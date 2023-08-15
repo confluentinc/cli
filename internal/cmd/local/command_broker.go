@@ -11,8 +11,8 @@ func (c *Command) newBrokerCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newBrokerListCommand())
-	// cmd.AddCommand(c.newBrokerDescribeCommand())
-	// cmd.AddCommand(c.newBrokerUpdateCommand())
+	cmd.AddCommand(c.newBrokerDescribeCommand())
+	cmd.AddCommand(c.newBrokerUpdateCommand())
 
 	return cmd
 }

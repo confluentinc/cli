@@ -37,7 +37,7 @@ type ImagePullResponse struct {
 func (c *Command) newKafkaStartCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
-		Short: "Start a single-node instance of Apache Kafka.",
+		Short: "Start a single-node or two-node instance of Apache Kafka.",
 		Args:  cobra.NoArgs,
 		RunE:  c.kafkaStart,
 	}

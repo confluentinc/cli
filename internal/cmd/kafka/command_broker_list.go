@@ -3,6 +3,7 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/broker"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -48,7 +49,7 @@ func (c *brokerCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, data := range brokersGetResp.Data {
-		broker := &brokerOut{
+		broker := &broker.BrokerOut{
 			ClusterId: data.ClusterId,
 			BrokerId:  data.BrokerId,
 		}

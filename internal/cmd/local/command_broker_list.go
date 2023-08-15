@@ -5,25 +5,19 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/broker"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type brokerOut struct {
-	ClusterId string `human:"Cluster" serialized:"cluster_id"`
-	BrokerId  int32  `human:"Broker ID" serialized:"broker_id"`
-	Host      string `human:"Host" serialized:"host"`
-	Port      int32  `human:"Port" serialized:"port"`
-}
-
 func (c *Command) newBrokerListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List local cluster brokers.",
 		Args:  cobra.NoArgs,
-		RunE:  c.brokerList,
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -31,7 +25,7 @@ func (c *Command) newBrokerListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) brokerList(cmd *cobra.Command, args []string) error {
+func (c *Command) list(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
@@ -45,7 +39,7 @@ func (c *Command) brokerList(cmd *cobra.Command, args []string) error {
 
 	list := output.NewList(cmd)
 	for _, data := range brokersGetResp.Data {
-		broker := &brokerOut{
+		broker := &broker.BrokerOut{
 			ClusterId: data.ClusterId,
 			BrokerId:  data.BrokerId,
 		}
