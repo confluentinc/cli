@@ -39,7 +39,7 @@ Usage:
   confluent plugin [command]
 
 Available Commands:
-  install     Install official Confluent CLI plugins.
+  install     Install or update official Confluent CLI plugins.
   list        List Confluent CLI plugins in $PATH.
   search      Search for Confluent CLI plugins.
 

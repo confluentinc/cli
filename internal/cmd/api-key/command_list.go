@@ -119,7 +119,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
 
 		// Check if multicluster keys are enabled, and if so check the resources field
-		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, config.CliLaunchDarklyClient, true, false) {
+		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, config.CliLaunchDarklyClient, true, false) && len(apiKey.Spec.GetResources()) > 0 {
 			resources = apiKey.Spec.GetResources()
 		}
 
