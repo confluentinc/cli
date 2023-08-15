@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	testserver "github.com/confluentinc/cli/test/test-server"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 func (s *CLITestSuite) TestAsyncapiExport() {
