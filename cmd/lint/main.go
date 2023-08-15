@@ -8,7 +8,7 @@ import (
 
 	"github.com/client9/gospell"
 
-	pcmd "github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/internal"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/linter"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
@@ -333,7 +333,7 @@ func main() {
 		cfg.IsTest = true
 		cfg.Version = new(pversion.Version)
 
-		cmd := pcmd.NewConfluentCommand(cfg)
+		cmd := internal.NewConfluentCommand(cfg)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1

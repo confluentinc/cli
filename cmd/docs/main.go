@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	cmd "github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/internal"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/docs"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
@@ -37,7 +37,7 @@ func main() {
 
 		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
-			Command: cmd.NewConfluentCommand(cfg),
+			Command: internal.NewConfluentCommand(cfg),
 		}
 	}
 

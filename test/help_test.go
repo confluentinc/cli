@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/internal"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/version"
 )
@@ -30,7 +30,7 @@ func (s *CLITestSuite) TestHelp() {
 		cfg.IsTest = true
 		cfg.DisableFeatureFlags = true
 
-		s.testHelp(pcmd.NewConfluentCommand(cfg), cfg.CurrentContext)
+		s.testHelp(internal.NewConfluentCommand(cfg), cfg.CurrentContext)
 	}
 }
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	pcmd "github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/internal"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/usage"
@@ -69,7 +69,7 @@ func buildWhitelist() []string {
 		cfg.IsTest = true
 		cfg.Version = new(pversion.Version)
 
-		cmd := pcmd.NewConfluentCommand(cfg)
+		cmd := internal.NewConfluentCommand(cfg)
 		usage.WhitelistCommandsAndFlags(cmd, whitelist)
 	}
 
