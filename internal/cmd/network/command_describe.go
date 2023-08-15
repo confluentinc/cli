@@ -5,12 +5,14 @@ import (
 
 	"github.com/spf13/cobra"
 
+	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type out struct {
+type humanOut struct {
 	Id                    string `human:"ID" serialized:"id"`
 	EnvironmentId         string `human:"Environment ID" serialized:"environment_id"`
 	Name                  string `human:"Name" serialized:"name"`
@@ -21,6 +23,19 @@ type out struct {
 	DnsResolution         string `human:"DNS Resolution" serialized:"dns_resolution"`
 	Phase                 string `human:"Phase" serialized:"phase"`
 	ActiveConnectionTypes string `human:"Active Connection Types" serialized:"active_connection_types"`
+}
+
+type serializedOut struct {
+	Id                    string   `serialized:"id"`
+	EnvironmentId         string   `serialized:"environment_id"`
+	Name                  string   `serialized:"name"`
+	Cloud                 string   `serialized:"cloud"`
+	Region                string   `serialized:"region"`
+	Cidr                  string   `serialized:"cidr"`
+	Zones                 []string `serialized:"zones"`
+	DnsResolution         string   `serialized:"dns_resolution"`
+	Phase                 string   `serialized:"phase"`
+	ActiveConnectionTypes []string `serialized:"active_connection_types"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -56,18 +71,42 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	return printTable(cmd, network)
+}
+
+func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
 	table := output.NewTable(cmd)
-	table.Add(&out{
-		Id:                    network.GetId(),
-		EnvironmentId:         network.Spec.Environment.GetId(),
-		Name:                  network.Spec.GetDisplayName(),
-		Cloud:                 network.Spec.GetCloud(),
-		Region:                network.Spec.GetRegion(),
-		Cidr:                  network.Spec.GetCidr(),
-		Zones:                 strings.Join(network.Spec.GetZones(), ","),
-		DnsResolution:         network.Spec.DnsConfig.GetResolution(),
-		Phase:                 network.Status.GetPhase(),
-		ActiveConnectionTypes: strings.Join(network.Status.GetActiveConnectionTypes().Items, ","),
-	})
+
+	zones := network.Spec.GetZones()
+	activeConnectionTypes := network.Status.GetActiveConnectionTypes().Items
+
+	if output.GetFormat(cmd) == output.Human {
+		table.Add(&humanOut{
+			Id:                    network.GetId(),
+			EnvironmentId:         network.Spec.Environment.GetId(),
+			Name:                  network.Spec.GetDisplayName(),
+			Cloud:                 network.Spec.GetCloud(),
+			Region:                network.Spec.GetRegion(),
+			Cidr:                  network.Spec.GetCidr(),
+			Zones:                 strings.Join(zones, ","),
+			DnsResolution:         network.Spec.DnsConfig.GetResolution(),
+			Phase:                 network.Status.GetPhase(),
+			ActiveConnectionTypes: strings.Join(activeConnectionTypes, ","),
+		})
+	} else {
+		table.Add(&serializedOut{
+			Id:                    network.GetId(),
+			EnvironmentId:         network.Spec.Environment.GetId(),
+			Name:                  network.Spec.GetDisplayName(),
+			Cloud:                 network.Spec.GetCloud(),
+			Region:                network.Spec.GetRegion(),
+			Cidr:                  network.Spec.GetCidr(),
+			Zones:                 zones,
+			DnsResolution:         network.Spec.DnsConfig.GetResolution(),
+			Phase:                 network.Status.GetPhase(),
+			ActiveConnectionTypes: activeConnectionTypes,
+		})
+	}
+
 	return table.Print()
 }
