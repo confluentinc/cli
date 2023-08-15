@@ -1,20 +1,12 @@
-+--------------------------+----------------------------------------------------------------------------------------------------------------+
-| Id                       | n-abcde1                                                                                                       |
-| Environment              | env-00000                                                                                                      |
-| Display Name             | prod-aws-us-east1                                                                                              |
-| Cloud                    | AWS                                                                                                            |
-| Region                   | us-east-1                                                                                                      |
-| ConnectionTypes          | {[PRIVATELINK]}                                                                                                |
-| Cidr                     | 10.200.0.0/16                                                                                                  |
-| Zones                    | [use1-az1 use1-az2 use1-az3]                                                                                   |
-| DnsResolution            | CHASED_PRIVATE                                                                                                 |
-| Phase                    | READY                                                                                                          |
-| SupportedConnectionTypes | {[PRIVATELINK]}                                                                                                |
-| ActiveConnectionTypes    | {[PRIVATELINK]}                                                                                                |
-| ReservedCidr             | 172.20.255.0/24                                                                                                |
-| Resource URL             | https://api.confluent.cloud/networking/v1/networks/n-abcde1                                                    |
-| Resource Name            | crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-00000/network=n-abcde1 |
-| Created At               | 2023-02-24T00:00:00Z                                                                                           |
-| Updated At               | 2023-02-24T00:00:00Z                                                                                           |
-| Deleted At               | 2023-02-24T00:00:00Z                                                                                           |
-+--------------------------+----------------------------------------------------------------------------------------------------------------+
++-------------------------+------------------------------+
+| ID                      | n-abcde1                     |
+| Environment ID          | env-00000                    |
+| Name                    | prod-aws-us-east1            |
+| Cloud                   | AWS                          |
+| Region                  | us-east-1                    |
+| CIDR                    | 10.200.0.0/16                |
+| Zones                   | [use1-az1 use1-az2 use1-az3] |
+| DNS Resolution          | CHASED_PRIVATE               |
+| Phase                   | READY                        |
+| Active Connection Types | {[PRIVATELINK]}              |
++-------------------------+------------------------------+
