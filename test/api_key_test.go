@@ -140,7 +140,7 @@ func (s *CLITestSuite) TestApiKey() {
 
 		// test multicluster keys
 		{name: "listing multicluster API keys", args: "api-key list", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/56.golden"},
-		{name: "listing multicluster API keys with --resource field", args: "api-key list --resource lsrc-abc", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/57.golden"},
+		{name: "listing multicluster API keys with --resource field", args: "api-key list --resource lsrc-1234", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/57.golden"},
 		{name: "listing multicluster API keys with --current-user field", args: "api-key list --current-user", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/58.golden"},
 		{name: "listing multicluster API keys with --service-account field", args: "api-key list --service-account sa-12345", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/59.golden"},
 	}
