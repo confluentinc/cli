@@ -43,7 +43,7 @@ func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 				},
 				Status: &networkingv1.NetworkingV1NetworkStatus{
 					Phase:                 "READY",
-					ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK"}},
+					ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}},
 				},
 			}
 			err := json.NewEncoder(w).Encode(network)

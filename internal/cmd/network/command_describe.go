@@ -1,26 +1,26 @@
 package network
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-
-	networking "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 )
 
 type out struct {
-	Id                    string                                 `human:"ID" serialized:"id"`
-	EnvironmentId         string                                 `human:"Environment ID" serialized:"environment_id"`
-	Name                  string                                 `human:"Name" serialized:"name"`
-	Cloud                 string                                 `human:"Cloud" serialized:"cloud"`
-	Region                string                                 `human:"Region" serialized:"region"`
-	Cidr                  string                                 `human:"CIDR" serialized:"cidr"`
-	Zones                 []string                               `human:"Zones" serialized:"zone"`
-	DnsResolution         string                                 `human:"DNS Resolution" serialized:"dns_resolution"`
-	Phase                 string                                 `human:"Phase" serialized:"phase"`
-	ActiveConnectionTypes networking.NetworkingV1ConnectionTypes `human:"Active Connection Types" serialized:"active_connection_types"`
+	Id                    string `human:"ID" serialized:"id"`
+	EnvironmentId         string `human:"Environment ID" serialized:"environment_id"`
+	Name                  string `human:"Name" serialized:"name"`
+	Cloud                 string `human:"Cloud" serialized:"cloud"`
+	Region                string `human:"Region" serialized:"region"`
+	Cidr                  string `human:"CIDR" serialized:"cidr"`
+	Zones                 string `human:"Zones" serialized:"zones"`
+	DnsResolution         string `human:"DNS Resolution" serialized:"dns_resolution"`
+	Phase                 string `human:"Phase" serialized:"phase"`
+	ActiveConnectionTypes string `human:"Active Connection Types" serialized:"active_connection_types"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -28,6 +28,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Use:   "describe <id>",
 		Short: "Desribe a network.",
 		Args:  cobra.ExactArgs(1),
+		// TODO: Implement autocompletion after List Network is implemented.
 		// ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE: c.describe,
 		Example: examples.BuildExampleString(
@@ -38,8 +39,8 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddOutputFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -63,10 +64,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		Cloud:                 network.Spec.GetCloud(),
 		Region:                network.Spec.GetRegion(),
 		Cidr:                  network.Spec.GetCidr(),
-		Zones:                 network.Spec.GetZones(),
+		Zones:                 strings.Join(network.Spec.GetZones(), ","),
 		DnsResolution:         network.Spec.DnsConfig.GetResolution(),
 		Phase:                 network.Status.GetPhase(),
-		ActiveConnectionTypes: network.Status.GetActiveConnectionTypes(),
+		ActiveConnectionTypes: strings.Join(network.Status.GetActiveConnectionTypes().Items, ","),
 	})
 	return table.Print()
 }
