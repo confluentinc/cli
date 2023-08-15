@@ -14,6 +14,7 @@ import (
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
@@ -40,6 +41,7 @@ type Client struct {
 	KsqlClient             *ksql.APIClient
 	KafkaQuotasClient      *kafkaquotas.APIClient
 	MdsClient              *mdsv2.APIClient
+	NetworkingClient       *networkingv1.APIClient
 	OrgClient              *orgv2.APIClient
 	SchemaRegistryClient   *srcm.APIClient
 	SsoClient              *ssov2.APIClient
@@ -69,6 +71,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
 		MdsClient:              newMdsClient(url, userAgent, unsafeTrace),
+		NetworkingClient:       newNetowrkingClient(url, userAgent, unsafeTrace),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
 		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),
 		SsoClient:              newSsoClient(url, userAgent, unsafeTrace),
