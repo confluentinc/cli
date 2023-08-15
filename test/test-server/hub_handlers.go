@@ -12,8 +12,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/cpstructs"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/v3/pkg/cpstructs"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 const archivePath = "test/fixtures/input/connect/test-plugin.zip"
