@@ -3,7 +3,7 @@ package test
 import (
 	"fmt"
 
-	testserver "github.com/confluentinc/cli/test/test-server"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 var (
@@ -83,7 +83,7 @@ func (s *CLITestSuite) TestSchemaRegistryExporter() {
 
 	tests := []CLITest{
 		{args: fmt.Sprintf("schema-registry exporter list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/list.golden"},
-		{args: fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config-file %s --environment %s`, exporterConfigPath, testserver.SRApiEnvId), fixture: "schema-registry/exporter/create.golden"},
+		{args: fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config %s --environment %s`, exporterConfigPath, testserver.SRApiEnvId), fixture: "schema-registry/exporter/create.golden"},
 		{args: fmt.Sprintf("schema-registry exporter describe myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/describe.golden"},
 		{args: fmt.Sprintf(`schema-registry exporter update myexporter --subjects foo,bar,test --subject-format my-\\${subject} --environment %s`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/update.golden"},
 		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete.golden"},

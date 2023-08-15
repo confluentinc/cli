@@ -124,8 +124,8 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
 
 		// Cluster linking
-		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config-file " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
@@ -205,6 +205,7 @@ func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 		{args: "kafka cluster use lkc-12345"},
 		{args: "kafka cluster configuration describe compression.type", fixture: "kafka/cluster/configuration/describe.golden"},
 		{args: "kafka cluster configuration update --config auto.create.topics.enable=true", fixture: "kafka/cluster/configuration/update.golden"},
+		{args: "kafka cluster configuration update --config test/fixtures/input/kafka/cluster/configuration/update.properties", fixture: "kafka/cluster/configuration/update.golden"},
 		{args: "kafka cluster configuration list", fixture: "kafka/cluster/configuration/list.golden"},
 	}
 
@@ -273,8 +274,8 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker describe --all --config-name compression.type -o json", fixture: "kafka/broker/describe-all-config-json.golden"},
 		{args: "kafka broker describe 1 --all", exitCode: 1, fixture: "kafka/broker/err-all-and-arg.golden"},
 
-		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN --all", fixture: "kafka/broker/update-all.golden"},
-		{args: "kafka broker update 1 --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/broker/update-1.golden"},
+		{args: "kafka broker update --all --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/broker/update-all.golden"},
+		{args: "kafka broker update 1 --config test/fixtures/input/kafka/broker/update.properties", fixture: "kafka/broker/update-1.golden"},
 		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", exitCode: 1, fixture: "kafka/broker/err-need-all-or-arg.golden"},
 
 		{args: "kafka broker delete 1 --force", fixture: "kafka/broker/delete.golden"},
@@ -480,6 +481,7 @@ func (s *CLITestSuite) TestKafkaQuota() {
 		{args: "kafka quota delete cq-1234 --force", fixture: "kafka/quota/delete.golden"},
 		{args: "kafka quota delete cq-1234", input: "cq-1234\n", fixture: "kafka/quota/delete-prompt.golden"},
 		{args: "kafka quota update cq-1234 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
+		{args: "kafka quota update cq-1234", fixture: "kafka/quota/no-op-update.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
