@@ -50,6 +50,12 @@ func handleSchemaRegistryClusters(t *testing.T) http.HandlerFunc {
 
 func handleSchemaRegistryCluster(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		if id != srClusterId {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodPatch:
 			req := new(srcmv2.SrcmV2ClusterUpdate)
