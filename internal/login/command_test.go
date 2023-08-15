@@ -722,7 +722,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
 			req.True(ok)
 			req.NotEqual(http.DefaultTransport, transport)
-			found := slices.ContainsFunc(transport.TLSClientConfig.RootCAs.Subjects(), func (subject []byte) bool { //nolint:staticcheck
+			found := slices.ContainsFunc(transport.TLSClientConfig.RootCAs.Subjects(), func(subject []byte) bool { //nolint
 				return bytes.Equal(cert.RawSubject, subject)
 			})
 			req.True(found, "Certificate not found in client.")
