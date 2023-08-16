@@ -22,7 +22,7 @@ func (c *command) newListCommand() *cobra.Command {
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
-	for field := range c.jsonFieldToName {
+	for field := range c.configWhiteList {
 		list.Add(c.newConfigurationOut(field))
 	}
 	return list.Print()

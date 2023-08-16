@@ -32,7 +32,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 
 func (c *command) update(_ *cobra.Command, args []string) error {
 	field := args[0]
-	value, err := convertValue(field, args[1], c.jsonFieldToType)
+	value, err := c.convertValue(field, args[1])
 	if err != nil {
 		if field == "current_context" {
 			return errors.NewErrorWithSuggestions(err.Error(), "Please use `confluent context use` to set the current context.")
@@ -40,7 +40,7 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	oldValue := reflect.ValueOf(c.cfg).Elem().FieldByName(c.jsonFieldToName[field])
+	oldValue := reflect.ValueOf(c.cfg).Elem().FieldByName(c.configWhiteList[field].name)
 	if field == "disable_feature_flags" {
 		if ok, err := confirmSet(field, form.NewPrompt()); err != nil {
 			return err
@@ -59,16 +59,16 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func convertValue(field, value string, settableFields map[string]reflect.Kind) (any, error) {
-	kind, ok := settableFields[field]
+func (c *command) convertValue(field, value string) (any, error) {
+	fieldInfo, ok := c.configWhiteList[field]
 	if !ok {
 		return nil, fmt.Errorf(fieldNotConfigurableError, field)
 	}
-	switch kind {
+	switch fieldInfo.kind {
 	case reflect.Bool:
 		val, err := strconv.ParseBool(value)
 		if err != nil {
-			return nil, fmt.Errorf(`"%s" is not a valid value for config field "%s", which is of type: %s`, value, field, kind.String())
+			return nil, fmt.Errorf(`"%s" is not a valid value for config field "%s", which is of type: %s`, value, field, fieldInfo.kind.String())
 		}
 		return val, nil
 	default:

@@ -16,11 +16,15 @@ import (
 
 const fieldNotConfigurableError = `configuration field "%s" either does not exist or is not configurable`
 
+type configInfo struct {
+	kind reflect.Kind
+	name string
+}
+
 type command struct {
 	*pcmd.CLICommand
 	cfg             *config.Config
-	jsonFieldToName map[string]string
-	jsonFieldToType map[string]reflect.Kind
+	configWhiteList map[string]*configInfo
 }
 
 type configurationOut struct {
@@ -35,12 +39,11 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short:   "Configure the Confluent CLI.",
 	}
 
-	jsonFieldToType, jsonFieldToName := getSettableConfigFields(cfg)
+	configWhitelist := getConfigWhiteList(cfg)
 	c := &command{
 		CLICommand:      pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		cfg:             cfg,
-		jsonFieldToName: jsonFieldToName,
-		jsonFieldToType: jsonFieldToType,
+		configWhiteList: configWhitelist,
 	}
 
 	cmd.AddCommand(c.newDescribeCommand())
@@ -50,20 +53,22 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func getSettableConfigFields(cfg *config.Config) (map[string]reflect.Kind, map[string]string) {
-	jsonFieldToType := make(map[string]reflect.Kind)
-	jsonFieldToName := make(map[string]string)
+func getConfigWhiteList(cfg *config.Config) map[string]*configInfo {
+	whitelist := make(map[string]*configInfo)
 	t := reflect.TypeOf(*cfg)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
+		// currently only boolean fields are part of this whitelist, but this may change in the future
 		if kind := field.Type.Kind(); kind == reflect.Bool {
 			if jsonFieldName := getJsonFieldName(field, cfg.IsTest); jsonFieldName != "" {
-				jsonFieldToType[jsonFieldName] = kind
-				jsonFieldToName[jsonFieldName] = field.Name
+				whitelist[jsonFieldName] = &configInfo{
+					kind: kind,
+					name: field.Name,
+				}
 			}
 		}
 	}
-	return jsonFieldToType, jsonFieldToName
+	return whitelist
 }
 
 func getJsonFieldName(field reflect.StructField, isTest bool) string {
@@ -84,7 +89,7 @@ func getJsonFieldName(field reflect.StructField, isTest bool) string {
 }
 
 func (c *command) newConfigurationOut(field string) *configurationOut {
-	value := reflect.ValueOf(c.cfg).Elem().FieldByName(c.jsonFieldToName[field])
+	value := reflect.ValueOf(c.cfg).Elem().FieldByName(c.configWhiteList[field].name)
 	return &configurationOut{
 		Name:  field,
 		Value: fmt.Sprintf("%v", value),
@@ -100,5 +105,5 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return types.GetSortedKeys(c.jsonFieldToName)
+	return types.GetSortedKeys(c.configWhiteList)
 }

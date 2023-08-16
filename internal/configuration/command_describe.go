@@ -28,7 +28,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	field := args[0]
-	if _, ok := c.jsonFieldToType[field]; !ok {
+	if _, ok := c.configWhiteList[field]; !ok {
 		return fmt.Errorf(fieldNotConfigurableError, field)
 	}
 	table := output.NewTable(cmd)
