@@ -15,7 +15,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
-const numPartitionsKey = "num.partitions"
+const (
+	// EOF Unicode encoding for Ctrl+D (^D) character
+	EOF              = "\u0004"
+	numPartitionsKey = "num.partitions"
+)
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand

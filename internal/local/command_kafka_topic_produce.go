@@ -83,15 +83,20 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		close(input)
+		input <- kafka.EOF
 	}()
 	go scan() // Prime reader
 
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
 		if data == "" {
+			if scanErr != nil {
+				break
+			}
 			go scan()
 			continue
+		} else if data == kafka.EOF {
+			break
 		}
 
 		msg, err := kafka.GetProduceMessage(cmd, make([]byte, 4), make([]byte, 4), topicName, data, nil, serializationProvider)
@@ -109,14 +114,12 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topicName)
 			if isProduceToCompactedTopicError {
 				scanErr = err
-				close(input)
 				break
 			}
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
 		go scan()
 	}
-	close(deliveryChan)
 	return scanErr
 }
 
