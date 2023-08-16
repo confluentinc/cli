@@ -1,7 +1,7 @@
-Describe a Kafka consumer group.
+List Kafka consumer groups.
 
 Usage:
-  confluent kafka consumer-group describe <consumer-group> [flags]
+  confluent kafka consumer group list [flags]
 
 Flags:
       --cluster string       Kafka cluster ID.

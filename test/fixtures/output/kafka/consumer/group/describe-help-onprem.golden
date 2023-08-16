@@ -1,7 +1,7 @@
 Describe a Kafka consumer group.
 
 Usage:
-  confluent kafka consumer-group describe <consumer-group> [flags]
+  confluent kafka consumer group describe <group> [flags]
 
 Flags:
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.

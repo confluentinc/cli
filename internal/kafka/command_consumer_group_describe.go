@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
+func (c *consumerCommand) newGroupDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <consumer-group>",
+		Use:               "describe <group>",
 		Short:             "Describe a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
 		RunE:              c.describe,
 	}
 
@@ -28,7 +28,7 @@ func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) describe(cmd *cobra.Command, args []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err

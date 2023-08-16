@@ -513,11 +513,11 @@ func (s *CLITestSuite) TestKafkaConsumer() {
 
 func (s *CLITestSuite) TestKafkaConsumerGroup() {
 	tests := []CLITest{
-		{args: "kafka consumer-group list --cluster lkc-1234", fixture: "kafka/consumer-group/list.golden"},
-		{args: "kafka consumer-group list --cluster lkc-1234 -o json", fixture: "kafka/consumer-group/list-json.golden"},
-		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer-group/describe.golden"},
-		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer-group/describe-json.golden"},
-		{args: "kafka consumer-group describe consumer-group-1234 --cluster lkc-1234", fixture: "kafka/consumer-group/describe-dne.golden", exitCode: 1},
+		{args: "kafka consumer group list --cluster lkc-1234", fixture: "kafka/consumer-group/list.golden"},
+		{args: "kafka consumer group list --cluster lkc-1234 -o json", fixture: "kafka/consumer-group/list-json.golden"},
+		{args: "kafka consumer group describe consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer-group/describe.golden"},
+		{args: "kafka consumer group describe consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer-group/describe-json.golden"},
+		{args: "kafka consumer group describe consumer-group-1234 --cluster lkc-1234", fixture: "kafka/consumer-group/describe-dne.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -527,9 +527,9 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests = []CLITest{
-		{args: "kafka consumer-group list", fixture: "kafka/consumer-group/list-onprem.golden"},
-		{args: "kafka consumer-group describe consumer-group-1", fixture: "kafka/consumer-group/describe-onprem.golden"},
-		{args: "kafka consumer-group describe consumer-group-1234", fixture: "kafka/consumer-group/describe-onprem-dne.golden", exitCode: 1},
+		{args: "kafka consumer group list", fixture: "kafka/consumer-group/list-onprem.golden"},
+		{args: "kafka consumer group describe consumer-group-1", fixture: "kafka/consumer-group/describe-onprem.golden"},
+		{args: "kafka consumer group describe consumer-group-1234", fixture: "kafka/consumer-group/describe-onprem-dne.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -542,7 +542,7 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete kafka consumer list --cluster lkc-1234 --group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
-		{args: `__complete kafka consumer-group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer-group/autocomplete.golden"},
+		{args: `__complete kafka consumer group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer-group/autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},

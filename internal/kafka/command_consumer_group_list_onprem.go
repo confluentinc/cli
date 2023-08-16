@@ -8,12 +8,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *consumerGroupCommand) newListCommandOnPrem() *cobra.Command {
+func (c *consumerCommand) newGroupListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listOnPrem,
+		RunE:  c.listGroupsOnPrem,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -23,7 +23,7 @@ func (c *consumerGroupCommand) newListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerGroupCommand) listOnPrem(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) listGroupsOnPrem(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err

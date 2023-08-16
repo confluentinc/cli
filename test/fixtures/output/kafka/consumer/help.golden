@@ -4,6 +4,7 @@ Usage:
   confluent kafka consumer [command]
 
 Available Commands:
+  group       Manage Kafka consumer groups.
   list        List Kafka consumers.
 
 Global Flags:

@@ -7,12 +7,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *consumerGroupCommand) newListCommand() *cobra.Command {
+func (c *consumerCommand) newGroupListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.listGroups,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -23,7 +23,7 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *consumerCommand) listGroups(cmd *cobra.Command, _ []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err

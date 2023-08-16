@@ -12,9 +12,9 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *consumerGroupCommand) newDescribeCommandOnPrem() *cobra.Command {
+func (c *consumerCommand) newGroupDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <consumer-group>",
+		Use:   "describe <group>",
 		Short: "Describe a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describeOnPrem,
@@ -27,7 +27,7 @@ func (c *consumerGroupCommand) newDescribeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerGroupCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
