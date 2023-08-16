@@ -3,7 +3,7 @@ package test
 import (
 	"fmt"
 
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 )
 
 func (s *CLITestSuite) contextCreateArgs(name string) string {
