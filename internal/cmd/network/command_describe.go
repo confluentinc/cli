@@ -13,16 +13,16 @@ import (
 )
 
 type humanOut struct {
-	Id                    string `human:"ID" serialized:"id"`
-	EnvironmentId         string `human:"Environment ID" serialized:"environment_id"`
-	Name                  string `human:"Name" serialized:"name"`
-	Cloud                 string `human:"Cloud" serialized:"cloud"`
-	Region                string `human:"Region" serialized:"region"`
-	Cidr                  string `human:"CIDR" serialized:"cidr"`
-	Zones                 string `human:"Zones" serialized:"zones"`
-	DnsResolution         string `human:"DNS Resolution" serialized:"dns_resolution"`
-	Phase                 string `human:"Phase" serialized:"phase"`
-	ActiveConnectionTypes string `human:"Active Connection Types" serialized:"active_connection_types"`
+	Id                    string `human:"ID"`
+	EnvironmentId         string `human:"Environment ID"`
+	Name                  string `human:"Name"`
+	Cloud                 string `human:"Cloud"`
+	Region                string `human:"Region"`
+	Cidr                  string `human:"CIDR"`
+	Zones                 string `human:"Zones"`
+	DnsResolution         string `human:"DNS Resolution"`
+	Phase                 string `human:"Phase"`
+	ActiveConnectionTypes string `human:"Active Connection Types"`
 }
 
 type serializedOut struct {
