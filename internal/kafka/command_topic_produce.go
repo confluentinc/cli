@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -125,18 +126,14 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	}
 
 	var scanErr error
-	input, scan := PrepareInputChannel(&scanErr)
+	input, scan, mutex := PrepareInputChannel(&scanErr)
 
 	// Trap SIGINT to trigger a shutdown.
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		select {
-		case <-input:
-		default:
-			close(input)
-		}
+		CloseChannel(input, mutex)
 	}()
 	// Prime reader
 	go scan()
@@ -156,7 +153,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
-				close(input)
+				CloseChannel(input, mutex)
 				break
 			}
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
@@ -198,7 +195,7 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchem
 	return metaInfo, referencePathMap, nil
 }
 
-func PrepareInputChannel(scanErr *error) (chan string, func()) {
+func PrepareInputChannel(scanErr *error) (chan string, func(), *sync.Mutex) {
 	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
 	// On-prem Kafka messageMaxBytes: using the same value of cloud. TODO: allow larger sizes if customers request
@@ -206,6 +203,7 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 	const maxScanTokenSize = 1024*1024*2 + 12
 	scanner.Buffer(nil, maxScanTokenSize)
 	input := make(chan string, 1)
+	mutex := new(sync.Mutex)
 	// Avoid blocking in for loop so ^C or ^D can exit immediately.
 	return input, func() {
 		hasNext := scanner.Scan()
@@ -215,10 +213,21 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 				*scanErr = scanner.Err()
 			}
 			// Otherwise just EOF.
-			close(input)
+			CloseChannel(input, mutex)
 		} else {
 			input <- scanner.Text()
 		}
+	}, mutex
+}
+
+func CloseChannel(channel chan string, mutex *sync.Mutex) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	select {
+	case <-channel:
+	default:
+		close(channel)
 	}
 }
 

@@ -77,13 +77,13 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	output.ErrPrintln("Type a message and press ENTER to produce to the topic.")
 
 	var scanErr error
-	input, scan := kafka.PrepareInputChannel(&scanErr)
+	input, scan, mutex := kafka.PrepareInputChannel(&scanErr)
 
 	signals := make(chan os.Signal, 1) // Trap SIGINT to trigger a shutdown.
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		close(input)
+		kafka.CloseChannel(input, mutex)
 	}()
 	go scan() // Prime reader
 
@@ -109,7 +109,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topicName)
 			if isProduceToCompactedTopicError {
 				scanErr = err
-				close(input)
+				kafka.CloseChannel(input, mutex)
 				break
 			}
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
