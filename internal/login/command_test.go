@@ -532,7 +532,7 @@ func TestPromptLoginFlag(t *testing.T) {
 			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 			loginArgs := []string{"--prompt"}
 			if !test.isCloud {
-				loginArgs = append(loginArgs, "--url http://localhost:8090")
+				loginArgs = append(loginArgs, "--url", "http://localhost:8090")
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
 			req.NoError(err)
@@ -628,7 +628,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 				expectedCaCert = test.caCertPathFlag
 			}
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, expectedCaCert)
-			_, err := pcmd.ExecuteCommand(loginCmd, "--url http://localhost:8090", fmt.Sprintf("--ca-cert-path %s", test.caCertPathFlag))
+			_, err := pcmd.ExecuteCommand(loginCmd, "--url", "http://localhost:8090", "--ca-cert-path", test.caCertPathFlag)
 			req.NoError(err)
 
 			ctx := cfg.Context()
