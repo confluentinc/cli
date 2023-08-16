@@ -132,11 +132,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		select {
-		case <-input:
-		default:
-			close(input)
-		}
+		input <- EOF
 	}()
 	// Prime reader
 	go scan()
@@ -144,8 +140,13 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
 		if data == "" {
+			if scanErr != nil {
+				break
+			}
 			go scan()
 			continue
+		} else if data == EOF {
+			break
 		}
 
 		message, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
@@ -156,7 +157,6 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
-				close(input)
 				break
 			}
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
@@ -169,7 +169,6 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		}
 		go scan()
 	}
-	close(deliveryChan)
 	return scanErr
 }
 

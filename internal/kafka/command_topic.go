@@ -17,6 +17,9 @@ import (
 
 const numPartitionsKey = "num.partitions"
 
+// EOF Unicode encoding for Ctrl+D (^D) character
+var EOF = "\u0004"
+
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 	clientID string
