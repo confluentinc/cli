@@ -26,6 +26,7 @@ func (c *consumerCommand) newGroupCommand(cfg *config.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		cmd.AddCommand(c.newGroupDescribeCommand())
 		cmd.AddCommand(c.newGroupListCommand())
+		cmd.AddCommand(c.newLagCommand(cfg))
 	} else {
 		cmd.AddCommand(c.newGroupDescribeCommandOnPrem())
 		cmd.AddCommand(c.newGroupListCommandOnPrem())
