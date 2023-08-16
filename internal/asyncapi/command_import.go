@@ -3,6 +3,7 @@ package asyncapi
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -26,7 +27,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/retry"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -321,7 +321,7 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 	}
 	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
 		value := configValue
-		if types.Contains(modifiableConfigs, configName) {
+		if slices.Contains(modifiableConfigs, configName) {
 			updateConfigs = append(updateConfigs, kafkarestv3.AlterConfigBatchRequestDataData{
 				Name:  configName,
 				Value: *kafkarestv3.NewNullableString(&value),

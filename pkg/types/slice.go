@@ -17,8 +17,3 @@ func Remove(haystack []string, needle string) []string {
 	}
 	return haystack
 }
-
-func RemoveDuplicates(slice []string) []string {
-	s := NewSet(slice...)
-	return s.Slice()
-}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -208,7 +209,7 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 		topics := spec.Destinations.Topics
 		for topicName, destination := range topics {
 			if _, ok := newTopics[topicName]; ok {
-				retentionTime := utils.Max(destination.RetentionMs, newTopics[topicName].RetentionMs)
+				retentionTime := max(destination.RetentionMs, newTopics[topicName].RetentionMs)
 				if destination.RetentionMs != newTopics[topicName].RetentionMs {
 					topicRetentionDiscrepancies[topicName] = retentionTime
 				}
@@ -259,7 +260,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		}
 
 		for _, principal := range *excludedPrincipals {
-			if !types.Contains(newExcludedPrincipals, principal) {
+			if !slices.Contains(newExcludedPrincipals, principal) {
 				newExcludedPrincipals = append(newExcludedPrincipals, principal)
 			}
 		}
@@ -454,7 +455,7 @@ func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		var differentPrincipals []string
 		newSpecPrincipals := *newSpec.ExcludedPrincipals
 		for _, principal := range newSpecPrincipals {
-			if !types.Contains(*excludedPrincipals, principal) {
+			if !slices.Contains(*excludedPrincipals, principal) {
 				differentPrincipals = append(differentPrincipals, principal)
 			}
 		}
