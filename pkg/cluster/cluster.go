@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -29,7 +29,7 @@ type prettyCluster struct {
 	Protocol       string `human:"Protocol" serialized:"protocol"`
 }
 
-func PrintClusters(cmd *cobra.Command, clusterInfos []mds.ClusterInfo) error {
+func PrintClusters(cmd *cobra.Command, clusterInfos []mdsv1.ClusterInfo) error {
 	if output.GetFormat(cmd).IsSerialized() {
 		return output.SerializedOutput(cmd, clusterInfos)
 	}
@@ -41,16 +41,16 @@ func PrintClusters(cmd *cobra.Command, clusterInfos []mds.ClusterInfo) error {
 	return list.Print()
 }
 
-func createPrettyProtocol(protocol mds.Protocol) string {
+func createPrettyProtocol(protocol mdsv1.Protocol) string {
 	switch protocol {
-	case mds.PROTOCOL_SASL_PLAINTEXT, mds.PROTOCOL_SASL_SSL, mds.PROTOCOL_HTTP, mds.PROTOCOL_HTTPS:
+	case mdsv1.PROTOCOL_SASL_PLAINTEXT, mdsv1.PROTOCOL_SASL_SSL, mdsv1.PROTOCOL_HTTP, mdsv1.PROTOCOL_HTTPS:
 		return string(protocol)
 	default:
 		return ""
 	}
 }
 
-func createPrettyCluster(clusterInfo mds.ClusterInfo) *prettyCluster {
+func createPrettyCluster(clusterInfo mdsv1.ClusterInfo) *prettyCluster {
 	var t, id, cid, p string
 	switch {
 	case clusterInfo.Scope.Clusters.ConnectCluster != "":
@@ -85,7 +85,7 @@ func createPrettyCluster(clusterInfo mds.ClusterInfo) *prettyCluster {
 	}
 }
 
-func createPrettyHost(hostInfo mds.HostInfo) string {
+func createPrettyHost(hostInfo mdsv1.HostInfo) string {
 	if hostInfo.Port > 0 {
 		return fmt.Sprintf("%s:%d", hostInfo.Host, hostInfo.Port)
 	}

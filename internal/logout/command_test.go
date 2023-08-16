@@ -11,7 +11,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	mdsMock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
 	"github.com/confluentinc/cli/v3/internal/login"
@@ -94,7 +94,7 @@ var (
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return testToken, "refreshToken", nil
 		},
-		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
+		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials) (string, error) {
 			return testToken, nil
 		},
 	}
@@ -160,13 +160,13 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.New()
-	var mdsClient *mds.APIClient
+	var mdsClient *mdsv1.APIClient
 	if !isCloud {
-		mdsConfig := mds.NewConfiguration()
-		mdsClient = mds.NewAPIClient(mdsConfig)
+		mdsConfig := mdsv1.NewConfiguration()
+		mdsClient = mdsv1.NewAPIClient(mdsConfig)
 		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
-			GetTokenFunc: func(ctx context.Context) (mds.AuthenticationResponse, *http.Response, error) {
-				return mds.AuthenticationResponse{
+			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
+				return mdsv1.AuthenticationResponse{
 					AuthToken: testToken,
 					TokenType: "JWT",
 					ExpiresIn: 100,
@@ -188,7 +188,7 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 		},
 	}
 	mdsClientManager := &climock.MDSClientManager{
-		GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
+		GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
 			return mdsClient, nil
 		},
 	}

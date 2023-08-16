@@ -11,7 +11,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
@@ -550,17 +550,17 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand, unsafeTrace
 	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version, unsafeTrace)
 }
 
-func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version, unsafeTrace bool) *mds.APIClient {
-	mdsConfig := mds.NewConfiguration()
+func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version, unsafeTrace bool) *mdsv1.APIClient {
+	mdsConfig := mdsv1.NewConfiguration()
 	mdsConfig.HTTPClient = utils.DefaultClient()
 	mdsConfig.Debug = unsafeTrace
 	if ctx == nil {
-		return mds.NewAPIClient(mdsConfig)
+		return mdsv1.NewAPIClient(mdsConfig)
 	}
 	mdsConfig.BasePath = ctx.Platform.Server
 	mdsConfig.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
-		return mds.NewAPIClient(mdsConfig)
+		return mdsv1.NewAPIClient(mdsConfig)
 	}
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
@@ -571,7 +571,7 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 	} else {
 		mdsConfig.HTTPClient = client
 	}
-	return mds.NewAPIClient(mdsConfig)
+	return mdsv1.NewAPIClient(mdsConfig)
 }
 
 // InitializeOnPremKafkaRest provides PreRun operations for on-prem commands that require a Kafka REST Proxy client. (ccloud RP commands use Authenticated prerun)
