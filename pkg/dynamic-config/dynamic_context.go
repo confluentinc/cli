@@ -7,8 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
-
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -161,60 +159,6 @@ func (d *DynamicContext) UseAPIKey(apiKey, clusterId string) error {
 	return d.Save()
 }
 
-// SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
-// or a SRNotEnabledError if there is none set,
-// or an ErrNotLoggedIn if the user is not logged in.
-func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*config.SchemaRegistryCluster, error) {
-	resource, _ := cmd.Flags().GetString("resource")
-	resourceType := presource.LookupType(resource)
-
-	environmentId, err := d.EnvironmentId()
-	if err != nil {
-		return nil, err
-	}
-
-	var cluster *config.SchemaRegistryCluster
-	var clusterChanged bool
-	var srNotEnabledErr error
-	if resourceType == presource.SchemaRegistryCluster {
-		for _, srCluster := range d.SchemaRegistryClusters {
-			if srCluster.GetId() == resource {
-				cluster = srCluster
-			}
-		}
-		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.V2Client.GetSchemaRegistryClusterById(resource, environmentId)
-			if err != nil {
-				return nil, errors.CatchResourceNotFoundError(err, resource)
-			}
-			cluster = makeSRCluster(&srCluster)
-			clusterChanged = true
-		}
-	} else {
-		cluster = d.SchemaRegistryClusters[environmentId]
-		if cluster == nil || missingDetails(cluster) {
-			srClusters, err := d.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
-			if err != nil {
-				return nil, errors.CatchResourceNotFoundError(err, resource)
-			}
-			if len(srClusters) != 0 {
-				cluster = makeSRCluster(&srClusters[0])
-			} else {
-				cluster = nil
-				srNotEnabledErr = errors.NewSRNotEnabledError()
-			}
-			clusterChanged = true
-		}
-	}
-	d.SchemaRegistryClusters[environmentId] = cluster
-	if clusterChanged {
-		if err := d.Save(); err != nil {
-			return nil, err
-		}
-	}
-	return cluster, srNotEnabledErr
-}
-
 func (d *DynamicContext) HasLogin() bool {
 	credType := d.GetCredentialType()
 	switch credType {
@@ -245,27 +189,6 @@ func (d *DynamicContext) AuthenticatedState() (*config.ContextState, error) {
 	return d.State, nil
 }
 
-func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool, error) {
-	srCluster, err := d.SchemaRegistryCluster(cmd)
-	if err != nil {
-		return false, nil
-	}
-	key, secret, err := d.KeyAndSecretFlags(cmd)
-	if err != nil {
-		return false, err
-	}
-	if key != "" {
-		if srCluster.SrCredentials == nil {
-			srCluster.SrCredentials = &config.APIKeyPair{}
-		}
-		srCluster.SrCredentials.Key = key
-	}
-	if secret != "" {
-		srCluster.SrCredentials.Secret = secret
-	}
-	return srCluster.SrCredentials != nil && srCluster.SrCredentials.Key != "" && srCluster.SrCredentials.Secret != "", nil
-}
-
 func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
 	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
 		return "", "", nil
@@ -285,15 +208,4 @@ func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, 
 	}
 
 	return apiKey, apiSecret, nil
-}
-
-func missingDetails(cluster *config.SchemaRegistryCluster) bool {
-	return cluster.SchemaRegistryEndpoint == "" || cluster.Id == ""
-}
-
-func makeSRCluster(cluster *srcmv2.SrcmV2Cluster) *config.SchemaRegistryCluster {
-	return &config.SchemaRegistryCluster{
-		Id:                     cluster.GetId(),
-		SchemaRegistryEndpoint: cluster.Spec.GetHttpEndpoint(),
-	}
 }
