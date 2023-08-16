@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -27,7 +27,7 @@ type AuthenticatedCLICommand struct {
 
 	Client            *ccloudv1.Client
 	KafkaRESTProvider *KafkaRESTProvider
-	MDSClient         *mds.APIClient
+	MDSClient         *mdsv1.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	V2Client          *ccloudv2.Client
 

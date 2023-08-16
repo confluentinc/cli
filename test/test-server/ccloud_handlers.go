@@ -15,7 +15,7 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -345,7 +345,7 @@ func handleUsers(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/metadata/security/v2alpha1/authenticate"
 func handleV2Authenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		reply := &mds.AuthenticationResponse{
+		reply := &mdsv1.AuthenticationResponse{
 			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
 			TokenType: "dunno",
 			ExpiresIn: 9999999999,
