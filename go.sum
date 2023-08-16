@@ -136,6 +136,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0 h1:jIXXhGi+Xn+XYFCErnMvd035Q
 github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0/go.mod h1:ufn9In8kDsyJ7Nru2ygpAaWdGw7DSDTOTtDhQVSmZjs=
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0 h1:TWwZHdfo2XNKrnGOuxXx4LF8WgahqqDC47Ap51L4thM=
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0/go.mod h1:odGsHChrn2l+jaOvx4Gib5//U4a3Id79wstQVkNh8v0=
+github.com/confluentinc/ccloud-sdk-go-v2/networking v0.8.0 h1:/QkBQMSVgVKuQwgsV44KaNKMuB8a1MF8gjjcuF9pB8g=
+github.com/confluentinc/ccloud-sdk-go-v2/networking v0.8.0/go.mod h1:jL9lLHYwFKzCJE5Fh62UdRqJCMJ9T/xg5QOdnQRYIUg=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.6.0 h1:kHITtUyof5/kALFCHLH7wSMlYmEZX0jKlh8Hich0Q8I=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.6.0/go.mod h1:40AGTF6TnYiBLR25utDlAdBKEYB3gt0wldxokJLz5r0=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
