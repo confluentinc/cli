@@ -11,8 +11,8 @@ import (
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:               "describe [config-field]",
+	return &cobra.Command{
+		Use:               "describe [key]",
 		Short:             "Describe a user-configurable field.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -20,12 +20,10 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `See if update checks are enabled by describing "disable_update_check".`,
-				Code: `confluent configuration describe disable_update_check`,
+				Code: "confluent configuration describe disable_update_check",
 			},
 		),
 	}
-
-	return cmd
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {

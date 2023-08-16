@@ -267,7 +267,7 @@ const (
 
 	// config package
 	CorruptedConfigErrorPrefix = "corrupted CLI config"
-	CorruptedConfigSuggestions = "Your CLI config file \"%s\" is corrupted.\n" +
+	CorruptedConfigSuggestions = "Your configuration file \"%s\" is corrupted.\n" +
 		"Remove config file, and run `confluent login` or `confluent context create`.\n" +
 		"Unfortunately, your active CLI state will be lost as a result.\n" +
 		"Please file a support ticket with details about your config file to help us address this issue.\n" +

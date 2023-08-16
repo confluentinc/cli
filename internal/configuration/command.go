@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
-const fieldNotConfigurableError = `config field "%s" either doesn't exist or is not configurable`
+const fieldNotConfigurableError = `configuration field "%s" either does not exist or is not configurable`
 
 type command struct {
 	*pcmd.CLICommand
@@ -85,11 +85,10 @@ func getJsonFieldName(field reflect.StructField, isTest bool) string {
 
 func (c *command) newConfigurationOut(field string) *configurationOut {
 	value := reflect.ValueOf(c.cfg).Elem().FieldByName(c.jsonFieldToName[field])
-	configOut := &configurationOut{
+	return &configurationOut{
 		Name:  field,
 		Value: fmt.Sprintf("%v", value),
 	}
-	return configOut
 }
 
 func (c *command) validArgs(cmd *cobra.Command, args []string) []string {

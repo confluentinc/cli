@@ -15,8 +15,8 @@ import (
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:               "update [config-field] [value]",
+	return &cobra.Command{
+		Use:               "update [key] [value]",
 		Short:             "Update a user-configurable field's value.",
 		Args:              cobra.ExactArgs(2),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -24,12 +24,10 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Disable plugins by setting "disable_plugins" to true.`,
-				Code: `confluent configuration update disable_plugins true`,
+				Code: "confluent configuration update disable_plugins true",
 			},
 		),
 	}
-
-	return cmd
 }
 
 func (c *command) update(_ *cobra.Command, args []string) error {
@@ -37,7 +35,7 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 	value, err := convertValue(field, args[1], c.jsonFieldToType)
 	if err != nil {
 		if field == "current_context" {
-			err = errors.NewErrorWithSuggestions(err.Error(), "Please use `confluent context use` to set the current context.")
+			return errors.NewErrorWithSuggestions(err.Error(), "Please use `confluent context use` to set the current context.")
 		}
 		return err
 	}
