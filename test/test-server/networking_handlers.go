@@ -18,6 +18,8 @@ func handleNetworkingNetwork(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingNetworkGet(t, id)(w, r)
+		case http.MethodDelete:
+			handleNetworkingNetworkDelete(t, id)(w, r)
 		}
 	}
 }
@@ -48,6 +50,23 @@ func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingNetworkDelete(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "n-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The network n-invalid was not found.")
+			require.NoError(t, err)
+		case "n-dependency":
+			w.WriteHeader(http.StatusConflict)
+			err := writeErrorJson(w, "Network deletion not allowed due to existing dependencies. Please delete the following dependent resources before attempting to delete the network again: pla-1abcde")
+			require.NoError(t, err)
+		case "n-abcde1":
+			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }
