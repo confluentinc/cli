@@ -26,11 +26,11 @@ func (c *command) newUpdateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Grant privilege to activate Stream Designer pipeline "pipe-12345".`,
-				Code: `confluent pipeline update pipe-12345 --activation-privilege true`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege=true`,
 			},
 			examples.Example{
 				Text: `Revoke privilege to activate Stream Designer pipeline "pipe-12345".`,
-				Code: `confluent pipeline update pipe-12345 --activation-privilege false`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege=false`,
 			},
 			examples.Example{
 				Text: `Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456".`,
