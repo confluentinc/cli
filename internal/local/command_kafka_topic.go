@@ -36,7 +36,7 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	if c.Config.LocalPorts == nil {
 		return nil, "", errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	url := fmt.Sprintf(localhostPrefix, c.Config.LocalPorts.KafkaRestPort)
+	url := fmt.Sprintf(localhostPrefix, c.Config.LocalPorts.KafkaRestPorts[0]) // one krest port is enough for all communications
 
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
