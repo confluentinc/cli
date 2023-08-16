@@ -3,7 +3,7 @@
 package featureflags
 
 import (
-	b64 "encoding/base64"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"time"
@@ -238,7 +238,7 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return b64.URLEncoding.EncodeToString(userBytes), nil
+	return base64.URLEncoding.EncodeToString(userBytes), nil
 }
 
 func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext) lduser.User {
