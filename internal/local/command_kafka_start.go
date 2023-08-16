@@ -116,7 +116,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	}
 	output.Println("\r")
 
-	log.CliLogger.Tracef("Pull confluent-local image success")
+	log.CliLogger.Tracef("Successfully pulled Confluent Local image")
 
 	if err := c.prepareAndSaveLocalPorts(cmd, c.Config.IsTest); err != nil {
 		return err
@@ -125,8 +125,8 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
+
 	ports := c.Config.LocalPorts
-	platform := &specsv1.Platform{OS: "linux", Architecture: runtime.GOARCH}
 	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
 	natPlaintextPort := nat.Port(ports.PlaintextPort + "/tcp")
 	config := &container.Config{
@@ -140,37 +140,41 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		Env: getContainerEnvironmentWithPorts(ports),
 	}
 	hostConfig := &container.HostConfig{PortBindings: nat.PortMap{
-		natKafkaRestPort: []nat.PortBinding{
-			{
-				HostIP:   localhost,
-				HostPort: ports.KafkaRestPort,
-			},
-		},
-		natPlaintextPort: []nat.PortBinding{
-			{
-				HostIP:   localhost,
-				HostPort: ports.PlaintextPort,
-			},
-		},
-	},
+		natKafkaRestPort: []nat.PortBinding{{
+			HostIP:   localhost,
+			HostPort: ports.KafkaRestPort,
+		}},
+		natPlaintextPort: []nat.PortBinding{{
+			HostIP:   localhost,
+			HostPort: ports.PlaintextPort,
+		}},
+	}}
+	platform := &specsv1.Platform{
+		OS:           "linux",
+		Architecture: runtime.GOARCH,
 	}
 
 	createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, confluentLocalContainerName)
 	if err != nil {
 		return err
 	}
-	log.CliLogger.Tracef("Create confluent-local container success")
+	log.CliLogger.Tracef("Successfully created Confluent Local container")
 
-	err = dockerClient.ContainerStart(context.Background(), createResp.ID, types.ContainerStartOptions{})
-	if err != nil {
+	if err := dockerClient.ContainerStart(context.Background(), createResp.ID, types.ContainerStartOptions{}); err != nil {
 		return err
 	}
 
-	output.Printf("Started Confluent Local container %v.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp.ID))
+	output.ErrPrintf("Started Confluent Local container %v.\n", getShortenedContainerId(createResp.ID))
 
 	table := output.NewTable(cmd)
 	table.Add(c.Config.LocalPorts)
-	return table.Print()
+	if err := table.Print(); err != nil {
+		return err
+	}
+
+	output.ErrPrintln("To continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.")
+
+	return nil
 }
 
 func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) error {
