@@ -26,3 +26,8 @@ func (c *Client) GetNetwork(envId, id string) (networkingv1.NetworkingV1Network,
 	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.GetNetworkingV1Network(c.networkingApiContext(), id).Environment(envId).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) DeleteNetwork(envId, id string) error {
+	httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.DeleteNetworkingV1Network(c.networkingApiContext(), id).Environment(envId).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}

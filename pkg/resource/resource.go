@@ -24,6 +24,7 @@ const (
 	KafkaCluster          = "Kafka cluster"
 	KsqlCluster           = "KSQL cluster"
 	MirrorTopic           = "mirror topic"
+	Network               = "network"
 	Organization          = "organization"
 	ProviderShare         = "provider share"
 	Pipeline              = "pipeline"

@@ -12,3 +12,16 @@ func (s *CLITestSuite) TestNetworkDescribe() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkDelete() {
+	tests := []CLITest{
+		{args: "network delete n-abcde1 --force", fixture: "network/delete.golden"},
+		{args: "network delete n-abcde1", input: "y\n", fixture: "network/delete-prompt.golden"},
+		{args: "network delete n-dependency --force", fixture: "network/delete-network-with-dependency.golden", exitCode: 1},
+		{args: "network delete n-invalid --force", fixture: "network/delete-network-not-exist.golden", exitCode: 1},
+	}
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

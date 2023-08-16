@@ -4,6 +4,7 @@ Usage:
   confluent network [command]
 
 Available Commands:
+  delete      Delete a network.
   describe    Desribe a network.
 
 Global Flags:
