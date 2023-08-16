@@ -21,9 +21,10 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
+	configWhitelist := getConfigWhitelist(c.cfg)
 	list := output.NewList(cmd)
-	for field := range c.configWhiteList {
-		list.Add(c.newConfigurationOut(field))
+	for field := range configWhitelist {
+		list.Add(c.newConfigurationOut(field, configWhitelist))
 	}
 	return list.Print()
 }

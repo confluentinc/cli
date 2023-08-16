@@ -16,7 +16,7 @@ func TestGetConfigWhitelist(t *testing.T) {
 		panic(err)
 	}
 
-	expected := map[string]*configInfo{
+	expected := map[string]*configFieldInfo{
 		"disable_feature_flags": {name: "DisableFeatureFlags", kind: reflect.Bool},
 		"disable_plugins":       {name: "DisablePlugins", kind: reflect.Bool},
 		"disable_updates":       {name: "DisableUpdates", kind: reflect.Bool},
@@ -24,8 +24,8 @@ func TestGetConfigWhitelist(t *testing.T) {
 		"no_browser":            {name: "NoBrowser", kind: reflect.Bool},
 	}
 	if runtime.GOOS == "windows" {
-		expected["disable_plugins_once"] = &configInfo{name: "DisablePluginsOnce", kind: reflect.Bool}
+		expected["disable_plugins_once"] = &configFieldInfo{name: "DisablePluginsOnce", kind: reflect.Bool}
 	}
 
-	require.Equal(t, expected, getConfigWhiteList(cfg))
+	require.Equal(t, expected, getConfigWhitelist(cfg))
 }

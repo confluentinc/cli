@@ -16,19 +16,18 @@ import (
 
 const fieldNotConfigurableError = `configuration field "%s" either does not exist or is not configurable`
 
-type configInfo struct {
+type command struct {
+	*pcmd.CLICommand
+	cfg *config.Config
+}
+
+type configFieldInfo struct {
 	kind     reflect.Kind
 	name     string
 	readOnly bool
 }
 
-type command struct {
-	*pcmd.CLICommand
-	cfg             *config.Config
-	configWhiteList map[string]*configInfo
-}
-
-type configurationOut struct {
+type configFieldOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
 	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
@@ -41,11 +40,9 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short:   "Configure the Confluent CLI.",
 	}
 
-	configWhitelist := getConfigWhiteList(cfg)
 	c := &command{
-		CLICommand:      pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		cfg:             cfg,
-		configWhiteList: configWhitelist,
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:        cfg,
 	}
 
 	cmd.AddCommand(c.newDescribeCommand())
@@ -55,18 +52,18 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func getConfigWhiteList(cfg *config.Config) map[string]*configInfo {
-	whitelist := make(map[string]*configInfo)
+func getConfigWhitelist(cfg *config.Config) map[string]*configFieldInfo {
+	whitelist := make(map[string]*configFieldInfo)
 	t := reflect.TypeOf(*cfg)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		// currently only boolean fields are part of this whitelist, but this may change in the future
 		if kind := field.Type.Kind(); kind == reflect.Bool {
 			if jsonFieldName := getJsonFieldName(field); jsonFieldName != "" {
-				whitelist[jsonFieldName] = &configInfo{
+				whitelist[jsonFieldName] = &configFieldInfo{
 					kind:     kind,
 					name:     field.Name,
-					readOnly: isReadOnly(jsonFieldName, cfg.IsTest),
+					readOnly: isReadOnly(jsonFieldName),
 				}
 			}
 		}
@@ -89,19 +86,16 @@ func getJsonFieldName(field reflect.StructField) string {
 	return jsonTag
 }
 
-func isReadOnly(jsonField string, isTest bool) bool {
-	if jsonField == "disable_updates" && !isTest && update.IsHomebrew() {
-		return true
-	}
-	return false
+func isReadOnly(jsonField string) bool {
+	return jsonField == "disable_updates" && update.IsHomebrew()
 }
 
-func (c *command) newConfigurationOut(field string) *configurationOut {
-	value := reflect.ValueOf(c.cfg).Elem().FieldByName(c.configWhiteList[field].name)
-	return &configurationOut{
+func (c *command) newConfigurationOut(field string, configWhitelist map[string]*configFieldInfo) *configFieldOut {
+	value := reflect.ValueOf(c.cfg).Elem().FieldByName(configWhitelist[field].name)
+	return &configFieldOut{
 		Name:     field,
 		Value:    fmt.Sprintf("%v", value),
-		ReadOnly: c.configWhiteList[field].readOnly,
+		ReadOnly: configWhitelist[field].readOnly,
 	}
 }
 
@@ -114,5 +108,5 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return types.GetSortedKeys(c.configWhiteList)
+	return types.GetSortedKeys(getConfigWhitelist(c.cfg))
 }
