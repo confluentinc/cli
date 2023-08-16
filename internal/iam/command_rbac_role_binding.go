@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/pflag"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 var (
@@ -25,21 +26,15 @@ var (
 	// ccloud has Email as additional field
 	ccloudResourcePatternListFields = []string{"Principal", "Email", "Role", "Environment", "CloudCluster", "ClusterType", "LogicalCluster", "ResourceType", "Name", "PatternType"}
 
-	clusterScopedRoles = map[string]bool{
-		"SystemAdmin":   true,
-		"ClusterAdmin":  true,
-		"SecurityAdmin": true,
-		"UserAdmin":     true,
-		"Operator":      true,
-	}
-
-	clusterScopedRolesV2 = map[string]bool{
-		"CloudClusterAdmin": true,
-	}
-
-	environmentScopedRoles = map[string]bool{
-		"EnvironmentAdmin": true,
-	}
+	clusterScopedRoles = types.NewSet(
+		"ClusterAdmin",
+		"Operator",
+		"SecurityAdmin",
+		"SystemAdmin",
+		"UserAdmin",
+	)
+	clusterScopedRolesV2   = types.NewSet("CloudClusterAdmin")
+	environmentScopedRoles = types.NewSet("EnvironmentAdmin")
 
 	literalPatternType  = "LITERAL"
 	prefixedPatternType = "PREFIXED"
@@ -50,8 +45,8 @@ type roleBindingOptions struct {
 	resource         string
 	prefix           bool
 	principal        string
-	mdsScope         mds.MdsScope
-	resourcesRequest mds.ResourcesRequest
+	mdsScope         mdsv1.MdsScope
+	resourcesRequest mdsv1.ResourcesRequest
 }
 
 type roleBindingCommand struct {
@@ -125,7 +120,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		return nil, err
 	}
 
-	var resourcesRequest mds.ResourcesRequest
+	var resourcesRequest mdsv1.ResourcesRequest
 	if resource != "" {
 		parsedResourcePattern, err := parseAndValidateResourcePattern(resource, prefix)
 		if err != nil {
@@ -145,9 +140,9 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 			}
 		}
 
-		resourcesRequest = mds.ResourcesRequest{
+		resourcesRequest = mdsv1.ResourcesRequest{
 			Scope:            *scope,
-			ResourcePatterns: []mds.ResourcePattern{parsedResourcePattern},
+			ResourcePatterns: []mdsv1.ResourcePattern{parsedResourcePattern},
 		}
 	}
 	return &roleBindingOptions{
@@ -190,8 +185,8 @@ func (c *roleBindingCommand) validatePrincipalFormat(principal string) error {
 	return nil
 }
 
-func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.MdsScope, error) {
-	scope := &mds.MdsScopeClusters{}
+func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.MdsScope, error) {
+	scope := &mdsv1.MdsScopeClusters{}
 	nonKafkaScopesSet := 0
 
 	clusterName, err := cmd.Flags().GetString("cluster-name")
@@ -232,10 +227,10 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 			return nil, errors.New(errors.MoreThanOneNonKafkaErrorMsg)
 		}
 
-		return &mds.MdsScope{Clusters: *scope}, nil
+		return &mdsv1.MdsScope{Clusters: *scope}, nil
 	}
 
-	return &mds.MdsScope{ClusterName: clusterName}, nil
+	return &mdsv1.MdsScope{ClusterName: clusterName}, nil
 }
 
 func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
@@ -271,8 +266,8 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 	return nil
 }
 
-func parseAndValidateResourcePattern(resource string, prefix bool) (mds.ResourcePattern, error) {
-	var result mds.ResourcePattern
+func parseAndValidateResourcePattern(resource string, prefix bool) (mdsv1.ResourcePattern, error) {
+	var result mdsv1.ResourcePattern
 	if prefix {
 		result.PatternType = "PREFIXED"
 	} else {
@@ -441,7 +436,7 @@ func (c *roleBindingCommand) createContext() context.Context {
 	if c.cfg.IsCloudLogin() {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.Context.GetAuthToken())
 	} else {
-		return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
+		return context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 	}
 }
 
@@ -570,10 +565,10 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		if err != nil {
 			return "", err
 		}
-		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
+		if clusterScopedRolesV2.Contains(role) && !cmd.Flags().Changed("cloud-cluster") {
 			return "", errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
-		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
+		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 			return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
 		}
 	}

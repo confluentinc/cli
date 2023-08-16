@@ -6,7 +6,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
@@ -27,7 +27,7 @@ func (c *routeCommand) newLookupCommand() *cobra.Command {
 
 func (c *routeCommand) lookup(cmd *cobra.Command, args []string) error {
 	resource := args[0]
-	opts := &mds.ResolveResourceRouteOpts{Crn: optional.NewString(resource)}
+	opts := &mdsv1.ResolveResourceRouteOpts{Crn: optional.NewString(resource)}
 	result, response, err := c.MDSClient.AuditLogConfigurationApi.ResolveResourceRoute(c.createContext(), opts)
 	if err != nil {
 		return HandleMdsAuditLogApiError(cmd, err, response)

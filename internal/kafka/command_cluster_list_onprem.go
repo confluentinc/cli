@@ -6,7 +6,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -30,7 +30,7 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *clusterCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
-	clustertype := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(kafkaClusterTypeName)}
+	clustertype := &mdsv1.ClusterRegistryListOpts{ClusterType: optional.NewString(kafkaClusterTypeName)}
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), clustertype)
 	if err != nil {
@@ -41,5 +41,5 @@ func (c *clusterCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *clusterCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
+	return context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 }

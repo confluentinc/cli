@@ -2,7 +2,7 @@
 package auth
 
 import (
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/utils"
@@ -10,13 +10,13 @@ import (
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient
 type MDSClientManager interface {
-	GetMDSClient(url, caCertPath string, unsafeTrace bool) (*mds.APIClient, error)
+	GetMDSClient(url, caCertPath string, unsafeTrace bool) (*mdsv1.APIClient, error)
 }
 
 type MDSClientManagerImpl struct{}
 
-func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath string, unsafeTrace bool) (*mds.APIClient, error) {
-	mdsConfig := mds.NewConfiguration()
+func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath string, unsafeTrace bool) (*mdsv1.APIClient, error) {
+	mdsConfig := mdsv1.NewConfiguration()
 	mdsConfig.Debug = unsafeTrace
 
 	if caCertPath != "" {
@@ -30,7 +30,7 @@ func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath string, unsafeTrace 
 	} else {
 		mdsConfig.HTTPClient = utils.DefaultClient()
 	}
-	mdsClient := mds.NewAPIClient(mdsConfig)
+	mdsClient := mdsv1.NewAPIClient(mdsConfig)
 	mdsClient.ChangeBasePath(url)
 	return mdsClient, nil
 }
