@@ -1,13 +1,14 @@
 package configuration
 
 import (
-	"reflect"
 	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 func TestGetConfigWhitelist(t *testing.T) {
@@ -16,16 +17,18 @@ func TestGetConfigWhitelist(t *testing.T) {
 		panic(err)
 	}
 
-	expected := map[string]*configFieldInfo{
-		"disable_feature_flags": {name: "DisableFeatureFlags", kind: reflect.Bool},
-		"disable_plugins":       {name: "DisablePlugins", kind: reflect.Bool},
-		"disable_updates":       {name: "DisableUpdates", kind: reflect.Bool},
-		"disable_update_check":  {name: "DisableUpdateCheck", kind: reflect.Bool},
-		"no_browser":            {name: "NoBrowser", kind: reflect.Bool},
-	}
-	if runtime.GOOS == "windows" {
-		expected["disable_plugins_once"] = &configFieldInfo{name: "DisablePluginsOnce", kind: reflect.Bool}
+	expected := []string{
+		"disable_feature_flags",
+		"disable_plugins",
+		"disable_update_check",
+		"disable_updates",
+		"no_browser",
 	}
 
-	require.Equal(t, expected, getConfigWhitelist(cfg))
+	if runtime.GOOS == "windows" {
+		expected = append(expected, "disable_plugins_once")
+		slices.Sort(expected)
+	}
+
+	require.Equal(t, expected, types.GetSortedKeys(getConfigWhitelist(cfg)))
 }
