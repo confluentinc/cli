@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
@@ -21,12 +20,6 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		// TODO: Implement autocompletion after List Network is implemented.
 		// ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE: c.delete,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Delete Confluent network "n-abcde1".`,
-				Code: `confluent network delete n-abcde1`,
-			},
-		),
 	}
 
 	pcmd.AddForceFlag(cmd)
@@ -43,7 +36,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Network, id)
+	network, err := c.V2Client.GetNetwork(environmentId, id)
+	if err != nil {
+		return err
+	}
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Network, network.GetId())
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}

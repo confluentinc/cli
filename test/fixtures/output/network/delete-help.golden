@@ -3,11 +3,6 @@ Delete a network.
 Usage:
   confluent network delete <id> [flags]
 
-Examples:
-Delete Confluent network "n-abcde1".
-
-  $ confluent network delete n-abcde1
-
 Flags:
       --force                Skip the deletion confirmation prompt.
       --context string       CLI context name.
