@@ -32,7 +32,6 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(cmd, prerunner)
 
 	c.AddCommand(c.newKafkaCommand())
-	c.AddCommand(c.newBrokerCommand())
 
 	c.AddCommand(NewCurrentCommand(prerunner))
 	c.AddCommand(NewDestroyCommand(prerunner))

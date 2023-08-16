@@ -44,7 +44,7 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
-	brokerId, all, err := broker.CheckAllOrBrokerIdSpecified(cmd, args)
+	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args)
 	if err != nil {
 		return err
 	}

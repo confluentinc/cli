@@ -21,9 +21,10 @@ const (
 func (c *Command) newKafkaCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kafka",
-		Short: "Manage a single-node or two-node instance of Apache Kafka.",
+		Short: "Manage a local instance of Apache Kafka.",
 	}
 
+	cmd.AddCommand(c.newKafkaBrokerCommand())
 	cmd.AddCommand(c.newKafkaStartCommand())
 	cmd.AddCommand(c.newKafkaStopCommand())
 	cmd.AddCommand(c.newKafkaTopicCommand())

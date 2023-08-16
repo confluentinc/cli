@@ -28,7 +28,7 @@ type BrokerOut struct {
 	Port      int32  `human:"Port" serialized:"port"`
 }
 
-func CheckAllOrBrokerIdSpecified(cmd *cobra.Command, args []string) (int32, bool, error) {
+func CheckAllOrIdSpecified(cmd *cobra.Command, args []string) (int32, bool, error) {
 	if cmd.Flags().Changed("all") && len(args) > 0 {
 		return -1, false, errors.New(errors.OnlySpecifyAllOrBrokerIDErrorMsg)
 	}

@@ -21,30 +21,30 @@ type KafkaClusterTestSuite struct {
 	cmkClusterApi   *cmkmock.ClustersCmkV2Api
 }
 
-func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
+func (suite *KafkaClusterTestSuite) TestBroker_CheckAllOrIdSpecified() {
 	req := suite.Require()
 	// only --all
 	cmd := newCmdWithAllFlag()
 	_ = cmd.ParseFlags([]string{"--all"})
-	id, all, err := CheckAllOrBrokerIdSpecified(cmd, []string{})
+	id, all, err := CheckAllOrIdSpecified(cmd, []string{})
 	req.NoError(err)
 	req.True(all)
 	req.Equal(int32(-1), id)
 	// only broker id arg
 	cmd = newCmdWithAllFlag()
-	id, all, err = CheckAllOrBrokerIdSpecified(cmd, []string{"1"})
+	id, all, err = CheckAllOrIdSpecified(cmd, []string{"1"})
 	req.NoError(err)
 	req.False(all)
 	req.Equal(int32(1), id)
 	// --all and broker id arg
 	cmd = newCmdWithAllFlag()
 	_ = cmd.ParseFlags([]string{"--all"})
-	_, _, err = CheckAllOrBrokerIdSpecified(cmd, []string{"1"})
+	_, _, err = CheckAllOrIdSpecified(cmd, []string{"1"})
 	req.Error(err)
 	req.Equal(errors.OnlySpecifyAllOrBrokerIDErrorMsg, err.Error())
 	// neither
 	cmd = newCmdWithAllFlag()
-	_, _, err = CheckAllOrBrokerIdSpecified(cmd, []string{})
+	_, _, err = CheckAllOrIdSpecified(cmd, []string{})
 	req.Error(err)
 	req.Equal(errors.MustSpecifyAllOrBrokerIDErrorMsg, err.Error())
 }

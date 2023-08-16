@@ -13,13 +13,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func (c *Command) newBrokerDescribeCommand() *cobra.Command {
+func (c *Command) newKafkaBrokerDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
-		Short: "Describe a Confluent local broker.",
+		Short: "Describe a local Kafka broker.",
 		Long:  "Describe cluster-wide or per-broker configuration values.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.describe,
+		RunE:  c.kafkaDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the "min.insync.replicas" configuration for broker 1.`,
@@ -39,8 +39,8 @@ func (c *Command) newBrokerDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) describe(cmd *cobra.Command, args []string) error {
-	brokerId, all, err := broker.CheckAllOrBrokerIdSpecified(cmd, args)
+func (c *Command) kafkaDescribe(cmd *cobra.Command, args []string) error {
+	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args)
 	if err != nil {
 		return err
 	}

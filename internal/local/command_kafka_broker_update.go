@@ -16,13 +16,13 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
-func (c *Command) newBrokerUpdateCommand() *cobra.Command {
+func (c *Command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
-		Short: "Update a Confluent local broker configurations.",
+		Short: "Update a local Kafka broker configurations.",
 		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.update,
+		RunE:  c.kafkaUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
@@ -44,8 +44,8 @@ func (c *Command) newBrokerUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) update(cmd *cobra.Command, args []string) error {
-	brokerId, all, err := broker.CheckAllOrBrokerIdSpecified(cmd, args)
+func (c *Command) kafkaUpdate(cmd *cobra.Command, args []string) error {
+	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args)
 	if err != nil {
 		return err
 	}

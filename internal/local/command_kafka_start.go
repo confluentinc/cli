@@ -146,7 +146,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	config1 := &container.Config{
 		Image:    dockerImageName,
-		Hostname: "broker1",
+		Hostname: "confluent-local-broker-1",
 		Cmd:      containerStartCmd,
 		ExposedPorts: nat.PortSet{
 			natKafkaRestPorts[0]: struct{}{},
@@ -174,7 +174,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	config2 := &container.Config{
 		Image:    dockerImageName,
-		Hostname: "broker2",
+		Hostname: "confluent-local-broker-2",
 		Cmd:      containerStartCmd,
 		ExposedPorts: nat.PortSet{
 			natKafkaRestPorts[1]: struct{}{},
@@ -200,13 +200,12 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	createResp1, err := dockerClient.ContainerCreate(context.Background(), config1, hostConfig1, nil, platform, "broker1")
+	createResp1, err := dockerClient.ContainerCreate(context.Background(), config1, hostConfig1, nil, platform, "confluent-local-broker-1")
 	if err != nil {
 		return err
 	}
-	log.CliLogger.Tracef("Create confluent-local container for broker 1 success")
-	err = dockerClient.ContainerStart(context.Background(), createResp1.ID, types.ContainerStartOptions{})
-	if err != nil {
+	log.CliLogger.Trace("Successfully created a Confluent Local container for broker 1")
+	if err := dockerClient.ContainerStart(context.Background(), createResp1.ID, types.ContainerStartOptions{}); err != nil {
 		return err
 	}
 
@@ -215,25 +214,33 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if multiBroker {
-		createResp2, err := dockerClient.ContainerCreate(context.Background(), config2, hostConfig2, nil, platform, "broker2")
+		createResp2, err := dockerClient.ContainerCreate(context.Background(), config2, hostConfig2, nil, platform, "confluent-local-broker-2")
 		if err != nil {
 			return err
 		}
-		log.CliLogger.Tracef("Create confluent-local container for broker 2 success")
-		err = dockerClient.ContainerStart(context.Background(), createResp2.ID, types.ContainerStartOptions{})
-		if err != nil {
+		log.CliLogger.Trace("Successfully created a Confluent Local container for broker 2")
+		if err := dockerClient.ContainerStart(context.Background(), createResp2.ID, types.ContainerStartOptions{}); err != nil {
 			return err
 		}
 
-		output.Printf("Started Confluent Local containers %v, %v.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp1.ID), getShortenedContainerId(createResp2.ID))
+		table := output.NewTable(cmd)
+		table.Add(c.Config.LocalPorts)
+		err = table.Print()
+		if err != nil {
+			return err
+		}
+		output.Printf("Started Confluent Local containers %s, %s.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp1.ID), getShortenedContainerId(createResp2.ID))
 	} else {
-		output.Printf("Started Confluent Local containers %v.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp1.ID))
-
+		table := output.NewTable(cmd)
+		table.Add(c.Config.LocalPorts)
+		err = table.Print()
+		if err != nil {
+			return err
+		}
+		output.Printf("Started Confluent Local containers %s.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp1.ID))
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(c.Config.LocalPorts)
-	return table.Print()
+	return nil
 }
 
 func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) error {
@@ -290,32 +297,32 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) erro
 }
 
 func (c *Command) validateCustomizedPorts() error {
-	for idx := 0; idx < len(c.Config.LocalPorts.KafkaRestPorts); idx++ {
+	for idx, port := range c.Config.LocalPorts.KafkaRestPorts {
 		brokerId := idx + 1
-		kafkaRestLn, err := net.Listen("tcp", ":"+c.Config.LocalPorts.KafkaRestPorts[idx])
+		kafkaRestLn, err := net.Listen("tcp", ":"+port)
 		if err != nil {
 			freePort, err := freeport.GetFreePort()
 			if err != nil {
 				return err
 			}
-			invalidKafkaRestPort := c.Config.LocalPorts.KafkaRestPorts[idx]
 			c.Config.LocalPorts.KafkaRestPorts[idx] = strconv.Itoa(freePort)
-			log.CliLogger.Warnf("Kafka REST port %s is not available, using port %d for broker %d instead.", invalidKafkaRestPort, freePort, brokerId)
+			log.CliLogger.Warnf("Kafka REST port %s is not available, using port %d for broker %d instead.", port, freePort, brokerId)
 		} else {
 			if err := kafkaRestLn.Close(); err != nil {
 				return err
 			}
 		}
-
-		plaintextLn, err := net.Listen("tcp", ":"+c.Config.LocalPorts.PlaintextPorts[idx])
+	}
+	for idx, port := range c.Config.LocalPorts.PlaintextPorts {
+		brokerId := idx + 1
+		plaintextLn, err := net.Listen("tcp", ":"+port)
 		if err != nil {
 			freePort, err := freeport.GetFreePort()
 			if err != nil {
 				return err
 			}
-			invalidPlaintextPort := c.Config.LocalPorts.PlaintextPorts[idx]
 			c.Config.LocalPorts.PlaintextPorts[idx] = strconv.Itoa(freePort)
-			log.CliLogger.Warnf("Plaintext port %s is not available, using port %d for broker %d instead.", invalidPlaintextPort, freePort, brokerId)
+			log.CliLogger.Warnf("Plaintext port %s is not available, using port %d for broker %d instead.", port, freePort, brokerId)
 		} else {
 			if err := plaintextLn.Close(); err != nil {
 				return err
@@ -338,7 +345,7 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int) []strin
 		"KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1",
 		"KAFKA_PROCESS_ROLES=broker,controller",
 		fmt.Sprintf("KAFKA_NODE_ID=%d", brokerId),
-		fmt.Sprintf("KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker1:%s,2@broker2:%s", ports.ControllerPorts[0], ports.ControllerPorts[1]),
+		fmt.Sprintf("KAFKA_CONTROLLER_QUORUM_VOTERS=1@confluent-local-broker-1:%s,2@confluent-local-broker-2:%s", ports.ControllerPorts[0], ports.ControllerPorts[1]),
 		fmt.Sprintf("KAFKA_LISTENERS=PLAINTEXT://broker%d:%s,CONTROLLER://broker%d:%s,PLAINTEXT_HOST://0.0.0.0:%s", brokerId, ports.BrokerPorts[idx], brokerId, ports.ControllerPorts[idx], ports.PlaintextPorts[idx]),
 		"KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT",
 		"KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER",
@@ -347,7 +354,7 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int) []strin
 	}
 	if idx == 0 { // configure krest proxy only for the first broker.
 		a = append(a, fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPorts[0]))
-		a = append(a, fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=broker1:%s,broker2:%s", ports.BrokerPorts[0], ports.BrokerPorts[1]))
+		a = append(a, fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=confluent-local-broker-1:%s,confluent-local-broker-2:%s", ports.BrokerPorts[0], ports.BrokerPorts[1]))
 	}
 	fmt.Println("a", a)
 	return a
