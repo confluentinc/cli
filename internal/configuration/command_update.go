@@ -61,7 +61,7 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 
 func (c *command) convertValue(field, value string) (any, error) {
 	fieldInfo, ok := c.configWhiteList[field]
-	if !ok {
+	if !ok || fieldInfo.readOnly {
 		return nil, fmt.Errorf(fieldNotConfigurableError, field)
 	}
 	switch fieldInfo.kind {

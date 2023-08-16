@@ -1,4 +1,5 @@
-+-------+-----------------+
-| Name  | disable_plugins |
-| Value | true            |
-+-------+-----------------+
++-----------+-----------------+
+| Name      | disable_plugins |
+| Value     | true            |
+| Read-Only | false           |
++-----------+-----------------+

@@ -1,8 +1,8 @@
-          Name          | Value
-------------------------+--------
-  disable_feature_flags | false
-  disable_plugins       | true
-  disable_plugins_once  | true
-  disable_update_check  | false
-  disable_updates       | false
-  no_browser            | false
+          Name          | Value | Read-Only
+------------------------+-------+------------
+  disable_feature_flags | false | false
+  disable_plugins       | true  | false
+  disable_plugins_once  | false | false
+  disable_update_check  | false | false
+  disable_updates       | false | false
+  no_browser            | false | false

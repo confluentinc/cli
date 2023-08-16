@@ -17,8 +17,9 @@ import (
 const fieldNotConfigurableError = `configuration field "%s" either does not exist or is not configurable`
 
 type configInfo struct {
-	kind reflect.Kind
-	name string
+	kind     reflect.Kind
+	name     string
+	readOnly bool
 }
 
 type command struct {
@@ -28,8 +29,9 @@ type command struct {
 }
 
 type configurationOut struct {
-	Name  string `human:"Name" serialized:"name"`
-	Value string `human:"Value" serialized:"value"`
+	Name     string `human:"Name" serialized:"name"`
+	Value    string `human:"Value" serialized:"value"`
+	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -60,10 +62,11 @@ func getConfigWhiteList(cfg *config.Config) map[string]*configInfo {
 		field := t.Field(i)
 		// currently only boolean fields are part of this whitelist, but this may change in the future
 		if kind := field.Type.Kind(); kind == reflect.Bool {
-			if jsonFieldName := getJsonFieldName(field, cfg.IsTest); jsonFieldName != "" {
+			if jsonFieldName := getJsonFieldName(field); jsonFieldName != "" {
 				whitelist[jsonFieldName] = &configInfo{
-					kind: kind,
-					name: field.Name,
+					kind:     kind,
+					name:     field.Name,
+					readOnly: isReadOnly(jsonFieldName, cfg.IsTest),
 				}
 			}
 		}
@@ -71,7 +74,7 @@ func getConfigWhiteList(cfg *config.Config) map[string]*configInfo {
 	return whitelist
 }
 
-func getJsonFieldName(field reflect.StructField, isTest bool) string {
+func getJsonFieldName(field reflect.StructField) string {
 	jsonTag := field.Tag.Get("json")
 	if jsonTag == "-" {
 		return ""
@@ -79,20 +82,26 @@ func getJsonFieldName(field reflect.StructField, isTest bool) string {
 	if strings.Contains(jsonTag, ",") {
 		jsonTag, _, _ = strings.Cut(jsonTag, ",")
 	}
+	// Want to hide this from linux and mac until the name specifies this field only affects Windows to avoid confusion
 	if jsonTag == "disable_plugins_once" && runtime.GOOS != "windows" {
-		return ""
-	}
-	if jsonTag == "disable_updates" && !isTest && update.IsHomebrew() {
 		return ""
 	}
 	return jsonTag
 }
 
+func isReadOnly(jsonField string, isTest bool) bool {
+	if jsonField == "disable_updates" && !isTest && update.IsHomebrew() {
+		return true
+	}
+	return false
+}
+
 func (c *command) newConfigurationOut(field string) *configurationOut {
 	value := reflect.ValueOf(c.cfg).Elem().FieldByName(c.configWhiteList[field].name)
 	return &configurationOut{
-		Name:  field,
-		Value: fmt.Sprintf("%v", value),
+		Name:     field,
+		Value:    fmt.Sprintf("%v", value),
+		ReadOnly: c.configWhiteList[field].readOnly,
 	}
 }
 
