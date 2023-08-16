@@ -492,8 +492,8 @@ func (s *CLITestSuite) TestKafkaQuota() {
 
 func (s *CLITestSuite) TestKafkaConsumer() {
 	tests := []CLITest{
-		{args: "kafka consumer list --consumer-group consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/list.golden"},
-		{args: "kafka consumer list --consumer-group consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/list-json.golden"},
+		{args: "kafka consumer list --group consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/list.golden"},
+		{args: "kafka consumer list --group consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/list-json.golden"},
 	}
 
 	for _, test := range tests {
@@ -504,7 +504,7 @@ func (s *CLITestSuite) TestKafkaConsumer() {
 	test := CLITest{
 		login:   "onprem",
 		env:     []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()},
-		args:    "kafka consumer list --consumer-group consumer-group-1",
+		args:    "kafka consumer list --group consumer-group-1",
 		fixture: "kafka/consumer/list-onprem.golden",
 	}
 
@@ -541,7 +541,7 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
-		{args: `__complete kafka consumer list --cluster lkc-1234 --consumer-group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
+		{args: `__complete kafka consumer list --cluster lkc-1234 --group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
 		{args: `__complete kafka consumer-group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer-group/autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},

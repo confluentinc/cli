@@ -17,18 +17,18 @@ func (c *consumerCommand) newListCommandOnPrem() *cobra.Command {
 		RunE:  c.listOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List all consumers for consumer-group "my-consumer-group".`,
-				Code: "confluent kafka consumer list --consumer-group my-consumer-group",
+				Text: `List all consumers for consumer group "my-consumer-group".`,
+				Code: "confluent kafka consumer list --group my-consumer-group",
 			},
 		),
 	}
 
-	cmd.Flags().String("consumer-group", "", "Consumer group ID.")
+	cmd.Flags().String("group", "", "Consumer group ID.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("consumer-group"))
+	cobra.CheckErr(cmd.MarkFlagRequired("group"))
 
 	return cmd
 }
@@ -44,7 +44,7 @@ func (c *consumerCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerGroup, err := cmd.Flags().GetString("consumer-group")
+	consumerGroup, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
 	}

@@ -16,8 +16,8 @@ func (c *consumerCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List all consumers for consumer-group "my-consumer-group".`,
-				Code: "confluent kafka consumer list --consumer-group my-consumer-group",
+				Text: `List all consumers for consumer group "my-consumer-group".`,
+				Code: "confluent kafka consumer list --group my-consumer-group",
 			},
 		),
 	}
@@ -28,7 +28,7 @@ func (c *consumerCommand) newListCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("consumer-group"))
+	cobra.CheckErr(cmd.MarkFlagRequired("group"))
 
 	return cmd
 }
@@ -39,7 +39,7 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerGroup, err := cmd.Flags().GetString("consumer-group")
+	consumerGroup, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
 	}
