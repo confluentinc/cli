@@ -7,11 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
-type consumerGroupCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
-func newConsumerGroupCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newConsumerGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "consumer-group",
 		Aliases:     []string{"cg"},

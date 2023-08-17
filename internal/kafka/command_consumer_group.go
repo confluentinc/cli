@@ -18,8 +18,8 @@ type consumerGroupOut struct {
 
 func (c *consumerCommand) newGroupCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "group",
-		Short:       "Manage Kafka consumer groups.",
+		Use:   "group",
+		Short: "Manage Kafka consumer groups.",
 	}
 
 	if cfg.IsCloudLogin() {
