@@ -31,6 +31,7 @@ func (c *consumerCommand) newLagCommand(cfg *config.Config) *cobra.Command {
 		cmd.AddCommand(c.newLagSummarizeCommand())
 	} else {
 		cmd.AddCommand(c.newLagGetCommandOnPrem())
+		cmd.AddCommand(c.newLagListCommandOnPrem())
 	}
 
 	return cmd
