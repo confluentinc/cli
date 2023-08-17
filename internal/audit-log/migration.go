@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -14,7 +15,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/types"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mdsv1.AuditLogConfigSpec, []string, error) {
@@ -176,7 +176,7 @@ func warnNewBootstrapServers(specs map[string]*mdsv1.AuditLogConfigSpec, bootstr
 	for clusterId, spec := range specs {
 		oldBootStrapServers := spec.Destinations.BootstrapServers
 		sort.Strings(oldBootStrapServers)
-		if !utils.TestEq(oldBootStrapServers, bootstrapServers) {
+		if !slices.Equal(oldBootStrapServers, bootstrapServers) {
 			newWarning := fmt.Sprintf(errors.NewBootstrapWarning, clusterId, oldBootStrapServers, bootstrapServers)
 			warnings = append(warnings, newWarning)
 		}
@@ -208,7 +208,7 @@ func combineDestinationTopics(specs map[string]*mdsv1.AuditLogConfigSpec, newSpe
 		topics := spec.Destinations.Topics
 		for topicName, destination := range topics {
 			if _, ok := newTopics[topicName]; ok {
-				retentionTime := utils.Max(destination.RetentionMs, newTopics[topicName].RetentionMs)
+				retentionTime := max(destination.RetentionMs, newTopics[topicName].RetentionMs)
 				if destination.RetentionMs != newTopics[topicName].RetentionMs {
 					topicRetentionDiscrepancies[topicName] = retentionTime
 				}
@@ -259,7 +259,7 @@ func combineExcludedPrincipals(specs map[string]*mdsv1.AuditLogConfigSpec, newSp
 		}
 
 		for _, principal := range *excludedPrincipals {
-			if !types.Contains(newExcludedPrincipals, principal) {
+			if !slices.Contains(newExcludedPrincipals, principal) {
 				newExcludedPrincipals = append(newExcludedPrincipals, principal)
 			}
 		}
@@ -454,7 +454,7 @@ func warnNewExcludedPrincipals(specs map[string]*mdsv1.AuditLogConfigSpec, newSp
 		var differentPrincipals []string
 		newSpecPrincipals := *newSpec.ExcludedPrincipals
 		for _, principal := range newSpecPrincipals {
-			if !types.Contains(*excludedPrincipals, principal) {
+			if !slices.Contains(*excludedPrincipals, principal) {
 				differentPrincipals = append(differentPrincipals, principal)
 			}
 		}
