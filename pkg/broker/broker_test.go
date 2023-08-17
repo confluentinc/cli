@@ -1,43 +1,61 @@
-package kafka
+package broker
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 )
 
-func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
+type KafkaClusterTestSuite struct {
+	suite.Suite
+	conf            *config.Config
+	envMetadataMock *ccloudv1mock.EnvironmentMetadata
+	metricsApi      *metricsmock.Version2Api
+	cmkClusterApi   *cmkmock.ClustersCmkV2Api
+}
+
+func (suite *KafkaClusterTestSuite) TestBroker_CheckAllOrIdSpecified() {
 	req := suite.Require()
 	// only --all
 	cmd := newCmdWithAllFlag()
 	_ = cmd.ParseFlags([]string{"--all"})
-	id, all, err := checkAllOrBrokerIdSpecified(cmd, []string{})
+	id, all, err := CheckAllOrIdSpecified(cmd, []string{})
 	req.NoError(err)
 	req.True(all)
 	req.Equal(int32(-1), id)
 	// only broker id arg
 	cmd = newCmdWithAllFlag()
-	id, all, err = checkAllOrBrokerIdSpecified(cmd, []string{"1"})
+	id, all, err = CheckAllOrIdSpecified(cmd, []string{"1"})
 	req.NoError(err)
 	req.False(all)
 	req.Equal(int32(1), id)
 	// --all and broker id arg
 	cmd = newCmdWithAllFlag()
 	_ = cmd.ParseFlags([]string{"--all"})
-	_, _, err = checkAllOrBrokerIdSpecified(cmd, []string{"1"})
+	_, _, err = CheckAllOrIdSpecified(cmd, []string{"1"})
 	req.Error(err)
 	req.Equal(errors.OnlySpecifyAllOrBrokerIDErrorMsg, err.Error())
 	// neither
 	cmd = newCmdWithAllFlag()
-	_, _, err = checkAllOrBrokerIdSpecified(cmd, []string{})
+	_, _, err = CheckAllOrIdSpecified(cmd, []string{})
 	req.Error(err)
 	req.Equal(errors.MustSpecifyAllOrBrokerIDErrorMsg, err.Error())
 }
 
-var expectedConfigData = []configOut{
+func newCmdWithAllFlag() *cobra.Command {
+	cmd := &cobra.Command{}
+	cmd.Flags().Bool("all", false, "All brokers.")
+	return cmd
+}
+
+var expectedConfigData = []ConfigOut{
 	{
 		"testConfig",
 		"testValue",
@@ -75,42 +93,11 @@ func (suite *KafkaClusterTestSuite) TestBroker_parseClusterConfigData() {
 			},
 		},
 	}
-	data := parseClusterConfigData(clusterConfig)
+	data := ParseClusterConfigData(clusterConfig)
 	verifyConfigData(req, data, expectedConfigData)
 }
 
-func (suite *KafkaClusterTestSuite) TestBroker_parseBrokerConfigData() {
-	req := suite.Require()
-	value := "testValue"
-	brokerConfig := kafkarestv3.BrokerConfigDataList{
-		Data: []kafkarestv3.BrokerConfigData{
-			{
-				Name:        "testConfig",
-				Value:       &value,
-				IsReadOnly:  true,
-				IsSensitive: true,
-				IsDefault:   true,
-			},
-			{
-				Name:        "testConfig2",
-				Value:       nil,
-				IsReadOnly:  true,
-				IsSensitive: true,
-				IsDefault:   true,
-			},
-		},
-	}
-	data := parseBrokerConfigData(brokerConfig)
-	verifyConfigData(req, data, expectedConfigData)
-}
-
-func newCmdWithAllFlag() *cobra.Command {
-	cmd := &cobra.Command{}
-	cmd.Flags().Bool("all", false, "All brokers.")
-	return cmd
-}
-
-func verifyConfigData(req *require.Assertions, data []*configOut, expected []configOut) {
+func verifyConfigData(req *require.Assertions, data []*ConfigOut, expected []ConfigOut) {
 	req.Equal(len(data), len(expected))
 	for i, d := range data {
 		req.Equal(expected[i].Name, d.Name)

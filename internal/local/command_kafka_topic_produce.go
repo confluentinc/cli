@@ -46,7 +46,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	producer, err := newOnPremProducer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
+	producer, err := newOnPremProducer(cmd, ":"+c.Config.LocalPorts.PlaintextPorts[0]+",:"+c.Config.LocalPorts.PlaintextPorts[1])
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}

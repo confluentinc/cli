@@ -6,6 +6,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -73,7 +74,7 @@ func (c *linkCommand) configurationUpdateOnPrem(cmd *cobra.Command, args []strin
 	}
 
 	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
-		AlterConfigBatchRequestData: optional.NewInterface(toAlterConfigBatchRequestDataOnPrem(configMap)),
+		AlterConfigBatchRequestData: optional.NewInterface(broker.ToAlterConfigBatchRequestDataOnPrem(configMap)),
 	}
 
 	if httpResp, err := client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(ctx, clusterId, linkName, opts); err != nil {
