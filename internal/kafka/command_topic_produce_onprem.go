@@ -3,7 +3,6 @@ package kafka
 import (
 	"fmt"
 	"os"
-	"os/signal"
 
 	"github.com/spf13/cobra"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
@@ -29,11 +27,11 @@ func (c *command) newProduceCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Produce message to topic "my_topic" with SASL_SSL/PLAIN protocol (providing username and password).`,
-				Code: `confluent kafka topic produce my_topic --protocol SASL_SSL --sasl-mechanism PLAIN --bootstrap "localhost:19091" --username user --password secret --ca-location my-cert.crt`,
+				Code: `confluent kafka topic produce my_topic --protocol SASL_SSL --sasl-mechanism PLAIN --bootstrap localhost:19091 --username user --password secret --ca-location my-cert.crt`,
 			},
 			examples.Example{
 				Text: `Produce message to topic "my_topic" with SSL protocol, and SSL verification enabled.`,
-				Code: `confluent kafka topic produce my_topic --protocol SSL --bootstrap "localhost:18091" --ca-location my-cert.crt`,
+				Code: `confluent kafka topic produce my_topic --protocol SSL --bootstrap localhost:18091 --ca-location my-cert.crt`,
 			},
 		),
 	}
@@ -162,49 +160,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
-
-	var scanErr error
-	input, scan := PrepareInputChannel(&scanErr)
-
-	signals := make(chan os.Signal, 1) // Trap SIGINT to trigger a shutdown.
-	signal.Notify(signals, os.Interrupt)
-	go func() {
-		<-signals
-		close(input)
-	}()
-	go scan() // Prime reader
-
-	deliveryChan := make(chan ckafka.Event)
-	for data := range input {
-		if data == "" {
-			go scan()
-			continue
-		}
-
-		msg, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
-		if err != nil {
-			return err
-		}
-		if err := producer.Produce(msg, deliveryChan); err != nil {
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
-		}
-
-		e := <-deliveryChan                // read a ckafka event from the channel
-		m := e.(*ckafka.Message)           // extract the message from the event
-		if m.TopicPartition.Error != nil { // catch all other errors
-			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
-			if isProduceToCompactedTopicError {
-				scanErr = err
-				close(input)
-				break
-			}
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
-		}
-		go scan()
-	}
-	close(deliveryChan)
-	return scanErr
+	return ProduceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
 }
 
 func prepareSerializer(cmd *cobra.Command, topic, mode string) (string, string, serdes.SerializationProvider, error) {

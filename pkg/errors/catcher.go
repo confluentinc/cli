@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
@@ -76,7 +76,7 @@ func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
 
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
-	case mds.GenericOpenAPIError:
+	case mdsv1.GenericOpenAPIError:
 		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
 		if strings.Contains(err.Error(), "Forbidden Access") {

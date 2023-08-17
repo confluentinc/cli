@@ -117,7 +117,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	output.Println("\r")
-	log.CliLogger.Tracef("Pull confluent-local image success")
+	log.CliLogger.Tracef("Successfully pulled Confluent Local image")
 
 	numOfBrokers, err := cmd.Flags().GetInt32("brokers")
 	if err != nil {
@@ -130,10 +130,11 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
+
 	ports := c.Config.LocalPorts
 	platform := &specsv1.Platform{OS: "linux", Architecture: runtime.GOARCH}
-	natKafkaRestPorts := []nat.Port{nat.Port(ports.KafkaRestPorts[0] + "/tcp"), nat.Port(ports.KafkaRestPorts[1] + "/tcp")}
-	natPlaintextPorts := []nat.Port{nat.Port(ports.PlaintextPorts[0] + "/tcp"), nat.Port(ports.PlaintextPorts[1] + "/tcp")}
+	natKafkaRestPorts := getNatKafkaRestPorts(ports, numOfBrokers)
+	natPlaintextPorts := getNatPlaintextPorts(ports, numOfBrokers)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
 	// create a customized network
@@ -318,6 +319,22 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numOf
 	}
 	fmt.Println("a", a)
 	return a
+}
+
+func getNatKafkaRestPorts(ports *config.LocalPorts, numOfBrokers int32) []nat.Port {
+	res := []nat.Port{}
+	for i := 0; i < int(numOfBrokers); i++ {
+		res = append(res, nat.Port(ports.KafkaRestPorts[i]+"/tcp"))
+	}
+	return res
+}
+
+func getNatPlaintextPorts(ports *config.LocalPorts, numOfBrokers int32) []nat.Port {
+	res := []nat.Port{}
+	for i := 0; i < int(numOfBrokers); i++ {
+		res = append(res, nat.Port(ports.PlaintextPorts[i]+"/tcp"))
+	}
+	return res
 }
 
 func getKafkaControllerQuorumVoters(ports *config.LocalPorts, numOfBrokers int32) string {

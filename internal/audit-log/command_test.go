@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
 	climock "github.com/confluentinc/cli/v3/mock"
@@ -23,69 +23,69 @@ import (
 
 var (
 	timeNow = time.Now()
-	getSpec = mds.AuditLogConfigSpec{
-		Destinations: mds.AuditLogConfigDestinations{
+	getSpec = mdsv1.AuditLogConfigSpec{
+		Destinations: mdsv1.AuditLogConfigDestinations{
 			BootstrapServers: []string{"one:8090"},
-			Topics: map[string]mds.AuditLogConfigDestinationConfig{
+			Topics: map[string]mdsv1.AuditLogConfigDestinationConfig{
 				"confluent-audit-log-events": {
 					RetentionMs: 10 * 24 * 60 * 60 * 1000,
 				},
 			},
 		},
 		ExcludedPrincipals: &[]string{},
-		DefaultTopics: mds.AuditLogConfigDefaultTopics{
+		DefaultTopics: mdsv1.AuditLogConfigDefaultTopics{
 			Allowed: "confluent-audit-log-events",
 			Denied:  "confluent-audit-log-events",
 		},
-		Routes: &map[string]mds.AuditLogConfigRouteCategories{},
-		Metadata: &mds.AuditLogConfigMetadata{
+		Routes: &map[string]mdsv1.AuditLogConfigRouteCategories{},
+		Metadata: &mdsv1.AuditLogConfigMetadata{
 			ResourceVersion: "one",
 			UpdatedAt:       &timeNow,
 		},
 	}
-	putSpec = mds.AuditLogConfigSpec{
-		Destinations: mds.AuditLogConfigDestinations{
+	putSpec = mdsv1.AuditLogConfigSpec{
+		Destinations: mdsv1.AuditLogConfigDestinations{
 			BootstrapServers: []string{"two:8090"},
-			Topics: map[string]mds.AuditLogConfigDestinationConfig{
+			Topics: map[string]mdsv1.AuditLogConfigDestinationConfig{
 				"confluent-audit-log-events": {
 					RetentionMs: 20 * 24 * 60 * 60 * 1000,
 				},
 			},
 		},
 		ExcludedPrincipals: &[]string{},
-		DefaultTopics: mds.AuditLogConfigDefaultTopics{
+		DefaultTopics: mdsv1.AuditLogConfigDefaultTopics{
 			Allowed: "confluent-audit-log-events",
 			Denied:  "confluent-audit-log-events",
 		},
-		Routes: &map[string]mds.AuditLogConfigRouteCategories{},
-		Metadata: &mds.AuditLogConfigMetadata{
+		Routes: &map[string]mdsv1.AuditLogConfigRouteCategories{},
+		Metadata: &mdsv1.AuditLogConfigMetadata{
 			ResourceVersion: "one",
 			UpdatedAt:       &timeNow,
 		},
 	}
-	putResponseSpec = mds.AuditLogConfigSpec{
-		Destinations: mds.AuditLogConfigDestinations{
+	putResponseSpec = mdsv1.AuditLogConfigSpec{
+		Destinations: mdsv1.AuditLogConfigDestinations{
 			BootstrapServers: []string{"localhost:8090"},
-			Topics: map[string]mds.AuditLogConfigDestinationConfig{
+			Topics: map[string]mdsv1.AuditLogConfigDestinationConfig{
 				"confluent-audit-log-events": {
 					RetentionMs: 30 * 24 * 60 * 60 * 1000,
 				},
 			},
 		},
 		ExcludedPrincipals: &[]string{},
-		DefaultTopics: mds.AuditLogConfigDefaultTopics{
+		DefaultTopics: mdsv1.AuditLogConfigDefaultTopics{
 			Allowed: "confluent-audit-log-events",
 			Denied:  "confluent-audit-log-events",
 		},
-		Routes:   &map[string]mds.AuditLogConfigRouteCategories{},
-		Metadata: &mds.AuditLogConfigMetadata{},
+		Routes:   &map[string]mdsv1.AuditLogConfigRouteCategories{},
+		Metadata: &mdsv1.AuditLogConfigMetadata{},
 	}
 )
 
 type AuditConfigTestSuite struct {
 	suite.Suite
 	conf    *config.Config
-	mockApi mds.AuditLogConfigurationApi
+	mockApi mdsv1.AuditLogConfigurationApi
 }
 
 type ApiFunc string
@@ -111,14 +111,14 @@ func (suite *AuditConfigTestSuite) TearDownSuite() {
 }
 
 func StripTimestamp(obj any) any {
-	spec, castOk := obj.(mds.AuditLogConfigSpec)
+	spec, castOk := obj.(mdsv1.AuditLogConfigSpec)
 	if castOk {
-		return mds.AuditLogConfigSpec{
+		return mdsv1.AuditLogConfigSpec{
 			Destinations:       spec.Destinations,
 			ExcludedPrincipals: spec.ExcludedPrincipals,
 			DefaultTopics:      spec.DefaultTopics,
 			Routes:             spec.Routes,
-			Metadata: &mds.AuditLogConfigMetadata{
+			Metadata: &mdsv1.AuditLogConfigMetadata{
 				ResourceVersion: spec.Metadata.ResourceVersion,
 			},
 		}
@@ -143,60 +143,60 @@ func (suite *AuditConfigTestSuite) mockCmdReceiver(expect chan MockCall, expecte
 
 func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Command {
 	suite.mockApi = &mock.AuditLogConfigurationApi{
-		GetConfigFunc: func(ctx context.Context) (mds.AuditLogConfigSpec, *http.Response, error) {
+		GetConfigFunc: func(ctx context.Context) (mdsv1.AuditLogConfigSpec, *http.Response, error) {
 			result, err := suite.mockCmdReceiver(expect, GetConfig, nil)
 			if err != nil {
-				return mds.AuditLogConfigSpec{}, nil, nil
+				return mdsv1.AuditLogConfigSpec{}, nil, nil
 			}
-			castResult, ok := result.(mds.AuditLogConfigSpec)
+			castResult, ok := result.(mdsv1.AuditLogConfigSpec)
 			if ok {
 				return castResult, nil, nil
 			} else {
 				assert.Fail(suite.T(), "unexpected result type for GetConfig")
-				return mds.AuditLogConfigSpec{}, nil, nil
+				return mdsv1.AuditLogConfigSpec{}, nil, nil
 			}
 		},
-		ListRoutesFunc: func(ctx context.Context, opts *mds.ListRoutesOpts) (mds.AuditLogConfigListRoutesResponse, *http.Response, error) {
+		ListRoutesFunc: func(ctx context.Context, opts *mdsv1.ListRoutesOpts) (mdsv1.AuditLogConfigListRoutesResponse, *http.Response, error) {
 			result, err := suite.mockCmdReceiver(expect, ListRoutes, opts)
 			if err != nil {
-				return mds.AuditLogConfigListRoutesResponse{}, nil, nil
+				return mdsv1.AuditLogConfigListRoutesResponse{}, nil, nil
 			}
-			castResult, ok := result.(mds.AuditLogConfigListRoutesResponse)
+			castResult, ok := result.(mdsv1.AuditLogConfigListRoutesResponse)
 			if ok {
 				return castResult, nil, nil
 			} else {
 				assert.Fail(suite.T(), "unexpected result type for ListRoutes")
-				return mds.AuditLogConfigListRoutesResponse{}, nil, nil
+				return mdsv1.AuditLogConfigListRoutesResponse{}, nil, nil
 			}
 		},
-		PutConfigFunc: func(ctx context.Context, spec mds.AuditLogConfigSpec) (mds.AuditLogConfigSpec, *http.Response, error) {
+		PutConfigFunc: func(ctx context.Context, spec mdsv1.AuditLogConfigSpec) (mdsv1.AuditLogConfigSpec, *http.Response, error) {
 			result, err := suite.mockCmdReceiver(expect, PutConfig, spec)
 			if err != nil {
-				return mds.AuditLogConfigSpec{}, nil, nil
+				return mdsv1.AuditLogConfigSpec{}, nil, nil
 			}
-			castResult, ok := result.(mds.AuditLogConfigSpec)
+			castResult, ok := result.(mdsv1.AuditLogConfigSpec)
 			if ok {
 				return castResult, nil, nil
 			} else {
 				assert.Fail(suite.T(), "unexpected result type for PutConfig")
-				return mds.AuditLogConfigSpec{}, nil, nil
+				return mdsv1.AuditLogConfigSpec{}, nil, nil
 			}
 		},
-		ResolveResourceRouteFunc: func(ctx context.Context, opts *mds.ResolveResourceRouteOpts) (mds.AuditLogConfigResolveResourceRouteResponse, *http.Response, error) {
+		ResolveResourceRouteFunc: func(ctx context.Context, opts *mdsv1.ResolveResourceRouteOpts) (mdsv1.AuditLogConfigResolveResourceRouteResponse, *http.Response, error) {
 			result, err := suite.mockCmdReceiver(expect, ResolveResourceRoute, opts)
 			if err != nil {
-				return mds.AuditLogConfigResolveResourceRouteResponse{}, nil, nil
+				return mdsv1.AuditLogConfigResolveResourceRouteResponse{}, nil, nil
 			}
-			castResult, ok := result.(mds.AuditLogConfigResolveResourceRouteResponse)
+			castResult, ok := result.(mdsv1.AuditLogConfigResolveResourceRouteResponse)
 			if ok {
 				return castResult, nil, nil
 			} else {
 				assert.Fail(suite.T(), "unexpected result type for ResolveResourceRoute")
-				return mds.AuditLogConfigResolveResourceRouteResponse{}, nil, nil
+				return mdsv1.AuditLogConfigResolveResourceRouteResponse{}, nil, nil
 			}
 		},
 	}
-	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
+	mdsClient := mdsv1.NewAPIClient(mdsv1.NewConfiguration())
 	mdsClient.AuditLogConfigurationApi = suite.mockApi
 	return New(climock.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
 }
@@ -254,21 +254,21 @@ func (suite *AuditConfigTestSuite) TestAuditConfigUpdateForce() {
 
 func (suite *AuditConfigTestSuite) TestAuditConfigRouteList() {
 	devNull := ""
-	bothToDevNull := mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNull, Denied: &devNull}
-	authorizeToDevNull := mds.AuditLogConfigRouteCategories{Authorize: &bothToDevNull}
+	bothToDevNull := mdsv1.AuditLogConfigRouteCategoryTopics{Allowed: &devNull, Denied: &devNull}
+	authorizeToDevNull := mdsv1.AuditLogConfigRouteCategories{Authorize: &bothToDevNull}
 
 	expect := make(chan MockCall, 10)
 	expect <- MockCall{
 		Func: ListRoutes,
-		Input: &mds.ListRoutesOpts{
+		Input: &mdsv1.ListRoutesOpts{
 			Q: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test"),
 		},
-		Result: mds.AuditLogConfigListRoutesResponse{
-			DefaultTopics: mds.AuditLogConfigDefaultTopics{
+		Result: mdsv1.AuditLogConfigListRoutesResponse{
+			DefaultTopics: mdsv1.AuditLogConfigDefaultTopics{
 				Allowed: "confluent-audit-log-events",
 				Denied:  "confluent-audit-log-events",
 			},
-			Routes: &map[string]mds.AuditLogConfigRouteCategories{
+			Routes: &map[string]mdsv1.AuditLogConfigRouteCategories{
 				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test/connector=from-db4": authorizeToDevNull,
 				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test/connector=*":        authorizeToDevNull,
 				"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=*/connector=*":              authorizeToDevNull,
@@ -292,17 +292,17 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	expect := make(chan MockCall, 10)
 	expect <- MockCall{
 		Func: ResolveResourceRoute,
-		Input: &mds.ResolveResourceRouteOpts{
+		Input: &mdsv1.ResolveResourceRouteOpts{
 			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test"),
 		},
-		Result: mds.AuditLogConfigResolveResourceRouteResponse{
+		Result: mdsv1.AuditLogConfigResolveResourceRouteResponse{
 			Route: "default",
-			Categories: mds.AuditLogConfigRouteCategories{
-				Management: &mds.AuditLogConfigRouteCategoryTopics{Allowed: &defaultTopic, Denied: &defaultTopic},
-				Authorize:  &mds.AuditLogConfigRouteCategoryTopics{Allowed: &defaultTopic, Denied: &defaultTopic},
-				Produce:    &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
-				Consume:    &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
-				Describe:   &mds.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
+			Categories: mdsv1.AuditLogConfigRouteCategories{
+				Management: &mdsv1.AuditLogConfigRouteCategoryTopics{Allowed: &defaultTopic, Denied: &defaultTopic},
+				Authorize:  &mdsv1.AuditLogConfigRouteCategoryTopics{Allowed: &defaultTopic, Denied: &defaultTopic},
+				Produce:    &mdsv1.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
+				Consume:    &mdsv1.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
+				Describe:   &mdsv1.AuditLogConfigRouteCategoryTopics{Allowed: &devNullTopic, Denied: &devNullTopic},
 			},
 		},
 	}
@@ -313,7 +313,7 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	assert.Equal(suite.T(), 0, len(expect))
 }
 
-func writeToTempFile(spec mds.AuditLogConfigSpec) (*os.File, error) {
+func writeToTempFile(spec mdsv1.AuditLogConfigSpec) (*os.File, error) {
 	fileBytes, err := json.Marshal(spec)
 	if err != nil {
 		return nil, err

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/auth/sso"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -17,7 +17,7 @@ import (
 
 type AuthTokenHandler interface {
 	GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error)
-	GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error)
+	GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials) (string, error)
 }
 
 type AuthTokenHandlerImpl struct{}
@@ -141,9 +141,9 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, re
 	return res.GetToken(), refreshToken, err
 }
 
-func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {
+func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials) (string, error) {
 	ctx := utils.GetContext()
-	basicContext := context.WithValue(ctx, mds.ContextBasicAuth, mds.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
+	basicContext := context.WithValue(ctx, mdsv1.ContextBasicAuth, mdsv1.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
 	resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 	if err != nil {
 		return "", err

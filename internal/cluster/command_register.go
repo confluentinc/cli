@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -68,20 +68,20 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
-	clusterInfo := mds.ClusterInfo{ClusterName: clusterName, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
+	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
+	clusterInfo := mdsv1.ClusterInfo{ClusterName: clusterName, Scope: mdsv1.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
 
-	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mds.ClusterInfo{clusterInfo})
+	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mdsv1.ClusterInfo{clusterInfo})
 	if err != nil {
 		return cluster.HandleClusterError(err, response)
 	}
 
 	// On Success display the newly added/updated entry
-	return cluster.PrintClusters(cmd, []mds.ClusterInfo{clusterInfo})
+	return cluster.PrintClusters(cmd, []mdsv1.ClusterInfo{clusterInfo})
 }
 
-func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
-	scope := &mds.ScopeClusters{}
+func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeClusters, error) {
+	scope := &mdsv1.ScopeClusters{}
 
 	nonKafkaScopesSet := 0
 
@@ -116,20 +116,20 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClu
 	return scope, nil
 }
 
-func (c *registerCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error) {
+func (c *registerCommand) parseHosts(cmd *cobra.Command) ([]mdsv1.HostInfo, error) {
 	hosts, err := cmd.Flags().GetStringSlice("hosts")
 	if err != nil {
 		return nil, err
 	}
 
-	hostInfos := make([]mds.HostInfo, len(hosts))
+	hostInfos := make([]mdsv1.HostInfo, len(hosts))
 	for i, host := range hosts {
 		hostInfo := strings.Split(host, ":")
 		port := int64(0)
 		if len(hostInfo) > 1 {
 			port, _ = strconv.ParseInt(hostInfo[1], 10, 32)
 		}
-		hostInfos[i] = mds.HostInfo{
+		hostInfos[i] = mdsv1.HostInfo{
 			Host: hostInfo[0],
 			Port: int32(port),
 		}
@@ -137,7 +137,7 @@ func (c *registerCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error)
 	return hostInfos, nil
 }
 
-func (c *registerCommand) parseProtocol(cmd *cobra.Command) (mds.Protocol, error) {
+func (c *registerCommand) parseProtocol(cmd *cobra.Command) (mdsv1.Protocol, error) {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return "", err
@@ -145,13 +145,13 @@ func (c *registerCommand) parseProtocol(cmd *cobra.Command) (mds.Protocol, error
 
 	switch strings.ToUpper(protocol) {
 	case "SASL_PLAINTEXT":
-		return mds.PROTOCOL_SASL_PLAINTEXT, nil
+		return mdsv1.PROTOCOL_SASL_PLAINTEXT, nil
 	case "SASL_SSL":
-		return mds.PROTOCOL_SASL_SSL, nil
+		return mdsv1.PROTOCOL_SASL_SSL, nil
 	case "HTTP":
-		return mds.PROTOCOL_HTTP, nil
+		return mdsv1.PROTOCOL_HTTP, nil
 	case "HTTPS":
-		return mds.PROTOCOL_HTTPS, nil
+		return mdsv1.PROTOCOL_HTTPS, nil
 	default:
 		return "", errors.Errorf(errors.ProtocolNotSupportedErrorMsg, protocol)
 	}

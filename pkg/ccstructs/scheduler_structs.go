@@ -3,8 +3,8 @@ package ccstructs
 import (
 	"time"
 
-	proto "github.com/gogo/protobuf/proto"
-	types "github.com/gogo/protobuf/types"
+	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/types"
 )
 
 // ACLBindng: binds an ACL to a resource pattern.

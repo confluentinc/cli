@@ -9,7 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/autocomplete"
-	lexer "github.com/confluentinc/cli/v3/pkg/flink/internal/highlighting"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/reverseisearch"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -159,7 +159,7 @@ func (c *InputController) Prompt() prompt.IPrompt {
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
 		prompt.OptionSuggestionBGColor(prompt.DarkGray),
-		prompt.OptionSetLexer(lexer.Lexer),
+		prompt.OptionSetLexer(highlighting.Lexer),
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)
