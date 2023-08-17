@@ -15,7 +15,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
-const fieldNotConfigurableError = `configuration field "%s" does not exist or is not configurable`
+const (
+	fieldDoesNotExistError = `configuration key "%s" does not exist`
+	fieldReadOnlyError     = `configuration "%s" is read-only`
+)
 
 type command struct {
 	*pcmd.CLICommand
@@ -63,7 +66,7 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		jsonTag, _, _ := strings.Cut(field.Tag.Get("json"), ",")
+		jsonTag := strings.Split(field.Tag.Get("json"), ",")[0]
 		if slices.Contains(config.Whitelist, jsonTag) {
 			whitelist[jsonTag] = &fieldInfo{
 				kind:     field.Type.Kind(),

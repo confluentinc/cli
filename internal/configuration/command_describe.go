@@ -35,7 +35,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	field := args[0]
 
 	if _, ok := whitelist[field]; !ok {
-		return fmt.Errorf(fieldNotConfigurableError, field)
+		return fmt.Errorf(fieldDoesNotExistError, field)
 	}
 
 	table := output.NewTable(cmd)

@@ -63,8 +63,10 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 
 func convertValue(field, value string, whitelist map[string]*fieldInfo) (any, error) {
 	info, ok := whitelist[field]
-	if !ok || info.readOnly {
-		return nil, fmt.Errorf(fieldNotConfigurableError, field)
+	if !ok {
+		return nil, fmt.Errorf(fieldDoesNotExistError, field)
+	} else if info.readOnly {
+		return nil, fmt.Errorf(fieldReadOnlyError, field)
 	}
 	switch info.kind {
 	case reflect.Bool:
