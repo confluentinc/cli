@@ -12,7 +12,7 @@ func (c *consumerCommand) newGroupListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listGroups,
+		RunE:  c.groupList,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
