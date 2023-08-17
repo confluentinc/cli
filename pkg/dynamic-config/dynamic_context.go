@@ -62,7 +62,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 
 	if identityPool, _ := cmd.Flags().GetString("identity-pool"); identityPool != "" {
 		ctx := d.Config.Context()
-		d.Config.SetOverwrittenIdentityPool(ctx.GetCurrentFlinkComputePool())
+		d.Config.SetOverwrittenIdentityPool(ctx.GetCurrentIdentityPool())
 		if err := ctx.SetCurrentIdentityPool(identityPool); err != nil {
 			return err
 		}
