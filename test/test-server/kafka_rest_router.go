@@ -121,7 +121,7 @@ func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 			Principal:    "User:sa-12345",
 			PatternType:  "LITERAL",
 		}}
-		if clusterName == "lkc-acls" {
+		if clusterId == "lkc-acls" {
 			data = append(data, cckafkarestv3.AclData{
 				ResourceType: cckafkarestv3.TOPIC,
 				ResourceName: "test-topic",
