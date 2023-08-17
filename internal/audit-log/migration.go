@@ -11,15 +11,15 @@ import (
 
 	"github.com/imdario/mergo"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	warn "github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mds.AuditLogConfigSpec, []string, error) {
-	var newSpec mds.AuditLogConfigSpec
+func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mdsv1.AuditLogConfigSpec, []string, error) {
+	var newSpec mdsv1.AuditLogConfigSpec
 	const defaultTopicName = "confluent-audit-log-events"
 	var warnings []string
 	var newWarnings []string
@@ -28,7 +28,7 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 
 	clusterAuditLogConfigSpecs, err := jsonConfigsToAuditLogConfigSpecs(clusterConfigs)
 	if err != nil {
-		return mds.AuditLogConfigSpec{}, warnings, err
+		return mdsv1.AuditLogConfigSpec{}, warnings, err
 	}
 
 	newWarnings = migrateOtherCategoryToManagement(clusterAuditLogConfigSpecs)
@@ -68,7 +68,7 @@ func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServer
 	return newSpec, warnings, nil
 }
 
-func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) []string {
+func migrateOtherCategoryToManagement(specs map[string]*mdsv1.AuditLogConfigSpec) []string {
 	var warnings []string
 	for clusterId, spec := range specs {
 		routes := spec.Routes
@@ -83,7 +83,7 @@ func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) 
 				} else if reflect.DeepEqual(route.Management, route.Other) {
 					route.Other = nil
 				} else {
-					warning := fmt.Sprintf(warn.OtherCategoryWarning, routeName, clusterId)
+					warning := fmt.Sprintf(errors.OtherCategoryWarning, routeName, clusterId)
 					warnings = append(warnings, warning)
 					route.Other = nil
 				}
@@ -96,14 +96,14 @@ func migrateOtherCategoryToManagement(specs map[string]*mds.AuditLogConfigSpec) 
 
 // Add the AUTHORIZE and MANAGEMENT categories to the route when the default topic is different than the default
 // ("confluent-audit-log-events")
-func addDefaultEnabledCategories(specs map[string]*mds.AuditLogConfigSpec, defaultTopicName string) {
+func addDefaultEnabledCategories(specs map[string]*mdsv1.AuditLogConfigSpec, defaultTopicName string) {
 	for _, spec := range specs {
 		routes := spec.Routes
 		if routes == nil {
 			continue
 		}
 		if spec.DefaultTopics.Denied != defaultTopicName || spec.DefaultTopics.Allowed != defaultTopicName {
-			enabledCategoryTopics := mds.AuditLogConfigRouteCategoryTopics{
+			enabledCategoryTopics := mdsv1.AuditLogConfigRouteCategoryTopics{
 				Allowed: &spec.DefaultTopics.Allowed,
 				Denied:  &spec.DefaultTopics.Denied,
 			}
@@ -120,7 +120,7 @@ func addDefaultEnabledCategories(specs map[string]*mds.AuditLogConfigSpec, defau
 	}
 }
 
-func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []string {
+func warnMultipleCRNAuthorities(specs map[string]*mdsv1.AuditLogConfigSpec) []string {
 	var warnings []string
 	for clusterId, spec := range specs {
 		routes := spec.Routes
@@ -137,7 +137,7 @@ func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []stri
 
 		if len(foundAuthorities) > 1 {
 			sort.Strings(foundAuthorities)
-			newWarning := fmt.Sprintf(warn.MultipleCRNWarning, clusterId, foundAuthorities)
+			newWarning := fmt.Sprintf(errors.MultipleCRNWarning, clusterId, foundAuthorities)
 			warnings = append(warnings, newWarning)
 		}
 	}
@@ -149,7 +149,7 @@ func getCRNAuthority(routeName string) string {
 	return re.FindString(routeName)
 }
 
-func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) []string {
+func warnMismatchKafaClusters(specs map[string]*mdsv1.AuditLogConfigSpec) []string {
 	var warnings []string
 	for clusterId, spec := range specs {
 		routes := spec.Routes
@@ -158,7 +158,7 @@ func warnMismatchKafaClusters(specs map[string]*mds.AuditLogConfigSpec) []string
 		}
 		for routeName := range *routes {
 			if checkMismatchKafkaCluster(routeName, clusterId) {
-				newWarning := fmt.Sprintf(warn.MismatchedKafkaClusterWarning, clusterId, routeName)
+				newWarning := fmt.Sprintf(errors.MismatchedKafkaClusterWarning, clusterId, routeName)
 				warnings = append(warnings, newWarning)
 			}
 		}
@@ -172,37 +172,37 @@ func checkMismatchKafkaCluster(routeName, expectedClusterId string) bool {
 	return result == ""
 }
 
-func warnNewBootstrapServers(specs map[string]*mds.AuditLogConfigSpec, bootstrapServers []string) []string {
+func warnNewBootstrapServers(specs map[string]*mdsv1.AuditLogConfigSpec, bootstrapServers []string) []string {
 	var warnings []string
 	for clusterId, spec := range specs {
 		oldBootStrapServers := spec.Destinations.BootstrapServers
 		sort.Strings(oldBootStrapServers)
 		if !utils.TestEq(oldBootStrapServers, bootstrapServers) {
-			newWarning := fmt.Sprintf(warn.NewBootstrapWarning, clusterId, oldBootStrapServers, bootstrapServers)
+			newWarning := fmt.Sprintf(errors.NewBootstrapWarning, clusterId, oldBootStrapServers, bootstrapServers)
 			warnings = append(warnings, newWarning)
 		}
 	}
 	return warnings
 }
 
-func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[string]*mds.AuditLogConfigSpec, error) {
-	clusterAuditLogConfigSpecs := make(map[string]*mds.AuditLogConfigSpec)
+func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[string]*mdsv1.AuditLogConfigSpec, error) {
+	clusterAuditLogConfigSpecs := make(map[string]*mdsv1.AuditLogConfigSpec)
 	for clusterId, auditConfig := range clusterConfigs {
-		var spec mds.AuditLogConfigSpec
+		var spec mdsv1.AuditLogConfigSpec
 		if err := json.Unmarshal([]byte(auditConfig), &spec); err != nil {
-			return nil, fmt.Errorf(warn.MalformedConfigErrorMsg, clusterId, err.Error())
+			return nil, fmt.Errorf(errors.MalformedConfigErrorMsg, clusterId, err.Error())
 		}
 		clusterAuditLogConfigSpecs[clusterId] = &spec
 	}
 	return clusterAuditLogConfigSpecs, nil
 }
 
-func addBootstrapServers(spec *mds.AuditLogConfigSpec, bootstrapServers []string) {
+func addBootstrapServers(spec *mdsv1.AuditLogConfigSpec, bootstrapServers []string) {
 	spec.Destinations.BootstrapServers = bootstrapServers
 }
 
-func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
-	newTopics := make(map[string]mds.AuditLogConfigDestinationConfig)
+func combineDestinationTopics(specs map[string]*mdsv1.AuditLogConfigSpec, newSpec *mdsv1.AuditLogConfigSpec) []string {
+	newTopics := make(map[string]mdsv1.AuditLogConfigDestinationConfig)
 	topicRetentionDiscrepancies := make(map[string]int64)
 
 	for _, spec := range specs {
@@ -213,7 +213,7 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 				if destination.RetentionMs != newTopics[topicName].RetentionMs {
 					topicRetentionDiscrepancies[topicName] = retentionTime
 				}
-				newTopics[topicName] = mds.AuditLogConfigDestinationConfig{RetentionMs: retentionTime}
+				newTopics[topicName] = mdsv1.AuditLogConfigDestinationConfig{RetentionMs: retentionTime}
 			} else {
 				newTopics[topicName] = destination
 			}
@@ -230,27 +230,27 @@ func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int6
 
 	i := 0
 	for topicName, maxRetentionTime := range topicRetentionDiscrepancies {
-		warnings[i] = fmt.Sprintf(warn.RetentionTimeDiscrepancyWarning, topicName, maxRetentionTime)
+		warnings[i] = fmt.Sprintf(errors.RetentionTimeDiscrepancyWarning, topicName, maxRetentionTime)
 		i++
 	}
 
 	return warnings
 }
 
-func setDefaultTopic(newSpec *mds.AuditLogConfigSpec, defaultTopicName string) {
+func setDefaultTopic(newSpec *mdsv1.AuditLogConfigSpec, defaultTopicName string) {
 	const DefaultRetentionMs = 7776000000
 
-	newSpec.DefaultTopics = mds.AuditLogConfigDefaultTopics{
+	newSpec.DefaultTopics = mdsv1.AuditLogConfigDefaultTopics{
 		Allowed: defaultTopicName,
 		Denied:  defaultTopicName,
 	}
 
 	if _, ok := newSpec.Destinations.Topics[defaultTopicName]; !ok {
-		newSpec.Destinations.Topics[defaultTopicName] = mds.AuditLogConfigDestinationConfig{RetentionMs: DefaultRetentionMs}
+		newSpec.Destinations.Topics[defaultTopicName] = mdsv1.AuditLogConfigDestinationConfig{RetentionMs: DefaultRetentionMs}
 	}
 }
 
-func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) {
+func combineExcludedPrincipals(specs map[string]*mdsv1.AuditLogConfigSpec, newSpec *mdsv1.AuditLogConfigSpec) {
 	var newExcludedPrincipals []string
 
 	for _, spec := range specs {
@@ -271,8 +271,8 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 	newSpec.ExcludedPrincipals = &newExcludedPrincipals
 }
 
-func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
-	newRoutes := make(map[string]mds.AuditLogConfigRouteCategories)
+func combineRoutes(specs map[string]*mdsv1.AuditLogConfigSpec, newSpec *mdsv1.AuditLogConfigSpec) []string {
+	newRoutes := make(map[string]mdsv1.AuditLogConfigRouteCategories)
 	var warnings []string
 
 	clusterIds := make([]string, 0)
@@ -289,7 +289,7 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 		for crnPath, route := range *routes {
 			newCRNPath := replaceClusterId(crnPath, clusterId)
 			if _, ok := newRoutes[newCRNPath]; ok {
-				newWarning := fmt.Sprintf(warn.RepeatedRouteWarning, newCRNPath)
+				newWarning := fmt.Sprintf(errors.RepeatedRouteWarning, newCRNPath)
 				warnings = append(warnings, newWarning)
 			} else {
 				newRoutes[newCRNPath] = route
@@ -301,7 +301,7 @@ func combineRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditL
 	return warnings
 }
 
-func replaceCRNAuthorityRoutes(newSpec *mds.AuditLogConfigSpec, newCRNAuthority string) {
+func replaceCRNAuthorityRoutes(newSpec *mdsv1.AuditLogConfigSpec, newCRNAuthority string) {
 	routes := *newSpec.Routes
 
 	for crnPath, routeValue := range routes {
@@ -345,7 +345,7 @@ func generateCRNPath(clusterId, crnAuthority, pathExtension, subcluster string) 
 
 // For each of the input clusters, we need to make sure that if they specify a default topic different than the global one,
 // that messages go to their specific default topics instead of the global default topic
-func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec, newCRNAuthority string) {
+func generateAlternateDefaultTopicRoutes(specs map[string]*mdsv1.AuditLogConfigSpec, newSpec *mdsv1.AuditLogConfigSpec, newCRNAuthority string) {
 	type Resource struct {
 		extension  string
 		categories []string
@@ -408,7 +408,7 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 	for _, clusterId := range clusterIds {
 		spec := specs[clusterId]
 		if spec.DefaultTopics.Denied != newSpec.DefaultTopics.Denied || spec.DefaultTopics.Allowed != newSpec.DefaultTopics.Allowed {
-			oldDefaultTopics := mds.AuditLogConfigRouteCategoryTopics{
+			oldDefaultTopics := mdsv1.AuditLogConfigRouteCategoryTopics{
 				Allowed: &spec.DefaultTopics.Allowed,
 				Denied:  &spec.DefaultTopics.Denied,
 			}
@@ -425,7 +425,7 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 					}
 
 					// Initialize our newRouteConfig with values
-					newRouteConfig := mds.AuditLogConfigRouteCategories{}
+					newRouteConfig := mdsv1.AuditLogConfigRouteCategories{}
 					if err := mergo.Map(&newRouteConfig, categoriesToRoutes); err != nil {
 						continue
 					}
@@ -444,7 +444,7 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 	}
 }
 
-func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec *mds.AuditLogConfigSpec) []string {
+func warnNewExcludedPrincipals(specs map[string]*mdsv1.AuditLogConfigSpec, newSpec *mdsv1.AuditLogConfigSpec) []string {
 	var warnings []string
 	for clusterId, spec := range specs {
 		excludedPrincipals := spec.ExcludedPrincipals
@@ -460,7 +460,7 @@ func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 			}
 		}
 		if len(differentPrincipals) != 0 {
-			newWarning := fmt.Sprintf(warn.NewExcludedPrincipalsWarning, clusterId, differentPrincipals)
+			newWarning := fmt.Sprintf(errors.NewExcludedPrincipalsWarning, clusterId, differentPrincipals)
 			warnings = append(warnings, newWarning)
 		}
 	}
