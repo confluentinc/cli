@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
@@ -34,7 +34,7 @@ func SearchPath(cfg *config.Config) map[string][]string {
 
 	pathDirList := filepath.SplitList(os.Getenv("PATH"))
 	pluginDir := filepath.Join(os.Getenv("HOME"), ".confluent", "plugins")
-	if !types.Contains(pathDirList, pluginDir) {
+	if !slices.Contains(pathDirList, pluginDir) {
 		pathDirList = append(pathDirList, pluginDir)
 	}
 
@@ -75,7 +75,7 @@ func PluginFromEntry(entry os.DirEntry) string {
 func isExecutable(entry fs.DirEntry) bool {
 	if runtime.GOOS == "windows" {
 		extension := strings.ToUpper(filepath.Ext(entry.Name()))
-		return types.Contains(filepath.SplitList(os.Getenv("PATHEXT")), extension)
+		return slices.Contains(filepath.SplitList(os.Getenv("PATHEXT")), extension)
 	}
 
 	fileInfo, err := entry.Info()

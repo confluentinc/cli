@@ -2,8 +2,6 @@ package types
 
 import (
 	"sync"
-
-	"github.com/samber/lo"
 )
 
 type MaterializedStatementResultsIterator struct {
@@ -209,12 +207,12 @@ func (s *MaterializedStatementResults) GetMaxWidthPerColumn() []int {
 
 	columnWidths := make([]int, len(s.GetHeaders()))
 	for colIdx, column := range s.GetHeaders() {
-		columnWidths[colIdx] = lo.Max([]int{len(column), columnWidths[colIdx]})
+		columnWidths[colIdx] = max(len(column), columnWidths[colIdx])
 	}
 
 	s.ForEach(func(rowIdx int, row *StatementResultRow) {
 		for colIdx, field := range row.Fields {
-			columnWidths[colIdx] = lo.Max([]int{len(field.ToString()), columnWidths[colIdx]})
+			columnWidths[colIdx] = max(len(field.ToString()), columnWidths[colIdx])
 		}
 	})
 	return columnWidths

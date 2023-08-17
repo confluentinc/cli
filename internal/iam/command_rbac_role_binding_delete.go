@@ -3,6 +3,7 @@ package iam
 import (
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -85,18 +86,10 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return err
 	}
 
-	var roleBindingToDelete mdsv2.IamV2RoleBinding
-	found := false
-
-	for _, roleBinding := range roleBindings {
-		if roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
-			roleBindingToDelete = roleBinding
-			found = true
-			break
-		}
-	}
-
-	if !found {
+	idx := slices.IndexFunc(roleBindings, func(roleBinding mdsv2.IamV2RoleBinding) bool {
+		return roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern()
+	})
+	if idx == -1 {
 		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
 	}
 
@@ -104,7 +97,7 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return err
 	}
 
-	_, err = c.V2Client.DeleteIamRoleBinding(roleBindingToDelete.GetId())
+	_, err = c.V2Client.DeleteIamRoleBinding(roleBindings[idx].GetId())
 	return err
 }
 
