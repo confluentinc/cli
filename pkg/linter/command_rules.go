@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/client9/gospell"
@@ -13,7 +14,6 @@ import (
 	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 type CommandRule func(cmd *cobra.Command) error
@@ -232,7 +232,7 @@ func RequireValidExamples() CommandRule {
 			}
 
 			for _, match := range regexp.MustCompile(`--[a-z\-]+`).FindAllString(example, -1) {
-				if !types.Contains(allFlags, match) {
+				if !slices.Contains(allFlags, match) {
 					errs = multierror.Append(errs, fmt.Errorf("%s: unknown flag `%s` found in example %d", cmd.CommandPath(), match, i+1))
 				}
 			}

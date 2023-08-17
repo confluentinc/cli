@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -21,7 +22,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/version"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
@@ -291,7 +291,7 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 }
 
 func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
-	if !types.Contains(attributes, key) {
+	if !slices.Contains(attributes, key) {
 		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
 	}
 	custom.Set(key, value)
