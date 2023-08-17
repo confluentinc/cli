@@ -1,13 +1,12 @@
 package utils
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 const (
@@ -19,12 +18,12 @@ const (
 
 func TestContains(t *testing.T) {
 	req := require.New(t)
-	req.True(types.Contains([]string{"a"}, "a"))
+	req.True(slices.Contains([]string{"a"}, "a"))
 }
 
 func TestDoesNotContain(t *testing.T) {
 	req := require.New(t)
-	req.False(types.Contains([]string{}, "a"))
+	req.False(slices.Contains([]string{}, "a"))
 }
 
 func TestDoesPathExist(t *testing.T) {
