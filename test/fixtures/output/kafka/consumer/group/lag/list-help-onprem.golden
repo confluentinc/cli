@@ -4,7 +4,7 @@ Usage:
   confluent kafka consumer group lag list <group> [flags]
 
 Examples:
-List all consumer lags for consumers in the `my-consumer-group` consumer group.
+List all consumer lags in the `my-consumer-group` consumer group.
 
   $ confluent kafka consumer group lag list my-consumer-group
 
