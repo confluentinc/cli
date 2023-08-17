@@ -110,7 +110,7 @@ func handleKafkaRestClusters(t *testing.T) http.HandlerFunc {
 func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		clusterName := vars["cluster"]
+		clusterId := vars["cluster"]
 
 		data := []cckafkarestv3.AclData{{
 			ResourceType: cckafkarestv3.TOPIC,
