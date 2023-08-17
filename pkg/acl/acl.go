@@ -325,9 +325,9 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.Acl
 	for _, acl := range acls {
 		principal := acl.GetPrincipal()
 		if !all {
-			if integerId, err := principalHasIntegerId(principal); err != nil {
+			if hasIntegerId, err := principalHasIntegerId(principal); err != nil {
 				return err
-			} else if integerId {
+			} else if hasIntegerId {
 				continue
 			}
 		}
@@ -345,10 +345,6 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.Acl
 }
 
 func principalHasIntegerId(principal string) (bool, error) {
-	if principal == "" {
-		return false, nil
-	}
-
 	x := strings.Split(principal, ":")
 	if len(x) < 2 {
 		return false, errors.Errorf("unrecognized principal format %s", principal)
@@ -356,11 +352,8 @@ func principalHasIntegerId(principal string) (bool, error) {
 	suffix := x[1]
 
 	// The principal has a numeric ID
-	if _, err := strconv.ParseInt(suffix, 10, 32); err == nil {
-		return true, nil
-	}
-
-	return false, nil
+	_, err := strconv.ParseInt(suffix, 10, 32)
+	return err == nil, nil
 }
 
 func GetCreateAclRequestData(binding *ccstructs.ACLBinding) cckafkarestv3.CreateAclRequestData {
