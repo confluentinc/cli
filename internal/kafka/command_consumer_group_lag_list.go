@@ -14,7 +14,7 @@ func (c *consumerCommand) newLagListCommand() *cobra.Command {
 		Short:             "List consumer lags for a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
-		RunE:              c.listLags,
+		RunE:              c.lagList,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all consumer lags for consumers in the `my-consumer-group` consumer group.",
@@ -31,7 +31,7 @@ func (c *consumerCommand) newLagListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) listLags(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) lagList(cmd *cobra.Command, args []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err

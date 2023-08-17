@@ -14,7 +14,7 @@ func (c *consumerCommand) newLagListCommandOnPrem() *cobra.Command {
 		Use:               "list <group>",
 		Short:             "List consumer lags for a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
-		RunE:              c.listLagsOnPrem,
+		RunE:              c.lagListOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all consumer lags for consumers in the `my-consumer-group` consumer group.",
@@ -30,7 +30,7 @@ func (c *consumerCommand) newLagListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) listLagsOnPrem(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) lagListOnPrem(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
