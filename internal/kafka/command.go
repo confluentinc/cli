@@ -20,7 +20,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newClientConfigCommand(cfg, prerunner))
 	cmd.AddCommand(newClusterCommand(cfg, prerunner))
 	cmd.AddCommand(newConsumerCommand(cfg, prerunner))
-	cmd.AddCommand(newConsumerGroupCommand(prerunner))
 	cmd.AddCommand(newLinkCommand(cfg, prerunner))
 	cmd.AddCommand(newMirrorCommand(prerunner))
 	cmd.AddCommand(newPartitionCommand(prerunner))
