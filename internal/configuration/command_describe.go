@@ -11,7 +11,7 @@ import (
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "describe <key>",
 		Short:             "Describe a user-configurable field.",
 		Args:              cobra.ExactArgs(1),
@@ -24,6 +24,10 @@ func (c *command) newDescribeCommand() *cobra.Command {
 			},
 		),
 	}
+
+	pcmd.AddOutputFlag(cmd)
+
+	return cmd
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
