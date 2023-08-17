@@ -82,7 +82,7 @@ func NewClient(cliName string, disableUpdateCheck bool) update.Client {
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if c.Config.DisableUpdates {
 		message := "updates are disabled for this binary"
-		if isHomebrew() {
+		if IsHomebrew() {
 			return errors.NewErrorWithSuggestions(
 				message,
 				fmt.Sprintf("If installed with Homebrew, run `brew upgrade %s`.", homebrewFormula),
@@ -161,7 +161,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func isHomebrew() bool {
+func IsHomebrew() bool {
 	out, err := exec.NewCommand("brew", "ls", homebrewFormula).Output()
 	if err != nil {
 		return false
