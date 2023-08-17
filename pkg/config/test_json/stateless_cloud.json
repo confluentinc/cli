@@ -55,8 +55,7 @@
             "last_update": "0001-01-01T00:00:00Z"
           }
         }
-      },
-      "schema_registry_clusters": {}
+      }
     }
   },
   "context_states": {

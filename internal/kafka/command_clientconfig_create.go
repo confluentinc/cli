@@ -208,16 +208,8 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 }
 
 func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile string) (string, error) {
-	// get schema registry cluster from context and flags, including key pair
 	srCluster, err := c.getSchemaRegistryCluster(cmd)
 	if err != nil {
-		if err.Error() == errors.NotLoggedInErrorMsg {
-			return "", new(errors.SRNotAuthenticatedError)
-		}
-		// if SR not enabled, comment out SR in the configuration file and warn users
-		if srNotEnabledErr, ok := err.(*errors.SRNotEnabledError); ok {
-			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile), nil
-		}
 		return "", err
 	}
 
@@ -265,28 +257,39 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 // the key passed via the flags, please remove this function entirely because there is no more need to
 // manually fetch the values of the flags. (see setKafkaCluster as example)
 func (c *clientConfigCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*config.SchemaRegistryCluster, error) {
-	// get SR cluster from context
-	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	// get SR key pair from flag
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
+	if err != nil {
+		return nil, err
+	}
+	if len(clusters) == 0 {
+		return nil, errors.NewSRNotEnabledError()
+	}
+
 	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, err
 	}
+
 	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, err
 	}
 
-	// set SR key pair
-	srCluster.SrCredentials = &config.APIKeyPair{
-		Key:    schemaRegistryApiKey,
-		Secret: schemaRegistryApiSecret,
+	cluster := &config.SchemaRegistryCluster{
+		Id:                     clusters[0].GetId(),
+		SchemaRegistryEndpoint: clusters[0].Spec.GetHttpEndpoint(),
+		SrCredentials: &config.APIKeyPair{
+			Key:    schemaRegistryApiKey,
+			Secret: schemaRegistryApiSecret,
+		},
 	}
-	return srCluster, nil
+
+	return cluster, nil
 }
 
 func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.KafkaClusterConfig) error {
