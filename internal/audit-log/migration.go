@@ -15,7 +15,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/types"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mdsv1.AuditLogConfigSpec, []string, error) {
@@ -177,7 +176,7 @@ func warnNewBootstrapServers(specs map[string]*mdsv1.AuditLogConfigSpec, bootstr
 	for clusterId, spec := range specs {
 		oldBootStrapServers := spec.Destinations.BootstrapServers
 		sort.Strings(oldBootStrapServers)
-		if !utils.TestEq(oldBootStrapServers, bootstrapServers) {
+		if !slices.Equal(oldBootStrapServers, bootstrapServers) {
 			newWarning := fmt.Sprintf(errors.NewBootstrapWarning, clusterId, oldBootStrapServers, bootstrapServers)
 			warnings = append(warnings, newWarning)
 		}

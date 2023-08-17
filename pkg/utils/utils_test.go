@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -15,16 +14,6 @@ const (
 	serviceAccountFlagName = "service-account"
 	helpFlagName           = "help"
 )
-
-func TestContains(t *testing.T) {
-	req := require.New(t)
-	req.True(slices.Contains([]string{"a"}, "a"))
-}
-
-func TestDoesNotContain(t *testing.T) {
-	req := require.New(t)
-	req.False(slices.Contains([]string{}, "a"))
-}
 
 func TestDoesPathExist(t *testing.T) {
 	t.Run("DoesPathExist: empty path returns false", func(t *testing.T) {
