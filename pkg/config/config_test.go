@@ -115,25 +115,17 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		CredentialName:     loginCredential.Name,
 		CurrentEnvironment: environmentId,
 		Environments:       map[string]*EnvironmentContext{environmentId: {}},
-		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
-			environmentId: {
-				Id:                     "lsrc-123",
-				SchemaRegistryEndpoint: "http://some-lsrc-endpoint",
-				SrCredentials:          nil,
-			},
-		},
-		State: regularOrgContextState,
+		State:              regularOrgContextState,
 	}
 	statelessContext := &Context{
-		Name:                   contextName,
-		Platform:               platform,
-		PlatformName:           platform.Name,
-		Credential:             apiCredential,
-		CredentialName:         apiCredential.Name,
-		Environments:           map[string]*EnvironmentContext{},
-		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
-		State:                  &ContextState{},
-		Config:                 &Config{SavedCredentials: savedCredentials},
+		Name:           contextName,
+		Platform:       platform,
+		PlatformName:   platform.Name,
+		Credential:     apiCredential,
+		CredentialName: apiCredential.Name,
+		Environments:   map[string]*EnvironmentContext{},
+		State:          &ContextState{},
+		Config:         &Config{SavedCredentials: savedCredentials},
 	}
 	twoEnvStatefulContext := &Context{
 		Name:               contextName,
@@ -145,12 +137,6 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		Environments: map[string]*EnvironmentContext{
 			"acc-123":  {},
 			"env-flag": {},
-		},
-		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{
-			environmentId: {
-				Id:                     "lsrc-123",
-				SchemaRegistryEndpoint: "http://some-lsrc-endpoint",
-			},
 		},
 		State: regularOrgContextState,
 	}
