@@ -51,7 +51,7 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return pcluster.HandleClusterError(err, httpResp)
 	}
 
-	found := slices.ContainsFunc(clusterInfos, func(cluster mds.ClusterInfo) bool {
+	found := slices.ContainsFunc(clusterInfos, func(cluster mdsv1.ClusterInfo) bool {
 		return cluster.ClusterName == clusterName
 	})
 	if !found {
