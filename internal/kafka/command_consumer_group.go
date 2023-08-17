@@ -20,7 +20,6 @@ func (c *consumerCommand) newGroupCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "group",
 		Short:       "Manage Kafka consumer groups.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
 	if cfg.IsCloudLogin() {

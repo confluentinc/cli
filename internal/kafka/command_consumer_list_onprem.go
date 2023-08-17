@@ -44,12 +44,12 @@ func (c *consumerCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerGroup, err := cmd.Flags().GetString("group")
+	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
 	}
 
-	consumers, resp, err := restClient.ConsumerGroupV3Api.ListKafkaConsumers(restContext, clusterId, consumerGroup)
+	consumers, resp, err := restClient.ConsumerGroupV3Api.ListKafkaConsumers(restContext, clusterId, group)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}

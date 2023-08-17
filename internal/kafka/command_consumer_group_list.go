@@ -12,7 +12,7 @@ func (c *consumerCommand) newGroupListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listGroups,
+		RunE:  c.groupList,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -23,19 +23,19 @@ func (c *consumerCommand) newGroupListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) listGroups(cmd *cobra.Command, _ []string) error {
+func (c *consumerCommand) groupList(cmd *cobra.Command, _ []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	consumerGroups, err := kafkaREST.CloudClient.ListKafkaConsumerGroups()
+	groups, err := kafkaREST.CloudClient.ListKafkaConsumerGroups()
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, group := range consumerGroups.Data {
+	for _, group := range groups.Data {
 		list.Add(&consumerGroupOut{
 			ClusterId:         group.GetClusterId(),
 			ConsumerGroupId:   group.GetConsumerGroupId(),
