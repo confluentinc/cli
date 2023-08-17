@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 
 	"github.com/confluentinc/cli/v3/internal/update"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -53,37 +54,25 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
-	whitelist := make(map[string]*fieldInfo)
+	if runtime.GOOS == "windows" {
+		config.Whitelist = append(config.Whitelist, "disable_plugins_once")
+	}
+
+	whitelist := make(map[string]*fieldInfo, len(config.Whitelist))
 	t := reflect.TypeOf(*cfg)
+
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		// currently only boolean fields are part of this whitelist, but this may change in the future
-		if kind := field.Type.Kind(); kind == reflect.Bool {
-			if jsonFieldName := getJsonFieldName(field); jsonFieldName != "" {
-				whitelist[jsonFieldName] = &fieldInfo{
-					kind:     kind,
-					name:     field.Name,
-					readOnly: isReadOnly(jsonFieldName),
-				}
+		jsonTag, _, _ := strings.Cut(field.Tag.Get("json"), ",")
+		if slices.Contains(config.Whitelist, jsonTag) {
+			whitelist[jsonTag] = &fieldInfo{
+				kind:     field.Type.Kind(),
+				name:     field.Name,
+				readOnly: isReadOnly(jsonTag),
 			}
 		}
 	}
 	return whitelist
-}
-
-func getJsonFieldName(field reflect.StructField) string {
-	jsonTag := field.Tag.Get("json")
-	if jsonTag == "-" {
-		return ""
-	}
-	if strings.Contains(jsonTag, ",") {
-		jsonTag, _, _ = strings.Cut(jsonTag, ",")
-	}
-	// Want to hide this from linux and mac until the name specifies this field only affects Windows to avoid confusion
-	if jsonTag == "disable_plugins_once" && runtime.GOOS != "windows" {
-		return ""
-	}
-	return jsonTag
 }
 
 func isReadOnly(jsonField string) bool {

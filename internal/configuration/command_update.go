@@ -16,14 +16,14 @@ import (
 
 func (c *command) newUpdateCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:               "update [key] [value]",
+		Use:               "update <key> <value>",
 		Short:             "Update a user-configurable field's value.",
 		Args:              cobra.ExactArgs(2),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Disable plugins by setting "disable_plugins" to true.`,
+				Text: `Set the "disable_plugins" configuration to "true".`,
 				Code: "confluent configuration update disable_plugins true",
 			},
 		),
@@ -50,6 +50,7 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 		}
 	}
 	oldValue.Set(reflect.ValueOf(value))
+
 	if err := c.cfg.Validate(); err != nil {
 		return err
 	}
@@ -61,15 +62,15 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 }
 
 func convertValue(field, value string, whitelist map[string]*fieldInfo) (any, error) {
-	fieldInfo, ok := whitelist[field]
-	if !ok || fieldInfo.readOnly {
+	info, ok := whitelist[field]
+	if !ok || info.readOnly {
 		return nil, fmt.Errorf(fieldNotConfigurableError, field)
 	}
-	switch fieldInfo.kind {
+	switch info.kind {
 	case reflect.Bool:
 		val, err := strconv.ParseBool(value)
 		if err != nil {
-			return nil, fmt.Errorf(`"%s" is not a valid value for config field "%s", which is of type: %s`, value, field, fieldInfo.kind.String())
+			return nil, fmt.Errorf(`"%s" is not a valid value for config field "%s", which is of type: %s`, value, field, info.kind.String())
 		}
 		return val, nil
 	default:

@@ -1,10 +1,10 @@
 Update a user-configurable field's value.
 
 Usage:
-  confluent configuration update [key] [value] [flags]
+  confluent configuration update <key> <value> [flags]
 
 Examples:
-Disable plugins by setting "disable_plugins" to true.
+Set the "disable_plugins" configuration to "true".
 
   $ confluent configuration update disable_plugins true
 

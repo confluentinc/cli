@@ -1,10 +1,10 @@
 Describe a user-configurable field.
 
 Usage:
-  confluent configuration describe [key] [flags]
+  confluent configuration describe <key> [flags]
 
 Examples:
-See if update checks are enabled by describing "disable_update_check".
+View the "disable_update_check" configuration.
 
   $ confluent configuration describe disable_update_check
 

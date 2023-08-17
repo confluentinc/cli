@@ -22,6 +22,7 @@ func (c *command) newListCommand() *cobra.Command {
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	whitelist := getWhitelist(c.cfg)
+
 	list := output.NewList(cmd)
 	for field := range whitelist {
 		list.Add(c.newFieldOut(field, whitelist))
