@@ -12,8 +12,8 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	climock "github.com/confluentinc/cli/v3/mock"
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
@@ -84,7 +84,7 @@ var (
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return "", "", nil
 		},
-		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
+		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials) (string, error) {
 			return "", nil
 		},
 	}
@@ -112,8 +112,8 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		MDSClientManager: &climock.MDSClientManager{
-			GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
-				return &mds.APIClient{}, nil
+			GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
+				return &mdsv1.APIClient{}, nil
 			},
 		},
 		LoginCredentialsManager: mockLoginCredentialsManager,
@@ -426,7 +426,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 					return validAuthToken, "", nil
 				},
-				GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
+				GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials) (string, error) {
 					return validAuthToken, nil
 				},
 			}
@@ -672,7 +672,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 		require.NoError(t, err)
 		kafkaREST, err := c.GetKafkaREST()
 		require.NoError(t, err)
-		auth, ok := kafkaREST.Context.Value(krsdk.ContextAccessToken).(string)
+		auth, ok := kafkaREST.Context.Value(kafkarestv3.ContextAccessToken).(string)
 		require.True(t, ok)
 		require.Equal(t, validAuthToken, auth)
 	})

@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -42,7 +42,7 @@ func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Res
 			return errors.NewWrapErrorWithSuggestions(err, errors.UnableToAccessEndpointErrorMsg, errors.UnableToAccessEndpointSuggestions)
 		case http.StatusForbidden:
 			switch e := err.(type) {
-			case mds.GenericOpenAPIError:
+			case mdsv1.GenericOpenAPIError:
 				cmd.SilenceUsage = true
 				em := errorMessage{}
 				if err = json.Unmarshal(e.Body(), &em); err != nil {
