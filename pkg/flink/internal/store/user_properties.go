@@ -65,7 +65,7 @@ func (p *UserProperties) Delete(key string) {
 }
 
 func (p *UserProperties) Clear() {
-	p.properties = map[string]string{}
+	clear(p.properties)
 	p.addDefaultProperties()
 }
 

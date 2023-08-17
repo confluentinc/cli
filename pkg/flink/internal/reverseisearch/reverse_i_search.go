@@ -1,7 +1,6 @@
 package reverseisearch
 
 import (
-	"math"
 	"strings"
 
 	"github.com/confluentinc/go-prompt"
@@ -210,7 +209,7 @@ func search(substr string, s []string, startIndex int) searchResult {
 		return searchResult{-1, "", -1}
 	}
 	// if start > size, just use size
-	upperBound := int(math.Min(float64(startIndex), float64(len(s)-1)))
+	upperBound := min(startIndex, len(s)-1)
 	for i := upperBound; i >= 0; i-- {
 		substrI := strings.ToUpper(s[i])
 		if strings.Contains(substrI, substr) {
