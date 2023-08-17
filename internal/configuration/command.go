@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 
 	"github.com/confluentinc/cli/v3/internal/update"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
