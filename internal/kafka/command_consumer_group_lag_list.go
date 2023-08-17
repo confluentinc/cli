@@ -17,7 +17,7 @@ func (c *consumerCommand) newLagListCommand() *cobra.Command {
 		RunE:              c.lagList,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all consumer lags for consumers in the `my-consumer-group` consumer group.",
+				Text: "List all consumer lags in the `my-consumer-group` consumer group.",
 				Code: "confluent kafka consumer group lag list my-consumer-group",
 			},
 		),
