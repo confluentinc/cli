@@ -1,8 +1,7 @@
 +---------------+-------------------------------+
-| Creation Date | 2022-01-01 00:00:00 +0000 UTC |
+| Creation Date | 2023-01-01 00:00:00 +0000 UTC |
 | Name          | my-statement                  |
 | Statement     | CREATE TABLE test;            |
-| Compute Pool  | pool-123456                   |
-| Status        | TODO                          |
-| Status Detail | TODO                          |
+| Compute Pool  | lfcp-123456                   |
+| Status        | PENDING                       |
 +---------------+-------------------------------+
