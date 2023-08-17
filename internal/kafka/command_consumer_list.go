@@ -44,7 +44,7 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumers, err := kafkaREST.CloudClient.ListKafkaConsumers(consumerGroup)
+	consumers, err := kafkaREST.CloudClient.ListKafkaConsumers(group)
 	if err != nil {
 		return err
 	}

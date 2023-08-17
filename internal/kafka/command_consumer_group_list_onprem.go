@@ -13,7 +13,7 @@ func (c *consumerCommand) newGroupListCommandOnPrem() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listGroupsOnPrem,
+		RunE:  c.groupListOnPrem,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -23,7 +23,7 @@ func (c *consumerCommand) newGroupListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) listGroupsOnPrem(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) groupListOnPrem(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -34,13 +34,13 @@ func (c *consumerCommand) listGroupsOnPrem(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	consumerGroup, resp, err := restClient.ConsumerGroupV3Api.ListKafkaConsumerGroups(restContext, clusterId)
+	groups, resp, err := restClient.ConsumerGroupV3Api.ListKafkaConsumerGroups(restContext, clusterId)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, group := range consumerGroup.Data {
+	for _, group := range groups.Data {
 		list.Add(&consumerGroupOut{
 			ClusterId:         group.ClusterId,
 			ConsumerGroupId:   group.ConsumerGroupId,

@@ -34,19 +34,19 @@ func (c *consumerCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	consumerGroup, err := kafkaREST.CloudClient.GetKafkaConsumerGroup(args[0])
+	group, err := kafkaREST.CloudClient.GetKafkaConsumerGroup(args[0])
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&consumerGroupOut{
-		ClusterId:         consumerGroup.GetClusterId(),
-		ConsumerGroupId:   consumerGroup.GetConsumerGroupId(),
-		Coordinator:       getStringBroker(consumerGroup.GetCoordinator()),
-		IsSimple:          consumerGroup.GetIsSimple(),
-		PartitionAssignor: consumerGroup.GetPartitionAssignor(),
-		State:             consumerGroup.GetState(),
+		ClusterId:         group.GetClusterId(),
+		ConsumerGroupId:   group.GetConsumerGroupId(),
+		Coordinator:       getStringBroker(group.GetCoordinator()),
+		IsSimple:          group.GetIsSimple(),
+		PartitionAssignor: group.GetPartitionAssignor(),
+		State:             group.GetState(),
 	})
 	return table.Print()
 }
