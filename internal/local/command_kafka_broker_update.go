@@ -19,7 +19,7 @@ import (
 func (c *Command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
-		Short: "Update a local Kafka broker configurations.",
+		Short: "Update Confluent Local Kafka broker configurations.",
 		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.kafkaUpdate,
