@@ -22,7 +22,10 @@ blocks:
           commands:
             # Set up Go
             - checkout
-            - sem-version go $(cat .go-version)
+            - wget https://go.dev/dl/go$(cat .go-version).linux-amd64.tar.gz
+            - sudo tar -xvf go$(cat .go-version).linux-amd64.tar.gz -C /usr/local
+            - export PATH=$PATH:/usr/local/go/bin
+            - export PATH=$PATH:$(go env GOPATH)/bin
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
