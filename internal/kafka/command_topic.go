@@ -2,6 +2,9 @@ package kafka
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"runtime"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -13,7 +16,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
+
+// EOF Unicode encoding for Ctrl+D (^D) character
+const EOF = "\u0004"
 
 const numPartitionsKey = "num.partitions"
 
@@ -157,4 +165,59 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 	}
 
 	return nil
+}
+
+func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckafka.Producer) error {
+	if runtime.GOOS == "windows" {
+		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C")
+	} else {
+		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
+	}
+
+	var scanErr error
+	input, scan := PrepareInputChannel(&scanErr)
+
+	// Trap SIGINT to trigger a shutdown.
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	go func() {
+		<-signals
+		input <- EOF
+	}()
+	// Prime reader
+	go scan()
+
+	deliveryChan := make(chan ckafka.Event)
+	for data := range input {
+		if data == "" {
+			if scanErr != nil {
+				break
+			}
+			go scan()
+			continue
+		} else if data == EOF {
+			break
+		}
+
+		message, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
+		if err != nil {
+			return err
+		}
+		if err := producer.Produce(message, deliveryChan); err != nil {
+			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
+			if isProduceToCompactedTopicError {
+				scanErr = err
+				break
+			}
+			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
+		}
+
+		e := <-deliveryChan                // read a ckafka event from the channel
+		m := e.(*ckafka.Message)           // extract the message from the event
+		if m.TopicPartition.Error != nil { // catch all other errors
+			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+		}
+		go scan()
+	}
+	return scanErr
 }
