@@ -109,6 +109,9 @@ func handleKafkaRestClusters(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster}/acls"
 func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster"]
+
 		data := []cckafkarestv3.AclData{{
 			ResourceType: cckafkarestv3.TOPIC,
 			ResourceName: "test-topic",
@@ -118,6 +121,17 @@ func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 			Principal:    "User:sa-12345",
 			PatternType:  "LITERAL",
 		}}
+		if clusterName == "lkc-acls" {
+			data = append(data, cckafkarestv3.AclData{
+				ResourceType: cckafkarestv3.TOPIC,
+				ResourceName: "test-topic",
+				Operation:    "READ",
+				Permission:   "ALLOW",
+				Host:         "*",
+				Principal:    "User:012345",
+				PatternType:  "LITERAL",
+			})
+		}
 
 		var res any
 
@@ -128,7 +142,7 @@ func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 			w.WriteHeader(http.StatusCreated)
 			res = cckafkarestv3.AclData{}
 		case http.MethodDelete:
-			res = cckafkarestv3.InlineResponse200{Data: data}
+			res = cckafkarestv3.InlineResponse200{Data: []cckafkarestv3.AclData{data[0]}}
 		}
 
 		err := json.NewEncoder(w).Encode(res)
