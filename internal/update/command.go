@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/exec"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/update"
 	"github.com/confluentinc/cli/v3/pkg/update/s3"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
@@ -182,7 +182,7 @@ func isHomebrew() bool {
 
 	log.CliLogger.Tracef("Executable path: %s", path)
 
-	return types.Contains(homebrewPaths, path)
+	return slices.Contains(homebrewPaths, path)
 }
 
 func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
