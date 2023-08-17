@@ -31,9 +31,9 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(_ *cobra.Command, args []string) error {
-	configWhitelist := getConfigWhitelist(c.cfg)
+	whitelist := getWhitelist(c.cfg)
 	field := args[0]
-	value, err := convertValue(field, args[1], configWhitelist)
+	value, err := convertValue(field, args[1], whitelist)
 	if err != nil {
 		if field == "current_context" {
 			return errors.NewErrorWithSuggestions(err.Error(), "Please use `confluent context use` to set the current context.")
@@ -41,7 +41,7 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	oldValue := reflect.ValueOf(c.cfg).Elem().FieldByName(configWhitelist[field].name)
+	oldValue := reflect.ValueOf(c.cfg).Elem().FieldByName(whitelist[field].name)
 	if field == "disable_feature_flags" {
 		if ok, err := confirmSet(field, form.NewPrompt()); err != nil {
 			return err
@@ -60,8 +60,8 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func convertValue(field, value string, configWhitelist map[string]*configFieldInfo) (any, error) {
-	fieldInfo, ok := configWhitelist[field]
+func convertValue(field, value string, whitelist map[string]*fieldInfo) (any, error) {
+	fieldInfo, ok := whitelist[field]
 	if !ok || fieldInfo.readOnly {
 		return nil, fmt.Errorf(fieldNotConfigurableError, field)
 	}

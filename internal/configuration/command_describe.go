@@ -27,12 +27,12 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	configWhitelist := getConfigWhitelist(c.cfg)
+	whitelist := getWhitelist(c.cfg)
 	field := args[0]
-	if _, ok := configWhitelist[field]; !ok {
+	if _, ok := whitelist[field]; !ok {
 		return fmt.Errorf(fieldNotConfigurableError, field)
 	}
 	table := output.NewTable(cmd)
-	table.Add(c.newConfigurationOut(field, configWhitelist))
+	table.Add(c.newFieldOut(field, whitelist))
 	return table.Print()
 }

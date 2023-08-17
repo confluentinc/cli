@@ -14,20 +14,20 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
-const fieldNotConfigurableError = `configuration field "%s" either does not exist or is not configurable`
+const fieldNotConfigurableError = `configuration field "%s" does not exist or is not configurable`
 
 type command struct {
 	*pcmd.CLICommand
 	cfg *config.Config
 }
 
-type configFieldInfo struct {
+type fieldInfo struct {
 	kind     reflect.Kind
 	name     string
 	readOnly bool
 }
 
-type configFieldOut struct {
+type fieldOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
 	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
@@ -52,15 +52,15 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func getConfigWhitelist(cfg *config.Config) map[string]*configFieldInfo {
-	whitelist := make(map[string]*configFieldInfo)
+func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
+	whitelist := make(map[string]*fieldInfo)
 	t := reflect.TypeOf(*cfg)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		// currently only boolean fields are part of this whitelist, but this may change in the future
 		if kind := field.Type.Kind(); kind == reflect.Bool {
 			if jsonFieldName := getJsonFieldName(field); jsonFieldName != "" {
-				whitelist[jsonFieldName] = &configFieldInfo{
+				whitelist[jsonFieldName] = &fieldInfo{
 					kind:     kind,
 					name:     field.Name,
 					readOnly: isReadOnly(jsonFieldName),
@@ -90,12 +90,12 @@ func isReadOnly(jsonField string) bool {
 	return jsonField == "disable_updates" && update.IsHomebrew()
 }
 
-func (c *command) newConfigurationOut(field string, configWhitelist map[string]*configFieldInfo) *configFieldOut {
-	value := reflect.ValueOf(c.cfg).Elem().FieldByName(configWhitelist[field].name)
-	return &configFieldOut{
+func (c *command) newFieldOut(field string, whitelist map[string]*fieldInfo) *fieldOut {
+	value := reflect.ValueOf(c.cfg).Elem().FieldByName(whitelist[field].name)
+	return &fieldOut{
 		Name:     field,
 		Value:    fmt.Sprintf("%v", value),
-		ReadOnly: configWhitelist[field].readOnly,
+		ReadOnly: whitelist[field].readOnly,
 	}
 }
 
@@ -108,5 +108,5 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return types.GetSortedKeys(getConfigWhitelist(c.cfg))
+	return types.GetSortedKeys(getWhitelist(c.cfg))
 }

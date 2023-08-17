@@ -30,5 +30,5 @@ func TestGetConfigWhitelist(t *testing.T) {
 		slices.Sort(expected)
 	}
 
-	require.Equal(t, expected, types.GetSortedKeys(getConfigWhitelist(cfg)))
+	require.Equal(t, expected, types.GetSortedKeys(getWhitelist(cfg)))
 }
