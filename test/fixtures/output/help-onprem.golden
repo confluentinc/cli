@@ -8,6 +8,7 @@ Available Commands:
   cloud-signup    Sign up for Confluent Cloud.
   cluster         Retrieve metadata about Confluent Platform clusters.
   completion      Print shell completion code.
+  configuration   Configure the Confluent CLI.
   connect         Manage Kafka Connect.
   context         Manage CLI configuration contexts.
   help            Help about any command
