@@ -8,10 +8,10 @@ import (
 
 	"github.com/client9/gospell"
 
-	pcmd "github.com/confluentinc/cli/internal/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/linter"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/linter"
+	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
 var commandRules = []linter.CommandRule{
@@ -32,11 +32,12 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("plugin"),
 		linter.ExcludeCommand("completion"),
 		linter.ExcludeCommandContains("kafka client-config create"),
+		linter.ExcludeCommandContains("local services kafka start"),
 		linter.ExcludeCommand("local current")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
-	linter.RequireValidExamples(),
+	linter.Filter(linter.RequireValidExamples(), linter.ExcludeCommand("pipeline update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -61,6 +62,7 @@ var flagRules = []linter.FlagRule{
 			"enable-systest-events",
 			"formatter",
 			"isolation-level",
+			"key-deserializer",
 			"line-reader",
 			"max-block-ms",
 			"max-memory-bytes",
@@ -74,6 +76,7 @@ var flagRules = []linter.FlagRule{
 			"retry-backoff-ms",
 			"socket-buffer-size",
 			"timeout",
+			"value-deserializer",
 			"value-format",
 		),
 	),
@@ -127,6 +130,7 @@ var flagRules = []linter.FlagRule{
 			"gcp-project-id",
 			"if-not-exists",
 			"kafka-api-key",
+			"kafka-rest-port",
 			"local-secrets-file",
 			"log-exclude-rows",
 			"max-block-ms",
@@ -206,6 +210,7 @@ var vocabWords = []string{
 	"aws",
 	"backoff",
 	"byok",
+	"cel",
 	"cfu",
 	"cku",
 	"cli",
@@ -317,10 +322,10 @@ func main() {
 	}
 
 	// Lint all three subsets of commands: no context, cloud, and on-prem
-	configs := []*v1.Config{
+	configs := []*config.Config{
 		{CurrentContext: "No Context"},
-		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
-		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
+		{CurrentContext: "Cloud", Contexts: map[string]*config.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
+		{CurrentContext: "On-Prem", Contexts: map[string]*config.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 
 	code := 0
@@ -328,7 +333,7 @@ func main() {
 		cfg.IsTest = true
 		cfg.Version = new(pversion.Version)
 
-		cmd := pcmd.NewConfluentCommand(cfg)
+		cmd := internal.NewConfluentCommand(cfg)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1

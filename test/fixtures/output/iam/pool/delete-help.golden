@@ -10,6 +10,7 @@ Delete identity pool "pool-12345":
 
 Flags:
       --provider string   REQUIRED: ID of this pool's identity provider.
+      --context string    CLI context name.
       --force             Skip the deletion confirmation prompt.
 
 Global Flags:

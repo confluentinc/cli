@@ -22,8 +22,6 @@ func (s *CLITestSuite) TestIamRbacRole_Cloud() {
 		{args: "iam rbac role describe CloudClusterAdmin -o yaml", fixture: "iam/rbac/role/describe-yaml-cloud.golden"},
 		{args: "iam rbac role describe CloudClusterAdmin", fixture: "iam/rbac/role/describe-cloud.golden"},
 		{args: "iam rbac role describe InvalidRole", fixture: "iam/rbac/role/describe-invalid-role-cloud.golden", exitCode: 1},
-		{args: "iam rbac role list -o json", fixture: "iam/rbac/role/list-json-cloud.golden"},
-		{args: "iam rbac role list -o yaml", fixture: "iam/rbac/role/list-yaml-cloud.golden"},
 		{args: "iam rbac role list", fixture: "iam/rbac/role/list-cloud.golden"},
 	}
 
@@ -157,7 +155,7 @@ func (s *CLITestSuite) TestIamServiceAccount() {
 		{args: "iam service-account delete sa-12345 sa-67890", fixture: "iam/service-account/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam service-account delete sa-12345 sa-54321", input: "n\n", fixture: "iam/service-account/delete-multiple-refuse.golden"},
 		{args: "iam service-account delete sa-12345 sa-54321", input: "y\n", fixture: "iam/service-account/delete-multiple-success.golden"},
-		{args: "iam service-account delete sa-12345", input: "service_account\n", fixture: "iam/service-account/delete-prompt.golden"},
+		{args: "iam service-account delete sa-12345", input: "service-account\n", fixture: "iam/service-account/delete-prompt.golden"},
 		{args: "iam service-account list -o json", fixture: "iam/service-account/list-json.golden"},
 		{args: "iam service-account list -o yaml", fixture: "iam/service-account/list-yaml.golden"},
 		{args: "iam service-account list", fixture: "iam/service-account/list.golden"},
@@ -254,57 +252,17 @@ func (s *CLITestSuite) TestIamUserInvitationList() {
 	}
 }
 
-func (s *CLITestSuite) TestIamProviderCreate() {
+func (s *CLITestSuite) TestIamProvider() {
 	tests := []CLITest{
-		{args: "iam provider create Okta --description new-description --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestIamProviderDelete() {
-	tests := []CLITest{
+		{args: "iam provider create okta --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
 		{args: "iam provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
 		{args: "iam provider delete op-12345 op-54321", fixture: "iam/identity-provider/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam provider delete op-12345 op-67890", input: "n\n", fixture: "iam/identity-provider/delete-multiple-refuse.golden"},
 		{args: "iam provider delete op-12345 op-67890", input: "y\n", fixture: "iam/identity-provider/delete-multiple-success.golden"},
-		{args: "iam provider delete op-12345", input: "identity_provider\n", fixture: "iam/identity-provider/delete-prompt.golden"},
+		{args: "iam provider delete op-12345", input: "identity-provider\n", fixture: "iam/identity-provider/delete-prompt.golden"},
 		{args: "iam provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestIamProviderDescribe() {
-	tests := []CLITest{
 		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestIamProviderUpdate() {
-	tests := []CLITest{
-		{args: "iam provider update op-12345 --name new-name --description new-description", fixture: "iam/identity-provider/update.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestIamProviderList() {
-	tests := []CLITest{
+		{args: "iam provider update op-12345 --name updated-name --description 'updated description'", fixture: "iam/identity-provider/update.golden"},
 		{args: "iam provider list", fixture: "iam/identity-provider/list.golden"},
 	}
 
@@ -314,58 +272,36 @@ func (s *CLITestSuite) TestIamProviderList() {
 	}
 }
 
-func (s *CLITestSuite) TestIamPoolCreate() {
+func (s *CLITestSuite) TestIamPool() {
 	tests := []CLITest{
-		{args: `iam pool create testPool --provider op-12345 --description new-description --identity-claim sub --filter "claims.iss=https://company.provider.com"`, fixture: "iam/identity-pool/create.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestIamPoolDelete() {
-	tests := []CLITest{
+		{args: `iam pool create test-pool --provider op-12345 --description "new description" --identity-claim sub --filter "claims.iss=https://company.provider.com"`, fixture: "iam/identity-pool/create.golden"},
 		{args: "iam pool delete pool-55555 --provider op-12345 --force", fixture: "iam/identity-pool/delete.golden"},
 		{args: "iam pool delete pool-55555 pool-44444 --provider op-12345", fixture: "iam/identity-pool/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam pool delete pool-55555 pool-12345 --provider op-12345", input: "n\n", fixture: "iam/identity-pool/delete-multiple-refuse.golden"},
 		{args: "iam pool delete pool-55555 pool-12345 --provider op-12345", input: "y\n", fixture: "iam/identity-pool/delete-multiple-success.golden"},
-		{args: "iam pool delete pool-55555 --provider op-12345", input: "identity_pool\n", fixture: "iam/identity-pool/delete-prompt.golden"},
+		{args: "iam pool delete pool-55555 --provider op-12345", input: "identity-pool\n", fixture: "iam/identity-pool/delete-prompt.golden"},
 		{args: "iam pool delete pool-1 --provider op-12345 --force", fixture: "iam/identity-pool/delete-dne.golden", exitCode: 1},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestIamPoolDescribe() {
-	tests := []CLITest{
 		{args: "iam pool describe pool-12345 --provider op-12345", fixture: "iam/identity-pool/describe.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestIamPoolUpdate() {
-	tests := []CLITest{
-		{args: `iam pool update pool-12345 --provider op-12345 --name newer-name --description more-descriptive --identity-claim new-sub --filter "claims.iss=https://new-company.new-provider.com"`, fixture: "iam/identity-pool/update.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestIamPoolList() {
-	tests := []CLITest{
+		{args: `iam pool update pool-12345 --provider op-12345 --name "updated-name" --description "updated description" --identity-claim new-sub --filter "claims.iss=https://new-company.new-provider.com"`, fixture: "iam/identity-pool/update.golden"},
+		{args: "iam pool update pool-12345 --provider op-12345", fixture: "iam/identity-pool/no-op-update.golden", exitCode: 1},
 		{args: "iam pool list --provider op-12345", fixture: "iam/identity-pool/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIamGroupMapping() {
+	tests := []CLITest{
+		{args: `iam group-mapping create group_mapping --description new-group-description --filter '"engineering" in claims.group || "marketing" in claims.group'`, fixture: "iam/group-mapping/create.golden"},
+		{args: "iam group-mapping delete pool-abc --force", fixture: "iam/group-mapping/delete.golden"},
+		{args: "iam group-mapping delete pool-abc", input: "another-group-mapping\n", fixture: "iam/group-mapping/delete-prompt.golden"},
+		{args: "iam group-mapping delete pool-dne --force", fixture: "iam/group-mapping/delete-dne.golden", exitCode: 1},
+		{args: "iam group-mapping describe pool-abc", fixture: "iam/group-mapping/describe.golden"},
+		{args: `iam group-mapping update pool-abc --name updated-group-mapping --description "updated description" --filter claims.principal.startsWith("user")`, fixture: "iam/group-mapping/update.golden"},
+		{args: "iam group-mapping list", fixture: "iam/group-mapping/list.golden"},
 	}
 
 	for _, test := range tests {

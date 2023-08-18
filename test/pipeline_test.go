@@ -35,7 +35,6 @@ func (s *CLITestSuite) TestPipeline() {
 		{args: "pipeline deactivate pipe-12345 --retained-topics topic1", fixture: "pipeline/deactivate.golden"},
 		{args: "pipeline update pipe-12345 --name newName --description newDescription", fixture: "pipeline/update-with-new-name-and-desc.golden"},
 		{args: "pipeline update pipe-12345 --name newName --description newDescription -o json", fixture: "pipeline/update-with-json-output.golden"},
-		{args: "pipeline update pipe-12345 --activation-privilege", fixture: "pipeline/update-activation-privilege.golden"},
 		{args: "pipeline update pipe-12345 --activation-privilege=true", fixture: "pipeline/update-activation-privilege.golden"},
 		{args: "pipeline update pipe-12345 --activation-privilege=false", fixture: "pipeline/update.golden"},
 		{args: fmt.Sprintf("pipeline update pipe-12345 --sql-file %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},

@@ -24,7 +24,7 @@ func (s *CLITestSuite) TestLocalKafka() {
 		s.runIntegrationTest(test)
 	}
 
-	time.Sleep(25 * time.Second)
+	time.Sleep(40 * time.Second)
 
 	tests2 := []CLITest{
 		{args: "local kafka topic create test", fixture: "local/kafka/topic/create.golden"},

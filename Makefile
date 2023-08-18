@@ -37,7 +37,7 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	GOOS="" GOARCH="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/semver.mk
@@ -68,7 +68,7 @@ lint: lint-go lint-cli
 .PHONY: lint-go
 lint-go:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
-	golangci-lint run --timeout=10m
+	golangci-lint run --timeout 10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli
@@ -86,9 +86,9 @@ cmd/lint/en_US.dic:
 unit-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
-	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/test)
+	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
 else
-	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/test) $(UNIT_TEST_ARGS)
+	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: build-for-integration-test
@@ -106,10 +106,10 @@ ifdef CI
 	export GOCOVERDIR=test/coverage && \
 	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
 	mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/test) && \
+	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
-	go test -v $$(go list ./... | grep github.com/confluentinc/cli/test) $(INTEGRATION_TEST_ARGS)
+	go test -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
 endif
 
 .PHONY: test
