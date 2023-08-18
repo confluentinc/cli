@@ -37,12 +37,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	brokerId := int32(i)
 
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

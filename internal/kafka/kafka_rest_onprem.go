@@ -12,21 +12,31 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkarestv3.APIClient, context.Context, error) {
+func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkarestv3.APIClient, context.Context, string, error) {
 	url, err := getKafkaRestUrl(cmd)
 	if err != nil { // require the flag
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	kafkaRestClient := kafkaREST.Client
 	SetServerURL(cmd, kafkaRestClient, url)
-	return kafkaRestClient, kafkaREST.Context, nil
+
+	clusters, httpResp, err := kafkaRestClient.ClusterV3Api.ClustersGet(kafkaREST.Context)
+	if err != nil {
+		return nil, nil, "", kafkarest.NewError(kafkaRestClient.GetConfig().BasePath, err, httpResp)
+	}
+	if clusters.Data == nil || len(clusters.Data) == 0 {
+		return nil, nil, "", errors.NewErrorWithSuggestions(errors.NoClustersFoundErrorMsg, errors.NoClustersFoundSuggestions)
+	}
+
+	return kafkaRestClient, kafkaREST.Context, clusters.Data[0].ClusterId, nil
 }
 
 // Used for on-prem KafkaRest commands

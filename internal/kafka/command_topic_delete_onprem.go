@@ -42,11 +42,7 @@ func (c *command) newDeleteCommandOnPrem() *cobra.Command {
 
 func (c *command) deleteOnPrem(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
