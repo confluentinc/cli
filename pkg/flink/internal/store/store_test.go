@@ -991,7 +991,7 @@ func TestTimeout(t *testing.T) {
 	}
 }
 
-func (s *StoreTestSuite) TestProcessStatement() {
+func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
 		OrgResourceId:  "orgId",
@@ -1015,7 +1015,72 @@ func (s *StoreTestSuite) TestProcessStatement() {
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
+	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+		ComputePoolId: "computePoolId",
+	}
+	serviceAccountId := "sa-123"
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+	}
+
+	statement := "SELECT * FROM table"
+	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), serviceAccountId, "", "envId", "orgId").
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	expectedStatement := types.NewProcessedStatement(statementObj)
+	expectedStatement.ServiceAccount = serviceAccountId
+	require.Equal(s.T(), expectedStatement, processedStatement)
+}
+
+func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAccount() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+		ComputePoolId: "computePoolId",
+	}
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+	}
+
+	statement := "SELECT * FROM table"
+	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "", "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1047,7 +1112,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	returnedError := errors.New("test error")
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
+	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
 		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
