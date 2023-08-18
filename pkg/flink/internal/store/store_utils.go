@@ -395,8 +395,8 @@ func parseStatementType(statement string) StatementType {
 	}
 }
 
-// This returns the local timezone as a custom timezone along with the offset to UTC
-// Example: UTC+02:00 or UTC-08:00
+// This returns the local timezone as a custom timezone along with the offset to UTC/GMT
+// Example: GMT+02:00 or GMT-08:00
 func getLocalTimezone() string {
 	_, offsetSeconds := time.Now().Zone()
 	return formatUTCOffsetToTimezone(offsetSeconds)
@@ -410,7 +410,7 @@ func formatUTCOffsetToTimezone(offsetSeconds int) string {
 		timeOffset *= -1
 	}
 	offsetStr := fmt.Sprintf("%02d:%02d", int(timeOffset.Hours()), int(timeOffset.Minutes())%60)
-	return fmt.Sprintf("UTC%s%s", sign, offsetStr)
+	return fmt.Sprintf("GMT%s%s", sign, offsetStr)
 }
 
 // This increases function calculates a wait time that starts at 300 ms and increases 300 ms every 10 retries.
@@ -425,10 +425,10 @@ func calcWaitTime(retries int) time.Duration {
 // We either use the value set by user using set or use a default value of 10 minutes (as of today)
 func (s *Store) getTimeout() time.Duration {
 	if s.Properties.HasKey(config.ConfigKeyResultsTimeout) {
-		timeoutInSeconds, err := strconv.Atoi(s.Properties.Get(config.ConfigKeyResultsTimeout))
+		timeoutInMilliseconds, err := strconv.Atoi(s.Properties.Get(config.ConfigKeyResultsTimeout))
 		if err == nil {
 			// TODO - check for error when setting the property so user knows he hasn't set the results-timeout property properly
-			return time.Duration(timeoutInSeconds) * time.Second
+			return time.Duration(timeoutInMilliseconds) * time.Millisecond
 		} else {
 			return config.DefaultTimeoutDuration
 		}
