@@ -78,8 +78,9 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
 		statement,
 		s.appOptions.GetComputePoolId(),
+		s.Properties.GetSqlProperties(),
+		s.Properties.Get(config.ConfigKeyServiceAcount),
 		s.appOptions.GetIdentityPoolId(),
-		s.Properties.GetProperties(),
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrgResourceId(),
 	)
@@ -87,7 +88,9 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		status := statementObj.GetStatus()
 		return nil, types.NewStatementErrorFailureMsg(err, status.GetDetail())
 	}
-	return types.NewProcessedStatement(statementObj), nil
+	processedStatement := types.NewProcessedStatement(statementObj)
+	processedStatement.ServiceAccount = s.Properties.Get(config.ConfigKeyServiceAcount)
+	return processedStatement, nil
 }
 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
@@ -260,6 +263,7 @@ func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]strin
 	properties := map[string]string{
 		config.ConfigKeyCatalog:       appOptions.GetEnvironmentName(),
 		config.ConfigKeyDatabase:      appOptions.GetDatabase(),
+		config.ConfigKeyServiceAcount: appOptions.GetServiceAccountId(),
 		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
 	}
 
