@@ -9,7 +9,7 @@
       Fields: ([]types.StatementResultField) (len=2) {
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=7) "catalog"
+          Value: (string) (len=19) "sql.current-catalog"
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
@@ -22,7 +22,7 @@
       Fields: ([]types.StatementResultField) (len=2) {
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=16) "default_database"
+          Value: (string) (len=20) "sql.current-database"
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
@@ -35,7 +35,7 @@
       Fields: ([]types.StatementResultField) (len=2) {
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=21) "table.local-time-zone"
+          Value: (string) (len=19) "sql.local-time-zone"
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
