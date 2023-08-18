@@ -2,8 +2,10 @@ package autocomplete
 
 import (
 	"fmt"
+
+	"github.com/confluentinc/go-prompt"
+
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	prompt "github.com/confluentinc/go-prompt"
 )
 
 func SetCompleter(in prompt.Document) []prompt.Suggest {
