@@ -26,6 +26,8 @@ type ProcessedStatement struct {
 	StatementName     string `json:"statement_name"`
 	Kind              string `json:"statement"`
 	ComputePool       string `json:"compute_pool"`
+	IdentityPool      string `json:"identity_pool"`
+	ServiceAccount    string `json:"service_account"`
 	Status            PHASE  `json:"status"`
 	StatusDetail      string `json:"status_detail,omitempty"` // Shown at the top before the table
 	IsLocalStatement  bool
@@ -38,7 +40,11 @@ type ProcessedStatement struct {
 func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) *ProcessedStatement {
 	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
 	return &ProcessedStatement{
-		StatementName:     statementObj.Spec.GetStatementName(),
+		StatementName: statementObj.Spec.GetStatementName(),
+		ComputePool:   statementObj.Spec.GetComputePoolId(),
+		IdentityPool:  statementObj.Spec.GetIdentityPoolId(),
+		//TODO: add when v1beta1 statement SDK is ready
+		//ServiceAccount:    statementObj.Spec.GetServiceAccountId(),
 		StatusDetail:      statementObj.Status.GetDetail(),
 		Status:            PHASE(statementObj.Status.GetPhase()),
 		ResultSchema:      statementObj.Status.GetResultSchema(),
@@ -64,7 +70,7 @@ func (s ProcessedStatement) printStatusMessageOfLocalStatement() {
 
 func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	if s.StatementName != "" {
-		utils.OutputInfof("Statement name: %s\n", s.StatementName)
+		utils.OutputInfof("Statement name: %s", s.StatementName)
 	}
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))

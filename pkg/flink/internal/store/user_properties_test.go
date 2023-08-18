@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 )
 
 type UserPropertiesTestSuite struct {
@@ -155,4 +157,11 @@ func (s *UserPropertiesTestSuite) TestToSortedSlice() {
 		})
 		cupaloy.SnapshotT(t, userPropertiesWithEmptyDefault.ToSortedSlice(true))
 	})
+}
+
+func (s *UserPropertiesTestSuite) TestShouldOnlyReturnSqlNamespaceProperties() {
+	s.userProperties.Set(config.ConfigKeyResultsTimeout, "1000")
+	s.userProperties.Set(config.ConfigKeyCatalog, "test-catalog")
+
+	require.Equal(s.T(), map[string]string{config.ConfigKeyCatalog: "test-catalog"}, s.userProperties.GetSqlProperties())
 }
