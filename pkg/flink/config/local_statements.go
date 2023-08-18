@@ -10,8 +10,8 @@ const (
 	ConfigStatementTerminator = ";"
 
 	// keys
-	ConfigKeyCatalog        = "catalog"
-	ConfigKeyDatabase       = "default_database"
-	ConfigKeyLocalTimeZone  = "table.local-time-zone"
-	ConfigKeyResultsTimeout = "table.results-timeout"
+	ConfigKeyCatalog        = "sql.current-catalog"
+	ConfigKeyDatabase       = "sql.current-database"
+	ConfigKeyLocalTimeZone  = "sql.local-time-zone"
+	ConfigKeyResultsTimeout = "client.results-timeout"
 )

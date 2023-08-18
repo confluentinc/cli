@@ -225,8 +225,8 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	}
 
 	return nil, &types.StatementError{
-		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.",
-			timeout.Seconds()),
+		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
+			timeout.Seconds(), config.ConfigKeyResultsTimeout),
 		FailureMessage: errorsMsg,
 	}
 }
