@@ -47,19 +47,19 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 
 func (c *identityProviderCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
 	var displayName string
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		provider, err := c.V2Client.GetIdentityProvider(id)
 		if err != nil {
-			return err
+			return false
 		}
 		if id == args[0] {
 			displayName = provider.GetDisplayName()
 		}
 
-		return nil
+		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityProvider, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityProvider, existenceFunc); err != nil {
 		return false, err
 	}
 

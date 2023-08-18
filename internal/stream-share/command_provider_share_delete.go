@@ -37,10 +37,7 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteProviderShare(id); err != nil {
-			return err
-		}
-		return nil
+		return c.V2Client.DeleteProviderShare(id)
 	}
 
 	_, err := resource.Delete(args, deleteFunc, resource.ProviderShare)
@@ -48,12 +45,12 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) confirmDeletionProviderShare(cmd *cobra.Command, args []string) (bool, error) {
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.DescribeProviderShare(id)
-		return err
+		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ProviderShare, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ProviderShare, existenceFunc); err != nil {
 		return false, err
 	}
 

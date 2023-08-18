@@ -122,10 +122,10 @@ func ValidatePrefixes(resourceType string, args []string) error {
 	return nil
 }
 
-func ValidateArgs(fullParentCommand string, args []string, resourceType string, callDescribeEndpoint func(string) error) error {
+func ValidateArgs(fullParentCommand string, args []string, resourceType string, resourceExists func(string) bool) error {
 	var invalidArgs []string
 	for _, arg := range args {
-		if err := callDescribeEndpoint(arg); err != nil {
+		if !resourceExists(arg) {
 			invalidArgs = append(invalidArgs, arg)
 		}
 	}

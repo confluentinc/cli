@@ -37,10 +37,7 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteConsumerShare(id); err != nil {
-			return err
-		}
-		return nil
+		return c.V2Client.DeleteConsumerShare(id)
 	}
 
 	_, err := resource.Delete(args, deleteFunc, resource.ConsumerShare)
@@ -48,12 +45,12 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) confirmDeletionConsumerShare(cmd *cobra.Command, args []string) (bool, error) {
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.DescribeConsumerShare(id)
-		return err
+		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ConsumerShare, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ConsumerShare, existenceFunc); err != nil {
 		return false, err
 	}
 

@@ -52,19 +52,20 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
 	var displayName string
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		environment, err := c.V2Client.GetOrgEnvironment(id)
 		if err != nil {
-			return err
+			return false
 		}
+
 		if id == args[0] {
 			displayName = environment.GetDisplayName()
 		}
 
-		return nil
+		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Environment, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Environment, existenceFunc); err != nil {
 		return false, err
 	}
 

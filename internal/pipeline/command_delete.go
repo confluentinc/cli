@@ -49,10 +49,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id); err != nil {
-			return err
-		}
-		return nil
+		return c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id)
 	}
 
 	singleDeleteMsg := "Requested to delete pipeline %s.\n"
@@ -63,19 +60,19 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId string, args []string) (bool, error) {
 	var displayName string
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id)
 		if err != nil {
-			return err
+			return false
 		}
 		if id == args[0] {
 			displayName = pipeline.Spec.GetDisplayName()
 		}
 
-		return nil
+		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Pipeline, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Pipeline, existenceFunc); err != nil {
 		return false, err
 	}
 

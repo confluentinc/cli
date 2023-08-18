@@ -53,12 +53,12 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) confirmDeletionStatement(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId string, args []string) (bool, error) {
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
-		return err
+		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkStatement, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkStatement, existenceFunc); err != nil {
 		return false, err
 	}
 

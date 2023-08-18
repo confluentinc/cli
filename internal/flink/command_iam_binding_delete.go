@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -54,14 +53,11 @@ func (c *command) confirmDeletionIamBinding(cmd *cobra.Command, environmentId st
 		iamBindingsSet.Add(iamBinding.GetId())
 	}
 
-	describeFunc := func(id string) error {
-		if !iamBindingsSet.Contains(id) {
-			return errors.Errorf(`%s "%s" not found`, resource.FlinkIamBinding, id)
-		}
-		return nil
+	existenceFunc := func(id string) bool {
+		return iamBindingsSet.Contains(id)
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkIamBinding, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkIamBinding, existenceFunc); err != nil {
 		return false, err
 	}
 

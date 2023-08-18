@@ -55,19 +55,19 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 
 func (c *identityPoolCommand) confirmDeletion(cmd *cobra.Command, provider string, args []string) (bool, error) {
 	var displayName string
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		pool, err := c.V2Client.GetIdentityPool(id, provider)
 		if err != nil {
-			return err
+			return false
 		}
 		if id == args[0] {
 			displayName = pool.GetDisplayName()
 		}
 
-		return nil
+		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityPool, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityPool, existenceFunc); err != nil {
 		return false, err
 	}
 

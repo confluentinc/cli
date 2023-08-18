@@ -40,8 +40,12 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	brokerIdToNumId := make(map[string]int32)
-	if confirm, err := c.confirmDeletion(cmd, restClient, restContext, clusterId, args, brokerIdToNumId); err != nil {
+	brokerIdToIntId, err := mapBrokerIdToIntId(args)
+	if err != nil {
+		return err
+	}
+
+	if confirm, err := c.confirmDeletion(cmd, restClient, restContext, clusterId, args, brokerIdToIntId); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -49,7 +53,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 
 	opts := &kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
 	deleteFunc := func(id string) error {
-		if _, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerIdToNumId[id], opts); err != nil {
+		if _, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerIdToIntId[id], opts); err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 		return nil
@@ -61,25 +65,28 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string, brokerIdToNumId map[string]int32) (bool, error) {
-	describeFunc := func(id string) error {
-		i, err := strconv.ParseInt(id, 10, 32)
-		if err != nil {
-			return err
-		}
-		numId := int32(i)
-
-		if _, _, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, numId); err != nil {
-			return err
-		}
-		brokerIdToNumId[id] = numId
-
-		return nil
+func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string, brokerIdToIntId map[string]int32) (bool, error) {
+	existenceFunc := func(id string) bool {
+		_, _, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerIdToIntId[id])
+		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Broker, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Broker, existenceFunc); err != nil {
 		return false, err
 	}
 
 	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Broker, args))
+}
+
+func mapBrokerIdToIntId(args []string) (map[string]int32, error) {
+	brokerIdToIntId := make(map[string]int32)
+	for _, arg := range args {
+		i, err := strconv.ParseInt(arg, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		brokerIdToIntId[arg] = int32(i)
+	}
+
+	return brokerIdToIntId, nil
 }

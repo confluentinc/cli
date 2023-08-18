@@ -47,7 +47,8 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorIdToName := make(map[string]string)
+	connectorIdToName, err := c.mapConnectorIdToName(environmentId, kafkaCluster.ID)
+
 	if confirm, err := c.confirmDeletion(cmd, environmentId, kafkaCluster.ID, args, connectorIdToName); err != nil {
 		return err
 	} else if !confirm {
@@ -66,17 +67,12 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string, connectorIdToName map[string]string) (bool, error) {
-	describeFunc := func(id string) error {
-		connector, err := c.V2Client.GetConnectorExpansionById(id, environmentId, kafkaClusterId)
-		if err != nil {
-			return err
-		}
-		connectorIdToName[id] = connector.Info.GetName()
-
-		return nil
+	existenceFunc := func(id string) bool {
+		_, ok := connectorIdToName[id]
+		return ok
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Connector, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Connector, existenceFunc); err != nil {
 		return false, err
 	}
 
@@ -90,4 +86,19 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafk
 	}
 
 	return true, nil
+}
+
+func(c *clusterCommand) mapConnectorIdToName(environmentId, kafkaClusterId string) (map[string]string, error) {
+	// NOTE: Do NOT replace this with `V2Client.GetConnectorExpansionById` calls; that function itself calls `V2Client.ListConnectorsWithExpansions`
+	connectors, err := c.V2Client.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "id,info,status")
+	if err != nil {
+		return nil, err
+	}
+
+	connectorIdToName := make(map[string]string)
+	for _, connector := range connectors {
+		connectorIdToName[connector.Id.GetId()] = connector.Info.GetName()
+	}
+
+	return connectorIdToName, nil
 }

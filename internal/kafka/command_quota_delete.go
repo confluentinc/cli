@@ -31,10 +31,7 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteKafkaQuota(id); err != nil {
-			return err
-		}
-		return nil
+		return c.V2Client.DeleteKafkaQuota(id)
 	}
 
 	_, err := resource.Delete(args, deleteFunc, resource.ClientQuota)
@@ -43,19 +40,19 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 
 func (c *quotaCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
 	var displayName string
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		quota, err := c.V2Client.DescribeKafkaQuota(id)
 		if err != nil {
-			return err
+			return false
 		}
 		if id == args[0] {
 			displayName = quota.Spec.GetDisplayName()
 		}
 
-		return nil
+		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClientQuota, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClientQuota, existenceFunc); err != nil {
 		return false, err
 	}
 

@@ -46,12 +46,12 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *linkCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, args []string) (bool, error) {
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		_, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(id)
-		return err
+		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClusterLink, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClusterLink, existenceFunc); err != nil {
 		return false, err
 	}
 

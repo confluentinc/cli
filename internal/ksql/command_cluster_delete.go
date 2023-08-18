@@ -44,8 +44,9 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	idToCluster := make(map[string]ksqlv2.KsqldbcmV2Cluster)
-	if confirm, err := c.confirmDeletion(cmd, environmentId, args, idToCluster); err != nil {
+	idToCluster := c.mapIdToCluster(args, environmentId)
+
+	if confirm, err := c.confirmDeletion(cmd, args, idToCluster); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -62,10 +63,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		if err := c.V2Client.DeleteKsqlCluster(id, environmentId); err != nil {
-			return err
-		}
-		return nil
+		return c.V2Client.DeleteKsqlCluster(id, environmentId)
 	}
 
 	_, err = resource.Delete(args, deleteFunc, resource.KsqlCluster)
@@ -103,18 +101,13 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 	return nil
 }
 
-func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string, idToCluster map[string]ksqlv2.KsqldbcmV2Cluster) (bool, error) {
-	describeFunc := func(id string) error {
-		cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
-		if err != nil {
-			return err
-		}
-		idToCluster[id] = cluster
-
-		return nil
+func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, args []string, idToCluster map[string]ksqlv2.KsqldbcmV2Cluster) (bool, error) {
+	existenceFunc := func(id string) bool {
+		_, ok := idToCluster[id]
+		return ok
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KsqlCluster, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KsqlCluster, existenceFunc); err != nil {
 		return false, err
 	}
 
@@ -128,4 +121,20 @@ func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, 
 	}
 
 	return true, nil
+}
+
+func (c *ksqlCommand) mapIdToCluster(args []string, environmentId string) map[string]ksqlv2.KsqldbcmV2Cluster {
+	// NOTE: This function does not return an error for invalid IDs; validation will instead
+	// be done by resource.ValidateArgs using this map. This allows for consistent existence
+	// error messaging across all delete commands which support multiple deletion.
+
+	idToCluster := make(map[string]ksqlv2.KsqldbcmV2Cluster)
+	for _, id := range args {
+		cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
+		if err == nil {
+			idToCluster[id] = cluster
+		}
+	}
+
+	return idToCluster
 }

@@ -69,12 +69,12 @@ func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 }
 
 func confirmDeletionOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) (bool, error) {
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		_, _, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, id)
-		return err
+		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, existenceFunc); err != nil {
 		return false, err
 	}
 

@@ -63,19 +63,19 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 
 func (c *command) confirmDeletionExporter(cmd *cobra.Command, client *schemaregistry.Client, args []string) (bool, error) {
 	var name string
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		info, err := client.GetExporterInfo(args[0])
 		if err != nil {
-			return err
+			return false
 		}
 		if id == args[0] {
 			name = info.Name
 		}
 
-		return nil
+		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.SchemaExporter, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.SchemaExporter, existenceFunc); err != nil {
 		return false, err
 	}
 

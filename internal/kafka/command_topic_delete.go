@@ -71,12 +71,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, args []string) (bool, error) {
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		_, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(id)
-		return err
+		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, existenceFunc); err != nil {
 		return false, err
 	}
 

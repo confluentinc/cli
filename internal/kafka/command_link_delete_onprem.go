@@ -56,12 +56,12 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 }
 
 func (c *linkCommand) confirmDeletionOnPrem(cmd *cobra.Command, client *kafkarestv3.APIClient, ctx context.Context, clusterId string, args []string) (bool, error) {
-	describeFunc := func(id string) error {
+	existenceFunc := func(id string) bool {
 		_, _, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, id)
-		return err
+		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClusterLink, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClusterLink, existenceFunc); err != nil {
 		return false, err
 	}
 
