@@ -320,11 +320,11 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 		return err
 	}
 
-	allResourceTypes := make(map[string]bool)
+	allResourceTypes := []string{}
 	found := false
 	for _, role := range roles {
 		for _, operation := range role.AccessPolicy.AllowedOperations {
-			allResourceTypes[operation.ResourceType] = true
+			allResourceTypes = append(allResourceTypes, operation.ResourceType)
 			if operation.ResourceType == resourceType {
 				found = true
 				break
@@ -333,10 +333,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 	}
 
 	if !found {
-		uniqueResourceTypes := []string{}
-		for rt := range allResourceTypes {
-			uniqueResourceTypes = append(uniqueResourceTypes, rt)
-		}
+		uniqueResourceTypes := types.RemoveDuplicates(allResourceTypes)
 		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
 	}

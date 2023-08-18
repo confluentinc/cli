@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/antihax/optional"
@@ -24,7 +25,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -193,7 +193,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
-		if types.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
+		if slices.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
 			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
 			if err != nil {
 				return err
@@ -222,7 +222,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if types.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
+	if slices.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
 		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
