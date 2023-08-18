@@ -26,6 +26,7 @@ blocks:
             - sudo tar -xvf go$(cat .go-version).linux-amd64.tar.gz -C /usr/local
             - export PATH=/usr/local/go/bin:$PATH
             - export PATH=$(go env GOPATH)/bin:$PATH
+            - go env GOROOT
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
