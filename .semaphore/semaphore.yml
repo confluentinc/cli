@@ -25,7 +25,7 @@ blocks:
             - wget https://go.dev/dl/go$(cat .go-version).linux-amd64.tar.gz
             - sudo tar -xvf go$(cat .go-version).linux-amd64.tar.gz -C /usr/local
             - export GOROOT=/usr/local/go
-            - export PATH=$(go env GOROOT)/bin:$PATH
+            - export PATH=$GOROOT/bin:$PATH
             - export PATH=$(go env GOPATH)/bin:$PATH
 
             # Try to restore cached dependencies
@@ -61,7 +61,7 @@ blocks:
             - wget https://go.dev/dl/go$(cat .go-version).darwin-amd64.tar.gz
             - sudo tar -xvf go$(cat .go-version).darwin-amd64.tar.gz -C /usr/local
             - export GOROOT=/usr/local/go
-            - export PATH=$(go env GOROOT)/bin:$PATH
+            - export PATH=$GOROOT/bin:$PATH
             - export PATH=$(go env GOPATH)/bin:$PATH
 
             # Run tests
