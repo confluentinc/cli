@@ -4,7 +4,7 @@ Usage:
   confluent stream-share provider share [command]
 
 Available Commands:
-  delete      Delete a provider share.
+  delete      Delete one or more provider shares.
   describe    Describe a provider share.
   list        List shares for provider.
 

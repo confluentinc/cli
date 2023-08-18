@@ -1,23 +1,19 @@
 package context
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <context>",
-		Short:             "Delete a context.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <context-1> [context-2] ... [context-n]",
+		Short:             "Delete one or more contexts.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -27,20 +23,29 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	ctx, err := c.Config.FindContext(args[0])
-	if err != nil {
+	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Context, ctx.Name)
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
-		return err
+	deleteFunc := func(id string) error {
+		return c.Config.DeleteContext(id)
 	}
 
-	if err := c.Config.DeleteContext(ctx.Name); err != nil {
-		return err
+	_, err := resource.Delete(args, deleteFunc, resource.Context)
+	return err
+}
+
+func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
+	existenceFunc := func(id string) bool {
+		_, err := c.Config.FindContext(id)
+		return err == nil
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.Context, ctx.Name)
-	return nil
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Context, existenceFunc); err != nil {
+		return false, err
+	}
+
+	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Context, args))
 }

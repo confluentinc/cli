@@ -1,0 +1,1 @@
+Are you sure you want to delete brokers "1" and "2"? (y/n): Started deletion of brokers "1" and "2". To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.
