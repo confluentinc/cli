@@ -48,25 +48,26 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	connectorIdToName, err := c.mapConnectorIdToName(environmentId, kafkaCluster.ID)
+	if err != nil {
+		return err
+	}
 
-	if confirm, err := c.confirmDeletion(cmd, environmentId, kafkaCluster.ID, args, connectorIdToName); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, kafkaCluster.ID, args, connectorIdToName); err != nil {
 		return err
 	} else if !confirm {
 		return nil
 	}
 
 	deleteFunc := func(id string) error {
-		if _, err := c.V2Client.DeleteConnector(connectorIdToName[id], environmentId, kafkaCluster.ID); err != nil {
-			return err
-		}
-		return nil
+		_, err := c.V2Client.DeleteConnector(connectorIdToName[id], environmentId, kafkaCluster.ID)
+		return err
 	}
 
 	_, err = resource.Delete(args, deleteFunc, resource.Connector)
 	return err
 }
 
-func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string, connectorIdToName map[string]string) (bool, error) {
+func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, kafkaClusterId string, args []string, connectorIdToName map[string]string) (bool, error) {
 	existenceFunc := func(id string) bool {
 		_, ok := connectorIdToName[id]
 		return ok
