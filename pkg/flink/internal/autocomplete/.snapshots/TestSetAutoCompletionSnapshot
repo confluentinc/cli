@@ -5,6 +5,6 @@
   },
   (prompt.Suggest) {
     Text: (string) (len=44) "SET 'sql.local-time-zone' = 'Europe/Berlin';",
-    Description: (string) (len=48) "Used to set the timezone for the current session"
+    Description: (string) (len=129) "Used to set the timezone for the current session either with a TZID ('Europe/Berlin'), a fixed offset ('GMT+02:00') or just 'UTC'"
   }
 }
