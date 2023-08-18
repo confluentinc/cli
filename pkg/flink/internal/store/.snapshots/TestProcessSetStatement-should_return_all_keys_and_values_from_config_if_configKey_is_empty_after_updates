@@ -3,33 +3,7 @@
     (string) (len=3) "Key",
     (string) (len=5) "Value"
   },
-  Rows: ([]types.StatementResultRow) (len=5) {
-    (types.StatementResultRow) {
-      Operation: (types.StatementResultOperation) +I,
-      Fields: ([]types.StatementResultField) (len=2) {
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=7) "catalog"
-        },
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=4) "job1"
-        }
-      }
-    },
-    (types.StatementResultRow) {
-      Operation: (types.StatementResultOperation) +I,
-      Fields: ([]types.StatementResultField) (len=2) {
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=16) "default_database"
-        },
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=17) "<unset> (default)"
-        }
-      }
-    },
+  Rows: ([]types.StatementResultRow) (len=4) {
     (types.StatementResultRow) {
       Operation: (types.StatementResultOperation) +I,
       Fields: ([]types.StatementResultField) (len=2) {
@@ -48,11 +22,11 @@
       Fields: ([]types.StatementResultField) (len=2) {
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=21) "table.local-time-zone"
+          Value: (string) (len=19) "sql.current-catalog"
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=10) "London/GMT"
+          Value: (string) (len=17) "<unset> (default)"
         }
       }
     },
@@ -61,11 +35,24 @@
       Fields: ([]types.StatementResultField) (len=2) {
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=7) "timeout"
+          Value: (string) (len=20) "sql.current-database"
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=2) "30"
+          Value: (string) (len=17) "<unset> (default)"
+        }
+      }
+    },
+    (types.StatementResultRow) {
+      Operation: (types.StatementResultOperation) +I,
+      Fields: ([]types.StatementResultField) (len=2) {
+        (types.AtomicStatementResultField) {
+          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
+          Value: (string) (len=19) "sql.local-time-zone"
+        },
+        (types.AtomicStatementResultField) {
+          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
+          Value: (string) (len=10) "London/GMT"
         }
       }
     }

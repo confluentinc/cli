@@ -95,11 +95,10 @@ func TestProcessSetStatement(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		cupaloy.SnapshotT(t, result.StatementResults)
 
-		// Add some key-value pairs to the config
-		s.Properties.Set("catalog", "job1")
-		s.Properties.Set("timeout", "30")
+		assert.Equal(t, 2, len(result.StatementResults.Headers))
+		assert.Equal(t, len(s.Properties.GetProperties()), len(result.StatementResults.Rows))
+		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 
 	t.Run("should update config for valid configKey", func(t *testing.T) {
@@ -114,13 +113,9 @@ func TestProcessSetStatement(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		expectedKeyValuePairs := map[string]string{"catalog": "job1", "timeout": "30", "location": "USA"}
 
-		// check row and column lengths match
 		assert.Equal(t, 2, len(result.StatementResults.Headers))
-		// + 2 for the other default properties apart from catalog
-		assert.Equal(t, len(expectedKeyValuePairs)+2, len(result.StatementResults.Rows))
-		// check if all expected key value pairs are in the results
+		assert.Equal(t, len(s.Properties.GetProperties()), len(result.StatementResults.Rows))
 		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 }
@@ -246,23 +241,23 @@ func TestFormatUTCOffsetToTimezone(t *testing.T) {
 	}{
 		{
 			offsetSeconds: hoursToSeconds(5.5),
-			expected:      "UTC+05:30",
+			expected:      "GMT+05:30",
 		},
 		{
 			offsetSeconds: hoursToSeconds(-6),
-			expected:      "UTC-06:00",
+			expected:      "GMT-06:00",
 		},
 		{
 			offsetSeconds: hoursToSeconds(0),
-			expected:      "UTC+00:00",
+			expected:      "GMT+00:00",
 		},
 		{
 			offsetSeconds: hoursToSeconds(-2.25),
-			expected:      "UTC-02:15",
+			expected:      "GMT-02:15",
 		},
 		{
 			offsetSeconds: hoursToSeconds(3.75),
-			expected:      "UTC+03:45",
+			expected:      "GMT+03:45",
 		},
 	}
 
