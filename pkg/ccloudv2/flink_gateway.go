@@ -14,7 +14,7 @@ type GatewayClientInterface interface {
 	DeleteStatement(environmentId, statementName, orgId string) error
 	GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementList, error)
-	CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
+	CreateStatement(statement, computePoolId string, properties map[string]string, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error)
 	GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error)
 }
@@ -84,17 +84,24 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePool
 	return allStatements, nil
 }
 
-func (c *FlinkGatewayClient) CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+func (c *FlinkGatewayClient) CreateStatement(statement, computePoolId string, properties map[string]string, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
 	statementName := uuid.New().String()[:18]
 
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName:  &statementName,
-			Statement:      &statement,
-			ComputePoolId:  &computePoolId,
-			IdentityPoolId: &identityPoolId,
-			Properties:     &properties,
+			StatementName: &statementName,
+			Statement:     &statement,
+			ComputePoolId: &computePoolId,
+			Properties:    &properties,
 		},
+	}
+	if serviceAccountId != "" {
+		// add the service account header and remove it after the request
+		c.GetConfig().AddDefaultHeader("Service-Account-Id", serviceAccountId)
+		defer delete(c.GetConfig().DefaultHeader, "Service-Account-Id")
+	} else {
+		// if this is also empty we have the interactive query/AUMP case
+		statementObj.Spec.IdentityPoolId = &identityPoolId
 	}
 	resp, httpResp, err := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statementObj).OrgId(orgId).Execute()
 	return resp, flink.CatchError(err, httpResp)
