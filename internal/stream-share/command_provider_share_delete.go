@@ -1,24 +1,20 @@
 package streamshare
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a provider share.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validProviderShareArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more provider shares.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validProviderShareArgsMultiple),
 		RunE:              c.deleteProviderShare,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -34,21 +30,29 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 }
 
 func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
-	shareId := args[0]
-
-	if _, err := c.V2Client.DescribeProviderShare(shareId); err != nil {
+	if confirm, err := c.confirmDeletionProviderShare(cmd, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ProviderShare, shareId)
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
-		return err
+	deleteFunc := func(id string) error {
+		return c.V2Client.DeleteProviderShare(id)
 	}
 
-	if err := c.V2Client.DeleteProviderShare(shareId); err != nil {
-		return err
+	_, err := resource.Delete(args, deleteFunc, resource.ProviderShare)
+	return err
+}
+
+func (c *command) confirmDeletionProviderShare(cmd *cobra.Command, args []string) (bool, error) {
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.DescribeProviderShare(id)
+		return err == nil
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.ProviderShare, shareId)
-	return nil
+	if err := resource.ValidateArgs(cmd, args, resource.ProviderShare, existenceFunc); err != nil {
+		return false, err
+	}
+
+	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ProviderShare, args))
 }
