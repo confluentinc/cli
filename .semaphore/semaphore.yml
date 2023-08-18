@@ -22,7 +22,11 @@ blocks:
           commands:
             # Set up Go
             - checkout
-            - sem-version go $(cat .go-version)
+            - wget https://go.dev/dl/go$(cat .go-version).linux-amd64.tar.gz
+            - sudo tar -xvf go$(cat .go-version).linux-amd64.tar.gz -C /usr/local
+            - export GOROOT=/usr/local/go
+            - export PATH=$(go env GOROOT)/bin:$PATH
+            - export PATH=$(go env GOPATH)/bin:$PATH
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
@@ -56,8 +60,9 @@ blocks:
             - checkout
             - wget https://go.dev/dl/go$(cat .go-version).darwin-amd64.tar.gz
             - sudo tar -xvf go$(cat .go-version).darwin-amd64.tar.gz -C /usr/local
-            - export PATH=$PATH:/usr/local/go/bin
-            - export PATH=$PATH:$(go env GOPATH)/bin
+            - export GOROOT=/usr/local/go
+            - export PATH=$(go env GOROOT)/bin:$PATH
+            - export PATH=$(go env GOPATH)/bin:$PATH
 
             # Run tests
             - make test

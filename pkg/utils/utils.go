@@ -13,32 +13,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func Max(x, y int64) int64 {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func TestEq(a, b []string) bool {
-	// If one is nil, the other must also be nil.
-	if (a == nil) != (b == nil) {
-		return false
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
-}
-
 func DoesPathExist(path string) bool {
 	if path == "" {
 		return false

@@ -2,9 +2,9 @@ package sso
 
 import (
 	"net/url"
+	"slices"
 	"strings"
 
-	"github.com/confluentinc/cli/v3/pkg/types"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
@@ -53,5 +53,5 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 }
 
 func IsOkta(url string) bool {
-	return types.Contains([]string{"prod-us-gov", "infra-us-gov", "devel-us-gov"}, GetCCloudEnvFromBaseUrl(url))
+	return slices.Contains([]string{"prod-us-gov", "infra-us-gov", "devel-us-gov"}, GetCCloudEnvFromBaseUrl(url))
 }
