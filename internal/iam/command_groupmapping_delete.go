@@ -41,7 +41,7 @@ func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.SsoGroupMapping, args[0], groupMapping.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, groupMapping.GetDisplayName()); err != nil {
+	if err := form.ConfirmDeletionWithString(cmd, promptMsg, groupMapping.GetDisplayName()); err != nil {
 		return err
 	}
 
@@ -49,6 +49,6 @@ func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintf(errors.DeletedResourceMsg, resource.SsoGroupMapping, args[0])
+	output.ErrPrintf("Deleted %s %s.\n", resource.SsoGroupMapping, args[0])
 	return nil
 }
