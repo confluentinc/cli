@@ -1,24 +1,20 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *groupMappingCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a group mapping.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more group mappings.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -35,20 +31,49 @@ func (c *groupMappingCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
-	groupMapping, err := c.V2Client.GetGroupMapping(args[0])
-	if err != nil {
+	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
 		return err
-	}
-
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.SsoGroupMapping, args[0], groupMapping.GetDisplayName())
-	if err := form.ConfirmDeletionWithString(cmd, promptMsg, groupMapping.GetDisplayName()); err != nil {
-		return err
+	} else if !confirm {
+		return nil
 	}
 
 	if err := c.V2Client.DeleteGroupMapping(args[0]); err != nil {
 		return err
 	}
 
-	output.ErrPrintf("Deleted %s %s.\n", resource.SsoGroupMapping, args[0])
-	return nil
+	deleteFunc := func(id string) error {
+		return c.V2Client.DeleteGroupMapping(id)
+	}
+
+	_, err := resource.Delete(args, deleteFunc, resource.SsoGroupMapping)
+	return err
+}
+
+func (c *groupMappingCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
+	var displayName string
+	existenceFunc := func(id string) bool {
+		groupMapping, err := c.V2Client.GetGroupMapping(id)
+		if err != nil {
+			return false
+		}
+		if id == args[0] {
+			displayName = groupMapping.GetDisplayName()
+		}
+
+		return true
+	}
+
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.SsoGroupMapping, existenceFunc); err != nil {
+		return false, err
+	}
+
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.SsoGroupMapping, args))
+	}
+
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.SsoGroupMapping, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
