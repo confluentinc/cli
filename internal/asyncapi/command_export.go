@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -24,7 +25,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 type confluentBinding struct {
@@ -284,7 +284,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		Subject:     topicName + "-value",
 		Properties:  kafka.ConsumerProperties{},
 	}
-	if types.Contains(serdes.SchemaBasedFormats, valueFormat) {
+	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {
 		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)
 		if err != nil {
 			return nil, err

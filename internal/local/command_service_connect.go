@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -16,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -220,7 +220,7 @@ func (c *Command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []stri
 
 	var configFile string
 
-	if types.Contains(connectors, connector) {
+	if slices.Contains(connectors, connector) {
 		configFile, err = c.ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err
