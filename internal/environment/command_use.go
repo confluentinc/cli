@@ -30,7 +30,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, pcmd.FullParentName(cmd)))
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, "confluent environment"))
 	}
 
 	c.Context.SetCurrentEnvironment(id)

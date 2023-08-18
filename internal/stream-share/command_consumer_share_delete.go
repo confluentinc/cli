@@ -50,7 +50,7 @@ func (c *command) confirmDeletionConsumerShare(cmd *cobra.Command, args []string
 		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ConsumerShare, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.ConsumerShare, existenceFunc); err != nil {
 		return false, err
 	}
 

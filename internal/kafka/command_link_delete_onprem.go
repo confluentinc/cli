@@ -61,7 +61,7 @@ func (c *linkCommand) confirmDeletionOnPrem(cmd *cobra.Command, client *kafkares
 		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClusterLink, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.ClusterLink, existenceFunc); err != nil {
 		return false, err
 	}
 

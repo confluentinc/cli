@@ -58,7 +58,7 @@ func (c *command) confirmDeletionStatement(cmd *cobra.Command, client *ccloudv2.
 		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkStatement, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.FlinkStatement, existenceFunc); err != nil {
 		return false, err
 	}
 

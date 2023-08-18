@@ -50,7 +50,7 @@ func (c *command) confirmDeletionProviderShare(cmd *cobra.Command, args []string
 		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ProviderShare, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.ProviderShare, existenceFunc); err != nil {
 		return false, err
 	}
 

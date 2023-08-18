@@ -76,7 +76,7 @@ func (c *command) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST,
 		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.Topic, existenceFunc); err != nil {
 		return false, err
 	}
 

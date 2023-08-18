@@ -67,7 +67,7 @@ func (c *identityPoolCommand) confirmDeletion(cmd *cobra.Command, provider strin
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityPool, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.IdentityPool, existenceFunc); err != nil {
 		return false, err
 	}
 

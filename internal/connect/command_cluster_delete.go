@@ -73,7 +73,7 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, kafkaClusterId stri
 		return ok
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Connector, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.Connector, existenceFunc); err != nil {
 		return false, err
 	}
 

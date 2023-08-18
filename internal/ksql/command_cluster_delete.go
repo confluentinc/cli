@@ -107,7 +107,7 @@ func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, args []string, idToClu
 		return ok
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KsqlCluster, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.KsqlCluster, existenceFunc); err != nil {
 		return false, err
 	}
 

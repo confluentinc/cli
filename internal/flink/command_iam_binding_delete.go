@@ -57,7 +57,7 @@ func (c *command) confirmDeletionIamBinding(cmd *cobra.Command, environmentId st
 		return iamBindingsSet.Contains(id)
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkIamBinding, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.FlinkIamBinding, existenceFunc); err != nil {
 		return false, err
 	}
 

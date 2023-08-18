@@ -74,7 +74,7 @@ func confirmDeletionOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient
 		return err == nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.Topic, existenceFunc); err != nil {
 		return false, err
 	}
 

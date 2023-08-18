@@ -63,7 +63,7 @@ func (c *groupMappingCommand) confirmDeletion(cmd *cobra.Command, args []string)
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.SsoGroupMapping, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.SsoGroupMapping, existenceFunc); err != nil {
 		return false, err
 	}
 

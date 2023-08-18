@@ -59,7 +59,7 @@ func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, 
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.User, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.User, existenceFunc); err != nil {
 		return false, err
 	}
 

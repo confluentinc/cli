@@ -63,7 +63,7 @@ func (c *command) confirmDeletionComputePool(cmd *cobra.Command, environmentId s
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkComputePool, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.FlinkComputePool, existenceFunc); err != nil {
 		return false, err
 	}
 

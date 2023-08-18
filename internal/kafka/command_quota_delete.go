@@ -52,7 +52,7 @@ func (c *quotaCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool,
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClientQuota, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.ClientQuota, existenceFunc); err != nil {
 		return false, err
 	}
 

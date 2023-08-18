@@ -81,7 +81,7 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId strin
 		return true
 	}
 
-	err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KafkaCluster, existenceFunc)
+	err := resource.ValidateArgs(cmd, args, resource.KafkaCluster, existenceFunc)
 	if err != nil {
 		PluralClusterEnvironmentSuggestions := "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 		return false, errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)

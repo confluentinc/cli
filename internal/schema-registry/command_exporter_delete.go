@@ -75,7 +75,7 @@ func (c *command) confirmDeletionExporter(cmd *cobra.Command, client *schemaregi
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.SchemaExporter, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.SchemaExporter, existenceFunc); err != nil {
 		return false, err
 	}
 

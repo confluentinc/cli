@@ -43,7 +43,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	errs := multierror.Append(err, c.deleteEnvironmentsFromConfig(deletedIDs))
 	if errs.ErrorOrNil() != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, pcmd.FullParentName(cmd)))
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, "confluent environment"))
 	}
 
 	return nil
@@ -64,7 +64,7 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, erro
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Environment, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.Environment, existenceFunc); err != nil {
 		return false, err
 	}
 

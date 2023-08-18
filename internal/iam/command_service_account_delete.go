@@ -67,7 +67,7 @@ func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []strin
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ServiceAccount, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.ServiceAccount, existenceFunc); err != nil {
 		return false, err
 	}
 

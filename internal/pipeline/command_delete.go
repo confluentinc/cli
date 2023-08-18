@@ -72,7 +72,7 @@ func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId s
 		return true
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Pipeline, existenceFunc); err != nil {
+	if err := resource.ValidateArgs(cmd, args, resource.Pipeline, existenceFunc); err != nil {
 		return false, err
 	}
 

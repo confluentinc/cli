@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -122,7 +123,7 @@ func ValidatePrefixes(resourceType string, args []string) error {
 	return nil
 }
 
-func ValidateArgs(fullParentCommand string, args []string, resourceType string, resourceExists func(string) bool) error {
+func ValidateArgs(c *cobra.Command, args []string, resourceType string, resourceExists func(string) bool) error {
 	var invalidArgs []string
 	for _, arg := range args {
 		if !resourceExists(arg) {
@@ -136,7 +137,20 @@ func ValidateArgs(fullParentCommand string, args []string, resourceType string, 
 		if len(invalidArgs) > 1 {
 			invalidArgsErrMsg = fmt.Sprintf(NotFoundErrorMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 		}
-		return errors.NewErrorWithSuggestions(invalidArgsErrMsg, fmt.Sprintf(errors.ListResourceSuggestions, resourceType, fullParentCommand))
+
+		// Find the full parent command string for use in the suggestion message
+		var fullParentCommand string
+		if c.HasParent() {
+			fullParentCommand = c.Parent().Name()
+			c = c.Parent()
+		}
+		for c.HasParent() {
+			fullParentCommand = fmt.Sprintf("%s %s", c.Parent().Name(), fullParentCommand)
+			c = c.Parent()
+		}
+		invalidArgsSuggestion := fmt.Sprintf(errors.ListResourceSuggestions, resourceType, fullParentCommand)
+
+		return errors.NewErrorWithSuggestions(invalidArgsErrMsg, invalidArgsSuggestion)
 	}
 
 	return nil
