@@ -2,6 +2,7 @@ package linter
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -9,8 +10,6 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 type FlagRule func(flag *pflag.Flag, cmd *cobra.Command) error
@@ -122,7 +121,7 @@ func RequireFlagUsageRealWords(properNouns []string) FlagRule {
 		}
 
 		for _, w := range strings.Split(usage, " ") {
-			if ok := vocab.Spell(w); !ok && !types.Contains(properNouns, w) {
+			if ok := vocab.Spell(w); !ok && !slices.Contains(properNouns, w) {
 				issue := fmt.Errorf("flag usage should consist of delimited real english words for --%s on `%s` - unknown '%s' in '%s'", flag.Name, FullCommand(cmd), w, usage)
 				issues = multierror.Append(issues, issue)
 			}
