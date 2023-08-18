@@ -1,23 +1,21 @@
 package flink
 
 import (
-	"fmt"
-
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newComputePoolDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a Flink compute pool.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more Flink compute pools.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgsMultiple),
 		RunE:              c.computePoolDelete,
 	}
 
@@ -34,30 +32,59 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	computePool, err := c.V2Client.DescribeFlinkComputePool(args[0], environmentId)
-	if err != nil {
+	if confirm, err := c.confirmDeletionComputePool(cmd, environmentId, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.FlinkComputePool, computePool.GetId(), computePool.Spec.GetDisplayName())
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, computePool.Spec.GetDisplayName()); err != nil || !ok {
-		return err
+	deleteFunc := func(id string) error {
+		return c.V2Client.DeleteFlinkComputePool(id, environmentId)
 	}
 
-	if err := c.V2Client.DeleteFlinkComputePool(args[0], environmentId); err != nil {
-		return err
-	}
+	deletedIDs, err := resource.Delete(args, deleteFunc, resource.FlinkComputePool)
 
-	output.Printf(errors.DeletedResourceMsg, resource.FlinkComputePool, args[0])
+	errs := multierror.Append(err, c.removePoolFromConfigIfCurrent(deletedIDs))
 
-	if computePool.GetId() == c.Context.GetCurrentFlinkComputePool() {
-		if err := c.Context.SetCurrentFlinkComputePool(""); err != nil {
-			return err
+	return errs.ErrorOrNil()
+}
+
+func (c *command) confirmDeletionComputePool(cmd *cobra.Command, environmentId string, args []string) (bool, error) {
+	var displayName string
+	existenceFunc := func(id string) bool {
+		computePool, err := c.V2Client.DescribeFlinkComputePool(id, environmentId)
+		if err != nil {
+			return false
 		}
-		if err := c.Config.Save(); err != nil {
-			return err
+		if id == args[0] {
+			displayName = computePool.Spec.GetDisplayName()
+		}
+
+		return true
+	}
+
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkComputePool, existenceFunc); err != nil {
+		return false, err
+	}
+
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkComputePool, args))
+	}
+
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.FlinkComputePool, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (c *command) removePoolFromConfigIfCurrent(deletedIDs []string) error {
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	for _, id := range deletedIDs {
+		if id == c.Context.GetCurrentFlinkComputePool() {
+			errs = multierror.Append(errs, c.Context.SetCurrentFlinkComputePool(""), c.Config.Save())
 		}
 	}
 
-	return nil
+	return errs.ErrorOrNil()
 }
