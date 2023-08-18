@@ -43,10 +43,10 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deletedIDs, err := resource.Delete(args, deleteFunc, resource.FlinkComputePool)
-	if err2 := c.removePoolFromConfigIfCurrent(deletedIDs); err2 != nil {
-		err = multierror.Append(err, err2)
-	}
-	return err
+
+	errs := multierror.Append(err, c.removePoolFromConfigIfCurrent(deletedIDs))
+
+	return errs.ErrorOrNil()
 }
 
 func (c *command) confirmDeletionComputePool(cmd *cobra.Command, environmentId string, args []string) (bool, error) {
@@ -82,12 +82,7 @@ func (c *command) removePoolFromConfigIfCurrent(deletedIDs []string) error {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	for _, id := range deletedIDs {
 		if id == c.Context.GetCurrentFlinkComputePool() {
-			if err := c.Context.SetCurrentFlinkComputePool(""); err != nil {
-				errs = multierror.Append(errs, err)
-			}
-			if err := c.Config.Save(); err != nil {
-				errs = multierror.Append(errs, err)
-			}
+			errs = multierror.Append(errs, c.Context.SetCurrentFlinkComputePool(""), c.Config.Save())
 		}
 	}
 

@@ -50,10 +50,9 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deletedIDs, err := resource.Delete(args, deleteFunc, resource.KafkaCluster)
-	if err2 := c.removeKafkaClusterConfigs(deletedIDs); err2 != nil {
-		err = multierror.Append(err, err2)
-	}
-	if err != nil {
+
+	errs := multierror.Append(err, c.removeKafkaClusterConfigs(deletedIDs))
+	if errs.ErrorOrNil() != nil {
 		if len(args)-len(deletedIDs) > 1 {
 			return errors.NewErrorWithSuggestions(err.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
 		} else {
@@ -102,9 +101,7 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId strin
 func (c *clusterCommand) removeKafkaClusterConfigs(deletedIDs []string) error {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	for _, id := range deletedIDs {
-		if err := c.Context.RemoveKafkaClusterConfig(id); err != nil {
-			errs = multierror.Append(errs, err)
-		}
+		errs = multierror.Append(errs, c.Context.RemoveKafkaClusterConfig(id))
 	}
 
 	return errs.ErrorOrNil()
