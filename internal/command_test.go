@@ -2,6 +2,7 @@ package internal
 
 import (
 	"runtime"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,7 +11,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
@@ -33,7 +33,7 @@ func TestHelp_NoContext(t *testing.T) {
 		"version",
 	}
 	if runtime.GOOS == "windows" {
-		commands = types.Remove(commands, "local")
+		commands = slices.DeleteFunc(commands, func(s string) bool { return s == "local" })
 	}
 
 	for _, command := range commands {
@@ -57,7 +57,7 @@ func TestHelp_CloudSuspendedOrg(t *testing.T) {
 		"cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "prompt", "shell", "update", "version",
 	}
 	if runtime.GOOS == "windows" {
-		commands = types.Remove(commands, "local")
+		commands = slices.DeleteFunc(commands, func(s string) bool { return s == "local" })
 	}
 
 	for _, command := range commands {
@@ -83,7 +83,7 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 		"admin", "cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "prompt", "shell", "update", "version",
 	}
 	if runtime.GOOS == "windows" {
-		commands = types.Remove(commands, "local")
+		commands = slices.DeleteFunc(commands, func(s string) bool { return s == "local" })
 	}
 
 	for _, command := range commands {
@@ -171,7 +171,7 @@ func TestHelp_OnPrem(t *testing.T) {
 		"local", "login", "logout", "schema-registry", "secret", "update", "version",
 	}
 	if runtime.GOOS == "windows" {
-		commands = types.Remove(commands, "local")
+		commands = slices.DeleteFunc(commands, func(s string) bool { return s == "local" })
 	}
 
 	for _, command := range commands {

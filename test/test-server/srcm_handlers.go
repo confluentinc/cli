@@ -3,14 +3,13 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
-
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 const (
@@ -160,7 +159,7 @@ func filterRegionList(regionList []srcmv2.SrcmV2Region, cloud, region, packageTy
 	for _, regionSpec := range regionList {
 		if (regionSpec.Spec.GetCloud() == cloud || cloud == "") &&
 			(regionSpec.Spec.GetRegionName() == region || region == "") &&
-			(types.Contains(regionSpec.Spec.GetPackages(), packageType) || packageType == "") {
+			(slices.Contains(regionSpec.Spec.GetPackages(), packageType) || packageType == "") {
 			filteredRegionList = append(filteredRegionList, regionSpec)
 		}
 	}

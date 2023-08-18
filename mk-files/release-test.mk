@@ -52,5 +52,5 @@ smoke-tests:
 	vault login -method=oidc -path=okta && \
 	password=$$(vault kv get -field password v1/devel/kv/cli/system-tests/test-user-password) && \
 	echo -e "cli-team+system-tests@confluent.io\n$${password}\n" | HOME=$$(mktemp -d) ./bin/confluent login && \
-	go install github.com/confluentinc/cli/v3-plugins/confluent-login-headless_sso@latest && \
+	go install github.com/confluentinc/cli-plugins/confluent-login-headless_sso@latest && \
 	HOME=$$(mktemp -d) ./bin/confluent login headless-sso --provider okta --email cli-team+system-tests+sso@confluent.io --password $${password}
