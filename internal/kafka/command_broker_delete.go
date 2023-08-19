@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/antihax/optional"
@@ -11,7 +12,9 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *brokerCommand) newDeleteCommand() *cobra.Command {
@@ -49,10 +52,8 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if confirm, err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.Broker); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.Broker); err != nil {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	opts := &kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
@@ -63,9 +64,14 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	singleDeleteMsg := "Started deletion of broker %s. To monitor the remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
-	multipleDeleteMsg := "Started deletion of brokers %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
-	_, err = deletion.DeleteWithCustomMessage(args, deleteFunc, singleDeleteMsg, multipleDeleteMsg)
+	deletedIDs, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+	deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
+	if len(deletedIDs) == 1 {
+		output.Printf(deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIDs[0]))
+	} else if len(deletedIDs) > 1 {
+		output.Printf(deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
+	}
+
 	return err
 }
 

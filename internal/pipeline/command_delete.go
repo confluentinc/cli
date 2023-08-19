@@ -1,12 +1,16 @@
 package pipeline
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
@@ -52,18 +56,21 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Pipeline, pipeline.Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Pipeline, pipeline.Spec.GetDisplayName()); err != nil {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	deleteFunc := func(id string) error {
 		return c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id)
 	}
 
-	singleDeleteMsg := "Requested to delete pipeline %s.\n"
-	multipleDeleteMsg := "Requested to delete pipelines %s.\n"
-	_, err = deletion.DeleteWithCustomMessage(args, deleteFunc, singleDeleteMsg, multipleDeleteMsg)
+	deletedIDs, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+	deleteMsg := "Requested to delete %s %s.\n"
+	if len(deletedIDs) == 1 {
+		output.Printf(deleteMsg, resource.Pipeline, fmt.Sprintf("\"%s\"", deletedIDs[0]))
+	} else if len(deletedIDs) > 1 {
+		output.Printf(deleteMsg, resource.Plural(resource.Pipeline), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
+	}
+
 	return err
 }

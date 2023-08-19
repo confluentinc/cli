@@ -93,7 +93,7 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
 	}
 
-	if ok, err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return err
 	}
 
@@ -102,7 +102,7 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 }
 
 func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
-	if ok, err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return nil, err
 	}
 

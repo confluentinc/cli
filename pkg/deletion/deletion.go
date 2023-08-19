@@ -2,6 +2,7 @@ package deletion
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -13,25 +14,25 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func ValidateAndConfirmDeletionYesNo(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) (bool, error) {
+func ValidateAndConfirmDeletionYesNo(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
 	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
-		return false, err
+		return err
 	}
 
 	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
-		return false, err
+		return err
 	}
 
 	return ConfirmDeletionYesNo(cmd, DefaultYesNoPromptString(resourceType, args))
 }
 
-func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) (bool, error) {
+func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
 	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
-		return false, err
+		return err
 	}
 
 	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
-		return false, err
+		return err
 	}
 
 	if len(args) > 1 {
@@ -40,26 +41,30 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 
 	promptString := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, args[0], name)
 	if err := ConfirmDeletionWithString(cmd, promptString, name); err != nil {
-		return false, err
+		return err
 	}
 
-	return true, nil
+	return nil
 }
 
-func ConfirmDeletionYesNo(cmd *cobra.Command, promptMsg string) (bool, error) {
+func ConfirmDeletionYesNo(cmd *cobra.Command, promptMsg string) error {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return false, err
+		return err
 	} else if force {
-		return true, nil
+		return nil
 	}
 
 	prompt := form.NewPrompt()
 	f := form.New(form.Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: true})
 	if err := f.Prompt(prompt); err != nil {
-		return false, errors.New(errors.FailedToReadInputErrorMsg)
+		return errors.New(errors.FailedToReadInputErrorMsg)
 	}
 
-	return f.Responses["confirm"].(bool), nil
+	if !f.Responses["confirm"].(bool) {
+		os.Exit(0)
+	}
+
+	return nil
 }
 
 func ConfirmDeletionWithString(cmd *cobra.Command, promptMsg, stringToType string) error {
@@ -83,7 +88,7 @@ func ConfirmDeletionWithString(cmd *cobra.Command, promptMsg, stringToType strin
 	return errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
-func delete(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
+func DeleteWithoutMessage(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deletedIDs []string
 	for _, id := range args {
@@ -98,25 +103,13 @@ func delete(args []string, callDeleteEndpoint func(string) error) ([]string, err
 }
 
 func Delete(args []string, callDeleteEndpoint func(string) error, resourceType string) ([]string, error) {
-	deletedIDs, err := delete(args, callDeleteEndpoint)
+	deletedIDs, err := DeleteWithoutMessage(args, callDeleteEndpoint)
 
 	DeletedResourceMsg := "Deleted %s %s.\n"
 	if len(deletedIDs) == 1 {
 		output.Printf(DeletedResourceMsg, resourceType, fmt.Sprintf("\"%s\"", deletedIDs[0]))
 	} else if len(deletedIDs) > 1 {
 		output.Printf(DeletedResourceMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
-	}
-
-	return deletedIDs, err
-}
-
-func DeleteWithCustomMessage(args []string, callDeleteEndpoint func(string) error, singularMsg, pluralMsg string) ([]string, error) {
-	deletedIDs, err := delete(args, callDeleteEndpoint)
-
-	if len(deletedIDs) == 1 {
-		output.Printf(singularMsg, fmt.Sprintf("\"%s\"", deletedIDs[0]))
-	} else if len(deletedIDs) > 1 {
-		output.Printf(pluralMsg, utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
 	}
 
 	return deletedIDs, err

@@ -38,10 +38,8 @@ func (c *command) iamBindingDelete(cmd *cobra.Command, args []string) error {
 		return iamBindingsSet.Contains(id)
 	}
 
-	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.FlinkIamBinding, args[0]); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.FlinkIamBinding, args[0]); err != nil {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	deleteFunc := func(id string) error {

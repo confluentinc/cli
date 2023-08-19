@@ -32,10 +32,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if confirm, err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.ApiKey); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.ApiKey); err != nil {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	deleteFunc := func(id string) error {
