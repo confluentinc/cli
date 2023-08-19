@@ -10,7 +10,7 @@
     "name": "env123"
   },
   {
-    "is_current": false,
+    "is_current": true,
     "id": "env-595",
     "name": "other"
   },
@@ -18,10 +18,5 @@
     "is_current": false,
     "id": "env-srUpdate",
     "name": "srUpdate"
-  },
-  {
-    "is_current": true,
-    "id": "not-595",
-    "name": "other"
   }
 ]
