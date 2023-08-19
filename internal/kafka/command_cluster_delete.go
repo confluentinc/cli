@@ -7,7 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -36,8 +36,19 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletion(cmd, environmentId, args); err != nil {
+	cluster, _, err := c.V2Client.DescribeKafkaCluster(args[0], environmentId)
+	if err != nil {
 		return err
+	}
+
+	existenceFunc := func(id string) bool {
+		_, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.KafkaCluster, cluster.Spec.GetDisplayName()); err != nil {
+		PluralClusterEnvironmentSuggestions := "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
+		return errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
 	} else if !confirm {
 		return nil
 	}
@@ -49,7 +60,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIDs, err := resource.Delete(args, deleteFunc, resource.KafkaCluster)
+	deletedIDs, err := deletion.Delete(args, deleteFunc, resource.KafkaCluster)
 
 	errs := multierror.Append(err, c.removeKafkaClusterConfigs(deletedIDs))
 	if errs.ErrorOrNil() != nil {
@@ -61,41 +72,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string) (bool, error) {
-	if err := resource.ValidatePrefixes(resource.KafkaCluster, args); err != nil {
-		return false, err
-	}
-
-	var displayName string
-	existenceFunc := func(id string) bool {
-		cluster, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId)
-		if err != nil {
-			return false
-		}
-		if id == args[0] {
-			displayName = cluster.Spec.GetDisplayName()
-		}
-
-		return true
-	}
-
-	err := resource.ValidateArgs(cmd, args, resource.KafkaCluster, existenceFunc)
-	if err != nil {
-		PluralClusterEnvironmentSuggestions := "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-		return false, errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KafkaCluster, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KafkaCluster, args[0], displayName), displayName); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }
 
 func (c *clusterCommand) removeKafkaClusterConfigs(deletedIDs []string) error {

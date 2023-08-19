@@ -7,9 +7,9 @@ import (
 
 	pacl "github.com/confluentinc/cli/v3/pkg/acl"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -76,7 +76,7 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)
-	if ok, err := form.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
+	if ok, err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 		return err
 	}
 

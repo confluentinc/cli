@@ -9,7 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -51,7 +51,12 @@ func (c *command) deleteOnPrem(cmd *cobra.Command, args []string) error {
 }
 
 func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, args []string, clusterId string) error {
-	if confirm, err := confirmDeletionOnPrem(cmd, restClient, restContext, clusterId, args); err != nil {
+	existenceFunc := func(id string) bool {
+		_, _, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.Topic, args[0]); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -64,27 +69,6 @@ func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return nil
 	}
 
-	_, err := resource.Delete(args, deleteFunc, resource.Topic)
+	_, err := deletion.Delete(args, deleteFunc, resource.Topic)
 	return err
-}
-
-func confirmDeletionOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) (bool, error) {
-	existenceFunc := func(id string) bool {
-		_, _, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, id)
-		return err == nil
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.Topic, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Topic, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Topic, args[0], args[0]), args[0]); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }

@@ -7,8 +7,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -53,7 +53,7 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, clusters[0].GetId(), resource.Environment, environmentId)
-	if ok, err := form.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
+	if ok, err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 		return err
 	}
 

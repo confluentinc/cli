@@ -5,9 +5,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 )
 
 func (c *command) newExporterDeleteCommand(cfg *config.Config) *cobra.Command {
@@ -47,7 +46,17 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletionExporter(cmd, client, args); err != nil {
+	info, err := client.GetExporterInfo(args[0])
+	if err != nil {
+		return err
+	}
+
+	existenceFunc := func(id string) bool {
+		_, err := client.GetExporterInfo(id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.SchemaExporter, info.Name); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -57,35 +66,6 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return client.DeleteExporter(id)
 	}
 
-	_, err = resource.Delete(args, deleteFunc, resource.SchemaExporter)
+	_, err = deletion.Delete(args, deleteFunc, resource.SchemaExporter)
 	return err
-}
-
-func (c *command) confirmDeletionExporter(cmd *cobra.Command, client *schemaregistry.Client, args []string) (bool, error) {
-	var name string
-	existenceFunc := func(id string) bool {
-		info, err := client.GetExporterInfo(args[0])
-		if err != nil {
-			return false
-		}
-		if id == args[0] {
-			name = info.Name
-		}
-
-		return true
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.SchemaExporter, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.SchemaExporter, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.SchemaExporter, args[0], name), name); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }

@@ -5,7 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -42,7 +42,17 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletion(cmd, environmentId, cluster.ID, args); err != nil {
+	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
+	if err != nil {
+		return err
+	}
+
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.Pipeline, pipeline.Spec.GetDisplayName()); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -54,35 +64,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	singleDeleteMsg := "Requested to delete pipeline %s.\n"
 	multipleDeleteMsg := "Requested to delete pipelines %s.\n"
-	_, err = resource.DeleteWithCustomMessage(args, deleteFunc, singleDeleteMsg, multipleDeleteMsg)
+	_, err = deletion.DeleteWithCustomMessage(args, deleteFunc, singleDeleteMsg, multipleDeleteMsg)
 	return err
-}
-
-func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId string, args []string) (bool, error) {
-	var displayName string
-	existenceFunc := func(id string) bool {
-		pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id)
-		if err != nil {
-			return false
-		}
-		if id == args[0] {
-			displayName = pipeline.Spec.GetDisplayName()
-		}
-
-		return true
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.Pipeline, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Pipeline, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Pipeline, args[0], displayName), displayName); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }

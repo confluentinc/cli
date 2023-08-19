@@ -3,9 +3,8 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -38,7 +37,12 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletionStatement(cmd, client, environmentId, args); err != nil {
+	existenceFunc := func(id string) bool {
+		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.FlinkStatement); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -48,19 +52,6 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return client.DeleteStatement(environmentId, id, c.Context.LastOrgId)
 	}
 
-	_, err = resource.Delete(args, deleteFunc, resource.FlinkStatement)
+	_, err = deletion.Delete(args, deleteFunc, resource.FlinkStatement)
 	return err
-}
-
-func (c *command) confirmDeletionStatement(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId string, args []string) (bool, error) {
-	existenceFunc := func(id string) bool {
-		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
-		return err == nil
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.FlinkStatement, existenceFunc); err != nil {
-		return false, err
-	}
-
-	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkStatement, args))
 }

@@ -5,7 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -39,7 +39,17 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletion(cmd, provider, args); err != nil {
+	pool, err := c.V2Client.GetIdentityPool(args[0], provider)
+	if err != nil {
+		return err
+	}
+
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.GetIdentityPool(id, provider)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.IdentityPool, pool.GetDisplayName()); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -49,35 +59,6 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteIdentityPool(id, provider)
 	}
 
-	_, err = resource.Delete(args, deleteFunc, resource.IdentityPool)
+	_, err = deletion.Delete(args, deleteFunc, resource.IdentityPool)
 	return err
-}
-
-func (c *identityPoolCommand) confirmDeletion(cmd *cobra.Command, provider string, args []string) (bool, error) {
-	var displayName string
-	existenceFunc := func(id string) bool {
-		pool, err := c.V2Client.GetIdentityPool(id, provider)
-		if err != nil {
-			return false
-		}
-		if id == args[0] {
-			displayName = pool.GetDisplayName()
-		}
-
-		return true
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.IdentityPool, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.IdentityPool, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.IdentityPool, args[0], displayName), displayName); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }

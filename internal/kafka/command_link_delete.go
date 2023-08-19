@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -31,7 +31,12 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletion(cmd, kafkaREST, args); err != nil {
+	existenceFunc := func(id string) bool {
+		_, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.ClusterLink, args[0]); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -41,27 +46,6 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return kafkaREST.CloudClient.DeleteKafkaLink(id)
 	}
 
-	_, err = resource.Delete(args, deleteFunc, resource.ClusterLink)
+	_, err = deletion.Delete(args, deleteFunc, resource.ClusterLink)
 	return err
-}
-
-func (c *linkCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, args []string) (bool, error) {
-	existenceFunc := func(id string) bool {
-		_, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(id)
-		return err == nil
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.ClusterLink, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ClusterLink, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.ClusterLink, args[0], args[0]), args[0]); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }

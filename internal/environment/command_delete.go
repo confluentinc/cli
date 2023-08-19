@@ -8,7 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -29,7 +29,17 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
+	environment, err := c.V2Client.GetOrgEnvironment(args[0])
+	if err != nil {
+		return err
+	}
+
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.GetOrgEnvironment(id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.Environment, environment.GetDisplayName()); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -39,7 +49,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteOrgEnvironment(id)
 	}
 
-	deletedIDs, err := resource.Delete(args, deleteFunc, resource.Environment)
+	deletedIDs, err := deletion.Delete(args, deleteFunc, resource.Environment)
 
 	errs := multierror.Append(err, c.deleteEnvironmentsFromConfig(deletedIDs))
 	if errs.ErrorOrNil() != nil {
@@ -47,36 +57,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
-	var displayName string
-	existenceFunc := func(id string) bool {
-		environment, err := c.V2Client.GetOrgEnvironment(id)
-		if err != nil {
-			return false
-		}
-
-		if id == args[0] {
-			displayName = environment.GetDisplayName()
-		}
-
-		return true
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.Environment, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Environment, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Environment, args[0], displayName), displayName); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }
 
 func (c *command) deleteEnvironmentsFromConfig(deletedIDs []string) error {

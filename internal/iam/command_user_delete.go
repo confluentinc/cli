@@ -5,7 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -24,7 +24,17 @@ func (c *userCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
-	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
+	user, err := c.V2Client.GetIamUserById(args[0])
+	if err != nil {
+		return err
+	}
+
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.GetIamUserById(id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.User, user.GetFullName()); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -37,39 +47,6 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	_, err := resource.Delete(args, deleteFunc, resource.User)
+	_, err = deletion.Delete(args, deleteFunc, resource.User)
 	return err
-}
-
-func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
-	if err := resource.ValidatePrefixes(resource.User, args); err != nil {
-		return false, err
-	}
-
-	var fullName string
-	existenceFunc := func(id string) bool {
-		user, err := c.V2Client.GetIamUserById(id)
-		if err != nil {
-			return false
-		}
-		if id == args[0] {
-			fullName = user.GetFullName()
-		}
-
-		return true
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.User, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.User, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.User, args[0], fullName), fullName); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }

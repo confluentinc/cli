@@ -5,7 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -52,7 +52,12 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletion(cmd, kafkaCluster.ID, args, connectorIdToName); err != nil {
+	existenceFunc := func(id string) bool {
+		_, ok := connectorIdToName[id]
+		return ok
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.Connector, connectorIdToName[args[0]]); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -63,30 +68,8 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = resource.Delete(args, deleteFunc, resource.Connector)
+	_, err = deletion.Delete(args, deleteFunc, resource.Connector)
 	return err
-}
-
-func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, kafkaClusterId string, args []string, connectorIdToName map[string]string) (bool, error) {
-	existenceFunc := func(id string) bool {
-		_, ok := connectorIdToName[id]
-		return ok
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.Connector, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Connector, args))
-	}
-
-	displayName := connectorIdToName[args[0]]
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Connector, args[0], displayName), displayName); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }
 
 func (c *clusterCommand) mapConnectorIdToName(environmentId, kafkaClusterId string) (map[string]string, error) {

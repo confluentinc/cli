@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -25,7 +25,12 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
+	existenceFunc := func(id string) bool {
+		_, _, err := c.V2Client.GetByokKey(id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ByokKey); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -38,22 +43,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if _, err := resource.Delete(args, deleteFunc, resource.ByokKey); err != nil {
+	if _, err := deletion.Delete(args, deleteFunc, resource.ByokKey); err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.ByokKeyNotFoundSuggestions)
 	}
 
 	return nil
-}
-
-func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
-	existenceFunc := func(id string) bool {
-		_, _, err := c.V2Client.GetByokKey(id)
-		return err == nil
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.ByokKey, existenceFunc); err != nil {
-		return false, err
-	}
-
-	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ByokKey, args))
 }

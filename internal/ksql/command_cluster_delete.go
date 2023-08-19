@@ -14,8 +14,7 @@ import (
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -36,9 +35,6 @@ func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
-	id := args[0]
-	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -46,7 +42,12 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 
 	idToCluster := c.mapIdToCluster(args, environmentId)
 
-	if confirm, err := c.confirmDeletion(cmd, args, idToCluster); err != nil {
+	existenceFunc := func(id string) bool {
+		_, ok := idToCluster[id]
+		return ok
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.KsqlCluster, idToCluster[args[0]].Spec.GetDisplayName()); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -66,7 +67,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteKsqlCluster(id, environmentId)
 	}
 
-	_, err = resource.Delete(args, deleteFunc, resource.KsqlCluster)
+	_, err = deletion.Delete(args, deleteFunc, resource.KsqlCluster)
 	return err
 }
 
@@ -101,31 +102,9 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 	return nil
 }
 
-func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, args []string, idToCluster map[string]ksqlv2.KsqldbcmV2Cluster) (bool, error) {
-	existenceFunc := func(id string) bool {
-		_, ok := idToCluster[id]
-		return ok
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.KsqlCluster, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KsqlCluster, args))
-	}
-
-	displayName := idToCluster[args[0]].Spec.GetDisplayName()
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KsqlCluster, args[0], displayName), displayName); err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
 func (c *ksqlCommand) mapIdToCluster(args []string, environmentId string) map[string]ksqlv2.KsqldbcmV2Cluster {
 	// NOTE: This function does not return an error for invalid IDs; validation will instead
-	// be done by resource.ValidateArgs using this map. This allows for consistent existence
+	// be done by deletion.ValidateAndConfirmDeletion using this map. This allows for consistent existence
 	// error messaging across all delete commands which support multiple deletion.
 
 	idToCluster := make(map[string]ksqlv2.KsqldbcmV2Cluster)

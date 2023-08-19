@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -123,10 +121,10 @@ func ValidatePrefixes(resourceType string, args []string) error {
 	return nil
 }
 
-func ValidateArgs(c *cobra.Command, args []string, resourceType string, resourceExists func(string) bool) error {
+func ValidateArgs(c *cobra.Command, args []string, resourceType string, checkExistence func(string) bool) error {
 	var invalidArgs []string
 	for _, arg := range args {
-		if !resourceExists(arg) {
+		if !checkExistence(arg) {
 			invalidArgs = append(invalidArgs, arg)
 		}
 	}
@@ -168,43 +166,4 @@ func Plural(resource string) string {
 	}
 
 	return resource + "s"
-}
-
-func delete(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deletedIDs []string
-	for _, id := range args {
-		if err := callDeleteEndpoint(id); err != nil {
-			errs = multierror.Append(errs, err)
-		} else {
-			deletedIDs = append(deletedIDs, id)
-		}
-	}
-
-	return deletedIDs, errs.ErrorOrNil()
-}
-
-func Delete(args []string, callDeleteEndpoint func(string) error, resourceType string) ([]string, error) {
-	deletedIDs, err := delete(args, callDeleteEndpoint)
-
-	DeletedResourceMsg := "Deleted %s %s.\n"
-	if len(deletedIDs) == 1 {
-		output.Printf(DeletedResourceMsg, resourceType, fmt.Sprintf("\"%s\"", deletedIDs[0]))
-	} else if len(deletedIDs) > 1 {
-		output.Printf(DeletedResourceMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
-	}
-
-	return deletedIDs, err
-}
-
-func DeleteWithCustomMessage(args []string, callDeleteEndpoint func(string) error, singularMsg, pluralMsg string) ([]string, error) {
-	deletedIDs, err := delete(args, callDeleteEndpoint)
-
-	if len(deletedIDs) == 1 {
-		output.Printf(singularMsg, fmt.Sprintf("\"%s\"", deletedIDs[0]))
-	} else if len(deletedIDs) > 1 {
-		output.Printf(pluralMsg, utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
-	}
-
-	return deletedIDs, err
 }

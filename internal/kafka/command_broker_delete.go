@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/antihax/optional"
@@ -10,7 +9,7 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -45,7 +44,12 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletion(cmd, restClient, restContext, clusterId, args, brokerIdToIntId); err != nil {
+	existenceFunc := func(id string) bool {
+		_, _, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerIdToIntId[id])
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Broker); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -61,21 +65,8 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 
 	singleDeleteMsg := "Started deletion of broker %s. To monitor the remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
 	multipleDeleteMsg := "Started deletion of brokers %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
-	_, err = resource.DeleteWithCustomMessage(args, deleteFunc, singleDeleteMsg, multipleDeleteMsg)
+	_, err = deletion.DeleteWithCustomMessage(args, deleteFunc, singleDeleteMsg, multipleDeleteMsg)
 	return err
-}
-
-func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string, brokerIdToIntId map[string]int32) (bool, error) {
-	existenceFunc := func(id string) bool {
-		_, _, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerIdToIntId[id])
-		return err == nil
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.Broker, existenceFunc); err != nil {
-		return false, err
-	}
-
-	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Broker, args))
 }
 
 func mapBrokerIdToIntId(args []string) (map[string]int32, error) {

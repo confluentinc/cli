@@ -6,7 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -32,7 +32,17 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
+	serviceAccount, _, err := c.V2Client.GetIamServiceAccount(args[0])
+	if err != nil {
+		return err
+	}
+
+	existenceFunc := func(id string) bool {
+		_, _, err := c.V2Client.GetIamServiceAccount(id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.ServiceAccount, serviceAccount.GetDisplayName()); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -45,39 +55,6 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return nil
 	}
 
-	_, err := resource.Delete(args, deleteFunc, resource.ServiceAccount)
+	_, err = deletion.Delete(args, deleteFunc, resource.ServiceAccount)
 	return err
-}
-
-func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
-	if err := resource.ValidatePrefixes(resource.ServiceAccount, args); err != nil {
-		return false, err
-	}
-
-	var displayName string
-	existenceFunc := func(id string) bool {
-		serviceAccount, _, err := c.V2Client.GetIamServiceAccount(id)
-		if err != nil {
-			return false
-		}
-		if id == args[0] {
-			displayName = serviceAccount.GetDisplayName()
-		}
-
-		return true
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.ServiceAccount, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ServiceAccount, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.ServiceAccount, args[0], displayName), displayName); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }

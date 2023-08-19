@@ -5,7 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -31,7 +31,17 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
-	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
+	provider, err := c.V2Client.GetIdentityProvider(args[0])
+	if err != nil {
+		return err
+	}
+
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.GetIdentityProvider(id)
+		return err == nil
+	}
+
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.IdentityProvider, provider.GetDisplayName()); err != nil {
 		return err
 	} else if !confirm {
 		return nil
@@ -41,35 +51,6 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		return c.V2Client.DeleteIdentityProvider(id)
 	}
 
-	_, err := resource.Delete(args, deleteFunc, resource.IdentityProvider)
+	_, err = deletion.Delete(args, deleteFunc, resource.IdentityProvider)
 	return err
-}
-
-func (c *identityProviderCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
-	var displayName string
-	existenceFunc := func(id string) bool {
-		provider, err := c.V2Client.GetIdentityProvider(id)
-		if err != nil {
-			return false
-		}
-		if id == args[0] {
-			displayName = provider.GetDisplayName()
-		}
-
-		return true
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resource.IdentityProvider, existenceFunc); err != nil {
-		return false, err
-	}
-
-	if len(args) > 1 {
-		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.IdentityProvider, args))
-	}
-
-	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.IdentityProvider, args[0], displayName), displayName); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }
