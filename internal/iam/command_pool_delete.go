@@ -41,7 +41,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 
 	pool, err := c.V2Client.GetIdentityPool(args[0], provider)
 	if err != nil {
-		return err
+		return resource.ResourcesNotFoundError(cmd, resource.IdentityPool, args[0])
 	}
 
 	existenceFunc := func(id string) bool {

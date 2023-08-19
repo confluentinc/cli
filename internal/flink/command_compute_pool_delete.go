@@ -34,7 +34,7 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 
 	computePool, err := c.V2Client.DescribeFlinkComputePool(args[0], environmentId)
 	if err != nil {
-		return err
+		return resource.ResourcesNotFoundError(cmd, resource.FlinkComputePool, args[0])
 	}
 
 	existenceFunc := func(id string) bool {

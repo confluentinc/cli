@@ -48,7 +48,7 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 
 	info, err := client.GetExporterInfo(args[0])
 	if err != nil {
-		return err
+		return resource.ResourcesNotFoundError(cmd, resource.SchemaExporter, args[0])
 	}
 
 	existenceFunc := func(id string) bool {

@@ -130,28 +130,32 @@ func ValidateArgs(c *cobra.Command, args []string, resourceType string, checkExi
 	}
 
 	if len(invalidArgs) != 0 {
-		NotFoundErrorMsg := `%s %s not found`
-		invalidArgsErrMsg := fmt.Sprintf(NotFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
-		if len(invalidArgs) > 1 {
-			invalidArgsErrMsg = fmt.Sprintf(NotFoundErrorMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
-		}
-
-		// Find the full parent command string for use in the suggestion message
-		var fullParentCommand string
-		if c.HasParent() {
-			fullParentCommand = c.Parent().Name()
-			c = c.Parent()
-		}
-		for c.HasParent() {
-			fullParentCommand = fmt.Sprintf("%s %s", c.Parent().Name(), fullParentCommand)
-			c = c.Parent()
-		}
-		invalidArgsSuggestion := fmt.Sprintf(errors.ListResourceSuggestions, resourceType, fullParentCommand)
-
-		return errors.NewErrorWithSuggestions(invalidArgsErrMsg, invalidArgsSuggestion)
+		return ResourcesNotFoundError(c, resourceType, invalidArgs...)
 	}
 
 	return nil
+}
+
+func ResourcesNotFoundError(c *cobra.Command, resourceType string, invalidArgs ...string) error {
+	NotFoundErrorMsg := `%s %s not found`
+	invalidArgsErrMsg := fmt.Sprintf(NotFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+	if len(invalidArgs) > 1 {
+		invalidArgsErrMsg = fmt.Sprintf(NotFoundErrorMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+	}
+
+	// Find the full parent command string for use in the suggestion message
+	var fullParentCommand string
+	if c.HasParent() {
+		fullParentCommand = c.Parent().Name()
+		c = c.Parent()
+	}
+	for c.HasParent() {
+		fullParentCommand = fmt.Sprintf("%s %s", c.Parent().Name(), fullParentCommand)
+		c = c.Parent()
+	}
+	invalidResourceSuggestion := fmt.Sprintf(errors.ListResourceSuggestions, resourceType, fullParentCommand)
+
+	return errors.NewErrorWithSuggestions(invalidArgsErrMsg, invalidResourceSuggestion)
 }
 
 func Plural(resource string) string {

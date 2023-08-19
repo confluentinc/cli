@@ -33,7 +33,7 @@ func (c *groupMappingCommand) newDeleteCommand() *cobra.Command {
 func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
 	groupMapping, err := c.V2Client.GetGroupMapping(args[0])
 	if err != nil {
-		return err
+		return resource.ResourcesNotFoundError(cmd, resource.SsoGroupMapping, args[0])
 	}
 
 	existenceFunc := func(id string) bool {

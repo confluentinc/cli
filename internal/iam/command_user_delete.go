@@ -26,7 +26,7 @@ func (c *userCommand) newDeleteCommand() *cobra.Command {
 func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	user, err := c.V2Client.GetIamUserById(args[0])
 	if err != nil {
-		return err
+		return resource.ResourcesNotFoundError(cmd, resource.User, args[0])
 	}
 
 	existenceFunc := func(id string) bool {

@@ -26,7 +26,7 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 	quota, err := c.V2Client.DescribeKafkaQuota(args[0])
 	if err != nil {
-		return err
+		return resource.ResourcesNotFoundError(cmd, resource.ClientQuota, args[0])
 	}
 
 	existenceFunc := func(id string) bool {
