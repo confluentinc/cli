@@ -56,7 +56,7 @@ func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return err == nil
 	}
 
-	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.Topic, args[0]); err != nil {
+	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Topic, args[0]); err != nil {
 		return err
 	} else if !confirm {
 		return nil

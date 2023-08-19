@@ -39,7 +39,7 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.ClusterLink, args[0]); err != nil {
+	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ClusterLink, args[0]); err != nil {
 		return err
 	} else if !confirm {
 		return nil

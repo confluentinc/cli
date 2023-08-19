@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) (bool, error) {
+func ValidateAndConfirmDeletionYesNo(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) (bool, error) {
 	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
 		return false, err
 	}
@@ -25,7 +25,7 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 	return ConfirmDeletionYesNo(cmd, DefaultYesNoPromptString(resourceType, args))
 }
 
-func ValidateAndConfirmDeletionWithName(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) (bool, error) {
+func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) (bool, error) {
 	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
 		return false, err
 	}
