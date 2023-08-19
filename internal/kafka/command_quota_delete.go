@@ -1,23 +1,19 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a Kafka client quota.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more Kafka client quotas.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -28,19 +24,26 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	if _, err := c.V2Client.DescribeKafkaQuota(args[0]); err != nil {
-		return err
+	quota, err := c.V2Client.DescribeKafkaQuota(args[0])
+	if err != nil {
+		return resource.ResourcesNotFoundError(cmd, resource.ClientQuota, args[0])
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ClientQuota, args[0], args[0])
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, args[0]); err != nil {
-		return err
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.DescribeKafkaQuota(id)
+		return err == nil
 	}
 
-	if err := c.V2Client.DeleteKafkaQuota(args[0]); err != nil {
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.ClientQuota, quota.Spec.GetDisplayName()); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.ClientQuota, args[0])
-	return nil
+	deleteFunc := func(id string) error {
+		return c.V2Client.DeleteKafkaQuota(id)
+	}
+
+	_, err = deletion.Delete(args, deleteFunc, resource.ClientQuota)
+	return err
 }

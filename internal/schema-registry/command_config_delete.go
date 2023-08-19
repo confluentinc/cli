@@ -8,8 +8,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -64,7 +64,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 	var outStr string
 	if subject != "" {
 		promptMsg := fmt.Sprintf(`Are you sure you want to delete the subject-level compatibility level config and revert it to the global default for "%s"?`, subject)
-		if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+		if ok, err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 			return err
 		}
 		outStr, err = client.DeleteSubjectLevelConfig(subject)
@@ -73,7 +73,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		promptMsg := `Are you sure you want to delete the global compatibility level config and revert it to the default?`
-		if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+		if ok, err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 			return err
 		}
 		outStr, err = client.DeleteTopLevelConfig()

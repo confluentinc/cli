@@ -4,19 +4,19 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *linkCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <link>",
-		Short: "Delete a cluster link.",
-		Args:  cobra.ExactArgs(1),
+		Use:   "delete <link-1> [link-2] ... [link-n]",
+		Short: "Delete one or more cluster links.",
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.deleteOnPrem,
 	}
 
+	pcmd.AddForceFlag(cmd)
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
@@ -24,8 +24,6 @@ func (c *linkCommand) newDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
-	linkName := args[0]
-
 	client, ctx, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -36,10 +34,24 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if httpResp, err := client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, linkName, nil); err != nil {
-		return handleOpenApiError(httpResp, err, client)
+	existenceFunc := func(id string) bool {
+		_, _, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, id)
+		return err == nil
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.ClusterLink, linkName)
-	return nil
+	if confirm, err := deletion.ValidateAndConfirmDeletionWithName(cmd, args, existenceFunc, resource.ClusterLink, args[0]); err != nil {
+		return err
+	} else if !confirm {
+		return nil
+	}
+
+	deleteFunc := func(id string) error {
+		if r, err := client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, id, nil); err != nil {
+			return handleOpenApiError(r, err, client)
+		}
+		return nil
+	}
+
+	_, err = deletion.Delete(args, deleteFunc, resource.ClusterLink)
+	return err
 }
