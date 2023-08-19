@@ -1,24 +1,20 @@
 package connect
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a connector.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more connectors.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
@@ -41,31 +37,50 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	clusterId := args[0]
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(clusterId, environmentId, kafkaCluster.ID)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Connector, clusterId, connector.Info.GetName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, connector.Info.GetName()); err != nil {
+	connectorIdToName, err := c.mapConnectorIdToName(environmentId, kafkaCluster.ID)
+	if err != nil {
 		return err
 	}
 
-	if _, err := c.V2Client.DeleteConnector(connector.Info.GetName(), environmentId, kafkaCluster.ID); err != nil {
+	existenceFunc := func(id string) bool {
+		_, ok := connectorIdToName[id]
+		return ok
+	}
+
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Connector, connectorIdToName[args[0]]); err != nil {
 		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.Connector, clusterId)
-	return nil
+	deleteFunc := func(id string) error {
+		_, err := c.V2Client.DeleteConnector(connectorIdToName[id], environmentId, kafkaCluster.ID)
+		return err
+	}
+
+	_, err = deletion.Delete(args, deleteFunc, resource.Connector)
+	return err
+}
+
+func (c *clusterCommand) mapConnectorIdToName(environmentId, kafkaClusterId string) (map[string]string, error) {
+	// NOTE: Do NOT replace this with `V2Client.GetConnectorExpansionById` calls; that function itself calls `V2Client.ListConnectorsWithExpansions`
+	connectors, err := c.V2Client.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "id,info,status")
+	if err != nil {
+		return nil, err
+	}
+
+	connectorIdToName := make(map[string]string)
+	for _, connector := range connectors {
+		connectorIdToName[connector.Id.GetId()] = connector.Info.GetName()
+	}
+
+	return connectorIdToName, nil
 }
