@@ -1,22 +1,19 @@
 package flink
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 func (c *command) newIamBindingDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a Flink IAM binding.",
-		Args:  cobra.ExactArgs(1),
+		Use:   "delete <id-1> [id-2] ... [id-n]",
+		Short: "Delete one or more Flink IAM bindings.",
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.iamBindingDelete,
 	}
 
@@ -32,16 +29,38 @@ func (c *command) iamBindingDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.FlinkIamBinding, args[0], args[0])
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, args[0]); err != nil || !ok {
+	iamBindingsSet, err := c.getIamBindingsSet(environmentId)
+	if err != nil {
 		return err
 	}
 
-	if err := c.V2Client.DeleteFlinkIAMBinding(args[0], environmentId); err != nil {
-		return err
+	existenceFunc := func(id string) bool {
+		return iamBindingsSet.Contains(id)
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.FlinkIamBinding, args[0])
+	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.FlinkIamBinding, args[0]); err != nil {
+		return err
+	} else if !confirm {
+		return nil
+	}
 
-	return nil
+	deleteFunc := func(id string) error {
+		return c.V2Client.DeleteFlinkIAMBinding(id, environmentId)
+	}
+
+	_, err = deletion.Delete(args, deleteFunc, resource.FlinkIamBinding)
+	return err
+}
+
+func (c *command) getIamBindingsSet(environmentId string) (types.Set[string], error) {
+	iamBindings, err := c.V2Client.ListFlinkIAMBindings(environmentId, "", "", "")
+	if err != nil {
+		return nil, err
+	}
+	iamBindingsSet := types.NewSet[string]()
+	for _, iamBinding := range iamBindings {
+		iamBindingsSet.Add(iamBinding.GetId())
+	}
+
+	return iamBindingsSet, nil
 }

@@ -1,24 +1,20 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete an identity provider.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more identity providers.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -37,18 +33,24 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
 	provider, err := c.V2Client.GetIdentityProvider(args[0])
 	if err != nil {
-		return err
+		return resource.ResourcesNotFoundError(cmd, resource.IdentityProvider, args[0])
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.IdentityProvider, args[0], provider.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, provider.GetDisplayName()); err != nil {
-		return err
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.GetIdentityProvider(id)
+		return err == nil
 	}
 
-	if err := c.V2Client.DeleteIdentityProvider(args[0]); err != nil {
+	if confirm, err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.IdentityProvider, provider.GetDisplayName()); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
-	output.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityProvider, args[0])
-	return nil
+	deleteFunc := func(id string) error {
+		return c.V2Client.DeleteIdentityProvider(id)
+	}
+
+	_, err = deletion.Delete(args, deleteFunc, resource.IdentityProvider)
+	return err
 }

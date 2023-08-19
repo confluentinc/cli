@@ -1,23 +1,19 @@
 package flink
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newStatementDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <name>",
-		Short:             "Delete a Flink SQL statement.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
+		Use:               "delete <name-1> [name-2] ... [name-n]",
+		Short:             "Delete one or more Flink SQL statements.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgsMultiple),
 		RunE:              c.statementDelete,
 	}
 
@@ -41,19 +37,21 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := client.GetStatement(environmentId, args[0], c.Context.LastOrgId); err != nil {
-		return err
+	existenceFunc := func(id string) bool {
+		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
+		return err == nil
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.FlinkStatement, args[0])
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if confirm, err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.FlinkStatement); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
-	if err := client.DeleteStatement(environmentId, args[0], c.Context.LastOrgId); err != nil {
-		return err
+	deleteFunc := func(id string) error {
+		return client.DeleteStatement(environmentId, id, c.Context.LastOrgId)
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.FlinkStatement, args[0])
-	return nil
+	_, err = deletion.Delete(args, deleteFunc, resource.FlinkStatement)
+	return err
 }
