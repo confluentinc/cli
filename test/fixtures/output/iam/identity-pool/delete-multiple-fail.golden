@@ -1,0 +1,4 @@
+Error: identity pool "pool-44444" not found
+
+Suggestions:
+    List available identity pools with `confluent iam pool list`.

@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create API keys for a given resource.
-  delete      Delete an API key.
+  delete      Delete one or more API keys.
   describe    Describe an API key.
   list        List the API keys.
   store       Store an API key/secret locally to use in the CLI.
