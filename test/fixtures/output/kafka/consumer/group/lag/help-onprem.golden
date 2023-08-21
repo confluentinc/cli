@@ -1,4 +1,4 @@
-View consumer lag.
+View consumer group lag.
 
 Usage:
   confluent kafka consumer group lag [command]

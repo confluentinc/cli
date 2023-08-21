@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   describe    Describe a Kafka consumer group.
-  lag         View consumer lag.
+  lag         View consumer group lag.
   list        List Kafka consumer groups.
 
 Global Flags:
