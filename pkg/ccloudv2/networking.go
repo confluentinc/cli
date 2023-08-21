@@ -32,9 +32,7 @@ func (c *Client) DeleteNetwork(envId, id string) error {
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateNetwork(envId, id string, update networkingv1.NetworkingV1NetworkUpdate) (networkingv1.NetworkingV1Network, error) {
-	update.Spec.SetEnvironment(networkingv1.ObjectReference{Id: envId})
-
-	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.UpdateNetworkingV1Network(c.networkingApiContext(), id).NetworkingV1NetworkUpdate(update).Execute()
+func (c *Client) UpdateNetwork(envId, id string, updateReq networkingv1.NetworkingV1NetworkUpdate) (networkingv1.NetworkingV1Network, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.UpdateNetworkingV1Network(c.networkingApiContext(), id).NetworkingV1NetworkUpdate(updateReq).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }

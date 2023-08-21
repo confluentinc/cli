@@ -6,7 +6,6 @@ import (
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
@@ -20,7 +19,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		RunE: c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name of the network "n-123456".`,
+				Text: `Update the name of network "n-123456".`,
 				Code: `confluent network update n-123456 --name "new name"`,
 			},
 		),
@@ -37,13 +36,6 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"name",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -54,10 +46,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updateNetwork := networkingv1.NetworkingV1NetworkUpdate{Spec: &networkingv1.NetworkingV1NetworkSpecUpdate{}}
-
-	if name != "" {
-		updateNetwork.Spec.SetDisplayName(name)
+	updateNetwork := networkingv1.NetworkingV1NetworkUpdate{
+		Spec: &networkingv1.NetworkingV1NetworkSpecUpdate{
+			DisplayName: networkingv1.PtrString(name),
+			Environment: &networkingv1.ObjectReference{Id: environmentId},
+		},
 	}
 
 	network, err := c.V2Client.UpdateNetwork(environmentId, args[0], updateNetwork)
