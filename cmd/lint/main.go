@@ -24,7 +24,7 @@ var commandRules = []linter.CommandRule{
 
 	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.Filter(linter.RequireNotTitleCase("Short", properNouns)),
+	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("local kafka broker")),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
@@ -130,7 +130,7 @@ var flagRules = []linter.FlagRule{
 			"gcp-project-id",
 			"if-not-exists",
 			"kafka-api-key",
-			"kafka-rest-port",
+			"kafka-rest-ports",
 			"local-secrets-file",
 			"log-exclude-rows",
 			"max-block-ms",

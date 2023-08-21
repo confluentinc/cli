@@ -11,7 +11,8 @@ import (
 
 const (
 	dockerImageName             = "confluentinc/confluent-local:latest"
-	confluentLocalContainerName = "confluent-local"
+	confluentLocalBroker1       = "confluent-local-broker-1"
+	confluentLocalBroker2       = "confluent-local-broker-2"
 	localhostPrefix             = "http://localhost:%s"
 	localhost                   = "localhost"
 	kafkaRestNotReadySuggestion = "Kafka REST connection is not ready. Re-running the command may solve the issue."
@@ -20,9 +21,10 @@ const (
 func (c *Command) newKafkaCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kafka",
-		Short: "Manage a single-node instance of Apache Kafka.",
+		Short: "Manage a local instance of Apache Kafka.",
 	}
 
+	cmd.AddCommand(c.newKafkaBrokerCommand())
 	cmd.AddCommand(c.newKafkaStartCommand())
 	cmd.AddCommand(c.newKafkaStopCommand())
 	cmd.AddCommand(c.newKafkaTopicCommand())
