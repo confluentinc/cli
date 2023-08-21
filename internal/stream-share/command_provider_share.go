@@ -37,6 +37,10 @@ func (c *command) validProviderShareArgs(cmd *cobra.Command, args []string) []st
 		return nil
 	}
 
+	return c.validProviderShareArgsMultiple(cmd, args)
+}
+
+func (c *command) validProviderShareArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
