@@ -12,6 +12,7 @@ Available Commands:
   describe    Describe a service account.
   list        List service accounts.
   update      Update a service account.
+  use         Choose a service account to be used in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.
