@@ -1,24 +1,17 @@
 package broker
 
 import (
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
-	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 type KafkaClusterTestSuite struct {
 	suite.Suite
-	conf            *config.Config
-	envMetadataMock *ccloudv1mock.EnvironmentMetadata
-	metricsApi      *metricsmock.Version2Api
-	cmkClusterApi   *cmkmock.ClustersCmkV2Api
 }
 
 func (suite *KafkaClusterTestSuite) TestBroker_CheckAllOrIdSpecified() {

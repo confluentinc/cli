@@ -6,6 +6,8 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
 	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -13,13 +15,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 func (c *Command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
-		Short: "Update Confluent Local Kafka broker configurations.",
+		Short: "Update local Kafka broker configurations.",
 		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.kafkaUpdate,

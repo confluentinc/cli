@@ -44,8 +44,8 @@ func (c *Command) newKafkaStartCommand() *cobra.Command {
 		RunE:  c.kafkaStart,
 	}
 
-	cmd.Flags().StringSlice("kafka-rest-ports", []string{"8082", "9092"}, "The port number for Kafka REST for brokers.")
-	cmd.Flags().StringSlice("plaintext-ports", nil, "The port number for plaintext producer and consumer clients for brokers. If not specified, a random free port will be used.")
+	cmd.Flags().StringSlice("kafka-rest-ports", []string{"8082", "9092"}, "A comma-separated list of Kafka REST port numbers for brokers.")
+	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.")
 	cmd.Flags().Int32("brokers", 1, "Number of brokers in the Confluent Local cluster.") // range: [1, 4]
 	return cmd
 }
