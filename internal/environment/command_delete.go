@@ -45,16 +45,16 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteOrgEnvironment(id)
 	}
 
-	deletedIDs, err := deletion.Delete(args, deleteFunc, resource.Environment)
+	deletedIds, err := deletion.Delete(args, deleteFunc, resource.Environment)
 
-	errs := multierror.Append(err, c.deleteEnvironmentsFromConfig(deletedIDs))
+	errs := multierror.Append(err, c.deleteEnvironmentsFromConfig(deletedIds))
 
 	return errs.ErrorOrNil()
 }
 
-func (c *command) deleteEnvironmentsFromConfig(deletedIDs []string) error {
+func (c *command) deleteEnvironmentsFromConfig(deletedIds []string) error {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	for _, id := range deletedIDs {
+	for _, id := range deletedIds {
 		if id == c.Context.GetCurrentEnvironment() {
 			c.Context.SetCurrentEnvironment("")
 			errs = multierror.Append(errs, c.Config.Save())

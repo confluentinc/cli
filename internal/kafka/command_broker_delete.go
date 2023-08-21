@@ -59,12 +59,12 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIDs, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 	deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
-	if len(deletedIDs) == 1 {
-		output.Printf(deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIDs[0]))
-	} else if len(deletedIDs) > 1 {
-		output.Printf(deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
+	if len(deletedIds) == 1 {
+		output.Printf(deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIds[0]))
+	} else if len(deletedIds) > 1 {
+		output.Printf(deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err

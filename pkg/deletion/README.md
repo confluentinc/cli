@@ -131,17 +131,17 @@ Any errors resulting from these additional tasks should be appended to the error
 Note that you must call `ErrorOrNil()` for multierrors instead of returning them directly.
 
 ```go
-deletedIDs, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
+deletedIds, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
 
-errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIDs))
+errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIds))
 ```
 
 Then, either return `errs.ErrorOrNil()` or process the error further:
 
 ```go
-deletedIDs, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
+deletedIds, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
 
-errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIDs))
+errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIds))
 if errs.ErrorOrNil() != nil {
     return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
 }
@@ -152,12 +152,12 @@ return nil
 Lastly, if your resource is not immediately deleted, then you should instead call `deletion.DeleteWithoutMessage` and write your own custom deletion message instead:
 
 ```go
-deletedIDs, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
-if len(deletedIDs) == 1 {
-    output.Printf(deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIDs[0]))
-} else if len(deletedIDs) > 1 {
-    output.Printf(deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
+if len(deletedIds) == 1 {
+    output.Printf(deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIds[0]))
+} else if len(deletedIds) > 1 {
+    output.Printf(deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 }
 
 return err

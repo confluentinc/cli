@@ -43,9 +43,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIDs, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
+	deletedIds, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
 
-	errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIDs))
+	errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIds))
 	if errs.ErrorOrNil() != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
 	}
@@ -53,9 +53,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) deleteKeysFromKeyStore(deletedIDs []string) error {
+func (c *command) deleteKeysFromKeyStore(deletedIds []string) error {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	for _, id := range deletedIDs {
+	for _, id := range deletedIds {
 		errs = multierror.Append(errs, c.keystore.DeleteAPIKey(id))
 	}
 

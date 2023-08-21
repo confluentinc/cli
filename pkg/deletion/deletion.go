@@ -90,29 +90,29 @@ func ConfirmDeletionWithString(cmd *cobra.Command, promptMsg, stringToType strin
 
 func DeleteWithoutMessage(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deletedIDs []string
+	var deletedIds []string
 	for _, id := range args {
 		if err := callDeleteEndpoint(id); err != nil {
 			errs = multierror.Append(errs, errors.Wrapf(err, "failed to delete %s", id))
 		} else {
-			deletedIDs = append(deletedIDs, id)
+			deletedIds = append(deletedIds, id)
 		}
 	}
 
-	return deletedIDs, errs.ErrorOrNil()
+	return deletedIds, errs.ErrorOrNil()
 }
 
 func Delete(args []string, callDeleteEndpoint func(string) error, resourceType string) ([]string, error) {
-	deletedIDs, err := DeleteWithoutMessage(args, callDeleteEndpoint)
+	deletedIds, err := DeleteWithoutMessage(args, callDeleteEndpoint)
 
 	DeletedResourceMsg := "Deleted %s %s.\n"
-	if len(deletedIDs) == 1 {
-		output.Printf(DeletedResourceMsg, resourceType, fmt.Sprintf("\"%s\"", deletedIDs[0]))
-	} else if len(deletedIDs) > 1 {
-		output.Printf(DeletedResourceMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
+	if len(deletedIds) == 1 {
+		output.Printf(DeletedResourceMsg, resourceType, fmt.Sprintf("\"%s\"", deletedIds[0]))
+	} else if len(deletedIds) > 1 {
+		output.Printf(DeletedResourceMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
-	return deletedIDs, err
+	return deletedIds, err
 }
 
 func DefaultYesNoPromptString(resourceType string, idList []string) string {

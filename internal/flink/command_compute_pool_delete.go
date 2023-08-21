@@ -50,16 +50,16 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteFlinkComputePool(id, environmentId)
 	}
 
-	deletedIDs, err := deletion.Delete(args, deleteFunc, resource.FlinkComputePool)
+	deletedIds, err := deletion.Delete(args, deleteFunc, resource.FlinkComputePool)
 
-	errs := multierror.Append(err, c.removePoolFromConfigIfCurrent(deletedIDs))
+	errs := multierror.Append(err, c.removePoolFromConfigIfCurrent(deletedIds))
 
 	return errs.ErrorOrNil()
 }
 
-func (c *command) removePoolFromConfigIfCurrent(deletedIDs []string) error {
+func (c *command) removePoolFromConfigIfCurrent(deletedIds []string) error {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	for _, id := range deletedIDs {
+	for _, id := range deletedIds {
 		if id == c.Context.GetCurrentFlinkComputePool() {
 			errs = multierror.Append(errs, c.Context.SetCurrentFlinkComputePool(""), c.Config.Save())
 		}

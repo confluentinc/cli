@@ -64,12 +64,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id)
 	}
 
-	deletedIDs, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 	deleteMsg := "Requested to delete %s %s.\n"
-	if len(deletedIDs) == 1 {
-		output.Printf(deleteMsg, resource.Pipeline, fmt.Sprintf("\"%s\"", deletedIDs[0]))
-	} else if len(deletedIDs) > 1 {
-		output.Printf(deleteMsg, resource.Plural(resource.Pipeline), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
+	if len(deletedIds) == 1 {
+		output.Printf(deleteMsg, resource.Pipeline, fmt.Sprintf("\"%s\"", deletedIds[0]))
+	} else if len(deletedIds) > 1 {
+		output.Printf(deleteMsg, resource.Plural(resource.Pipeline), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err
