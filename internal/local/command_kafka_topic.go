@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -36,7 +37,7 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	if c.Config.LocalPorts == nil {
 		return nil, "", errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	url := fmt.Sprintf(localhostPrefix, c.Config.LocalPorts.KafkaRestPort)
+	url := fmt.Sprintf(localhostPrefix, c.Config.LocalPorts.KafkaRestPorts[0]) // one krest port is enough for all communications
 
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -60,4 +61,14 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	}
 
 	return kafkaRestClient, clusterListData.Data[0].ClusterId, nil
+}
+
+func (c *Command) getPlaintextBootstrapServers() string {
+	servers := ":"
+	for _, port := range c.Config.LocalPorts.PlaintextPorts {
+		servers += port + ",:"
+	}
+	servers = strings.TrimRight(servers, ",:")
+	fmt.Println("bootstrap:", servers)
+	return servers
 }

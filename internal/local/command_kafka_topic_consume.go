@@ -68,7 +68,7 @@ func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	consumer, err := newOnPremConsumer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
+	consumer, err := newOnPremConsumer(cmd, c.getPlaintextBootstrapServers())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}
