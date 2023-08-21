@@ -44,7 +44,7 @@ func (c *Command) newKafkaStartCommand() *cobra.Command {
 		RunE:  c.kafkaStart,
 	}
 
-	cmd.Flags().StringSlice("kafka-rest-ports", []string{"8082", "9092"}, "A comma-separated list of Kafka REST port numbers for brokers.")
+	cmd.Flags().StringSlice("kafka-rest-ports", nil, "A comma-separated list of Kafka REST port numbers for brokers.")
 	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.")
 	cmd.Flags().Int32("brokers", 1, "Number of brokers in the Confluent Local cluster.") // range: [1, 4]
 	return cmd
@@ -134,7 +134,9 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	ports := c.Config.LocalPorts
 	platform := &specsv1.Platform{OS: "linux", Architecture: runtime.GOARCH}
 	natKafkaRestPorts := getNatKafkaRestPorts(ports, numOfBrokers)
+	fmt.Println(natKafkaRestPorts)
 	natPlaintextPorts := getNatPlaintextPorts(ports, numOfBrokers)
+	fmt.Println(natPlaintextPorts)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
 	// create a customized network
@@ -222,6 +224,7 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, numOfBrokers int3
 			return err
 		}
 
+		c.Config.LocalPorts = &config.LocalPorts{}
 		for i := 0; i < int(numOfBrokers); i++ {
 			c.Config.LocalPorts.KafkaRestPorts = append(c.Config.LocalPorts.KafkaRestPorts, defaultKafkaRestPorts[i])
 			c.Config.LocalPorts.PlaintextPorts = append(c.Config.LocalPorts.PlaintextPorts, strconv.Itoa(freePorts[i]))
@@ -299,7 +302,7 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numOf
 	a := []string{
 		fmt.Sprintf("KAFKA_BROKER_ID=%d", brokerId),
 		"KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT",
-		fmt.Sprintf("KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker%d:%s,PLAINTEXT_HOST://localhost:%s", brokerId, ports.BrokerPorts[idx], ports.PlaintextPorts[idx]),
+		fmt.Sprintf("KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://confluent-local-broker-%d:%s,PLAINTEXT_HOST://localhost:%s", brokerId, ports.BrokerPorts[idx], ports.PlaintextPorts[idx]),
 		"KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1",
 		"KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0",
 		"KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1",
@@ -307,7 +310,7 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numOf
 		"KAFKA_PROCESS_ROLES=broker,controller",
 		fmt.Sprintf("KAFKA_NODE_ID=%d", brokerId),
 		getKafkaControllerQuorumVoters(ports, numOfBrokers),
-		fmt.Sprintf("KAFKA_LISTENERS=PLAINTEXT://broker%d:%s,CONTROLLER://broker%d:%s,PLAINTEXT_HOST://0.0.0.0:%s", brokerId, ports.BrokerPorts[idx], brokerId, ports.ControllerPorts[idx], ports.PlaintextPorts[idx]),
+		fmt.Sprintf("KAFKA_LISTENERS=PLAINTEXT://confluent-local-broker-%d:%s,CONTROLLER://confluent-local-broker-%d:%s,PLAINTEXT_HOST://0.0.0.0:%s", brokerId, ports.BrokerPorts[idx], brokerId, ports.ControllerPorts[idx], ports.PlaintextPorts[idx]),
 		"KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT",
 		"KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER",
 		"KAFKA_LOG_DIRS=/tmp/kraft-combined-logs",
@@ -340,7 +343,7 @@ func getNatPlaintextPorts(ports *config.LocalPorts, numOfBrokers int32) []nat.Po
 func getKafkaControllerQuorumVoters(ports *config.LocalPorts, numOfBrokers int32) string {
 	voters := fmt.Sprintf("KAFKA_CONTROLLER_QUORUM_VOTERS=1@confluent-local-broker-1:%s", ports.ControllerPorts[0])
 	for i := int32(1); i < numOfBrokers; i++ {
-		voters += fmt.Sprintf(",confluent-local-broker-%v:%s", i, ports.ControllerPorts[i])
+		voters += fmt.Sprintf(",%v@confluent-local-broker-%v:%s", i+1, i+1, ports.ControllerPorts[i])
 	}
 	return voters
 }
@@ -348,7 +351,7 @@ func getKafkaControllerQuorumVoters(ports *config.LocalPorts, numOfBrokers int32
 func getKafkaRestBootstrapServers(ports *config.LocalPorts, numOfBrokers int32) string {
 	servers := fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=confluent-local-broker-1:%s", ports.BrokerPorts[0])
 	for i := int32(1); i < numOfBrokers; i++ {
-		servers += fmt.Sprintf(",confluent-local-broker-%v:%s", i, ports.ControllerPorts[i])
+		servers += fmt.Sprintf(",confluent-local-broker-%v:%s", i+1, ports.BrokerPorts[i])
 	}
 	return servers
 }
