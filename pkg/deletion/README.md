@@ -152,13 +152,13 @@ return nil
 Lastly, if your resource is not immediately deleted, then you should instead call `deletion.DeleteWithoutMessage` and write your own custom deletion message instead:
 
 ```go
-	deletedIDs, err := deletion.DeleteWithoutMessage(args, deleteFunc)
-	deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
-	if len(deletedIDs) == 1 {
-		output.Printf(deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIDs[0]))
-	} else if len(deletedIDs) > 1 {
-		output.Printf(deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
-	}
+deletedIDs, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
+if len(deletedIDs) == 1 {
+    output.Printf(deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIDs[0]))
+} else if len(deletedIDs) > 1 {
+    output.Printf(deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
+}
 
-	return err
+return err
 ```
