@@ -13,7 +13,7 @@ import (
 
 type humanOut struct {
 	Id                    string `human:"ID"`
-	EnvironmentId         string `human:"Environment ID"`
+	EnvironmentId         string `human:"Environment"`
 	Name                  string `human:"Name"`
 	Cloud                 string `human:"Cloud"`
 	Region                string `human:"Region"`

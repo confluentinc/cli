@@ -10,7 +10,7 @@ import (
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Desribe a network.",
+		Short: "Describe a network.",
 		Args:  cobra.ExactArgs(1),
 		// TODO: Implement autocompletion after List Network is implemented.
 		// ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

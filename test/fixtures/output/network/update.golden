@@ -1,6 +1,6 @@
 +-------------------------+------------------------------+
 | ID                      | n-abcde1                     |
-| Environment ID          | env-00000                    |
+| Environment             | env-00000                    |
 | Name                    | new-prod-aws-us-east1        |
 | Cloud                   | AWS                          |
 | Region                  | us-east-1                    |

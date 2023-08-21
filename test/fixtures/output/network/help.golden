@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   delete      Delete a network.
-  describe    Desribe a network.
+  describe    Describe a network.
   update      Update an existing network.
 
 Global Flags:

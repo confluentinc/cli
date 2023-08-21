@@ -20,17 +20,18 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		RunE: c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name of the network "n-abcde1" with a new name.`,
-				Code: "confluent network update n-abcde1 --name new-test-network",
+				Text: `Update the name of the network "n-123456".`,
+				Code: `confluent network update n-123456 --name "new name"`,
 			},
 		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the network.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
