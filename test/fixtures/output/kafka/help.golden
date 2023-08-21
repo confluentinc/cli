@@ -4,15 +4,15 @@ Usage:
   confluent kafka [command]
 
 Available Commands:
-  acl            Manage Kafka ACLs.
-  client-config  Manage Kafka Clients configuration files.
-  cluster        Manage Kafka clusters.
-  consumer       Manage Kafka consumers.
-  link           Manage inter-cluster links.
-  mirror         Manage cluster linking mirror topics.
-  quota          Manage Kafka client quotas.
-  region         Manage Confluent Cloud regions.
-  topic          Manage Kafka topics.
+  acl           Manage Kafka ACLs.
+  client-config Manage Kafka Clients configuration files.
+  cluster       Manage Kafka clusters.
+  consumer      Manage Kafka consumers.
+  link          Manage inter-cluster links.
+  mirror        Manage cluster linking mirror topics.
+  quota         Manage Kafka client quotas.
+  region        Manage Confluent Cloud regions.
+  topic         Manage Kafka topics.
 
 Global Flags:
   -h, --help            Show help for this command.
