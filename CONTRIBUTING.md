@@ -134,13 +134,13 @@ As a basic demonstration, we'll be implementing a command which prints the name 
 
 #### Creating the Command
 
-Like all other commands, this command will reside in `internal/cmd`. First, we must create a directory for this command:
+Like all other commands, this command will reside in `internal`. First, we must create a directory for this command:
 
-    mkdir internal/cmd/config
+    mkdir internal/config
 
 Next, we create two files, one for the top-level command `config`, and another for `describe`.
 
-`internal/cmd/config/command.go`:
+`internal/config/command.go`:
 
 ```go
 package config
@@ -166,7 +166,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 }
 ```
 
-`internal/cmd/config/command_describe.go`:
+`internal/config/command_describe.go`:
 
 ```go
 package config
@@ -210,7 +210,7 @@ func (c *command) describe(_ *cobra.Command, args []string) error {
 #### Registering the Command
 
 Finally, we must add the newly created `config` command as a child of the root command.
-Add the following line to `internal/cmd/command.go`, and make sure to import its package:
+Add the following line to `internal/command.go`, and make sure to import its package:
 
     cmd.AddCommand(config.New(prerunner))
 
