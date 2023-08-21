@@ -37,6 +37,10 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(environment)
 			require.NoError(t, err)
 		case http.MethodDelete:
+			if id == "env-000" || id == "env-111" {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			_, err := io.WriteString(w, "")
 			require.NoError(t, err)
 		case http.MethodPatch:

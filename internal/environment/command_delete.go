@@ -1,8 +1,6 @@
 package environment
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -50,11 +48,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	deletedIDs, err := deletion.Delete(args, deleteFunc, resource.Environment)
 
 	errs := multierror.Append(err, c.deleteEnvironmentsFromConfig(deletedIDs))
-	if errs.ErrorOrNil() != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, "confluent environment"))
-	}
 
-	return nil
+	return errs.ErrorOrNil()
 }
 
 func (c *command) deleteEnvironmentsFromConfig(deletedIDs []string) error {

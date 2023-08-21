@@ -93,7 +93,7 @@ func DeleteWithoutMessage(args []string, callDeleteEndpoint func(string) error) 
 	var deletedIDs []string
 	for _, id := range args {
 		if err := callDeleteEndpoint(id); err != nil {
-			errs = multierror.Append(errs, err)
+			errs = multierror.Append(errs, errors.Wrapf(err, "failed to delete %s", id))
 		} else {
 			deletedIDs = append(deletedIDs, id)
 		}
