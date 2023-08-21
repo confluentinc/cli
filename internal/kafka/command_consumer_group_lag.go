@@ -22,7 +22,7 @@ type lagOut struct {
 func (c *consumerCommand) newLagCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "lag",
-		Short:  "View consumer lag.",
+		Short:  "View consumer group lag.",
 	}
 
 	if cfg.IsCloudLogin() {
