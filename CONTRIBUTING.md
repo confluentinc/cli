@@ -264,7 +264,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 ```
 
-See the [Autocompletion](internal/pkg/cmd/AUTOCOMPLETION.md) resource for implementation details.
+See the [Autocompletion](pkg/cmd/AUTOCOMPLETION.md) resource for implementation details.
 
 ### Opening a PR
 
@@ -279,7 +279,7 @@ Note: If there is a JIRA ticket associated with your PR, please format the PR de
 
 Please familiarize yourself with the following resources before writing your first CLI command:
 
-* [Cloud and On-Prem Annotations](internal/pkg/cmd/ANNOTATIONS.md)
-* [CLI Error Handling](internal/pkg/errors/README.md)
-* [Autocompletion](internal/pkg/cmd/AUTOCOMPLETION.md)
+* [Cloud and On-Prem Annotations](pkg/cmd/ANNOTATIONS.md)
+* [CLI Error Handling](pkg/errors/README.md)
+* [Autocompletion](pkg/cmd/AUTOCOMPLETION.md)
 * TODO: REST Proxy Commands
