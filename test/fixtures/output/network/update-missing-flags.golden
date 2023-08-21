@@ -1,14 +1,14 @@
-Describe a network.
-
+Error: required flag(s) "name" not set
 Usage:
-  confluent network describe <id> [flags]
+  confluent network update <id> [flags]
 
 Examples:
-Describe Confluent network "n-abcde1".
+Update the name of network "n-123456".
 
-  $ confluent network describe n-abcde1
+  $ confluent network update n-123456 --name "new name"
 
 Flags:
+      --name string          REQUIRED: Name of the network.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
@@ -17,3 +17,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
