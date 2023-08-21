@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/go-retryablehttp"
 
 	plog "github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
@@ -61,7 +61,7 @@ func getServerUrl(baseURL string) string {
 		return baseURL
 	}
 
-	if types.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
+	if slices.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
 		u.Host = "api." + u.Host
 		u.Path = ""
 	} else {

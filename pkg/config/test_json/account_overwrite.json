@@ -64,13 +64,6 @@
             }
           }
         }
-      },
-      "schema_registry_clusters": {
-        "acc-123": {
-          "id": "lsrc-123",
-          "schema_registry_endpoint": "http://some-lsrc-endpoint",
-          "schema_registry_credentials": null
-        }
       }
     }
   },

@@ -3,6 +3,7 @@ package kafka
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 func (c *command) newConsumeCommandOnPrem() *cobra.Command {
@@ -29,11 +29,11 @@ func (c *command) newConsumeCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
-				Code: `confluent kafka topic consume my_topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`,
+				Code: `confluent kafka topic consume my_topic --protocol SSL --bootstrap localhost:19091 --ca-location my-cert.crt --cert-location client.pem --key-location client.key`,
 			},
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SASL_SSL/OAUTHBEARER protocol enabled (using MDS token).`,
-				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091" --ca-location my-cert.crt`,
+				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap localhost:19091 --ca-location my-cert.crt`,
 			},
 		),
 	}
@@ -147,7 +147,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	var srClient *schemaregistry.Client
-	if types.Contains(serdes.SchemaBasedFormats, valueFormat) {
+	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {
 		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return err

@@ -3,7 +3,7 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -73,9 +73,9 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	quotaUpdate := kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
+	quotaUpdate := kafkaquotasv1.KafkaQuotasV1ClientQuotaUpdate{
 		Id: &quotaId,
-		Spec: &kafkaquotas.KafkaQuotasV1ClientQuotaSpecUpdate{
+		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpecUpdate{
 			DisplayName: &updateName,
 			Description: &updateDescription,
 			Throughput:  updateThroughput,
@@ -93,7 +93,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	return table.Print()
 }
 
-func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotas.GlobalObjectReference) (*[]kafkaquotas.GlobalObjectReference, error) {
+func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotasv1.GlobalObjectReference) (*[]kafkaquotasv1.GlobalObjectReference, error) {
 	if cmd.Flags().Changed("add-principals") {
 		addPrincipals, err := cmd.Flags().GetStringSlice("add-principals")
 		if err != nil {
@@ -123,7 +123,7 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 	return &updatePrincipals, nil
 }
 
-func getUpdatedThroughput(cmd *cobra.Command, throughput *kafkaquotas.KafkaQuotasV1Throughput) (*kafkaquotas.KafkaQuotasV1Throughput, error) {
+func getUpdatedThroughput(cmd *cobra.Command, throughput *kafkaquotasv1.KafkaQuotasV1Throughput) (*kafkaquotasv1.KafkaQuotasV1Throughput, error) {
 	if cmd.Flags().Changed("ingress") {
 		ingress, err := cmd.Flags().GetString("ingress")
 		if err != nil {

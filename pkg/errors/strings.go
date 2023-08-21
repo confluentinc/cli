@@ -118,7 +118,7 @@ const (
 	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
 	UsingResourceMsg              = "Using %s \"%s\".\n"
 
-	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
+	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%v\".\n"
 
 	// Stream Sharing commands
 	ResendInviteMsg = "Sent invitation for \"%s\".\n"

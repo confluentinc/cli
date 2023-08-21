@@ -3,6 +3,7 @@ package acl
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -315,10 +316,23 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.
 }
 
 func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.AclData) error {
+	all, err := cmd.Flags().GetBool("all")
+	if err != nil {
+		return err
+	}
+
 	list := output.NewList(cmd)
 	for _, acl := range acls {
+		principal := acl.GetPrincipal()
+		if !all {
+			if hasIntegerId, err := principalHasIntegerId(principal); err != nil {
+				return err
+			} else if hasIntegerId {
+				continue
+			}
+		}
 		list.Add(&out{
-			Principal:    acl.GetPrincipal(),
+			Principal:    principal,
 			Permission:   acl.GetPermission(),
 			Operation:    acl.GetOperation(),
 			ResourceType: string(acl.GetResourceType()),
@@ -328,6 +342,18 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.Acl
 	}
 	list.Filter(listFields)
 	return list.Print()
+}
+
+func principalHasIntegerId(principal string) (bool, error) {
+	x := strings.Split(principal, ":")
+	if len(x) < 2 {
+		return false, errors.Errorf("unrecognized principal format %s", principal)
+	}
+	suffix := x[1]
+
+	// The principal has a numeric ID
+	_, err := strconv.ParseInt(suffix, 10, 32)
+	return err == nil, nil
 }
 
 func GetCreateAclRequestData(binding *ccstructs.ACLBinding) cckafkarestv3.CreateAclRequestData {

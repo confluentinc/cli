@@ -2,10 +2,11 @@ package cluster
 
 import (
 	"context"
+	"slices"
 
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/cluster"
 	pcluster "github.com/confluentinc/cli/v3/pkg/cluster"
@@ -38,24 +39,22 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
+	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 
 	clusterName, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
 		return err
 	}
 
-	clusterInfos, httpResp, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mds.ClusterRegistryListOpts{})
+	clusterInfos, httpResp, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mdsv1.ClusterRegistryListOpts{})
 	if err != nil {
 		return pcluster.HandleClusterError(err, httpResp)
 	}
-	clusterFound := false
-	for _, cluster := range clusterInfos {
-		if clusterName == cluster.ClusterName {
-			clusterFound = true
-		}
-	}
-	if !clusterFound {
+
+	found := slices.ContainsFunc(clusterInfos, func(cluster mdsv1.ClusterInfo) bool {
+		return cluster.ClusterName == clusterName
+	})
+	if !found {
 		return errors.Errorf(errors.UnknownClusterErrorMsg, clusterName)
 	}
 

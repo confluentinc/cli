@@ -6,7 +6,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
@@ -29,15 +29,15 @@ func (c *routeCommand) newListCommand() *cobra.Command {
 }
 
 func (c *routeCommand) list(cmd *cobra.Command, _ []string) error {
-	var opts *mds.ListRoutesOpts
+	var opts *mdsv1.ListRoutesOpts
 	if cmd.Flags().Changed("resource") {
 		resource, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return err
 		}
-		opts = &mds.ListRoutesOpts{Q: optional.NewString(resource)}
+		opts = &mdsv1.ListRoutesOpts{Q: optional.NewString(resource)}
 	} else {
-		opts = &mds.ListRoutesOpts{Q: optional.EmptyString()}
+		opts = &mdsv1.ListRoutesOpts{Q: optional.EmptyString()}
 	}
 	result, response, err := c.MDSClient.AuditLogConfigurationApi.ListRoutes(c.createContext(), opts)
 	if err != nil {

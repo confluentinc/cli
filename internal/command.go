@@ -20,6 +20,7 @@ import (
 	cloudsignup "github.com/confluentinc/cli/v3/internal/cloud-signup"
 	"github.com/confluentinc/cli/v3/internal/cluster"
 	"github.com/confluentinc/cli/v3/internal/completion"
+	"github.com/confluentinc/cli/v3/internal/configuration"
 	"github.com/confluentinc/cli/v3/internal/connect"
 	"github.com/confluentinc/cli/v3/internal/context"
 	"github.com/confluentinc/cli/v3/internal/environment"
@@ -112,6 +113,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New())
 	cmd.AddCommand(completion.New())
+	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner, flagResolver))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
