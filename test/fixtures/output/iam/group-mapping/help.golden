@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a group mapping.
-  delete      Delete a group mapping.
+  delete      Delete one or more group mappings.
   describe    Describe a group mapping.
   list        List group mappings.
   update      Update a group mapping.
