@@ -39,8 +39,8 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if r, err := client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, id, nil); err != nil {
-			return handleOpenApiError(r, err, client)
+		if httpResp, err := client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, id, nil); err != nil {
+			return handleOpenApiError(httpResp, err, client)
 		}
 		return nil
 	}

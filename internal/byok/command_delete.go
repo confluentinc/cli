@@ -35,8 +35,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if r, err := c.V2Client.DeleteByokKey(id); err != nil {
-			return errors.CatchByokKeyNotFoundError(err, r)
+		if httpResp, err := c.V2Client.DeleteByokKey(id); err != nil {
+			return errors.CatchByokKeyNotFoundError(err, httpResp)
 		}
 		return nil
 	}

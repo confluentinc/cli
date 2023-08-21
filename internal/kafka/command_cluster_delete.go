@@ -52,8 +52,8 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if r, err := c.V2Client.DeleteKafkaCluster(id, environmentId); err != nil {
-			return errors.CatchKafkaNotFoundError(err, id, r)
+		if httpResp, err := c.V2Client.DeleteKafkaCluster(id, environmentId); err != nil {
+			return errors.CatchKafkaNotFoundError(err, id, httpResp)
 		}
 		return nil
 	}

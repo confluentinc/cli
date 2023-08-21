@@ -57,8 +57,8 @@ func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 	}
 
 	deleteFunc := func(id string) error {
-		if r, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, id); err != nil {
-			return kafkarest.NewError(restClient.GetConfig().BasePath, err, r)
+		if httpResp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, id); err != nil {
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 		}
 		return nil
 	}

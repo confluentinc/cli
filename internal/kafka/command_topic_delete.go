@@ -58,12 +58,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if r, err := kafkaREST.CloudClient.DeleteKafkaTopic(id); err != nil {
+		if httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(id); err != nil {
 			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
 				return fmt.Errorf(errors.UnknownTopicErrorMsg, id)
 			} else {
-				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 		}
 		return nil

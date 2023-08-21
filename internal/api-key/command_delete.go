@@ -37,8 +37,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if r, err := c.V2Client.DeleteApiKey(id); err != nil {
-			return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, r)
+		if httpResp, err := c.V2Client.DeleteApiKey(id); err != nil {
+			return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, httpResp)
 		}
 		return nil
 	}
