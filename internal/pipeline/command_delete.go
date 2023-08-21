@@ -6,19 +6,19 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <pipeline-id>",
-		Short:             "Delete a pipeline.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <pipeline-id-1> [pipeline-id-2] ... [pipeline-id-n]",
+		Short:             "Delete one or more pipelines.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -48,18 +48,29 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
 	if err != nil {
+		return resource.ResourcesNotFoundError(cmd, resource.Pipeline, args[0])
+	}
+
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, id)
+		return err == nil
+	}
+
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Pipeline, pipeline.Spec.GetDisplayName()); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Pipeline, pipeline.GetId(), pipeline.Spec.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, pipeline.Spec.GetDisplayName()); err != nil {
-		return err
+	deleteFunc := func(id string) error {
+		return c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id)
 	}
 
-	if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, args[0]); err != nil {
-		return err
+	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+	deleteMsg := "Requested to delete %s %s.\n"
+	if len(deletedIds) == 1 {
+		output.Printf(deleteMsg, resource.Pipeline, fmt.Sprintf("\"%s\"", deletedIds[0]))
+	} else if len(deletedIds) > 1 {
+		output.Printf(deleteMsg, resource.Plural(resource.Pipeline), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
-	output.Printf(errors.RequestedDeleteResourceMsg, resource.Pipeline, args[0])
-	return nil
+	return err
 }

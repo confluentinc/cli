@@ -1,0 +1,4 @@
+Error: consumer share "ss-12346" not found
+
+Suggestions:
+    List available consumer shares with `confluent stream-share consumer share list`.
