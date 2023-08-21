@@ -175,7 +175,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 						HostPort: ports.KafkaRestPorts[idx],
 					},
 				},
-				natPlaintextPorts[0]: []nat.PortBinding{
+				natPlaintextPorts[idx]: []nat.PortBinding{
 					{
 						HostIP:   localhost,
 						HostPort: ports.PlaintextPorts[idx],
