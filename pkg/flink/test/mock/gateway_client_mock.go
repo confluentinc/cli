@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
-	v1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	v1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,10 +35,10 @@ func (m *MockGatewayClientInterface) EXPECT() *MockGatewayClientInterfaceMockRec
 }
 
 // CreateStatement mocks base method.
-func (m *MockGatewayClientInterface) CreateStatement(arg0, arg1 string, arg2 map[string]string, arg3, arg4, arg5, arg6 string) (v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) CreateStatement(arg0, arg1 string, arg2 map[string]string, arg3, arg4, arg5, arg6 string) (v1beta1.SqlV1beta1Statement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateStatement", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
-	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1Statement)
+	ret0, _ := ret[0].(v1beta1.SqlV1beta1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -64,10 +64,10 @@ func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(arg0, arg1, ar
 }
 
 // GetExceptions mocks base method.
-func (m *MockGatewayClientInterface) GetExceptions(arg0, arg1, arg2 string) (v1alpha1.SqlV1alpha1StatementExceptionList, error) {
+func (m *MockGatewayClientInterface) GetExceptions(arg0, arg1, arg2 string) (v1beta1.SqlV1beta1StatementExceptionList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetExceptions", arg0, arg1, arg2)
-	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1StatementExceptionList)
+	ret0, _ := ret[0].(v1beta1.SqlV1beta1StatementExceptionList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -79,10 +79,10 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetExceptions(arg0, arg1, arg2
 }
 
 // GetStatement mocks base method.
-func (m *MockGatewayClientInterface) GetStatement(arg0, arg1, arg2 string) (v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) GetStatement(arg0, arg1, arg2 string) (v1beta1.SqlV1beta1Statement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStatement", arg0, arg1, arg2)
-	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1Statement)
+	ret0, _ := ret[0].(v1beta1.SqlV1beta1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -94,10 +94,10 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetStatement(arg0, arg1, arg2 
 }
 
 // GetStatementResults mocks base method.
-func (m *MockGatewayClientInterface) GetStatementResults(arg0, arg1, arg2, arg3 string) (v1alpha1.SqlV1alpha1StatementResult, error) {
+func (m *MockGatewayClientInterface) GetStatementResults(arg0, arg1, arg2, arg3 string) (v1beta1.SqlV1beta1StatementResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStatementResults", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1StatementResult)
+	ret0, _ := ret[0].(v1beta1.SqlV1beta1StatementResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -109,10 +109,10 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetStatementResults(arg0, arg1
 }
 
 // ListStatements mocks base method.
-func (m *MockGatewayClientInterface) ListStatements(arg0, arg1, arg2, arg3 string) (v1alpha1.SqlV1alpha1StatementList, error) {
+func (m *MockGatewayClientInterface) ListStatements(arg0, arg1, arg2, arg3 string) (v1beta1.SqlV1beta1StatementList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListStatements", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1StatementList)
+	ret0, _ := ret[0].(v1beta1.SqlV1beta1StatementList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
