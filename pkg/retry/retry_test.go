@@ -1,4 +1,3 @@
-//nolint:all
 package retry
 
 import (
@@ -16,4 +15,4 @@ func TestRetry(t *testing.T) {
 	require.NoError(t, Retry(time.Nanosecond, 2*time.Nanosecond, func() error {
 		return nil
 	}))
-} 
+}
