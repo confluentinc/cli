@@ -1,4 +1,4 @@
-package login
+package logout
 
 import (
 	"fmt"
@@ -16,7 +16,17 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func NewLogoutCommand(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
+type command struct {
+	*pcmd.CLICommand
+	cfg                      *config.Config
+	ccloudClientFactory      pauth.CCloudClientFactory
+	netrcHandler             netrc.NetrcHandler
+	loginCredentialsManager  pauth.LoginCredentialsManager
+	loginOrganizationManager pauth.LoginOrganizationManager
+	authTokenHandler         pauth.AuthTokenHandler
+}
+
+func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "logout",
 		Args: cobra.NoArgs,
@@ -34,7 +44,6 @@ func NewLogoutCommand(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClient
 	c := &command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		cfg:                      cfg,
-		mdsClientManager:         mdsClientManager,
 		ccloudClientFactory:      ccloudClientFactory,
 		netrcHandler:             netrcHandler,
 		loginCredentialsManager:  loginCredentialsManager,
@@ -75,7 +84,8 @@ func (c *command) logout(cmd *cobra.Command, _ []string) error {
 
 func (c *command) revokeCCloudRefreshToken(cmd *cobra.Command, url string) error {
 	ctx := c.Config.Config.Context()
-	credentials, err := c.getCCloudCredentials(cmd, url, c.getOrgResourceId(cmd))
+	orgResourceId := pauth.GetOrgResourceId(cmd, c.loginOrganizationManager)
+	credentials, err := pauth.GetCCloudCredentials(c.ccloudClientFactory, cmd, c.cfg, c.loginCredentialsManager, orgResourceId, url)
 	if err != nil {
 		return err
 	}

@@ -24,8 +24,9 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	mdsmock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
+	mdsMock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
+	"github.com/confluentinc/cli/v3/internal/logout"
 	climock "github.com/confluentinc/cli/v3/mock"
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -112,7 +113,7 @@ var (
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {},
+		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
@@ -713,7 +714,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 
 	cert, err := x509.ParseCertificate(certBytes)
 	req.NoError(err, "Couldn't reparse certificate")
-	mdsClient.TokensAndAuthenticationApi = &mdsmock.TokensAndAuthenticationApi{
+	mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
 		GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
 			req.NotEqual(http.DefaultClient, mdsClient)
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
@@ -741,7 +742,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 			return mdsClient, nil
 		},
 	}
-	loginCmd := NewLoginCommand(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, LoginOrganizationManager, AuthTokenHandler)
+	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, LoginOrganizationManager, AuthTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -901,7 +902,7 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	if !isCloud {
 		mdsConfig := mdsv1.NewConfiguration()
 		mdsClient = mdsv1.NewAPIClient(mdsConfig)
-		mdsClient.TokensAndAuthenticationApi = &mdsmock.TokensAndAuthenticationApi{
+		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
 			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
 				return mdsv1.AuthenticationResponse{
 					AuthToken: testToken1,
@@ -930,9 +931,44 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 		},
 	}
 	prerunner := climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := NewLoginCommand(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
+	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
+}
+
+func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, contextName string) (*cobra.Command, *config.Config) {
+	config.SetTempHomeDir()
+	cfg := config.AuthenticatedConfigMockWithContextName(contextName)
+	var mdsClient *mdsv1.APIClient
+	if !isCloud {
+		mdsConfig := mdsv1.NewConfiguration()
+		mdsClient = mdsv1.NewAPIClient(mdsConfig)
+		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
+			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
+				return mdsv1.AuthenticationResponse{
+					AuthToken: testToken1,
+					TokenType: "JWT",
+					ExpiresIn: 100,
+				}, nil, nil
+			},
+		}
+	}
+	ccloudClientFactory := &climock.CCloudClientFactory{
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+			req.Equal("https://confluent.cloud", baseURL)
+			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, User: userInterface}
+		},
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+			return &ccloudv1.Client{Growth: &ccloudv1mock.Growth{
+				GetFreeTrialInfoFunc: func(_ int32) ([]*ccloudv1.GrowthPromoCodeClaim, error) {
+					return []*ccloudv1.GrowthPromoCodeClaim{}, nil
+				},
+			}, Auth: auth, User: userInterface}
+		},
+	}
+	prerunner := climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	logoutCmd := logout.New(cfg, prerunner, ccloudClientFactory, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
+	return logoutCmd, cfg
 }
 
 func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, orgResourceId string) {
@@ -960,4 +996,11 @@ func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, orgReso
 	} else {
 		req.Equal("http://localhost:8090", ctx.Platform.Server)
 	}
+}
+
+func verifyLoggedOutState(t *testing.T, cfg *config.Config, loggedOutContext string) {
+	req := require.New(t)
+	state := cfg.Contexts[loggedOutContext].State
+	req.Empty(state.AuthToken)
+	req.Empty(state.Auth)
 }
