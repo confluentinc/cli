@@ -31,7 +31,6 @@ import (
 	"github.com/confluentinc/cli/v3/internal/ksql"
 	"github.com/confluentinc/cli/v3/internal/local"
 	"github.com/confluentinc/cli/v3/internal/login"
-	"github.com/confluentinc/cli/v3/internal/logout"
 	"github.com/confluentinc/cli/v3/internal/organization"
 	"github.com/confluentinc/cli/v3/internal/pipeline"
 	"github.com/confluentinc/cli/v3/internal/plugin"
@@ -121,8 +120,8 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(kafka.New(cfg, prerunner))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
 	cmd.AddCommand(local.New(prerunner))
-	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
-	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(login.NewLoginCommand(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
+	cmd.AddCommand(login.NewLogoutCommand(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(organization.New(prerunner))
 	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))

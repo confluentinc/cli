@@ -26,7 +26,6 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	mdsmock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
-	"github.com/confluentinc/cli/v3/internal/logout"
 	climock "github.com/confluentinc/cli/v3/mock"
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -113,8 +112,7 @@ var (
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
-		},
+		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {},
 	}
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
@@ -743,7 +741,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, LoginOrganizationManager, AuthTokenHandler)
+	loginCmd := NewLoginCommand(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, LoginOrganizationManager, AuthTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -811,10 +809,10 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
+		logoutCmd, cfg1 := newLogoutCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager, ctx.Name)
 		_, err = pcmd.ExecuteCommand(logoutCmd)
 		req.NoError(err)
-		verifyLoggedOutState(t, cfg, ctx.Name)
+		verifyLoggedOutState(t, cfg1, ctx.Name)
 
 		// logging back in the same context
 		_, err = pcmd.ExecuteCommand(loginCmd, s.args...)
@@ -932,14 +930,9 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 		},
 	}
 	prerunner := climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
+	loginCmd := NewLoginCommand(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
-}
-
-func newLogoutCmd(cfg *config.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *config.Config) {
-	logoutCmd := logout.New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
-	return logoutCmd, cfg
 }
 
 func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, orgResourceId string) {
@@ -967,11 +960,4 @@ func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, orgReso
 	} else {
 		req.Equal("http://localhost:8090", ctx.Platform.Server)
 	}
-}
-
-func verifyLoggedOutState(t *testing.T, cfg *config.Config, loggedOutContext string) {
-	req := require.New(t)
-	state := cfg.Contexts[loggedOutContext].State
-	req.Empty(state.AuthToken)
-	req.Empty(state.Auth)
 }
