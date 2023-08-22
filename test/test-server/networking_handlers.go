@@ -3,10 +3,13 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 )
@@ -22,6 +25,15 @@ func handleNetworkingNetwork(t *testing.T) http.HandlerFunc {
 			handleNetworkingNetworkDelete(t, id)(w, r)
 		case http.MethodPatch:
 			handleNetworkingNetworkUpdate(t, id)(w, r)
+		}
+	}
+}
+
+func handleNetworkingNetworks(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingNetworkList(t)(w, r)
 		}
 	}
 }
@@ -101,4 +113,95 @@ func handleNetworkingNetworkUpdate(t *testing.T, id string) http.HandlerFunc {
 			require.NoError(t, err)
 		}
 	}
+}
+
+func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		awsNetwork := networkingv1.NetworkingV1Network{
+			Id: networkingv1.PtrString("n-abcde1"),
+			Spec: &networkingv1.NetworkingV1NetworkSpec{
+				Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+				DisplayName: networkingv1.PtrString("prod-aws-us-east1"),
+				Cloud:       networkingv1.PtrString("AWS"),
+				Region:      networkingv1.PtrString("us-east-1"),
+				Cidr:        networkingv1.PtrString("10.200.0.0/16"),
+				Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
+				DnsConfig:   &networkingv1.NetworkingV1DnsConfig{Resolution: "CHASED_PRIVATE"},
+			},
+			Status: &networkingv1.NetworkingV1NetworkStatus{
+				Phase:                 "READY",
+				ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}},
+			},
+		}
+		gcpNetwork := networkingv1.NetworkingV1Network{
+			Id: networkingv1.PtrString("n-abcde2"),
+			Spec: &networkingv1.NetworkingV1NetworkSpec{
+				Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+				DisplayName: networkingv1.PtrString("prod-gcp-us-central1"),
+				Cloud:       networkingv1.PtrString("GCP"),
+				Region:      networkingv1.PtrString("us-central1"),
+				Cidr:        networkingv1.PtrString("10.1.0.0/16"),
+				Zones:       &[]string{"us-central1-a", "us-central1-b", "us-central1-c"},
+			},
+			Status: &networkingv1.NetworkingV1NetworkStatus{
+				Phase:                 "READY",
+				ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK"}},
+			},
+		}
+		azureNetwork := networkingv1.NetworkingV1Network{
+			Id: networkingv1.PtrString("n-abcde3"),
+			Spec: &networkingv1.NetworkingV1NetworkSpec{
+				Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+				DisplayName: networkingv1.PtrString("prod-azure-eastus2"),
+				Cloud:       networkingv1.PtrString("AZURE"),
+				Region:      networkingv1.PtrString("eastus2"),
+				Cidr:        networkingv1.PtrString("10.0.0.0/16"),
+				Zones:       &[]string{"1", "2", "3"},
+			},
+			Status: &networkingv1.NetworkingV1NetworkStatus{
+				Phase:                 "READY",
+				ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			},
+		}
+
+		networks := []networkingv1.NetworkingV1Network{awsNetwork, gcpNetwork, azureNetwork}
+		networkList := filterNetworks(r.URL, networks)
+		err := json.NewEncoder(w).Encode(networkList)
+		require.NoError(t, err)
+	}
+}
+
+func filterNetworks(url *url.URL, networks []networkingv1.NetworkingV1Network) *networkingv1.NetworkingV1NetworkList {
+	networkList := &networkingv1.NetworkingV1NetworkList{}
+
+	names := []string{}
+	for _, name := range url.Query()["spec.display_name"] {
+		trimmedNames := strings.Trim(name, "{[]}")
+		for _, trimmedName := range strings.Split(trimmedNames, " ") {
+			names = append(names, trimmedName)
+		}
+		// names = append(names, name)
+	}
+
+	clouds := []string{}
+	for _, cloud := range url.Query()["spec.cloud"] {
+		trimmedClouds := strings.Trim(cloud, "{[]}")
+		for _, trimmedCloud := range strings.Split(trimmedClouds, " ") {
+			clouds = append(clouds, trimmedCloud)
+		}
+		// clouds = append(clouds, cloud)
+	}
+
+	for _, network := range networks {
+		name := network.Spec.GetDisplayName()
+		cloud := network.Spec.GetCloud()
+
+		nameFilter := len(names) == 0 || slices.Contains(names, name)
+		cloudFilter := len(clouds) == 0 || slices.Contains(clouds, cloud)
+		if nameFilter && cloudFilter {
+			networkList.Data = append(networkList.Data, network)
+		}
+	}
+
+	return networkList
 }
