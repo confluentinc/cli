@@ -36,7 +36,7 @@ type command struct {
 	authTokenHandler         pauth.AuthTokenHandler
 }
 
-func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
+func NewLoginCommand(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -206,12 +206,14 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
 	c.loginCredentialsManager.SetCloudClient(client)
 
-	prompt, err := cmd.Flags().GetBool("prompt")
-	if err != nil {
-		return nil, err
-	}
-	if prompt {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId))
+	if cmd.Use == "login" {
+		prompt, err := cmd.Flags().GetBool("prompt")
+		if err != nil {
+			return nil, err
+		}
+		if prompt {
+			return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId))
+		}
 	}
 
 	filterParams := netrc.NetrcMachineParams{
