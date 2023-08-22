@@ -17,7 +17,7 @@ import (
 )
 
 type command struct {
-	*pcmd.CLICommand
+	*pcmd.AuthenticatedCLICommand
 	cfg                      *config.Config
 	ccloudClientFactory      pauth.CCloudClientFactory
 	netrcHandler             netrc.NetrcHandler
@@ -33,16 +33,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 	}
 
 	context := "Confluent Cloud or Confluent Platform"
-	if cfg.IsCloudLogin() {
-		context = "Confluent Cloud"
-	} else if cfg.IsOnPremLogin() {
-		context = "Confluent Platform"
-	}
-
-	cmd.Short = fmt.Sprintf("Log out of %s.", context)
-
 	c := &command{
-		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		AuthenticatedCLICommand:  pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
 		cfg:                      cfg,
 		ccloudClientFactory:      ccloudClientFactory,
 		netrcHandler:             netrcHandler,
@@ -50,6 +42,15 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 		loginOrganizationManager: loginOrganizationManager,
 		authTokenHandler:         authTokenHandler,
 	}
+	if cfg.IsCloudLogin() {
+		context = "Confluent Cloud"
+	} else if cfg.IsOnPremLogin() {
+		context = "Confluent Platform"
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
+	}
+
+	cmd.Short = fmt.Sprintf("Log out of %s.", context)
+
 	cmd.RunE = c.logout
 
 	return cmd
@@ -96,7 +97,7 @@ func (c *command) revokeCCloudRefreshToken(cmd *cobra.Command, url string) error
 	}
 	credentials.AuthToken = contextState.AuthToken
 
-	if err := c.authTokenHandler.RevokeRefreshToken(c.ccloudClientFactory, url, credentials); err != nil {
+	if err := c.authTokenHandler.RevokeRefreshToken(c.Client, url, credentials); err != nil {
 		return err
 	}
 	return nil

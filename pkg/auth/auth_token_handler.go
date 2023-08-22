@@ -18,7 +18,7 @@ import (
 type AuthTokenHandler interface {
 	GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error)
 	GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials) (string, error)
-	RevokeRefreshToken(clientFactory CCloudClientFactory, url string, credentials *Credentials) error
+	RevokeRefreshToken(client *ccloudv1.Client, url string, credentials *Credentials) error
 }
 
 type AuthTokenHandlerImpl struct{}
@@ -171,9 +171,8 @@ func login(client *ccloudv1.Client, req *ccloudv1.AuthenticateRequest) (*ccloudv
 	}
 }
 
-func (a *AuthTokenHandlerImpl) RevokeRefreshToken(clientFactory CCloudClientFactory, url string, credentials *Credentials) error {
+func (a *AuthTokenHandlerImpl) RevokeRefreshToken(client *ccloudv1.Client, url string, credentials *Credentials) error {
 	req := &ccloudv1.AuthenticateRequest{IdToken: credentials.AuthToken}
-	client := clientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, url)
 
 	if credentials.IsSSO {
 		if _, err := client.Auth.OktaLogout(req); err != nil {
