@@ -81,9 +81,6 @@ var resourceToPrefix = map[string]string{
 	User:                  UserPrefix,
 }
 
-// Singular words ending w/ these suffixes generally add an extra -es syllable in their plural forms
-var pluralExtraSyllableSuffix = types.NewSet("s", "x", "z", "ch", "sh")
-
 func LookupType(resourceId string) string {
 	if resourceId == Cloud {
 		return Cloud
@@ -136,22 +133,22 @@ func ValidateArgs(c *cobra.Command, args []string, resourceType string, checkExi
 	return nil
 }
 
-func ResourcesNotFoundError(c *cobra.Command, resourceType string, invalidArgs ...string) error {
-	NotFoundErrorMsg := `%s %s not found`
-	invalidArgsErrMsg := fmt.Sprintf(NotFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+func ResourcesNotFoundError(cmd *cobra.Command, resourceType string, invalidArgs ...string) error {
+	notFoundErrorMsg := `%s %s not found`
+	invalidArgsErrMsg := fmt.Sprintf(notFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 	if len(invalidArgs) > 1 {
-		invalidArgsErrMsg = fmt.Sprintf(NotFoundErrorMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+		invalidArgsErrMsg = fmt.Sprintf(notFoundErrorMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 	}
 
 	// Find the full parent command string for use in the suggestion message
 	var fullParentCommand string
-	if c.HasParent() {
-		fullParentCommand = c.Parent().Name()
-		c = c.Parent()
+	if cmd.HasParent() {
+		fullParentCommand = cmd.Parent().Name()
+		cmd = cmd.Parent()
 	}
-	for c.HasParent() {
-		fullParentCommand = fmt.Sprintf("%s %s", c.Parent().Name(), fullParentCommand)
-		c = c.Parent()
+	for cmd.HasParent() {
+		fullParentCommand = fmt.Sprintf("%s %s", cmd.Parent().Name(), fullParentCommand)
+		cmd = cmd.Parent()
 	}
 	invalidResourceSuggestion := fmt.Sprintf(errors.ListResourceSuggestions, resourceType, fullParentCommand)
 
@@ -162,6 +159,9 @@ func Plural(resource string) string {
 	if resource == "" {
 		return ""
 	}
+
+	// Singular words ending w/ these suffixes generally add an extra -es syllable in their plural forms
+	var pluralExtraSyllableSuffix = types.NewSet("s", "x", "z", "ch", "sh")
 
 	for suffix := range pluralExtraSyllableSuffix {
 		if strings.HasSuffix(resource, suffix) {
