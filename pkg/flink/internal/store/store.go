@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
@@ -88,9 +89,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		status := statementObj.GetStatus()
 		return nil, types.NewStatementErrorFailureMsg(err, status.GetDetail())
 	}
-	processedStatement := types.NewProcessedStatement(statementObj)
-	processedStatement.ServiceAccount = s.Properties.Get(config.ConfigKeyServiceAcount)
-	return processedStatement, nil
+	return types.NewProcessedStatement(statementObj), nil
 }
 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
@@ -173,8 +172,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
 			getRequestDuration = time.Since(start)
 
-			status := statementObj.GetStatus()
-			statusDetail := status.GetDetail()
+			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
 				return nil, types.NewStatementErrorFailureMsg(err, statusDetail)
 			}
@@ -232,6 +230,27 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			timeout.Seconds(), config.ConfigKeyResultsTimeout),
 		FailureMessage: errorsMsg,
 	}
+}
+
+func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) string {
+	status := statementObj.GetStatus()
+	if status.GetDetail() != "" {
+		return status.GetDetail()
+	}
+
+	// if the status detail field is empty, we check if there's an exception instead
+	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrgResourceId())
+	if err != nil {
+		return ""
+	}
+
+	exceptions := exceptionsResponse.GetData()
+	if len(exceptions) < 1 {
+		return ""
+	}
+
+	// most recent exception is on top of the returned list
+	return exceptions[0].GetStacktrace()
 }
 
 func extractPageToken(nextUrl string) (string, error) {

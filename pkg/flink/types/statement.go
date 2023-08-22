@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -33,18 +33,17 @@ type ProcessedStatement struct {
 	IsLocalStatement  bool
 	IsSelectStatement bool
 	PageToken         string
-	ResultSchema      flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
+	ResultSchema      flinkgatewayv1beta1.SqlV1beta1ResultSchema
 	StatementResults  *StatementResults
 }
 
-func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) *ProcessedStatement {
+func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) *ProcessedStatement {
 	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
 	return &ProcessedStatement{
-		StatementName: statementObj.Spec.GetStatementName(),
-		ComputePool:   statementObj.Spec.GetComputePoolId(),
-		IdentityPool:  statementObj.Spec.GetIdentityPoolId(),
-		//TODO: add when v1beta1 statement SDK is ready
-		//ServiceAccount:    statementObj.Spec.GetServiceAccountId(),
+		StatementName:     statementObj.GetName(),
+		ComputePool:       statementObj.Spec.GetComputePoolId(),
+		IdentityPool:      statementObj.Spec.GetIdentityPoolId(),
+		ServiceAccount:    statementObj.GetPrincipal(),
 		StatusDetail:      statementObj.Status.GetDetail(),
 		Status:            PHASE(statementObj.Status.GetPhase()),
 		ResultSchema:      statementObj.Status.GetResultSchema(),
