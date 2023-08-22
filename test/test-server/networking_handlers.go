@@ -3,13 +3,10 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 )
@@ -164,44 +161,8 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 			},
 		}
 
-		networks := []networkingv1.NetworkingV1Network{awsNetwork, gcpNetwork, azureNetwork}
-		networkList := filterNetworks(r.URL, networks)
+		networkList := networkingv1.NetworkingV1NetworkList{Data: []networkingv1.NetworkingV1Network{awsNetwork, gcpNetwork, azureNetwork}}
 		err := json.NewEncoder(w).Encode(networkList)
 		require.NoError(t, err)
 	}
-}
-
-func filterNetworks(url *url.URL, networks []networkingv1.NetworkingV1Network) *networkingv1.NetworkingV1NetworkList {
-	networkList := &networkingv1.NetworkingV1NetworkList{}
-
-	names := []string{}
-	for _, name := range url.Query()["spec.display_name"] {
-		trimmedNames := strings.Trim(name, "{[]}")
-		for _, trimmedName := range strings.Split(trimmedNames, " ") {
-			names = append(names, trimmedName)
-		}
-		// names = append(names, name)
-	}
-
-	clouds := []string{}
-	for _, cloud := range url.Query()["spec.cloud"] {
-		trimmedClouds := strings.Trim(cloud, "{[]}")
-		for _, trimmedCloud := range strings.Split(trimmedClouds, " ") {
-			clouds = append(clouds, trimmedCloud)
-		}
-		// clouds = append(clouds, cloud)
-	}
-
-	for _, network := range networks {
-		name := network.Spec.GetDisplayName()
-		cloud := network.Spec.GetCloud()
-
-		nameFilter := len(names) == 0 || slices.Contains(names, name)
-		cloudFilter := len(clouds) == 0 || slices.Contains(clouds, cloud)
-		if nameFilter && cloudFilter {
-			networkList.Data = append(networkList.Data, network)
-		}
-	}
-
-	return networkList
 }

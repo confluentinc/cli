@@ -44,8 +44,6 @@ func (s *CLITestSuite) TestNetworkList() {
 	tests := []CLITest{
 		{args: "network list", fixture: "network/list.golden"},
 		{args: "network list --output json", fixture: "network/list-json.golden"},
-		{args: "network list --name network-not-exist", fixture: "network/list-none-found.golden"},
-		{args: "network list --cloud AWS --cloud GCP", fixture: "network/list-multiple-same-flag.golden"},
 	}
 
 	for _, test := range tests {

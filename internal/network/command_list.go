@@ -19,13 +19,6 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	cmd.Flags().StringSlice("name", nil, "Filter by a comma-separated list of names.")
-	cmd.Flags().StringSlice("cloud", nil, "Filter by a comma-separated list of clouds.")
-	cmd.Flags().StringSlice("region", nil, "Filter by a comma-separated list of regions.")
-	cmd.Flags().StringSlice("connection-type", nil, "Filter by a comma-separated list of connection types.")
-	cmd.Flags().StringSlice("cidr", nil, "Filter by a comma-separated list of CIDRs.")
-	cmd.Flags().StringSlice("phase", nil, "Filter by a comma-separated list of phases.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -39,37 +32,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	names, err := cmd.Flags().GetStringSlice("name")
-	if err != nil {
-		return err
-	}
-
-	clouds, err := cmd.Flags().GetStringSlice("cloud")
-	if err != nil {
-		return err
-	}
-
-	regions, err := cmd.Flags().GetStringSlice("region")
-	if err != nil {
-		return err
-	}
-
-	connectionTypes, err := cmd.Flags().GetStringSlice("connection-type")
-	if err != nil {
-		return err
-	}
-
-	cidrs, err := cmd.Flags().GetStringSlice("cidr")
-	if err != nil {
-		return err
-	}
-
-	phases, err := cmd.Flags().GetStringSlice("phase")
-	if err != nil {
-		return err
-	}
-
-	networks, err := c.V2Client.ListNetworks(environmentId, names, clouds, regions, connectionTypes, cidrs, phases)
+	networks, err := c.V2Client.ListNetworks(environmentId)
 	if err != nil {
 		return err
 	}
