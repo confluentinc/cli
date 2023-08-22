@@ -45,10 +45,6 @@ func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.V2Client.DeleteGroupMapping(args[0]); err != nil {
-		return err
-	}
-
 	deleteFunc := func(id string) error {
 		return c.V2Client.DeleteGroupMapping(id)
 	}
