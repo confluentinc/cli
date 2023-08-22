@@ -1,24 +1,21 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a service account.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more service accounts.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -35,26 +32,27 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	serviceAccountId := args[0]
-
-	if resource.LookupType(serviceAccountId) != resource.ServiceAccount {
-		return errors.New(errors.BadServiceAccountIDErrorMsg)
-	}
-
-	serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
+	serviceAccount, _, err := c.V2Client.GetIamServiceAccount(args[0])
 	if err != nil {
-		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
+		return resource.ResourcesNotFoundError(cmd, resource.ServiceAccount, args[0])
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ServiceAccount, serviceAccountId, serviceAccount.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, serviceAccount.GetDisplayName()); err != nil {
+	existenceFunc := func(id string) bool {
+		_, _, err := c.V2Client.GetIamServiceAccount(id)
+		return err == nil
+	}
+
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ServiceAccount, serviceAccount.GetDisplayName()); err != nil {
 		return err
 	}
 
-	if err := c.V2Client.DeleteIamServiceAccount(serviceAccountId); err != nil {
-		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, serviceAccountId, err)
+	deleteFunc := func(id string) error {
+		if err := c.V2Client.DeleteIamServiceAccount(id); err != nil {
+			return errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, id, err)
+		}
+		return nil
 	}
 
-	output.ErrPrintf(errors.DeletedResourceMsg, resource.ServiceAccount, serviceAccountId)
-	return nil
+	_, err = deletion.Delete(args, deleteFunc, resource.ServiceAccount)
+	return err
 }
