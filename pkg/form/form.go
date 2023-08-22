@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -69,36 +68,6 @@ func (f *Form) Prompt(prompt Prompt) error {
 	}
 
 	return nil
-}
-
-func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, error) {
-	force, err := cmd.Flags().GetBool("force")
-	if err != nil {
-		return false, err
-	}
-	if force {
-		return true, nil
-	}
-
-	prompt := NewPrompt()
-	isYesNo := stringToType == ""
-	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
-	if err := f.Prompt(prompt); err != nil && isYesNo {
-		return false, errors.New(errors.FailedToReadInputErrorMsg)
-	} else if err != nil {
-		return false, err
-	}
-
-	if isYesNo {
-		return f.Responses["confirm"].(bool), nil
-	}
-
-	if f.Responses["confirm"].(string) == stringToType || f.Responses["confirm"].(string) == fmt.Sprintf(`"%s"`, stringToType) {
-		return true, nil
-	}
-
-	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
-	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
 func ConfirmEnter() error {
