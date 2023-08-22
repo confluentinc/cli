@@ -7,12 +7,14 @@ import (
 	"strings"
 
 	"github.com/dghubble/sling"
+	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
+	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
 )
@@ -218,4 +220,46 @@ func GetDataplaneToken(authenticatedState *config.ContextState, server string) (
 		return "", errors.New(res.Error)
 	}
 	return res.Token, nil
+}
+
+// Order of precedence: env vars > config file > netrc file > prompt
+// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
+func GetCCloudCredentials(ccloudClientFactory CCloudClientFactory, cmd *cobra.Command, cfg *config.Config, loginCredentialsManager LoginCredentialsManager, orgResourceId, url string) (*Credentials, error) {
+	client := ccloudClientFactory.AnonHTTPClientFactory(url)
+	loginCredentialsManager.SetCloudClient(client)
+
+	if cmd.Use == "login" {
+		prompt, err := cmd.Flags().GetBool("prompt")
+		if err != nil {
+			return nil, err
+		}
+		if prompt {
+			return GetLoginCredentials(loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId))
+		}
+	}
+
+	filterParams := netrc.NetrcMachineParams{
+		IsCloud: true,
+		URL:     url,
+	}
+	ctx := cfg.Context()
+	if strings.Contains(ctx.GetNetrcMachineName(), url) {
+		filterParams.Name = ctx.GetNetrcMachineName()
+	}
+
+	return GetLoginCredentials(
+		loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		loginCredentialsManager.GetSsoCredentialsFromConfig(cfg, url),
+		loginCredentialsManager.GetCredentialsFromKeychain(cfg, true, filterParams.Name, url),
+		loginCredentialsManager.GetCredentialsFromConfig(cfg, filterParams),
+		loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
+		loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId),
+	)
+}
+
+func GetOrgResourceId(cmd *cobra.Command, loginOrganizationManager LoginOrganizationManager) string {
+	return GetLoginOrganization(
+		loginOrganizationManager.GetLoginOrganizationFromFlag(cmd),
+		loginOrganizationManager.GetLoginOrganizationFromEnvironmentVariable(),
+	)
 }
