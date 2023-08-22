@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
@@ -214,7 +214,7 @@ func (s *ResultFetcherTestSuite) TestReturnHeadersFromResultSchema() {
 	mockStatement := getStatementWithResultsExample()
 	mockStatement.StatementResults.Headers = nil
 	columnDetails := generators.MockResultColumns(2, 1).Example()
-	mockStatement.ResultSchema = flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{Columns: &columnDetails}
+	mockStatement.ResultSchema = flinkgatewayv1beta1.SqlV1beta1ResultSchema{Columns: &columnDetails}
 	headers := make([]string, len(mockStatement.ResultSchema.GetColumns()))
 	for idx, column := range mockStatement.ResultSchema.GetColumns() {
 		headers[idx] = column.GetName()
