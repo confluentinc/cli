@@ -113,8 +113,6 @@ func catchCCloudTokenErrors(err error) error {
 		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginErrorSuggestions)
 	case *ccloudv1.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
-	case *ccloudv1.ExpiredTokenError:
-		return NewErrorWithSuggestions(ExpiredTokenErrorMsg, ExpiredTokenSuggestions)
 	}
 	return err
 }
