@@ -260,7 +260,6 @@ const (
 	SRNotEnabledErrorMsg    = "Schema Registry not enabled"
 	SRNotEnabledSuggestions = "Schema Registry must be enabled for the environment in order to run the command.\n" +
 		"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`."
-	MalformedJWTNoExprErrorMsg = "malformed JWT claims: no expiration"
 
 	// config package
 	CorruptedConfigErrorPrefix = "corrupted CLI config"
@@ -401,7 +400,7 @@ const (
 
 	// Special error handling
 	QuotaExceededSuggestions = "Look up Confluent Cloud service quota limits with `confluent service-quota list`."
-	AvoidTimeoutSuggestions  = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
+	AvoidTimeoutSuggestions  = "To avoid session timeouts, non-SSO users can save their credentials with `confluent login --save`."
 	NotLoggedInErrorMsg      = "not logged in"
 	AuthTokenSuggestions     = "You must be logged in to retrieve an oauthbearer token.\n" +
 		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and Schema Registry."
