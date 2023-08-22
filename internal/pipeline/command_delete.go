@@ -67,7 +67,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 	deleteMsg := "Requested to delete %s %s.\n"
 	if len(deletedIds) == 1 {
-		output.Printf(deleteMsg, resource.Pipeline, fmt.Sprintf("\"%s\"", deletedIds[0]))
+		output.Printf(deleteMsg, resource.Pipeline, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
 		output.Printf(deleteMsg, resource.Plural(resource.Pipeline), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
