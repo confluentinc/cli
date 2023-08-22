@@ -730,14 +730,6 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 		IsCloud: r.Config.IsCloudLogin(),
 		Name:    ctx.GetNetrcMachineName(),
 	}
-	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
-		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
-	)
-	if err != nil {
-		return "", "", err
-	}
 
 	if r.Config.IsCloudLogin() {
 		manager := pauth.NewLoginOrganizationManagerImpl()
@@ -745,8 +737,31 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 			manager.GetLoginOrganizationFromConfigurationFile(r.Config),
 			manager.GetLoginOrganizationFromEnvironmentVariable(),
 		)
+
+		credentials, err := pauth.GetLoginCredentials(
+			r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
+			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
+			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
+		)
+		if err != nil {
+			return "", "", err
+		}
+
 		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, organizationId)
 	} else {
+		credentials, err := pauth.GetLoginCredentials(
+			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, false, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
+			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
+			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
+		)
+		if err != nil {
+			return "", "", err
+		}
+
 		mdsClientManager := pauth.MDSClientManagerImpl{}
 		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)
 		if err != nil {

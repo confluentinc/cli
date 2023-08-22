@@ -386,7 +386,7 @@ func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pau
 		return err
 	}
 
-	output.ErrPrintf(errors.WroteCredentialsToKeychainMsg)
+	output.ErrPrintln("Wrote login credentials to keychain.")
 
 	return nil
 }

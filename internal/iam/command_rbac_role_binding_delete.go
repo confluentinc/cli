@@ -10,9 +10,9 @@ import (
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 )
 
 const rbacPromptMsg = "Are you sure you want to delete this role binding?"
@@ -93,7 +93,7 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
 	}
 
-	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return err
 	}
 
@@ -102,7 +102,7 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 }
 
 func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
-	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return nil, err
 	}
 

@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   configuration Manage Kafka cluster configurations.
   create        Create a Kafka cluster.
-  delete        Delete a Kafka cluster.
+  delete        Delete one or more Kafka clusters.
   describe      Describe a Kafka cluster.
   list          List Kafka clusters.
   update        Update a Kafka cluster.
