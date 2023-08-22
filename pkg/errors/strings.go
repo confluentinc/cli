@@ -6,15 +6,14 @@ const (
 	UseAPIKeyMsg    = "Using API Key \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
-	LoggedInAsMsgWithOrg          = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
-	LoggedInUsingEnvMsg           = "Using environment \"%s\".\n"
-	LoggedOutMsg                  = "You are now logged out."
-	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
-	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
-	RemoveKeychainCredentialsMsg  = "Removed credentials for user \"%s\" from keychain\n"
-	StopNonInteractiveMsg         = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
-	FoundEnvCredMsg               = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
+	LoggedInAsMsg                = "Logged in as \"%s\".\n"
+	LoggedInAsMsgWithOrg         = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg          = "Using environment \"%s\".\n"
+	LoggedOutMsg                 = "You are now logged out."
+	RemoveNetrcCredentialsMsg    = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
+	RemoveKeychainCredentialsMsg = "Removed credentials for user \"%s\" from keychain\n"
+	StopNonInteractiveMsg        = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg              = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"

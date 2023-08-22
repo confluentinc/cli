@@ -8,7 +8,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
@@ -34,6 +33,7 @@ func (v *JWTValidatorImpl) Validate(context *config.Context) error {
 	if context != nil {
 		authToken = context.State.AuthToken
 	}
+
 	var claims map[string]any
 	token, err := jwt.ParseSigned(authToken)
 	if err != nil {
@@ -42,13 +42,15 @@ func (v *JWTValidatorImpl) Validate(context *config.Context) error {
 	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 		return err
 	}
+
 	exp, ok := claims["exp"].(float64)
 	if !ok {
-		return errors.New(errors.MalformedJWTNoExprErrorMsg)
+		return errors.New("malformed token: no expiration")
 	}
+
 	if float64(v.Clock.Now().Unix()) > exp {
-		log.CliLogger.Debug("Token expired.")
-		return new(ccloudv1.ExpiredTokenError)
+		return errors.NewErrorWithSuggestions(errors.ExpiredTokenErrorMsg, errors.ExpiredTokenSuggestions)
 	}
+
 	return nil
 }
