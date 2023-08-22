@@ -168,7 +168,7 @@ func TestPreRun_TokenExpires(t *testing.T) {
 	require.Nil(t, cfg.Context().State.Auth)
 }
 
-func Test_UpdateToken(t *testing.T) {
+func TestUpdateToken(t *testing.T) {
 	tests := []struct {
 		name      string
 		isCloud   bool
@@ -257,6 +257,11 @@ func Test_UpdateToken(t *testing.T) {
 					}
 				},
 				GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
