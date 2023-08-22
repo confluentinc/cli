@@ -1,0 +1,20 @@
+Display networks in the current environment.
+
+Usage:
+  confluent network list [flags]
+
+Flags:
+      --name strings              Filter by a comma-separated list of names.
+      --cloud strings             Filter by a comma-separated list of clouds.
+      --region strings            Filter by a comma-separated list of regions.
+      --connection-type strings   Filter by a comma-separated list of connection types.
+      --cidr strings              Filter by a comma-separated list of CIDRs.
+      --phase strings             Filter by a comma-separated list of phases.
+      --context string            CLI context name.
+      --environment string        Environment ID.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
