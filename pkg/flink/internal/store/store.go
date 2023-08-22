@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
@@ -89,9 +89,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	if err != nil {
 		return nil, types.NewStatementErrorFailureMsg(err, s.getStatusDetail(statementObj))
 	}
-	processedStatement := types.NewProcessedStatement(statementObj)
-	processedStatement.ServiceAccount = s.Properties.Get(config.ConfigKeyServiceAcount)
-	return processedStatement, nil
+	return types.NewProcessedStatement(statementObj), nil
 }
 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
@@ -234,14 +232,14 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	}
 }
 
-func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) string {
+func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) string {
 	status := statementObj.GetStatus()
 	if status.GetDetail() != "" {
 		return status.GetDetail()
 	}
 
 	// if the status detail field is empty, we check if there's an exception instead
-	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
+	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrgResourceId())
 	if err != nil {
 		return ""
 	}
