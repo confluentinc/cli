@@ -967,7 +967,7 @@ func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInter
 		},
 	}
 	prerunner := climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	logoutCmd := logout.New(cfg, prerunner, ccloudClientFactory, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
+	logoutCmd := logout.New(cfg, prerunner, netrcHandler, authTokenHandler)
 	return logoutCmd, cfg
 }
 

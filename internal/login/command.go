@@ -114,14 +114,14 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
-	orgResourceId := pauth.GetOrgResourceId(cmd, c.loginOrganizationManager)
+	orgResourceId := c.getOrgResourceId(cmd)
 
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
 	}
 
-	credentials, err := pauth.GetCCloudCredentials(c.ccloudClientFactory, cmd, c.cfg, c.loginCredentialsManager, orgResourceId, url)
+	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -198,6 +198,39 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 	if remainingFreeCredit > 0 {
 		output.ErrPrintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
 	}
+}
+
+// Order of precedence: env vars > config file > netrc file > prompt
+// i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
+func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
+	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
+	c.loginCredentialsManager.SetCloudClient(client)
+
+	prompt, err := cmd.Flags().GetBool("prompt")
+	if err != nil {
+		return nil, err
+	}
+	if prompt {
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId))
+	}
+
+	filterParams := netrc.NetrcMachineParams{
+		IsCloud: true,
+		URL:     url,
+	}
+	ctx := c.Config.Config.Context()
+	if strings.Contains(ctx.GetNetrcMachineName(), url) {
+		filterParams.Name = ctx.GetNetrcMachineName()
+	}
+
+	return pauth.GetLoginCredentials(
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, url),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
+		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId),
+	)
 }
 
 func (c *command) loginMDS(cmd *cobra.Command, url string) error {
@@ -386,4 +419,11 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	}
 
 	return url, strings.Join(msg, " and "), nil
+}
+
+func (c *command) getOrgResourceId(cmd *cobra.Command) string {
+	return pauth.GetLoginOrganization(
+		c.loginOrganizationManager.GetLoginOrganizationFromFlag(cmd),
+		c.loginOrganizationManager.GetLoginOrganizationFromEnvironmentVariable(),
+	)
 }
