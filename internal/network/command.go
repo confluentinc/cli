@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -8,6 +9,7 @@ import (
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -51,6 +53,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
@@ -58,6 +61,13 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
 	table := output.NewTable(cmd)
+
+	if network.Spec == nil {
+		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
+	}
+	if network.Status == nil {
+		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
+	}
 
 	zones := network.Spec.GetZones()
 	activeConnectionTypes := network.Status.GetActiveConnectionTypes().Items
@@ -91,4 +101,38 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 	}
 
 	return table.Print()
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteNetworks()
+}
+
+func (c *command) autocompleteNetworks() []string {
+	networks, err := c.getNetworks()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(networks))
+	for i, network := range networks {
+		suggestions[i] = fmt.Sprintf("%s\t%s", network.GetId(), network.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func (c *command) getNetworks() ([]networkingv1.NetworkingV1Network, error) {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListNetworks(environmentId)
 }

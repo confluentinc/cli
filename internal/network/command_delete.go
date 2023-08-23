@@ -14,12 +14,11 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a network.",
-		Args:  cobra.ExactArgs(1),
-		// TODO: Implement autocompletion after List Network is implemented.
-		// ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE: c.delete,
+		Use:               "delete <id>",
+		Short:             "Delete a network.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.delete,
 	}
 
 	pcmd.AddForceFlag(cmd)
