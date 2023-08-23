@@ -39,3 +39,20 @@ func (s *CLITestSuite) TestNetworkUpdate() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkList() {
+	tests := []CLITest{
+		{args: "network list", fixture: "network/list.golden"},
+		{args: "network list --output json", fixture: "network/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetwork_Autocomplete() {
+	test := CLITest{args: `__complete network describe ""`, login: "cloud", fixture: "network/describe-autocomplete.golden"}
+	s.runIntegrationTest(test)
+}
