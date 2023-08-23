@@ -5,8 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
-
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -27,20 +25,11 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	environmentId, err := c.Context.EnvironmentId()
+	networks, err := c.getNetworks()
 	if err != nil {
 		return err
 	}
 
-	networks, err := c.V2Client.ListNetworks(environmentId)
-	if err != nil {
-		return err
-	}
-
-	return c.printList(cmd, networks)
-}
-
-func (c *command) printList(cmd *cobra.Command, networks []networkingv1.NetworkingV1Network) error {
 	list := output.NewList(cmd)
 	for _, network := range networks {
 		zones := network.Spec.GetZones()
@@ -74,7 +63,6 @@ func (c *command) printList(cmd *cobra.Command, networks []networkingv1.Networki
 			})
 		}
 	}
-
 	list.Filter([]string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
 	return list.Print()
 }

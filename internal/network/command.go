@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -92,4 +93,38 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 	}
 
 	return table.Print()
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteNetworks()
+}
+
+func (c *command) autocompleteNetworks() []string {
+	networks, err := c.getNetworks()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(networks))
+	for i, network := range networks {
+		suggestions[i] = fmt.Sprintf("%s\t%s", network.GetId(), network.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func (c *command) getNetworks() ([]networkingv1.NetworkingV1Network, error) {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListNetworks(environmentId)
 }

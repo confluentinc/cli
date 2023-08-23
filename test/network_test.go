@@ -51,3 +51,8 @@ func (s *CLITestSuite) TestNetworkList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetwork_Autocomplete() {
+	test := CLITest{args: `__complete network describe ""`, login: "cloud", fixture: "network/describe-autocomplete.golden"}
+	s.runIntegrationTest(test)
+}
