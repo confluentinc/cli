@@ -34,7 +34,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
-	acl, err := parse(cmd)
+	acl, err := parse(c.Context, cmd)
 	if err != nil {
 		return err
 	}
