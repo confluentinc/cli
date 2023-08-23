@@ -905,22 +905,21 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	cfg := config.New()
 	var ccloudClientFactory *climock.CCloudClientFactory
 	var mdsClient *mdsv1.APIClient
-	var mdsClientManager *climock.MDSClientManager
 	var prerunner pcmd.PreRunner
 
 	if !isCloud {
 		mdsClient = testhelp.NewMdsClientMock(testToken1)
-		mdsClientManager = &climock.MDSClientManager{
-			GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
-				return mdsClient, nil
-			},
-		}
 		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	} else {
 		ccloudClientFactory = testhelp.NewCCloudClientFactoryMock(auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	}
 
+	mdsClientManager := &climock.MDSClientManager{
+		GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
+			return mdsClient, nil
+		},
+	}
 	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg

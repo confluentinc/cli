@@ -113,24 +113,7 @@ func TestLogout(t *testing.T) {
 	cfg := config.AuthenticatedConfigMockWithContextName(config.MockContextName)
 	contextName := cfg.Context().Name
 	// run login command
-	auth := &ccloudv1mock.Auth{
-		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
-			return &ccloudv1.AuthenticateReply{Token: testToken}, nil
-		},
-		UserFunc: func() (*ccloudv1.GetMeReply, error) {
-			return &ccloudv1.GetMeReply{
-				User: &ccloudv1.User{
-					Id:        23,
-					Email:     promptUser,
-					FirstName: "Cody",
-				},
-				Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
-			}, nil
-		},
-	}
-	userInterface := &ccloudv1mock.UserInterface{}
-	logoutCmd, cfg := newLogoutCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, contextName)
+	logoutCmd, cfg := newLogoutCmd(getAuthMock(), nil, true, req, mockNetrcHandler, AuthTokenHandler, contextName)
 	_, err := pcmd.ExecuteCommand(logoutCmd)
 	req.NoError(err)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc(true, contextName)
@@ -145,24 +128,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	cfg := config.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().GetNetrcMachineName()
 	// run login command
-	auth := &ccloudv1mock.Auth{
-		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
-			return &ccloudv1.AuthenticateReply{Token: testToken}, nil
-		},
-		UserFunc: func() (*ccloudv1.GetMeReply, error) {
-			return &ccloudv1.GetMeReply{
-				User: &ccloudv1.User{
-					Id:        23,
-					Email:     promptUser,
-					FirstName: "Cody",
-				},
-				Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
-			}, nil
-		},
-	}
-	userInterface := &ccloudv1mock.UserInterface{}
-	loginCmd, _ := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+	loginCmd, _ := newLoginCmd(getAuthMock(), nil, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
 
@@ -178,20 +144,20 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	cfg := config.New()
 	var ccloudClientFactory *climock.CCloudClientFactory
 	var mdsClient *mdsv1.APIClient
-	var mdsClientManager *climock.MDSClientManager
 	var prerunner pcmd.PreRunner
 
 	if !isCloud {
 		mdsClient = testhelp.NewMdsClientMock(testToken)
-		mdsClientManager = &climock.MDSClientManager{
-			GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
-				return mdsClient, nil
-			},
-		}
 		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	} else {
 		ccloudClientFactory = testhelp.NewCCloudClientFactoryMock(auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
+	}
+
+	mdsClientManager := &climock.MDSClientManager{
+		GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
+			return mdsClient, nil
+		},
 	}
 	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	return loginCmd, cfg
@@ -224,4 +190,23 @@ func verifyLoggedOutState(t *testing.T, cfg *config.Config, loggedOutContext str
 
 func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
 	req.NoError(os.Unsetenv(pauth.DeprecatedConfluentCloudEmail))
+}
+
+func getAuthMock() *ccloudv1mock.Auth {
+	return &ccloudv1mock.Auth{
+		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			return &ccloudv1.AuthenticateReply{Token: testToken}, nil
+		},
+		UserFunc: func() (*ccloudv1.GetMeReply, error) {
+			return &ccloudv1.GetMeReply{
+				User: &ccloudv1.User{
+					Id:        23,
+					Email:     promptUser,
+					FirstName: "Cody",
+				},
+				Organization: &ccloudv1.Organization{ResourceId: "o-123"},
+				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+			}, nil
+		},
+	}
 }
