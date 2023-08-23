@@ -26,6 +26,7 @@ func handleNetworkingNetwork(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/networking/v1/networks"
 func handleNetworkingNetworks(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
