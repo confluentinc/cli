@@ -44,7 +44,7 @@ func (c *Command) newKafkaStartCommand() *cobra.Command {
 		RunE:  c.kafkaStart,
 	}
 
-	cmd.Flags().StringSlice("kafka-rest-ports", nil, "A comma-separated list of Kafka REST port numbers for brokers.")
+	cmd.Flags().String("kafka-rest-port", "8082", "Kafka REST port number.")
 	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.")
 	cmd.Flags().Int32("brokers", 1, "Number of brokers in the Confluent Local cluster.") // range: [1, 4]
 	return cmd
@@ -133,10 +133,8 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	ports := c.Config.LocalPorts
 	platform := &specsv1.Platform{OS: "linux", Architecture: runtime.GOARCH}
-	natKafkaRestPorts := getNatKafkaRestPorts(ports, numOfBrokers)
-	fmt.Println(natKafkaRestPorts)
+	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
 	natPlaintextPorts := getNatPlaintextPorts(ports, numOfBrokers)
-	fmt.Println(natPlaintextPorts)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
 	// create a customized network
@@ -160,7 +158,6 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 			Hostname: fmt.Sprintf("confluent-local-broker-%d", brokerId),
 			Cmd:      containerStartCmd,
 			ExposedPorts: nat.PortSet{
-				natKafkaRestPorts[idx]: struct{}{},
 				natPlaintextPorts[idx]: struct{}{},
 			},
 			Env: getContainerEnvironmentWithPorts(ports, idx, numOfBrokers),
@@ -169,12 +166,6 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		hostConfig := &container.HostConfig{
 			NetworkMode: container.NetworkMode("confluent-local-network"),
 			PortBindings: nat.PortMap{
-				natKafkaRestPorts[idx]: []nat.PortBinding{
-					{
-						HostIP:   localhost,
-						HostPort: ports.KafkaRestPorts[idx],
-					},
-				},
 				natPlaintextPorts[idx]: []nat.PortBinding{
 					{
 						HostIP:   localhost,
@@ -182,6 +173,16 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 					},
 				},
 			},
+		}
+
+		if idx == 0 {
+			config.ExposedPorts[natKafkaRestPort] = struct{}{}
+			hostConfig.PortBindings[natKafkaRestPort] = []nat.PortBinding{
+				{
+					HostIP:   localhost,
+					HostPort: ports.KafkaRestPort,
+				},
+			}
 		}
 
 		createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, fmt.Sprintf("confluent-local-broker-%d", brokerId))
@@ -215,7 +216,7 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, numOfBrokers int3
 		c.Config.LocalPorts = &config.LocalPorts{
 			BrokerPorts:     []string{"2996", "2997"},
 			ControllerPorts: []string{"2998", "2999"},
-			KafkaRestPorts:  []string{"3000", "3001"},
+			KafkaRestPort:   "8082",
 			PlaintextPorts:  []string{"3002", "3003"},
 		}
 	} else {
@@ -224,20 +225,19 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, numOfBrokers int3
 			return err
 		}
 
-		c.Config.LocalPorts = &config.LocalPorts{}
+		c.Config.LocalPorts = &config.LocalPorts{KafkaRestPort: "8082"}
 		for i := 0; i < int(numOfBrokers); i++ {
-			c.Config.LocalPorts.KafkaRestPorts = append(c.Config.LocalPorts.KafkaRestPorts, defaultKafkaRestPorts[i])
 			c.Config.LocalPorts.PlaintextPorts = append(c.Config.LocalPorts.PlaintextPorts, strconv.Itoa(freePorts[i]))
 			c.Config.LocalPorts.BrokerPorts = append(c.Config.LocalPorts.BrokerPorts, strconv.Itoa(freePorts[i+int(numOfBrokers)]))
 			c.Config.LocalPorts.ControllerPorts = append(c.Config.LocalPorts.ControllerPorts, strconv.Itoa(freePorts[i+2*int(numOfBrokers)]))
 		}
 
-		kafkaRestPorts, err := cmd.Flags().GetStringSlice("kafka-rest-ports")
+		kafkaRestPort, err := cmd.Flags().GetString("kafka-rest-port")
 		if err != nil {
 			return err
 		}
-		if len(kafkaRestPorts) != 0 {
-			c.Config.LocalPorts.KafkaRestPorts = kafkaRestPorts
+		if kafkaRestPort != "" {
+			c.Config.LocalPorts.KafkaRestPort = kafkaRestPort
 		}
 
 		plaintextPorts, err := cmd.Flags().GetStringSlice("plaintext-ports")
@@ -261,22 +261,21 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, numOfBrokers int3
 }
 
 func (c *Command) validateCustomizedPorts() error {
-	for idx, port := range c.Config.LocalPorts.KafkaRestPorts {
-		brokerId := idx + 1
-		kafkaRestLn, err := net.Listen("tcp", ":"+port)
+	kafkaRestLn, err := net.Listen("tcp", ":"+c.Config.LocalPorts.KafkaRestPort)
+	if err != nil {
+		freePort, err := freeport.GetFreePort()
 		if err != nil {
-			freePort, err := freeport.GetFreePort()
-			if err != nil {
-				return err
-			}
-			c.Config.LocalPorts.KafkaRestPorts[idx] = strconv.Itoa(freePort)
-			log.CliLogger.Warnf("Kafka REST port %s is not available, using port %d for broker %d instead.", port, freePort, brokerId)
-		} else {
-			if err := kafkaRestLn.Close(); err != nil {
-				return err
-			}
+			return err
+		}
+		invalidPort := c.Config.LocalPorts.KafkaRestPort
+		c.Config.LocalPorts.KafkaRestPort = strconv.Itoa(freePort)
+		log.CliLogger.Warnf("Kafka REST port %s is not available, using port %d instead.", invalidPort, freePort)
+	} else {
+		if err := kafkaRestLn.Close(); err != nil {
+			return err
 		}
 	}
+
 	for idx, port := range c.Config.LocalPorts.PlaintextPorts {
 		brokerId := idx + 1
 		plaintextLn, err := net.Listen("tcp", ":"+port)
@@ -317,19 +316,11 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numOf
 		"KAFKA_REST_HOST_NAME=rest-proxy",
 	}
 	if idx == 0 { // configure krest proxy only for the first broker.
-		a = append(a, fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPorts[0]))
+		a = append(a, fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort))
 		a = append(a, getKafkaRestBootstrapServers(ports, numOfBrokers))
 	}
 	fmt.Println("a", a)
 	return a
-}
-
-func getNatKafkaRestPorts(ports *config.LocalPorts, numOfBrokers int32) []nat.Port {
-	res := []nat.Port{}
-	for i := 0; i < int(numOfBrokers); i++ {
-		res = append(res, nat.Port(ports.KafkaRestPorts[i]+"/tcp"))
-	}
-	return res
 }
 
 func getNatPlaintextPorts(ports *config.LocalPorts, numOfBrokers int32) []nat.Port {
