@@ -202,8 +202,8 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	output.Printf("Started Confluent Local containers %s.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", strings.Join(containerIds, ","))
-
+	output.Printf("Started Confluent Local containers %s.\n", strings.Join(containerIds, ","))
+	output.Println("To continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.")
 	return nil
 }
 

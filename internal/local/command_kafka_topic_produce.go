@@ -70,7 +70,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return kafka.ProduceToTopic(cmd, make([]byte, 4), make([]byte, 4), topicName, nil, serializationProvider, producer)
+	return kafka.ProduceToTopic(cmd, []byte{}, make([]byte, 4), topicName, nil, serializationProvider, producer)
 }
 
 func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, error) {
