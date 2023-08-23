@@ -7,7 +7,6 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_ccloud_sdk_go_v1_public "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	github_com_confluentinc_cli_v3_pkg_auth "github.com/confluentinc/cli/v3/pkg/auth"
 	github_com_confluentinc_mds_sdk_go_public_mdsv1 "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
@@ -20,9 +19,6 @@ type AuthTokenHandler struct {
 	lockGetConfluentToken sync.Mutex
 	GetConfluentTokenFunc func(mdsClient *github_com_confluentinc_mds_sdk_go_public_mdsv1.APIClient, credentials *github_com_confluentinc_cli_v3_pkg_auth.Credentials) (string, error)
 
-	lockRevokeRefreshToken sync.Mutex
-	RevokeRefreshTokenFunc func(client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client, req *github_com_confluentinc_ccloud_sdk_go_v1_public.AuthenticateRequest) (*github_com_confluentinc_ccloud_sdk_go_v1_public.AuthenticateReply, error)
-
 	calls struct {
 		GetCCloudTokens []struct {
 			ClientFactory github_com_confluentinc_cli_v3_pkg_auth.CCloudClientFactory
@@ -34,10 +30,6 @@ type AuthTokenHandler struct {
 		GetConfluentToken []struct {
 			MdsClient   *github_com_confluentinc_mds_sdk_go_public_mdsv1.APIClient
 			Credentials *github_com_confluentinc_cli_v3_pkg_auth.Credentials
-		}
-		RevokeRefreshToken []struct {
-			Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
-			Req    *github_com_confluentinc_ccloud_sdk_go_v1_public.AuthenticateRequest
 		}
 	}
 }
@@ -133,47 +125,6 @@ func (m *AuthTokenHandler) GetConfluentTokenCalls() []struct {
 	return m.calls.GetConfluentToken
 }
 
-// RevokeRefreshToken mocks base method by wrapping the associated func.
-func (m *AuthTokenHandler) RevokeRefreshToken(client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client, req *github_com_confluentinc_ccloud_sdk_go_v1_public.AuthenticateRequest) (*github_com_confluentinc_ccloud_sdk_go_v1_public.AuthenticateReply, error) {
-	m.lockRevokeRefreshToken.Lock()
-	defer m.lockRevokeRefreshToken.Unlock()
-
-	if m.RevokeRefreshTokenFunc == nil {
-		panic("mocker: AuthTokenHandler.RevokeRefreshTokenFunc is nil but AuthTokenHandler.RevokeRefreshToken was called.")
-	}
-
-	call := struct {
-		Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
-		Req    *github_com_confluentinc_ccloud_sdk_go_v1_public.AuthenticateRequest
-	}{
-		Client: client,
-		Req:    req,
-	}
-
-	m.calls.RevokeRefreshToken = append(m.calls.RevokeRefreshToken, call)
-
-	return m.RevokeRefreshTokenFunc(client, req)
-}
-
-// RevokeRefreshTokenCalled returns true if RevokeRefreshToken was called at least once.
-func (m *AuthTokenHandler) RevokeRefreshTokenCalled() bool {
-	m.lockRevokeRefreshToken.Lock()
-	defer m.lockRevokeRefreshToken.Unlock()
-
-	return len(m.calls.RevokeRefreshToken) > 0
-}
-
-// RevokeRefreshTokenCalls returns the calls made to RevokeRefreshToken.
-func (m *AuthTokenHandler) RevokeRefreshTokenCalls() []struct {
-	Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
-	Req    *github_com_confluentinc_ccloud_sdk_go_v1_public.AuthenticateRequest
-} {
-	m.lockRevokeRefreshToken.Lock()
-	defer m.lockRevokeRefreshToken.Unlock()
-
-	return m.calls.RevokeRefreshToken
-}
-
 // Reset resets the calls made to the mocked methods.
 func (m *AuthTokenHandler) Reset() {
 	m.lockGetCCloudTokens.Lock()
@@ -182,7 +133,4 @@ func (m *AuthTokenHandler) Reset() {
 	m.lockGetConfluentToken.Lock()
 	m.calls.GetConfluentToken = nil
 	m.lockGetConfluentToken.Unlock()
-	m.lockRevokeRefreshToken.Lock()
-	m.calls.RevokeRefreshToken = nil
-	m.lockRevokeRefreshToken.Unlock()
 }

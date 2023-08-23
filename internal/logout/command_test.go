@@ -12,7 +12,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	mdsMock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
+	mdsmock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
 	"github.com/confluentinc/cli/v3/internal/login"
 	climock "github.com/confluentinc/cli/v3/mock"
@@ -107,6 +107,11 @@ var (
 			return false, nil
 		},
 	}
+	mockAuthResponse = mdsv1.AuthenticationResponse{
+		AuthToken: testToken,
+		TokenType: "JWT",
+		ExpiresIn: 100,
+	}
 )
 
 func TestLogout(t *testing.T) {
@@ -132,7 +137,7 @@ func TestLogout(t *testing.T) {
 		},
 	}
 	userInterface := &ccloudv1mock.UserInterface{}
-	logoutCmd, cfg := newLogoutCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager, contextName)
+	logoutCmd, cfg := newLogoutCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, contextName)
 	_, err := pcmd.ExecuteCommand(logoutCmd)
 	req.NoError(err)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc(true, contextName)
@@ -182,13 +187,9 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	if !isCloud {
 		mdsConfig := mdsv1.NewConfiguration()
 		mdsClient = mdsv1.NewAPIClient(mdsConfig)
-		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
-			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
-				return mdsv1.AuthenticationResponse{
-					AuthToken: testToken,
-					TokenType: "JWT",
-					ExpiresIn: 100,
-				}, nil, nil
+		mdsClient.TokensAndAuthenticationApi = &mdsmock.TokensAndAuthenticationApi{
+			GetTokenFunc: func(_ context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
+				return mockAuthResponse, nil, nil
 			},
 		}
 	}
@@ -215,20 +216,16 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, contextName string) (*cobra.Command, *config.Config) {
+func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, contextName string) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.AuthenticatedConfigMockWithContextName(contextName)
 	var mdsClient *mdsv1.APIClient
 	if !isCloud {
 		mdsConfig := mdsv1.NewConfiguration()
 		mdsClient = mdsv1.NewAPIClient(mdsConfig)
-		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
-			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
-				return mdsv1.AuthenticationResponse{
-					AuthToken: testToken,
-					TokenType: "JWT",
-					ExpiresIn: 100,
-				}, nil, nil
+		mdsClient.TokensAndAuthenticationApi = &mdsmock.TokensAndAuthenticationApi{
+			GetTokenFunc: func(_ context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
+				return mockAuthResponse, nil, nil
 			},
 		}
 	}
