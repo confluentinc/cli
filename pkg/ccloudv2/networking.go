@@ -22,28 +22,28 @@ func (c *Client) networkingApiContext() context.Context {
 	return context.WithValue(context.Background(), networkingv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) GetNetwork(envId, id string) (networkingv1.NetworkingV1Network, error) {
-	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.GetNetworkingV1Network(c.networkingApiContext(), id).Environment(envId).Execute()
+func (c *Client) GetNetwork(environment, id string) (networkingv1.NetworkingV1Network, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.GetNetworkingV1Network(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteNetwork(envId, id string) error {
-	httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.DeleteNetworkingV1Network(c.networkingApiContext(), id).Environment(envId).Execute()
+func (c *Client) DeleteNetwork(environment, id string) error {
+	httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.DeleteNetworkingV1Network(c.networkingApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateNetwork(envId, id string, updateReq networkingv1.NetworkingV1NetworkUpdate) (networkingv1.NetworkingV1Network, error) {
+func (c *Client) UpdateNetwork(environment, id string, updateReq networkingv1.NetworkingV1NetworkUpdate) (networkingv1.NetworkingV1Network, error) {
 	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.UpdateNetworkingV1Network(c.networkingApiContext(), id).NetworkingV1NetworkUpdate(updateReq).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListNetworks(envId string) ([]networkingv1.NetworkingV1Network, error) {
+func (c *Client) ListNetworks(environment string) ([]networkingv1.NetworkingV1Network, error) {
 	var list []networkingv1.NetworkingV1Network
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListNetworks(envId, pageToken)
+		page, err := c.executeListNetworks(environment, pageToken)
 		if err != nil {
 			return nil, err
 		}

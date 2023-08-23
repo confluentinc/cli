@@ -162,7 +162,26 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 			},
 		}
 
-		networkList := networkingv1.NetworkingV1NetworkList{Data: []networkingv1.NetworkingV1Network{awsNetwork, gcpNetwork, azureNetwork}}
+		pageToken := r.URL.Query().Get("page_token")
+		var networkList networkingv1.NetworkingV1NetworkList
+		switch pageToken {
+		case "azure":
+			networkList = networkingv1.NetworkingV1NetworkList{
+				Data:     []networkingv1.NetworkingV1Network{azureNetwork},
+				Metadata: networkingv1.ListMeta{},
+			}
+		case "gcp":
+			networkList = networkingv1.NetworkingV1NetworkList{
+				Data:     []networkingv1.NetworkingV1Network{gcpNetwork},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=azure"))},
+			}
+		default:
+			networkList = networkingv1.NetworkingV1NetworkList{
+				Data:     []networkingv1.NetworkingV1Network{awsNetwork},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=gcp"))},
+			}
+		}
+
 		err := json.NewEncoder(w).Encode(networkList)
 		require.NoError(t, err)
 	}
