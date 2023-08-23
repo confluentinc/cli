@@ -44,7 +44,7 @@ func (c *Command) newKafkaStartCommand() *cobra.Command {
 
 	cmd.Flags().String("kafka-rest-port", "8082", "Kafka REST port number.")
 	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.")
-	cmd.Flags().Int32("brokers", 1, "Number of brokers in the Confluent Local cluster.") // range: [1, 4]
+	cmd.Flags().Int32("brokers", 1, "Number of brokers in the Confluent Local cluster.") // range: [1, 4]? do we enforce a range?
 	return cmd
 }
 
@@ -296,7 +296,7 @@ func (c *Command) validateCustomizedPorts() error {
 
 func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numOfBrokers int32) []string {
 	brokerId := idx + 1
-	a := []string{
+	envs := []string{
 		fmt.Sprintf("KAFKA_BROKER_ID=%d", brokerId),
 		"KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT",
 		fmt.Sprintf("KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://confluent-local-broker-%d:%s,PLAINTEXT_HOST://localhost:%s", brokerId, ports.BrokerPorts[idx], ports.PlaintextPorts[idx]),
@@ -314,11 +314,10 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numOf
 		"KAFKA_REST_HOST_NAME=rest-proxy",
 	}
 	if idx == 0 { // configure krest proxy only for the first broker.
-		a = append(a, fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort))
-		a = append(a, getKafkaRestBootstrapServers(ports, numOfBrokers))
+		envs = append(envs, fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort))
+		envs = append(envs, getKafkaRestBootstrapServers(ports, numOfBrokers))
 	}
-	fmt.Println("a", a)
-	return a
+	return envs
 }
 
 func getNatPlaintextPorts(ports *config.LocalPorts, numOfBrokers int32) []nat.Port {
