@@ -34,7 +34,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	pmock "github.com/confluentinc/cli/v3/pkg/mock"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
-	testhelp "github.com/confluentinc/cli/v3/pkg/test-helpers"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -908,10 +907,10 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	var prerunner pcmd.PreRunner
 
 	if !isCloud {
-		mdsClient = testhelp.NewMdsClientMock(testToken1)
+		mdsClient = climock.NewMdsClientMock(testToken1)
 		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	} else {
-		ccloudClientFactory = testhelp.NewCCloudClientFactoryMock(auth, userInterface, req)
+		ccloudClientFactory = climock.NewCCloudClientFactoryMock(auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	}
 
@@ -931,10 +930,10 @@ func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInter
 	var prerunner pcmd.PreRunner
 
 	if !isCloud {
-		mdsClient = testhelp.NewMdsClientMock(testToken1)
+		mdsClient = climock.NewMdsClientMock(testToken1)
 		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	} else {
-		ccloudClientFactory = testhelp.NewCCloudClientFactoryMock(auth, userInterface, req)
+		ccloudClientFactory = climock.NewCCloudClientFactoryMock(auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	}
 	logoutCmd := logout.New(cfg, prerunner, netrcHandler, authTokenHandler)
