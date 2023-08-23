@@ -27,8 +27,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-var defaultKafkaRestPorts = []string{"8082", "9092", "10012", "20012"}
-
 type ImagePullResponse struct {
 	Status   string `json:"status"`
 	Error    string `json:"error,omitempty"`
@@ -39,7 +37,7 @@ type ImagePullResponse struct {
 func (c *Command) newKafkaStartCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
-		Short: "Start a single-node or two-node instance of Apache Kafka.",
+		Short: "Start a local Apache Kafka instance.",
 		Args:  cobra.NoArgs,
 		RunE:  c.kafkaStart,
 	}
