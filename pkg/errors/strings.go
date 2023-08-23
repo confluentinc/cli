@@ -106,15 +106,17 @@ const (
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
-	CreatedResourceMsg            = "Created %s \"%s\".\n"
-	CreatedLinkResourceMsg        = "Created %s \"%s\" with configs:\n%s\n"
-	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
-	DeleteResourceConfirmYesNoMsg = `Are you sure you want to delete %s "%s"?`
-	DeleteACLConfirmMsg           = "Are you sure you want to delete the ACL corresponding to these parameters?"
-	DeleteACLsConfirmMsg          = "Are you sure you want to delete the ACLs corresponding to these parameters?"
-	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
-	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
-	UsingResourceMsg              = "Using %s \"%s\".\n"
+	CreatedResourceMsg             = "Created %s \"%s\".\n"
+	CreatedLinkResourceMsg         = "Created %s \"%s\" with configs:\n%s\n"
+	DeleteResourceConfirmMsg       = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
+	DeleteResourceConfirmYesNoMsg  = `Are you sure you want to delete %s "%s"?`
+	DeleteACLConfirmMsg            = "Are you sure you want to delete the ACL corresponding to these parameters?"
+	DeleteACLsConfirmMsg           = "Are you sure you want to delete the ACLs corresponding to these parameters?"
+	RequestedDeleteResourceMsg     = "Requested to delete %s \"%s\".\n"
+	UpdatedResourceMsg             = "Updated %s \"%s\".\n"
+	UsingResourceMsg               = "Using %s \"%s\".\n"
+	UnsetResourceMsg               = "Unset %s \"%s\".\n"
+	UnsetResourceNothingToUnsetMsg = "No %s in use.\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%v\".\n"
 

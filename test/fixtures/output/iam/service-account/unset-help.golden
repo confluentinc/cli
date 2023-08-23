@@ -1,7 +1,7 @@
-Choose a service account to be used in subsequent commands which support passing a service account with the `--service-account` flag.
+Unsets a service account that was set with `service-account use`.
 
 Usage:
-  confluent iam service-account use <id> [flags]
+  confluent iam service-account unset [flags]
 
 Flags:
       --context string   CLI context name.
