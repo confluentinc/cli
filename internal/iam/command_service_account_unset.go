@@ -12,7 +12,7 @@ import (
 func (c *serviceAccountCommand) newUnsetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "unset",
-		Short:             "Unsets a service account that was set with `service-account use`.",
+		Short:             "Unsets a service account that was set with `use`.",
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.unset,
 	}
