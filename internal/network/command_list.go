@@ -1,11 +1,13 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -32,6 +34,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, network := range networks {
+		if network.Spec == nil {
+			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
+		}
+		if network.Status == nil {
+			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
+		}
+
 		zones := network.Spec.GetZones()
 		activeConnectionTypes := network.Status.GetActiveConnectionTypes().Items
 
@@ -63,6 +72,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 	}
-	list.Filter([]string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
+	list.Filter([]string{"Id", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
 	return list.Print()
 }

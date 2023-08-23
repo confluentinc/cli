@@ -9,6 +9,7 @@ import (
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -60,6 +61,13 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
 	table := output.NewTable(cmd)
+
+	if network.Spec == nil {
+		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
+	}
+	if network.Status == nil {
+		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
+	}
 
 	zones := network.Spec.GetZones()
 	activeConnectionTypes := network.Status.GetActiveConnectionTypes().Items

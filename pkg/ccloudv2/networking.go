@@ -57,8 +57,8 @@ func (c *Client) ListNetworks(envId string) ([]networkingv1.NetworkingV1Network,
 	return list, nil
 }
 
-func (c *Client) executeListNetworks(envId, pageToken string) (networkingv1.NetworkingV1NetworkList, error) {
-	req := c.NetworkingClient.NetworksNetworkingV1Api.ListNetworkingV1Networks(c.networkingApiContext()).Environment(envId).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListNetworks(environment, pageToken string) (networkingv1.NetworkingV1NetworkList, error) {
+	req := c.NetworkingClient.NetworksNetworkingV1Api.ListNetworkingV1Networks(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
