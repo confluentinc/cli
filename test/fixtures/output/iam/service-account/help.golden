@@ -11,7 +11,9 @@ Available Commands:
   delete      Delete one or more service accounts.
   describe    Describe a service account.
   list        List service accounts.
+  unset       Unsets a service account that was set with `use`.
   update      Update a service account.
+  use         Choose a service account to be used in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.
