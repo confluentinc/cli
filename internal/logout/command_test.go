@@ -1,8 +1,6 @@
 package logout
 
 import (
-	"context"
-	"net/http"
 	"os"
 	"testing"
 
@@ -12,7 +10,6 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	mdsMock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
 	"github.com/confluentinc/cli/v3/internal/login"
 	climock "github.com/confluentinc/cli/v3/mock"
@@ -112,9 +109,10 @@ var (
 func TestLogout(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
-	cfg := config.AuthenticatedCloudConfigMock()
+	cfg := config.AuthenticatedConfigMockWithContextName(config.MockContextName)
 	contextName := cfg.Context().Name
-	logoutCmd, cfg := newLogoutCmd(cfg, mockNetrcHandler)
+	// run login command
+	logoutCmd, cfg := newLogoutCmd(getAuthMock(), nil, true, req, mockNetrcHandler, AuthTokenHandler, contextName)
 	_, err := pcmd.ExecuteCommand(logoutCmd)
 	req.NoError(err)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc(true, contextName)
@@ -129,7 +127,72 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	cfg := config.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().GetNetrcMachineName()
 	// run login command
-	auth := &ccloudv1mock.Auth{
+	loginCmd, _ := newLoginCmd(getAuthMock(), nil, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+	_, err := pcmd.ExecuteCommand(loginCmd)
+	req.NoError(err)
+
+	_, err = mockNetrcHandler.RemoveNetrcCredentials(true, contextName)
+	req.NoError(err)
+	exist, err := mockNetrcHandler.CheckCredentialExistFunc(true, contextName)
+	req.NoError(err)
+	req.Equal(exist, false)
+}
+
+func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
+	config.SetTempHomeDir()
+	cfg := config.New()
+	var ccloudClientFactory *climock.CCloudClientFactory
+	var mdsClient *mdsv1.APIClient
+	var prerunner pcmd.PreRunner
+
+	if !isCloud {
+		mdsClient = climock.NewMdsClientMock(testToken)
+		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
+	} else {
+		ccloudClientFactory = climock.NewCCloudClientFactoryMock(auth, userInterface, req)
+		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
+	}
+
+	mdsClientManager := &climock.MDSClientManager{
+		GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
+			return mdsClient, nil
+		},
+	}
+	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
+	return loginCmd, cfg
+}
+
+func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, contextName string) (*cobra.Command, *config.Config) {
+	config.SetTempHomeDir()
+	cfg := config.AuthenticatedConfigMockWithContextName(contextName)
+	var ccloudClientFactory *climock.CCloudClientFactory
+	var mdsClient *mdsv1.APIClient
+	var prerunner pcmd.PreRunner
+
+	if !isCloud {
+		mdsClient = climock.NewMdsClientMock(testToken)
+		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
+	} else {
+		ccloudClientFactory = climock.NewCCloudClientFactoryMock(auth, userInterface, req)
+		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
+	}
+	logoutCmd := New(cfg, prerunner, netrcHandler, authTokenHandler)
+	return logoutCmd, cfg
+}
+
+func verifyLoggedOutState(t *testing.T, cfg *config.Config, loggedOutContext string) {
+	req := require.New(t)
+	state := cfg.Contexts[loggedOutContext].State
+	req.Empty(state.AuthToken)
+	req.Empty(state.Auth)
+}
+
+func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
+	req.NoError(os.Unsetenv(pauth.DeprecatedConfluentCloudEmail))
+}
+
+func getAuthMock() *ccloudv1mock.Auth {
+	return &ccloudv1mock.Auth{
 		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
 			return &ccloudv1.AuthenticateReply{Token: testToken}, nil
 		},
@@ -145,70 +208,4 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 			}, nil
 		},
 	}
-	userInterface := &ccloudv1mock.UserInterface{}
-	loginCmd, _ := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
-	_, err := pcmd.ExecuteCommand(loginCmd)
-	req.NoError(err)
-
-	_, err = mockNetrcHandler.RemoveNetrcCredentials(true, contextName)
-	req.NoError(err)
-	exist, err := mockNetrcHandler.CheckCredentialExistFunc(true, contextName)
-	req.NoError(err)
-	req.Equal(exist, false)
-}
-
-func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
-	config.SetTempHomeDir()
-	cfg := config.New()
-	var mdsClient *mdsv1.APIClient
-	if !isCloud {
-		mdsConfig := mdsv1.NewConfiguration()
-		mdsClient = mdsv1.NewAPIClient(mdsConfig)
-		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
-			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
-				return mdsv1.AuthenticationResponse{
-					AuthToken: testToken,
-					TokenType: "JWT",
-					ExpiresIn: 100,
-				}, nil, nil
-			},
-		}
-	}
-	ccloudClientFactory := &climock.CCloudClientFactory{
-		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
-			req.Equal("https://confluent.cloud", baseURL)
-			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, User: userInterface}
-		},
-		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-			return &ccloudv1.Client{Growth: &ccloudv1mock.Growth{
-				GetFreeTrialInfoFunc: func(_ int32) ([]*ccloudv1.GrowthPromoCodeClaim, error) {
-					return []*ccloudv1.GrowthPromoCodeClaim{}, nil
-				},
-			}, Auth: auth, User: userInterface}
-		},
-	}
-	mdsClientManager := &climock.MDSClientManager{
-		GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
-			return mdsClient, nil
-		},
-	}
-	prerunner := climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
-	return loginCmd, cfg
-}
-
-func newLogoutCmd(cfg *config.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *config.Config) {
-	logoutCmd := New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
-	return logoutCmd, cfg
-}
-
-func verifyLoggedOutState(t *testing.T, cfg *config.Config, loggedOutContext string) {
-	req := require.New(t)
-	state := cfg.Contexts[loggedOutContext].State
-	req.Empty(state.AuthToken)
-	req.Empty(state.Auth)
-}
-
-func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
-	req.NoError(os.Unsetenv(pauth.DeprecatedConfluentCloudEmail))
 }
