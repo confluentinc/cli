@@ -65,7 +65,7 @@ func (c *command) logout(_ *cobra.Command, _ []string) error {
 		}
 
 		if isCCloud := ccloudv2.IsCCloudURL(ctx.Platform.Server, c.cfg.IsTest); isCCloud {
-			if _, err := c.revokeCCloudRefreshToken(); err != nil {
+			if _, err := c.revokeCCloudRefreshToken(ctx); err != nil {
 				return err
 			}
 		}
@@ -79,15 +79,14 @@ func (c *command) logout(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (c *command) revokeCCloudRefreshToken() (*ccloudv1.AuthenticateReply, error) {
-	ctx := c.Config.Config.Context()
+func (c *command) revokeCCloudRefreshToken(ctx *config.Context) (*ccloudv1.AuthenticateReply, error) {
 	contextState := c.Config.Config.ContextStates[ctx.Name]
 	if err := contextState.DecryptContextStateAuthToken(ctx.Name); err != nil {
 		return nil, err
 	}
 
 	req := &ccloudv1.AuthenticateRequest{IdToken: contextState.AuthToken}
-	if sso.IsOkta(c.Client.BaseURL) {
+	if sso.IsOkta(ctx.Platform.Server) {
 		return c.Client.Auth.OktaLogout(req)
 	} else {
 		return c.Client.Auth.Logout(req)
