@@ -1,6 +1,8 @@
-package kafka
+package local
 
 import (
+	"context"
+
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
@@ -8,19 +10,20 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 )
 
-func (c *brokerCommand) newUpdateCommand() *cobra.Command {
+func (c *Command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
-		Short: "Update Kafka broker configurations.",
+		Short: "Update local Kafka broker configurations.",
 		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.update,
+		RunE:  c.kafkaUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
@@ -35,7 +38,6 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool("all", false, "Apply configuration update to all brokers in the cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("config"))
@@ -43,15 +45,15 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
+func (c *Command) kafkaUpdate(cmd *cobra.Command, args []string) error {
 	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args)
 	if err != nil {
 		return err
 	}
 
-	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
+	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
 	config, err := cmd.Flags().GetStringSlice("config")
@@ -65,7 +67,7 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 	data := broker.ToAlterConfigBatchRequestDataOnPrem(configMap)
 
 	if all {
-		resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId,
+		resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(context.Background(), clusterId,
 			&kafkarestv3.UpdateKafkaClusterConfigsOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(data),
 			})
@@ -73,7 +75,7 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 	} else {
-		resp, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId,
+		resp, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsalterPost(context.Background(), clusterId, brokerId,
 			&kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts{
 				AlterConfigBatchRequestData: optional.NewInterface(data),
 			})
