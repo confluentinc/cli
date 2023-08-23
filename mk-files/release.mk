@@ -165,7 +165,7 @@ update-muckrake:
 	git clone git@github.com:confluentinc/muckrake.git $(MUCKRAKE) && \
 	cd $(MUCKRAKE) && \
 	git fetch --all && \
-	branch="cli-$${version}" && \
+	branch=bump-cli && \
 	base=$$(git branch --remote --format "%(refname:short)" | sed -n "s|^origin/\([1-9][0-9]*\.[0-9][0-9]*\.x\)$$|\1|p" | tail -1) && \
 	git checkout $$base && \
 	git checkout $$branch || git checkout -b $$branch && \
@@ -194,7 +194,7 @@ update-packaging:
 	git clone git@github.com:confluentinc/packaging.git $(PACKAGING) && \
 	cd $(PACKAGING) && \
 	git fetch --all && \
-	branch="cli-$${version}" && \
+	branch="bump-cli" && \
 	base=$$(git branch --remote --format "%(refname:short)" | sed -n "s|^origin/\([1-9][0-9]*\.[0-9][0-9]*\.x\)$$|\1|p" | tail -1) && \
 	git checkout $$base && \
 	git checkout $$branch || git checkout -b $$branch && \
