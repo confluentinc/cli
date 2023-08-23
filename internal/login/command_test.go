@@ -24,7 +24,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	mdsmock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
+	mdsMock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
 	"github.com/confluentinc/cli/v3/internal/logout"
 	climock "github.com/confluentinc/cli/v3/mock"
@@ -113,8 +113,7 @@ var (
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
-		},
+		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
@@ -715,7 +714,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 
 	cert, err := x509.ParseCertificate(certBytes)
 	req.NoError(err, "Couldn't reparse certificate")
-	mdsClient.TokensAndAuthenticationApi = &mdsmock.TokensAndAuthenticationApi{
+	mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
 		GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
 			req.NotEqual(http.DefaultClient, mdsClient)
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
@@ -811,10 +810,10 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
+		logoutCmd, cfg1 := newLogoutCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager, ctx.Name)
 		_, err = pcmd.ExecuteCommand(logoutCmd)
 		req.NoError(err)
-		verifyLoggedOutState(t, cfg, ctx.Name)
+		verifyLoggedOutState(t, cfg1, ctx.Name)
 
 		// logging back in the same context
 		_, err = pcmd.ExecuteCommand(loginCmd, s.args...)
@@ -903,7 +902,7 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	if !isCloud {
 		mdsConfig := mdsv1.NewConfiguration()
 		mdsClient = mdsv1.NewAPIClient(mdsConfig)
-		mdsClient.TokensAndAuthenticationApi = &mdsmock.TokensAndAuthenticationApi{
+		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
 			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
 				return mdsv1.AuthenticationResponse{
 					AuthToken: testToken1,
@@ -937,8 +936,38 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cfg *config.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *config.Config) {
-	logoutCmd := logout.New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
+func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, contextName string) (*cobra.Command, *config.Config) {
+	config.SetTempHomeDir()
+	cfg := config.AuthenticatedConfigMockWithContextName(contextName)
+	var mdsClient *mdsv1.APIClient
+	if !isCloud {
+		mdsConfig := mdsv1.NewConfiguration()
+		mdsClient = mdsv1.NewAPIClient(mdsConfig)
+		mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
+			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
+				return mdsv1.AuthenticationResponse{
+					AuthToken: testToken1,
+					TokenType: "JWT",
+					ExpiresIn: 100,
+				}, nil, nil
+			},
+		}
+	}
+	ccloudClientFactory := &climock.CCloudClientFactory{
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+			req.Equal("https://confluent.cloud", baseURL)
+			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, User: userInterface}
+		},
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+			return &ccloudv1.Client{Growth: &ccloudv1mock.Growth{
+				GetFreeTrialInfoFunc: func(_ int32) ([]*ccloudv1.GrowthPromoCodeClaim, error) {
+					return []*ccloudv1.GrowthPromoCodeClaim{}, nil
+				},
+			}, Auth: auth, User: userInterface}
+		},
+	}
+	prerunner := climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	logoutCmd := logout.New(cfg, prerunner, netrcHandler, authTokenHandler)
 	return logoutCmd, cfg
 }
 

@@ -6,9 +6,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/dghubble/sling"
-
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	"github.com/dghubble/sling"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"

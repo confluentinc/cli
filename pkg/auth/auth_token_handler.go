@@ -18,6 +18,7 @@ import (
 type AuthTokenHandler interface {
 	GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error)
 	GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials) (string, error)
+	RevokeRefreshToken(client *ccloudv1.Client, req *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error)
 }
 
 type AuthTokenHandlerImpl struct{}
@@ -167,5 +168,13 @@ func login(client *ccloudv1.Client, req *ccloudv1.AuthenticateRequest) (*ccloudv
 		return client.Auth.OktaLogin(req)
 	} else {
 		return client.Auth.Login(req)
+	}
+}
+
+func (a *AuthTokenHandlerImpl) RevokeRefreshToken(client *ccloudv1.Client, req *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+	if sso.IsOkta(client.BaseURL) {
+		return client.Auth.OktaLogout(req)
+	} else {
+		return client.Auth.Logout(req)
 	}
 }
