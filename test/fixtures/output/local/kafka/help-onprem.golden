@@ -1,10 +1,11 @@
-Manage a single-node instance of Apache Kafka.
+Manage a local instance of Apache Kafka.
 
 Usage:
   confluent local kafka [command]
 
 Available Commands:
-  start       Start a single-node instance of Apache Kafka.
+  broker      Manage Kafka brokers in Confluent Local.
+  start       Start a local Apache Kafka instance.
   stop        Stop the local Apache Kafka service.
   topic       Run Kafka topic related commands.
 
