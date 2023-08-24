@@ -8,13 +8,8 @@ Describe the "min.insync.replicas" configuration for broker 1.
 
   $ confluent local broker describe 1 --config-name min.insync.replicas
 
-Describe the non-default cluster-wide broker configuration values.
-
-  $ confluent local broker describe --all
-
 Flags:
-      --all                  Get cluster-wide broker configurations (non-default values only).
-      --config-name string   Get a specific configuration value (pair with --all to see a cluster-wide configuration.
+      --config-name string   Get a specific configuration value
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

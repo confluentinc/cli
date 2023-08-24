@@ -21,8 +21,8 @@ func (c *Command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 		RunE:  c.configurationDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update configuration values for all brokers in the cluster.",
-				Code: "confluent kafka broker update --all --config min.insync.replicas=2,num.partitions=2",
+				Text: "List configuration values for the Kafka cluster.",
+				Code: "confluent local kafka cluster configuration list",
 			},
 		),
 	}

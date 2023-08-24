@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   broker      Manage Kafka brokers in Confluent Local.
+  cluster     Manage Kafka cluster in Confluent Local.
   start       Start a local Apache Kafka instance.
   stop        Stop the local Apache Kafka service.
   topic       Run Kafka topic related commands.

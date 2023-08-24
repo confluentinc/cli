@@ -26,14 +26,10 @@ func (c *Command) newKafkaBrokerDescribeCommand() *cobra.Command {
 				Text: `Describe the "min.insync.replicas" configuration for broker 1.`,
 				Code: "confluent local broker describe 1 --config-name min.insync.replicas",
 			},
-			examples.Example{
-				Text: "Describe the non-default cluster-wide broker configuration values.",
-				Code: "confluent local broker describe --all",
-			},
 		),
 	}
 
-	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a cluster-wide configuration.")
+	cmd.Flags().String("config-name", "", "Get a specific configuration value")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
