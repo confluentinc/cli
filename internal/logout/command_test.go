@@ -141,12 +141,11 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	config.SetTempHomeDir()
 	cfg := config.New()
 	var ccloudClientFactory *climock.CCloudClientFactory
-	var mdsClient *mdsv1.APIClient
 	var mdsClientManager *climock.MDSClientManager
 	var prerunner pcmd.PreRunner
 
 	if !isCloud {
-		mdsClient = climock.NewMdsClientMock(testToken)
+		mdsClient := climock.NewMdsClientMock(testToken)
 		mdsClientManager = &climock.MDSClientManager{
 			GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
 				return mdsClient, nil
@@ -165,15 +164,13 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, contextName string) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.AuthenticatedConfigMockWithContextName(contextName)
-	var ccloudClientFactory *climock.CCloudClientFactory
-	var mdsClient *mdsv1.APIClient
 	var prerunner pcmd.PreRunner
 
 	if !isCloud {
-		mdsClient = climock.NewMdsClientMock(testToken)
+		mdsClient := climock.NewMdsClientMock(testToken)
 		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	} else {
-		ccloudClientFactory = climock.NewCCloudClientFactoryMock(auth, userInterface, req)
+		ccloudClientFactory := climock.NewCCloudClientFactoryMock(auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	}
 	logoutCmd := New(cfg, prerunner, netrcHandler, authTokenHandler)
