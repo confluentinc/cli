@@ -904,21 +904,22 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	cfg := config.New()
 	var ccloudClientFactory *climock.CCloudClientFactory
 	var mdsClient *mdsv1.APIClient
+	var mdsClientManager *climock.MDSClientManager
 	var prerunner pcmd.PreRunner
 
 	if !isCloud {
 		mdsClient = climock.NewMdsClientMock(testToken1)
+		mdsClientManager = &climock.MDSClientManager{
+			GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
+				return mdsClient, nil
+			},
+		}
 		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	} else {
 		ccloudClientFactory = climock.NewCCloudClientFactoryMock(auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	}
 
-	mdsClientManager := &climock.MDSClientManager{
-		GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
-			return mdsClient, nil
-		},
-	}
 	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
@@ -936,8 +937,7 @@ func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInter
 		ccloudClientFactory = climock.NewCCloudClientFactoryMock(auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	}
-	logoutCmd := logout.New(cfg, prerunner, netrcHandler, authTokenHandler)
-	return logoutCmd
+	return logout.New(cfg, prerunner, netrcHandler, authTokenHandler)
 }
 
 func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, orgResourceId string) {

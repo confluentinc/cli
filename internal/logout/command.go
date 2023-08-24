@@ -64,7 +64,7 @@ func (c *command) logout(_ *cobra.Command, _ []string) error {
 			return err
 		}
 
-		if isCCloud := ccloudv2.IsCCloudURL(ctx.Platform.Server, c.cfg.IsTest); isCCloud {
+		if ccloudv2.IsCCloudURL(ctx.Platform.Server, c.cfg.IsTest) {
 			if _, err := c.revokeCCloudRefreshToken(ctx); err != nil {
 				return err
 			}
