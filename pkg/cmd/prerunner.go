@@ -190,7 +190,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
-				if cmd.Use == "logout" {
+				if cmd.Use == "logout" && r.Config.Context() == nil {
 					return nil
 				}
 
