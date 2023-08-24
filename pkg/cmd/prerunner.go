@@ -190,6 +190,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
+				if cmd.Use == "logout" {
+					return nil
+				}
+
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
 					netrcMachineName = ctx.GetNetrcMachineName()
