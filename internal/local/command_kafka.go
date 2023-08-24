@@ -23,6 +23,7 @@ func (c *Command) newKafkaCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newKafkaBrokerCommand())
+	cmd.AddCommand(c.newKafkaClusterCommand())
 	cmd.AddCommand(c.newKafkaStartCommand())
 	cmd.AddCommand(c.newKafkaStopCommand())
 	cmd.AddCommand(c.newKafkaTopicCommand())

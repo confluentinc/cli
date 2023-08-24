@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -19,7 +20,7 @@ func (c *Command) newKafkaBrokerDescribeCommand() *cobra.Command {
 		Short: "Describe a local Kafka broker.",
 		Long:  "Describe cluster-wide or per-broker configuration values.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.kafkaDescribe,
+		RunE:  c.brokerDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the "min.insync.replicas" configuration for broker 1.`,
@@ -32,15 +33,15 @@ func (c *Command) newKafkaBrokerDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
 	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a cluster-wide configuration.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *Command) kafkaDescribe(cmd *cobra.Command, args []string) error {
-	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args)
+func (c *Command) brokerDescribe(cmd *cobra.Command, args []string) error {
+	brokerIdStr := args[0]
+	brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
 	if err != nil {
 		return err
 	}
@@ -55,21 +56,11 @@ func (c *Command) kafkaDescribe(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
-	// Get Broker Configs
-	var data []*broker.ConfigOut
-	if all { // fetch cluster-wide configs
-		clusterConfig, err := broker.GetClusterWideConfigs(restClient, context.Background(), clusterId, configName)
-		if err != nil {
-			return err
-		}
-		data = broker.ParseClusterConfigData(clusterConfig)
-	} else { // fetch individual broker configs
-		brokerConfig, err := broker.GetIndividualBrokerConfigs(restClient, context.Background(), clusterId, brokerId, configName)
-		if err != nil {
-			return err
-		}
-		data = broker.ParseBrokerConfigData(brokerConfig)
+	brokerConfig, err := broker.GetIndividualBrokerConfigs(restClient, context.Background(), clusterId, int32(brokerId), configName)
+	if err != nil {
+		return err
 	}
+	data := broker.ParseBrokerConfigData(brokerConfig)
 
 	list := output.NewList(cmd)
 	for _, entry := range data {

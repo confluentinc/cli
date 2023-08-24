@@ -23,7 +23,7 @@ func (c *Command) newKafkaBrokerUpdateCommand() *cobra.Command {
 		Short: "Update local Kafka broker configurations.",
 		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.kafkaUpdate,
+		RunE:  c.brokerUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
@@ -45,7 +45,7 @@ func (c *Command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaUpdate(cmd *cobra.Command, args []string) error {
+func (c *Command) brokerUpdate(cmd *cobra.Command, args []string) error {
 	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args)
 	if err != nil {
 		return err

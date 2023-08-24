@@ -24,7 +24,7 @@ var commandRules = []linter.CommandRule{
 
 	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("local kafka broker")),
+	linter.Filter(linter.RequireNotTitleCase("Short", properNouns)),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
@@ -172,6 +172,7 @@ var properNouns = []string{
 	"Clients",
 	"Clojure",
 	"Confluent Cloud",
+	"Confluent Local",
 	"Confluent Platform",
 	"Confluent",
 	"Connect",

@@ -17,7 +17,7 @@ func (c *Command) newKafkaBrokerListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List local Kafka brokers.",
 		Args:  cobra.NoArgs,
-		RunE:  c.kafkaList,
+		RunE:  c.brokerList,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -25,7 +25,7 @@ func (c *Command) newKafkaBrokerListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaList(cmd *cobra.Command, args []string) error {
+func (c *Command) brokerList(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
