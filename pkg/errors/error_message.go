@@ -449,4 +449,7 @@ const (
 	// General
 	DeleteResourceErrorMsg = `failed to delete %s "%s": %v`
 	UpdateResourceErrorMsg = `failed to update %s "%s": %v`
+
+	// Network commands
+	CorruptedNetworkResponseErrorMsg = "corrupted %s in response"
 )
