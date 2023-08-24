@@ -47,8 +47,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if output.GetFormat(cmd) == output.Human {
 			list.Add(&humanOut{
 				Id:                    network.GetId(),
-				EnvironmentId:         network.Spec.Environment.GetId(),
 				Name:                  network.Spec.GetDisplayName(),
+				EnvironmentId:         network.Spec.Environment.GetId(),
 				Cloud:                 network.Spec.GetCloud(),
 				Region:                network.Spec.GetRegion(),
 				Cidr:                  network.Spec.GetCidr(),
@@ -60,8 +60,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		} else {
 			list.Add(&serializedOut{
 				Id:                    network.GetId(),
-				EnvironmentId:         network.Spec.Environment.GetId(),
 				Name:                  network.Spec.GetDisplayName(),
+				EnvironmentId:         network.Spec.Environment.GetId(),
 				Cloud:                 network.Spec.GetCloud(),
 				Region:                network.Spec.GetRegion(),
 				Cidr:                  network.Spec.GetCidr(),
