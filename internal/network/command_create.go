@@ -14,11 +14,28 @@ import (
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <name>",
-		Short:   "Create a new network.",
-		Args:    cobra.ExactArgs(1),
-		RunE:    c.create,
-		Example: examples.BuildExampleString(examples.Example{}),
+		Use:   "create <name>",
+		Short: "Create a new network.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Create a Confluent network in AWS with connection type "transitgateway" by specifying zones and CIDR.`,
+				Code: "confluent network create aws_tgw --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16",
+			},
+			examples.Example{
+				Text: `Create a Confluent network in AWS with connection type "peering" by specifying zones info.`,
+				Code: "confluent network create aws_peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27",
+			},
+			examples.Example{
+				Text: `Create a Confluent network in GCP with connection type "peering" by specifying zones and CIDR.`,
+				Code: "confluent network create gcp_peering --cloud gcp --region us-central1 --connection-types peering --zones us-central1-a,us-central1-b,us-central1-c --cidr 10.1.0.0/16",
+			},
+			examples.Example{
+				Text: `Create a Confluent network in Azure with connection type "privatelink" by specifying DNS resolution.`,
+				Code: "confluent network create azure_pl --cloud azure --region eastus2 --connection-types privatelink --dns-resolution chased_private",
+			},
+		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
