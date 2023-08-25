@@ -11,7 +11,7 @@ import (
 
 func (c *command) newExporterDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <name-1> <name-2> ... <name-n>",
+		Use:   "delete <name-1> [name-2] ... [name-n]",
 		Short: "Delete one or more schema exporters.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.exporterDelete,
