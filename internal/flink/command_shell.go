@@ -24,6 +24,7 @@ func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) 
 	}
 
 	c.addComputePoolFlag(cmd)
+	//TODO: remove as soon v1beta1 migration is complete (https://confluentinc.atlassian.net/browse/KFS-941)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID (deprecated).")
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

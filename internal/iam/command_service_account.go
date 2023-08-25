@@ -35,9 +35,9 @@ func newServiceAccountCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUnsetCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 	cmd.AddCommand(c.newUseCommand())
-	cmd.AddCommand(c.newUnsetCommand())
 
 	return cmd
 }

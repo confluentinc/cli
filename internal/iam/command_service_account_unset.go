@@ -12,7 +12,8 @@ import (
 func (c *serviceAccountCommand) newUnsetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "unset",
-		Short:             "Unsets a service account that was set with `use`.",
+		Short:             "Unset the current service account.",
+		Long:              "Unset the current service account that was set with `confluent iam service-account use`.",
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.unset,
 	}
@@ -25,7 +26,6 @@ func (c *serviceAccountCommand) newUnsetCommand() *cobra.Command {
 func (c *serviceAccountCommand) unset(_ *cobra.Command, args []string) error {
 	serviceAccountToUnset := c.Context.GetCurrentServiceAccount()
 	if serviceAccountToUnset == "" {
-		output.Printf(errors.UnsetResourceNothingToUnsetMsg, resource.ServiceAccount)
 		return nil
 	}
 
