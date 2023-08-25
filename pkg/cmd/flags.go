@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
+	"github.com/confluentinc/cli/v3/pkg/network"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
@@ -127,6 +128,11 @@ func AddConfigFlag(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("config", []string{}, `A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.`)
 }
 
+func AddConnectionTypesFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("connection-types", nil, fmt.Sprintf(`Specify a comma-separated list of network access types of %s.`, utils.ArrayToCommaDelimitedString(network.ConnectionTypes, "or")))
+	RegisterFlagCompletionFunc(cmd, "connection-types", func(_ *cobra.Command, _ []string) []string { return network.ConnectionTypes })
+}
+
 func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 	cmd.Flags().String("context", "", "CLI context name.")
 
@@ -141,6 +147,11 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 
 func AutocompleteContexts(cfg *config.Config) []string {
 	return types.GetSortedKeys(cfg.Contexts)
+}
+
+func AddDnsResolutionFlag(cmd *cobra.Command) {
+	cmd.Flags().String("dns-resolution", "", fmt.Sprintf("Specify the DNS resolution as %s.", utils.ArrayToCommaDelimitedString(network.DnsResolutions, "or")))
+	RegisterFlagCompletionFunc(cmd, "dns-resolution", func(_ *cobra.Command, _ []string) []string { return network.DnsResolutions })
 }
 
 func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
