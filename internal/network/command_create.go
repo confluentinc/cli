@@ -160,7 +160,7 @@ func getZoneInfoItems(zoneInfo []string) ([]networkingv1.NetworkingV1ZoneInfo, e
 	for i, info := range zoneInfo {
 		zoneInfo := strings.Split(info, "=")
 		if len(zoneInfo) != 2 {
-			return nil, errors.NewErrorWithSuggestions("invalid zones-info", "zone1=cidr1") // TO-DO
+			return nil, errors.NewErrorWithSuggestions("invalid zones-info", `Specify a comma-separated list of "zone=cidr" pairs. For exmaple: "--zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27"`)
 		}
 		zoneInfoItems[i] = networkingv1.NetworkingV1ZoneInfo{
 			ZoneId: networkingv1.PtrString(zoneInfo[0]), Cidr: networkingv1.PtrString(zoneInfo[1]),
