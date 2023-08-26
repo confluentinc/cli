@@ -8,10 +8,10 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -130,6 +130,6 @@ func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.SchemaExporter, args[0])
+	color.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.SchemaExporter, args[0])
 	return nil
 }

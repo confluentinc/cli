@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
@@ -271,7 +271,7 @@ func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		output.Println("Exit with Ctrl-D")
+		color.Println(c.Config.EnableColor, "Exit with Ctrl-D")
 	}
 
 	kafkaCommand.Env = []string{

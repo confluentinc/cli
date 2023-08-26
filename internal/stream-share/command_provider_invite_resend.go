@@ -4,9 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newResendEmailInviteCommand() *cobra.Command {
@@ -35,6 +35,6 @@ func (c *command) resendEmailInvite(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.ResendInviteMsg, shareId)
+	color.Printf(c.Config.EnableColor, errors.ResendInviteMsg, shareId)
 	return nil
 }

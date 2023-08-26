@@ -54,7 +54,7 @@ func (f *Form) Prompt(prompt Prompt) error {
 		res, err := field.validate(val)
 		if err != nil {
 			if fmt.Sprintf(errors.InvalidInputFormatErrorMsg, val, field.ID) == err.Error() {
-				output.ErrPrintln(err)
+				output.ErrPrintf("Error: %v\n", err)
 				i-- // re-prompt on invalid regex
 				continue
 			}
@@ -79,7 +79,7 @@ func ConfirmEnter() error {
 		return err
 	}
 	// Warning: do not remove this print line; it prevents an unexpected interaction with browser.OpenUrl causing pages to open in the background
-	output.Print("\n")
+	output.Println("")
 
 	return nil
 }

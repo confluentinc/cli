@@ -7,9 +7,9 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -75,6 +75,6 @@ func (c *linkCommand) configurationUpdateOnPrem(cmd *cobra.Command, args []strin
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	output.Printf(errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
+	color.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

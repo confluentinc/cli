@@ -5,8 +5,8 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -33,6 +33,6 @@ func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	output.Printf("An email invitation has been sent to \"%s\".\n", invitation.GetEmail())
+	color.Printf(c.Config.EnableColor, "An email invitation has been sent to \"%s\".\n", invitation.GetEmail())
 	return nil
 }

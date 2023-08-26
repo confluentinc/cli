@@ -45,6 +45,7 @@ import (
 	"github.com/confluentinc/cli/v3/internal/version"
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -52,7 +53,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/help"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 	pplugin "github.com/confluentinc/cli/v3/pkg/plugin"
 	secrets "github.com/confluentinc/cli/v3/pkg/secret"
@@ -62,10 +62,11 @@ import (
 
 func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     pversion.CLIName,
-		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
-		Long:    getLongDescription(cfg),
-		Version: cfg.Version.Version,
+		Use:           pversion.CLIName,
+		Short:         fmt.Sprintf("%s.", pversion.FullCLIName),
+		Long:          getLongDescription(cfg),
+		Version:       cfg.Version.Version,
+		SilenceErrors: true,
 	}
 
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
@@ -110,7 +111,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
-	cmd.AddCommand(cloudsignup.New())
+	cmd.AddCommand(cloudsignup.New(prerunner))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner, flagResolver))
@@ -158,9 +159,9 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 			}
 			u := ppanic.CollectPanic(cmd, args, cfg)
 			if err := reportUsage(cmd, cfg, u); err != nil {
-				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
+				color.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
 			}
-			cobra.CheckErr(r)
+			pcmd.CheckErr(cfg.EnableColor, r)
 		}
 	}()
 	if !cfg.DisablePlugins {
@@ -176,9 +177,8 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 	}
 
 	err := cmd.Execute()
-	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
-	u.Error = cliv1.PtrBool(err != nil)
 
+	u.Error = cliv1.PtrBool(err != nil)
 	if err := reportUsage(cmd, cfg, u); err != nil {
 		return err
 	}

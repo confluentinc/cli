@@ -9,6 +9,7 @@ import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -122,8 +123,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln(errors.APIKeyTime)
-		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
+		color.ErrPrintln(c.Config.EnableColor, errors.APIKeyTime)
+		color.ErrPrintln(c.Config.EnableColor, errors.APIKeyNotRetrievableMsg)
 	}
 
 	table := output.NewTable(cmd)
@@ -152,7 +153,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(errors.UseAPIKeyMsg, userKey.Key)
+		color.Printf(c.Config.EnableColor, errors.UseAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

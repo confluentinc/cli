@@ -6,9 +6,9 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -55,6 +55,6 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
 
-	output.ErrPrintf(errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
+	color.ErrPrintf(c.Config.EnableColor, errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
 	return nil
 }

@@ -8,11 +8,11 @@ import (
 
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type Command struct {
@@ -61,6 +61,6 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(errors.LoggedOutMsg)
+	color.Println(c.Config.EnableColor, errors.LoggedOutMsg)
 	return nil
 }

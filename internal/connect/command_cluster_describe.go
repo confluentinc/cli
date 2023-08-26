@@ -107,8 +107,8 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	if err := table.Print(); err != nil {
 		return err
 	}
-	output.Println()
-	output.Println()
+	output.Println("")
+	output.Println("")
 
 	output.Println("Task Level Details")
 	list := output.NewList(cmd)
@@ -121,8 +121,8 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	if err := list.Print(); err != nil {
 		return err
 	}
-	output.Println()
-	output.Println()
+	output.Println("")
+	output.Println("")
 
 	output.Println("Configuration Details")
 	list = output.NewList(cmd)

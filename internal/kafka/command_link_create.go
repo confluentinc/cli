@@ -8,9 +8,9 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -200,7 +200,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}
-	output.Print(msg)
+	color.Print(c.Config.EnableColor, msg)
 
 	return nil
 }

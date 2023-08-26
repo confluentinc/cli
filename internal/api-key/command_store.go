@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -128,6 +128,6 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&config.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
-	output.ErrPrintf(errors.StoredAPIKeyMsg, key)
+	color.ErrPrintf(c.Config.EnableColor, errors.StoredAPIKeyMsg, key)
 	return nil
 }

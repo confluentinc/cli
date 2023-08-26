@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -82,7 +83,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output.Printf("Deleted %s.\n", resource.SchemaRegistryConfiguration)
+	color.Printf(c.Config.EnableColor, "Deleted %s.\n", resource.SchemaRegistryConfiguration)
 	out := &configOut{}
 	if err := json.Unmarshal([]byte(outStr), out); err != nil {
 		return err

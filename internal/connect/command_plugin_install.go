@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/cpstructs"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -150,7 +151,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		successStr = utils.AddDryRunPrefix(successStr)
 	}
-	output.Printf("\n%s", successStr)
+	color.Printf(c.Config.EnableColor, "\n%s", successStr)
 
 	return nil
 }
@@ -315,7 +316,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 	}
 
 	if len(previousInstallations) > 0 {
-		output.Print("\n")
+		output.Println("")
 	}
 	return nil
 }
@@ -323,7 +324,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstructs.Manifest, archivePath, pluginDir string, dryRun bool) error {
 	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
-		output.Printf(utils.AddDryRunPrefix(installStr))
+		color.Printf(c.Config.EnableColor, utils.AddDryRunPrefix(installStr))
 		return nil
 	}
 	output.Print(installStr)
@@ -430,7 +431,7 @@ func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prom
 			}
 		}
 	}
-	output.Print("\n")
+	output.Println("")
 
 	return nil
 }

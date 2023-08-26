@@ -8,10 +8,10 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 )
 
@@ -113,7 +113,7 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject string, client
 		return catchSchemaNotFoundError(err, subject, "")
 	}
 
-	output.Printf("Successfully updated subject-level compatibility to \"%s\" for subject \"%s\".\n", req.Compatibility, subject)
+	color.Printf(c.Config.EnableColor, "Successfully updated subject-level compatibility to \"%s\" for subject \"%s\".\n", req.Compatibility, subject)
 	return nil
 }
 
@@ -123,6 +123,6 @@ func (c *command) updateMode(subject, mode string, client *schemaregistry.Client
 		return catchSchemaNotFoundError(err, "subject", "")
 	}
 
-	output.Printf("Successfully updated subject-level mode to \"%s\" for subject \"%s\".\n", res.Mode, subject)
+	color.Printf(c.Config.EnableColor, "Successfully updated subject-level mode to \"%s\" for subject \"%s\".\n", res.Mode, subject)
 	return nil
 }

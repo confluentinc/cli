@@ -20,6 +20,7 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/form"
@@ -70,7 +71,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	for _, container := range containers {
 		if container.Image == dockerImageName {
-			output.Println("Confluent Local is already running.")
+			color.Println(c.Config.EnableColor, "Confluent Local is already running.")
 			prompt := form.NewPrompt()
 			f := form.New(form.Field{
 				ID:        "confirm",
@@ -104,17 +105,17 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if response.Status == "Downloading" {
-			output.Printf("\rDownloading: %s", response.Progress)
+			color.Printf(c.Config.EnableColor, "\rDownloading: %s", response.Progress)
 		} else if response.Status == "Extracting" {
-			output.Printf("\rExtracting: %s", response.Progress)
+			color.Printf(c.Config.EnableColor, "\rExtracting: %s", response.Progress)
 		} else {
-			output.Printf("\n%s", response.Status)
+			color.Printf(c.Config.EnableColor, "\n%s", response.Status)
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		return err
 	}
-	output.Println("\r")
+	color.Println(c.Config.EnableColor, "\r")
 
 	log.CliLogger.Tracef("Successfully pulled Confluent Local image")
 
@@ -164,7 +165,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintf("Started Confluent Local container %v.\n", getShortenedContainerId(createResp.ID))
+	color.ErrPrintf(c.Config.EnableColor, "Started Confluent Local container %v.\n", getShortenedContainerId(createResp.ID))
 
 	table := output.NewTable(cmd)
 	table.Add(c.Config.LocalPorts)
@@ -172,7 +173,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln("To continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.")
+	color.ErrPrintln(c.Config.EnableColor, "To continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.")
 
 	return nil
 }

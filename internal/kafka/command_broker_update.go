@@ -7,6 +7,7 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -83,9 +84,9 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 
 	if output.GetFormat(cmd) == output.Human {
 		if all {
-			output.Printf("Updated the following broker configurations for cluster \"%s\":\n", clusterId)
+			color.Printf(c.Config.EnableColor, "Updated the following broker configurations for cluster \"%s\":\n", clusterId)
 		} else {
-			output.Printf("Updated the following configurations for broker \"%d\":\n", brokerId)
+			color.Printf(c.Config.EnableColor, "Updated the following configurations for broker \"%d\":\n", brokerId)
 		}
 	}
 

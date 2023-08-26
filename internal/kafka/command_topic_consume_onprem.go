@@ -11,10 +11,10 @@ import (
 
 	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
@@ -144,7 +144,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingConsumerMsg)
+	color.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
 
 	var srClient *schemaregistry.Client
 	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {

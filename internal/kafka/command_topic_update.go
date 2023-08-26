@@ -10,6 +10,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -103,7 +104,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if dryRun {
-		output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
+		color.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Topic, topicName)
 		return nil
 	}
 
@@ -154,7 +155,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	// Write current state of relevant config settings
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintf(updateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedString)
+		color.ErrPrintf(c.Config.EnableColor, updateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedString)
 	}
 
 	return list.Print()

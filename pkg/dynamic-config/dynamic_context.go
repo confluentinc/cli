@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -32,7 +32,7 @@ func NewDynamicContext(context *config.Context, v2Client *ccloudv2.Client) *Dyna
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
+			color.ErrPrintln(d.Config.EnableColor, "WARNING: The `--environment` flag is ignored when using API key credentials.")
 		} else {
 			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
@@ -42,7 +42,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
 		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
+			color.ErrPrintln(d.Config.EnableColor, "WARNING: The `--cluster` flag is ignored when using API key credentials.")
 		} else {
 			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())

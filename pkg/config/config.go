@@ -67,28 +67,31 @@ var (
 
 // Whitelist is the configuration fields that are visible by the `config` subcommands.
 var Whitelist = []string{
+	"disable_feature_flags",
+	"disable_plugins",
 	"disable_update_check",
 	"disable_updates",
-	"disable_plugins",
-	"disable_feature_flags",
+	"enable_color",
 	"no_browser",
 }
 
 // Config represents the CLI configuration.
 type Config struct {
-	DisableUpdateCheck  bool                        `json:"disable_update_check"`
-	DisableUpdates      bool                        `json:"disable_updates,omitempty"`
-	DisablePlugins      bool                        `json:"disable_plugins"`
-	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
-	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
-	NoBrowser           bool                        `json:"no_browser"`
-	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
-	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
-	CurrentContext      string                      `json:"current_context"`
-	Contexts            map[string]*Context         `json:"contexts,omitempty"`
-	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
-	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
-	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
+	DisableFeatureFlags bool `json:"disable_feature_flags"`
+	DisablePlugins      bool `json:"disable_plugins"`
+	DisablePluginsOnce  bool `json:"disable_plugins_once,omitempty"`
+	DisableUpdateCheck  bool `json:"disable_update_check"`
+	DisableUpdates      bool `json:"disable_updates,omitempty"`
+	EnableColor         bool `json:"enable_color"`
+	NoBrowser           bool `json:"no_browser"`
+
+	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
+	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
+	CurrentContext   string                      `json:"current_context"`
+	Contexts         map[string]*Context         `json:"contexts,omitempty"`
+	ContextStates    map[string]*ContextState    `json:"context_states,omitempty"`
+	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+	LocalPorts       *LocalPorts                 `json:"local_ports,omitempty"`
 
 	// Deprecated
 	AnonymousId string `json:"anonymous_id,omitempty"`
