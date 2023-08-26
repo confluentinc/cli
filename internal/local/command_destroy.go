@@ -4,9 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -42,7 +42,7 @@ func (c *Command) runDestroyCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf(errors.DestroyDeletingMsg, dir)
+	color.Printf(c.Config.EnableColor, errors.DestroyDeletingMsg, dir)
 	if err := c.cc.RemoveCurrentDir(); err != nil {
 		return err
 	}

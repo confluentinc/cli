@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 const sqlFileTemplate = "./<pipeline-id>.sql"
@@ -72,7 +72,7 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("Saved source code for pipeline \"%s\" at \"%s\".\n", args[0], path)
+	color.Printf(c.Config.EnableColor, "Saved source code for pipeline \"%s\" at \"%s\".\n", args[0], path)
 	return nil
 }
 

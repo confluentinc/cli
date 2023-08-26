@@ -10,14 +10,12 @@ import (
 )
 
 func New() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "cloud-signup",
 		Short: "Sign up for Confluent Cloud.",
 		Args:  cobra.NoArgs,
 		RunE:  cloudSignup,
 	}
-
-	return cmd
 }
 
 func cloudSignup(cmd *cobra.Command, _ []string) error {

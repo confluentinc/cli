@@ -19,6 +19,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -186,7 +187,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 	for topicName, topicDetails := range spec.Channels {
 		if err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite); err != nil {
 			if err.Error() == parseErrorMessage {
-				output.Printf("WARNING: topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
+				color.Printf(c.Config.EnableColor, "WARNING: topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
 			} else {
 				log.CliLogger.Warn(err)
 			}
@@ -242,7 +243,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 			spec.Channels[topicName].Description); err != nil {
 			return fmt.Errorf("unable to update topic description: %v", err)
 		}
-		output.Printf("Added description to topic \"%s\".\n", topicName)
+		color.Printf(c.Config.EnableColor, "Added description to topic \"%s\".\n", topicName)
 	}
 	return nil
 }
@@ -298,7 +299,7 @@ func (c *command) createTopic(topicName string, kafkaBinding kafkaBinding) (bool
 		}
 		return false, kafkarest.NewError(kafkaRest.CloudClient.GetUrl(), err, httpResp)
 	}
-	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
+	color.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return true, nil
 }
 
@@ -335,7 +336,7 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 			return fmt.Errorf("unable to update topic configs: %v", err)
 		}
 	}
-	output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
+	color.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Topic, topicName)
 	return nil
 }
 

@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -12,34 +13,38 @@ import (
 
 // Print formats using the default formats for its operands and writes to stdout.
 // Spaces are added between operands when neither is a string.
-func Print(args ...any) {
-	_, _ = fmt.Fprint(os.Stdout, args...)
+func Print(s string) {
+	printTo(os.Stdout, s)
 }
 
 // Println formats using the default formats for its operands and writes to stdout.
 // Spaces are always added between operands and a newline is appended.
-func Println(args ...any) {
-	_, _ = fmt.Fprintln(os.Stdout, args...)
+func Println(s string) {
+	printTo(os.Stdout, s+"\n")
 }
 
 // Printf formats according to a format specifier and writes to stdout.
-func Printf(format string, args ...any) {
-	_, _ = fmt.Fprintf(os.Stdout, format, args...)
+func Printf(s string, args ...any) {
+	printTo(os.Stdout, fmt.Sprintf(s, args...))
 }
 
 // ErrPrint formats using the default formats for its operands and writes to stderr.
 // Spaces are always added between operands.
-func ErrPrint(args ...any) {
-	_, _ = fmt.Fprint(os.Stderr, args...)
+func ErrPrint(s string) {
+	printTo(os.Stderr, s)
 }
 
 // ErrPrintln formats using the default formats for its operands and writes to stderr.
 // Spaces are always added between operands and a newline is appended.
-func ErrPrintln(args ...any) {
-	_, _ = fmt.Fprintln(os.Stderr, args...)
+func ErrPrintln(s string) {
+	printTo(os.Stderr, s+"\n")
 }
 
 // ErrPrintf formats according to a format specifier and writes to stderr.
-func ErrPrintf(format string, args ...any) {
-	_, _ = fmt.Fprintf(os.Stderr, format, args...)
+func ErrPrintf(s string, args ...any) {
+	printTo(os.Stderr, fmt.Sprintf(s, args...))
+}
+
+func printTo(w io.Writer, s string) {
+	_, _ = fmt.Fprint(w, s)
 }

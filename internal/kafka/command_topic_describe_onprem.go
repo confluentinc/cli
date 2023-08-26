@@ -141,11 +141,11 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 	if err := list.Print(); err != nil {
 		return err
 	}
-	output.Println()
+	output.Println("")
 
 	// Output config info
 	output.Println("Configuration")
-	output.Println()
+	output.Println("")
 	list = output.NewList(cmd)
 	for name, value := range topic.Configs {
 		list.Add(&configOut{

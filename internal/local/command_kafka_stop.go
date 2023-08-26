@@ -8,9 +8,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *Command) newKafkaStopCommand() *cobra.Command {
@@ -55,7 +55,7 @@ func (c *Command) stopAndRemoveConfluentLocal(dockerClient *client.Client) error
 			}
 			log.CliLogger.Tracef("Confluent Local container removed")
 
-			output.Printf("Confluent Local has been stopped: removed container \"%s\".\n", getShortenedContainerId(container.ID))
+			color.Printf(c.Config.EnableColor, "Confluent Local has been stopped: removed container \"%s\".\n", getShortenedContainerId(container.ID))
 		}
 	}
 

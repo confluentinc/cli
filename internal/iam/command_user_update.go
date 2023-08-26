@@ -6,8 +6,8 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -43,6 +43,6 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.Errorf(errors.UpdateResourceErrorMsg, resource.User, resourceId, err)
 	}
 
-	output.ErrPrintf(errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)
+	color.ErrPrintf(c.Config.EnableColor, errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)
 	return nil
 }

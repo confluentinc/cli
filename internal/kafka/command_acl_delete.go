@@ -8,9 +8,9 @@ import (
 	pacl "github.com/confluentinc/cli/v3/pkg/acl"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -95,7 +95,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(filter)
 		if err != nil {
 			if i > 0 {
-				output.ErrPrintln(printAclsDeleted(count))
+				color.ErrPrintln(c.Config.EnableColor, printAclsDeleted(count))
 			}
 			return err
 		}
@@ -103,7 +103,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(deleteResp.Data)
 	}
 
-	output.ErrPrintln(printAclsDeleted(count))
+	color.ErrPrintln(c.Config.EnableColor, printAclsDeleted(count))
 	return nil
 }
 

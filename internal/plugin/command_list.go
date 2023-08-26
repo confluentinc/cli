@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/plugin"
@@ -41,7 +42,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	pluginMap := plugin.SearchPath(c.cfg)
 
 	if len(pluginMap) == 0 && output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln("Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
+		color.ErrPrintln(c.Config.EnableColor, "Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
 	}
 
 	home, err := os.UserHomeDir()
@@ -84,10 +85,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, pluginInfo := range nameConflictPlugins {
-		output.ErrPrintf("[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
+		color.ErrPrintf(c.Config.EnableColor, "[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
 	}
 	for _, pluginInfo := range overshadowedPlugins {
-		output.ErrPrintf("[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
+		color.ErrPrintf(c.Config.EnableColor, "[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
 	}
 
 	return nil

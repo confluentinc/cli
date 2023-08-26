@@ -107,7 +107,7 @@ func Delete(args []string, callDeleteEndpoint func(string) error, resourceType s
 
 	DeletedResourceMsg := "Deleted %s %s.\n"
 	if len(deletedIds) == 1 {
-		output.Printf(DeletedResourceMsg, resourceType, fmt.Sprintf("\"%s\"", deletedIds[0]))
+		output.Printf(DeletedResourceMsg, resourceType, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
 		output.Printf(DeletedResourceMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}

@@ -12,11 +12,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/exec"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/update"
 	"github.com/confluentinc/cli/v3/pkg/update/s3"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
@@ -110,24 +110,24 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.CheckingForUpdatesMsg)
+	color.ErrPrintln(c.Config.EnableColor, errors.CheckingForUpdatesMsg)
 	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
 	}
 
 	if latestMajorVersion == "" && latestMinorVersion == "" {
-		output.Println(errors.UpToDateMsg)
+		color.Println(c.Config.EnableColor, errors.UpToDateMsg)
 		return nil
 	}
 
 	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
-		output.Printf(errors.MajorVersionUpdateMsg, pversion.CLIName)
+		color.Printf(c.Config.EnableColor, errors.MajorVersionUpdateMsg, pversion.CLIName)
 		return nil
 	}
 
 	if latestMajorVersion == "" && major {
-		output.Print(errors.NoMajorVersionUpdateMsg)
+		color.Print(c.Config.EnableColor, errors.NoMajorVersionUpdateMsg)
 		return nil
 	}
 

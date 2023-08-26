@@ -8,9 +8,9 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newClusterUpdateCommand() *cobra.Command {
@@ -93,7 +93,7 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf("Successfully updated top-level compatibility to \"%s\".\n", req.Compatibility)
+	color.Printf(c.Config.EnableColor, "Successfully updated top-level compatibility to \"%s\".\n", req.Compatibility)
 	return nil
 }
 
@@ -173,6 +173,6 @@ func (c *command) updateTopLevelMode(cmd *cobra.Command, mode string) error {
 		return err
 	}
 
-	output.Printf("Successfully updated top-level mode to \"%s\".\n", req.Mode)
+	color.Printf(c.Config.EnableColor, "Successfully updated top-level mode to \"%s\".\n", req.Mode)
 	return nil
 }

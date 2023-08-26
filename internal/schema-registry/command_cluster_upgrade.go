@@ -8,9 +8,9 @@ import (
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newClusterUpgradeCommand() *cobra.Command {
@@ -66,7 +66,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	if strings.ToLower(clusterSpec.GetPackage()) == packageDisplayName {
-		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
+		color.ErrPrintf(c.Config.EnableColor, errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
 		return nil
 	}
 
@@ -81,6 +81,6 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf("The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n", environmentId, packageDisplayName)
+	color.Printf(c.Config.EnableColor, "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n", environmentId, packageDisplayName)
 	return nil
 }

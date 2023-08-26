@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -82,12 +83,12 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	ticker.Stop()
 	if endpoint == "" {
-		output.ErrPrintln(errors.EndPointNotPopulatedMsg)
+		color.ErrPrintln(c.Config.EnableColor, errors.EndPointNotPopulatedMsg)
 	}
 
 	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if _, ok := srCluster.GetIdOk(); ok {
-		output.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
+		color.ErrPrintln(c.Config.EnableColor, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}
 
 	table := output.NewTable(cmd)

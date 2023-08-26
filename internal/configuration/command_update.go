@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/form"
@@ -57,7 +58,7 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 	if err := c.cfg.Save(); err != nil {
 		return err
 	}
-	output.Print(fmt.Sprintf(errors.UpdateSuccessMsg, "value", "config field", field, value))
+	color.Printf(c.Config.EnableColor, errors.UpdateSuccessMsg, "value", "config field", field, value)
 	return nil
 }
 
@@ -92,7 +93,7 @@ func confirmSet(field string, prompt form.Prompt) (bool, error) {
 		return false, err
 	}
 	if !f.Responses["proceed"].(bool) {
-		output.Println(fmt.Sprintf(`Configuration field "%s" was not updated.`, field))
+		output.Printf("Configuration field \"%s\" was not updated.\n", field)
 		return false, nil
 	}
 	return true, nil

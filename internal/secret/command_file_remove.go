@@ -1,9 +1,8 @@
 package secret
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newRemoveCommand() *cobra.Command {
@@ -50,6 +49,6 @@ func (c *command) remove(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.ErrPrintln("Deleted configuration values.")
+	color.ErrPrintln(c.Config.EnableColor, "Deleted configuration values.")
 	return nil
 }

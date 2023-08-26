@@ -3,8 +3,8 @@ package admin
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -18,7 +18,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	output.Println("Edit credit card")
+	color.Println(c.Config.EnableColor, "Edit credit card")
 
 	f := form.New(
 		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
@@ -45,6 +45,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println("Updated.")
+	color.Println(c.Config.EnableColor, "Updated.")
 	return nil
 }
