@@ -1,4 +1,4 @@
-Create a new network.
+Create a network.
 
 Usage:
   confluent network create <name> [flags]
@@ -23,12 +23,12 @@ Create a Confluent network in Azure with connection type "privatelink" by specif
 Flags:
       --cloud string               REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --region string              REQUIRED: Cloud region ID for this network.
-      --connection-types strings   REQUIRED: Specify a comma-separated list of network access types of "privatelink", "peering", or "transitgateway".
-      --cidr string                Specify a /16 IPv4 CIDR block to be used. Required for networks of connection type "peering" and "transitgateway".
-      --zones strings              Specify the availability zones for this network seperating with commas (e.g. "use1-az1,use1-az2,use1-az3").
-      --zone-info strings          Specify a comma-separated list of "zone=cidr" pairs. Each CIDR must be a /27 IPv4 CIDR block.
+      --connection-types strings   REQUIRED: A comma-separated list of network access types: "privatelink", "peering", or "transitgateway".
+      --cidr string                A /16 IPv4 CIDR block. Required for networks of connection type "peering" and "transitgateway".
+      --zones strings              A comma-separated list of availability zones for this network.
+      --zone-info strings          A comma-separated list of "zone=cidr" pairs. Each CIDR must be a /27 IPv4 CIDR block.
       --dns-resolution string      Specify the DNS resolution as "private" or "chased_private".
-      --reserved-cidr string       Specify a /24 IPv4 CIDR block to be used. Can be used for AWS networks of connection type "peering" and "transitgateway".
+      --reserved-cidr string       A /24 IPv4 CIDR block. Can be used for AWS networks of connection type "peering" and "transitgateway".
       --context string             CLI context name.
       --environment string         Environment ID.
   -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")

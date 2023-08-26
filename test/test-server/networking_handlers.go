@@ -196,13 +196,9 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&body)
 		require.NoError(t, err)
 
-		connectionTypeItems := body.Spec.ConnectionTypes.Items
-		for _, ct := range connectionTypeItems {
-			if ct == "TRANSITGATEWAY" && body.Spec.Cidr == nil {
-			}
-		}
+		connectionTypes := body.Spec.ConnectionTypes.Items
 
-		if slices.Contains(connectionTypeItems, "TRANSITGATEWAY") && body.Spec.Cidr == nil {
+		if slices.Contains(connectionTypes, "TRANSITGATEWAY") && body.Spec.Cidr == nil {
 			w.WriteHeader(http.StatusBadRequest)
 			err := writeErrorJson(w, "A cidr must be provided when using TRANSITGATEWAY.")
 			require.NoError(t, err)

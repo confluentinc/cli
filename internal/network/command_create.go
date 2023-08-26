@@ -15,7 +15,7 @@ import (
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a new network.",
+		Short: "Create a network.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -40,13 +40,12 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("region", "", "Cloud region ID for this network.")
-	pcmd.AddConnectionTypesFlag(cmd)
-	cmd.Flags().String("cidr", "", `Specify a /16 IPv4 CIDR block to be used. Required for networks of connection type "peering" and "transitgateway".`)
-	cmd.Flags().StringSlice("zones", nil, `Specify the availability zones for this network seperating with commas (e.g. "use1-az1,use1-az2,use1-az3").`)
-	cmd.Flags().StringSlice("zone-info", nil, `Specify a comma-separated list of "zone=cidr" pairs. Each CIDR must be a /27 IPv4 CIDR block.`)
-	pcmd.AddDnsResolutionFlag(cmd)
-	cmd.Flags().String("reserved-cidr", "", `Specify a /24 IPv4 CIDR block to be used. Can be used for AWS networks of connection type "peering" and "transitgateway".`)
-
+	AddConnectionTypesFlag(cmd)
+	cmd.Flags().String("cidr", "", `A /16 IPv4 CIDR block. Required for networks of connection type "peering" and "transitgateway".`)
+	cmd.Flags().StringSlice("zones", nil, `A comma-separated list of availability zones for this network.`)
+	cmd.Flags().StringSlice("zone-info", nil, `A comma-separated list of "zone=cidr" pairs. Each CIDR must be a /27 IPv4 CIDR block.`)
+	AddDnsResolutionFlag(cmd)
+	cmd.Flags().String("reserved-cidr", "", `A /24 IPv4 CIDR block. Can be used for AWS networks of connection type "peering" and "transitgateway".`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -78,8 +77,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	connectionTypesItems := make([]string, len(connectionTypes))
-	for i, ct := range connectionTypes {
-		connectionTypesItems[i] = strings.ToUpper(ct)
+	for i, connectionType := range connectionTypes {
+		connectionTypesItems[i] = strings.ToUpper(connectionType)
 	}
 
 	cidr, err := cmd.Flags().GetString("cidr")
@@ -160,7 +159,7 @@ func getZoneInfoItems(zoneInfo []string) ([]networkingv1.NetworkingV1ZoneInfo, e
 	for i, info := range zoneInfo {
 		zoneInfo := strings.Split(info, "=")
 		if len(zoneInfo) != 2 {
-			return nil, errors.NewErrorWithSuggestions("invalid zones-info", `Specify a comma-separated list of "zone=cidr" pairs. For exmaple: "--zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27"`)
+			return nil, errors.New("invalid zone-info")
 		}
 		zoneInfoItems[i] = networkingv1.NetworkingV1ZoneInfo{
 			ZoneId: networkingv1.PtrString(zoneInfo[0]), Cidr: networkingv1.PtrString(zoneInfo[1]),

@@ -4,7 +4,7 @@ Usage:
   confluent network [command]
 
 Available Commands:
-  create      Create a new network.
+  create      Create a network.
   delete      Delete a network.
   describe    Describe a network.
   list        Display networks in the current environment.
