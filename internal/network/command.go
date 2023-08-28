@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 type humanOut struct {
@@ -43,6 +44,11 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
+var (
+	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
+	DnsResolutions  = []string{"private", "chased_private"}
+)
+
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "network",
@@ -51,6 +57,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
@@ -135,4 +142,14 @@ func (c *command) getNetworks() ([]networkingv1.NetworkingV1Network, error) {
 	}
 
 	return c.V2Client.ListNetworks(environmentId)
+}
+
+func AddConnectionTypesFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("connection-types", nil, fmt.Sprintf(`A comma-separated list of network access types: %s.`, utils.ArrayToCommaDelimitedString(ConnectionTypes, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "connection-types", func(_ *cobra.Command, _ []string) []string { return ConnectionTypes })
+}
+
+func AddDnsResolutionFlag(cmd *cobra.Command) {
+	cmd.Flags().String("dns-resolution", "", fmt.Sprintf("Specify the DNS resolution as %s.", utils.ArrayToCommaDelimitedString(DnsResolutions, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "dns-resolution", func(_ *cobra.Command, _ []string) []string { return DnsResolutions })
 }
