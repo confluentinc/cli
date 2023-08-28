@@ -1,4 +1,4 @@
 private
-chased_private
+chased-private
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

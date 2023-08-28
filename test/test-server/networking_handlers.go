@@ -198,7 +198,7 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 
 		connectionTypes := body.Spec.ConnectionTypes.Items
 
-		if slices.Contains(connectionTypes, "TRANSITGATEWAY") && body.Spec.Cidr == nil {
+		if slices.Contains(connectionTypes, "TRANSITGATEWAY") && (body.Spec.Cidr == nil && body.Spec.ZonesInfo == nil) {
 			w.WriteHeader(http.StatusBadRequest)
 			err := writeErrorJson(w, "A cidr must be provided when using TRANSITGATEWAY.")
 			require.NoError(t, err)
@@ -210,13 +210,32 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 					DisplayName: body.Spec.DisplayName,
 					Cloud:       body.Spec.Cloud,
 					Region:      body.Spec.Region,
-					Cidr:        body.Spec.Cidr,
-					Zones:       body.Spec.Zones,
 				},
 				Status: &networkingv1.NetworkingV1NetworkStatus{
-					Phase:                 "PROVISIONING",
-					ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+					Phase:                    "PROVISIONING",
+					SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
+					ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
 				},
+			}
+
+			if body.Spec.Zones != nil {
+				network.Spec.SetZones(*body.Spec.Zones)
+			}
+
+			if body.Spec.DnsConfig != nil && body.Spec.DnsConfig.Resolution != "" {
+				network.Spec.SetDnsConfig(networkingv1.NetworkingV1DnsConfig{Resolution: body.Spec.DnsConfig.Resolution})
+			}
+
+			if body.Spec.ZonesInfo != nil {
+				network.Spec.SetZonesInfo(*body.Spec.ZonesInfo)
+			}
+
+			if body.Spec.Cidr != nil {
+				network.Spec.SetCidr(*body.Spec.Cidr)
+			}
+
+			if body.Spec.ReservedCidr != nil {
+				network.Spec.SetReservedCidr(*body.Spec.ReservedCidr)
 			}
 
 			err = json.NewEncoder(w).Encode(network)

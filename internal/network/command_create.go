@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -8,7 +9,6 @@ import (
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
@@ -21,19 +21,19 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a Confluent network in AWS with connection type "transitgateway" by specifying zones and CIDR.`,
-				Code: "confluent network create aws_tgw --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16",
+				Code: "confluent network create aws-tgw --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16",
 			},
 			examples.Example{
-				Text: `Create a Confluent network in AWS with connection type "peering" by specifying zones info.`,
-				Code: "confluent network create aws_peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27",
+				Text: `Create a Confluent network in AWS with connection type "peering" by specifying zone info.`,
+				Code: "confluent network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27",
 			},
 			examples.Example{
 				Text: `Create a Confluent network in GCP with connection type "peering" by specifying zones and CIDR.`,
-				Code: "confluent network create gcp_peering --cloud gcp --region us-central1 --connection-types peering --zones us-central1-a,us-central1-b,us-central1-c --cidr 10.1.0.0/16",
+				Code: "confluent network create gcp-peering --cloud gcp --region us-central1 --connection-types peering --zones us-central1-a,us-central1-b,us-central1-c --cidr 10.1.0.0/16",
 			},
 			examples.Example{
 				Text: `Create a Confluent network in Azure with connection type "privatelink" by specifying DNS resolution.`,
-				Code: "confluent network create azure_pl --cloud azure --region eastus2 --connection-types privatelink --dns-resolution chased_private",
+				Code: "confluent network create azure-pl --cloud azure --region eastus2 --connection-types privatelink --dns-resolution chased-private",
 			},
 		),
 	}
@@ -43,7 +43,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	AddConnectionTypesFlag(cmd)
 	cmd.Flags().String("cidr", "", `A /16 IPv4 CIDR block. Required for networks of connection type "peering" and "transitgateway".`)
 	cmd.Flags().StringSlice("zones", nil, `A comma-separated list of availability zones for this network.`)
-	cmd.Flags().StringSlice("zone-info", nil, `A comma-separated list of "zone=cidr" pairs. Each CIDR must be a /27 IPv4 CIDR block.`)
+	cmd.Flags().StringSlice("zone-info", nil, `A comma-separated list of "zone=cidr" pairs or CIDR blocks. Each CIDR must be a /27 IPv4 CIDR block.`)
 	AddDnsResolutionFlag(cmd)
 	cmd.Flags().String("reserved-cidr", "", `A /24 IPv4 CIDR block. Can be used for AWS networks of connection type "peering" and "transitgateway".`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -104,7 +104,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	dnsResolution = strings.ToUpper(dnsResolution)
+	dnsResolution, err = formatDnsResolution(dnsResolution)
+	if err != nil {
+		return err
+	}
 
 	reservedCidr, err := cmd.Flags().GetString("reserved-cidr")
 	if err != nil {
@@ -157,13 +160,31 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func getZoneInfoItems(zoneInfo []string) ([]networkingv1.NetworkingV1ZoneInfo, error) {
 	zoneInfoItems := make([]networkingv1.NetworkingV1ZoneInfo, len(zoneInfo))
 	for i, info := range zoneInfo {
-		zoneInfo := strings.Split(info, "=")
-		if len(zoneInfo) != 2 {
-			return nil, errors.New("invalid zone-info")
-		}
-		zoneInfoItems[i] = networkingv1.NetworkingV1ZoneInfo{
-			ZoneId: networkingv1.PtrString(zoneInfo[0]), Cidr: networkingv1.PtrString(zoneInfo[1]),
+		zoneInfoSplit := strings.Split(info, "=")
+		if len(zoneInfoSplit) == 1 {
+			zoneInfoItems[i] = networkingv1.NetworkingV1ZoneInfo{
+				Cidr: networkingv1.PtrString(zoneInfoSplit[0]),
+			}
+		} else if len(zoneInfoSplit) == 2 {
+			zoneInfoItems[i] = networkingv1.NetworkingV1ZoneInfo{
+				ZoneId: networkingv1.PtrString(zoneInfoSplit[0]), Cidr: networkingv1.PtrString(zoneInfoSplit[1]),
+			}
+		} else {
+			return nil, fmt.Errorf(`zone info "%s" is not correctly formatted as <zone-ID>=<CIDR> or <CIDR>`, info)
 		}
 	}
 	return zoneInfoItems, nil
+}
+
+func formatDnsResolution(dnsResolution string) (string, error) {
+	switch dnsResolution {
+	case "":
+		return "", nil
+	case "private":
+		return "PRIVATE", nil
+	case "chased-private":
+		return "CHASED_PRIVATE", nil
+	default:
+		return "", fmt.Errorf(`dns resolution "%s" is not valid`, dnsResolution)
+	}
 }

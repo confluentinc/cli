@@ -37,8 +37,8 @@ func (c *Client) UpdateNetwork(environment, id string, networkingV1NetworkUpdate
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreateNetwork(networkingV1Network networkingv1.NetworkingV1Network) (networkingv1.NetworkingV1Network, error) {
-	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.CreateNetworkingV1Network(c.networkingApiContext()).NetworkingV1Network(networkingV1Network).Execute()
+func (c *Client) CreateNetwork(network networkingv1.NetworkingV1Network) (networkingv1.NetworkingV1Network, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.CreateNetworkingV1Network(c.networkingApiContext()).NetworkingV1Network(network).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 

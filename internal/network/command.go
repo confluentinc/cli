@@ -46,7 +46,7 @@ type command struct {
 
 var (
 	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
-	DnsResolutions  = []string{"private", "chased_private"}
+	DnsResolutions  = []string{"private", "chased-private"}
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
