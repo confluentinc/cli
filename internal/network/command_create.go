@@ -76,9 +76,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectionTypesItems := make([]string, len(connectionTypes))
 	for i, connectionType := range connectionTypes {
-		connectionTypesItems[i] = strings.ToUpper(connectionType)
+		connectionTypes[i] = strings.ToUpper(connectionType)
 	}
 
 	cidr, err := cmd.Flags().GetString("cidr")
@@ -124,7 +123,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			DisplayName:     networkingv1.PtrString(name),
 			Cloud:           networkingv1.PtrString(cloud),
 			Region:          networkingv1.PtrString(region),
-			ConnectionTypes: &networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypesItems},
+			ConnectionTypes: &networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes},
 			Environment:     &networkingv1.ObjectReference{Id: environmentId},
 		},
 	}
