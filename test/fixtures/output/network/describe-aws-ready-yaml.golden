@@ -10,6 +10,11 @@ zones:
 - use1-az3
 dns_resolution: CHASED_PRIVATE
 phase: READY
+supported_connection_types:
+- PRIVATELINK
+- TRANSITGATEWAY
 active_connection_types:
 - PRIVATELINK
 - TRANSITGATEWAY
+vpc: vpc-00000000000000000
+account: "000000000000"

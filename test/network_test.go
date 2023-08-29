@@ -2,8 +2,14 @@ package test
 
 func (s *CLITestSuite) TestNetworkDescribe() {
 	tests := []CLITest{
-		{args: "network describe n-abcde1", fixture: "network/describe.golden"},
-		{args: "network describe n-abcde1 --output yaml", fixture: "network/describe-yaml.golden"},
+		{args: "network describe n-abcde1", fixture: "network/describe-aws-ready.golden"},
+		{args: "network describe n-abcde2", fixture: "network/describe-gcp-ready.golden"},
+		{args: "network describe n-abcde3", fixture: "network/describe-azure-ready.golden"},
+		{args: "network describe n-abcde4", fixture: "network/describe-aws-provisioning.golden"},
+		{args: "network describe n-abcde5", fixture: "network/describe-gcp-provisioning.golden"},
+		{args: "network describe n-abcde6", fixture: "network/describe-azure-provisioning.golden"},
+		{args: "network describe n-abcde1 --output yaml", fixture: "network/describe-aws-ready-yaml.golden"},
+		{args: "network describe n-abcde4 --output yaml", fixture: "network/describe-aws-provisioning-yaml.golden"},
 		{args: "network describe", fixture: "network/describe-missing-id.golden", exitCode: 1},
 		{args: "network describe n-invalid", fixture: "network/describe-invalid.golden", exitCode: 1},
 	}
