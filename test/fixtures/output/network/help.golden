@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a network.
-  delete      Delete a network.
+  delete      Delete one or more networks.
   describe    Describe a network.
   list        Display networks in the current environment.
   update      Update an existing network.
