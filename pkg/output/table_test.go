@@ -23,7 +23,7 @@ func TestTable(t *testing.T) {
 		Human.String(): {
 			"+-------------+-----------------+",
 			"| Current     | true            |",
-			"| ID          |               1 |",
+			"| ID          | 1               |",
 			"| Name        | lkc-123456      |",
 			"| Description | Example Cluster |",
 			"+-------------+-----------------+",
