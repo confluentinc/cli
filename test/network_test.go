@@ -23,6 +23,9 @@ func (s *CLITestSuite) TestNetworkDelete() {
 	tests := []CLITest{
 		{args: "network delete n-abcde1 --force", fixture: "network/delete.golden"},
 		{args: "network delete n-abcde1", input: "y\n", fixture: "network/delete-prompt.golden"},
+		{args: "network delete n-abcde1 n-invalid", fixture: "network/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network delete n-abcde1 n-abcde2", input: "n\n", fixture: "network/delete-multiple-refuse.golden"},
+		{args: "network delete n-abcde1 n-abcde2", input: "y\n", fixture: "network/delete-multiple-success.golden"},
 		{args: "network delete n-dependency --force", fixture: "network/delete-network-with-dependency.golden", exitCode: 1},
 		{args: "network delete n-invalid --force", fixture: "network/delete-network-not-exist.golden", exitCode: 1},
 	}

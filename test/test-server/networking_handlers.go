@@ -85,7 +85,7 @@ func handleNetworkingNetworkDelete(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusConflict)
 			err := writeErrorJson(w, "Network deletion not allowed due to existing dependencies. Please delete the following dependent resources before attempting to delete the network again: pla-1abcde")
 			require.NoError(t, err)
-		case "n-abcde1":
+		case "n-abcde1", "n-abcde2":
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
