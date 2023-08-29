@@ -14,7 +14,7 @@ import (
 
 var OrgEnvironments = []*orgv2.OrgV2Environment{
 	{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
-	{Id: orgv2.PtrString("not-595"), DisplayName: orgv2.PtrString("other")},
+	{Id: orgv2.PtrString("env-595"), DisplayName: orgv2.PtrString("other")},
 	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")},
 	{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate")},
 }
@@ -37,6 +37,10 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(environment)
 			require.NoError(t, err)
 		case http.MethodDelete:
+			if id == "env-000" || id == "env-111" {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			_, err := io.WriteString(w, "")
 			require.NoError(t, err)
 		case http.MethodPatch:

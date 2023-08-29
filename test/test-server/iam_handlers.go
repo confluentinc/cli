@@ -469,7 +469,7 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != groupMappingResourceId {
+		if id != groupMappingResourceId && id != "pool-def" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return

@@ -3,9 +3,9 @@
 | ID                   | lkc-describe-dedicated-with-encryption |
 | Name                 | kafka-cluster                          |
 | Type                 | DEDICATED                              |
-| Cluster Size         |                                      1 |
-| Ingress Limit (MB/s) |                                     50 |
-| Egress Limit (MB/s)  |                                    150 |
+| Cluster Size         | 1                                      |
+| Ingress Limit (MB/s) | 50                                     |
+| Egress Limit (MB/s)  | 150                                    |
 | Storage              | Infinite                               |
 | Provider             | aws                                    |
 | Region               | us-west-2                              |
@@ -14,5 +14,5 @@
 | Endpoint             | SASL_SSL://kafka-endpoint              |
 | Encryption Key ID    | abc123                                 |
 | REST Endpoint        | http://127.0.0.1:1025                  |
-| Topic Count          |                                      2 |
+| Topic Count          | 2                                      |
 +----------------------+----------------------------------------+
