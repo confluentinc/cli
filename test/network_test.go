@@ -90,3 +90,14 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkPeeringList() {
+	tests := []CLITest{
+		{args: "network peering list", fixture: "network/peering/list.golden"},
+		{args: "network peering list --output json", fixture: "network/peering/list-json.golden"},
+	}
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

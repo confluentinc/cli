@@ -1,0 +1,5 @@
+      ID      |     Name      | Network ID | Cloud | Phase  
+--------------+---------------+------------+-------+--------
+  peer-111111 | aws-peering   | n-abcde1   | AWS   | READY  
+  peer-111112 | gcp-peering   | n-abcde1   | GCP   | READY  
+  peer-111113 | azure-peering | n-abcde1   | Azure | READY  
