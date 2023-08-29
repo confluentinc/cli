@@ -3,15 +3,16 @@ package iam
 import (
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/spf13/cobra"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 )
 
 const rbacPromptMsg = "Are you sure you want to delete this role binding?"
@@ -85,31 +86,23 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return err
 	}
 
-	var roleBindingToDelete mdsv2.IamV2RoleBinding
-	found := false
-
-	for _, roleBinding := range roleBindings {
-		if roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
-			roleBindingToDelete = roleBinding
-			found = true
-			break
-		}
-	}
-
-	if !found {
+	idx := slices.IndexFunc(roleBindings, func(roleBinding mdsv2.IamV2RoleBinding) bool {
+		return roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern()
+	})
+	if idx == -1 {
 		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
 	}
 
-	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return err
 	}
 
-	_, err = c.V2Client.DeleteIamRoleBinding(roleBindingToDelete.GetId())
+	_, err = c.V2Client.DeleteIamRoleBinding(roleBindings[idx].GetId())
 	return err
 }
 
 func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
-	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return nil, err
 	}
 

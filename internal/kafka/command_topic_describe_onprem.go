@@ -59,11 +59,7 @@ func (c *command) describeOnPrem(cmd *cobra.Command, args []string) error {
 	// Parse Args
 	topicName := args[0]
 
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

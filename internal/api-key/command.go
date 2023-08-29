@@ -129,6 +129,10 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -207,14 +211,15 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 		}
 		clusterId = cluster.GetId()
 	case presource.SchemaRegistryCluster:
-		cluster, err := c.Context.SchemaRegistryCluster(cmd)
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return "", "", "", err
+		}
+		cluster, err := v2Client.GetSchemaRegistryClusterById(resource, environmentId)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
-		clusterId = cluster.Id
-		if cluster.SrCredentials != nil {
-			apiKey = cluster.SrCredentials.Key
-		}
+		clusterId = cluster.GetId()
 	default:
 		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resource)
 	}

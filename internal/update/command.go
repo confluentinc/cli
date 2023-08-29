@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/exec"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/update"
 	"github.com/confluentinc/cli/v3/pkg/update/s3"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
@@ -82,7 +82,7 @@ func NewClient(cliName string, disableUpdateCheck bool) update.Client {
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if c.Config.DisableUpdates {
 		message := "updates are disabled for this binary"
-		if isHomebrew() {
+		if IsHomebrew() {
 			return errors.NewErrorWithSuggestions(
 				message,
 				fmt.Sprintf("If installed with Homebrew, run `brew upgrade %s`.", homebrewFormula),
@@ -161,7 +161,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func isHomebrew() bool {
+func IsHomebrew() bool {
 	out, err := exec.NewCommand("brew", "ls", homebrewFormula).Output()
 	if err != nil {
 		return false
@@ -182,7 +182,7 @@ func isHomebrew() bool {
 
 	log.CliLogger.Tracef("Executable path: %s", path)
 
-	return types.Contains(homebrewPaths, path)
+	return slices.Contains(homebrewPaths, path)
 }
 
 func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {

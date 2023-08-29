@@ -1,0 +1,4 @@
+Error: KSQL cluster "lksqlc-12346" not found
+
+Suggestions:
+    List available KSQL clusters with `confluent ksql cluster list`.

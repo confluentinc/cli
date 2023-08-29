@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -208,36 +209,43 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 }
 
 func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile string) (string, error) {
-	// get schema registry cluster from context and flags, including key pair
-	srCluster, err := c.getSchemaRegistryCluster(cmd)
+	cluster, err := c.getSchemaRegistryCluster()
 	if err != nil {
-		if err.Error() == errors.NotLoggedInErrorMsg {
-			return "", new(errors.SRNotAuthenticatedError)
-		}
-		// if SR not enabled, comment out SR in the configuration file and warn users
-		if srNotEnabledErr, ok := err.(*errors.SRNotEnabledError); ok {
-			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile), nil
-		}
 		return "", err
+	}
+
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return "", err
+	}
+
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return "", err
+	}
+
+	apiKeyPair := &config.APIKeyPair{
+		Key:    schemaRegistryApiKey,
+		Secret: schemaRegistryApiSecret,
 	}
 
 	// replace SR_ENDPOINT template
 	configFile = replaceTemplates(configFile, map[string]string{
-		srEndpointTemplate: srCluster.SchemaRegistryEndpoint,
+		srEndpointTemplate: cluster.Spec.GetHttpEndpoint(),
 	})
 
 	// if empty API key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
-	if srCluster.SrCredentials.Key == "" || srCluster.SrCredentials.Secret == "" {
+	if apiKeyPair.Key == "" || apiKeyPair.Secret == "" {
 		// comment out SR and warn users
-		if srCluster.SrCredentials.Key == "" && srCluster.SrCredentials.Secret == "" {
+		if apiKeyPair.Key == "" && apiKeyPair.Secret == "" {
 			// both key and secret empty
 			configFile = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
-		} else if srCluster.SrCredentials.Key == "" {
+		} else if apiKeyPair.Key == "" {
 			// only key empty
 			configFile = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
 		} else {
 			// only secret empty
-			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, srCluster.SrCredentials.Key), errors.SRSecretNotSetSuggestions, configFile)
+			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, apiKeyPair.Key), errors.SRSecretNotSetSuggestions, configFile)
 		}
 
 		return configFile, nil
@@ -249,44 +257,33 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 	}
 
 	// validate that the key pair matches with the cluster
-	if err := c.validateSchemaRegistryCredentials(srCluster, unsafeTrace); err != nil {
+	if err := c.validateSchemaRegistryCredentials(cluster, apiKeyPair, unsafeTrace); err != nil {
 		return "", err
 	}
 
 	// replace SR_API_KEY and SR_API_SECRET templates
 	configFile = replaceTemplates(configFile, map[string]string{
-		srApiKeyTemplate:    srCluster.SrCredentials.Key,
-		srApiSecretTemplate: srCluster.SrCredentials.Secret,
+		srApiKeyTemplate:    apiKeyPair.Key,
+		srApiSecretTemplate: apiKeyPair.Secret,
 	})
 	return configFile, nil
 }
 
-// TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR API key stored in the context and
-// the key passed via the flags, please remove this function entirely because there is no more need to
-// manually fetch the values of the flags. (see setKafkaCluster as example)
-func (c *clientConfigCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*config.SchemaRegistryCluster, error) {
-	// get SR cluster from context
-	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
+func (c *clientConfigCommand) getSchemaRegistryCluster() (*srcmv2.SrcmV2Cluster, error) {
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	// get SR key pair from flag
-	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 	if err != nil {
 		return nil, err
 	}
-	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return nil, err
+	if len(clusters) == 0 {
+		return nil, errors.NewSRNotEnabledError()
 	}
 
-	// set SR key pair
-	srCluster.SrCredentials = &config.APIKeyPair{
-		Key:    schemaRegistryApiKey,
-		Secret: schemaRegistryApiSecret,
-	}
-	return srCluster, nil
+	return &clusters[0], nil
 }
 
 func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.KafkaClusterConfig) error {
@@ -310,13 +307,13 @@ func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.Kafk
 	return nil
 }
 
-func (c *clientConfigCommand) validateSchemaRegistryCredentials(srCluster *config.SchemaRegistryCluster, unsafeTrace bool) error {
+func (c *clientConfigCommand) validateSchemaRegistryCredentials(cluster *srcmv2.SrcmV2Cluster, apiKeyPair *config.APIKeyPair, unsafeTrace bool) error {
 	srConfig := srsdk.NewConfiguration()
-	srConfig.BasePath = srCluster.SchemaRegistryEndpoint
+	srConfig.BasePath = cluster.Spec.GetHttpEndpoint()
 	srConfig.UserAgent = c.Version.UserAgent
 	srConfig.Debug = unsafeTrace
 
-	client := schemaregistry.NewClientWithApiKey(srConfig, srCluster.SrCredentials.Key, srCluster.SrCredentials.Secret)
+	client := schemaregistry.NewClientWithApiKey(srConfig, apiKeyPair.Key, apiKeyPair.Secret)
 
 	if err := client.Get(); err != nil {
 		return errors.NewErrorWithSuggestions(errors.SRCredsValidationFailedErrorMsg, errors.SRCredsValidationFailedSuggestions)

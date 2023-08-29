@@ -22,3 +22,7 @@ func (s Set[V]) Contains(key V) bool {
 func (s Set[V]) Slice() []V {
 	return GetKeys(s)
 }
+
+func RemoveDuplicates(slice []string) []string {
+	return NewSet(slice...).Slice()
+}

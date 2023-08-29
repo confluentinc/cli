@@ -24,7 +24,7 @@ import (
 var (
 	environments = []*ccloudv1.Account{
 		{Id: "a-595", Name: "default", OrgResourceId: "abc-123"},
-		{Id: "not-595", Name: "other"},
+		{Id: "env-595", Name: "other"},
 		{Id: "env-123", Name: "env123"},
 		{Id: SRApiEnvId, Name: "srUpdate"},
 		{Id: "env-987zy", Name: "confluent-audit-log"},
