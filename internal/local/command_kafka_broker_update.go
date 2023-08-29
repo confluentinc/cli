@@ -1,20 +1,23 @@
-package kafka
+package local
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *brokerCommand) newUpdateCommand() *cobra.Command {
+func (c *Command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
-		Short: "Update Kafka broker configurations.",
+		Short: "Update local Kafka broker configurations.",
 		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.update,
+		RunE:  c.brokerUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
@@ -29,7 +32,6 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool("all", false, "Apply configuration update to all brokers in the cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("config"))
@@ -37,11 +39,11 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
-	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
+func (c *Command) brokerUpdate(cmd *cobra.Command, args []string) error {
+	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
-	return broker.Update(cmd, args, restClient, restContext, clusterId)
+	return broker.Update(cmd, args, restClient, context.Background(), clusterId)
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -56,7 +57,7 @@ func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 }
 
 func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
-	brokerId, all, err := checkAllOrBrokerIdSpecified(cmd, args)
+	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -60,4 +61,9 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	}
 
 	return kafkaRestClient, clusterListData.Data[0].ClusterId, nil
+}
+
+func (c *Command) getPlaintextBootstrapServers() string {
+	servers := strings.Join(c.Config.LocalPorts.PlaintextPorts, ":,")
+	return ":" + servers
 }
