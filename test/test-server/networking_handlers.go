@@ -3,6 +3,7 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -32,6 +33,8 @@ func handleNetworkingNetworks(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingNetworkList(t)(w, r)
+		case http.MethodPost:
+			handleNetworkingNetworkCreate(t)(w, r)
 		}
 	}
 }
@@ -184,5 +187,59 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 
 		err := json.NewEncoder(w).Encode(networkList)
 		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body networkingv1.NetworkingV1Network
+		err := json.NewDecoder(r.Body).Decode(&body)
+		require.NoError(t, err)
+
+		connectionTypes := body.Spec.ConnectionTypes.Items
+
+		if slices.Contains(connectionTypes, "TRANSITGATEWAY") && (body.Spec.Cidr == nil && body.Spec.ZonesInfo == nil) {
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, "A cidr must be provided when using TRANSITGATEWAY.")
+			require.NoError(t, err)
+		} else {
+			network := &networkingv1.NetworkingV1Network{
+				Id: networkingv1.PtrString("n-abcde1"),
+				Spec: &networkingv1.NetworkingV1NetworkSpec{
+					Environment: &networkingv1.ObjectReference{Id: body.Spec.Environment.Id},
+					DisplayName: body.Spec.DisplayName,
+					Cloud:       body.Spec.Cloud,
+					Region:      body.Spec.Region,
+				},
+				Status: &networkingv1.NetworkingV1NetworkStatus{
+					Phase:                    "PROVISIONING",
+					SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
+					ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+				},
+			}
+
+			if body.Spec.Zones != nil {
+				network.Spec.SetZones(*body.Spec.Zones)
+			}
+
+			if body.Spec.DnsConfig != nil && body.Spec.DnsConfig.Resolution != "" {
+				network.Spec.SetDnsConfig(networkingv1.NetworkingV1DnsConfig{Resolution: body.Spec.DnsConfig.Resolution})
+			}
+
+			if body.Spec.ZonesInfo != nil {
+				network.Spec.SetZonesInfo(*body.Spec.ZonesInfo)
+			}
+
+			if body.Spec.Cidr != nil {
+				network.Spec.SetCidr(*body.Spec.Cidr)
+			}
+
+			if body.Spec.ReservedCidr != nil {
+				network.Spec.SetReservedCidr(*body.Spec.ReservedCidr)
+			}
+
+			err = json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		}
 	}
 }
