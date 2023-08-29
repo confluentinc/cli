@@ -135,7 +135,6 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	natPlaintextPorts := getNatPlaintextPorts(ports, numOfBrokers)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
-	// create a customized network
 	_, err = dockerClient.NetworkCreate(
 		context.Background(),
 		"confluent-local-network",
@@ -173,6 +172,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 			},
 		}
 
+		// expose Kafka REST port for broker 1
 		if idx == 0 {
 			config.ExposedPorts[natKafkaRestPort] = struct{}{}
 			hostConfig.PortBindings[natKafkaRestPort] = []nat.PortBinding{
@@ -313,7 +313,7 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numOf
 		"KAFKA_LOG_DIRS=/tmp/kraft-combined-logs",
 		"KAFKA_REST_HOST_NAME=rest-proxy",
 	}
-	if idx == 0 { // configure krest proxy only for the first broker.
+	if idx == 0 { // configure Kafka REST proxy broker 1
 		envs = append(envs, fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort))
 		envs = append(envs, getKafkaRestBootstrapServers(ports, numOfBrokers))
 	}
