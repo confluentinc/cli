@@ -130,19 +130,20 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
 		}
 
-		if cloud == "AWS" {
+		switch cloud {
+		case "AWS":
 			human.Vpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
 			human.Account = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
 			serialized.Vpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
 			serialized.Account = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
 			describeFields = append(describeFields, "Vpc", "Account")
-		} else if cloud == "GCP" {
+		case "GCP":
 			human.VpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
 			human.Project = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
 			serialized.VpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
 			serialized.Project = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
 			describeFields = append(describeFields, "VpcNetwork", "Project")
-		} else if cloud == "AZURE" {
+		case "AZURE":
 			human.VNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
 			human.Subscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
 			serialized.VNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
