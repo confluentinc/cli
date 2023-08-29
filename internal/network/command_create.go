@@ -40,11 +40,11 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("region", "", "Cloud region ID for this network.")
-	AddConnectionTypesFlag(cmd)
+	addConnectionTypesFlag(cmd)
 	cmd.Flags().String("cidr", "", `A /16 IPv4 CIDR block. Required for networks of connection type "peering" and "transitgateway".`)
 	cmd.Flags().StringSlice("zones", nil, `A comma-separated list of availability zones for this network.`)
 	cmd.Flags().StringSlice("zone-info", nil, `A comma-separated list of "zone=cidr" pairs or CIDR blocks. Each CIDR must be a /27 IPv4 CIDR block.`)
-	AddDnsResolutionFlag(cmd)
+	addDnsResolutionFlag(cmd)
 	cmd.Flags().String("reserved-cidr", "", `A /24 IPv4 CIDR block. Can be used for AWS networks of connection type "peering" and "transitgateway".`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -103,10 +103,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	dnsResolution, err = formatDnsResolution(dnsResolution)
-	if err != nil {
-		return err
-	}
+	dnsResolution = strings.ToUpper(dnsResolution)
+	dnsResolution = strings.ReplaceAll(dnsResolution, "-", "_")
 
 	reservedCidr, err := cmd.Flags().GetString("reserved-cidr")
 	if err != nil {
@@ -173,17 +171,4 @@ func getZoneInfoItems(zoneInfo []string) ([]networkingv1.NetworkingV1ZoneInfo, e
 		}
 	}
 	return zoneInfoItems, nil
-}
-
-func formatDnsResolution(dnsResolution string) (string, error) {
-	switch dnsResolution {
-	case "":
-		return "", nil
-	case "private":
-		return "PRIVATE", nil
-	case "chased-private":
-		return "CHASED_PRIVATE", nil
-	default:
-		return "", fmt.Errorf(`dns resolution "%s" is not valid`, dnsResolution)
-	}
 }

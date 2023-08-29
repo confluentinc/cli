@@ -192,8 +192,8 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 
 func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var body networkingv1.NetworkingV1Network
-		err := json.NewDecoder(r.Body).Decode(&body)
+		body := &networkingv1.NetworkingV1Network{}
+		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
 		connectionTypes := body.Spec.ConnectionTypes.Items

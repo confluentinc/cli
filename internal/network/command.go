@@ -144,12 +144,12 @@ func (c *command) getNetworks() ([]networkingv1.NetworkingV1Network, error) {
 	return c.V2Client.ListNetworks(environmentId)
 }
 
-func AddConnectionTypesFlag(cmd *cobra.Command) {
+func addConnectionTypesFlag(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("connection-types", nil, fmt.Sprintf(`A comma-separated list of network access types: %s.`, utils.ArrayToCommaDelimitedString(ConnectionTypes, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "connection-types", func(_ *cobra.Command, _ []string) []string { return ConnectionTypes })
 }
 
-func AddDnsResolutionFlag(cmd *cobra.Command) {
+func addDnsResolutionFlag(cmd *cobra.Command) {
 	cmd.Flags().String("dns-resolution", "", fmt.Sprintf("Specify the DNS resolution as %s.", utils.ArrayToCommaDelimitedString(DnsResolutions, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "dns-resolution", func(_ *cobra.Command, _ []string) []string { return DnsResolutions })
 }
