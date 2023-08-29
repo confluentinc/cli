@@ -1,12 +1,12 @@
-+-------------------------+--------------+
-| ID                      | n-abcde1     |
-| Environment             | env-00000    |
-| Name                    | aws-peering  |
-| Cloud                   | AWS          |
-| Region                  | us-west-2    |
-| CIDR                    |              |
-| Zones                   |              |
-| DNS Resolution          |              |
-| Phase                   | PROVISIONING |
-| Active Connection Types |              |
-+-------------------------+--------------+
++----------------------------+--------------+
+| ID                         | n-abcde1     |
+| Environment                | env-00000    |
+| Name                       | aws-peering  |
+| Cloud                      | AWS          |
+| Region                     | us-west-2    |
+| CIDR                       |              |
+| Zones                      |              |
+| Phase                      | PROVISIONING |
+| Supported Connection Types | PEERING      |
+| Active Connection Types    |              |
++----------------------------+--------------+

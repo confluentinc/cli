@@ -1,7 +1,7 @@
 +----------------------------+------------------------------+
 | ID                         | n-abcde1                     |
 | Environment                | env-00000                    |
-| Name                       | new-prod-aws-us-east1        |
+| Name                       | prod-aws-us-east1            |
 | Cloud                      | AWS                          |
 | Region                     | us-east-1                    |
 | CIDR                       | 10.200.0.0/16                |

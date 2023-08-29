@@ -8,5 +8,6 @@
   "zones": ["usw2-az1", "usw2-az2", "usw2-az4"],
   "dns_resolution": "",
   "phase": "PROVISIONING",
+  "supported_connection_types": ["TRANSITGATEWAY"],
   "active_connection_types": []
 }
