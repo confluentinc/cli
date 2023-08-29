@@ -3,10 +3,10 @@
 | ID                   | lkc-update-dedicated-expand |
 | Name                 | lkc-update-dedicated-expand |
 | Type                 | DEDICATED                   |
-| Cluster Size         |                           1 |
-| Pending Cluster Size |                           2 |
-| Ingress Limit (MB/s) |                          50 |
-| Egress Limit (MB/s)  |                         150 |
+| Cluster Size         | 1                           |
+| Pending Cluster Size | 2                           |
+| Ingress Limit (MB/s) | 50                          |
+| Egress Limit (MB/s)  | 150                         |
 | Storage              | Infinite                    |
 | Provider             | aws                         |
 | Region               | us-west-2                   |
@@ -14,5 +14,5 @@
 | Status               | EXPANDING                   |
 | Endpoint             | SASL_SSL://kafka-endpoint   |
 | REST Endpoint        | http://127.0.0.1:1025       |
-| Topic Count          |                           2 |
+| Topic Count          | 2                           |
 +----------------------+-----------------------------+
