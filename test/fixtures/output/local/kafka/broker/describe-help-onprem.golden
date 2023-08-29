@@ -1,0 +1,18 @@
+Describe cluster-wide or per-broker configuration values.
+
+Usage:
+  confluent local kafka broker describe [id] [flags]
+
+Examples:
+Describe the "min.insync.replicas" configuration for broker 1.
+
+  $ confluent local broker describe 1 --config-name min.insync.replicas
+
+Flags:
+      --config-name string   Get a specific configuration value
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
