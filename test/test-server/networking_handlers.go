@@ -47,22 +47,27 @@ func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 			err := writeErrorJson(w, "The network n-invalid was not found.")
 			require.NoError(t, err)
 		case "n-abcde1":
-			network := networkingv1.NetworkingV1Network{
-				Id: networkingv1.PtrString("n-abcde1"),
-				Spec: &networkingv1.NetworkingV1NetworkSpec{
-					Environment: &networkingv1.ObjectReference{Id: "env-00000"},
-					DisplayName: networkingv1.PtrString("prod-aws-us-east1"),
-					Cloud:       networkingv1.PtrString("AWS"),
-					Region:      networkingv1.PtrString("us-east-1"),
-					Cidr:        networkingv1.PtrString("10.200.0.0/16"),
-					Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
-					DnsConfig:   &networkingv1.NetworkingV1DnsConfig{Resolution: "CHASED_PRIVATE"},
-				},
-				Status: &networkingv1.NetworkingV1NetworkStatus{
-					Phase:                 "READY",
-					ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}},
-				},
-			}
+			network := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY")
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde2":
+			network := getGcpNetwork("n-abcde2", "prod-gcp-us-central1", "READY")
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde3":
+			network := getAzureNetwork("n-abcde3", "prod-azure-eastus2", "READY")
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde4":
+			network := getAwsNetwork("n-abcde4", "prod-aws-us-east1", "PROVISIONING")
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde5":
+			network := getGcpNetwork("n-abcde5", "prod-gcp-us-central1", "PROVISIONING")
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde6":
+			network := getAzureNetwork("n-abcde6", "prod-azure-eastus2", "PROVISIONING")
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		}
@@ -80,7 +85,7 @@ func handleNetworkingNetworkDelete(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusConflict)
 			err := writeErrorJson(w, "Network deletion not allowed due to existing dependencies. Please delete the following dependent resources before attempting to delete the network again: pla-1abcde")
 			require.NoError(t, err)
-		case "n-abcde1":
+		case "n-abcde1", "n-abcde2":
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
@@ -94,22 +99,7 @@ func handleNetworkingNetworkUpdate(t *testing.T, id string) http.HandlerFunc {
 			err := writeErrorJson(w, "The network n-invalid was not found.")
 			require.NoError(t, err)
 		case "n-abcde1":
-			network := networkingv1.NetworkingV1Network{
-				Id: networkingv1.PtrString("n-abcde1"),
-				Spec: &networkingv1.NetworkingV1NetworkSpec{
-					Environment: &networkingv1.ObjectReference{Id: "env-00000"},
-					DisplayName: networkingv1.PtrString("new-prod-aws-us-east1"),
-					Cloud:       networkingv1.PtrString("AWS"),
-					Region:      networkingv1.PtrString("us-east-1"),
-					Cidr:        networkingv1.PtrString("10.200.0.0/16"),
-					Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
-					DnsConfig:   &networkingv1.NetworkingV1DnsConfig{Resolution: "CHASED_PRIVATE"},
-				},
-				Status: &networkingv1.NetworkingV1NetworkStatus{
-					Phase:                 "READY",
-					ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}},
-				},
-			}
+			network := getAwsNetwork("n-abcde1", "new-prod-aws-us-east1", "READY")
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		}
@@ -118,52 +108,9 @@ func handleNetworkingNetworkUpdate(t *testing.T, id string) http.HandlerFunc {
 
 func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		awsNetwork := networkingv1.NetworkingV1Network{
-			Id: networkingv1.PtrString("n-abcde1"),
-			Spec: &networkingv1.NetworkingV1NetworkSpec{
-				Environment: &networkingv1.ObjectReference{Id: "env-00000"},
-				DisplayName: networkingv1.PtrString("prod-aws-us-east1"),
-				Cloud:       networkingv1.PtrString("AWS"),
-				Region:      networkingv1.PtrString("us-east-1"),
-				Cidr:        networkingv1.PtrString("10.200.0.0/16"),
-				Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
-				DnsConfig:   &networkingv1.NetworkingV1DnsConfig{Resolution: "CHASED_PRIVATE"},
-			},
-			Status: &networkingv1.NetworkingV1NetworkStatus{
-				Phase:                 "READY",
-				ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}},
-			},
-		}
-		gcpNetwork := networkingv1.NetworkingV1Network{
-			Id: networkingv1.PtrString("n-abcde2"),
-			Spec: &networkingv1.NetworkingV1NetworkSpec{
-				Environment: &networkingv1.ObjectReference{Id: "env-00000"},
-				DisplayName: networkingv1.PtrString("prod-gcp-us-central1"),
-				Cloud:       networkingv1.PtrString("GCP"),
-				Region:      networkingv1.PtrString("us-central1"),
-				Cidr:        networkingv1.PtrString("10.1.0.0/16"),
-				Zones:       &[]string{"us-central1-a", "us-central1-b", "us-central1-c"},
-			},
-			Status: &networkingv1.NetworkingV1NetworkStatus{
-				Phase:                 "READY",
-				ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK"}},
-			},
-		}
-		azureNetwork := networkingv1.NetworkingV1Network{
-			Id: networkingv1.PtrString("n-abcde3"),
-			Spec: &networkingv1.NetworkingV1NetworkSpec{
-				Environment: &networkingv1.ObjectReference{Id: "env-00000"},
-				DisplayName: networkingv1.PtrString("prod-azure-eastus2"),
-				Cloud:       networkingv1.PtrString("AZURE"),
-				Region:      networkingv1.PtrString("eastus2"),
-				Cidr:        networkingv1.PtrString("10.0.0.0/16"),
-				Zones:       &[]string{"1", "2", "3"},
-			},
-			Status: &networkingv1.NetworkingV1NetworkStatus{
-				Phase:                 "READY",
-				ActiveConnectionTypes: networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
-			},
-		}
+		awsNetwork := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY")
+		gcpNetwork := getGcpNetwork("n-abcde2", "prod-gcp-us-central1", "READY")
+		azureNetwork := getAzureNetwork("n-abcde3", "prod-azure-eastus2", "READY")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var networkList networkingv1.NetworkingV1NetworkList
@@ -242,4 +189,100 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		}
 	}
+}
+
+func getAwsNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
+	network := networkingv1.NetworkingV1Network{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingv1.NetworkingV1NetworkSpec{
+			Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+			DisplayName: networkingv1.PtrString(name),
+			Cloud:       networkingv1.PtrString("AWS"),
+			Region:      networkingv1.PtrString("us-east-1"),
+			Cidr:        networkingv1.PtrString("10.200.0.0/16"),
+			Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
+			DnsConfig:   &networkingv1.NetworkingV1DnsConfig{Resolution: "CHASED_PRIVATE"},
+		},
+		Status: &networkingv1.NetworkingV1NetworkStatus{
+			Phase:                    phase,
+			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}},
+			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+		},
+	}
+
+	if phase == "READY" {
+		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}}
+		network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+			NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
+				Kind:    "AwsNetwork",
+				Vpc:     "vpc-00000000000000000",
+				Account: "000000000000",
+			},
+		}
+	}
+
+	return network
+}
+
+func getGcpNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
+	network := networkingv1.NetworkingV1Network{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingv1.NetworkingV1NetworkSpec{
+			Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+			DisplayName: networkingv1.PtrString(name),
+			Cloud:       networkingv1.PtrString("GCP"),
+			Region:      networkingv1.PtrString("us-central1"),
+			Cidr:        networkingv1.PtrString("10.1.0.0/16"),
+			Zones:       &[]string{"us-central1-a", "us-central1-b", "us-central1-c"},
+		},
+		Status: &networkingv1.NetworkingV1NetworkStatus{
+			Phase:                    phase,
+			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: []string{"PRIVATELINK"}},
+			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+		},
+	}
+
+	if phase == "READY" {
+		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK"}}
+		network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+			NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
+				Kind:       "GcpNetwork",
+				Project:    "gcp-project",
+				VpcNetwork: "gcp-vpc",
+			},
+		}
+	}
+
+	return network
+}
+
+func getAzureNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
+	network := networkingv1.NetworkingV1Network{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingv1.NetworkingV1NetworkSpec{
+			Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+			DisplayName: networkingv1.PtrString(name),
+			Cloud:       networkingv1.PtrString("AZURE"),
+			Region:      networkingv1.PtrString("eastus2"),
+			Cidr:        networkingv1.PtrString("10.0.0.0/16"),
+			Zones:       &[]string{"1", "2", "3"},
+		},
+		Status: &networkingv1.NetworkingV1NetworkStatus{
+			Phase:                    phase,
+			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: []string{"PEERING"}},
+			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+		},
+	}
+
+	if phase == "READY" {
+		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PEERING"}}
+		network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+			NetworkingV1AzureNetwork: &networkingv1.NetworkingV1AzureNetwork{
+				Kind:         "AzureNetwork",
+				Vnet:         "azure-vnet",
+				Subscription: "aa000000-a000-0a00-00aa-0000aaa0a0a0",
+			},
+		}
+	}
+	return network
 }

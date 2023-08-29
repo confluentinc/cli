@@ -1,23 +1,20 @@
 package network
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a network.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more networks.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -29,26 +26,27 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	id := args[0]
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	network, err := c.V2Client.GetNetwork(environmentId, id)
-	if err != nil {
+	existenceFunc := func(id string) bool {
+		_, err := c.V2Client.GetNetwork(environmentId, id)
+		return err == nil
+	}
+
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.Network); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Network, network.GetId())
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
-		return err
+	deleteFunc := func(id string) error {
+		if err := c.V2Client.DeleteNetwork(environmentId, id); err != nil {
+			return errors.Errorf(errors.DeleteResourceErrorMsg, resource.Network, id, err)
+		}
+		return nil
 	}
 
-	if err := c.V2Client.DeleteNetwork(environmentId, id); err != nil {
-		return err
-	}
-
-	output.Printf(errors.DeletedResourceMsg, resource.Network, id)
-	return nil
+	_, err = deletion.Delete(args, deleteFunc, resource.Network)
+	return err
 }

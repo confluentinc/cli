@@ -30,6 +30,6 @@
     "zones": ["1", "2", "3"],
     "dns_resolution": "",
     "phase": "READY",
-    "active_connection_types": []
+    "active_connection_types": ["PEERING"]
   }
 ]

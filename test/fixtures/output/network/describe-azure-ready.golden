@@ -1,0 +1,14 @@
++----------------------------+--------------------------------------+
+| ID                         | n-abcde3                             |
+| Environment                | env-00000                            |
+| Name                       | prod-azure-eastus2                   |
+| Cloud                      | AZURE                                |
+| Region                     | eastus2                              |
+| CIDR                       | 10.0.0.0/16                          |
+| Zones                      | 1, 2, 3                              |
+| Phase                      | READY                                |
+| Supported Connection Types | PEERING                              |
+| Active Connection Types    | PEERING                              |
+| VNet                       | azure-vnet                           |
+| Subscription               | aa000000-a000-0a00-00aa-0000aaa0a0a0 |
++----------------------------+--------------------------------------+
