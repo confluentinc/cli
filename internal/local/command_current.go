@@ -31,7 +31,7 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runCurrentCommand(_ *cobra.Command, _ []string) error {
+func (c *command) runCurrentCommand(_ *cobra.Command, _ []string) error {
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err
