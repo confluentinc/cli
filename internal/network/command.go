@@ -15,29 +15,43 @@ import (
 )
 
 type humanOut struct {
-	Id                    string `human:"ID"`
-	EnvironmentId         string `human:"Environment"`
-	Name                  string `human:"Name"`
-	Cloud                 string `human:"Cloud"`
-	Region                string `human:"Region"`
-	Cidr                  string `human:"CIDR"`
-	Zones                 string `human:"Zones"`
-	DnsResolution         string `human:"DNS Resolution"`
-	Phase                 string `human:"Phase"`
-	ActiveConnectionTypes string `human:"Active Connection Types"`
+	Id                       string `human:"ID"`
+	EnvironmentId            string `human:"Environment"`
+	Name                     string `human:"Name"`
+	Cloud                    string `human:"Cloud"`
+	Region                   string `human:"Region"`
+	Cidr                     string `human:"CIDR"`
+	Zones                    string `human:"Zones"`
+	DnsResolution            string `human:"DNS Resolution,omitempty"`
+	Phase                    string `human:"Phase"`
+	SupportedConnectionTypes string `human:"Supported Connection Types"`
+	ActiveConnectionTypes    string `human:"Active Connection Types"`
+	AwsVpc                   string `human:"AWS VPC,omitempty"`
+	AwsAccount               string `human:"AWS Account,omitempty"`
+	GcpProject               string `human:"GCP Project,omitempty"`
+	GcpVpcNetwork            string `human:"GCP VPC Network,omitempty"`
+	AzureVNet                string `human:"Azure VNet,omitempty"`
+	AzureSubscription        string `human:"Azure Subscription,omitempty"`
 }
 
 type serializedOut struct {
-	Id                    string   `serialized:"id"`
-	EnvironmentId         string   `serialized:"environment_id"`
-	Name                  string   `serialized:"name"`
-	Cloud                 string   `serialized:"cloud"`
-	Region                string   `serialized:"region"`
-	Cidr                  string   `serialized:"cidr"`
-	Zones                 []string `serialized:"zones"`
-	DnsResolution         string   `serialized:"dns_resolution"`
-	Phase                 string   `serialized:"phase"`
-	ActiveConnectionTypes []string `serialized:"active_connection_types"`
+	Id                       string   `serialized:"id"`
+	EnvironmentId            string   `serialized:"environment_id"`
+	Name                     string   `serialized:"name"`
+	Cloud                    string   `serialized:"cloud"`
+	Region                   string   `serialized:"region"`
+	Cidr                     string   `serialized:"cidr"`
+	Zones                    []string `serialized:"zones"`
+	DnsResolution            string   `serialized:"dns_resolution"`
+	Phase                    string   `serialized:"phase"`
+	SupportedConnectionTypes []string `serialized:"supported_connection_types"`
+	ActiveConnectionTypes    []string `serialized:"active_connection_types"`
+	AwsVpc                   string   `serialized:"aws_vpc,omitempty"`
+	AwsAccount               string   `serialized:"aws_account,omitempty"`
+	GcpProject               string   `serialized:"gcp_project,omitempty"`
+	GcpVpcNetwork            string   `serialized:"gcp_vpc_network,omitempty"`
+	AzureVNet                string   `serialized:"azure_vnet,omitempty"`
+	AzureSubscription        string   `serialized:"azure_subscription,omitempty"`
 }
 
 type command struct {
@@ -68,6 +82,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
 	table := output.NewTable(cmd)
+	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
 
 	if network.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
@@ -77,36 +92,73 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 	}
 
 	zones := network.Spec.GetZones()
+	cloud := network.Spec.GetCloud()
+	phase := network.Status.GetPhase()
+	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes().Items
 	activeConnectionTypes := network.Status.GetActiveConnectionTypes().Items
 
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&humanOut{
-			Id:                    network.GetId(),
-			EnvironmentId:         network.Spec.Environment.GetId(),
-			Name:                  network.Spec.GetDisplayName(),
-			Cloud:                 network.Spec.GetCloud(),
-			Region:                network.Spec.GetRegion(),
-			Cidr:                  network.Spec.GetCidr(),
-			Zones:                 strings.Join(zones, ", "),
-			DnsResolution:         network.Spec.DnsConfig.GetResolution(),
-			Phase:                 network.Status.GetPhase(),
-			ActiveConnectionTypes: strings.Join(activeConnectionTypes, ", "),
-		})
-	} else {
-		table.Add(&serializedOut{
-			Id:                    network.GetId(),
-			EnvironmentId:         network.Spec.Environment.GetId(),
-			Name:                  network.Spec.GetDisplayName(),
-			Cloud:                 network.Spec.GetCloud(),
-			Region:                network.Spec.GetRegion(),
-			Cidr:                  network.Spec.GetCidr(),
-			Zones:                 zones,
-			DnsResolution:         network.Spec.DnsConfig.GetResolution(),
-			Phase:                 network.Status.GetPhase(),
-			ActiveConnectionTypes: activeConnectionTypes,
-		})
+	human := &humanOut{
+		Id:                       network.GetId(),
+		EnvironmentId:            network.Spec.Environment.GetId(),
+		Name:                     network.Spec.GetDisplayName(),
+		Cloud:                    network.Spec.GetCloud(),
+		Region:                   network.Spec.GetRegion(),
+		Cidr:                     network.Spec.GetCidr(),
+		Zones:                    strings.Join(zones, ", "),
+		DnsResolution:            network.Spec.DnsConfig.GetResolution(),
+		Phase:                    network.Status.GetPhase(),
+		SupportedConnectionTypes: strings.Join(supportedConnectionTypes, ", "),
+		ActiveConnectionTypes:    strings.Join(activeConnectionTypes, ", "),
 	}
 
+	serialized := &serializedOut{
+		Id:                       network.GetId(),
+		EnvironmentId:            network.Spec.Environment.GetId(),
+		Name:                     network.Spec.GetDisplayName(),
+		Cloud:                    network.Spec.GetCloud(),
+		Region:                   network.Spec.GetRegion(),
+		Cidr:                     network.Spec.GetCidr(),
+		Zones:                    zones,
+		DnsResolution:            network.Spec.DnsConfig.GetResolution(),
+		Phase:                    network.Status.GetPhase(),
+		SupportedConnectionTypes: supportedConnectionTypes,
+		ActiveConnectionTypes:    activeConnectionTypes,
+	}
+
+	if phase == "READY" {
+		if network.Status.Cloud == nil {
+			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
+		}
+
+		switch cloud {
+		case "AWS":
+			human.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
+			human.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
+			serialized.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
+			serialized.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
+			describeFields = append(describeFields, "AwsVpc", "AwsAccount")
+		case "GCP":
+			human.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
+			human.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
+			serialized.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
+			serialized.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
+			describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
+		case "AZURE":
+			human.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
+			human.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
+			serialized.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
+			serialized.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
+			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
+		}
+	}
+
+	if output.GetFormat(cmd) == output.Human {
+		table.Add(human)
+	} else {
+		table.Add(serialized)
+	}
+
+	table.Filter(describeFields)
 	return table.Print()
 }
 
@@ -114,7 +166,10 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
+	return c.validArgsMultiple(cmd, args)
+}
 
+func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
