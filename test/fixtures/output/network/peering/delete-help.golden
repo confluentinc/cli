@@ -1,4 +1,4 @@
-Delete one or more peering connections.
+Delete one or more peerings.
 
 Usage:
   confluent network peering delete <id-1> [id-2] ... [id-n] [flags]

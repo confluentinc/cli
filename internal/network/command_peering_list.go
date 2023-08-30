@@ -24,7 +24,7 @@ type listPeeringOut struct {
 func (c *peeringCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List peering connections.",
+		Short: "List peerings.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

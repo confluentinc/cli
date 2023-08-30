@@ -1,13 +1,13 @@
-Manage peering connections.
+Manage peerings.
 
 Usage:
   confluent network peering [command]
 
 Available Commands:
-  delete      Delete one or more peering connections.
-  describe    Describe a peering connection.
-  list        List peering connections.
-  update      Update an existing peering connection.
+  delete      Delete one or more peerings.
+  describe    Describe a peering.
+  list        List peerings.
+  update      Update an existing peering.
 
 Global Flags:
   -h, --help            Show help for this command.

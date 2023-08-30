@@ -1,4 +1,4 @@
-Update an existing peering connection.
+Update an existing peering.
 
 Usage:
   confluent network peering update <id> [flags]

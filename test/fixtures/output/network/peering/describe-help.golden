@@ -1,10 +1,10 @@
-Describe a peering connection.
+Describe a peering.
 
 Usage:
   confluent network peering describe <id> [flags]
 
 Examples:
-Describe peering connection "peer-111111".
+Describe peering "peer-111111".
 
   $ confluent network peering describe peer-111111
 

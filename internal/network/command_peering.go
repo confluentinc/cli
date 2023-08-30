@@ -52,7 +52,7 @@ type peeringSerializedOut struct {
 func newPeeringCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "peering",
-		Short: "Manage peering connections.",
+		Short: "Manage peerings.",
 		Args:  cobra.NoArgs,
 	}
 

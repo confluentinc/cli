@@ -12,7 +12,7 @@ import (
 func (c *peeringCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
-		Short:             "Update an existing peering connection.",
+		Short:             "Update an existing peering.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
