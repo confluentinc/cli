@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
-	brokerId, all, err := CheckAllOrIdSpecified(cmd, args)
+func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, checkAll bool) error {
+	brokerId, all, err := CheckAllOrIdSpecified(cmd, args, checkAll)
 	if err != nil {
 		return err
 	}

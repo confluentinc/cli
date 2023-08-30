@@ -57,7 +57,7 @@ func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 }
 
 func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
-	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args)
+	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args, true)
 	if err != nil {
 		return err
 	}

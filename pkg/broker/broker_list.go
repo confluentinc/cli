@@ -17,7 +17,7 @@ func List(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext con
 
 	list := output.NewList(cmd)
 	for _, data := range brokersGetResp.Data {
-		broker := &BrokerOut{
+		broker := &out{
 			ClusterId: data.ClusterId,
 			BrokerId:  data.BrokerId,
 		}

@@ -28,7 +28,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runDestroyCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runDestroyCommand(cmd *cobra.Command, _ []string) error {
 	if !c.cc.HasTrackingFile() {
 		return errors.New(errors.NothingToDestroyErrorMsg)
 	}

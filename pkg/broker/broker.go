@@ -23,14 +23,22 @@ type ConfigOut struct {
 	IsSensitive bool   `human:"Sensitive" serialized:"is_sensitive"`
 }
 
-type BrokerOut struct {
+type out struct {
 	ClusterId string `human:"Cluster" serialized:"cluster_id"`
 	BrokerId  int32  `human:"Broker ID" serialized:"broker_id"`
 	Host      string `human:"Host" serialized:"host"`
 	Port      int32  `human:"Port" serialized:"port"`
 }
 
-func CheckAllOrIdSpecified(cmd *cobra.Command, args []string) (int32, bool, error) {
+func CheckAllOrIdSpecified(cmd *cobra.Command, args []string, checkAll bool) (int32, bool, error) {
+	if !checkAll { // command has no "all" flag
+		if len(args) > 0 {
+			brokerIdStr := args[0]
+			brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
+			return int32(brokerId), false, err
+		}
+	}
+
 	if cmd.Flags().Changed("all") && len(args) > 0 {
 		return -1, false, errors.New(errors.OnlySpecifyAllOrBrokerIDErrorMsg)
 	}
@@ -41,28 +49,7 @@ func CheckAllOrIdSpecified(cmd *cobra.Command, args []string) (int32, bool, erro
 	if err != nil {
 		return -1, false, err
 	}
-	if len(args) > 0 {
-		brokerIdStr := args[0]
-		brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
-		return int32(brokerId), false, err
-	}
 	return -1, all, nil
-}
-
-func ParseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []*ConfigOut {
-	configs := make([]*ConfigOut, len(brokerConfig.Data))
-	for i, data := range brokerConfig.Data {
-		configs[i] = &ConfigOut{
-			Name:        data.Name,
-			IsDefault:   data.IsDefault,
-			IsReadOnly:  data.IsReadOnly,
-			IsSensitive: data.IsSensitive,
-		}
-		if data.Value != nil {
-			configs[i].Value = *data.Value
-		}
-	}
-	return configs
 }
 
 func ParseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []*ConfigOut {
@@ -81,22 +68,20 @@ func ParseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []*
 	return configs
 }
 
-// getIndividualBrokerConfigs fetches all per-broker configs or just the config specified by configName
-func GetIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, brokerId int32, configName string) (kafkarestv3.BrokerConfigDataList, error) {
-	var brokerConfig kafkarestv3.BrokerConfigDataList
-	var resp *http.Response
-	var err error
-	if configName != "" {
-		var brokerNameData kafkarestv3.BrokerConfigData
-		brokerNameData, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
-		brokerConfig.Data = []kafkarestv3.BrokerConfigData{brokerNameData}
-	} else {
-		brokerConfig, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []*ConfigOut {
+	configs := make([]*ConfigOut, len(brokerConfig.Data))
+	for i, data := range brokerConfig.Data {
+		configs[i] = &ConfigOut{
+			Name:        data.Name,
+			IsDefault:   data.IsDefault,
+			IsReadOnly:  data.IsReadOnly,
+			IsSensitive: data.IsSensitive,
+		}
+		if data.Value != nil {
+			configs[i].Value = *data.Value
+		}
 	}
-	if err != nil {
-		return brokerConfig, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-	}
-	return brokerConfig, nil
+	return configs
 }
 
 // getClusterWideConfigs fetches cluster-wide configs or just configName config if specified
@@ -115,6 +100,24 @@ func GetClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext contex
 		return clusterConfig, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 	return clusterConfig, nil
+}
+
+// getIndividualBrokerConfigs fetches all per-broker configs or just the config specified by configName
+func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, brokerId int32, configName string) (kafkarestv3.BrokerConfigDataList, error) {
+	var brokerConfig kafkarestv3.BrokerConfigDataList
+	var resp *http.Response
+	var err error
+	if configName != "" {
+		var brokerNameData kafkarestv3.BrokerConfigData
+		brokerNameData, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsNameGet(restContext, clusterId, brokerId, configName)
+		brokerConfig.Data = []kafkarestv3.BrokerConfigData{brokerNameData}
+	} else {
+		brokerConfig, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
+	}
+	if err != nil {
+		return brokerConfig, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+	}
+	return brokerConfig, nil
 }
 
 func ToAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) kafkarestv3.AlterConfigBatchRequestData {

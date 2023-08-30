@@ -43,5 +43,5 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return broker.Update(cmd, args, restClient, restContext, clusterId)
+	return broker.Update(cmd, args, restClient, restContext, clusterId, true)
 }

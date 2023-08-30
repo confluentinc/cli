@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *Command) newKafkaTopicConsumeCommand() *cobra.Command {
+func (c *command) newKafkaTopicConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -49,7 +49,7 @@ func (c *Command) newKafkaTopicConsumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err

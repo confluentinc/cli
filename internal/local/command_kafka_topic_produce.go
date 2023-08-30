@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
 
-func (c *Command) newKafkaTopicProduceCommand() *cobra.Command {
+func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -42,7 +42,7 @@ func (c *Command) newKafkaTopicProduceCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}

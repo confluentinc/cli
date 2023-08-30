@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func (c *Command) newKafkaClusterConfigurationListCommand() *cobra.Command {
+func (c *command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Confluent local Kafka cluster configurations.",
@@ -32,7 +32,7 @@ func (c *Command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) configurationDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) configurationDescribe(cmd *cobra.Command, args []string) error {
 	configName, err := cmd.Flags().GetString("config-name")
 	if err != nil {
 		return err

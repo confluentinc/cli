@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *Command) newKafkaBrokerCommand() *cobra.Command {
+func (c *command) newKafkaBrokerCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "broker",
 		Short: "Manage Kafka brokers in Confluent Local.",

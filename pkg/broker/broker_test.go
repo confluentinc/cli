@@ -19,25 +19,25 @@ func (suite *KafkaClusterTestSuite) TestBroker_CheckAllOrIdSpecified() {
 	// only --all
 	cmd := newCmdWithAllFlag()
 	_ = cmd.ParseFlags([]string{"--all"})
-	id, all, err := CheckAllOrIdSpecified(cmd, []string{})
+	id, all, err := CheckAllOrIdSpecified(cmd, []string{}, true)
 	req.NoError(err)
 	req.True(all)
 	req.Equal(int32(-1), id)
 	// only broker id arg
 	cmd = newCmdWithAllFlag()
-	id, all, err = CheckAllOrIdSpecified(cmd, []string{"1"})
+	id, all, err = CheckAllOrIdSpecified(cmd, []string{"1"}, true)
 	req.NoError(err)
 	req.False(all)
 	req.Equal(int32(1), id)
 	// --all and broker id arg
 	cmd = newCmdWithAllFlag()
 	_ = cmd.ParseFlags([]string{"--all"})
-	_, _, err = CheckAllOrIdSpecified(cmd, []string{"1"})
+	_, _, err = CheckAllOrIdSpecified(cmd, []string{"1"}, true)
 	req.Error(err)
 	req.Equal(errors.OnlySpecifyAllOrBrokerIDErrorMsg, err.Error())
 	// neither
 	cmd = newCmdWithAllFlag()
-	_, _, err = CheckAllOrIdSpecified(cmd, []string{})
+	_, _, err = CheckAllOrIdSpecified(cmd, []string{}, true)
 	req.Error(err)
 	req.Equal(errors.MustSpecifyAllOrBrokerIDErrorMsg, err.Error())
 }

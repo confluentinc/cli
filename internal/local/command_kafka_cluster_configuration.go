@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *Command) newKafkaClusterConfigurationCommand() *cobra.Command {
+func (c *command) newKafkaClusterConfigurationCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configuration",
 		Short: "Manage Kafka cluster configurations in Confluent Local.",
