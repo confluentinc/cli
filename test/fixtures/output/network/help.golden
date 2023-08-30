@@ -8,6 +8,7 @@ Available Commands:
   delete      Delete one or more networks.
   describe    Describe a network.
   list        Display networks in the current environment.
+  peering     Manage peering connections.
   update      Update an existing network.
 
 Global Flags:

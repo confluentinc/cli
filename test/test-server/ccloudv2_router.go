@@ -59,6 +59,7 @@ var ccloudV2Routes = []route{
 	{"/ksqldbcm/v2/clusters/{id}", handleKsqlCluster},
 	{"/networking/v1/networks", handleNetworkingNetworks},
 	{"/networking/v1/networks/{id}", handleNetworkingNetwork},
+	{"/networking/v1/peerings", handleNetworkingPeerings},
 	{"/org/v2/environments", handleOrgEnvironments},
 	{"/org/v2/environments/{id}", handleOrgEnvironment},
 	{"/org/v2/organizations", handleOrgOrganizations},

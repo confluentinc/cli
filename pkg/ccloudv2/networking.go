@@ -71,3 +71,33 @@ func (c *Client) executeListNetworks(environment, pageToken string) (networkingv
 	resp, httpResp, err := req.Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) ListPeerings(environment string) ([]networkingv1.NetworkingV1Peering, error) {
+	var list []networkingv1.NetworkingV1Peering
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, err := c.executeListPeerings(environment, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListPeerings(environment, pageToken string) (networkingv1.NetworkingV1PeeringList, error) {
+	req := c.NetworkingClient.PeeringsNetworkingV1Api.ListNetworkingV1Peerings(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
