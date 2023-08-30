@@ -1,14 +1,15 @@
-Describe a peering.
+Update an existing peering.
 
 Usage:
-  confluent network peering describe <id> [flags]
+  confluent network peering update <id> [flags]
 
 Examples:
-Describe peering "peer-111111".
+Update the name of peering "peer-111111"
 
-  $ confluent network peering describe peer-111111
+  $ confluent network peering update peer-111111 --name "new name"
 
 Flags:
+      --name string          REQUIRED: Name of the peering.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

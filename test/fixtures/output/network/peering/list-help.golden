@@ -1,4 +1,4 @@
-List peering connections.
+List peerings.
 
 Usage:
   confluent network peering list [flags]
