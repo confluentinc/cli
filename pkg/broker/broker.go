@@ -85,7 +85,7 @@ func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []*Con
 	return configs
 }
 
-// getClusterWideConfigs fetches cluster-wide configs or just configName config if specified
+// GetClusterWideConfigs fetches cluster-wide configs or just configName config if specified
 func GetClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId, configName string) (kafkarestv3.ClusterConfigDataList, error) {
 	var clusterConfig kafkarestv3.ClusterConfigDataList
 	var resp *http.Response
