@@ -15,7 +15,7 @@ import (
 func (c *peeringCommand) newPeeringListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "Display peering connections in the current environment.",
+		Short: "List peering connections.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

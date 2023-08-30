@@ -4,7 +4,7 @@ Usage:
   confluent network peering [command]
 
 Available Commands:
-  list        Display peering connections in the current environment.
+  list        List peering connections.
 
 Global Flags:
   -h, --help            Show help for this command.

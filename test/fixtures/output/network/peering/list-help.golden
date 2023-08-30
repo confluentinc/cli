@@ -1,4 +1,4 @@
-Display peering connections in the current environment.
+List peering connections.
 
 Usage:
   confluent network peering list [flags]

@@ -1,4 +1,4 @@
-Display networks in the current environment.
+List networks.
 
 Usage:
   confluent network list [flags]
