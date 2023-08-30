@@ -10,26 +10,15 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type listPeeringHumanOut struct {
-	Id             string `human:"ID"`
-	Name           string `human:"Name"`
-	NetworkId      string `human:"Network ID"`
-	Cloud          string `human:"Cloud"`
-	CustomRegion   string `human:"Custom Region,omitempty"`
-	VirtualNetwork string `human:"Virtual Nework, omitempty"`
-	CloudAccount   string `human:"Cloud Account, omitempty"`
-	Phase          string `human:"Phase"`
-}
-
-type listPeeringSerializedOut struct {
-	Id             string `serialized:"id"`
-	Name           string `serialized:"name"`
-	NetworkId      string `serialized:"network_id"`
-	Cloud          string `serialized:"cloud"`
-	CustomRegion   string `serialized:"custom_region,omitempty"`
-	VirtualNetwork string `serialized:"virtual_network, omitempty"`
-	CloudAccount   string `serialized:"cloud_account, omitempty"`
-	Phase          string `serialized:"phase"`
+type listPeeringOut struct {
+	Id             string `human:"ID" serialized:"id"`
+	Name           string `human:"Name" serialized:"name"`
+	NetworkId      string `human:"Network ID" serialized:"network_id"`
+	Cloud          string `human:"Cloud" serialized:"cloud"`
+	CustomRegion   string `human:"Custom Region,omitempty" serialized:"custom_region,omitempty"`
+	VirtualNetwork string `human:"Virtual Nework,omitempty" serialized:"virtual_network,omitempty"`
+	CloudAccount   string `human:"Cloud Account,omitempty" serialized:"cloud_account,omitempty"`
+	Phase          string `human:"Phase" serialized:"phase"`
 }
 
 func (c *peeringCommand) newListCommand() *cobra.Command {
@@ -67,49 +56,28 @@ func (c *peeringCommand) list(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		human := &listPeeringHumanOut{
+		out := &listPeeringOut{
 			Id:        peering.GetId(),
 			Name:      peering.Spec.GetDisplayName(),
 			NetworkId: peering.Spec.Network.GetId(),
 			Cloud:     cloud,
 			Phase:     peering.Status.GetPhase(),
 		}
-
-		serialized := &listPeeringSerializedOut{
-			Id:        peering.GetId(),
-			Name:      peering.Spec.GetDisplayName(),
-			NetworkId: peering.Spec.Network.GetId(),
-			Cloud:     cloud,
-			Phase:     peering.Status.GetPhase(),
-		}
-
 		switch cloud {
 		case CloudAws:
-			human.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
-			human.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
-			human.CloudAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
-			serialized.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
-			serialized.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
-			serialized.CloudAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
+			out.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
+			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
+			out.CloudAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
 		case CloudGcp:
-			human.VirtualNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
-			human.CloudAccount = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
-			serialized.VirtualNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
-			serialized.CloudAccount = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
+			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
+			out.CloudAccount = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
 		case CloudAzure:
-			human.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
-			human.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
-			human.CloudAccount = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
-			serialized.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
-			serialized.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
-			serialized.CloudAccount = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
+			out.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
+			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
+			out.CloudAccount = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
 		}
 
-		if output.GetFormat(cmd) == output.Human {
-			list.Add(human)
-		} else {
-			list.Add(serialized)
-		}
+		list.Add(out)
 	}
 	return list.Print()
 }
