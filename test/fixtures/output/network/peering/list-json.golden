@@ -4,6 +4,9 @@
     "name": "aws-peering",
     "network_id": "n-abcde1",
     "cloud": "AWS",
+    "custom_region": "us-east-1",
+    "virtual_network": "vpc-00000000000000000",
+    "cloud_account": "000000000000",
     "phase": "READY"
   },
   {
@@ -11,6 +14,8 @@
     "name": "gcp-peering",
     "network_id": "n-abcde1",
     "cloud": "GCP",
+    "virtual_network": "v-1",
+    "cloud_account": "p-1",
     "phase": "READY"
   },
   {
@@ -18,6 +23,9 @@
     "name": "azure-peering",
     "network_id": "n-abcde1",
     "cloud": "AZURE",
+    "custom_region": "centralus",
+    "virtual_network": "/subscriptions/s-1/resourceGroups/group-1/providers/Microsoft.Network/virtualNetworks/vnet-1",
+    "cloud_account": "t-1",
     "phase": "READY"
   }
 ]
