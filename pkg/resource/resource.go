@@ -35,6 +35,7 @@ const (
 	MirrorTopic                 = "mirror topic"
 	Network                     = "network"
 	Organization                = "organization"
+	Peering                     = "peering"
 	ProviderShare               = "provider share"
 	Pipeline                    = "pipeline"
 	SchemaExporter              = "schema exporter"

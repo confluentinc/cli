@@ -4,8 +4,10 @@ Usage:
   confluent network peering [command]
 
 Available Commands:
+  delete      Delete one or more peering connections.
   describe    Describe a peering connection.
   list        List peering connections.
+  update      Update an existing peering connection.
 
 Global Flags:
   -h, --help            Show help for this command.
