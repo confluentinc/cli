@@ -17,7 +17,7 @@
     "id": "peer-111113",
     "name": "azure-peering",
     "network_id": "n-abcde1",
-    "cloud": "Azure",
+    "cloud": "AZURE",
     "phase": "READY"
   }
 ]

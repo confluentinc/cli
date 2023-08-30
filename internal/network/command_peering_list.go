@@ -73,11 +73,11 @@ func getCloud(peering networkingv1.NetworkingV1Peering) (string, error) {
 	cloud := peering.Spec.GetCloud()
 
 	if cloud.NetworkingV1AwsPeering != nil {
-		return "AWS", nil
+		return CloudAws, nil
 	} else if cloud.NetworkingV1GcpPeering != nil {
-		return "GCP", nil
+		return CloudGcp, nil
 	} else if cloud.NetworkingV1AzurePeering != nil {
-		return "Azure", nil
+		return CloudAzure, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")

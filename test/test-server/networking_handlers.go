@@ -301,7 +301,7 @@ func handleNetworkingPeeringList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		awsPeering := getPeering("peer-111111", "aws-peering", "AWS")
 		gcpPeering := getPeering("peer-111112", "gcp-peering", "GCP")
-		azurePeering := getPeering("peer-111113", "azure-peering", "Azure")
+		azurePeering := getPeering("peer-111113", "azure-peering", "AZURE")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var peeringList networkingv1.NetworkingV1PeeringList
@@ -357,7 +357,7 @@ func getPeering(id, name, cloud string) networkingv1.NetworkingV1Peering {
 			Project:    "p-1",
 			VpcNetwork: "v-1",
 		}
-	case "Azure":
+	case "AZURE":
 		peering.Spec.Cloud.NetworkingV1AzurePeering = &networkingv1.NetworkingV1AzurePeering{
 			Kind:           "AzurePeering",
 			Tenant:         "t-1",
