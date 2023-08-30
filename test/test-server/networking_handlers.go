@@ -39,6 +39,17 @@ func handleNetworkingNetworks(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/peerings/{id}"
+func handleNetworkingPeering(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingPeeringGet(t, id)(w, r)
+		}
+	}
+}
+
 // Handler for "/networking/v1/peerings"
 func handleNetworkingPeerings(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -366,4 +377,27 @@ func getPeering(id, name, cloud string) networkingv1.NetworkingV1Peering {
 		}
 	}
 	return peering
+}
+
+func handleNetworkingPeeringGet(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "peer-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The peering peer-invalid was not found.")
+			require.NoError(t, err)
+		case "peer-111111":
+			peering := getPeering("peer-111111", "aws-peering", "AWS")
+			err := json.NewEncoder(w).Encode(peering)
+			require.NoError(t, err)
+		case "peer-111112":
+			peering := getPeering("peer-111112", "gcp-peering", "GCP")
+			err := json.NewEncoder(w).Encode(peering)
+			require.NoError(t, err)
+		case "peer-111113":
+			peering := getPeering("peer-111113", "azure-peering", "AZURE")
+			err := json.NewEncoder(w).Encode(peering)
+			require.NoError(t, err)
+		}
+	}
 }

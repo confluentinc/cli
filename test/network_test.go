@@ -101,3 +101,18 @@ func (s *CLITestSuite) TestNetworkPeeringList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkPeeringDescribe() {
+	tests := []CLITest{
+		{args: "network peering describe peer-111111", fixture: "network/peering/describe-aws.golden"},
+		{args: "network peering describe peer-111111 --output json", fixture: "network/peering/describe-aws-json.golden"},
+		{args: "network peering describe peer-111112", fixture: "network/peering/describe-gcp.golden"},
+		{args: "network peering describe peer-111113", fixture: "network/peering/describe-azure.golden"},
+		{args: "network peering describe", fixture: "network/peering/describe-missing-id.golden", exitCode: 1},
+		{args: "network peering describe peer-invalid", fixture: "network/peering/describe-invalid.golden", exitCode: 1},
+	}
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
