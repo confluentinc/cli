@@ -136,6 +136,22 @@ func (s *CLITestSuite) TestNetworkPeeringUpdate() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkPeeringDelete() {
+	tests := []CLITest{
+		{args: "network peering delete peer-111111 --force", fixture: "network/peering/delete.golden"},
+		{args: "network peering delete peer-111111", input: "y\n", fixture: "network/peering/delete-prompt.golden"},
+		{args: "network peering delete peer-111111 peer-invalid", fixture: "network/peering/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network peering delete peer-111111 peer-111112", input: "n\n", fixture: "network/peering/delete-multiple-refuse.golden"},
+		{args: "network peering delete peer-111111 peer-111112", input: "y\n", fixture: "network/peering/delete-multiple-success.golden"},
+		{args: "network peering delete peer-invalid --force", fixture: "network/peering/delete-peering-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkPeering_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network peering describe ""`, login: "cloud", fixture: "network/peering/describe-autocomplete.golden"},

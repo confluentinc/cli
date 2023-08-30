@@ -35,6 +35,7 @@ const (
 	MirrorTopic                 = "mirror topic"
 	Network                     = "network"
 	Organization                = "organization"
+	Peering                     = "peering"
 	ProviderShare               = "provider share"
 	Pipeline                    = "pipeline"
 	SchemaExporter              = "schema exporter"
@@ -162,7 +163,7 @@ func Plural(resource string) string {
 	}
 
 	// Singular words ending w/ these suffixes generally add an extra -es syllable in their plural forms
-	var pluralExtraSyllableSuffix = types.NewSet("s", "x", "z", "ch", "sh")
+	pluralExtraSyllableSuffix := types.NewSet("s", "x", "z", "ch", "sh")
 
 	for suffix := range pluralExtraSyllableSuffix {
 		if strings.HasSuffix(resource, suffix) {

@@ -111,3 +111,8 @@ func (c *Client) UpdatePeering(environment, id string, peeringUpdate networkingv
 	resp, httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.UpdateNetworkingV1Peering(c.networkingApiContext(), id).NetworkingV1PeeringUpdate(peeringUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) DeletePeering(environment, id string) error {
+	httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.DeleteNetworkingV1Peering(c.networkingApiContext(), id).Environment(environment).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
