@@ -13,10 +13,10 @@ import (
 
 func (c *command) newKafkaBrokerDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe [id]",
+		Use:   "describe <id>",
 		Short: "Describe a local Kafka broker.",
 		Long:  "Describe per-broker configuration values.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE:  c.brokerDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{

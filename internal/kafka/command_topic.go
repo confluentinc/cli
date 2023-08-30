@@ -202,7 +202,7 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 		} else if data == EOF {
 			break
 		}
-		fmt.Println("meta", keyMetaInfo, valueMetaInfo)
+
 		message, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
 		if err != nil {
 			return err

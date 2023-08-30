@@ -19,7 +19,7 @@ import (
 func (c *command) newKafkaClusterConfigurationUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update Confluent local Kafka cluster configurations.",
+		Short: "Update local Kafka cluster configurations.",
 		Args:  cobra.NoArgs,
 		RunE:  c.configurationUpdate,
 		Example: examples.BuildExampleString(

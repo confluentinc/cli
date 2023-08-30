@@ -13,10 +13,10 @@ import (
 
 func (c *command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update [id]",
+		Use:   "update <id>",
 		Short: "Update local Kafka broker configurations.",
 		Long:  "Update per-broker configurations.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE:  c.brokerUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{

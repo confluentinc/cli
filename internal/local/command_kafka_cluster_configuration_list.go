@@ -16,7 +16,7 @@ import (
 func (c *command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Confluent local Kafka cluster configurations.",
+		Short: "List local Kafka cluster configurations.",
 		Args:  cobra.NoArgs,
 		RunE:  c.configurationDescribe,
 		Example: examples.BuildExampleString(
