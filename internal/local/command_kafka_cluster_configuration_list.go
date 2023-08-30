@@ -27,6 +27,7 @@ func (c *command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().String("config-name", "", "Get a specific configuration value.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

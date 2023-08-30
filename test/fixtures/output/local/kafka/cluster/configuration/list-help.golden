@@ -9,7 +9,8 @@ List configuration values for the Kafka cluster.
   $ confluent local kafka cluster configuration list
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --config-name string   Get a specific configuration value.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

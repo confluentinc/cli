@@ -1,4 +1,4 @@
-Update per-broker or cluster-wide Kafka broker configurations.
+Update per-broker configurations.
 
 Usage:
   confluent local kafka broker update [id] [flags]
@@ -8,13 +8,8 @@ Update configuration values for broker 1.
 
   $ confluent kafka broker update 1 --config min.insync.replicas=2,num.partitions=2
 
-Update configuration values for all brokers in the cluster.
-
-  $ confluent kafka broker update --all --config min.insync.replicas=2,num.partitions=2
-
 Flags:
       --config strings   REQUIRED: A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
-      --all              Apply configuration update to all brokers in the cluster.
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

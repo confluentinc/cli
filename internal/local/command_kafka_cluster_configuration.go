@@ -11,6 +11,7 @@ func (c *command) newKafkaClusterConfigurationCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newKafkaClusterConfigurationListCommand())
+	cmd.AddCommand(c.newKafkaClusterConfigurationUpdateCommand())
 
 	return cmd
 }

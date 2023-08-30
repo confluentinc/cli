@@ -31,23 +31,24 @@ type out struct {
 }
 
 func CheckAllOrIdSpecified(cmd *cobra.Command, args []string, checkAll bool) (int32, bool, error) {
-	if !checkAll { // command has no "all" flag
-		if len(args) > 0 {
-			brokerIdStr := args[0]
-			brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
-			return int32(brokerId), false, err
+	var all bool
+	var err error
+	if checkAll {
+		if cmd.Flags().Changed("all") && len(args) > 0 {
+			return -1, false, errors.New(errors.OnlySpecifyAllOrBrokerIDErrorMsg)
+		}
+		if !cmd.Flags().Changed("all") && len(args) == 0 {
+			return -1, false, errors.New(errors.MustSpecifyAllOrBrokerIDErrorMsg)
+		}
+		all, err = cmd.Flags().GetBool("all")
+		if err != nil {
+			return -1, false, err
 		}
 	}
-
-	if cmd.Flags().Changed("all") && len(args) > 0 {
-		return -1, false, errors.New(errors.OnlySpecifyAllOrBrokerIDErrorMsg)
-	}
-	if !cmd.Flags().Changed("all") && len(args) == 0 {
-		return -1, false, errors.New(errors.MustSpecifyAllOrBrokerIDErrorMsg)
-	}
-	all, err := cmd.Flags().GetBool("all")
-	if err != nil {
-		return -1, false, err
+	if len(args) > 0 {
+		brokerIdStr := args[0]
+		brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
+		return int32(brokerId), false, err
 	}
 	return -1, all, nil
 }

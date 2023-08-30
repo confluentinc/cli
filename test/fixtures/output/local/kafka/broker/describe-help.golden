@@ -1,4 +1,4 @@
-Describe cluster-wide or per-broker configuration values.
+Describe per-broker configuration values.
 
 Usage:
   confluent local kafka broker describe [id] [flags]
@@ -9,7 +9,7 @@ Describe the "min.insync.replicas" configuration for broker 1.
   $ confluent local broker describe 1 --config-name min.insync.replicas
 
 Flags:
-      --config-name string   Get a specific configuration value
+      --config-name string   Get a specific configuration value.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

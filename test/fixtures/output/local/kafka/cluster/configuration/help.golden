@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   list        List Confluent local Kafka cluster configurations.
+  update      Update Confluent local Kafka cluster configurations.
 
 Global Flags:
   -h, --help            Show help for this command.
