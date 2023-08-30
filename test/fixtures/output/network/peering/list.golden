@@ -1,5 +1,5 @@
-      ID      |     Name      | Network ID | Cloud | Phase  
---------------+---------------+------------+-------+--------
-  peer-111111 | aws-peering   | n-abcde1   | AWS   | READY  
-  peer-111112 | gcp-peering   | n-abcde1   | GCP   | READY  
-  peer-111113 | azure-peering | n-abcde1   | Azure | READY  
+      ID      |     Name      | Network ID | Cloud | Custom Region |                                        Virtual Nework                                        | Cloud Account | Phase  
+--------------+---------------+------------+-------+---------------+----------------------------------------------------------------------------------------------+---------------+--------
+  peer-111111 | aws-peering   | n-abcde1   | AWS   | us-east-1     | vpc-00000000000000000                                                                        |  000000000000 | READY  
+  peer-111112 | gcp-peering   | n-abcde1   | GCP   |               | v-1                                                                                          | p-1           | READY  
+  peer-111113 | azure-peering | n-abcde1   | AZURE | centralus     | /subscriptions/s-1/resourceGroups/group-1/providers/Microsoft.Network/virtualNetworks/vnet-1 | t-1           | READY  

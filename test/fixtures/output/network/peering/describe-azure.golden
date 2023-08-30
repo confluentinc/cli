@@ -1,0 +1,10 @@
++---------------+----------------------------------------------------------------------------------------------+
+| ID            | peer-111113                                                                                  |
+| Name          | azure-peering                                                                                |
+| Network ID    | n-abcde1                                                                                     |
+| Cloud         | AZURE                                                                                        |
+| Phase         | READY                                                                                        |
+| Custom Region | centralus                                                                                    |
+| Azure VNet    | /subscriptions/s-1/resourceGroups/group-1/providers/Microsoft.Network/virtualNetworks/vnet-1 |
+| Azure Tenant  | t-1                                                                                          |
++---------------+----------------------------------------------------------------------------------------------+

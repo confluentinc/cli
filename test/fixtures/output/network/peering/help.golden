@@ -4,6 +4,7 @@ Usage:
   confluent network peering [command]
 
 Available Commands:
+  describe    Describe a peering connection.
   list        List peering connections.
 
 Global Flags:
