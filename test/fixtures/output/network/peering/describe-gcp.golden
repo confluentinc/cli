@@ -1,0 +1,9 @@
++-----------------+-------------+
+| ID              | peer-111112 |
+| Name            | gcp-peering |
+| Network ID      | n-abcde1    |
+| Cloud           | GCP         |
+| Phase           | READY       |
+| GCP Project     | p-1         |
+| GCP VPC Network | v-1         |
++-----------------+-------------+

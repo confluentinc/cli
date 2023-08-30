@@ -1,0 +1,11 @@
+{
+  "id": "peer-111111",
+  "name": "aws-peering",
+  "network_id": "n-abcde1",
+  "cloud": "AWS",
+  "phase": "READY",
+  "custom_region": "us-east-1",
+  "aws_vpc": "vpc-00000000000000000",
+  "aws_account": "000000000000",
+  "aws_routes": ["10.108.16.0/21"]
+}

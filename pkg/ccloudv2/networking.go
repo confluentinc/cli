@@ -101,3 +101,8 @@ func (c *Client) executeListPeerings(environment, pageToken string) (networkingv
 	resp, httpResp, err := req.Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) GetPeering(environment, id string) (networkingv1.NetworkingV1Peering, error) {
+	resp, httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.GetNetworkingV1Peering(c.networkingApiContext(), id).Environment(environment).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}

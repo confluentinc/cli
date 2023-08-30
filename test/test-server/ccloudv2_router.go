@@ -60,6 +60,7 @@ var ccloudV2Routes = []route{
 	{"/networking/v1/networks", handleNetworkingNetworks},
 	{"/networking/v1/networks/{id}", handleNetworkingNetwork},
 	{"/networking/v1/peerings", handleNetworkingPeerings},
+	{"/networking/v1/peerings/{id}", handleNetworkingPeering},
 	{"/org/v2/environments", handleOrgEnvironments},
 	{"/org/v2/environments/{id}", handleOrgEnvironment},
 	{"/org/v2/organizations", handleOrgOrganizations},
