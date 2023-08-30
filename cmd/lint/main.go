@@ -172,6 +172,7 @@ var properNouns = []string{
 	"Clients",
 	"Clojure",
 	"Confluent Cloud",
+	"Confluent Local",
 	"Confluent Platform",
 	"Confluent",
 	"Connect",
