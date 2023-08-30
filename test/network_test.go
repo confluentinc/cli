@@ -116,3 +116,13 @@ func (s *CLITestSuite) TestNetworkPeeringDescribe() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkPeering_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network peering describe ""`, login: "cloud", fixture: "network/peering/describe-autocomplete.golden"},
+	}
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
