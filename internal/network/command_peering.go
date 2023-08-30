@@ -1,11 +1,16 @@
 package network
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type peeringCommand struct {
@@ -53,7 +58,8 @@ func newPeeringCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &peeringCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newPeeringListCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
 
 	return cmd
 }
@@ -65,4 +71,115 @@ func (c *peeringCommand) getPeerings() ([]networkingv1.NetworkingV1Peering, erro
 	}
 
 	return c.V2Client.ListPeerings(environmentId)
+}
+
+func (c *peeringCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *peeringCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompletePeerings()
+}
+
+func (c *peeringCommand) autocompletePeerings() []string {
+	peerings, err := c.getPeerings()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(peerings))
+	for i, peering := range peerings {
+		suggestions[i] = fmt.Sprintf("%s\t%s", peering.GetId(), peering.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func getCloud(peering networkingv1.NetworkingV1Peering) (string, error) {
+	cloud := peering.Spec.GetCloud()
+
+	if cloud.NetworkingV1AwsPeering != nil {
+		return CloudAws, nil
+	} else if cloud.NetworkingV1GcpPeering != nil {
+		return CloudGcp, nil
+	} else if cloud.NetworkingV1AzurePeering != nil {
+		return CloudAzure, nil
+	}
+
+	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
+}
+
+func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peering) error {
+	table := output.NewTable(cmd)
+	describeFields := []string{"Id", "Name", "NetworkId", "Cloud", "Phase"}
+
+	if peering.Spec == nil {
+		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
+	}
+	if peering.Status == nil {
+		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
+	}
+
+	cloud, err := getCloud(peering)
+	if err != nil {
+		return err
+	}
+
+	human := &peeringHumanOut{
+		Id:        peering.GetId(),
+		Name:      peering.Spec.GetDisplayName(),
+		NetworkId: peering.Spec.Network.GetId(),
+		Cloud:     cloud,
+		Phase:     peering.Status.GetPhase(),
+	}
+
+	serialized := &peeringSerializedOut{
+		Id:        peering.GetId(),
+		Name:      peering.Spec.GetDisplayName(),
+		NetworkId: peering.Spec.Network.GetId(),
+		Cloud:     cloud,
+		Phase:     peering.Status.GetPhase(),
+	}
+
+	switch cloud {
+	case CloudAws:
+		human.AwsVpc = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
+		human.AwsAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
+		human.AwsRoutes = strings.Join(peering.Spec.Cloud.NetworkingV1AwsPeering.GetRoutes(), ", ")
+		human.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
+		serialized.AwsVpc = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
+		serialized.AwsAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
+		serialized.AwsRoutes = peering.Spec.Cloud.NetworkingV1AwsPeering.GetRoutes()
+		serialized.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
+		describeFields = append(describeFields, "AwsVpc", "AwsAccount", "AwsRoutes", "CustomRegion")
+	case CloudGcp:
+		human.GcpVpcNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
+		human.GcpProject = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
+		serialized.GcpVpcNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
+		serialized.GcpProject = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
+		describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
+	case CloudAzure:
+		human.AzureVNet = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
+		human.AzureTenant = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
+		human.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
+		serialized.AzureVNet = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
+		serialized.AzureTenant = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
+		serialized.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
+		describeFields = append(describeFields, "AzureVNet", "AzureTenant", "CustomRegion")
+	}
+
+	if output.GetFormat(cmd) == output.Human {
+		table.Add(human)
+	} else {
+		table.Add(serialized)
+	}
+
+	table.Filter(describeFields)
+	return table.Print()
 }

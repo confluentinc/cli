@@ -5,14 +5,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
-
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *peeringCommand) newPeeringListCommand() *cobra.Command {
+func (c *peeringCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List peering connections.",
@@ -67,18 +65,4 @@ func (c *peeringCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	list.Filter([]string{"Id", "Name", "NetworkId", "Cloud", "Phase"})
 	return list.Print()
-}
-
-func getCloud(peering networkingv1.NetworkingV1Peering) (string, error) {
-	cloud := peering.Spec.GetCloud()
-
-	if cloud.NetworkingV1AwsPeering != nil {
-		return CloudAws, nil
-	} else if cloud.NetworkingV1GcpPeering != nil {
-		return CloudGcp, nil
-	} else if cloud.NetworkingV1AzurePeering != nil {
-		return CloudAzure, nil
-	}
-
-	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
 }
