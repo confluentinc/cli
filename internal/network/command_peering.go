@@ -13,19 +13,35 @@ type peeringCommand struct {
 }
 
 type peeringHumanOut struct {
-	Id        string `human:"ID"`
-	Name      string `human:"Name"`
-	NetworkId string `human:"Network ID"`
-	Cloud     string `human:"Cloud"`
-	Phase     string `human:"Phase"`
+	Id            string `human:"ID"`
+	Name          string `human:"Name"`
+	NetworkId     string `human:"Network ID"`
+	Cloud         string `human:"Cloud"`
+	Phase         string `human:"Phase"`
+	CustomRegion  string `human:"Custom Region,omitempty"`
+	AwsVpc        string `human:"AWS VPC,omitempty"`
+	AwsAccount    string `human:"AWS Account,omitempty"`
+	AwsRoutes     string `human:"AWS Routes,omitempty"`
+	GcpProject    string `human:"GCP Project,omitempty"`
+	GcpVpcNetwork string `human:"GCP VPC Network,omitempty"`
+	AzureVNet     string `human:"Azure VNet,omitempty"`
+	AzureTenant   string `human:"Azure Tenant,omitempty"`
 }
 
 type peeringSerializedOut struct {
-	Id        string `serialized:"id"`
-	Name      string `serialized:"name"`
-	NetworkId string `serialized:"network_id"`
-	Cloud     string `serialized:"cloud"`
-	Phase     string `serialized:"phase"`
+	Id            string   `serialized:"id"`
+	Name          string   `serialized:"name"`
+	NetworkId     string   `serialized:"network_id"`
+	Cloud         string   `serialized:"cloud"`
+	Phase         string   `serialized:"phase"`
+	CustomRegion  string   `serialized:"custom_region,omitempty"`
+	AwsVpc        string   `serialized:"aws_vpc,omitempty"`
+	AwsAccount    string   `serialized:"aws_account,omitempty"`
+	AwsRoutes     []string `serialized:"aws_routes,omitempty"`
+	GcpProject    string   `serialized:"gcp_project,omitempty"`
+	GcpVpcNetwork string   `serialized:"gcp_vpc_network,omitempty"`
+	AzureVNet     string   `serialized:"azure_vnet,omitempty"`
+	AzureTenant   string   `serialized:"azure_tenant,omitempty"`
 }
 
 func newPeeringCommand(prerunner pcmd.PreRunner) *cobra.Command {

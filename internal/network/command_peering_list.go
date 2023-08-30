@@ -65,6 +65,7 @@ func (c *peeringCommand) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 	}
+	list.Filter([]string{"Id", "Name", "NetworkId", "Cloud", "Phase"})
 	return list.Print()
 }
 
