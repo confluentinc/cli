@@ -3,10 +3,12 @@ package broker
 import (
 	"context"
 
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
 )
 
 func List(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
