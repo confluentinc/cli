@@ -61,6 +61,10 @@ type command struct {
 var (
 	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
 	DnsResolutions  = []string{"private", "chased-private"}
+
+	CloudAws   = "AWS"
+	CloudAzure = "AZURE"
+	CloudGcp   = "GCP"
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
@@ -133,19 +137,19 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		}
 
 		switch cloud {
-		case "AWS":
+		case CloudAws:
 			human.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
 			human.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
 			serialized.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
 			serialized.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
 			describeFields = append(describeFields, "AwsVpc", "AwsAccount")
-		case "GCP":
+		case CloudGcp:
 			human.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
 			human.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
 			serialized.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
 			serialized.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
 			describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
-		case "AZURE":
+		case CloudAzure:
 			human.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
 			human.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
 			serialized.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
