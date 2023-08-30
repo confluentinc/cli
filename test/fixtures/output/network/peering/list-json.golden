@@ -1,0 +1,23 @@
+[
+  {
+    "id": "peer-111111",
+    "name": "aws-peering",
+    "network_id": "n-abcde1",
+    "cloud": "AWS",
+    "phase": "READY"
+  },
+  {
+    "id": "peer-111112",
+    "name": "gcp-peering",
+    "network_id": "n-abcde1",
+    "cloud": "GCP",
+    "phase": "READY"
+  },
+  {
+    "id": "peer-111113",
+    "name": "azure-peering",
+    "network_id": "n-abcde1",
+    "cloud": "Azure",
+    "phase": "READY"
+  }
+]

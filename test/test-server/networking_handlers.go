@@ -39,6 +39,16 @@ func handleNetworkingNetworks(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/peerings"
+func handleNetworkingPeerings(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingPeeringList(t)(w, r)
+		}
+	}
+}
+
 func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -285,4 +295,75 @@ func getAzureNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
 		}
 	}
 	return network
+}
+
+func handleNetworkingPeeringList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		awsPeering := getPeering("peer-111111", "aws-peering", "AWS")
+		gcpPeering := getPeering("peer-111112", "gcp-peering", "GCP")
+		azurePeering := getPeering("peer-111113", "azure-peering", "Azure")
+
+		pageToken := r.URL.Query().Get("page_token")
+		var peeringList networkingv1.NetworkingV1PeeringList
+		switch pageToken {
+		case "azure":
+			peeringList = networkingv1.NetworkingV1PeeringList{
+				Data:     []networkingv1.NetworkingV1Peering{azurePeering},
+				Metadata: networkingv1.ListMeta{},
+			}
+		case "gcp":
+			peeringList = networkingv1.NetworkingV1PeeringList{
+				Data:     []networkingv1.NetworkingV1Peering{gcpPeering},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/peerings?environment=env-00000&page_size=1&page_token=azure"))},
+			}
+		default:
+			peeringList = networkingv1.NetworkingV1PeeringList{
+				Data:     []networkingv1.NetworkingV1Peering{awsPeering},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/peerings?environment=env-00000&page_size=1&page_token=gcp"))},
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(peeringList)
+		require.NoError(t, err)
+	}
+}
+
+func getPeering(id, name, cloud string) networkingv1.NetworkingV1Peering {
+	peering := networkingv1.NetworkingV1Peering{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingv1.NetworkingV1PeeringSpec{
+			Cloud:       &networkingv1.NetworkingV1PeeringSpecCloudOneOf{},
+			DisplayName: networkingv1.PtrString(name),
+			Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+			Network:     &networkingv1.ObjectReference{Id: "n-abcde1"},
+		},
+		Status: &networkingv1.NetworkingV1PeeringStatus{
+			Phase: "READY",
+		},
+	}
+
+	switch cloud {
+	case "AWS":
+		peering.Spec.Cloud.NetworkingV1AwsPeering = &networkingv1.NetworkingV1AwsPeering{
+			Kind:           "AwsPeering",
+			Account:        "000000000000",
+			Vpc:            "vpc-00000000000000000",
+			Routes:         []string{"10.108.16.0/21"},
+			CustomerRegion: "us-east-1",
+		}
+	case "GCP":
+		peering.Spec.Cloud.NetworkingV1GcpPeering = &networkingv1.NetworkingV1GcpPeering{
+			Kind:       "GcpPeering",
+			Project:    "p-1",
+			VpcNetwork: "v-1",
+		}
+	case "Azure":
+		peering.Spec.Cloud.NetworkingV1AzurePeering = &networkingv1.NetworkingV1AzurePeering{
+			Kind:           "AzurePeering",
+			Tenant:         "t-1",
+			Vnet:           "/subscriptions/s-1/resourceGroups/group-1/providers/Microsoft.Network/virtualNetworks/vnet-1",
+			CustomerRegion: "centralus",
+		}
+	}
+	return peering
 }

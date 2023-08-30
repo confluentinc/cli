@@ -1,7 +1,7 @@
-List networks.
+List peering connections.
 
 Usage:
-  confluent network list [flags]
+  confluent network peering list [flags]
 
 Flags:
       --context string       CLI context name.

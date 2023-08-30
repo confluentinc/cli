@@ -14,7 +14,7 @@ import (
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "Display networks in the current environment.",
+		Short: "List networks.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
