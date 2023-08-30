@@ -106,3 +106,8 @@ func (c *Client) GetPeering(environment, id string) (networkingv1.NetworkingV1Pe
 	resp, httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.GetNetworkingV1Peering(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) UpdatePeering(environment, id string, peeringUpdate networkingv1.NetworkingV1PeeringUpdate) (networkingv1.NetworkingV1Peering, error) {
+	resp, httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.UpdateNetworkingV1Peering(c.networkingApiContext(), id).NetworkingV1PeeringUpdate(peeringUpdate).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}

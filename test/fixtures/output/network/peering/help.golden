@@ -6,6 +6,7 @@ Usage:
 Available Commands:
   describe    Describe a peering connection.
   list        List peering connections.
+  update      Update an existing peering connection.
 
 Global Flags:
   -h, --help            Show help for this command.

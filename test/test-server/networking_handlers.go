@@ -46,6 +46,8 @@ func handleNetworkingPeering(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPeeringGet(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingPeeringUpdate(t, id)(w, r)
 		}
 	}
 }
@@ -397,6 +399,25 @@ func handleNetworkingPeeringGet(t *testing.T, id string) http.HandlerFunc {
 		case "peer-111113":
 			peering := getPeering("peer-111113", "azure-peering", "AZURE")
 			err := json.NewEncoder(w).Encode(peering)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingPeeringUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "peer-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The peering peer-invalid was not found.")
+			require.NoError(t, err)
+		case "peer-111111":
+			body := &networkingv1.NetworkingV1Network{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			peering := getPeering("peer-111111", body.Spec.GetDisplayName(), "AWS")
+			err = json.NewEncoder(w).Encode(peering)
 			require.NoError(t, err)
 		}
 	}
