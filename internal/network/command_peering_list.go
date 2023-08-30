@@ -16,7 +16,7 @@ type listPeeringHumanOut struct {
 	NetworkId      string `human:"Network ID"`
 	Cloud          string `human:"Cloud"`
 	CustomRegion   string `human:"Custom Region,omitempty"`
-	VirtualNetwork string `human:"Virtual Netwrok, omitempty"`
+	VirtualNetwork string `human:"Virtual Nework, omitempty"`
 	CloudAccount   string `human:"Cloud Account, omitempty"`
 	Phase          string `human:"Phase"`
 }
