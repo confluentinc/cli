@@ -46,10 +46,9 @@ type peeringSerializedOut struct {
 
 func newPeeringCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "peering",
-		Short:       "Manage peering connections.",
-		Args:        cobra.NoArgs,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "peering",
+		Short: "Manage peering connections.",
+		Args:  cobra.NoArgs,
 	}
 
 	c := &peeringCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
