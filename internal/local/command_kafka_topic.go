@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func (c *Command) newKafkaTopicCommand() *cobra.Command {
+func (c *command) newKafkaTopicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Run Kafka topic related commands.",
@@ -60,4 +61,9 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	}
 
 	return kafkaRestClient, clusterListData.Data[0].ClusterId, nil
+}
+
+func (c *command) getPlaintextBootstrapServers() string {
+	servers := strings.Join(c.Config.LocalPorts.PlaintextPorts, ",:")
+	return ":" + servers
 }
