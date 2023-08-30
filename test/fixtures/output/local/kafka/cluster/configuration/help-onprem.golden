@@ -1,0 +1,15 @@
+Manage Kafka cluster configurations in Confluent Local.
+
+Usage:
+  confluent local kafka cluster configuration [command]
+
+Available Commands:
+  list        List Confluent local Kafka cluster configurations.
+  update      Update Confluent local Kafka cluster configurations.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local kafka cluster configuration [command] --help" for more information about a command.
