@@ -16,5 +16,5 @@ supported_connection_types:
 active_connection_types:
 - PRIVATELINK
 - TRANSITGATEWAY
-vpc: vpc-00000000000000000
-account: "000000000000"
+aws_vpc: vpc-00000000000000000
+aws_account: "000000000000"

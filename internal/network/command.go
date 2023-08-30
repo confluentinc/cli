@@ -26,12 +26,12 @@ type humanOut struct {
 	Phase                    string `human:"Phase"`
 	SupportedConnectionTypes string `human:"Supported Connection Types"`
 	ActiveConnectionTypes    string `human:"Active Connection Types"`
-	Vpc                      string `human:"VPC"`
-	Account                  string `human:"Account"`
-	Project                  string `human:"Project"`
-	VpcNetwork               string `human:"VPC Network"`
-	VNet                     string `human:"VNet"`
-	Subscription             string `human:"Subscription"`
+	AwsVpc                   string `human:"AWS VPC,omitempty"`
+	AwsAccount               string `human:"AWS Account,omitempty"`
+	GcpProject               string `human:"GCP Project,omitempty"`
+	GcpVpcNetwork            string `human:"GCP VPC Network,omitempty"`
+	AzureVNet                string `human:"Azure VNet,omitempty"`
+	AzureSubscription        string `human:"Azure Subscription,omitempty"`
 }
 
 type serializedOut struct {
@@ -46,12 +46,12 @@ type serializedOut struct {
 	Phase                    string   `serialized:"phase"`
 	SupportedConnectionTypes []string `serialized:"supported_connection_types"`
 	ActiveConnectionTypes    []string `serialized:"active_connection_types"`
-	Vpc                      string   `serialized:"vpc"`
-	Account                  string   `serialized:"account"`
-	Project                  string   `serialized:"project"`
-	VpcNetwork               string   `serialized:"vpc_network"`
-	VNet                     string   `serialized:"vnet"`
-	Subscription             string   `serialized:"subscription"`
+	AwsVpc                   string   `serialized:"aws_vpc,omitempty"`
+	AwsAccount               string   `serialized:"aws_account,omitempty"`
+	GcpProject               string   `serialized:"gcp_project,omitempty"`
+	GcpVpcNetwork            string   `serialized:"gcp_vpc_network,omitempty"`
+	AzureVNet                string   `serialized:"azure_vnet,omitempty"`
+	AzureSubscription        string   `serialized:"azure_subscription,omitempty"`
 }
 
 type command struct {
@@ -132,23 +132,23 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 
 		switch cloud {
 		case "AWS":
-			human.Vpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
-			human.Account = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
-			serialized.Vpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
-			serialized.Account = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
-			describeFields = append(describeFields, "Vpc", "Account")
+			human.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
+			human.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
+			serialized.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
+			serialized.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
+			describeFields = append(describeFields, "AwsVpc", "AwsAccount")
 		case "GCP":
-			human.VpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
-			human.Project = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
-			serialized.VpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
-			serialized.Project = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
-			describeFields = append(describeFields, "VpcNetwork", "Project")
+			human.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
+			human.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
+			serialized.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
+			serialized.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
+			describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
 		case "AZURE":
-			human.VNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
-			human.Subscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
-			serialized.VNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
-			serialized.Subscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
-			describeFields = append(describeFields, "VNet", "Subscription")
+			human.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
+			human.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
+			serialized.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
+			serialized.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
+			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
 		}
 	}
 

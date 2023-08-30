@@ -10,6 +10,6 @@
 | Phase                      | READY                        |
 | Supported Connection Types | PRIVATELINK, TRANSITGATEWAY  |
 | Active Connection Types    | PRIVATELINK, TRANSITGATEWAY  |
-| VPC                        | vpc-00000000000000000        |
-| Account                    | 000000000000                 |
+| AWS VPC                    | vpc-00000000000000000        |
+| AWS Account                | 000000000000                 |
 +----------------------------+------------------------------+

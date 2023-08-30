@@ -9,6 +9,6 @@
 | Phase                      | READY                                |
 | Supported Connection Types | PEERING                              |
 | Active Connection Types    | PEERING                              |
-| VNet                       | azure-vnet                           |
-| Subscription               | aa000000-a000-0a00-00aa-0000aaa0a0a0 |
+| Azure VNet                 | azure-vnet                           |
+| Azure Subscription         | aa000000-a000-0a00-00aa-0000aaa0a0a0 |
 +----------------------------+--------------------------------------+

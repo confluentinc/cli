@@ -10,6 +10,6 @@
 | Phase                      | READY                          |
 | Supported Connection Types | PRIVATELINK                    |
 | Active Connection Types    | PRIVATELINK                    |
-| Project                    | gcp-project                    |
-| VPC Network                | gcp-vpc                        |
+| GCP Project                | gcp-project                    |
+| GCP VPC Network            | gcp-vpc                        |
 +----------------------------+--------------------------------+
