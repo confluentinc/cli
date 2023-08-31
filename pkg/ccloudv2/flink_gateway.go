@@ -2,8 +2,9 @@ package ccloudv2
 
 import (
 	"context"
-
+	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/google/uuid"
+	"net/http"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
@@ -27,7 +28,19 @@ type FlinkGatewayClient struct {
 func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
 	cfg := flinkgatewayv1alpha1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClientWithRedirect(unsafeTrace,
+		func(req *http.Request, via []*http.Request) error {
+			// Customize the redirect to add authorization header on 307 Redirect.
+			// This is required as the Location header returned by the gateway may not be an exact subdomain and Authorization
+			// header is copied only when the hostname is exactly the same or an exact subdomain of the hostname
+			// Ideally, we should check the status code returned in via[0].Response. However, via[0].Response is nil in underlying
+			// retryable http implementation
+			if len(via) > 0 && len(via) <= 10 {
+				log.CliLogger.Debugf("Following redirect with authorization to url:%s", req.URL)
+				req.Header.Add("Authorization", "Bearer "+authToken)
+			}
+			return nil
+		})
 	cfg.Servers = flinkgatewayv1alpha1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
