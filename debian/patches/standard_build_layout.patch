@@ -1,5 +1,5 @@
---- cli/Makefile	2023-08-17 08:17:03.168828613 -0700
-+++ debian/Makefile	2023-07-07 11:26:58.304825004 -0700
+--- cli/Makefile	2023-08-21 09:55:36.335812643 -0700
++++ debian/Makefile	2023-08-23 14:14:07.398823015 -0700
 @@ -1,120 +1,130 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.17.2
@@ -118,7 +118,7 @@
 +	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 +
 +	cd $(DESTDIR)$(LIBPATH); \
-+	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
++	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64; do \
 +		mkdir -p $${dir}; \
 +		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
 +		filepath=$${dir}/confluent$${ext}; \
