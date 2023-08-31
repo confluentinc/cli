@@ -13,6 +13,7 @@ func (s *CLITestSuite) TestNetworkDescribe() {
 		{args: "network describe", fixture: "network/describe-missing-id.golden", exitCode: 1},
 		{args: "network describe n-invalid", fixture: "network/describe-invalid.golden", exitCode: 1},
 	}
+
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
@@ -29,6 +30,7 @@ func (s *CLITestSuite) TestNetworkDelete() {
 		{args: "network delete n-dependency --force", fixture: "network/delete-network-with-dependency.golden", exitCode: 1},
 		{args: "network delete n-invalid --force", fixture: "network/delete-network-not-exist.golden", exitCode: 1},
 	}
+
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
@@ -85,6 +87,7 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 		{args: `__complete network create new-network --connection-types ""`, login: "cloud", fixture: "network/create-autocomplete-connection-types.golden"},
 		{args: `__complete network create new-network --dns-resolution ""`, login: "cloud", fixture: "network/create-autocomplete-dns-resolution.golden"},
 	}
+
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
@@ -96,6 +99,7 @@ func (s *CLITestSuite) TestNetworkPeeringList() {
 		{args: "network peering list", fixture: "network/peering/list.golden"},
 		{args: "network peering list --output json", fixture: "network/peering/list-json.golden"},
 	}
+
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
@@ -111,6 +115,37 @@ func (s *CLITestSuite) TestNetworkPeeringDescribe() {
 		{args: "network peering describe", fixture: "network/peering/describe-missing-id.golden", exitCode: 1},
 		{args: "network peering describe peer-invalid", fixture: "network/peering/describe-invalid.golden", exitCode: 1},
 	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPeeringUpdate() {
+	tests := []CLITest{
+		{args: "network peering update", fixture: "network/peering/update-missing-args.golden", exitCode: 1},
+		{args: "network peering update peer-111111", fixture: "network/peering/update-missing-flags.golden", exitCode: 1},
+		{args: "network peering update peer-111111 --name new-peering-name", fixture: "network/peering/update.golden"},
+		{args: "network peering update peer-invalid --name new-peering-name", fixture: "network/peering/update-peering-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPeeringDelete() {
+	tests := []CLITest{
+		{args: "network peering delete peer-111111 --force", fixture: "network/peering/delete.golden"},
+		{args: "network peering delete peer-111111", input: "y\n", fixture: "network/peering/delete-prompt.golden"},
+		{args: "network peering delete peer-111111 peer-invalid", fixture: "network/peering/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network peering delete peer-111111 peer-111112", input: "n\n", fixture: "network/peering/delete-multiple-refuse.golden"},
+		{args: "network peering delete peer-111111 peer-111112", input: "y\n", fixture: "network/peering/delete-multiple-success.golden"},
+		{args: "network peering delete peer-invalid --force", fixture: "network/peering/delete-peering-not-exist.golden", exitCode: 1},
+	}
+
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
@@ -121,6 +156,7 @@ func (s *CLITestSuite) TestNetworkPeering_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network peering describe ""`, login: "cloud", fixture: "network/peering/describe-autocomplete.golden"},
 	}
+
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
