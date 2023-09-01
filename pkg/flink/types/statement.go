@@ -69,7 +69,7 @@ func (s ProcessedStatement) printStatusMessageOfLocalStatement() {
 
 func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	if s.StatementName != "" {
-		utils.OutputInfof("Statement name: %s", s.StatementName)
+		utils.OutputInfof("Statement name: %s\n", s.StatementName)
 	}
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))
