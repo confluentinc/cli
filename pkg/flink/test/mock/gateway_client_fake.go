@@ -7,7 +7,6 @@ import (
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
-	"github.com/google/uuid"
 	"pgregory.net/rapid"
 )
 
@@ -45,33 +44,9 @@ func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken,
 	return flinkgatewayv1beta1.SqlV1beta1StatementList{Data: c.statements}, nil
 }
 
-func (c *FakeFlinkGatewayClient) CreateStatement(statement, computePoolId string, properties map[string]string, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
-	columnDetails := c.getFakeResultSchema(statement)
-	statementName := uuid.New().String()[:20]
-
+func (c *FakeFlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	c.fakeCount = 0
-	creationTime := time.Now()
-	c.statement = flinkgatewayv1beta1.SqlV1beta1Statement{
-		Name:       &statementName,
-		ApiVersion: nil,
-		Kind:       nil,
-		Metadata: &flinkgatewayv1beta1.ObjectMeta{
-			Self:      "",
-			CreatedAt: &creationTime,
-			UpdatedAt: nil,
-		},
-		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Statement:      &statement,
-			Properties:     &properties,
-			ComputePoolId:  &computePoolId,
-			IdentityPoolId: &identityPoolId,
-		},
-		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
-			Phase:        "PENDING",
-			ResultSchema: &flinkgatewayv1beta1.SqlV1beta1ResultSchema{Columns: &columnDetails},
-			Detail:       nil,
-		},
-	}
+	c.statement = statement
 	c.statements = append(c.statements, c.statement)
 
 	return c.statement, nil

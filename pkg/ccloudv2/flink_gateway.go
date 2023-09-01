@@ -3,8 +3,6 @@ package ccloudv2
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors/flink"
@@ -14,7 +12,7 @@ type GatewayClientInterface interface {
 	DeleteStatement(environmentId, statementName, orgId string) error
 	GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error)
-	CreateStatement(statement, computePoolId string, properties map[string]string, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
+	CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error)
 	GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1beta1.SqlV1beta1StatementExceptionList, error)
 }
@@ -84,25 +82,15 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePool
 	return allStatements, nil
 }
 
-func (c *FlinkGatewayClient) CreateStatement(statement, computePoolId string, properties map[string]string, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
-	statementName := uuid.New().String()[:18]
-
-	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
-		Name: &statementName,
-		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Statement:     &statement,
-			ComputePoolId: &computePoolId,
-			Properties:    &properties,
-		},
-	}
+func (c *FlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	if serviceAccountId != "" {
 		// add the service account header and remove it after the request
-		statementObj.Principal = &serviceAccountId
+		statement.Principal = &serviceAccountId
 	} else {
 		// if this is also empty we have the interactive query/AUMP case
-		statementObj.Spec.IdentityPoolId = &identityPoolId
+		statement.Spec.IdentityPoolId = &identityPoolId
 	}
-	resp, httpResp, err := c.StatementsSqlV1beta1Api.CreateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId).SqlV1beta1Statement(statementObj).Execute()
+	resp, httpResp, err := c.StatementsSqlV1beta1Api.CreateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId).SqlV1beta1Statement(statement).Execute()
 	return resp, flink.CatchError(err, httpResp)
 }
 
