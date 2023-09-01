@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/google/uuid"
 	"net/url"
 	"strings"
 	"time"
@@ -75,11 +76,21 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return result, sErr
 	}
 
+	statementName := uuid.New().String()[:18]
+
 	// Process remote statements
+	computePoolId := s.appOptions.GetComputePoolId()
+	properties := s.Properties.GetSqlProperties()
+
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
-		statement,
-		s.appOptions.GetComputePoolId(),
-		s.Properties.GetSqlProperties(),
+		flinkgatewayv1beta1.SqlV1beta1Statement{
+			Name: &statementName,
+			Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+				Statement:     &statement,
+				ComputePoolId: &computePoolId,
+				Properties:    &properties,
+			},
+		},
 		s.Properties.Get(config.ConfigKeyServiceAcount),
 		s.appOptions.GetIdentityPoolId(),
 		s.appOptions.GetEnvironmentId(),
