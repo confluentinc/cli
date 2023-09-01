@@ -1,0 +1,38 @@
+Error: if any flags in the group [gcp-project gcp-vpc-network] are set they must all be set; missing [gcp-project]
+Usage:
+  confluent network peering create <name> [flags]
+
+Examples:
+Create an AWS VPC peering.
+
+  $ confluent network peering create aws-peering --network n-abcde1 --cloud aws --aws-account 012345678901 --aws-vpc vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21
+
+Create a GCP VPC peering.
+
+  $ confluent network peering create gcp-peering --network n-abcde1 --cloud gcp --gcp-project temp-123456 --gcp-vpc-network customer-test-vpc-network --gcp-import-custom-routes
+
+Create an Azure VNet peering.
+
+  $ confluent network peering create azure-peering --network n-abcde1 --cloud azure --azure-tenant 1111tttt-1111-1111-1111-111111tttttt --azure-vnet /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet --customer-region centralus
+
+Flags:
+      --network string             REQUIRED: Network ID.
+      --cloud string               REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --aws-account string         AWS account ID associated with the VPC that you are peering with Confluent Cloud network.
+      --gcp-project string         Google Cloud project ID associated with the VPC that you are peering with Confluent Cloud network.
+      --azure-tenant string        Azure Tenant ID in which your Azure Subscription exists.
+      --aws-vpc string             AWS VPC ID that you are peering with Confluent Cloud network.
+      --gcp-vpc-network string     Name of the Google Cloud VPC that you are peering with Confluent Cloud network.
+      --azure-vnet string          Azure Resource ID of the VNet that you are peering with Confluent Cloud.
+      --aws-routes strings         A comma-separated list of CIDR blocks of the AWS VPC that you are peering with Confluent Cloud network.
+      --gcp-import-custom-routes   Enable customer route import for Google Cloud VPC Peering.
+      --customer-region string     Cloud region ID of the AWS VPC or Azure VNet that you are peering with Confluent Cloud network.
+      --context string             CLI context name.
+      --environment string         Environment ID.
+  -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

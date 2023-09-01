@@ -152,9 +152,29 @@ func (s *CLITestSuite) TestNetworkPeeringDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkPeeringCreate() {
+	tests := []CLITest{
+		{args: "network peering create aws-peering --network n-abcde1 --cloud aws --aws-account 012345678901 --aws-vpc vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21", fixture: "network/peering/create-aws.golden"},
+		{args: "network peering create aws-peering --network n-abcde1 --cloud aws --aws-account 012345678901 --aws-vpc vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21 --customer-region us-west-2", fixture: "network/peering/create-aws-customer-region.golden"},
+		{args: "network peering create aws-peering --network n-abcde1 --cloud aws --aws-account 012345678901 --aws-vpc vpc-abcdef0123456789a", fixture: "network/peering/create-aws-missing-flags.golden", exitCode: 1},
+		{args: "network peering create gcp-peering --network n-abcde1 --cloud gcp --gcp-project temp-123456 --gcp-vpc-network customer-test-vpc-network", fixture: "network/peering/create-gcp.golden"},
+		{args: "network peering create gcp-peering --network n-abcde1 --cloud gcp --gcp-project temp-123456 --gcp-vpc-network customer-test-vpc-network --gcp-import-custom-routes", fixture: "network/peering/create-gcp-import-custom-routes.golden"},
+		{args: "network peering create gcp-peering --network n-abcde1 --cloud gcp --gcp-vpc-network customer-test-vpc-network --gcp-import-custom-routes", fixture: "network/peering/create-gcp-missing-flags.golden", exitCode: 1},
+		{args: "network peering create azure-peering --network n-abcde1 --cloud azure --azure-tenant 1111tttt-1111-1111-1111-111111tttttt --azure-vnet /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet", fixture: "network/peering/create-azure.golden"},
+		{args: "network peering create azure-peering --network n-abcde1 --cloud azure --azure-tenant 1111tttt-1111-1111-1111-111111tttttt --azure-vnet /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet --customer-region centralus", fixture: "network/peering/create-azure-customer-region.golden"},
+		{args: "network peering create azure-peering --network n-abcde1 --cloud azure --azure-tenant 1111tttt-1111-1111-1111-111111tttttt", fixture: "network/peering/create-azure-missing-flags.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkPeering_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network peering describe ""`, login: "cloud", fixture: "network/peering/describe-autocomplete.golden"},
+		{args: `__complete network peering create aws-peering --network ""`, login: "cloud", fixture: "network/peering/create-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

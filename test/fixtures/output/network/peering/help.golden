@@ -4,6 +4,7 @@ Usage:
   confluent network peering [command]
 
 Available Commands:
+  create      Create a peering.
   delete      Delete one or more peerings.
   describe    Describe a peering.
   list        List peerings.
