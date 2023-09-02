@@ -1,0 +1,18 @@
+Manage transit gateway attachments.
+
+Usage:
+  confluent network transit-gateway-attachment [command]
+
+Aliases:
+  transit-gateway-attachment, tgw-attachment
+
+Available Commands:
+  describe    Describe a transit gateway attachment.
+  list        List transit gateway attachments.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network transit-gateway-attachment [command] --help" for more information about a command.
