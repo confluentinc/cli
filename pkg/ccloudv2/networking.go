@@ -121,3 +121,38 @@ func (c *Client) CreatePeering(peering networkingv1.NetworkingV1Peering) (networ
 	resp, httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.CreateNetworkingV1Peering(c.networkingApiContext()).NetworkingV1Peering(peering).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) ListTransitGatewayAttachments(environment string) ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+	var list []networkingv1.NetworkingV1TransitGatewayAttachment
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, err := c.executeListTransitGatewayAttachments(environment, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListTransitGatewayAttachments(environment, pageToken string) (networkingv1.NetworkingV1TransitGatewayAttachmentList, error) {
+	req := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.ListNetworkingV1TransitGatewayAttachments(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetTransitGatewayAttachment(environment, id string) (networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+	resp, httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.GetNetworkingV1TransitGatewayAttachment(c.networkingApiContext(), id).Environment(environment).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
