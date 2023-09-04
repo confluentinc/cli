@@ -133,7 +133,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	if serviceAccount == "" && identityPool == "" {
 		output.ErrPrintln("Warning: no service account provided. To ensure that your statements run continuously, " +
-			"switch to using a service account instead of your user identity by providing a service account with `confluent iam service-account use` or `--service-account`. " +
+			"switch to using a service account instead of your user identity with `confluent iam service-account use` or `--service-account`. " +
 			"Otherwise, statements will stop running after 4 hours.")
 	}
 
