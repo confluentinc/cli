@@ -4,10 +4,11 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"github.com/google/uuid"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
@@ -84,14 +85,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	properties := s.Properties.GetSqlProperties()
 
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
-		flinkgatewayv1beta1.SqlV1beta1Statement{
-			Name: &statementName,
-			Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-				Statement:     &statement,
-				ComputePoolId: &computePoolId,
-				Properties:    &properties,
-			},
-		},
+		createSqlV1beta1Statement(statement, statementName, computePoolId, properties),
 		s.Properties.Get(config.ConfigKeyServiceAcount),
 		s.appOptions.GetIdentityPoolId(),
 		s.appOptions.GetEnvironmentId(),
@@ -101,6 +95,17 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return nil, types.NewStatementErrorFailureMsg(err, s.getStatusDetail(statementObj))
 	}
 	return types.NewProcessedStatement(statementObj), nil
+}
+
+func createSqlV1beta1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1beta1.SqlV1beta1Statement {
+	return flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Statement:     &statement,
+			ComputePoolId: &computePoolId,
+			Properties:    &properties,
+		},
+	}
 }
 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {

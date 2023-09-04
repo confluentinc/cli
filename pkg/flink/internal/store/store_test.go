@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -1006,16 +1007,21 @@ func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
 	}
 
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", appOptions.IdentityPoolId, appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1038,17 +1044,22 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
+
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
-		Principal: &serviceAccountId,
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
 	}
 
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), serviceAccountId, "", "envId", "orgId").
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, "", appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1070,16 +1081,21 @@ func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAc
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
 	}
 
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "", "envId", "orgId").
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", "", appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1102,17 +1118,23 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "test status detail message"
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Detail: &statusDetailMessage,
 		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
 	}
 	returnedError := errors.New("test error")
 
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", appOptions.IdentityPoolId, appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, returnedError)
+
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
@@ -1596,4 +1618,23 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 	_, err := s.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatement(statementObj))
 
 	assert.NotNil(t, err)
+}
+
+type SqlV1beta1StatementMatcher struct {
+	Expected flinkgatewayv1beta1.SqlV1beta1Statement
+}
+
+// statementName is set inside the process function, we can only computePoolId, properties and statement
+func (p SqlV1beta1StatementMatcher) Matches(x interface{}) bool {
+	actual, ok := x.(flinkgatewayv1beta1.SqlV1beta1Statement)
+	if !ok {
+		return false
+	}
+	return *actual.Spec.ComputePoolId == *p.Expected.Spec.ComputePoolId &&
+		reflect.DeepEqual(actual.Spec.Properties, p.Expected.Spec.Properties) &&
+		*actual.Spec.Statement == *p.Expected.Spec.Statement
+}
+
+func (p SqlV1beta1StatementMatcher) String() string {
+	return fmt.Sprintf("%v", p.Expected)
 }
