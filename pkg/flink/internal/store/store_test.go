@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -18,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/errors/flink"
@@ -90,10 +91,10 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	}
 
 	// Test case 1: Statement is not pending
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
@@ -120,8 +121,8 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	}
 
 	statusDetailMessage := "test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
@@ -154,8 +155,8 @@ func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 	}
 
 	statusDetailMessage := "test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
@@ -186,16 +187,16 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	}
 
 	transientStatusDetailMessage := "Transient status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &transientStatusDetailMessage,
 		},
 	}
 
 	finalStatusDetailMessage := "Final status detail message"
-	statementObjCompleted := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObjCompleted := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
 			Detail: &finalStatusDetailMessage,
 		},
@@ -223,8 +224,8 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
 			Detail: &statusDetailMessage,
 		},
@@ -257,11 +258,9 @@ func TestCancelPendingStatement(t *testing.T) {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase: "PENDING",
 		},
 	}
@@ -269,7 +268,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: http.StatusInternalServerError}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
-	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, flinkError).AnyTimes()
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{}, flinkError).AnyTimes()
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
 
 	// Schedule routine to cancel context
@@ -703,7 +702,7 @@ func (s *StoreTestSuite) TestProcessHttpErrors() {
 	// given
 	res := &http.Response{
 		StatusCode: http.StatusUnauthorized,
-		Body:       generateCloserFromObject(flinkgatewayv1alpha1.NewError()),
+		Body:       generateCloserFromObject(flinkgatewayv1beta1.NewError()),
 	}
 
 	// when
@@ -716,7 +715,7 @@ func (s *StoreTestSuite) TestProcessHttpErrors() {
 	// given
 	title := "invalid syntax"
 	detail := "you should provide a table for select"
-	statementErr := &flinkgatewayv1alpha1.Error{Title: &title, Detail: &detail}
+	statementErr := &flinkgatewayv1beta1.Error{Title: &title, Detail: &detail}
 	res = &http.Response{
 		StatusCode: http.StatusBadRequest,
 		Body:       generateCloserFromObject(statementErr),
@@ -832,9 +831,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.COMPLETED,
 	}
-	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
@@ -861,9 +860,9 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
@@ -891,9 +890,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		Status:        types.RUNNING,
 	}
 	nextPage := "https://devel.cpdev.cloud/some/results?page_token=eyJWZX"
-	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{Next: &nextPage},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{Next: &nextPage},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
@@ -920,9 +919,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
+	statementResultObj := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
 	}
 	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
@@ -993,7 +992,7 @@ func TestTimeout(t *testing.T) {
 	}
 }
 
-func (s *StoreTestSuite) TestProcessStatement() {
+func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
 		OrgResourceId:  "orgId",
@@ -1008,16 +1007,95 @@ func (s *StoreTestSuite) TestProcessStatement() {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
+	}
+
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", appOptions.IdentityPoolId, appOptions.EnvironmentId, appOptions.OrgResourceId).
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+		ComputePoolId: "computePoolId",
+	}
+	serviceAccountId := "sa-123"
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
+	statusDetailMessage := "Test status detail message"
+
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
+	}
+
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, "", appOptions.EnvironmentId, appOptions.OrgResourceId).
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAccount() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+		ComputePoolId: "computePoolId",
+	}
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statement := "SELECT * FROM table"
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
+	}
+
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", "", appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1040,17 +1118,23 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Detail: &statusDetailMessage,
+		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
 		},
 	}
 	returnedError := errors.New("test error")
 
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", appOptions.IdentityPoolId, appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, returnedError)
+
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
@@ -1076,11 +1160,9 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 
 	statementName := "Test Statement"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
 			Detail: &statusDetailMessage,
 		},
@@ -1140,11 +1222,9 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 
 	statementName := "Test Statement"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Detail: &statusDetailMessage,
 		},
 	}
@@ -1178,11 +1258,9 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 
 	statementName := "Test Statement"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "FAILED",
 			Detail: &statusDetailMessage,
 		},
@@ -1216,18 +1294,16 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 	}
 
 	statementName := "Test Statement"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase: "FAILED",
 		},
 	}
 	exception1 := "Exception 1"
 	exception2 := "Exception 2"
-	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
-		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{
+	exceptionsResponse := flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{
+		Data: []flinkgatewayv1beta1.SqlV1beta1StatementException{
 			{Stacktrace: &exception1},
 			{Stacktrace: &exception2},
 		},
@@ -1262,18 +1338,16 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 	}
 
 	statementName := "Test Statement"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase: "FAILED",
 		},
 	}
 	exception1 := "Exception 1"
 	exception2 := "Exception 2"
-	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
-		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{
+	exceptionsResponse := flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{
+		Data: []flinkgatewayv1beta1.SqlV1beta1StatementException{
 			{Stacktrace: &exception1},
 			{Stacktrace: &exception2},
 		},
@@ -1300,11 +1374,9 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 	}
 
 	testStatusDetailMessage := "Test Status Detail Message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("Test Statement"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("Test Statement"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &testStatusDetailMessage,
 		},
@@ -1333,11 +1405,9 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 	}
 
 	testStatusDetailMessage := "Test Status Detail Message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("Test Statement"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("Test Statement"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "FAILED",
 			Detail: &testStatusDetailMessage,
 		},
@@ -1360,16 +1430,14 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 	}
 
 	statementName := "Test Statement"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase: "FAILED",
 		},
 	}
-	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
-		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{},
+	exceptionsResponse := flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{
+		Data: []flinkgatewayv1beta1.SqlV1beta1StatementException{},
 	}
 
 	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
@@ -1380,59 +1448,59 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
 	tests := []struct {
 		name              string
-		statement         flinkgatewayv1alpha1.SqlV1alpha1Statement
+		statement         flinkgatewayv1beta1.SqlV1beta1Statement
 		isSelectStatement bool
 	}{
 		{
 			name: "select lowercase",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("select * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("select * FROM table"),
 				},
 			},
 			isSelectStatement: true,
 		},
 		{
 			name: "select uppercase",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("SELECT * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("SELECT * FROM table"),
 				},
 			},
 			isSelectStatement: true,
 		},
 		{
 			name: "select random case",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("SeLeCt * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("SeLeCt * FROM table"),
 				},
 			},
 			isSelectStatement: true,
 		},
 		{
 			name: "leading white space",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("   select * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("   select * FROM table"),
 				},
 			},
 			isSelectStatement: true,
 		},
 		{
 			name: "missing last char",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("selec * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("selec * FROM table"),
 				},
 			},
 			isSelectStatement: false,
 		},
 		{
 			name: "missing last char",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("insert into table values (1, 2)"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("insert into table values (1, 2)"),
 				},
 			},
 			isSelectStatement: false,
@@ -1478,16 +1546,14 @@ func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("statement-name"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil)
+	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, nil)
 	processedStatement := types.NewProcessedStatement(statementObj)
 	processedStatement.Status = types.RUNNING
 
@@ -1508,16 +1574,14 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 		appOptions:       &appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("statement-name"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "RUNNING",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, nil).AnyTimes()
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go func() {
 		time.Sleep(2 * time.Second)
@@ -1542,18 +1606,35 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 		appOptions:       &appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("statement-name"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "RUNNING",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, errors.New("error"))
+	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, errors.New("error"))
 
 	_, err := s.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatement(statementObj))
 
 	assert.NotNil(t, err)
+}
+
+type SqlV1beta1StatementMatcher struct {
+	Expected flinkgatewayv1beta1.SqlV1beta1Statement
+}
+
+// statementName is set inside the process function, we can only computePoolId, properties and statement
+func (p SqlV1beta1StatementMatcher) Matches(x interface{}) bool {
+	actual, ok := x.(flinkgatewayv1beta1.SqlV1beta1Statement)
+	if !ok {
+		return false
+	}
+	return *actual.Spec.ComputePoolId == *p.Expected.Spec.ComputePoolId &&
+		reflect.DeepEqual(actual.Spec.Properties, p.Expected.Spec.Properties) &&
+		*actual.Spec.Statement == *p.Expected.Spec.Statement
+}
+
+func (p SqlV1beta1StatementMatcher) String() string {
+	return fmt.Sprintf("%v", p.Expected)
 }

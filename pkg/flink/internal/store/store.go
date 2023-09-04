@@ -8,7 +8,9 @@ import (
 	"strings"
 	"time"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	"github.com/google/uuid"
+
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
@@ -76,12 +78,16 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return result, sErr
 	}
 
+	statementName := uuid.New().String()[:18]
+
 	// Process remote statements
+	computePoolId := s.appOptions.GetComputePoolId()
+	properties := s.Properties.GetSqlProperties()
+
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
-		statement,
-		s.appOptions.GetComputePoolId(),
+		createSqlV1beta1Statement(statement, statementName, computePoolId, properties),
+		s.Properties.Get(config.ConfigKeyServiceAcount),
 		s.appOptions.GetIdentityPoolId(),
-		s.Properties.GetProperties(),
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrgResourceId(),
 	)
@@ -89,6 +95,17 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return nil, types.NewStatementErrorFailureMsg(err, s.getStatusDetail(statementObj))
 	}
 	return types.NewProcessedStatement(statementObj), nil
+}
+
+func createSqlV1beta1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1beta1.SqlV1beta1Statement {
+	return flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Statement:     &statement,
+			ComputePoolId: &computePoolId,
+			Properties:    &properties,
+		},
+	}
 }
 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
@@ -231,14 +248,14 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	}
 }
 
-func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) string {
+func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) string {
 	status := statementObj.GetStatus()
 	if status.GetDetail() != "" {
 		return status.GetDetail()
 	}
 
 	// if the status detail field is empty, we check if there's an exception instead
-	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
+	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrgResourceId())
 	if err != nil {
 		return ""
 	}
@@ -281,6 +298,7 @@ func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]strin
 	properties := map[string]string{
 		config.ConfigKeyCatalog:       appOptions.GetEnvironmentName(),
 		config.ConfigKeyDatabase:      appOptions.GetDatabase(),
+		config.ConfigKeyServiceAcount: appOptions.GetServiceAccountId(),
 		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
 	}
 
