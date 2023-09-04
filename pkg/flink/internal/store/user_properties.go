@@ -3,8 +3,11 @@ package store
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/samber/lo"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 )
 
 const emptyStringTag = "<unset>"
@@ -50,8 +53,20 @@ func (p *UserProperties) HasKey(key string) bool {
 	return keyExists
 }
 
+// GetProperties returns all properties
 func (p *UserProperties) GetProperties() map[string]string {
 	return p.properties
+}
+
+// GetSqlProperties returns only the properties that should be sent when creating a statement (identified by the 'sql.' prefix)
+func (p *UserProperties) GetSqlProperties() map[string]string {
+	sqlProperties := map[string]string{}
+	for key, value := range p.properties {
+		if strings.HasPrefix(key, config.ConfigNamespaceSql) {
+			sqlProperties[key] = value
+		}
+	}
+	return sqlProperties
 }
 
 func (p *UserProperties) Delete(key string) {
