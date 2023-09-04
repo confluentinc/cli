@@ -10,6 +10,7 @@ import (
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
 
@@ -23,7 +24,9 @@ func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) 
 	}
 
 	c.addComputePoolFlag(cmd)
-	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
+	//TODO: remove as soon v1beta1 migration is complete (https://confluentinc.atlassian.net/browse/KFS-941)
+	cmd.Flags().String("identity-pool", "", "Identity pool ID (deprecated).")
+	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -117,10 +120,21 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 	if identityPool == "" {
-		if c.Context.GetCurrentIdentityPool() == "" {
-			return errors.NewErrorWithSuggestions("no identity pool set", "Set a persistent identity pool with `confluent iam pool use` or pass the `--identity-pool` flag.")
-		}
 		identityPool = c.Context.GetCurrentIdentityPool()
+	}
+
+	serviceAccount, err := cmd.Flags().GetString("service-account")
+	if err != nil {
+		return err
+	}
+	if serviceAccount == "" {
+		serviceAccount = c.Context.GetCurrentServiceAccount()
+	}
+
+	if serviceAccount == "" && identityPool == "" {
+		output.ErrPrintln("Warning: no service account provided. To ensure that your statements run continuously, " +
+			"switch to using a service account instead of your user identity with `confluent iam service-account use` or `--service-account`. " +
+			"Otherwise, statements will stop running after 4 hours.")
 	}
 
 	database, err := cmd.Flags().GetString("database")
@@ -150,16 +164,17 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
 	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), types.ApplicationOptions{
-		Context:         c.Context,
-		UnsafeTrace:     unsafeTrace,
-		UserAgent:       c.Version.UserAgent,
-		EnvironmentName: catalog,
-		EnvironmentId:   environmentId,
-		OrgResourceId:   resourceId,
-		Database:        database,
-		ComputePoolId:   computePool,
-		IdentityPoolId:  identityPool,
-		Verbose:         verbose > 0,
+		Context:          c.Context,
+		UnsafeTrace:      unsafeTrace,
+		UserAgent:        c.Version.UserAgent,
+		EnvironmentName:  catalog,
+		EnvironmentId:    environmentId,
+		OrgResourceId:    resourceId,
+		Database:         database,
+		ComputePoolId:    computePool,
+		IdentityPoolId:   identityPool,
+		ServiceAccountId: serviceAccount,
+		Verbose:          verbose > 0,
 	}, reportUsage(cmd, c.Config.Config, unsafeTrace))
 	return nil
 }
