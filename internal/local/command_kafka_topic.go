@@ -64,7 +64,7 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 }
 
 func (c *command) getPlaintextBootstrapServers() string {
-	var portStrings []string
+	portStrings := make([]string, 0, len(c.Config.LocalPorts.PlaintextPorts))
 	for _, port := range c.Config.LocalPorts.PlaintextPorts {
 		portStrings = append(portStrings, ":"+port)
 	}
