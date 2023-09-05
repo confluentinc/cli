@@ -1,0 +1,10 @@
+{
+  "id": "tgwa-111111",
+  "name": "aws-tgwa1",
+  "network_id": "n-abcde1",
+  "ram_share_arn": "arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
+  "transit_gateway_id": "tgw-00000000000000000",
+  "routes": ["10.0.0.0/16"],
+  "transit_gateway_attachment_id": "tgw-attach-00000000000000000",
+  "phase": "READY"
+}
