@@ -1,7 +1,7 @@
 Describe per-broker configuration values.
 
 Usage:
-  confluent local kafka broker describe [id] [flags]
+  confluent local kafka broker describe <id> [flags]
 
 Examples:
 Describe the "min.insync.replicas" configuration for broker 1.

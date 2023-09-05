@@ -1,4 +1,4 @@
-List Confluent local Kafka cluster configurations.
+List local Kafka cluster configurations.
 
 Usage:
   confluent local kafka cluster configuration list [flags]

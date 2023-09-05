@@ -1,4 +1,4 @@
-Update Confluent local Kafka cluster configurations.
+Update local Kafka cluster configurations.
 
 Usage:
   confluent local kafka cluster configuration update [flags]

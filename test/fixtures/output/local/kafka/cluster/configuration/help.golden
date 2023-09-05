@@ -4,8 +4,8 @@ Usage:
   confluent local kafka cluster configuration [command]
 
 Available Commands:
-  list        List Confluent local Kafka cluster configurations.
-  update      Update Confluent local Kafka cluster configurations.
+  list        List local Kafka cluster configurations.
+  update      Update local Kafka cluster configurations.
 
 Global Flags:
   -h, --help            Show help for this command.

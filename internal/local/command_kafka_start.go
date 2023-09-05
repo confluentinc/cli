@@ -28,6 +28,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
+var (
+	confluentBrokerPrefix     = "confluent-local-broker-%d"
+	controllerVoterPrefix     = "%d@confluent-local-broker-%d:%s"
+	bootstrapServerPrefix     = "confluent-local-broker-%d:%s"
+	confluentLocalNetworkName = "confluent-local-network"
+)
+
 var networkCreate = types.NetworkCreate{
 	CheckDuplicate: true,
 	Driver:         "bridge",
@@ -55,7 +62,7 @@ func (c *command) newKafkaStartCommand() *cobra.Command {
 
 	cmd.Flags().String("kafka-rest-port", "8082", "Kafka REST port number.")
 	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.")
-	cmd.Flags().Int32("brokers", 1, "Number of brokers in the Confluent Local cluster.") // range: [1, 4]? do we enforce a range?
+	cmd.Flags().Int32("brokers", 1, "Number of brokers (between 1 and 4) in the Confluent Local cluster.")
 	return cmd
 }
 
@@ -132,10 +139,13 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	if numBrokers < 1 || numBrokers > 4 {
+		return errors.NewErrorWithSuggestions("Input number of brokers out of range.", "Choose the number of brokers between 1 and 4.") // wording?
+	}
+
 	if err := c.prepareAndSaveLocalPorts(cmd, numBrokers, c.Config.IsTest); err != nil {
 		return err
 	}
-
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
@@ -149,7 +159,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	natPlaintextPorts := getNatPlaintextPorts(ports, numBrokers)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
-	_, err = dockerClient.NetworkCreate(context.Background(), "confluent-local-network", networkCreate)
+	_, err = dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, networkCreate)
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		return err
 	}
@@ -159,7 +169,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		brokerId := idx + 1
 		config := &container.Config{
 			Image:        dockerImageName,
-			Hostname:     fmt.Sprintf("confluent-local-broker-%d", brokerId),
+			Hostname:     fmt.Sprintf(confluentBrokerPrefix, brokerId),
 			Cmd:          containerStartCmd,
 			ExposedPorts: nat.PortSet{natPlaintextPorts[idx]: struct{}{}},
 			Env:          getContainerEnvironmentWithPorts(ports, idx, numBrokers),
@@ -188,7 +198,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, fmt.Sprintf("confluent-local-broker-%d", brokerId))
+		createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, fmt.Sprintf(confluentBrokerPrefix, brokerId))
 		if err != nil {
 			return err
 		}
@@ -211,7 +221,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	}
 
 	output.Printf("Started Confluent Local containers %s.\n", utils.ArrayToCommaDelimitedString(containerIds, ""))
-	output.Println("To continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.")
+	output.Println("To continue your Confluent Local experience, run `confluent local kafka topic create <topic>` and `confluent local kafka topic produce <topic>`.")
 	return nil
 }
 
@@ -269,7 +279,7 @@ func (c *command) prepareAndSaveLocalPorts(cmd *cobra.Command, numBrokers int32,
 }
 
 func (c *command) validateCustomizedPorts() error {
-	kafkaRestLn, err := net.Listen("tcp", ":"+c.Config.LocalPorts.KafkaRestPort)
+	kafkaRestListener, err := net.Listen("tcp", ":"+c.Config.LocalPorts.KafkaRestPort)
 	if err != nil {
 		freePort, err := freeport.GetFreePort()
 		if err != nil {
@@ -279,14 +289,14 @@ func (c *command) validateCustomizedPorts() error {
 		c.Config.LocalPorts.KafkaRestPort = strconv.Itoa(freePort)
 		log.CliLogger.Warnf("Kafka REST port %s is not available, using port %d instead.", invalidPort, freePort)
 	} else {
-		if err := kafkaRestLn.Close(); err != nil {
+		if err := kafkaRestListener.Close(); err != nil {
 			return err
 		}
 	}
 
 	for idx, port := range c.Config.LocalPorts.PlaintextPorts {
 		brokerId := idx + 1
-		plaintextLn, err := net.Listen("tcp", ":"+port)
+		plaintextListener, err := net.Listen("tcp", ":"+port)
 		if err != nil {
 			freePort, err := freeport.GetFreePort()
 			if err != nil {
@@ -295,7 +305,7 @@ func (c *command) validateCustomizedPorts() error {
 			c.Config.LocalPorts.PlaintextPorts[idx] = strconv.Itoa(freePort)
 			log.CliLogger.Warnf("Plaintext port %s is not available, using port %d for broker %d instead.", port, freePort, brokerId)
 		} else {
-			if err := plaintextLn.Close(); err != nil {
+			if err := plaintextListener.Close(); err != nil {
 				return err
 			}
 		}
@@ -339,19 +349,19 @@ func getNatPlaintextPorts(ports *config.LocalPorts, numBrokers int32) []nat.Port
 }
 
 func getKafkaControllerQuorumVoters(ports *config.LocalPorts, numBrokers int32) string {
-	voters := fmt.Sprintf("KAFKA_CONTROLLER_QUORUM_VOTERS=1@confluent-local-broker-1:%s", ports.ControllerPorts[0])
+	voters := []string{fmt.Sprintf("KAFKA_CONTROLLER_QUORUM_VOTERS=1@confluent-local-broker-1:%s", ports.ControllerPorts[0])}
 	for i := int32(1); i < numBrokers; i++ {
-		voters += fmt.Sprintf(",%d@confluent-local-broker-%d:%s", i+1, i+1, ports.ControllerPorts[i])
+		voters = append(voters, fmt.Sprintf(controllerVoterPrefix, i+1, i+1, ports.ControllerPorts[i]))
 	}
-	return voters
+	return strings.Join(voters, ",")
 }
 
 func getKafkaRestBootstrapServers(ports *config.LocalPorts, numBrokers int32) string {
-	servers := fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=confluent-local-broker-1:%s", ports.BrokerPorts[0])
+	servers := []string{fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=confluent-local-broker-1:%s", ports.BrokerPorts[0])}
 	for i := int32(1); i < numBrokers; i++ {
-		servers += fmt.Sprintf(",confluent-local-broker-%d:%s", i+1, ports.BrokerPorts[i])
+		servers = append(servers, fmt.Sprintf(bootstrapServerPrefix, i+1, ports.BrokerPorts[i]))
 	}
-	return servers
+	return strings.Join(servers, ",")
 }
 
 func checkMachineArch() error {

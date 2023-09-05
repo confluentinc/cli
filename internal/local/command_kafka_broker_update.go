@@ -15,7 +15,7 @@ func (c *command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update local Kafka broker configurations.",
-		Long:  "Update per-broker configurations.",
+		Long:  "Update per-broker configurations for local Kafka brokers.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.brokerUpdate,
 		Example: examples.BuildExampleString(
