@@ -57,7 +57,7 @@ func (c *command) newKafkaStartCommand() *cobra.Command {
 
 	cmd.Flags().String("kafka-rest-port", "8082", "Kafka REST port number.")
 	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.")
-	cmd.Flags().Int32("num-brokers", 1, "Number of brokers (between 1 and 4, inclusive) in the Confluent Local Kafka cluster.")
+	cmd.Flags().Int32("brokers", 1, "Number of brokers (between 1 and 4, inclusive) in the Confluent Local Kafka cluster.")
 	return cmd
 }
 
@@ -130,15 +130,15 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	output.Println("\r")
 	log.CliLogger.Tracef("Successfully pulled Confluent Local image")
 
-	numBrokers, err := cmd.Flags().GetInt32("num-brokers")
+	brokers, err := cmd.Flags().GetInt32("brokers")
 	if err != nil {
 		return err
 	}
-	if numBrokers < 1 || numBrokers > 4 {
-		return errors.New("--num-brokers must be an integer between 1 and 4, inclusive.")
+	if brokers < 1 || brokers > 4 {
+		return errors.New("--brokers must be an integer between 1 and 4, inclusive.")
 	}
 
-	if err := c.prepareAndSaveLocalPorts(cmd, numBrokers, c.Config.IsTest); err != nil {
+	if err := c.prepareAndSaveLocalPorts(cmd, brokers, c.Config.IsTest); err != nil {
 		return err
 	}
 	if c.Config.LocalPorts == nil {
@@ -151,7 +151,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		Architecture: runtime.GOARCH,
 	}
 	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
-	natPlaintextPorts := getNatPlaintextPorts(ports, numBrokers)
+	natPlaintextPorts := getNatPlaintextPorts(ports, brokers)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
 	_, err = dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, types.NetworkCreate{
@@ -163,14 +163,14 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	}
 
 	var containerIds []string
-	for idx := int32(0); idx < numBrokers; idx++ {
+	for idx := int32(0); idx < brokers; idx++ {
 		brokerId := idx + 1
 		config := &container.Config{
 			Image:        dockerImageName,
 			Hostname:     fmt.Sprintf(confluentBrokerPrefix, brokerId),
 			Cmd:          containerStartCmd,
 			ExposedPorts: nat.PortSet{natPlaintextPorts[idx]: struct{}{}},
-			Env:          getContainerEnvironmentWithPorts(ports, idx, numBrokers),
+			Env:          getContainerEnvironmentWithPorts(ports, idx, brokers),
 		}
 
 		hostConfig := &container.HostConfig{
@@ -223,7 +223,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) prepareAndSaveLocalPorts(cmd *cobra.Command, numBrokers int32, isTest bool) error {
+func (c *command) prepareAndSaveLocalPorts(cmd *cobra.Command, brokers int32, isTest bool) error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}
@@ -236,16 +236,16 @@ func (c *command) prepareAndSaveLocalPorts(cmd *cobra.Command, numBrokers int32,
 			PlaintextPorts:  []string{"3002", "3003"},
 		}
 	} else {
-		freePorts, err := freeport.GetFreePorts(int(3 * numBrokers))
+		freePorts, err := freeport.GetFreePorts(int(3 * brokers))
 		if err != nil {
 			return err
 		}
 
 		c.Config.LocalPorts = &config.LocalPorts{KafkaRestPort: "8082"}
-		for i := 0; i < int(numBrokers); i++ {
+		for i := 0; i < int(brokers); i++ {
 			c.Config.LocalPorts.PlaintextPorts = append(c.Config.LocalPorts.PlaintextPorts, strconv.Itoa(freePorts[i]))
-			c.Config.LocalPorts.BrokerPorts = append(c.Config.LocalPorts.BrokerPorts, strconv.Itoa(freePorts[i+int(numBrokers)]))
-			c.Config.LocalPorts.ControllerPorts = append(c.Config.LocalPorts.ControllerPorts, strconv.Itoa(freePorts[i+2*int(numBrokers)]))
+			c.Config.LocalPorts.BrokerPorts = append(c.Config.LocalPorts.BrokerPorts, strconv.Itoa(freePorts[i+int(brokers)]))
+			c.Config.LocalPorts.ControllerPorts = append(c.Config.LocalPorts.ControllerPorts, strconv.Itoa(freePorts[i+2*int(brokers)]))
 		}
 
 		kafkaRestPort, err := cmd.Flags().GetString("kafka-rest-port")
@@ -312,7 +312,7 @@ func (c *command) validateCustomizedPorts() error {
 	return nil
 }
 
-func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numBrokers int32) []string {
+func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, brokers int32) []string {
 	brokerId := idx + 1
 	envs := []string{
 		fmt.Sprintf("KAFKA_BROKER_ID=%d", brokerId),
@@ -324,7 +324,7 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numBr
 		"KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1",
 		"KAFKA_PROCESS_ROLES=broker,controller",
 		fmt.Sprintf("KAFKA_NODE_ID=%d", brokerId),
-		getKafkaControllerQuorumVoters(ports, numBrokers),
+		getKafkaControllerQuorumVoters(ports, brokers),
 		fmt.Sprintf("KAFKA_LISTENERS=PLAINTEXT://confluent-local-broker-%d:%s,CONTROLLER://confluent-local-broker-%d:%s,PLAINTEXT_HOST://0.0.0.0:%s", brokerId, ports.BrokerPorts[idx], brokerId, ports.ControllerPorts[idx], ports.PlaintextPorts[idx]),
 		"KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT",
 		"KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER",
@@ -333,12 +333,12 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numBr
 	}
 	if idx == 0 { // configure Kafka REST proxy broker 1
 		envs = append(envs, fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort))
-		envs = append(envs, getKafkaRestBootstrapServers(ports, numBrokers))
+		envs = append(envs, getKafkaRestBootstrapServers(ports, brokers))
 	}
 	return envs
 }
 
-func getNatPlaintextPorts(ports *config.LocalPorts, numBrokers int32) []nat.Port {
+func getNatPlaintextPorts(ports *config.LocalPorts, brokers int32) []nat.Port {
 	res := []nat.Port{}
 	for _, port := range ports.PlaintextPorts {
 		res = append(res, nat.Port(port+"/tcp"))
@@ -346,17 +346,17 @@ func getNatPlaintextPorts(ports *config.LocalPorts, numBrokers int32) []nat.Port
 	return res
 }
 
-func getKafkaControllerQuorumVoters(ports *config.LocalPorts, numBrokers int32) string {
+func getKafkaControllerQuorumVoters(ports *config.LocalPorts, brokers int32) string {
 	voters := []string{fmt.Sprintf("KAFKA_CONTROLLER_QUORUM_VOTERS=1@confluent-local-broker-1:%s", ports.ControllerPorts[0])}
-	for i := int32(1); i < numBrokers; i++ {
+	for i := int32(1); i < brokers; i++ {
 		voters = append(voters, fmt.Sprintf(controllerVoterPrefix, i+1, i+1, ports.ControllerPorts[i]))
 	}
 	return strings.Join(voters, ",")
 }
 
-func getKafkaRestBootstrapServers(ports *config.LocalPorts, numBrokers int32) string {
+func getKafkaRestBootstrapServers(ports *config.LocalPorts, brokers int32) string {
 	servers := []string{fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=confluent-local-broker-1:%s", ports.BrokerPorts[0])}
-	for i := int32(1); i < numBrokers; i++ {
+	for i := int32(1); i < brokers; i++ {
 		servers = append(servers, fmt.Sprintf(bootstrapServerPrefix, i+1, ports.BrokerPorts[i]))
 	}
 	return strings.Join(servers, ",")
