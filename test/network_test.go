@@ -182,3 +182,42 @@ func (s *CLITestSuite) TestNetworkPeering_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentList() {
+	tests := []CLITest{
+		{args: "network tgw-attachment list", fixture: "network/transit-gateway-attachment/list.golden"},
+		{args: "network transit-gateway-attachment list", fixture: "network/transit-gateway-attachment/list.golden"},
+		{args: "network transit-gateway-attachment list --output json", fixture: "network/transit-gateway-attachment/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentDescribe() {
+	tests := []CLITest{
+		{args: "network tgw-attachment describe tgwa-111111", fixture: "network/transit-gateway-attachment/describe.golden"},
+		{args: "network transit-gateway-attachment describe tgwa-111111", fixture: "network/transit-gateway-attachment/describe.golden"},
+		{args: "network transit-gateway-attachment describe tgwa-111111 --output json", fixture: "network/transit-gateway-attachment/describe-json.golden"},
+		{args: "network transit-gateway-attachment describe", fixture: "network/transit-gateway-attachment/describe-missing-id.golden", exitCode: 1},
+		{args: "network transit-gateway-attachment describe tgwa-invalid", fixture: "network/transit-gateway-attachment/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkTransitGatewayAttachment_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network transit-gateway-attachment describe ""`, login: "cloud", fixture: "network/transit-gateway-attachment/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
