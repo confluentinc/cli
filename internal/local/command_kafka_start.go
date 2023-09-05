@@ -28,21 +28,16 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-var (
+const (
 	confluentBrokerPrefix     = "confluent-local-broker-%d"
 	controllerVoterPrefix     = "%d@confluent-local-broker-%d:%s"
 	bootstrapServerPrefix     = "confluent-local-broker-%d:%s"
 	confluentLocalNetworkName = "confluent-local-network"
 )
 
-var networkCreate = types.NetworkCreate{
-	CheckDuplicate: true,
-	Driver:         "bridge",
-}
-
 type portsOut struct {
-	KafkaRESTPort string `human:"Kafka Rest Port" json:"kafka_rest_port"`
-	PlaintextPort string `human:"Plaintext Ports" json:"plaintext_ports"`
+	KafkaRestPort  string `human:"Kafka REST Port" json:"kafka_rest_port"`
+	PlaintextPorts string `human:"Plaintext Ports" json:"plaintext_ports"`
 }
 
 type ImagePullResponse struct {
@@ -62,7 +57,7 @@ func (c *command) newKafkaStartCommand() *cobra.Command {
 
 	cmd.Flags().String("kafka-rest-port", "8082", "Kafka REST port number.")
 	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.")
-	cmd.Flags().Int32("brokers", 1, "Number of brokers (between 1 and 4) in the Confluent Local cluster.")
+	cmd.Flags().Int32("num-brokers", 1, "Number of brokers (between 1 and 4, inclusive) in the Confluent Local Kafka cluster.")
 	return cmd
 }
 
@@ -135,12 +130,12 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	output.Println("\r")
 	log.CliLogger.Tracef("Successfully pulled Confluent Local image")
 
-	numBrokers, err := cmd.Flags().GetInt32("brokers")
+	numBrokers, err := cmd.Flags().GetInt32("num-brokers")
 	if err != nil {
 		return err
 	}
 	if numBrokers < 1 || numBrokers > 4 {
-		return errors.NewErrorWithSuggestions("Input number of brokers out of range.", "Choose the number of brokers between 1 and 4.") // wording?
+		return errors.New("--num-brokers must be an integer between 1 and 4, inclusive.")
 	}
 
 	if err := c.prepareAndSaveLocalPorts(cmd, numBrokers, c.Config.IsTest); err != nil {
@@ -159,7 +154,10 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	natPlaintextPorts := getNatPlaintextPorts(ports, numBrokers)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
-	_, err = dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, networkCreate)
+	_, err = dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, types.NetworkCreate{
+		CheckDuplicate: true,
+		Driver:         "bridge",
+	})
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		return err
 	}
@@ -342,8 +340,8 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, numBr
 
 func getNatPlaintextPorts(ports *config.LocalPorts, numBrokers int32) []nat.Port {
 	res := []nat.Port{}
-	for i := 0; i < int(numBrokers); i++ {
-		res = append(res, nat.Port(ports.PlaintextPorts[i]+"/tcp"))
+	for _, port := range ports.PlaintextPorts {
+		res = append(res, nat.Port(port+"/tcp"))
 	}
 	return res
 }
