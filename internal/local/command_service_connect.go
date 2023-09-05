@@ -70,7 +70,7 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorConfigCommand(cmd *cobra.Command, args []string) error {
+func (c *command) runConnectConnectorConfigCommand(cmd *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorStatusCommand(_ *cobra.Command, args []string) error {
+func (c *command) runConnectConnectorStatusCommand(_ *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
@@ -182,7 +182,7 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorListCommand(_ *cobra.Command, _ []string) {
+func (c *command) runConnectConnectorListCommand(_ *cobra.Command, _ []string) {
 	output.Println("Bundled Connectors:")
 	output.Println(local.BuildTabbedList(connectors))
 }
@@ -207,7 +207,7 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []string) error {
+func (c *command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
@@ -281,7 +281,7 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorUnloadCommand(_ *cobra.Command, args []string) error {
+func (c *command) runConnectConnectorUnloadCommand(_ *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
@@ -330,7 +330,7 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectPluginListCommand(_ *cobra.Command, _ []string) error {
+func (c *command) runConnectPluginListCommand(_ *cobra.Command, _ []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
