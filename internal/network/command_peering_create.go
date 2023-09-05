@@ -20,40 +20,34 @@ func (c *peeringCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an AWS VPC peering.",
-				Code: "confluent network peering create aws-peering --network n-abcde1 --cloud aws --aws-account 012345678901 --aws-vpc vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21",
+				Code: "confluent network peering create aws-peering --network n-abcde1 --cloud aws --cloud-account 012345678901 --virtual-network vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21",
 			},
 			examples.Example{
 				Text: "Create a GCP VPC peering.",
-				Code: "confluent network peering create gcp-peering --network n-abcde1 --cloud gcp --gcp-project temp-123456 --gcp-vpc-network customer-test-vpc-network --gcp-import-custom-routes",
+				Code: "confluent network peering create gcp-peering --network n-abcde1 --cloud gcp --cloud-account temp-123456 --virtual-network customer-test-vpc-network --gcp-routes",
 			},
 			examples.Example{
 				Text: "Create an Azure VNet peering.",
-				Code: "confluent network peering create azure-peering --network n-abcde1 --cloud azure --azure-tenant 1111tttt-1111-1111-1111-111111tttttt --azure-vnet /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet --customer-region centralus",
+				Code: "confluent network peering create azure-peering --network n-abcde1 --cloud azure --cloud-account 1111tttt-1111-1111-1111-111111tttttt --virtual-network /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet --customer-region centralus",
 			},
 		),
 	}
 
 	addNetworkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("aws-account", "", "AWS account ID associated with the VPC that you are peering with Confluent Cloud network.")
-	cmd.Flags().String("gcp-project", "", "Google Cloud project ID associated with the VPC that you are peering with Confluent Cloud network.")
-	cmd.Flags().String("azure-tenant", "", "Azure Tenant ID in which your Azure Subscription exists.")
-	cmd.Flags().String("aws-vpc", "", "AWS VPC ID that you are peering with Confluent Cloud network.")
-	cmd.Flags().String("gcp-vpc-network", "", "Name of the Google Cloud VPC that you are peering with Confluent Cloud network.")
-	cmd.Flags().String("azure-vnet", "", "Azure Resource ID of the VNet that you are peering with Confluent Cloud.")
-	cmd.Flags().StringSlice("aws-routes", nil, "A comma-separated list of CIDR blocks of the AWS VPC that you are peering with Confluent Cloud network.")
-	cmd.Flags().Bool("gcp-import-custom-routes", false, "Enable customer route import for Google Cloud VPC Peering.")
+	cmd.Flags().String("cloud-account", "", "AWS account ID or Google Cloud project ID associated with the VPC that you are peering with Confluent Cloud network or Azure Tenant ID in which your Azure Subscription exists.")
+	cmd.Flags().String("virtual-network", "", "AWS VPC ID, name of the Google Cloud VPC, or Azure Resource ID of the VNet that you are peering with Confluent Cloud network.")
 	cmd.Flags().String("customer-region", "", "Cloud region ID of the AWS VPC or Azure VNet that you are peering with Confluent Cloud network.")
+	cmd.Flags().StringSlice("aws-routes", nil, "A comma-separated list of CIDR blocks of the AWS VPC that you are peering with Confluent Cloud network. Required for AWS VPC Peering.")
+	cmd.Flags().Bool("gcp-routes", false, "Enable customer route import for Google Cloud VPC Peering.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("network"))
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
-
-	cmd.MarkFlagsRequiredTogether("aws-account", "aws-vpc", "aws-routes")
-	cmd.MarkFlagsRequiredTogether("gcp-project", "gcp-vpc-network")
-	cmd.MarkFlagsRequiredTogether("azure-tenant", "azure-vnet")
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud-account"))
+	cobra.CheckErr(cmd.MarkFlagRequired("virtual-network"))
 
 	return cmd
 }
@@ -85,7 +79,6 @@ func (c *peeringCommand) create(cmd *cobra.Command, args []string) error {
 
 	createPeering := networkingv1.NetworkingV1Peering{
 		Spec: &networkingv1.NetworkingV1PeeringSpec{
-			Cloud:       &networkingv1.NetworkingV1PeeringSpecCloudOneOf{},
 			DisplayName: networkingv1.PtrString(name),
 			Environment: &networkingv1.ObjectReference{Id: environmentId},
 			Network:     &networkingv1.ObjectReference{Id: networkId},
@@ -98,19 +91,25 @@ func (c *peeringCommand) create(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		createPeering.Spec.Cloud.NetworkingV1AwsPeering = awsPeering
+		createPeering.Spec.Cloud = &networkingv1.NetworkingV1PeeringSpecCloudOneOf{
+			NetworkingV1AwsPeering: awsPeering,
+		}
 	case CloudGcp:
 		gcpPeering, err := c.createGcpPeeringRequest(cmd)
 		if err != nil {
 			return err
 		}
-		createPeering.Spec.Cloud.NetworkingV1GcpPeering = gcpPeering
+		createPeering.Spec.Cloud = &networkingv1.NetworkingV1PeeringSpecCloudOneOf{
+			NetworkingV1GcpPeering: gcpPeering,
+		}
 	case CloudAzure:
 		azurePeering, err := c.createAzurePeeringRequest(cmd, region)
 		if err != nil {
 			return err
 		}
-		createPeering.Spec.Cloud.NetworkingV1AzurePeering = azurePeering
+		createPeering.Spec.Cloud = &networkingv1.NetworkingV1PeeringSpecCloudOneOf{
+			NetworkingV1AzurePeering: azurePeering,
+		}
 	}
 
 	peering, err := c.V2Client.CreatePeering(createPeering)
@@ -122,12 +121,12 @@ func (c *peeringCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *peeringCommand) createAwsPeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AwsPeering, error) {
-	account, err := cmd.Flags().GetString("aws-account")
+	account, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err
 	}
 
-	vpc, err := cmd.Flags().GetString("aws-vpc")
+	vpc, err := cmd.Flags().GetString("virtual-network")
 	if err != nil {
 		return nil, err
 	}
@@ -157,17 +156,17 @@ func (c *peeringCommand) createAwsPeeringRequest(cmd *cobra.Command, networkRegi
 }
 
 func (c *peeringCommand) createGcpPeeringRequest(cmd *cobra.Command) (*networkingv1.NetworkingV1GcpPeering, error) {
-	project, err := cmd.Flags().GetString("gcp-project")
+	project, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err
 	}
 
-	vpcNetwork, err := cmd.Flags().GetString("gcp-vpc-network")
+	vpcNetwork, err := cmd.Flags().GetString("virtual-network")
 	if err != nil {
 		return nil, err
 	}
 
-	importCustomRoutes, err := cmd.Flags().GetBool("gcp-import-custom-routes")
+	gcpImportCustomRoutes, err := cmd.Flags().GetBool("gcp-routes")
 	if err != nil {
 		return nil, err
 	}
@@ -176,19 +175,19 @@ func (c *peeringCommand) createGcpPeeringRequest(cmd *cobra.Command) (*networkin
 		Kind:               "GcpPeering",
 		Project:            project,
 		VpcNetwork:         vpcNetwork,
-		ImportCustomRoutes: networkingv1.PtrBool(importCustomRoutes),
+		ImportCustomRoutes: networkingv1.PtrBool(gcpImportCustomRoutes),
 	}
 
 	return gcpPeering, nil
 }
 
 func (c *peeringCommand) createAzurePeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AzurePeering, error) {
-	tenant, err := cmd.Flags().GetString("azure-tenant")
+	tenant, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err
 	}
 
-	vnet, err := cmd.Flags().GetString("azure-vnet")
+	vnet, err := cmd.Flags().GetString("virtual-network")
 	if err != nil {
 		return nil, err
 	}
