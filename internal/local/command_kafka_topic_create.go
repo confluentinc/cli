@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *Command) newKafkaTopicCreateCommand() *cobra.Command {
+func (c *command) newKafkaTopicCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
@@ -33,7 +33,7 @@ func (c *Command) newKafkaTopicCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaTopicCreate(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicCreate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
