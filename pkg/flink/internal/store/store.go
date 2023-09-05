@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
-
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
@@ -86,7 +84,8 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		s.appOptions.GetOrgResourceId(),
 	)
 	if err != nil {
-		return nil, types.NewStatementErrorFailureMsg(err, s.getStatusDetail(statementObj))
+		status := statementObj.GetStatus()
+		return nil, types.NewStatementErrorFailureMsg(err, status.GetDetail())
 	}
 	return types.NewProcessedStatement(statementObj), nil
 }
@@ -171,7 +170,8 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
 			getRequestDuration = time.Since(start)
 
-			statusDetail := s.getStatusDetail(statementObj)
+			status := statementObj.GetStatus()
+			statusDetail := status.GetDetail()
 			if err != nil {
 				return nil, types.NewStatementErrorFailureMsg(err, statusDetail)
 			}
@@ -231,27 +231,6 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	}
 }
 
-func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) string {
-	status := statementObj.GetStatus()
-	if status.GetDetail() != "" {
-		return status.GetDetail()
-	}
-
-	// if the status detail field is empty, we check if there's an exception instead
-	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
-	if err != nil {
-		return ""
-	}
-
-	exceptions := exceptionsResponse.GetData()
-	if len(exceptions) < 1 {
-		return ""
-	}
-
-	// most recent exception is on top of the returned list
-	return exceptions[0].GetStacktrace()
-}
-
 func extractPageToken(nextUrl string) (string, error) {
 	if nextUrl == "" {
 		return "", nil
@@ -295,7 +274,8 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 			return &statement, nil
 		default:
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId())
-			statusDetail := s.getStatusDetail(statementObj)
+			status := statementObj.GetStatus()
+			statusDetail := status.GetDetail()
 			if err != nil {
 				return nil, &types.StatementError{
 					Message:        err.Error(),
