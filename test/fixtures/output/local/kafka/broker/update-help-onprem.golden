@@ -1,0 +1,18 @@
+Update per-broker configurations for local Kafka brokers.
+
+Usage:
+  confluent local kafka broker update <id> [flags]
+
+Examples:
+Update configuration values for broker 1.
+
+  $ confluent kafka broker update 1 --config min.insync.replicas=2,num.partitions=2
+
+Flags:
+      --config strings   REQUIRED: A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
+  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
