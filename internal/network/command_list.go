@@ -27,7 +27,12 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	networks, err := c.getNetworks()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	networks, err := getNetworks(c.V2Client, environmentId)
 	if err != nil {
 		return err
 	}

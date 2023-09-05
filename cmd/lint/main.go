@@ -288,6 +288,7 @@ var vocabWords = []string{
 	"vv",
 	"vvv",
 	"vvvv",
+	"vnet",
 	"vpc",
 	"whitelist",
 	"yaml",

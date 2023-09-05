@@ -8,6 +8,7 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -180,11 +181,16 @@ func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string 
 		return nil
 	}
 
-	return c.autocompleteNetworks()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	return autocompleteNetworks(c.V2Client, environmentId)
 }
 
-func (c *command) autocompleteNetworks() []string {
-	networks, err := c.getNetworks()
+func autocompleteNetworks(client *ccloudv2.Client, environmentId string) []string {
+	networks, err := getNetworks(client, environmentId)
 	if err != nil {
 		return nil
 	}
@@ -196,13 +202,8 @@ func (c *command) autocompleteNetworks() []string {
 	return suggestions
 }
 
-func (c *command) getNetworks() ([]networkingv1.NetworkingV1Network, error) {
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return nil, err
-	}
-
-	return c.V2Client.ListNetworks(environmentId)
+func getNetworks(client *ccloudv2.Client, environmentId string) ([]networkingv1.NetworkingV1Network, error) {
+	return client.ListNetworks(environmentId)
 }
 
 func addConnectionTypesFlag(cmd *cobra.Command) {
@@ -213,4 +214,20 @@ func addConnectionTypesFlag(cmd *cobra.Command) {
 func addDnsResolutionFlag(cmd *cobra.Command) {
 	cmd.Flags().String("dns-resolution", "", fmt.Sprintf("Specify the DNS resolution as %s.", utils.ArrayToCommaDelimitedString(DnsResolutions, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "dns-resolution", func(_ *cobra.Command, _ []string) []string { return DnsResolutions })
+}
+
+func addNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().String("network", "", "Network ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteNetworks(c.V2Client, environmentId)
+	})
 }

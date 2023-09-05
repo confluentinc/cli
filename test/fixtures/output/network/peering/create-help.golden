@@ -1,0 +1,34 @@
+Create a peering.
+
+Usage:
+  confluent network peering create <name> [flags]
+
+Examples:
+Create an AWS VPC peering.
+
+  $ confluent network peering create aws-peering --network n-abcde1 --cloud aws --cloud-account 012345678901 --virtual-network vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21
+
+Create a GCP VPC peering.
+
+  $ confluent network peering create gcp-peering --network n-abcde1 --cloud gcp --cloud-account temp-123456 --virtual-network customer-test-vpc-network --gcp-routes
+
+Create an Azure VNet peering.
+
+  $ confluent network peering create azure-peering --network n-abcde1 --cloud azure --cloud-account 1111tttt-1111-1111-1111-111111tttttt --virtual-network /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet --customer-region centralus
+
+Flags:
+      --network string           REQUIRED: Network ID.
+      --cloud string             REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --cloud-account string     REQUIRED: AWS account ID or Google Cloud project ID associated with the VPC that you are peering with Confluent Cloud network or Azure Tenant ID in which your Azure Subscription exists.
+      --virtual-network string   REQUIRED: AWS VPC ID, name of the Google Cloud VPC, or Azure Resource ID of the VNet that you are peering with Confluent Cloud network.
+      --customer-region string   Cloud region ID of the AWS VPC or Azure VNet that you are peering with Confluent Cloud network.
+      --aws-routes strings       A comma-separated list of CIDR blocks of the AWS VPC that you are peering with Confluent Cloud network. Required for AWS VPC Peering.
+      --gcp-routes               Enable customer route import for Google Cloud VPC Peering.
+      --context string           CLI context name.
+      --environment string       Environment ID.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
