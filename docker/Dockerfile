@@ -54,7 +54,8 @@ RUN npm install https
 COPY docker/server.js ./
 
 # Expose the port on which the WebSocket server will run
-EXPOSE 443
+EXPOSE 8443
+EXPOSE 8080
 
 # Start the WebSocket server when the container starts
 CMD ["node", "server.js"]
