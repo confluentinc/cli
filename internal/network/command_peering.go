@@ -58,6 +58,7 @@ func newPeeringCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &peeringCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())

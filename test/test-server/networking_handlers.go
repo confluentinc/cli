@@ -60,6 +60,8 @@ func handleNetworkingPeerings(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPeeringList(t)(w, r)
+		case http.MethodPost:
+			handleNetworkingPeeringCreate(t)(w, r)
 		}
 	}
 }
@@ -435,5 +437,29 @@ func handleNetworkingPeeringDelete(t *testing.T, id string) http.HandlerFunc {
 		case "peer-111111", "peer-111112":
 			w.WriteHeader(http.StatusNoContent)
 		}
+	}
+}
+
+func handleNetworkingPeeringCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkingv1.NetworkingV1Peering{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		peering := networkingv1.NetworkingV1Peering{
+			Id: networkingv1.PtrString("peer-111111"),
+			Spec: &networkingv1.NetworkingV1PeeringSpec{
+				Cloud:       body.Spec.Cloud,
+				DisplayName: body.Spec.DisplayName,
+				Environment: &networkingv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+				Network:     &networkingv1.ObjectReference{Id: body.Spec.Network.GetId()},
+			},
+			Status: &networkingv1.NetworkingV1PeeringStatus{
+				Phase: "PROVISIONING",
+			},
+		}
+
+		err = json.NewEncoder(w).Encode(peering)
+		require.NoError(t, err)
 	}
 }
