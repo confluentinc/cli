@@ -22,8 +22,8 @@ type route struct {
 }
 
 var kafkaRestRoutes = []route{
-	{"/kafka/v3/clusters", handleKafkaRPClusters},
-	{"/kafka/v3/clusters/{cluster_id}/acls:batch", handleKafkaRPACLsBatch},
+	{"/kafka/v3/clusters", handleKafkaRestClusters},
+	{"/kafka/v3/clusters/{cluster_id}/acls:batch", handleKafkaRestACLsBatch},
 	{"/kafka/v3/clusters/{cluster_id}/broker-configs", handleKafkaBrokerConfigs},
 	{"/kafka/v3/clusters/{cluster_id}/broker-configs/{name}", handleKafkaBrokerConfigsName},
 	{"/kafka/v3/clusters/{cluster_id}/broker-configs:alter", handleKafkaBrokerConfigsAlter},
@@ -36,31 +36,34 @@ var kafkaRestRoutes = []route{
 	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter", handleKafkaBrokerIdConfigsAlter},
 	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks", handleKafkaClustersClusterIdBrokersBrokerIdTasksGet},
 	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}", handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet},
-	{"/kafka/v3/clusters/{cluster_id}/consumer-groups", handleKafkaRPConsumerGroups},
-	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}", handleKafkaRPConsumerGroup},
-	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers", handleKafkaRPConsumers},
-	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary", handleKafkaRPLagSummary},
-	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags", handleKafkaRPLags},
-	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}", handleKafkaRPLag},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups", handleKafkaRestConsumerGroups},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}", handleKafkaRestConsumerGroup},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers", handleKafkaRestConsumers},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary", handleKafkaRestLagSummary},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags", handleKafkaRestLags},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}", handleKafkaRestLag},
 	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions", handleKafkaTopicPartitions},
 	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}", handleKafkaTopicPartitionId},
 	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}/reassignment", handleKafkaTopicPartitionIdReassignment},
-	{"/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status", handleKafkaRPReplicaStatus},
-	{"/kafka/v3/clusters/{cluster}/acls", handleKafkaRPACLs},
-	{"/kafka/v3/clusters/{cluster}/links", handleKafkaRPLinks},
-	{"/kafka/v3/clusters/{cluster}/links/-/mirrors", handleKafkaRPAllMirrors},
-	{"/kafka/v3/clusters/{cluster}/links/{link}", handleKafkaRPLink},
-	{"/kafka/v3/clusters/{cluster}/links/{link}/configs", handleKafkaRPLinkConfigs},
-	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors", handleKafkaRPMirrors},
-	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}", handleKafkaRPMirror},
-	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote", handleKafkaRPMirrorsPromote},
+	{"/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status", handleKafkaRestReplicaStatus},
+	{"/kafka/v3/clusters/{cluster}/acls", handleKafkaRestACLs},
+	{"/kafka/v3/clusters/{cluster}/links", handleKafkaRestLinks},
+	{"/kafka/v3/clusters/{cluster}/links/-/mirrors", handleKafkaRestAllMirrors},
+	{"/kafka/v3/clusters/{cluster}/links/{link}", handleKafkaRestLink},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/configs", handleKafkaRestLinkConfigs},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors", handleKafkaRestMirrors},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}", handleKafkaRestMirror},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:failover", handleKafkaRestMirrorsFailover},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:pause", handleKafkaRestMirrorsPause},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote", handleKafkaRestMirrorsPromote},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:resume", handleKafkaRestMirrorsResume},
 	{"/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status", handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus},
-	{"/kafka/v3/clusters/{cluster}/topics", handleKafkaRPTopics},
-	{"/kafka/v3/clusters/{cluster}/topics/{topic}", handleKafkaRPTopic},
-	{"/kafka/v3/clusters/{cluster}/topics/{topic}/configs", handleKafkaRPTopicConfigs},
-	{"/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter", handleKafkaRPConfigsAlter},
+	{"/kafka/v3/clusters/{cluster}/topics", handleKafkaRestTopics},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}", handleKafkaRestTopic},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}/configs", handleKafkaRestTopicConfigs},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter", handleKafkaRestConfigsAlter},
 	{"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status", handleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus},
-	{"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas", handleKafkaRPPartitionReplicas},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas", handleKafkaRestPartitionReplicas},
 }
 
 func NewKafkaRestProxyRouter(t *testing.T) *mux.Router {
@@ -75,7 +78,7 @@ func NewKafkaRestProxyRouter(t *testing.T) *mux.Router {
 }
 
 // Handler for: "/kafka/v3/clusters"
-func handleKafkaRPClusters(t *testing.T) http.HandlerFunc {
+func handleKafkaRestClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// List Clusters
 		if r.Method == http.MethodGet {
@@ -104,8 +107,11 @@ func handleKafkaRPClusters(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/acls"
-func handleKafkaRPACLs(t *testing.T) http.HandlerFunc {
+func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster"]
+
 		data := []cckafkarestv3.AclData{{
 			ResourceType: cckafkarestv3.TOPIC,
 			ResourceName: "test-topic",
@@ -115,6 +121,17 @@ func handleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 			Principal:    "User:sa-12345",
 			PatternType:  "LITERAL",
 		}}
+		if clusterId == "lkc-acls" {
+			data = append(data, cckafkarestv3.AclData{
+				ResourceType: cckafkarestv3.TOPIC,
+				ResourceName: "test-topic",
+				Operation:    "READ",
+				Permission:   "ALLOW",
+				Host:         "*",
+				Principal:    "User:012345",
+				PatternType:  "LITERAL",
+			})
+		}
 
 		var res any
 
@@ -125,7 +142,7 @@ func handleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 			w.WriteHeader(http.StatusCreated)
 			res = cckafkarestv3.AclData{}
 		case http.MethodDelete:
-			res = cckafkarestv3.InlineResponse200{Data: data}
+			res = cckafkarestv3.InlineResponse200{Data: []cckafkarestv3.AclData{data[0]}}
 		}
 
 		err := json.NewEncoder(w).Encode(res)
@@ -134,14 +151,14 @@ func handleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/acls:batch"
-func handleKafkaRPACLsBatch(_ *testing.T) http.HandlerFunc {
+func handleKafkaRestACLsBatch(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/topics"
-func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
+func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -238,7 +255,7 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 func PtrString(v string) *string { return &v }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
-func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
+func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topicName := vars["topic"]
@@ -310,7 +327,7 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
-func handleKafkaRPReplicaStatus(t *testing.T) http.HandlerFunc {
+func handleKafkaRestReplicaStatus(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topic := vars["topic"]
@@ -387,7 +404,7 @@ func handleKafkaRPReplicaStatus(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas"
-func handleKafkaRPPartitionReplicas(t *testing.T) http.HandlerFunc {
+func handleKafkaRestPartitionReplicas(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topicName := vars["topic"]
@@ -474,7 +491,7 @@ func handleKafkaRPPartitionReplicas(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter"
-func handleKafkaRPConfigsAlter(t *testing.T) http.HandlerFunc {
+func handleKafkaRestConfigsAlter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topicName := vars["topic"]
@@ -517,7 +534,7 @@ func handleKafkaRPConfigsAlter(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}"
-func handleKafkaRPTopic(t *testing.T) http.HandlerFunc {
+func handleKafkaRestTopic(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		topic := mux.Vars(r)["topic"]
 		if topic != "topic-exist" && topic != "topic-exist-2" && topic != "topic-exist-rest" {
@@ -540,7 +557,7 @@ func handleKafkaRPTopic(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links"
-func handleKafkaRPLinks(t *testing.T) http.HandlerFunc {
+func handleKafkaRestLinks(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
@@ -600,7 +617,7 @@ func handleKafkaRPLinks(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups"
-func handleKafkaRPConsumerGroups(t *testing.T) http.HandlerFunc {
+func handleKafkaRestConsumerGroups(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -640,13 +657,13 @@ func handleKafkaRPConsumerGroups(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/links/{link}"
-func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
+func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cluster := mux.Vars(r)["cluster"]
 		link := mux.Vars(r)["link"]
 		switch r.Method {
 		case http.MethodGet:
-			if link == "link-1" {
+			if link == "link-1" || link == "myLink_1" {
 				switch cluster {
 				case "cluster-1":
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
@@ -706,7 +723,7 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}"
-func handleKafkaRPConsumerGroup(t *testing.T) http.HandlerFunc {
+func handleKafkaRestConsumerGroup(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
@@ -734,7 +751,7 @@ func handleKafkaRPConsumerGroup(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/-/mirrors"
-func handleKafkaRPAllMirrors(t *testing.T) http.HandlerFunc {
+func handleKafkaRestAllMirrors(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
@@ -743,54 +760,54 @@ func handleKafkaRPAllMirrors(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListMirrorTopicsResponseDataList{Data: []cpkafkarestv3.ListMirrorTopicsResponseData{
+			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseDataList{Data: []cckafkarestv3.ListMirrorTopicsResponseData{
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
 					LinkName:        "link-1",
 					MirrorTopicName: "dest-topic-1",
 					SourceTopicName: "src-topic-1",
 					NumPartitions:   3,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   142857,
-							LastSourceFetchOffset: 1293009,
-						},
-						{
-							Partition:             1,
-							Lag:                   285714,
-							LastSourceFetchOffset: 28340404,
-						},
-						{
-							Partition:             2,
-							Lag:                   571428,
-							LastSourceFetchOffset: 5739304,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
 						},
 					},
-					MirrorStatus: "active",
+					MirrorStatus: cckafkarestv3.ACTIVE,
 					StateTimeMs:  111111111,
 				},
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
 					LinkName:        "link-2",
 					MirrorTopicName: "dest-topic-2",
 					SourceTopicName: "src-topic-2",
 					NumPartitions:   2,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   0,
-							LastSourceFetchOffset: 0,
-						},
-						{
-							Partition:             1,
-							Lag:                   0,
-							LastSourceFetchOffset: 0,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
 						},
 					},
-					MirrorStatus: "stopped",
+					MirrorStatus: cckafkarestv3.STOPPED,
 					StateTimeMs:  222222222,
 				},
 			}})
@@ -800,7 +817,7 @@ func handleKafkaRPAllMirrors(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers"
-func handleKafkaRPConsumers(t *testing.T) http.HandlerFunc {
+func handleKafkaRestConsumers(t *testing.T) http.HandlerFunc {
 	instance1 := "instance-1"
 	instance2 := "instance-2"
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -838,7 +855,7 @@ func handleKafkaRPConsumers(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors"
-func handleKafkaRPMirrors(t *testing.T) http.HandlerFunc {
+func handleKafkaRestMirrors(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
@@ -847,54 +864,54 @@ func handleKafkaRPMirrors(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListMirrorTopicsResponseDataList{Data: []cpkafkarestv3.ListMirrorTopicsResponseData{
+			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseDataList{Data: []cckafkarestv3.ListMirrorTopicsResponseData{
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
 					LinkName:        "link-1",
 					MirrorTopicName: "dest-topic-1",
 					SourceTopicName: "src-topic-1",
 					NumPartitions:   3,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   142857,
-							LastSourceFetchOffset: 1293009,
-						},
-						{
-							Partition:             1,
-							Lag:                   285714,
-							LastSourceFetchOffset: 28340404,
-						},
-						{
-							Partition:             2,
-							Lag:                   571428,
-							LastSourceFetchOffset: 5739304,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
 						},
 					},
-					MirrorStatus: "active",
+					MirrorStatus: cckafkarestv3.ACTIVE,
 					StateTimeMs:  111111111,
 				},
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
 					LinkName:        "link-2",
 					MirrorTopicName: "dest-topic-2",
 					SourceTopicName: "src-topic-2",
 					NumPartitions:   2,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   0,
-							LastSourceFetchOffset: 0,
-						},
-						{
-							Partition:             1,
-							Lag:                   0,
-							LastSourceFetchOffset: 0,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
 						},
 					},
-					MirrorStatus: "stopped",
+					MirrorStatus: cckafkarestv3.STOPPED,
 					StateTimeMs:  222222222,
 				},
 			}})
@@ -904,7 +921,7 @@ func handleKafkaRPMirrors(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary"
-func handleKafkaRPLagSummary(t *testing.T) http.HandlerFunc {
+func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
@@ -935,59 +952,219 @@ func handleKafkaRPLagSummary(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:promote"
-func handleKafkaRPMirrorsPromote(t *testing.T) http.HandlerFunc {
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:failover"
+func handleKafkaRestMirrorsFailover(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			errorMsg := "Not authorized"
-			var errorCode int32 = 401
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.AlterMirrorStatusResponseDataList{Data: []cpkafkarestv3.AlterMirrorStatusResponseData{
+			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
-					MirrorTopicName: "dest-topic-1",
-					ErrorMessage:    nil,
-					ErrorCode:       nil,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   142857,
-							LastSourceFetchOffset: 1293009,
-						},
-						{
-							Partition:             1,
-							Lag:                   285714,
-							LastSourceFetchOffset: 28340404,
-						},
-						{
-							Partition:             2,
-							Lag:                   571428,
-							LastSourceFetchOffset: 5739304,
+					MirrorTopicName: "topic-1",
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1000,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 10000,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 100000,
+							},
 						},
 					},
 				},
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
+					MirrorTopicName: "topic 2",
+					ErrorMessage:    *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Not authorized")),
+					ErrorCode:       *cckafkarestv3.NewNullableInt32(cckafkarestv3.PtrInt32(401)),
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
+						},
+					},
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:pause"
+func handleKafkaRestMirrorsPause(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
+				{
+					MirrorTopicName: "topic-1",
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+						},
+					},
+				},
+				{
+					MirrorTopicName: "topic 2",
+					ErrorMessage:    *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Not authorized")),
+					ErrorCode:       *cckafkarestv3.NewNullableInt32(cckafkarestv3.PtrInt32(401)),
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
+						},
+					},
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:promote"
+func handleKafkaRestMirrorsPromote(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
+				{
 					MirrorTopicName: "dest-topic-1",
-					ErrorMessage:    &errorMsg,
-					ErrorCode:       &errorCode,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   142857,
-							LastSourceFetchOffset: 1293009,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
 						},
-						{
-							Partition:             1,
-							Lag:                   285714,
-							LastSourceFetchOffset: 28340404,
+					},
+				},
+				{
+					MirrorTopicName: "dest-topic-1",
+					ErrorMessage:    *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Not authorized")),
+					ErrorCode:       *cckafkarestv3.NewNullableInt32(cckafkarestv3.PtrInt32(401)),
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
 						},
-						{
-							Partition:             2,
-							Lag:                   571428,
-							LastSourceFetchOffset: 5739304,
+					},
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:resume"
+func handleKafkaRestMirrorsResume(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
+				{
+					MirrorTopicName: "topic-1",
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1000,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 10000,
+							},
+						},
+					},
+				},
+				{
+					MirrorTopicName: "topic 2",
+					ErrorMessage:    *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Not authorized")),
+					ErrorCode:       *cckafkarestv3.NewNullableInt32(cckafkarestv3.PtrInt32(401)),
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
 						},
 					},
 				},
@@ -998,7 +1175,7 @@ func handleKafkaRPMirrorsPromote(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags"
-func handleKafkaRPLags(t *testing.T) http.HandlerFunc {
+func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
@@ -1050,7 +1227,7 @@ func handleKafkaRPLags(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/configs"
-func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
+func handleKafkaRestLinkConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		link := mux.Vars(r)["link"]
 		if link == "link-dne" {
@@ -1070,7 +1247,7 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 				{
 					Kind:      "",
 					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
+					ClusterId: "lkc-describe-topic",
 					Name:      "replica.fetch.max.bytes",
 					Value:     "1048576",
 					ReadOnly:  false,
@@ -1082,7 +1259,7 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 				{
 					Kind:      "",
 					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
+					ClusterId: "lkc-describe-topic",
 					Name:      "bootstrap.servers",
 					Value:     "bitcoin.com:8888",
 					ReadOnly:  false,
@@ -1094,7 +1271,7 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 				{
 					Kind:      "",
 					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
+					ClusterId: "lkc-describe-topic",
 					Name:      "link.mode",
 					Value:     linkMode,
 					ReadOnly:  false,
@@ -1110,35 +1287,37 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors/{mirror_name}"
-func handleKafkaRPMirror(t *testing.T) http.HandlerFunc {
+func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListMirrorTopicsResponseData{
+			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
-				Metadata:        cpkafkarestv3.ResourceMetadata{},
+				Metadata:        cckafkarestv3.ResourceMetadata{},
 				LinkName:        "link-1",
 				MirrorTopicName: "dest-topic-1",
 				SourceTopicName: "src-topic-1",
 				NumPartitions:   3,
-				MirrorLags: []cpkafkarestv3.MirrorLag{
-					{
-						Partition:             0,
-						Lag:                   142857,
-						LastSourceFetchOffset: 1293009,
-					},
-					{
-						Partition:             1,
-						Lag:                   285714,
-						LastSourceFetchOffset: 28340404,
-					},
-					{
-						Partition:             2,
-						Lag:                   571428,
-						LastSourceFetchOffset: 5739304,
+				MirrorLags: cckafkarestv3.MirrorLags{
+					Items: []cckafkarestv3.MirrorLag{
+						{
+							Partition:             0,
+							Lag:                   142857,
+							LastSourceFetchOffset: 1293009,
+						},
+						{
+							Partition:             1,
+							Lag:                   285714,
+							LastSourceFetchOffset: 28340404,
+						},
+						{
+							Partition:             2,
+							Lag:                   571428,
+							LastSourceFetchOffset: 5739304,
+						},
 					},
 				},
-				MirrorStatus: "active",
+				MirrorStatus: cckafkarestv3.ACTIVE,
 				StateTimeMs:  111111111,
 			})
 			require.NoError(t, err)
@@ -1152,7 +1331,7 @@ type partitionOffsets struct {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}"
-func handleKafkaRPLag(t *testing.T) http.HandlerFunc {
+func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 

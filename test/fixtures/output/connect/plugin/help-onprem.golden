@@ -1,4 +1,4 @@
-Manage Connect plugins.
+Manage plugins for managed connectors.
 
 Usage:
   confluent connect plugin [command]

@@ -15,22 +15,22 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/ccstructs"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 var (
 	environments = []*ccloudv1.Account{
 		{Id: "a-595", Name: "default", OrgResourceId: "abc-123"},
-		{Id: "not-595", Name: "other"},
+		{Id: "env-595", Name: "other"},
 		{Id: "env-123", Name: "env123"},
 		{Id: SRApiEnvId, Name: "srUpdate"},
 		{Id: "env-987zy", Name: "confluent-audit-log"},
 	}
 	keyIndex      = int32(3)
-	resourceIdMap = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
+	resourceIdMap = map[int32]string{auditLogServiceAccountId: auditLogServiceAccountResourceId, serviceAccountId: serviceAccountResourceId}
 
 	RegularOrg = &ccloudv1.Organization{
 		Id:   321,
@@ -49,17 +49,16 @@ var (
 )
 
 const (
-	serviceAccountID           = int32(12345)
-	serviceAccountResourceID   = "sa-12345"
-	identityProviderResourceID = "op-12345"
-	identityPoolResourceID     = "pool-12345"
-	deactivatedUserID          = int32(6666)
-	deactivatedResourceID      = "sa-6666"
-
-	auditLogServiceAccountID         = int32(1337)
-	auditLogServiceAccountResourceID = "sa-1337"
-
-	PromoTestCode = "PromoTestCode"
+	serviceAccountId                 = int32(12345)
+	serviceAccountResourceId         = "sa-12345"
+	groupMappingResourceId           = "pool-abc"
+	identityProviderResourceId       = "op-12345"
+	identityPoolResourceId           = "pool-12345"
+	deactivatedUserId                = int32(6666)
+	deactivatedResourceId            = "sa-6666"
+	auditLogServiceAccountId         = int32(1337)
+	auditLogServiceAccountResourceId = "sa-1337"
+	PromoTestCode                    = "PromoTestCode"
 )
 
 // Handler for: "/api/me"
@@ -79,7 +78,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:                "lkc-ab123",
 				AccountId:                "env-987zy",
-				ServiceAccountId:         auditLogServiceAccountID,
+				ServiceAccountId:         auditLogServiceAccountId,
 				ServiceAccountResourceId: "sa-1337",
 				TopicName:                "confluent-audit-log-events",
 			}
@@ -197,8 +196,8 @@ func handleServiceAccounts(t *testing.T) http.HandlerFunc {
 			res := &ccloudv1.GetServiceAccountsReply{
 				Users: []*ccloudv1.User{
 					{
-						Id:                 serviceAccountID,
-						ResourceId:         serviceAccountResourceID,
+						Id:                 serviceAccountId,
+						ResourceId:         serviceAccountResourceId,
 						ServiceName:        "service_account",
 						ServiceDescription: "at your service.",
 					},
@@ -315,7 +314,7 @@ func handleUsers(t *testing.T) http.HandlerFunc {
 			if userId != "" {
 				intId, err := strconv.Atoi(userId)
 				require.NoError(t, err)
-				if int32(intId) == deactivatedUserID {
+				if int32(intId) == deactivatedUserId {
 					users = []*ccloudv1.User{}
 				}
 			}
@@ -346,7 +345,7 @@ func handleUsers(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/metadata/security/v2alpha1/authenticate"
 func handleV2Authenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		reply := &mds.AuthenticationResponse{
+		reply := &mdsv1.AuthenticationResponse{
 			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
 			TokenType: "dunno",
 			ExpiresIn: 9999999999,
@@ -377,6 +376,9 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"cli.deprecation_notices":                []map[string]any{},
 			"cli.client_quotas.enable":               true,
 			"cli.stream_designer.source_code.enable": true,
+			"flink.rbac.namespace.cli.enable":        true,
+			"auth.rbac.identity_admin.enable":        true,
+			"cloud_growth.marketplace_linking_advertisement_experiment.enable": true,
 		}
 
 		val, ok := ldUser.GetCustom("org.resource_id")

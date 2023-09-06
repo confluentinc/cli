@@ -13,12 +13,12 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/netrc"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/v3/pkg/auth"
+	pauth "github.com/confluentinc/cli/v3/pkg/auth"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/netrc"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 var (
@@ -215,7 +215,7 @@ func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.ReplaceAll(string(wantBytes), urlPlaceHolder, test.loginURL)
-		data := v1.Config{}
+		data := config.Config{}
 		err = json.Unmarshal(got, &data)
 		s.NoError(err)
 		want = strings.ReplaceAll(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+test.loginURL].EncryptedPassword)
@@ -254,7 +254,7 @@ func (s *CLITestSuite) TestLogin_UpdateNetrcPassword() {
 		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
 		old, err := os.ReadFile(configFile)
 		s.NoError(err)
-		oldData := v1.Config{}
+		oldData := config.Config{}
 		err = json.Unmarshal(old, &oldData)
 		s.NoError(err)
 
@@ -268,7 +268,7 @@ func (s *CLITestSuite) TestLogin_UpdateNetrcPassword() {
 
 		got, err := os.ReadFile(configFile)
 		s.NoError(err)
-		data := v1.Config{}
+		data := config.Config{}
 		err = json.Unmarshal(got, &data)
 		s.NoError(err)
 

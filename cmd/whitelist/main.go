@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"sort"
 
-	pcmd "github.com/confluentinc/cli/internal/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/types"
-	"github.com/confluentinc/cli/internal/pkg/usage"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/types"
+	"github.com/confluentinc/cli/v3/pkg/usage"
+	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
 var version = "v0.0.0"
@@ -60,16 +60,16 @@ func buildWhitelist() []string {
 	whitelist.Add("__complete")
 
 	// Compile a whitelist for all three subsets of commands: no context, cloud, and on-prem
-	configs := []*v1.Config{
+	configs := []*config.Config{
 		{CurrentContext: "No Context"},
-		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
-		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
+		{CurrentContext: "Cloud", Contexts: map[string]*config.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
+		{CurrentContext: "On-Prem", Contexts: map[string]*config.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 	for _, cfg := range configs {
 		cfg.IsTest = true
 		cfg.Version = new(pversion.Version)
 
-		cmd := pcmd.NewConfluentCommand(cfg)
+		cmd := internal.NewConfluentCommand(cfg)
 		usage.WhitelistCommandsAndFlags(cmd, whitelist)
 	}
 

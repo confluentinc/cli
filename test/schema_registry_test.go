@@ -3,7 +3,7 @@ package test
 import (
 	"fmt"
 
-	testserver "github.com/confluentinc/cli/test/test-server"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 var (
@@ -66,15 +66,29 @@ func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestSchemaRegistryConfigDelete() {
+	tests := []CLITest{
+		{args: fmt.Sprintf("schema-registry config delete --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
+		{args: fmt.Sprintf("schema-registry config delete --subject payments --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestSchemaRegistryExporter() {
 	exporterConfigPath := getInputFixturePath("schema-registry", "schema-exporter-config.txt")
 
 	tests := []CLITest{
 		{args: fmt.Sprintf("schema-registry exporter list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/list.golden"},
-		{args: fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config-file %s --environment %s`, exporterConfigPath, testserver.SRApiEnvId), fixture: "schema-registry/exporter/create.golden"},
+		{args: fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config %s --environment %s`, exporterConfigPath, testserver.SRApiEnvId), fixture: "schema-registry/exporter/create.golden"},
 		{args: fmt.Sprintf("schema-registry exporter describe myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/describe.golden"},
 		{args: fmt.Sprintf(`schema-registry exporter update myexporter --subjects foo,bar,test --subject-format my-\\${subject} --environment %s`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/update.golden"},
 		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete.golden"},
+		{args: fmt.Sprintf(`schema-registry exporter delete myexporter myexporter2 --environment %s`, testserver.SRApiEnvId), input: "n\n", fixture: "schema-registry/exporter/delete-multiple-refuse.golden"},
+		{args: fmt.Sprintf(`schema-registry exporter delete myexporter myexporter2 --environment %s --force`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete-multiple-success.golden"},
 		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s", testserver.SRApiEnvId), input: "myexporter\n", fixture: "schema-registry/exporter/delete-prompt.golden"},
 		{args: fmt.Sprintf("schema-registry exporter get-status myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-status.golden"},
 		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output json --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-json.golden"},

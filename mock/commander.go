@@ -7,32 +7,32 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	pmock "github.com/confluentinc/cli/internal/pkg/mock"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	pmock "github.com/confluentinc/cli/v3/pkg/mock"
+	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
 type Commander struct {
 	FlagResolver      pcmd.FlagResolver
 	Client            *ccloudv1.Client
 	V2Client          *ccloudv2.Client
-	MDSClient         *mds.APIClient
+	MDSClient         *mdsv1.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
 	QuotasClient      *servicequotav1.APIClient
 	Version           *version.Version
-	Config            *v1.Config
+	Config            *config.Config
 }
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsClient *mdsv1.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *config.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -47,7 +47,7 @@ func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsCli
 	}
 }
 
-func NewPreRunnerMdsV2Mock(v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v1.Config) *Commander {
+func NewPreRunnerMdsV2Mock(v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *config.Config) *Commander {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,

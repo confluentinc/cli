@@ -1,7 +1,7 @@
 run:
   skip-dirs:
     - mock
-    - internal/pkg/flink/test/mock
+    - pkg/flink/test/mock
 linters:
   enable:
     - dupword
@@ -30,8 +30,8 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/confluentinc)
-      - prefix(github.com/confluentinc/cli)
+      - prefix(github.com/confluentinc/)
+      - prefix(github.com/confluentinc/cli/)
     custom-order: true
   gocritic:
     disabled-checks:
