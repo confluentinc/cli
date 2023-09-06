@@ -172,6 +172,8 @@ update-muckrake:
 	$(SED) -i "s|confluent-cli-.*=\$${confluent_s3}/confluent\.cloud/confluent-cli/archives/.*/confluent_.*_linux_amd64\.tar\.gz|confluent-cli-$${version}=\$${confluent_s3}/confluent.cloud/confluent-cli/archives/$${version}/confluent_$${version}_linux_amd64.tar.gz|" ducker/ducker && \
 	$(SED) -i "s|VERSION = \".*\"|VERSION = \"$${version}\"|" muckrake/services/cli.py && \
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-redhat.sh && \
+	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-redhat8.sh && \
+	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-redhat9.sh && \
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-ubuntu.sh && \
 	git commit -am "bump cli to v$${version}" && \
 	$(call dry-run,git push -u origin $$branch) && \
