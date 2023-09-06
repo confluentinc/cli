@@ -24,12 +24,7 @@ func (c *consumerCommand) newGroupListCommandOnPrem() *cobra.Command {
 }
 
 func (c *consumerCommand) groupListOnPrem(cmd *cobra.Command, args []string) error {
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -44,7 +39,7 @@ func (c *consumerCommand) groupListOnPrem(cmd *cobra.Command, args []string) err
 		list.Add(&consumerGroupOut{
 			ClusterId:         group.ClusterId,
 			ConsumerGroupId:   group.ConsumerGroupId,
-			Coordinator:       getStringBrokerOnPrem(group.Coordinator),
+			Coordinator:       getStringBroker(group.Coordinator.Related),
 			IsSimple:          group.IsSimple,
 			PartitionAssignor: group.PartitionAssignor,
 			State:             group.State,

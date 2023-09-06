@@ -1,11 +1,7 @@
 package kafka
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -28,12 +24,7 @@ func (c *consumerCommand) newGroupDescribeCommandOnPrem() *cobra.Command {
 }
 
 func (c *consumerCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -47,21 +38,10 @@ func (c *consumerCommand) describeOnPrem(cmd *cobra.Command, args []string) erro
 	table.Add(&consumerGroupOut{
 		ClusterId:         group.ClusterId,
 		ConsumerGroupId:   group.ConsumerGroupId,
-		Coordinator:       getStringBrokerOnPrem(group.Coordinator),
+		Coordinator:       getStringBroker(group.Coordinator.Related),
 		IsSimple:          group.IsSimple,
 		PartitionAssignor: group.PartitionAssignor,
 		State:             group.State,
 	})
 	return table.Print()
-}
-
-func getStringBrokerOnPrem(relationship kafkarestv3.Relationship) string {
-	// relationship.Related will look like ".../v3/clusters/{cluster_id}/brokers/{broker_id}
-	splitString := strings.SplitAfter(relationship.Related, "brokers/")
-	// if relationship was an empty string or did not contain "brokers/"
-	if len(splitString) < 2 {
-		return ""
-	}
-	// returning brokerId
-	return splitString[1]
 }
