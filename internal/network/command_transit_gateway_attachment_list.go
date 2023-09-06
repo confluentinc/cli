@@ -27,41 +27,41 @@ func (c *transitGatewayAttachmentCommand) newListCommand() *cobra.Command {
 }
 
 func (c *transitGatewayAttachmentCommand) list(cmd *cobra.Command, _ []string) error {
-	tgwas, err := c.getTransitGatewayAttachments()
+	attachments, err := c.getTransitGatewayAttachments()
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, tgwa := range tgwas {
-		if tgwa.Spec == nil {
+	for _, attachment := range attachments {
+		if attachment.Spec == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 		}
-		if tgwa.Status == nil {
+		if attachment.Status == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
 		if output.GetFormat(cmd) == output.Human {
 			list.Add(&transitGatewayAttachmentHumanOut{
-				Id:                         tgwa.GetId(),
-				Name:                       tgwa.Spec.GetDisplayName(),
-				NetworkId:                  tgwa.Spec.Network.GetId(),
-				RamShareArn:                tgwa.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
-				TransitGatewayId:           tgwa.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
-				Routes:                     strings.Join(tgwa.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(), ", "),
-				TransitGatewayAttachmentId: tgwa.Status.Cloud.NetworkingV1AwsTransitGatewayAttachmentStatus.GetTransitGatewayAttachmentId(),
-				Phase:                      tgwa.Status.GetPhase(),
+				Id:                         attachment.GetId(),
+				Name:                       attachment.Spec.GetDisplayName(),
+				NetworkId:                  attachment.Spec.Network.GetId(),
+				RamShareArn:                attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
+				TransitGatewayId:           attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
+				Routes:                     strings.Join(attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(), ", "),
+				TransitGatewayAttachmentId: attachment.Status.Cloud.NetworkingV1AwsTransitGatewayAttachmentStatus.GetTransitGatewayAttachmentId(),
+				Phase:                      attachment.Status.GetPhase(),
 			})
 		} else {
 			list.Add(&transitGatewayAttachmentSerializedOut{
-				Id:                         tgwa.GetId(),
-				Name:                       tgwa.Spec.GetDisplayName(),
-				NetworkId:                  tgwa.Spec.Network.GetId(),
-				RamShareArn:                tgwa.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
-				TransitGatewayId:           tgwa.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
-				Routes:                     tgwa.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(),
-				TransitGatewayAttachmentId: tgwa.Status.Cloud.NetworkingV1AwsTransitGatewayAttachmentStatus.GetTransitGatewayAttachmentId(),
-				Phase:                      tgwa.Status.GetPhase(),
+				Id:                         attachment.GetId(),
+				Name:                       attachment.Spec.GetDisplayName(),
+				NetworkId:                  attachment.Spec.Network.GetId(),
+				RamShareArn:                attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
+				TransitGatewayId:           attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
+				Routes:                     attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(),
+				TransitGatewayAttachmentId: attachment.Status.Cloud.NetworkingV1AwsTransitGatewayAttachmentStatus.GetTransitGatewayAttachmentId(),
+				Phase:                      attachment.Status.GetPhase(),
 			})
 		}
 	}

@@ -20,7 +20,7 @@
     "phase": "READY"
   },
   {
-    "id": "tgwa-222222",
+    "id": "tgwa-333333",
     "name": "aws-tgwa3",
     "network_id": "n-abcde1",
     "ram_share_arn": "arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",

@@ -3,9 +3,9 @@ Usage:
   confluent network transit-gateway-attachment describe <id> [flags]
 
 Examples:
-Describe transit gateway attachment "tgwa-a12cbd".
+Describe transit gateway attachment "tgwa-123456".
 
-  $ confluent network transit-gateway-attachment describe tgwa-a12cbd
+  $ confluent network transit-gateway-attachment describe tgwa-123456
 
 Flags:
       --context string       CLI context name.

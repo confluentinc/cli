@@ -466,8 +466,8 @@ func handleNetworkingTransitGatewayAttachmentGet(t *testing.T, id string) http.H
 			w.WriteHeader(http.StatusNotFound)
 			return
 		case "tgwa-111111":
-			tgwa := getTransitGatewayAttachment("tgwa-111111", "aws-tgwa1")
-			err := json.NewEncoder(w).Encode(tgwa)
+			attachment := getTransitGatewayAttachment("tgwa-111111", "aws-tgwa1")
+			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
 	}
@@ -475,26 +475,26 @@ func handleNetworkingTransitGatewayAttachmentGet(t *testing.T, id string) http.H
 
 func handleNetworkingTransitGatewayAttachmentsList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tgwa1 := getTransitGatewayAttachment("tgwa-111111", "aws-tgwa1")
-		tgwa2 := getTransitGatewayAttachment("tgwa-222222", "aws-tgwa2")
-		tgwa3 := getTransitGatewayAttachment("tgwa-222222", "aws-tgwa3")
+		attachment1 := getTransitGatewayAttachment("tgwa-111111", "aws-tgwa1")
+		attachment2 := getTransitGatewayAttachment("tgwa-222222", "aws-tgwa2")
+		attachment3 := getTransitGatewayAttachment("tgwa-333333", "aws-tgwa3")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var transitGatewayAttachmentList networkingv1.NetworkingV1TransitGatewayAttachmentList
 		switch pageToken {
 		case "aws-tgwa3":
 			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
-				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{tgwa3},
+				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment3},
 				Metadata: networkingv1.ListMeta{},
 			}
 		case "aws-tgwa2":
 			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
-				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{tgwa2},
+				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment2},
 				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/transit-gateway-attachments?environment=env-00000&page_size=1&page_token=aws-tgwa3"))},
 			}
 		default:
 			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
-				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{tgwa1},
+				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment1},
 				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/transit-gateway-attachments?environment=env-00000&page_size=1&page_token=aws-tgwa2"))},
 			}
 		}
@@ -505,7 +505,7 @@ func handleNetworkingTransitGatewayAttachmentsList(t *testing.T) http.HandlerFun
 }
 
 func getTransitGatewayAttachment(id, name string) networkingv1.NetworkingV1TransitGatewayAttachment {
-	tgwa := networkingv1.NetworkingV1TransitGatewayAttachment{
+	attachment := networkingv1.NetworkingV1TransitGatewayAttachment{
 		Id:   networkingv1.PtrString(id),
 		Kind: networkingv1.PtrString("TransitGatewayAttachment"),
 		Spec: &networkingv1.NetworkingV1TransitGatewayAttachmentSpec{
@@ -531,5 +531,5 @@ func getTransitGatewayAttachment(id, name string) networkingv1.NetworkingV1Trans
 			},
 		},
 	}
-	return tgwa
+	return attachment
 }
