@@ -42,7 +42,7 @@ type transitGatewayAttachmentSerializedOut struct {
 func newTransitGatewayAttachmentCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "transit-gateway-attachment",
-		Aliases: []string{"tgw-attachment"},
+		Aliases: []string{"tgwa"},
 		Short:   "Manage transit gateway attachments.",
 		Args:    cobra.NoArgs,
 	}

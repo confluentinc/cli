@@ -165,7 +165,7 @@ func (s *CLITestSuite) TestNetworkPeering_Autocomplete() {
 
 func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentList() {
 	tests := []CLITest{
-		{args: "network tgw-attachment list", fixture: "network/transit-gateway-attachment/list.golden"},
+		{args: "network tgwa list", fixture: "network/transit-gateway-attachment/list.golden"},
 		{args: "network transit-gateway-attachment list", fixture: "network/transit-gateway-attachment/list.golden"},
 		{args: "network transit-gateway-attachment list --output json", fixture: "network/transit-gateway-attachment/list-json.golden"},
 	}
@@ -178,7 +178,7 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentList() {
 
 func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentDescribe() {
 	tests := []CLITest{
-		{args: "network tgw-attachment describe tgwa-111111", fixture: "network/transit-gateway-attachment/describe.golden"},
+		{args: "network tgwa describe tgwa-111111", fixture: "network/transit-gateway-attachment/describe.golden"},
 		{args: "network transit-gateway-attachment describe tgwa-111111", fixture: "network/transit-gateway-attachment/describe.golden"},
 		{args: "network transit-gateway-attachment describe tgwa-111111 --output json", fixture: "network/transit-gateway-attachment/describe-json.golden"},
 		{args: "network transit-gateway-attachment describe", fixture: "network/transit-gateway-attachment/describe-missing-id.golden", exitCode: 1},

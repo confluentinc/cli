@@ -4,7 +4,7 @@ Usage:
   confluent network transit-gateway-attachment [command]
 
 Aliases:
-  transit-gateway-attachment, tgw-attachment
+  transit-gateway-attachment, tgwa
 
 Available Commands:
   describe    Describe a transit gateway attachment.
