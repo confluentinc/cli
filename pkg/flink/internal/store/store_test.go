@@ -127,7 +127,8 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		},
 	}
 	expectedError := &types.StatementError{
-		Message:        fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
+		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
+			timeout.Seconds(), config.ConfigKeyResultsTimeout),
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
@@ -265,10 +266,8 @@ func TestCancelPendingStatement(t *testing.T) {
 		},
 	}
 
-	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: http.StatusInternalServerError}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
-	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, flinkError).AnyTimes()
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
 
 	// Schedule routine to cancel context
@@ -966,7 +965,7 @@ func TestTimeout(t *testing.T) {
 		{
 			name: "results-timeout property set",
 			properties: map[string]string{
-				config.ConfigKeyResultsTimeout: "10", // timeout in seconds
+				config.ConfigKeyResultsTimeout: "10000", // timeout in milliseconds
 			},
 			expected: 10 * time.Second,
 		},
@@ -992,7 +991,7 @@ func TestTimeout(t *testing.T) {
 	}
 }
 
-func (s *StoreTestSuite) TestProcessStatement() {
+func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
 		OrgResourceId:  "orgId",
@@ -1016,7 +1015,72 @@ func (s *StoreTestSuite) TestProcessStatement() {
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
+	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+		ComputePoolId: "computePoolId",
+	}
+	serviceAccountId := "sa-123"
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+	}
+
+	statement := "SELECT * FROM table"
+	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), serviceAccountId, "", "envId", "orgId").
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	expectedStatement := types.NewProcessedStatement(statementObj)
+	expectedStatement.ServiceAccount = serviceAccountId
+	require.Equal(s.T(), expectedStatement, processedStatement)
+}
+
+func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAccount() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+		ComputePoolId: "computePoolId",
+	}
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+	}
+
+	statement := "SELECT * FROM table"
+	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "", "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1048,7 +1112,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	returnedError := errors.New("test error")
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
+	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
 		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
@@ -1199,181 +1263,6 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 	})
 	require.Nil(s.T(), processedStatement)
 	require.Equal(s.T(), expectedError, err)
-}
-
-func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStatementWithEmptyStatusDetail() {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
-	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-	}
-	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
-		client:           client,
-		appOptions:       appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	statementName := "Test Statement"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase: "FAILED",
-		},
-	}
-	exception1 := "Exception 1"
-	exception2 := "Exception 2"
-	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
-		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{
-			{Stacktrace: &exception1},
-			{Stacktrace: &exception2},
-		},
-	}
-	expectedError := &types.StatementError{
-		Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
-		FailureMessage: exception1,
-	}
-
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
-	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
-
-	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-		StatementName: statementName,
-		Status:        types.PENDING,
-	})
-	require.Nil(s.T(), processedStatement)
-	require.Equal(s.T(), expectedError, err)
-}
-
-func (s *StoreTestSuite) TestGetStatusDetail() {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
-	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-	}
-	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
-		client:           client,
-		appOptions:       appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	statementName := "Test Statement"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase: "FAILED",
-		},
-	}
-	exception1 := "Exception 1"
-	exception2 := "Exception 2"
-	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
-		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{
-			{Stacktrace: &exception1},
-			{Stacktrace: &exception2},
-		},
-	}
-
-	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil).Times(2)
-
-	require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
-	statementObj.Status.Phase = "FAILING"
-	require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
-}
-
-func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing() {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
-	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-	}
-	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
-		client:           client,
-		appOptions:       appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	testStatusDetailMessage := "Test Status Detail Message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("Test Statement"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase:  "PENDING",
-			Detail: &testStatusDetailMessage,
-		},
-	}
-
-	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
-	statementObj.Status.Phase = "COMPLETED"
-	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
-	statementObj.Status.Phase = "RUNNING"
-	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
-	statementObj.Status.Phase = "DELETED"
-	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
-}
-
-func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
-	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-	}
-	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
-		client:           client,
-		appOptions:       appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	testStatusDetailMessage := "Test Status Detail Message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("Test Statement"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase:  "FAILED",
-			Detail: &testStatusDetailMessage,
-		},
-	}
-
-	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
-}
-
-func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailable() {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
-	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-	}
-	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
-		client:           client,
-		appOptions:       appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	statementName := "Test Statement"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase: "FAILED",
-		},
-	}
-	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
-		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{},
-	}
-
-	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
-
-	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
 }
 
 func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {

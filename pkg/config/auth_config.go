@@ -9,3 +9,10 @@ type AuthConfig struct {
 	Account      *ccloudv1.Account      `json:"account,omitempty"`
 	Accounts     []*ccloudv1.Account    `json:"accounts,omitempty"`
 }
+
+func (a *AuthConfig) GetUser() *ccloudv1.User {
+	if a != nil {
+		return a.User
+	}
+	return nil
+}

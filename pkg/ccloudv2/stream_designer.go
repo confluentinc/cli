@@ -66,10 +66,7 @@ func (c *Client) GetSdPipeline(envId, clusterId, id string) (streamdesignerv1.Sd
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateSdPipeline(envId, clusterId, id string, update streamdesignerv1.SdV1Pipeline) (streamdesignerv1.SdV1Pipeline, error) {
-	update.Spec.SetEnvironment(streamdesignerv1.ObjectReference{Id: envId})
-	update.Spec.SetKafkaCluster(streamdesignerv1.ObjectReference{Id: clusterId})
-
-	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), id).SdV1Pipeline(update).Execute()
+func (c *Client) UpdateSdPipeline(id string, pipeline streamdesignerv1.SdV1Pipeline) (streamdesignerv1.SdV1Pipeline, error) {
+	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), id).SdV1Pipeline(pipeline).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }

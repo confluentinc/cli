@@ -35,7 +35,9 @@ func newServiceAccountCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUnsetCommand())
 	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newUseCommand())
 
 	return cmd
 }
@@ -55,6 +57,10 @@ func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []s
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *serviceAccountCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

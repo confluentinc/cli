@@ -32,19 +32,23 @@ func (c *command) newActivateCommand() *cobra.Command {
 }
 
 func (c *command) activate(cmd *cobra.Command, args []string) error {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	updatePipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{Activated: streamdesignerv1.PtrBool(true)}}
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	pipeline, err := c.V2Client.UpdateSdPipeline(environmentId, cluster.ID, args[0], updatePipeline)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+
+	pipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{
+		Activated:    streamdesignerv1.PtrBool(true),
+		Environment:  &streamdesignerv1.ObjectReference{Id: environmentId},
+		KafkaCluster: &streamdesignerv1.ObjectReference{Id: cluster.ID},
+	}}
+
+	pipeline, err = c.V2Client.UpdateSdPipeline(args[0], pipeline)
 	if err != nil {
 		return err
 	}

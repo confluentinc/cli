@@ -9,9 +9,14 @@ const (
 	ConfigOpUseCatalog        = "CATALOG"
 	ConfigStatementTerminator = ";"
 
+	// config namespaces
+	ConfigNamespaceSql    = "sql."
+	ConfigNamespaceClient = "client."
+
 	// keys
-	ConfigKeyCatalog        = "catalog"
-	ConfigKeyDatabase       = "default_database"
-	ConfigKeyLocalTimeZone  = "table.local-time-zone"
-	ConfigKeyResultsTimeout = "table.results-timeout"
+	ConfigKeyCatalog        = "sql.current-catalog"
+	ConfigKeyDatabase       = "sql.current-database"
+	ConfigKeyLocalTimeZone  = "sql.local-time-zone"
+	ConfigKeyResultsTimeout = "client.results-timeout"
+	ConfigKeyServiceAcount  = "client.service-account"
 )

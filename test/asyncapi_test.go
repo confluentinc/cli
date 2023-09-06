@@ -49,7 +49,7 @@ func (s *CLITestSuite) TestAsyncapiExport() {
 func (s *CLITestSuite) TestAsyncapiImport() {
 	tests := []CLITest{
 		{args: "asyncapi import", fixture: "asyncapi/import-err-no-file.golden", exitCode: 1},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
+		{args: "asyncapi import --file test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {
@@ -61,10 +61,10 @@ func (s *CLITestSuite) TestAsyncapiImport() {
 func (s *CLITestSuite) TestAsyncapiImport_WithWorkflow() {
 	tests := []CLITest{
 		{args: "environment use " + testserver.SRApiEnvId},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-no-overwrite.golden"},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-with-overwrite.golden"},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-with-context.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-no-channels.golden"},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-create-topic.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-create-topic.golden"},
+		{args: "asyncapi import --file test/fixtures/input/asyncapi/asyncapi-spec.yaml", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-no-overwrite.golden"},
+		{args: "asyncapi import --file test/fixtures/input/asyncapi/asyncapi-spec.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-with-overwrite.golden"},
+		{args: "asyncapi import --file test/fixtures/input/asyncapi/asyncapi-with-context.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-no-channels.golden"},
+		{args: "asyncapi import --file test/fixtures/input/asyncapi/asyncapi-create-topic.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-create-topic.golden"},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {

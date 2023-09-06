@@ -5,16 +5,17 @@ import (
 )
 
 type ApplicationOptions struct {
-	UnsafeTrace     bool
-	UserAgent       string
-	EnvironmentId   string
-	EnvironmentName string
-	OrgResourceId   string
-	Database        string
-	ComputePoolId   string
-	IdentityPoolId  string
-	Verbose         bool
-	Context         *dynamicconfig.DynamicContext
+	UnsafeTrace      bool
+	UserAgent        string
+	EnvironmentId    string
+	EnvironmentName  string
+	OrgResourceId    string
+	Database         string
+	ComputePoolId    string
+	IdentityPoolId   string
+	ServiceAccountId string
+	Verbose          bool
+	Context          *dynamicconfig.DynamicContext
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
@@ -72,6 +73,14 @@ func (a *ApplicationOptions) GetIdentityPoolId() string {
 	}
 	return ""
 }
+
+func (a *ApplicationOptions) GetServiceAccountId() string {
+	if a != nil {
+		return a.ServiceAccountId
+	}
+	return ""
+}
+
 func (a *ApplicationOptions) GetVerbose() bool {
 	if a != nil {
 		return a.Verbose

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/go-editor"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
@@ -43,7 +43,7 @@ func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	putSpec := mds.AuditLogConfigSpec{}
+	putSpec := mdsv1.AuditLogConfigSpec{}
 	if err = json.Unmarshal(edited, &putSpec); err != nil {
 		return err
 	}

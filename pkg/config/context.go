@@ -14,16 +14,18 @@ import (
 
 // Context represents a specific CLI context.
 type Context struct {
-	Name                   string                            `json:"name"`
-	NetrcMachineName       string                            `json:"netrc_machine_name"`
-	PlatformName           string                            `json:"platform"`
-	CredentialName         string                            `json:"credential"`
-	CurrentEnvironment     string                            `json:"current_environment,omitempty"`
-	Environments           map[string]*EnvironmentContext    `json:"environments,omitempty"`
-	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context"`
-	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters"`
-	LastOrgId              string                            `json:"last_org_id,omitempty"`
-	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty"`
+	Name                string                         `json:"name"`
+	NetrcMachineName    string                         `json:"netrc_machine_name"`
+	PlatformName        string                         `json:"platform"`
+	CredentialName      string                         `json:"credential"`
+	CurrentEnvironment  string                         `json:"current_environment,omitempty"`
+	Environments        map[string]*EnvironmentContext `json:"environments,omitempty"`
+	KafkaClusterContext *KafkaClusterContext           `json:"kafka_cluster_context"`
+	LastOrgId           string                         `json:"last_org_id,omitempty"`
+	FeatureFlags        *FeatureFlags                  `json:"feature_flags,omitempty"`
+
+	// Deprecated
+	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters,omitempty"`
 
 	Platform   *Platform     `json:"-"`
 	Credential *Credential   `json:"-"`
@@ -33,18 +35,17 @@ type Context struct {
 
 func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, orgResourceId, envId string) (*Context, error) {
 	ctx := &Context{
-		Name:                   name,
-		NetrcMachineName:       name,
-		Platform:               platform,
-		PlatformName:           platform.Name,
-		Credential:             credential,
-		CredentialName:         credential.Name,
-		CurrentEnvironment:     envId,
-		Environments:           map[string]*EnvironmentContext{},
-		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
-		State:                  state,
-		Config:                 config,
-		LastOrgId:              orgResourceId,
+		Name:               name,
+		NetrcMachineName:   name,
+		Platform:           platform,
+		PlatformName:       platform.Name,
+		Credential:         credential,
+		CredentialName:     credential.Name,
+		CurrentEnvironment: envId,
+		Environments:       map[string]*EnvironmentContext{},
+		State:              state,
+		Config:             config,
+		LastOrgId:          orgResourceId,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
 	if err := ctx.validate(); err != nil {
@@ -65,9 +66,6 @@ func (c *Context) validate() error {
 	}
 	if c.Environments == nil {
 		c.Environments = map[string]*EnvironmentContext{}
-	}
-	if c.SchemaRegistryClusters == nil {
-		c.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}
 	}
 	if c.State == nil {
 		c.State = new(ContextState)
@@ -351,6 +349,23 @@ func (c *Context) SetCurrentIdentityPool(id string) error {
 	}
 
 	ctx.CurrentIdentityPool = id
+	return nil
+}
+
+func (c *Context) GetCurrentServiceAccount() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentServiceAccount
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentServiceAccount(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentServiceAccount = id
 	return nil
 }
 

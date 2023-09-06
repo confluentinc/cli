@@ -1,7 +1,7 @@
-Delete a Kafka broker.
+Delete one or more Kafka brokers.
 
 Usage:
-  confluent kafka broker delete <id> [flags]
+  confluent kafka broker delete <id-1> [id-2] ... [id-n] [flags]
 
 Flags:
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.

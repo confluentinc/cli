@@ -47,6 +47,11 @@ func (c *Client) GetTopLevelConfig() (srsdk.Config, error) {
 	return res, err
 }
 
+func (c *Client) DeleteTopLevelConfig() (string, error) {
+	res, _, err := c.DefaultApi.DeleteTopLevelConfig(c.context)
+	return res, err
+}
+
 func (c *Client) UpdateTopLevelConfig(res srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, error) {
 	res, _, err := c.DefaultApi.UpdateTopLevelConfig(c.context, res)
 	return res, err
@@ -74,6 +79,11 @@ func (c *Client) GetSubjectLevelConfig(subject string) (srsdk.Config, error) {
 
 func (c *Client) UpdateSubjectLevelConfig(subject string, res srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, error) {
 	res, _, err := c.DefaultApi.UpdateSubjectLevelConfig(c.context, subject, res)
+	return res, err
+}
+
+func (c *Client) DeleteSubjectLevelConfig(subject string) (string, error) {
+	res, _, err := c.DefaultApi.DeleteSubjectConfig(c.context, subject)
 	return res, err
 }
 

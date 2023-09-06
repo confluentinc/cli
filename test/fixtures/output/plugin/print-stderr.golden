@@ -1,2 +1,2 @@
 can print to stderr
---meaningless-flag=false and stdout
+--meaningless-flag false and stdout

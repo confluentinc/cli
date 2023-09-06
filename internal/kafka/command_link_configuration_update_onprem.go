@@ -62,12 +62,7 @@ func (c *linkCommand) configurationUpdateOnPrem(cmd *cobra.Command, args []strin
 		return err
 	}
 
-	client, ctx, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(client, ctx)
+	client, ctx, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

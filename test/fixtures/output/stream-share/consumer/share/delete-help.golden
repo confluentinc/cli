@@ -1,7 +1,7 @@
-Delete a consumer share.
+Delete one or more consumer shares.
 
 Usage:
-  confluent stream-share consumer share delete <id> [flags]
+  confluent stream-share consumer share delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
 Delete consumer share "ss-12345":

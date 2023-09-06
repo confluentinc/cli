@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
@@ -76,7 +76,7 @@ func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
 
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
-	case mds.GenericOpenAPIError:
+	case mdsv1.GenericOpenAPIError:
 		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
 		if strings.Contains(err.Error(), "Forbidden Access") {
@@ -113,8 +113,6 @@ func catchCCloudTokenErrors(err error) error {
 		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginErrorSuggestions)
 	case *ccloudv1.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
-	case *ccloudv1.ExpiredTokenError:
-		return NewErrorWithSuggestions(ExpiredTokenErrorMsg, ExpiredTokenSuggestions)
 	}
 	return err
 }
@@ -211,7 +209,7 @@ func CatchCCloudV2ResourceNotFoundError(err error, resourceType string, r *http.
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(OrgResourceNotFoundSuggestions, resourceType))
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(ListResourceSuggestions, resourceType, resourceType))
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -238,11 +236,7 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		suggestions := KafkaClusterInaccessibleSuggestions
-		if r.Request.Method == http.MethodDelete {
-			suggestions = KafkaClusterDeletingSuggestions
-		}
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), suggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), KafkaClusterInaccessibleSuggestions)
 	}
 
 	return CatchCCloudV2Error(err, r)
