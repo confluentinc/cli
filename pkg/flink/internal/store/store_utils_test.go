@@ -124,15 +124,17 @@ func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
-		EnvironmentName: "envName",
-		Database:        "database",
+		OrgResourceId:    "orgId",
+		EnvironmentName:  "envName",
+		Database:         "database",
+		ServiceAccountId: "sa-123",
 	}
 	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
 	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
 		{config.ConfigKeyCatalog, fmt.Sprintf("%s (default)", appOptions.EnvironmentName)},
 		{config.ConfigKeyDatabase, fmt.Sprintf("%s (default)", appOptions.Database)},
 		{config.ConfigKeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
+		{config.ConfigKeyServiceAcount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
 	})
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {

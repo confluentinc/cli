@@ -14,7 +14,7 @@ func OutputErr(s string) {
 
 func OutputErrf(s string, args ...any) {
 	c := fColor.New(color.ErrorColor)
-	output.Printf(c.Sprint(s), args...)
+	output.Printf(c.Sprintln(s), args...)
 }
 
 func OutputInfo(s string) {
@@ -28,4 +28,9 @@ func OutputInfof(s string, args ...any) {
 func OutputWarn(s string) {
 	c := fColor.New(color.WarnColor)
 	output.Println(c.Sprint(s))
+}
+
+func OutputWarnf(s string, args ...any) {
+	c := fColor.New(color.WarnColor)
+	output.Printf(c.Sprintln(s), args...)
 }
