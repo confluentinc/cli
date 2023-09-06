@@ -42,8 +42,7 @@ func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement)
 	return &ProcessedStatement{
 		StatementName:     statementObj.GetName(),
 		ComputePool:       statementObj.Spec.GetComputePoolId(),
-		IdentityPool:      statementObj.Spec.GetIdentityPoolId(),
-		ServiceAccount:    statementObj.GetPrincipal(),
+		ServiceAccount:    statementObj.Spec.GetPrincipal(),
 		StatusDetail:      statementObj.Status.GetDetail(),
 		Status:            PHASE(statementObj.Status.GetPhase()),
 		ResultSchema:      statementObj.Status.GetResultSchema(),
