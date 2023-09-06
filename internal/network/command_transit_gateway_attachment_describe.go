@@ -16,8 +16,8 @@ func (c *transitGatewayAttachmentCommand) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe transit gateway attachment "tgwa-a12cbd".`,
-				Code: "confluent network transit-gateway-attachment describe tgwa-a12cbd",
+				Text: `Describe transit gateway attachment "tgwa-123456".`,
+				Code: "confluent network transit-gateway-attachment describe tgwa-123456",
 			},
 		),
 	}
@@ -35,10 +35,10 @@ func (c *transitGatewayAttachmentCommand) describe(cmd *cobra.Command, args []st
 		return err
 	}
 
-	tgwa, err := c.V2Client.GetTransitGatewayAttachment(environmentId, args[0])
+	attachment, err := c.V2Client.GetTransitGatewayAttachment(environmentId, args[0])
 	if err != nil {
 		return err
 	}
 
-	return printTransitGatewayAttachmentTable(cmd, tgwa)
+	return printTransitGatewayAttachmentTable(cmd, attachment)
 }
