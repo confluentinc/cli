@@ -105,10 +105,7 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePool
 func (c *FlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	if serviceAccountId != "" {
 		// add the service account header and remove it after the request
-		statement.Principal = &serviceAccountId
-	} else {
-		// if this is also empty we have the interactive query/AUMP case
-		statement.Spec.IdentityPoolId = &identityPoolId
+		statement.Spec.Principal = &serviceAccountId
 	}
 	resp, httpResp, err := c.StatementsSqlV1beta1Api.CreateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId).SqlV1beta1Statement(statement).Execute()
 	return resp, flink.CatchError(err, httpResp)
