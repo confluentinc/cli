@@ -75,7 +75,7 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 
 	suggestions := make([]string, len(statements))
 	for i, statement := range statements {
-		suggestions[i] = fmt.Sprintf("%s\t%s", statement.Spec.GetStatementName(), statement.Spec.GetStatement())
+		suggestions[i] = fmt.Sprintf("%s\t%s", statement.GetName(), statement.Spec.GetStatement())
 	}
 	return suggestions
 }
