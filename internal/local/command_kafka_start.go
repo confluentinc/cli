@@ -151,7 +151,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		Architecture: runtime.GOARCH,
 	}
 	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
-	natPlaintextPorts := getNatPlaintextPorts(ports, brokers)
+	natPlaintextPorts := getNatPlaintextPorts(ports)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
 	_, err = dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, types.NetworkCreate{
@@ -338,7 +338,7 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, broke
 	return envs
 }
 
-func getNatPlaintextPorts(ports *config.LocalPorts, brokers int32) []nat.Port {
+func getNatPlaintextPorts(ports *config.LocalPorts) []nat.Port {
 	res := []nat.Port{}
 	for _, port := range ports.PlaintextPorts {
 		res = append(res, nat.Port(port+"/tcp"))
