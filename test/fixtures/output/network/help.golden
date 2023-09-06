@@ -4,12 +4,13 @@ Usage:
   confluent network [command]
 
 Available Commands:
-  create      Create a network.
-  delete      Delete one or more networks.
-  describe    Describe a network.
-  list        List networks.
-  peering     Manage peerings.
-  update      Update an existing network.
+  create                     Create a network.
+  delete                     Delete one or more networks.
+  describe                   Describe a network.
+  list                       List networks.
+  peering                    Manage peerings.
+  transit-gateway-attachment Manage transit gateway attachments.
+  update                     Update an existing network.
 
 Global Flags:
   -h, --help            Show help for this command.

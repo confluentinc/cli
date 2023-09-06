@@ -1,0 +1,44 @@
+package network
+
+import (
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/examples"
+)
+
+func (c *transitGatewayAttachmentCommand) newDescribeCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "describe <id>",
+		Short:             "Describe a transit gateway attachment.",
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Args:              cobra.ExactArgs(1),
+		RunE:              c.describe,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Describe transit gateway attachment "tgwa-a12cbd".`,
+				Code: "confluent network transit-gateway-attachment describe tgwa-a12cbd",
+			},
+		),
+	}
+
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
+
+	return cmd
+}
+
+func (c *transitGatewayAttachmentCommand) describe(cmd *cobra.Command, args []string) error {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	tgwa, err := c.V2Client.GetTransitGatewayAttachment(environmentId, args[0])
+	if err != nil {
+		return err
+	}
+
+	return printTransitGatewayAttachmentTable(cmd, tgwa)
+}
