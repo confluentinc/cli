@@ -23,9 +23,18 @@ func (s *shell) executor(question string) {
 		os.Exit(0)
 	}
 
+	// Send only the last question and answer to provide extra context to the backend model.
+	// We may choose to send more context in the future, but it is more expensive.
+	const recentHistoryLen = 1
+	recentHistory := s.history
+
+	if len(s.history) > recentHistoryLen {
+		recentHistory = s.history[:len(s.history)-recentHistoryLen]
+	}
+
 	req := aiv1.AiV1ChatCompletionsRequest{
 		Question: aiv1.PtrString(question),
-		History:  &s.history,
+		History:  &recentHistory,
 	}
 	res, err := s.client.QueryChatCompletion(req)
 	if err != nil {
