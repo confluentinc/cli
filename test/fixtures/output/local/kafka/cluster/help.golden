@@ -1,0 +1,14 @@
+Manage local Kafka cluster.
+
+Usage:
+  confluent local kafka cluster [command]
+
+Available Commands:
+  configuration Manage Kafka cluster configurations in Confluent Local.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local kafka cluster [command] --help" for more information about a command.
