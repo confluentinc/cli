@@ -12,5 +12,9 @@ func (s *IntegerDeserializationProvider) LoadSchema(_ string, _ map[string]strin
 }
 
 func (s *IntegerDeserializationProvider) Deserialize(data []byte) (string, error) {
+	if len(data) == 0 {
+		return "", nil
+	}
+
 	return fmt.Sprintf("%d", binary.LittleEndian.Uint32(data)), nil
 }
