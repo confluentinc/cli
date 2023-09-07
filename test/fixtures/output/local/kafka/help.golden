@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   broker      Manage local Kafka brokers.
-  cluster     Manage local Kafka cluster.
+  cluster     Manage the local Kafka cluster.
   start       Start a local Apache Kafka instance.
   stop        Stop the local Apache Kafka service.
   topic       Run Kafka topic related commands.
