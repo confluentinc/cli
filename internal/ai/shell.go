@@ -38,8 +38,8 @@ func (s *shell) executor(question string) {
 	}
 	res, err := s.client.QueryChatCompletion(req)
 	if err != nil {
-		output.Printf("Error: %v", err)
-		return
+		output.Printf("Error: %v\n", err)
+		os.Exit(0)
 	}
 
 	s.history = append(s.history, aiv1.AiV1ChatCompletionsHistory{
@@ -49,8 +49,8 @@ func (s *shell) executor(question string) {
 
 	out, err := glamour.Render(res.GetAnswer(), "auto")
 	if err != nil {
-		output.Printf("Error: %v", err)
-		return
+		output.Printf("Error: %v\n", err)
+		os.Exit(0)
 	}
 
 	output.Println(out)
