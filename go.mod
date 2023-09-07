@@ -101,27 +101,17 @@ require (
 )
 
 require (
-	github.com/alecthomas/chroma v0.10.0 // indirect
-	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
-	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/dlclark/regexp2 v1.4.0 // indirect
-	github.com/gorilla/css v1.0.0 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.21 // indirect
-	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.15.2 // indirect
-	github.com/yuin/goldmark v1.5.2 // indirect
-	github.com/yuin/goldmark-emoji v1.0.1 // indirect
-)
-
-require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
+	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bufbuild/protocompile v0.4.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
@@ -129,6 +119,7 @@ require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
+	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -142,6 +133,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -157,10 +149,13 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mattn/go-tty v0.0.4 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.21 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/runc v1.1.4 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
@@ -180,6 +175,8 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
+	github.com/yuin/goldmark v1.5.2 // indirect
+	github.com/yuin/goldmark-emoji v1.0.1 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
