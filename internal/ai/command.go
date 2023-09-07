@@ -29,7 +29,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) ai(cmd *cobra.Command, _ []string) error {
-	output.Println(`Welcome to the Confluent AI Assistant! Type "exit" or press Ctrl-C to stop.`)
+	output.Println(`Welcome to the Confluent AI Assistant! Type "exit" to exit the shell.`)
 	// TODO: exit, quit, ctrl-c, esc
 
 	s := shell{
