@@ -20,20 +20,30 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
+	cmd.Flags().Bool("jit-enabled", false, "Toggle Just-In-Time (JIT) user provisioning for SSO-enabled organizations.")
 	pcmd.AddOutputFlag(cmd)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
+	organization := orgv2.OrgV2Organization{}
+	if cmd.Flags().Changed("jit-enabled") {
+		jitEnabled, err := cmd.Flags().GetBool("jit-enabled")
+		if err != nil {
+			return err
+		}
+		organization.JitEnabled = orgv2.PtrBool(jitEnabled)
 	}
 
-	organization := orgv2.OrgV2Organization{DisplayName: orgv2.PtrString(name)}
+	if cmd.Flags().Changed("name") {
+		name, err := cmd.Flags().GetString("name")
+		if err != nil {
+			return err
+		}
+		organization.DisplayName = orgv2.PtrString(name)
+	}
+
 	organization, httpResp, err := c.V2Client.UpdateOrgOrganization(c.Context.GetCurrentOrganization(), organization)
 	if err != nil {
 		return errors.CatchCCloudV2ResourceNotFoundError(err, resource.Organization, httpResp)
@@ -41,9 +51,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: organization.GetId() == c.Context.GetCurrentOrganization(),
-		Id:        organization.GetId(),
-		Name:      organization.GetDisplayName(),
+		IsCurrent:  organization.GetId() == c.Context.GetCurrentOrganization(),
+		Id:         organization.GetId(),
+		Name:       organization.GetDisplayName(),
+		JitEnabled: organization.GetJitEnabled(),
 	})
 	return table.Print()
 }
