@@ -89,18 +89,13 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	keyFormat, err := cmd.Flags().GetString("key-format")
-	if err != nil {
-		return err
-	}
-
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return err
 	}
 
-	if keyFormat != "string" && !parseKey {
-		return errors.New("`--parse-key` must be set when the key format is not \"string\"")
+	if cmd.Flags().Changed("key-format") && !parseKey {
+		return errors.New("`--parse-key` must be set when `key-format` is set")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")
