@@ -1,51 +1,14 @@
 package broker
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 type KafkaClusterTestSuite struct {
 	suite.Suite
-}
-
-func (suite *KafkaClusterTestSuite) TestBroker_CheckAllOrIdSpecified() {
-	req := suite.Require()
-	// only --all
-	cmd := newCmdWithAllFlag()
-	_ = cmd.ParseFlags([]string{"--all"})
-	id, all, err := CheckAllOrIdSpecified(cmd, []string{}, true)
-	req.NoError(err)
-	req.True(all)
-	req.Equal(int32(-1), id)
-	// only broker id arg
-	cmd = newCmdWithAllFlag()
-	id, all, err = CheckAllOrIdSpecified(cmd, []string{"1"}, true)
-	req.NoError(err)
-	req.False(all)
-	req.Equal(int32(1), id)
-	// --all and broker id arg
-	cmd = newCmdWithAllFlag()
-	_ = cmd.ParseFlags([]string{"--all"})
-	_, _, err = CheckAllOrIdSpecified(cmd, []string{"1"}, true)
-	req.Error(err)
-	req.Equal(errors.OnlySpecifyAllOrBrokerIDErrorMsg, err.Error())
-	// neither
-	cmd = newCmdWithAllFlag()
-	_, _, err = CheckAllOrIdSpecified(cmd, []string{}, true)
-	req.Error(err)
-	req.Equal(errors.MustSpecifyAllOrBrokerIDErrorMsg, err.Error())
-}
-
-func newCmdWithAllFlag() *cobra.Command {
-	cmd := &cobra.Command{}
-	cmd.Flags().Bool("all", false, "All brokers.")
-	return cmd
 }
 
 var expectedConfigData = []ConfigOut{

@@ -7,7 +7,7 @@ import (
 func (c *command) newKafkaBrokerCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "broker",
-		Short: "Manage Kafka brokers in Confluent Local.",
+		Short: "Manage local Kafka brokers.",
 	}
 
 	cmd.AddCommand(c.newKafkaBrokerDescribeCommand())

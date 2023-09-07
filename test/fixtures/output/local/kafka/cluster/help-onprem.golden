@@ -1,4 +1,4 @@
-Manage Kafka cluster in Confluent Local.
+Manage local Kafka cluster.
 
 Usage:
   confluent local kafka cluster [command]

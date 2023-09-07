@@ -1,4 +1,4 @@
-Manage Kafka brokers in Confluent Local.
+Manage local Kafka brokers.
 
 Usage:
   confluent local kafka broker [command]

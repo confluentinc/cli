@@ -7,7 +7,7 @@ import (
 func (c *command) newKafkaClusterCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cluster",
-		Short: "Manage Kafka cluster in Confluent Local.",
+		Short: "Manage local Kafka cluster.",
 	}
 
 	cmd.AddCommand(c.newKafkaClusterConfigurationCommand())
