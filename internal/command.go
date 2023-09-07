@@ -12,6 +12,7 @@ import (
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
 	"github.com/confluentinc/cli/v3/internal/admin"
+	"github.com/confluentinc/cli/v3/internal/ai"
 	apikey "github.com/confluentinc/cli/v3/internal/api-key"
 	"github.com/confluentinc/cli/v3/internal/asyncapi"
 	auditlog "github.com/confluentinc/cli/v3/internal/audit-log"
@@ -104,6 +105,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	cmd.AddCommand(admin.New(prerunner, cfg.IsTest))
+	cmd.AddCommand(ai.New(prerunner))
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))

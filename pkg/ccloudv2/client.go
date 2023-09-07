@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
@@ -28,6 +29,7 @@ type Client struct {
 	AuthToken string
 
 	ApiKeysClient          *apikeysv2.APIClient
+	AiClient               *aiv1.APIClient
 	BillingClient          *billingv1.APIClient
 	ByokClient             *byokv1.APIClient
 	CdxClient              *cdxv1.APIClient
@@ -57,6 +59,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		AuthToken: authToken,
 
 		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
+		AiClient:               newAiClient(url, userAgent, unsafeTrace),
 		BillingClient:          newBillingClient(url, userAgent, unsafeTrace),
 		ByokClient:             newByokV1Client(url, userAgent, unsafeTrace),
 		CdxClient:              newCdxClient(url, userAgent, unsafeTrace),
