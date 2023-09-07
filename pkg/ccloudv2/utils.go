@@ -16,7 +16,7 @@ import (
 
 const (
 	pageTokenQueryParameter = "page_token"
-	ccloudV2ListPageSize    = 99
+	ccloudV2ListPageSize    = 100
 )
 
 type NullableString interface {
