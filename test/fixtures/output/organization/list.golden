@@ -1,4 +1,4 @@
-  Current |   ID    | Name | JIT_Enabled
+  Current |   ID    | Name | JIT Enabled
 ----------+---------+------+--------------
   *       | abc-123 | org1 | true
           | abc-456 | org2 | true

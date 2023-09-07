@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --name string     Name of the Confluent Cloud organization.
-      --jit_enabled string     The flag to toggle Just-In-Time user provisioning for SSO-enabled organization
+      --jit_enabled string     Toggle Just-In-Time (JIT) user provisioning for SSO-enabled organizations.
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

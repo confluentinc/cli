@@ -20,7 +20,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
-	cmd.Flags().Bool("jit-enabled", false, "The flag to toggle Just-In-Time user provisioning for SSO-enabled organization.")
+	cmd.Flags().Bool("jit-enabled", false, "Toggle Just-In-Time (JIT) user provisioning for SSO-enabled organizations.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -51,10 +51,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent:   organization.GetId() == c.Context.GetCurrentOrganization(),
-		Id:          organization.GetId(),
-		Name:        organization.GetDisplayName(),
-		JIT_Enabled: organization.GetJitEnabled(),
+		IsCurrent:  organization.GetId() == c.Context.GetCurrentOrganization(),
+		Id:         organization.GetId(),
+		Name:       organization.GetDisplayName(),
+		JitEnabled: organization.GetJitEnabled(),
 	})
 	return table.Print()
 }
