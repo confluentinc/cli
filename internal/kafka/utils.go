@@ -55,20 +55,6 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) cckafkarestv3.A
 	return cckafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
 }
 
-func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkarestv3.AlterConfigBatchRequestData {
-	kafkaRestConfigs := make([]cpkafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
-	i := 0
-	for key, val := range configsMap {
-		v := val
-		kafkaRestConfigs[i] = cpkafkarestv3.AlterConfigBatchRequestDataData{
-			Name:  key,
-			Value: &v,
-		}
-		i++
-	}
-	return cpkafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
-}
-
 func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
 	if err == nil {
 		return nil
