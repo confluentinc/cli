@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/spinner"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ai/v1"
@@ -23,37 +25,48 @@ func (s *shell) executor(question string) {
 		os.Exit(0)
 	}
 
-	// Send only the last question and answer to provide extra context to the backend model.
-	// We may choose to send more context in the future, but it is more expensive.
-	const recentHistoryLen = 1
-	recentHistory := s.history
+	m := &model{spinner: spinner.New()}
+	m.spinner.Spinner = spinner.Ellipsis
 
-	if len(s.history) > recentHistoryLen {
-		recentHistory = s.history[:len(s.history)-recentHistoryLen]
+	go func() {
+		// Send only the last question and answer to provide extra context to the backend model.
+		// We may choose to send more context in the future, but it is more expensive.
+		const recentHistoryLen = 1
+		recentHistory := s.history
+
+		if len(s.history) > recentHistoryLen {
+			recentHistory = s.history[:len(s.history)-recentHistoryLen]
+		}
+
+		req := aiv1.AiV1ChatCompletionsRequest{
+			Question: aiv1.PtrString(question),
+			History:  &recentHistory,
+		}
+		res, err := s.client.QueryChatCompletion(req)
+		if err != nil {
+			exitWithErr(err)
+		}
+
+		s.history = append(s.history, aiv1.AiV1ChatCompletionsHistory{
+			Question: aiv1.PtrString(question),
+			Answer:   aiv1.PtrString(res.GetAnswer()),
+		})
+
+		out, err := glamour.Render(res.GetAnswer(), "auto")
+		if err != nil {
+			exitWithErr(err)
+		}
+		m.out = out
+	}()
+
+	if _, err := tea.NewProgram(m).Run(); err != nil {
+		exitWithErr(err)
 	}
 
-	req := aiv1.AiV1ChatCompletionsRequest{
-		Question: aiv1.PtrString(question),
-		History:  &recentHistory,
+	// Print outside of bubbletea to avoid text cropping
+	if m.out != "" {
+		output.Print(m.out)
 	}
-	res, err := s.client.QueryChatCompletion(req)
-	if err != nil {
-		output.Printf("Error: %v\n", err)
-		os.Exit(0)
-	}
-
-	s.history = append(s.history, aiv1.AiV1ChatCompletionsHistory{
-		Question: aiv1.PtrString(question),
-		Answer:   aiv1.PtrString(res.GetAnswer()),
-	})
-
-	out, err := glamour.Render(res.GetAnswer(), "auto")
-	if err != nil {
-		output.Printf("Error: %v\n", err)
-		os.Exit(0)
-	}
-
-	output.Println(out)
 }
 
 func (s *shell) completer(d prompt.Document) []prompt.Suggest {
@@ -63,4 +76,9 @@ func (s *shell) completer(d prompt.Document) []prompt.Suggest {
 func (s *shell) isExit(in string) bool {
 	in = strings.ToLower(strings.TrimSpace(in))
 	return in == "exit" || in == "quit"
+}
+
+func exitWithErr(err error) {
+	output.Printf("Error: %v\n", err)
+	os.Exit(0)
 }
