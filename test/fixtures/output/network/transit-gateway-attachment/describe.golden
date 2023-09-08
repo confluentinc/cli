@@ -1,10 +1,10 @@
-+-------------------------------+---------------------------------------------------------------------------------------+
-| ID                            | tgwa-111111                                                                           |
-| Name                          | aws-tgwa1                                                                             |
-| Network ID                    | n-abcde1                                                                              |
-| RAM Share ARN                 | arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx |
-| Transit Gateway ID            | tgw-00000000000000000                                                                 |
-| Routes                        | 10.0.0.0/16                                                                           |
-| Transit Gateway Attachment ID | tgw-attach-00000000000000000                                                          |
-| Phase                         | READY                                                                                 |
-+-------------------------------+---------------------------------------------------------------------------------------+
++-----------------------------------+---------------------------------------------------------------------------------------+
+| ID                                | tgwa-111111                                                                           |
+| Name                              | aws-tgwa1                                                                             |
+| Network ID                        | n-abcde1                                                                              |
+| AWS RAM Share ARN                 | arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx |
+| AWS Transit Gateway ID            | tgw-00000000000000000                                                                 |
+| Routes                            | 10.0.0.0/16                                                                           |
+| AWS Transit Gateway Attachment ID | tgw-attach-00000000000000000                                                          |
+| Phase                             | READY                                                                                 |
++-----------------------------------+---------------------------------------------------------------------------------------+
