@@ -3,9 +3,9 @@ Usage:
   confluent network peering update <id> [flags]
 
 Examples:
-Update the name of peering "peer-111111"
+Update the name of peering "peer-123456"
 
-  $ confluent network peering update peer-111111 --name "new name"
+  $ confluent network peering update peer-123456 --name "new name"
 
 Flags:
       --name string          REQUIRED: Name of the peering.

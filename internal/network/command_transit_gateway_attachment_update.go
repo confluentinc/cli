@@ -18,8 +18,8 @@ func (c *transitGatewayAttachmentCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name of transit gateway attachment "tgwa-111111"`,
-				Code: `confluent network transit-gateway-attachment update tgwa-111111 --name "new name"`,
+				Text: `Update the name of transit gateway attachment "tgwa-123456"`,
+				Code: `confluent network transit-gateway-attachment update tgwa-123456 --name "new name"`,
 			},
 		),
 	}

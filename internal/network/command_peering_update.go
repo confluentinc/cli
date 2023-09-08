@@ -18,8 +18,8 @@ func (c *peeringCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name of peering "peer-111111"`,
-				Code: `confluent network peering update peer-111111 --name "new name"`,
+				Text: `Update the name of peering "peer-123456"`,
+				Code: `confluent network peering update peer-123456 --name "new name"`,
 			},
 		),
 	}
