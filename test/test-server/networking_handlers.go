@@ -66,6 +66,27 @@ func handleNetworkingPeerings(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/transit-gateway-attachments/{id}"
+func handleNetworkingTransitGatewayAttachment(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingTransitGatewayAttachmentGet(t, id)(w, r)
+		}
+	}
+}
+
+// Handler for "/networking/v1/transit-gateway-attachments"
+func handleNetworkingTransitGatewayAttachments(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingTransitGatewayAttachmentsList(t)(w, r)
+		}
+	}
+}
+
 func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -462,4 +483,79 @@ func handleNetworkingPeeringCreate(t *testing.T) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(peering)
 		require.NoError(t, err)
 	}
+}
+
+func handleNetworkingTransitGatewayAttachmentGet(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "tgwa-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "tgwa-111111":
+			attachment := getTransitGatewayAttachment("tgwa-111111", "aws-tgwa1")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingTransitGatewayAttachmentsList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		attachment1 := getTransitGatewayAttachment("tgwa-111111", "aws-tgwa1")
+		attachment2 := getTransitGatewayAttachment("tgwa-222222", "aws-tgwa2")
+		attachment3 := getTransitGatewayAttachment("tgwa-333333", "aws-tgwa3")
+
+		pageToken := r.URL.Query().Get("page_token")
+		var transitGatewayAttachmentList networkingv1.NetworkingV1TransitGatewayAttachmentList
+		switch pageToken {
+		case "aws-tgwa3":
+			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
+				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment3},
+				Metadata: networkingv1.ListMeta{},
+			}
+		case "aws-tgwa2":
+			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
+				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment2},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/transit-gateway-attachments?environment=env-00000&page_size=1&page_token=aws-tgwa3"))},
+			}
+		default:
+			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
+				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment1},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/transit-gateway-attachments?environment=env-00000&page_size=1&page_token=aws-tgwa2"))},
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(transitGatewayAttachmentList)
+		require.NoError(t, err)
+	}
+}
+
+func getTransitGatewayAttachment(id, name string) networkingv1.NetworkingV1TransitGatewayAttachment {
+	attachment := networkingv1.NetworkingV1TransitGatewayAttachment{
+		Id:   networkingv1.PtrString(id),
+		Kind: networkingv1.PtrString("TransitGatewayAttachment"),
+		Spec: &networkingv1.NetworkingV1TransitGatewayAttachmentSpec{
+			DisplayName: networkingv1.PtrString(name),
+			Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+			Network:     &networkingv1.ObjectReference{Id: "n-abcde1"},
+			Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecCloudOneOf{
+				NetworkingV1AwsTransitGatewayAttachment: &networkingv1.NetworkingV1AwsTransitGatewayAttachment{
+					Kind:             "AwsTransitGatewayAttachment",
+					RamShareArn:      "arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
+					Routes:           []string{"10.0.0.0/16"},
+					TransitGatewayId: "tgw-00000000000000000",
+				},
+			},
+		},
+		Status: &networkingv1.NetworkingV1TransitGatewayAttachmentStatus{
+			Phase: "READY",
+			Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentStatusCloudOneOf{
+				NetworkingV1AwsTransitGatewayAttachmentStatus: &networkingv1.NetworkingV1AwsTransitGatewayAttachmentStatus{
+					Kind:                       networkingv1.PtrString("AwsTransitGatewayAttachmentStatus"),
+					TransitGatewayAttachmentId: "tgw-attach-00000000000000000",
+				},
+			},
+		},
+	}
+	return attachment
 }
