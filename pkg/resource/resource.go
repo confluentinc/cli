@@ -44,6 +44,7 @@ const (
 	ServiceAccount              = "service account"
 	SsoGroupMapping             = "SSO group mapping"
 	Topic                       = "topic"
+	TransitGatewayAttachment    = "transit gateway attachment"
 	User                        = "user"
 )
 

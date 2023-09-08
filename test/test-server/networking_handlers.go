@@ -73,6 +73,10 @@ func handleNetworkingTransitGatewayAttachment(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingTransitGatewayAttachmentGet(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingTransitGatewayAttachmentUpdate(t, id)(w, r)
+		case http.MethodDelete:
+			handleNetworkingTransitGatewayAttachmentDelete(t, id)(w, r)
 		}
 	}
 }
@@ -558,4 +562,34 @@ func getTransitGatewayAttachment(id, name string) networkingv1.NetworkingV1Trans
 		},
 	}
 	return attachment
+}
+
+func handleNetworkingTransitGatewayAttachmentUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "tgwa-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "tgwa-111111":
+			body := &networkingv1.NetworkingV1Network{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			attachment := getTransitGatewayAttachment("tgwa-111111", body.Spec.GetDisplayName())
+			err = json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingTransitGatewayAttachmentDelete(_ *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "tgw-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "tgwa-111111", "tgwa-222222":
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
 }
