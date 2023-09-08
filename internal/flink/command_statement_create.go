@@ -20,9 +20,9 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
-	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
+	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
