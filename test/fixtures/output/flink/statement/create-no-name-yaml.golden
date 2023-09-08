@@ -1,5 +1,5 @@
 creation_date: 2023-01-01T00:00:00Z
-name: a816aa06-16aa-4f69-8972-c13abf30d2ac
-statement: INSERT * INTO table;
+name: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
+statement: INSERT \* INTO table;
 compute_pool: lfcp-123456
 status: PENDING
