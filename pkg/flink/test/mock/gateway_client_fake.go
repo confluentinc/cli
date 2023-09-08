@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
 	"github.com/google/uuid"
 	"pgregory.net/rapid"
+
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
 )
 
 const (
@@ -105,16 +107,11 @@ func (c *FakeFlinkGatewayClient) getDynamicFakeResultSchema() []flinkgatewayv1al
 
 func (c *FakeFlinkGatewayClient) GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
 	resultData, nextUrl := c.getFakeResults()
-	return flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		ApiVersion: "",
-		Kind:       "",
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{
-			Self:      nil,
-			Next:      &nextUrl,
-			CreatedAt: nil,
-		},
-		Results: &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &resultData},
-	}, nil
+	result := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
+		Metadata: flinkgatewayv1alpha1.ResultListMeta{Next: &nextUrl},
+		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &resultData},
+	}
+	return result, nil
 }
 
 func (c *FakeFlinkGatewayClient) getFakeResults() ([]any, string) {

@@ -7,7 +7,6 @@ import (
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -22,9 +21,11 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
-	c.addComputePoolFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
+	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("sql"))
 
@@ -52,15 +53,9 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	computePool := c.Context.GetCurrentFlinkComputePool()
-	if computePool == "" {
-		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
-	}
-
 	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
 		StatementName: flinkgatewayv1alpha1.PtrString(name),
 		Statement:     flinkgatewayv1alpha1.PtrString(sql),
-		ComputePoolId: flinkgatewayv1alpha1.PtrString(computePool),
 	}}
 
 	client, err := c.GetFlinkGatewayClient()
@@ -73,8 +68,8 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	list := output.NewList(cmd)
-	list.Add(&statementOut{
+	table := output.NewTable(cmd)
+	table.Add(&statementOut{
 		CreationDate: statement.Metadata.GetCreatedAt(),
 		Name:         statement.Spec.GetStatementName(),
 		Statement:    statement.Spec.GetStatement(),
@@ -82,5 +77,5 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		Status:       statement.Status.GetPhase(),
 		StatusDetail: statement.Status.GetDetail(),
 	})
-	return list.Print()
+	return table.Print()
 }
