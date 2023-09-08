@@ -156,3 +156,13 @@ func (c *Client) GetTransitGatewayAttachment(environment, id string) (networking
 	resp, httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.GetNetworkingV1TransitGatewayAttachment(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) UpdateTransitGatewayAttachment(environment, id string, transitGatewayAttachmentUpdate networkingv1.NetworkingV1TransitGatewayAttachmentUpdate) (networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+	resp, httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.UpdateNetworkingV1TransitGatewayAttachment(c.networkingApiContext(), id).NetworkingV1TransitGatewayAttachmentUpdate(transitGatewayAttachmentUpdate).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) DeleteTransitGatewayAttachment(environment, id string) error {
+	httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.DeleteNetworkingV1TransitGatewayAttachment(c.networkingApiContext(), id).Environment(environment).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}

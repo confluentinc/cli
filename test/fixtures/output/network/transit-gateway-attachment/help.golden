@@ -7,8 +7,10 @@ Aliases:
   transit-gateway-attachment, tgwa
 
 Available Commands:
+  delete      Delete one or more transit gateway attachments.
   describe    Describe a transit gateway attachment.
   list        List transit gateway attachments.
+  update      Update an existing transit gateway attachment.
 
 Global Flags:
   -h, --help            Show help for this command.
