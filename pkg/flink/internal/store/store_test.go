@@ -1015,7 +1015,7 @@ func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
+	client.EXPECT().CreateStatementForShell(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1047,7 +1047,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), serviceAccountId, "", "envId", "orgId").
+	client.EXPECT().CreateStatementForShell(statement, "computePoolId", store.Properties.GetSqlProperties(), serviceAccountId, "", "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1080,7 +1080,7 @@ func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAc
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "", "envId", "orgId").
+	client.EXPECT().CreateStatementForShell(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "", "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1112,7 +1112,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	returnedError := errors.New("test error")
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
+	client.EXPECT().CreateStatementForShell(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
 		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),

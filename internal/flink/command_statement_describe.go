@@ -15,6 +15,7 @@ func (c *command) newStatementDescribeCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
 		RunE:              c.statementDescribe,
 	}
+
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -38,6 +39,7 @@ func (c *command) statementDescribe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	list := output.NewList(cmd)
 	list.Add(&statementOut{
 		CreationDate: statement.Metadata.GetCreatedAt(),
@@ -47,6 +49,5 @@ func (c *command) statementDescribe(cmd *cobra.Command, args []string) error {
 		Status:       statement.Status.GetPhase(),
 		StatusDetail: statement.Status.GetDetail(),
 	})
-
 	return list.Print()
 }

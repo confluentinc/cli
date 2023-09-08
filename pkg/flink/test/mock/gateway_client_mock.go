@@ -34,19 +34,19 @@ func (m *MockGatewayClientInterface) EXPECT() *MockGatewayClientInterfaceMockRec
 	return m.recorder
 }
 
-// CreateStatement mocks base method.
-func (m *MockGatewayClientInterface) CreateStatement(arg0, arg1 string, arg2 map[string]string, arg3, arg4, arg5, arg6 string) (v1alpha1.SqlV1alpha1Statement, error) {
+// CreateStatementForShell mocks base method.
+func (m *MockGatewayClientInterface) CreateStatementForShell(arg0, arg1 string, arg2 map[string]string, arg3, arg4, arg5, arg6 string) (v1alpha1.SqlV1alpha1Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateStatement", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+	ret := m.ctrl.Call(m, "CreateStatementForShell", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateStatement indicates an expected call of CreateStatement.
-func (mr *MockGatewayClientInterfaceMockRecorder) CreateStatement(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
+// CreateStatementForShell indicates an expected call of CreateStatementForShell.
+func (mr *MockGatewayClientInterfaceMockRecorder) CreateStatementForShell(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateStatement), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateStatementForShell", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateStatementForShell), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // DeleteStatement mocks base method.

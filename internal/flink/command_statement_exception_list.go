@@ -43,7 +43,6 @@ func (c *command) statementExceptionList(cmd *cobra.Command, args []string) erro
 	}
 
 	list := output.NewList(cmd)
-
 	for _, exception := range exceptions.Data {
 		list.Add(&exceptionOut{
 			Name:       exception.GetName(),
@@ -51,6 +50,5 @@ func (c *command) statementExceptionList(cmd *cobra.Command, args []string) erro
 			StackTrace: exception.GetStacktrace(),
 		})
 	}
-
 	return list.Print()
 }

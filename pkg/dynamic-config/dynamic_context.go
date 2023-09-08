@@ -30,13 +30,10 @@ func NewDynamicContext(context *config.Context, v2Client *ccloudv2.Client) *Dyna
 }
 
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
-	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
-		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
-		} else {
-			ctx := d.Config.Context()
-			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
-			ctx.SetCurrentEnvironment(environment)
+	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
+		ctx := d.Config.Context()
+		if err := ctx.SetCurrentFlinkCloudProvider(cloud); err != nil {
+			return err
 		}
 	}
 
@@ -58,6 +55,16 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		}
 	}
 
+	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
+		if d.GetCredentialType() == config.APIKey {
+			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
+		} else {
+			ctx := d.Config.Context()
+			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
+			ctx.SetCurrentEnvironment(environment)
+		}
+	}
+
 	if region, _ := cmd.Flags().GetString("region"); region != "" {
 		ctx := d.Config.Context()
 		if err := ctx.SetCurrentFlinkRegion(region); err != nil {
@@ -65,9 +72,9 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		}
 	}
 
-	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
+	if serviceAccount, _ := cmd.Flags().GetString("service-account"); serviceAccount != "" {
 		ctx := d.Config.Context()
-		if err := ctx.SetCurrentFlinkCloudProvider(cloud); err != nil {
+		if err := ctx.SetCurrentServiceAccount(serviceAccount); err != nil {
 			return err
 		}
 	}

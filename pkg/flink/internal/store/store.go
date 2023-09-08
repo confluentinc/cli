@@ -75,7 +75,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
+	statementObj, err := s.authenticatedGatewayClient().CreateStatementForShell(
 		statement,
 		s.appOptions.GetComputePoolId(),
 		s.Properties.GetSqlProperties(),
