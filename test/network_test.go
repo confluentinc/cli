@@ -269,3 +269,44 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachment_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAccessList() {
+	tests := []CLITest{
+		{args: "network pl access list", fixture: "network/private-link/access/list.golden"},
+		{args: "network private-link access list", fixture: "network/private-link/access/list.golden"},
+		{args: "network private-link access list --output json", fixture: "network/private-link/access/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAccessDescribe() {
+	tests := []CLITest{
+		{args: "network pl access describe pla-111111", fixture: "network/private-link/access/describe-aws.golden"},
+		{args: "network private-link access describe pla-111111", fixture: "network/private-link/access/describe-aws.golden"},
+		{args: "network private-link access describe pla-111111 --output json", fixture: "network/private-link/access/describe-aws-json.golden"},
+		{args: "network private-link access describe pla-111112", fixture: "network/private-link/access/describe-gcp.golden"},
+		{args: "network private-link access describe pla-111113", fixture: "network/private-link/access/describe-azure.golden"},
+		{args: "network private-link access describe", fixture: "network/private-link/access/describe-missing-id.golden", exitCode: 1},
+		{args: "network private-link access describe pla-invalid", fixture: "network/private-link/access/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAccess_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network private-link access describe ""`, login: "cloud", fixture: "network/private-link/access/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

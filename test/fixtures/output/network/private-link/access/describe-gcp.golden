@@ -1,0 +1,8 @@
++-------------+------------------+
+| ID          | pla-111112       |
+| Name        | gcp-pla          |
+| Network ID  | n-abcde1         |
+| Cloud       | GCP              |
+| GCP Project | temp-gear-123456 |
+| Phase       | READY            |
++-------------+------------------+
