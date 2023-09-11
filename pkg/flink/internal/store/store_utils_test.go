@@ -134,7 +134,7 @@ func TestProcessResetStatement(t *testing.T) {
 		{config.ConfigKeyCatalog, fmt.Sprintf("%s (default)", appOptions.EnvironmentName)},
 		{config.ConfigKeyDatabase, fmt.Sprintf("%s (default)", appOptions.Database)},
 		{config.ConfigKeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
-		{config.ConfigKeyServiceAcount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
+		{config.ConfigKeyServiceAccount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
 	})
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
