@@ -33,7 +33,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	_, nameExists := options["name"]
 	_, classExists := options["connector.class"]
 
-	if connectorType != "CUSTOM" && !nameExists || !classExists {
+	if connectorType != "CUSTOM" && (!nameExists || !classExists) {
 		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, configFile)
 	}
 
