@@ -602,33 +602,46 @@ func handleNetworkingTransitGatewayAttachmentCreate(t *testing.T) http.HandlerFu
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
-		attachment := networkingv1.NetworkingV1TransitGatewayAttachment{
-			Id:   networkingv1.PtrString("tgwa-123456"),
-			Kind: networkingv1.PtrString("TransitGatewayAttachment"),
-			Spec: &networkingv1.NetworkingV1TransitGatewayAttachmentSpec{
-				DisplayName: networkingv1.PtrString(body.Spec.GetDisplayName()),
-				Environment: &networkingv1.ObjectReference{Id: body.Spec.Environment.GetId()},
-				Network:     &networkingv1.ObjectReference{Id: body.Spec.Network.GetId()},
-				Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecCloudOneOf{
-					NetworkingV1AwsTransitGatewayAttachment: &networkingv1.NetworkingV1AwsTransitGatewayAttachment{
-						Kind:             "AwsTransitGatewayAttachment",
-						RamShareArn:      body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
-						Routes:           body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(),
-						TransitGatewayId: body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
+		networkId := body.Spec.Network.GetId()
+
+		switch networkId {
+		case "n-duplicate":
+			w.WriteHeader(http.StatusConflict)
+			err := writeErrorJson(w, "tgwa-123456 already exists between the network and the transit gateway")
+			require.NoError(t, err)
+		case "n-azure":
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, "The provided network n-azure resides in AZURE which differs from AWS, the cloud specified for this resource.")
+			require.NoError(t, err)
+		default:
+			attachment := networkingv1.NetworkingV1TransitGatewayAttachment{
+				Id:   networkingv1.PtrString("tgwa-123456"),
+				Kind: networkingv1.PtrString("TransitGatewayAttachment"),
+				Spec: &networkingv1.NetworkingV1TransitGatewayAttachmentSpec{
+					DisplayName: networkingv1.PtrString(body.Spec.GetDisplayName()),
+					Environment: &networkingv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+					Network:     &networkingv1.ObjectReference{Id: body.Spec.Network.GetId()},
+					Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecCloudOneOf{
+						NetworkingV1AwsTransitGatewayAttachment: &networkingv1.NetworkingV1AwsTransitGatewayAttachment{
+							Kind:             "AwsTransitGatewayAttachment",
+							RamShareArn:      body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
+							Routes:           body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(),
+							TransitGatewayId: body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
+						},
 					},
 				},
-			},
-			Status: &networkingv1.NetworkingV1TransitGatewayAttachmentStatus{
-				Phase: "PROVISIONING",
-				Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentStatusCloudOneOf{
-					NetworkingV1AwsTransitGatewayAttachmentStatus: &networkingv1.NetworkingV1AwsTransitGatewayAttachmentStatus{
-						Kind:                       networkingv1.PtrString("AwsTransitGatewayAttachmentStatus"),
-						TransitGatewayAttachmentId: "tgw-attach-00000000000000000",
+				Status: &networkingv1.NetworkingV1TransitGatewayAttachmentStatus{
+					Phase: "PROVISIONING",
+					Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentStatusCloudOneOf{
+						NetworkingV1AwsTransitGatewayAttachmentStatus: &networkingv1.NetworkingV1AwsTransitGatewayAttachmentStatus{
+							Kind:                       networkingv1.PtrString("AwsTransitGatewayAttachmentStatus"),
+							TransitGatewayAttachmentId: "tgw-attach-00000000000000000",
+						},
 					},
 				},
-			},
+			}
+			err = json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
 		}
-		err = json.NewEncoder(w).Encode(attachment)
-		require.NoError(t, err)
 	}
 }
