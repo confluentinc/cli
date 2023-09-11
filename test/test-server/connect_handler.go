@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	ccpv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 )
 
@@ -217,5 +218,84 @@ func handlePluginValidate(t *testing.T) http.HandlerFunc {
 
 		err := json.NewEncoder(w).Encode(connectv1.InlineResponse2003{Configs: configs})
 		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/connect/v1/custom-connector-plugins"
+func handleCustomPlugin(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			plugin := ccpv1.ConnectV1CustomConnectorPlugin{
+				Id:          PtrString("ccp-123456"),
+				DisplayName: PtrString("CliPluginTest"),
+			}
+			err := json.NewEncoder(w).Encode(plugin)
+			require.NoError(t, err)
+		}
+		if r.Method == http.MethodGet {
+			plugin1 := ccpv1.ConnectV1CustomConnectorPlugin{
+				Id:          PtrString("ccp-123456"),
+				DisplayName: PtrString("CliPluginTest1"),
+			}
+			plugin2 := ccpv1.ConnectV1CustomConnectorPlugin{
+				Id:          PtrString("ccp-789012"),
+				DisplayName: PtrString("CliPluginTest2"),
+			}
+			err := json.NewEncoder(w).Encode(ccpv1.ConnectV1CustomConnectorPluginList{Data: []ccpv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/connect/v1/custom-connector-plugins/{id}"
+func handleCustomPluginWithId(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			plugin := ccpv1.ConnectV1CustomConnectorPlugin{
+				Id:             PtrString("ccp-123456"),
+				DisplayName:    PtrString("CliPluginTest"),
+				ConnectorType:  PtrString("source"),
+				ConnectorClass: PtrString("io.confluent.kafka.connect.test"),
+			}
+			err := json.NewEncoder(w).Encode(plugin)
+			require.NoError(t, err)
+		}
+		if r.Method == http.MethodPatch {
+			plugin := ccpv1.ConnectV1CustomConnectorPlugin{
+				Id:          PtrString("ccp-123456"),
+				DisplayName: PtrString("CliPluginTestUpdate"),
+			}
+			err := json.NewEncoder(w).Encode(plugin)
+			require.NoError(t, err)
+		}
+		if r.Method == http.MethodDelete {
+			err := json.NewEncoder(w).Encode(ccpv1.ConnectV1CustomConnectorPlugin{})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/connect/v1/presigned-upload-url"
+func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			uploadUrl := ccpv1.ConnectV1PresignedUrl{
+				ContentFormat: PtrString("ZIP"),
+				UploadId:      PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl:     PtrString("https://api.confluent.cloud/connect/v1/dummy-presigned-url"),
+			}
+			err := json.NewEncoder(w).Encode(uploadUrl)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/connect/v1/dummy-presigned-url"
+func handleCustomPluginUploadFile(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			err := json.NewEncoder(w).Encode(PtrString("Success"))
+			require.NoError(t, err)
+		}
 	}
 }

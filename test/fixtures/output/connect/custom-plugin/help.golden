@@ -1,0 +1,18 @@
+Manage Custom Plugin.
+
+Usage:
+  confluent connect custom-plugin [command]
+
+Available Commands:
+  create      Create a custom connector plugin.
+  delete      Delete a custom connector plugin.
+  describe    Describe a custom connector plugin.
+  list        List custom connector plugins
+  update      Update a custom connector plugin configuration.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent connect custom-plugin [command] --help" for more information about a command.

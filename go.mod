@@ -16,7 +16,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
-	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
+	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
@@ -112,6 +112,8 @@ require (
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/ccp v0.0.1 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect

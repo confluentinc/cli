@@ -114,6 +114,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0 h1:a2EaPzwLEYkgil7rlsqRU
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0/go.mod h1:c7nUjQ5pQCqz4LagF1qatcj5NX4icoiSTaCxfdxAwsY=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1 h1:hk8Uc28S2dPd/few2yJKYY3FqTRuVO14qq4fhWrXwdw=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1/go.mod h1:XZksYS523oCggD4EAD8GmOFhPRe11kRqNHcAHzDQpgI=
+github.com/confluentinc/ccloud-sdk-go-v2/ccp v0.0.1 h1:gnALCJcQ3dCjy/gLDWOVWt5vCfcQ5J76H+x0nS2gbIs=
+github.com/confluentinc/ccloud-sdk-go-v2/ccp v0.0.1/go.mod h1:FUccGScl3lmUC2tq0FAn0VYUWgZ8p8ymOhZjJeIPFiM=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5 h1:w0Z2hFxg8ng8gycWKRZFdus1R+q8D/I5AmN06NZso5s=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5/go.mod h1:L8U9xs2duASJnjIYkwGrSbZNpApsbh+vlxsJlZMHJPA=
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0 h1:OOFNqtZN3Spuzz4TX6K6JfDM7zNDIE6BE1TtK78jFHQ=
@@ -122,6 +124,10 @@ github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0 h1:YQEcSvhX5ODllg0mhxLivckK
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0/go.mod h1:357Zo3HvVAe5iQgUFxUbQPAKJasGm8vFMkOB+krVmR8=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0 h1:hnYc/T55dGEqhFBYJIGBfSCMhyhT78U31kqEj9vdS94=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0/go.mod h1:vzL/maQvg76G8BMXM9Mx0FNrXI1ctdBr46/EbZ0VJso=
+github.com/confluentinc/ccloud-sdk-go-v2/connect v0.4.0 h1:sv7Ss7WqKkVAXmXVlR3VFhBotzVLr723ZzED8nlo3FE=
+github.com/confluentinc/ccloud-sdk-go-v2/connect v0.4.0/go.mod h1:vzL/maQvg76G8BMXM9Mx0FNrXI1ctdBr46/EbZ0VJso=
+github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1 h1:cEp0C29HMCq0eR9Zv8RGARUGJjjElpzNUmQp66qKHkA=
+github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1/go.mod h1:AaF39Acy3LFnHSHExaUtqNmbs7kL5/AL54CXX61+Il8=
 github.com/confluentinc/ccloud-sdk-go-v2/flink v0.4.0 h1:ueXax5e70pLN6yQ6vSJVBlAAGrb0Js+tJO7kYzxoAU8=
 github.com/confluentinc/ccloud-sdk-go-v2/flink v0.4.0/go.mod h1:x+8kpYsJHRlvGuIB/tV0afPNyjKst3MsNOE6XsjgAl0=
 github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.4.0 h1:1o0ksbMdXagJsViNRNyZXC+FBfWWTT/PuFHzjy7up4M=

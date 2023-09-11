@@ -1,8 +1,13 @@
 package connect
 
 import (
+	"bytes"
 	"encoding/json"
+	"github.com/dghubble/sling"
+	"io"
+	"mime/multipart"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -20,9 +25,15 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, configFile)
 	}
 
+	connectorType := options["confluent.connector.type"]
+	if connectorType != "" {
+		connectorType = "MANAGED"
+	}
+
 	_, nameExists := options["name"]
 	_, classExists := options["connector.class"]
-	if !nameExists || !classExists {
+
+	if connectorType != "CUSTOM" && !nameExists || !classExists {
 		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, configFile)
 	}
 
@@ -70,4 +81,43 @@ func parseConfigFile(filename string) (map[string]string, error) {
 	}
 
 	return kvPairs, err
+}
+
+func uploadFile(url, filePath string, formFields map[string]interface{}) error {
+
+	var buffer bytes.Buffer
+	writer := multipart.NewWriter(&buffer)
+
+	for key, value := range formFields {
+		if strValue, ok := value.(string); ok {
+			_ = writer.WriteField(key, strValue)
+		}
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return err
+	}
+
+	err = writer.Close()
+	if err != nil {
+		return err
+	}
+
+	_, err = sling.New().Base(url).Set("Content-Type", writer.FormDataContentType()).Post("").Body(&buffer).ReceiveSuccess(nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

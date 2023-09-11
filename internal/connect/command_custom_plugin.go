@@ -1,0 +1,44 @@
+package connect
+
+import (
+	v1 "github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+)
+
+type customPluginCommand struct {
+	*pcmd.AuthenticatedCLICommand
+}
+
+type customPluginOut struct {
+	Id                        string   `human:"ID" serialized:"id"`
+	Name                      string   `human:"Name" serialized:"name"`
+	Description               string   `human:"Description" serialized:"description"`
+	ConnectorClass            string   `human:"Connector Class" serialized:"connector_class"`
+	ConnectorType             string   `human:"Connector Type" serialized:"connector_type"`
+	SensitiveConfigProperties []string `human:"Sensitive Config Properties" serialized:"sensitive_config_properties"`
+}
+
+func newCustomPluginCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "custom-plugin",
+		Short:       "Manage Custom Plugin.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+	}
+
+	c := new(customPluginCommand)
+
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newListCommand())
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newUpdateCommand())
+	} else {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
+	}
+
+	return cmd
+}
