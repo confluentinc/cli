@@ -11,7 +11,6 @@ func newPrivateLinkCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:     "private-link",
 		Short:   "Manage private links.",
 		Aliases: []string{"pl"},
-		Args:    cobra.NoArgs,
 	}
 
 	cmd.AddCommand(newPrivateLinkAccessCommand(prerunner))
