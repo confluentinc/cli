@@ -211,6 +211,37 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentUpdate() {
+	tests := []CLITest{
+		{args: "network transit-gateway-attachment update", fixture: "network/transit-gateway-attachment/update-missing-args.golden", exitCode: 1},
+		{args: "network transit-gateway-attachment update tgwa-111111", fixture: "network/transit-gateway-attachment/update-missing-flags.golden", exitCode: 1},
+		{args: "network tgwa update tgwa-111111 --name new-name", fixture: "network/transit-gateway-attachment/update.golden"},
+		{args: "network transit-gateway-attachment update tgwa-111111 --name new-name", fixture: "network/transit-gateway-attachment/update.golden"},
+		{args: "network transit-gateway-attachment update tgwa-invalid --name new-name", fixture: "network/transit-gateway-attachment/update-tgwa-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentDelete() {
+	tests := []CLITest{
+		{args: "network transit-gateway-attachment delete tgwa-111111 --force", fixture: "network/transit-gateway-attachment/delete.golden"},
+		{args: "network transit-gateway-attachment delete tgwa-111111", input: "y\n", fixture: "network/transit-gateway-attachment/delete-prompt.golden"},
+		{args: "network transit-gateway-attachment delete tgwa-111111 tgwa-222222", input: "n\n", fixture: "network/transit-gateway-attachment/delete-multiple-refuse.golden"},
+		{args: "network transit-gateway-attachment delete tgwa-111111 tgwa-222222", input: "y\n", fixture: "network/transit-gateway-attachment/delete-multiple-success.golden"},
+		{args: "network transit-gateway-attachment delete tgwa-111111 tgwa-invalid", fixture: "network/transit-gateway-attachment/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network transit-gateway-attachment delete tgwa-invalid --force", fixture: "network/transit-gateway-attachment/delete-tgwa-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkTransitGatewayAttachment_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network transit-gateway-attachment describe ""`, login: "cloud", fixture: "network/transit-gateway-attachment/describe-autocomplete.golden"},

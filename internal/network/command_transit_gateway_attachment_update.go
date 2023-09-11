@@ -9,22 +9,22 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *peeringCommand) newUpdateCommand() *cobra.Command {
+func (c *transitGatewayAttachmentCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
-		Short:             "Update an existing peering.",
+		Short:             "Update an existing transit gateway attachment.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name of peering "peer-123456"`,
-				Code: `confluent network peering update peer-123456 --name "new name"`,
+				Text: `Update the name of transit gateway attachment "tgwa-123456"`,
+				Code: `confluent network transit-gateway-attachment update tgwa-123456 --name "new name"`,
 			},
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the peering.")
+	cmd.Flags().String("name", "", "Name of the transit gateway attachment.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -34,7 +34,7 @@ func (c *peeringCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *peeringCommand) update(cmd *cobra.Command, args []string) error {
+func (c *transitGatewayAttachmentCommand) update(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -45,17 +45,17 @@ func (c *peeringCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updatePeering := networkingv1.NetworkingV1PeeringUpdate{
-		Spec: &networkingv1.NetworkingV1PeeringSpecUpdate{
+	updateTransitGatewayAttachment := networkingv1.NetworkingV1TransitGatewayAttachmentUpdate{
+		Spec: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecUpdate{
 			DisplayName: networkingv1.PtrString(name),
 			Environment: &networkingv1.ObjectReference{Id: environmentId},
 		},
 	}
 
-	peering, err := c.V2Client.UpdatePeering(environmentId, args[0], updatePeering)
+	attachment, err := c.V2Client.UpdateTransitGatewayAttachment(environmentId, args[0], updateTransitGatewayAttachment)
 	if err != nil {
 		return err
 	}
 
-	return printPeeringTable(cmd, peering)
+	return printTransitGatewayAttachmentTable(cmd, attachment)
 }

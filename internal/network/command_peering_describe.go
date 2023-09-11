@@ -16,8 +16,8 @@ func (c *peeringCommand) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe peering "peer-111111".`,
-				Code: "confluent network peering describe peer-111111",
+				Text: `Describe peering "peer-123456".`,
+				Code: "confluent network peering describe peer-123456",
 			},
 		),
 	}
