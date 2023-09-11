@@ -84,10 +84,17 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	computePoolId := s.appOptions.GetComputePoolId()
 	properties := s.Properties.GetSqlProperties()
 
+	var principal string
+	serviceAccount := s.Properties.Get(config.ConfigKeyServiceAccount)
+	if serviceAccount != "" {
+		principal = serviceAccount
+	} else {
+		principal = s.appOptions.GetContext().GetUser().ResourceId
+	}
+
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
 		createSqlV1beta1Statement(statement, statementName, computePoolId, properties),
-		s.Properties.Get(config.ConfigKeyServiceAcount),
-		s.appOptions.GetIdentityPoolId(),
+		principal,
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrgResourceId(),
 	)
@@ -297,8 +304,8 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 
 func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
 	properties := map[string]string{
-		config.ConfigKeyServiceAcount: appOptions.GetServiceAccountId(),
-		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
+		config.ConfigKeyServiceAccount: appOptions.GetServiceAccountId(),
+		config.ConfigKeyLocalTimeZone:  getLocalTimezone(),
 	}
 
 	return properties

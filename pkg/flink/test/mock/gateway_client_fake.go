@@ -44,7 +44,7 @@ func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken,
 	return flinkgatewayv1beta1.SqlV1beta1StatementList{Data: c.statements}, nil
 }
 
-func (c *FakeFlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
+func (c *FakeFlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	c.fakeCount = 0
 	c.statement = statement
 	c.statements = append(c.statements, c.statement)

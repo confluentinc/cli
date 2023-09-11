@@ -15,7 +15,7 @@ type GatewayClientInterface interface {
 	DeleteStatement(environmentId, statementName, orgId string) error
 	GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error)
-	CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
+	CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error)
 	GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1beta1.SqlV1beta1StatementExceptionList, error)
 }
@@ -102,10 +102,10 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePool
 	return allStatements, nil
 }
 
-func (c *FlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
-	if serviceAccountId != "" {
-		// add the service account header and remove it after the request
-		statement.Spec.Principal = &serviceAccountId
+func (c *FlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
+	// add the service account header and remove it after the request
+	if principal != "" {
+		statement.Spec.Principal = &principal
 	}
 	resp, httpResp, err := c.StatementsSqlV1beta1Api.CreateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId).SqlV1beta1Statement(statement).Execute()
 	return resp, flink.CatchError(err, httpResp)

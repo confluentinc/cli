@@ -134,7 +134,7 @@ func TestProcessResetStatement(t *testing.T) {
 
 	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
 		{config.ConfigKeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
-		{config.ConfigKeyServiceAcount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
+		{config.ConfigKeyServiceAccount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
 	})
 
 	t.Run("should return all keys and values including default and initial values before reseting", func(t *testing.T) {

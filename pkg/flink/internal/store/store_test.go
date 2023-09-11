@@ -7,6 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	cliConfig "github.com/confluentinc/cli/v3/pkg/config"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 	"io"
 	"net/http"
 	"reflect"
@@ -992,43 +996,6 @@ func TestTimeout(t *testing.T) {
 	}
 }
 
-func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
-	appOptions := &types.ApplicationOptions{
-		OrgResourceId:  "orgId",
-		EnvironmentId:  "envId",
-		ComputePoolId:  "computePoolId",
-		IdentityPoolId: "identityPoolId",
-	}
-	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
-		client:           client,
-		appOptions:       appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	statement := "SELECT * FROM table"
-	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
-		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
-			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
-		},
-		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
-			ComputePoolId: &appOptions.ComputePoolId,
-			Statement:     &statement,
-		},
-	}
-
-	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", appOptions.IdentityPoolId, appOptions.EnvironmentId, appOptions.OrgResourceId).
-		Return(statementObj, nil)
-
-	processedStatement, err := store.ProcessStatement(statement)
-	require.Nil(s.T(), err)
-	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
-}
-
 func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
@@ -1059,7 +1026,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 		},
 	}
 
-	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, "", appOptions.EnvironmentId, appOptions.OrgResourceId).
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1067,12 +1034,28 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
 }
 
-func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAccount() {
+func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+
+	user := "u-1234"
+	contextState := &cliConfig.ContextState{
+		Auth: &cliConfig.AuthConfig{
+			User: &ccloudv1.User{
+				ResourceId: user,
+				Email:      "test-user@email",
+			},
+			Organization: testserver.RegularOrg,
+		},
+		AuthToken:        "eyJ.eyJ.abc",
+		AuthRefreshToken: "v1.abc",
+	}
 	appOptions := &types.ApplicationOptions{
 		OrgResourceId: "orgId",
 		EnvironmentId: "envId",
 		ComputePoolId: "computePoolId",
+		Context: &dynamicconfig.DynamicContext{
+			Context: &cliConfig.Context{State: contextState, Config: &cliConfig.Config{}},
+		},
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1095,7 +1078,7 @@ func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAc
 		},
 	}
 
-	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", "", appOptions.EnvironmentId, appOptions.OrgResourceId).
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, user, appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1105,14 +1088,14 @@ func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAc
 
 func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	serviceAccountId := "serviceAccountId"
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId:  "orgId",
-		EnvironmentId:  "envId",
-		ComputePoolId:  "computePoolId",
-		IdentityPoolId: "identityPoolId",
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+		ComputePoolId: "computePoolId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1132,7 +1115,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	}
 	returnedError := errors.New("test error")
 
-	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, "", appOptions.IdentityPoolId, appOptions.EnvironmentId, appOptions.OrgResourceId).
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, returnedError)
 
 	expectedError := &types.StatementError{
@@ -1287,7 +1270,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1331,7 +1314,7 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1367,7 +1350,7 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1398,7 +1381,7 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1423,7 +1406,7 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
