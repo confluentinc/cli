@@ -9,6 +9,7 @@ Available Commands:
   describe                   Describe a network.
   list                       List networks.
   peering                    Manage peerings.
+  private-link               Manage private links.
   transit-gateway-attachment Manage transit gateway attachments.
   update                     Update an existing network.
 

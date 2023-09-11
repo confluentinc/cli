@@ -1,0 +1,17 @@
+Manage private links.
+
+Usage:
+  confluent network private-link [command]
+
+Aliases:
+  private-link, pl
+
+Available Commands:
+  access      Manage private link accesses.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network private-link [command] --help" for more information about a command.

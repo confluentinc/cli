@@ -1,0 +1,130 @@
+package network
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
+)
+
+type privateLinkAccessCommand struct {
+	*pcmd.AuthenticatedCLICommand
+}
+
+type privateLinkAccessOut struct {
+	Id                string `human:"ID" serialized:"id"`
+	Name              string `human:"Name" serialized:"name"`
+	NetworkId         string `human:"Network ID" serialized:"network_id"`
+	Cloud             string `human:"Cloud" serialized:"cloud"`
+	AwsAccount        string `human:"AWS Account,omitempty" serialized:"aws_account,omitempty"`
+	GcpProject        string `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
+	AzureSubscription string `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
+	Phase             string `human:"Phase" serialized:"phase"`
+}
+
+func newPrivateLinkAccessCommand(prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "access",
+		Short: "Manage private link accesses.",
+		Args:  cobra.NoArgs,
+	}
+
+	c := &privateLinkAccessCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+
+	return cmd
+}
+
+func (c *privateLinkAccessCommand) getPrivateLinkAccesses() ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListPrivateLinkAccesses(environmentId)
+}
+
+func (c *privateLinkAccessCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *privateLinkAccessCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompletePrivateLinkAccesses()
+}
+
+func (c *privateLinkAccessCommand) autocompletePrivateLinkAccesses() []string {
+	accesses, err := c.getPrivateLinkAccesses()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(accesses))
+	for i, access := range accesses {
+		suggestions[i] = fmt.Sprintf("%s\t%s", access.GetId(), access.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func (c *privateLinkAccessCommand) getCloud(access networkingv1.NetworkingV1PrivateLinkAccess) (string, error) {
+	cloud := access.Spec.GetCloud()
+
+	if cloud.NetworkingV1AwsPrivateLinkAccess != nil {
+		return CloudAws, nil
+	} else if cloud.NetworkingV1GcpPrivateServiceConnectAccess != nil {
+		return CloudGcp, nil
+	} else if cloud.NetworkingV1AzurePrivateLinkAccess != nil {
+		return CloudAzure, nil
+	}
+
+	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
+}
+
+func (c *privateLinkAccessCommand) printPrivateLinkAccessTable(cmd *cobra.Command, access networkingv1.NetworkingV1PrivateLinkAccess) error {
+	table := output.NewTable(cmd)
+
+	if access.Spec == nil {
+		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
+	}
+	if access.Status == nil {
+		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
+	}
+
+	cloud, err := c.getCloud(access)
+	if err != nil {
+		return err
+	}
+
+	out := &privateLinkAccessOut{
+		Id:        access.GetId(),
+		Name:      access.Spec.GetDisplayName(),
+		NetworkId: access.Spec.Network.GetId(),
+		Cloud:     cloud,
+		Phase:     access.Status.GetPhase(),
+	}
+
+	switch cloud {
+	case CloudAws:
+		out.AwsAccount = access.Spec.Cloud.NetworkingV1AwsPrivateLinkAccess.GetAccount()
+	case CloudGcp:
+		out.GcpProject = access.Spec.Cloud.NetworkingV1GcpPrivateServiceConnectAccess.GetProject()
+	case CloudAzure:
+		out.AzureSubscription = access.Spec.Cloud.NetworkingV1AzurePrivateLinkAccess.GetSubscription()
+	}
+
+	table.Add(out)
+	return table.Print()
+}

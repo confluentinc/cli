@@ -171,3 +171,38 @@ func (c *Client) CreateTransitGatewayAttachment(attachment networkingv1.Networki
 	resp, httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.CreateNetworkingV1TransitGatewayAttachment(c.networkingApiContext()).NetworkingV1TransitGatewayAttachment(attachment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) ListPrivateLinkAccesses(environment string) ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
+	var list []networkingv1.NetworkingV1PrivateLinkAccess
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, err := c.executeListPrivateLinkAccesses(environment, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListPrivateLinkAccesses(environment, pageToken string) (networkingv1.NetworkingV1PrivateLinkAccessList, error) {
+	req := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.ListNetworkingV1PrivateLinkAccesses(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetPrivateLinkAccess(environment, id string) (networkingv1.NetworkingV1PrivateLinkAccess, error) {
+	resp, httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.GetNetworkingV1PrivateLinkAccess(c.networkingApiContext(), id).Environment(environment).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
