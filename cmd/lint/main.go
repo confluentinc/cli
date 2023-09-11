@@ -113,8 +113,9 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag(
-			"ram-share-arn",
 			"aws-account-id",
+			"aws-ram-share-arn",
+			"aws-transit-gateway",
 			"azure-subscription-id",
 			"ca-cert-path",
 			"client-cert-path",
