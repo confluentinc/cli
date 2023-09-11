@@ -42,7 +42,7 @@ func (c *transitGatewayAttachmentCommand) newCreateCommand() *cobra.Command {
 func (c *transitGatewayAttachmentCommand) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	networkId, err := cmd.Flags().GetString("network")
+	network, err := cmd.Flags().GetString("network")
 	if err != nil {
 		return err
 	}
@@ -52,18 +52,12 @@ func (c *transitGatewayAttachmentCommand) create(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	network, err := c.V2Client.GetNetwork(environmentId, networkId)
-	if err != nil {
-		return err
-	}
-	networkId = network.GetId()
-
 	awsRamShareArn, err := cmd.Flags().GetString("aws-ram-share-arn")
 	if err != nil {
 		return err
 	}
 
-	awsTransitGatewayId, err := cmd.Flags().GetString("aws-transit-gateway")
+	awsTransitGateway, err := cmd.Flags().GetString("aws-transit-gateway")
 	if err != nil {
 		return err
 	}
@@ -77,13 +71,13 @@ func (c *transitGatewayAttachmentCommand) create(cmd *cobra.Command, args []stri
 		Spec: &networkingv1.NetworkingV1TransitGatewayAttachmentSpec{
 			DisplayName: networkingv1.PtrString(name),
 			Environment: &networkingv1.ObjectReference{Id: environmentId},
-			Network:     &networkingv1.ObjectReference{Id: networkId},
+			Network:     &networkingv1.ObjectReference{Id: network},
 			Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecCloudOneOf{
 				NetworkingV1AwsTransitGatewayAttachment: &networkingv1.NetworkingV1AwsTransitGatewayAttachment{
 					Kind:             "AwsTransitGatewayAttachment",
 					RamShareArn:      awsRamShareArn,
 					Routes:           routes,
-					TransitGatewayId: awsTransitGatewayId,
+					TransitGatewayId: awsTransitGateway,
 				},
 			},
 		},
