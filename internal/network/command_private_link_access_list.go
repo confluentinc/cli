@@ -19,12 +19,12 @@ type listPrivateLinkAccessOut struct {
 	Phase        string `human:"Phase" serialized:"phase"`
 }
 
-func (c *privateLinkAccessCommand) newListCommand() *cobra.Command {
+func (c *command) newPrivateLinkAccessListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List private link accesses.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.listPrivateLinkAccesses,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -34,7 +34,7 @@ func (c *privateLinkAccessCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *privateLinkAccessCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) listPrivateLinkAccesses(cmd *cobra.Command, _ []string) error {
 	accesses, err := c.getPrivateLinkAccesses()
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (c *privateLinkAccessCommand) list(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
-		cloud, err := c.getCloud(access)
+		cloud, err := getPrivateLinkAccessCloud(access)
 		if err != nil {
 			return err
 		}

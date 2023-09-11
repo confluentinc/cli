@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *privateLinkAccessCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newPrivateLinkAccessDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a private link access.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.describe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validPrivateLinkAccessArgs),
+		RunE:              c.describePrivateLinkAccess,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe private link access "pla-123456".`,
@@ -29,7 +29,7 @@ func (c *privateLinkAccessCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *privateLinkAccessCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describePrivateLinkAccess(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

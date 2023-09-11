@@ -7,14 +7,9 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
-
-type privateLinkAccessCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
 
 type privateLinkAccessOut struct {
 	Id                string `human:"ID" serialized:"id"`
@@ -27,22 +22,20 @@ type privateLinkAccessOut struct {
 	Phase             string `human:"Phase" serialized:"phase"`
 }
 
-func newPrivateLinkAccessCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newPrivateLinkAccessCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "access",
 		Short: "Manage private link accesses.",
 		Args:  cobra.NoArgs,
 	}
 
-	c := &privateLinkAccessCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newPrivateLinkAccessDescribeCommand())
+	cmd.AddCommand(c.newPrivateLinkAccessListCommand())
 
 	return cmd
 }
 
-func (c *privateLinkAccessCommand) getPrivateLinkAccesses() ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
+func (c *command) getPrivateLinkAccesses() ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
@@ -51,14 +44,14 @@ func (c *privateLinkAccessCommand) getPrivateLinkAccesses() ([]networkingv1.Netw
 	return c.V2Client.ListPrivateLinkAccesses(environmentId)
 }
 
-func (c *privateLinkAccessCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validPrivateLinkAccessArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
-	return c.validArgsMultiple(cmd, args)
+	return c.validPrivateLinkAccessArgsMultiple(cmd, args)
 }
 
-func (c *privateLinkAccessCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+func (c *command) validPrivateLinkAccessArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -66,7 +59,7 @@ func (c *privateLinkAccessCommand) validArgsMultiple(cmd *cobra.Command, args []
 	return c.autocompletePrivateLinkAccesses()
 }
 
-func (c *privateLinkAccessCommand) autocompletePrivateLinkAccesses() []string {
+func (c *command) autocompletePrivateLinkAccesses() []string {
 	accesses, err := c.getPrivateLinkAccesses()
 	if err != nil {
 		return nil
@@ -79,7 +72,7 @@ func (c *privateLinkAccessCommand) autocompletePrivateLinkAccesses() []string {
 	return suggestions
 }
 
-func (c *privateLinkAccessCommand) getCloud(access networkingv1.NetworkingV1PrivateLinkAccess) (string, error) {
+func getPrivateLinkAccessCloud(access networkingv1.NetworkingV1PrivateLinkAccess) (string, error) {
 	cloud := access.Spec.GetCloud()
 
 	if cloud.NetworkingV1AwsPrivateLinkAccess != nil {
@@ -93,9 +86,7 @@ func (c *privateLinkAccessCommand) getCloud(access networkingv1.NetworkingV1Priv
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
 }
 
-func (c *privateLinkAccessCommand) printPrivateLinkAccessTable(cmd *cobra.Command, access networkingv1.NetworkingV1PrivateLinkAccess) error {
-	table := output.NewTable(cmd)
-
+func (c *command) printPrivateLinkAccessTable(cmd *cobra.Command, access networkingv1.NetworkingV1PrivateLinkAccess) error {
 	if access.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 	}
@@ -103,7 +94,7 @@ func (c *privateLinkAccessCommand) printPrivateLinkAccessTable(cmd *cobra.Comman
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 	}
 
-	cloud, err := c.getCloud(access)
+	cloud, err := getPrivateLinkAccessCloud(access)
 	if err != nil {
 		return err
 	}
@@ -125,6 +116,7 @@ func (c *privateLinkAccessCommand) printPrivateLinkAccessTable(cmd *cobra.Comman
 		out.AzureSubscription = access.Spec.Cloud.NetworkingV1AzurePrivateLinkAccess.GetSubscription()
 	}
 
+	table := output.NewTable(cmd)
 	table.Add(out)
 	return table.Print()
 }
