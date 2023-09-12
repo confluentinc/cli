@@ -8,14 +8,9 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
-
-type peeringCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
 
 type peeringHumanOut struct {
 	Id            string `human:"ID"`
@@ -49,25 +44,23 @@ type peeringSerializedOut struct {
 	AzureTenant   string   `serialized:"azure_tenant,omitempty"`
 }
 
-func newPeeringCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newPeeringCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "peering",
 		Short: "Manage peerings.",
 		Args:  cobra.NoArgs,
 	}
 
-	c := &peeringCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-
-	cmd.AddCommand(c.newCreateCommand())
-	cmd.AddCommand(c.newDeleteCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newPeeringCreateCommand())
+	cmd.AddCommand(c.newPeeringDeleteCommand())
+	cmd.AddCommand(c.newPeeringDescribeCommand())
+	cmd.AddCommand(c.newPeeringListCommand())
+	cmd.AddCommand(c.newPeeringUpdateCommand())
 
 	return cmd
 }
 
-func (c *peeringCommand) getPeerings() ([]networkingv1.NetworkingV1Peering, error) {
+func (c *command) getPeerings() ([]networkingv1.NetworkingV1Peering, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
@@ -76,14 +69,14 @@ func (c *peeringCommand) getPeerings() ([]networkingv1.NetworkingV1Peering, erro
 	return c.V2Client.ListPeerings(environmentId)
 }
 
-func (c *peeringCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validPeeringArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
-	return c.validArgsMultiple(cmd, args)
+	return c.validPeeringArgsMultiple(cmd, args)
 }
 
-func (c *peeringCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+func (c *command) validPeeringArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -91,7 +84,7 @@ func (c *peeringCommand) validArgsMultiple(cmd *cobra.Command, args []string) []
 	return c.autocompletePeerings()
 }
 
-func (c *peeringCommand) autocompletePeerings() []string {
+func (c *command) autocompletePeerings() []string {
 	peerings, err := c.getPeerings()
 	if err != nil {
 		return nil
@@ -104,7 +97,7 @@ func (c *peeringCommand) autocompletePeerings() []string {
 	return suggestions
 }
 
-func getCloud(peering networkingv1.NetworkingV1Peering) (string, error) {
+func getPeeringCloud(peering networkingv1.NetworkingV1Peering) (string, error) {
 	cloud := peering.Spec.GetCloud()
 
 	if cloud.NetworkingV1AwsPeering != nil {
@@ -119,9 +112,6 @@ func getCloud(peering networkingv1.NetworkingV1Peering) (string, error) {
 }
 
 func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peering) error {
-	table := output.NewTable(cmd)
-	describeFields := []string{"Id", "Name", "NetworkId", "Cloud", "Phase"}
-
 	if peering.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 	}
@@ -129,7 +119,7 @@ func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peer
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 	}
 
-	cloud, err := getCloud(peering)
+	cloud, err := getPeeringCloud(peering)
 	if err != nil {
 		return err
 	}
@@ -149,6 +139,8 @@ func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peer
 		Cloud:     cloud,
 		Phase:     peering.Status.GetPhase(),
 	}
+
+	describeFields := []string{"Id", "Name", "NetworkId", "Cloud", "Phase"}
 
 	switch cloud {
 	case CloudAws:
@@ -176,6 +168,8 @@ func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peer
 		serialized.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
 		describeFields = append(describeFields, "AzureVNet", "AzureTenant", "CustomRegion")
 	}
+
+	table := output.NewTable(cmd)
 
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(human)

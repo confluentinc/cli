@@ -174,6 +174,8 @@ func (s *CLITestSuite) TestNetworkPeeringCreate() {
 func (s *CLITestSuite) TestNetworkPeering_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network peering describe ""`, login: "cloud", fixture: "network/peering/describe-autocomplete.golden"},
+		{args: `__complete network peering update ""`, login: "cloud", fixture: "network/peering/update-autocomplete.golden"},
+		{args: `__complete network peering delete ""`, login: "cloud", fixture: "network/peering/delete-autocomplete.golden"},
 		{args: `__complete network peering create aws-peering --network ""`, login: "cloud", fixture: "network/peering/create-autocomplete.golden"},
 	}
 
