@@ -41,6 +41,7 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-class"))
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-type"))
 	cobra.CheckErr(cmd.MarkFlagFilename("plugin-file", "zip", "jar"))
+
 	return cmd
 }
 
