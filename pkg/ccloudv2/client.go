@@ -7,7 +7,7 @@ import (
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	ccpv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -31,7 +31,7 @@ type Client struct {
 	ApiKeysClient          *apikeysv2.APIClient
 	BillingClient          *billingv1.APIClient
 	ByokClient             *byokv1.APIClient
-	CcpClient              *ccpv1.APIClient
+	CcpClient              *connectcustompluginv1.APIClient
 	CdxClient              *cdxv1.APIClient
 	CliClient              *cliv1.APIClient
 	CmkClient              *cmkv2.APIClient

@@ -1,6 +1,6 @@
 id: ccp-123456
 name: CliPluginTest
 description: ""
-connectorclass: io.confluent.kafka.connect.test
-connectortype: source
-sensitiveconfigproperties: []
+connector_class: io.confluent.kafka.connect.test
+connector_type: source
+sensitive_properties: []

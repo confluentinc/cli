@@ -21,25 +21,30 @@ func (c *customPluginCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of custom plugin.")
 	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
 	cmd.Flags().String("sensitive-properties", "", "Sensitive properties of custom plugin.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
 	return cmd
 }
 
 func (c *customPluginCommand) update(cmd *cobra.Command, args []string) error {
+	if err := errors.CheckNoUpdate(cmd.Flags(), "name", "description", "documentation-link", "sensitive-properties"); err != nil {
+		return err
+	}
 	id := args[0]
-	var err error
-	var name, description, documentationLink, sensitivePropertiesString string
-	if name, err = cmd.Flags().GetString("name"); err != nil {
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
 		return err
 	}
-	if description, err = cmd.Flags().GetString("description"); err != nil {
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
 		return err
 	}
-	if documentationLink, err = cmd.Flags().GetString("documentation-link"); err != nil {
+	documentationLink, err := cmd.Flags().GetString("documentation-link")
+	if err != nil {
 		return err
 	}
-	if sensitivePropertiesString, err = cmd.Flags().GetString("sensitive-properties"); err != nil {
+	sensitivePropertiesString, err := cmd.Flags().GetString("sensitive-properties")
+	if err != nil {
 		return err
 	}
 

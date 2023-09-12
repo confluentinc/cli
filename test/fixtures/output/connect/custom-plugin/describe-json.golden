@@ -1,8 +1,8 @@
 {
-  "Id": "ccp-123456",
-  "Name": "CliPluginTest",
-  "Description": "",
-  "ConnectorClass": "io.confluent.kafka.connect.test",
-  "ConnectorType": "source",
-  "SensitiveConfigProperties": null
+  "id": "ccp-123456",
+  "name": "CliPluginTest",
+  "description": "",
+  "connector_class": "io.confluent.kafka.connect.test",
+  "connector_type": "source",
+  "sensitive_properties": null
 }

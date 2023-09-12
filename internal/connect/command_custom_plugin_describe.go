@@ -41,10 +41,7 @@ func (c *customPluginCommand) describe(cmd *cobra.Command, args []string) error 
 		ConnectorType:       plugin.GetConnectorType(),
 		SensitiveProperties: plugin.GetSensitiveConfigProperties(),
 	}
-	if output.GetFormat(cmd) == output.Human {
-		table := output.NewTable(cmd)
-		table.Add(out)
-		return table.Print()
-	}
-	return output.SerializedOutput(cmd, out)
+	table := output.NewTable(cmd)
+	table.Add(out)
+	return table.Print()
 }

@@ -40,37 +40,44 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-class"))
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-type"))
-
 	cobra.CheckErr(cmd.MarkFlagFilename("plugin-file", "zip", "jar"))
 	return cmd
 }
 
 func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []string) error {
 	displayName := args[0]
-	var err error
-	var description, documentationLink, pluginFileName, connectorClass, connectorType, sensitivePropertiesString string
-	if description, err = cmd.Flags().GetString("description"); err != nil {
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
 		return err
 	}
-	if documentationLink, err = cmd.Flags().GetString("documentation-link"); err != nil {
+	documentationLink, err := cmd.Flags().GetString("documentation-link")
+	if err != nil {
 		return err
 	}
-	if pluginFileName, err = cmd.Flags().GetString("plugin-file"); err != nil {
+	pluginFileName, err := cmd.Flags().GetString("plugin-file")
+	if err != nil {
 		return err
 	}
-	if connectorClass, err = cmd.Flags().GetString("connector-class"); err != nil {
+	connectorClass, err := cmd.Flags().GetString("connector-class")
+	if err != nil {
 		return err
 	}
-	if connectorType, err = cmd.Flags().GetString("connector-type"); err != nil {
+	connectorType, err := cmd.Flags().GetString("connector-type")
+	if err != nil {
 		return err
 	}
-	if sensitivePropertiesString, err = cmd.Flags().GetString("sensitive-properties"); err != nil {
+	sensitivePropertiesString, err := cmd.Flags().GetString("sensitive-properties")
+	if err != nil {
 		return err
 	}
 
-	extension := filepath.Ext(pluginFileName)[1:]
+	extension := filepath.Ext(pluginFileName)
+	if extension == "" {
+		return errors.Errorf("unable to read plugin file extension")
+	}
+	extension = extension[1:]
 	if extension != "zip" && extension != "jar" {
-		return errors.Errorf("only ZIP/JAR plugin file is allowed")
+		return errors.Errorf("only ZIP/JAR plugin files are allowed")
 	}
 
 	resp, err := c.V2Client.GetPresignedUrl(extension)

@@ -36,8 +36,6 @@ func newCustomPluginCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Com
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newUpdateCommand())
-	} else {
-		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 	}
 
 	return cmd

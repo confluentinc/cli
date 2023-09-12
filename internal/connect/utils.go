@@ -83,7 +83,7 @@ func parseConfigFile(filename string) (map[string]string, error) {
 	return kvPairs, err
 }
 
-func uploadFile(url, filePath string, formFields map[string]interface{}) error {
+func uploadFile(url, filePath string, formFields map[string]any) error {
 	var buffer bytes.Buffer
 	writer := multipart.NewWriter(&buffer)
 
@@ -103,13 +103,11 @@ func uploadFile(url, filePath string, formFields map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(part, file)
-	if err != nil {
+	if _, err = io.Copy(part, file); err != nil {
 		return err
 	}
 
-	err = writer.Close()
-	if err != nil {
+	if err = writer.Close(); err != nil {
 		return err
 	}
 
