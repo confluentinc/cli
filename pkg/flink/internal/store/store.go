@@ -269,7 +269,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1State
 	}
 
 	exceptions := exceptionsResponse.GetData()
-	if len(exceptions) < 1 {
+	if len(exceptions) == 0 {
 		return ""
 	}
 
