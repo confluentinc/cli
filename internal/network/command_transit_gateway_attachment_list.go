@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *transitGatewayAttachmentCommand) newListCommand() *cobra.Command {
+func (c *command) newTransitGatewayAttachmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List transit gateway attachments.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.listTransitGatewayAttachment,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -26,7 +26,7 @@ func (c *transitGatewayAttachmentCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *transitGatewayAttachmentCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) listTransitGatewayAttachment(cmd *cobra.Command, _ []string) error {
 	attachments, err := c.getTransitGatewayAttachments()
 	if err != nil {
 		return err

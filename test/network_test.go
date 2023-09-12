@@ -263,6 +263,8 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentCreate() {
 func (s *CLITestSuite) TestNetworkTransitGatewayAttachment_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network transit-gateway-attachment describe ""`, login: "cloud", fixture: "network/transit-gateway-attachment/describe-autocomplete.golden"},
+		{args: `__complete network transit-gateway-attachment update ""`, login: "cloud", fixture: "network/transit-gateway-attachment/update-autocomplete.golden"},
+		{args: `__complete network transit-gateway-attachment delete ""`, login: "cloud", fixture: "network/transit-gateway-attachment/delete-autocomplete.golden"},
 		{args: `__complete network transit-gateway-attachment create tgwa --network ""`, login: "cloud", fixture: "network/transit-gateway-attachment/create-autocomplete.golden"},
 	}
 
