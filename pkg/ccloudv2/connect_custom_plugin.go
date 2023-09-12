@@ -2,9 +2,11 @@ package ccloudv2
 
 import (
 	"context"
-	ccpv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"strings"
+
+	ccpv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 func newCcpClient(url, userAgent string, unsafeTrace bool) *ccpv1.APIClient {

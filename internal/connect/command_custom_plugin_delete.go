@@ -1,17 +1,18 @@
 package connect
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/resource"
-	"github.com/spf13/cobra"
 )
 
 func (c *customPluginCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a custom connector plugin.",
+		Use:   "delete <id-1> [id-2] ... [id-n]",
+		Short: "Delete custom connector plugin.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(

@@ -1,10 +1,11 @@
 package connect
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *customPluginCommand) newDescribeCommand() *cobra.Command {
@@ -33,15 +34,14 @@ func (c *customPluginCommand) describe(cmd *cobra.Command, args []string) error 
 		return err
 	}
 	out := &customPluginOut{
-		Id:                        plugin.GetId(),
-		Name:                      plugin.GetDisplayName(),
-		Description:               plugin.GetDescription(),
-		ConnectorClass:            plugin.GetConnectorClass(),
-		ConnectorType:             plugin.GetConnectorType(),
-		SensitiveConfigProperties: plugin.GetSensitiveConfigProperties(),
+		Id:                  plugin.GetId(),
+		Name:                plugin.GetDisplayName(),
+		Description:         plugin.GetDescription(),
+		ConnectorClass:      plugin.GetConnectorClass(),
+		ConnectorType:       plugin.GetConnectorType(),
+		SensitiveProperties: plugin.GetSensitiveConfigProperties(),
 	}
 	if output.GetFormat(cmd) == output.Human {
-		output.Println("Plugin Details")
 		table := output.NewTable(cmd)
 		table.Add(out)
 		return table.Print()

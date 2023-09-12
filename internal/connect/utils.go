@@ -3,12 +3,12 @@ package connect
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/dghubble/sling"
 	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 
+	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -84,7 +84,6 @@ func parseConfigFile(filename string) (map[string]string, error) {
 }
 
 func uploadFile(url, filePath string, formFields map[string]interface{}) error {
-
 	var buffer bytes.Buffer
 	writer := multipart.NewWriter(&buffer)
 

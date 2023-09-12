@@ -1,10 +1,11 @@
 package connect
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 type customPluginOutList struct {
@@ -15,7 +16,7 @@ type customPluginOutList struct {
 func (c *customPluginCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List custom connector plugins",
+		Short: "List custom connector plugins.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(

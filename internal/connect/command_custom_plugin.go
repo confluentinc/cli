@@ -1,9 +1,10 @@
 package connect
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	v1 "github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/spf13/cobra"
 )
 
 type customPluginCommand struct {
@@ -11,18 +12,18 @@ type customPluginCommand struct {
 }
 
 type customPluginOut struct {
-	Id                        string   `human:"ID" serialized:"id"`
-	Name                      string   `human:"Name" serialized:"name"`
-	Description               string   `human:"Description" serialized:"description"`
-	ConnectorClass            string   `human:"Connector Class" serialized:"connector_class"`
-	ConnectorType             string   `human:"Connector Type" serialized:"connector_type"`
-	SensitiveConfigProperties []string `human:"Sensitive Config Properties" serialized:"sensitive_config_properties"`
+	Id                  string   `human:"ID" serialized:"id"`
+	Name                string   `human:"Name" serialized:"name"`
+	Description         string   `human:"Description" serialized:"description"`
+	ConnectorClass      string   `human:"Connector Class" serialized:"connector_class"`
+	ConnectorType       string   `human:"Connector Type" serialized:"connector_type"`
+	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
 }
 
 func newCustomPluginCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "custom-plugin",
-		Short:       "Manage Custom Plugin.",
+		Short:       "Manage custom plugins.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

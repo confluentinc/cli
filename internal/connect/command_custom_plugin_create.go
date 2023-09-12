@@ -1,11 +1,13 @@
 package connect
 
 import (
+	"path/filepath"
+
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
 type pluginCreateOut struct {
@@ -22,35 +24,49 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.createCustomPlugin,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a custom connector plugin ",
-				Code: "confluent connect custom-plugin create plugin_name --config-file config.json",
+				Text: `Create custom connector plugin "my-plugin".`,
+				Code: "confluent connect custom-plugin create my-plugin --plugin-file datagen.zip --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector",
 			},
 		),
 	}
 
-	cmd.Flags().String("plugin-file", "", "ZIP/JAR plugin file.")
-	cmd.Flags().String("description", "", "Description of custom plugin.")
-	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
+	cmd.Flags().String("plugin-file", "", "ZIP/JAR custom plugin file.")
 	cmd.Flags().String("connector-class", "", "Connector class of custom plugin.")
 	cmd.Flags().String("connector-type", "", "Connector type of custom plugin.")
+	cmd.Flags().String("description", "", "Description of custom plugin.")
+	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
 	cmd.Flags().String("sensitive-properties", "", "Sensitive properties of custom plugin.")
 
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-class"))
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-type"))
 
 	cobra.CheckErr(cmd.MarkFlagFilename("plugin-file", "zip", "jar"))
-	cobra.CheckErr(cmd.MarkFlagRequired("plugin-file"))
 	return cmd
 }
 
 func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []string) error {
 	displayName := args[0]
-	description, err := cmd.Flags().GetString("description")
-	documentationLink, err := cmd.Flags().GetString("documentation-link")
-	pluginFileName, err := cmd.Flags().GetString("plugin-file")
-	connectorClass, err := cmd.Flags().GetString("connector-class")
-	connectorType, err := cmd.Flags().GetString("connector-type")
-	sensitivePropertiesString, err := cmd.Flags().GetString("sensitive-properties")
+	var err error
+	var description, documentationLink, pluginFileName, connectorClass, connectorType, sensitivePropertiesString string
+	if description, err = cmd.Flags().GetString("description"); err != nil {
+		return err
+	}
+	if documentationLink, err = cmd.Flags().GetString("documentation-link"); err != nil {
+		return err
+	}
+	if pluginFileName, err = cmd.Flags().GetString("plugin-file"); err != nil {
+		return err
+	}
+	if connectorClass, err = cmd.Flags().GetString("connector-class"); err != nil {
+		return err
+	}
+	if connectorType, err = cmd.Flags().GetString("connector-type"); err != nil {
+		return err
+	}
+	if sensitivePropertiesString, err = cmd.Flags().GetString("sensitive-properties"); err != nil {
+		return err
+	}
 
 	extension := filepath.Ext(pluginFileName)[1:]
 	if extension != "zip" && extension != "jar" {
@@ -62,8 +78,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	err = uploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData())
-	if err != nil {
+	if err = uploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
 		return err
 	}
 
