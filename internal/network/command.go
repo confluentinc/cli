@@ -81,18 +81,15 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(newPeeringCommand(prerunner))
+	cmd.AddCommand(c.newPeeringCommand())
 	cmd.AddCommand(c.newPrivateLinkCommand())
-	cmd.AddCommand(newTransitGatewayAttachmentCommand(prerunner))
+	cmd.AddCommand(c.newTransitGatewayAttachmentCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
 }
 
 func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
-	table := output.NewTable(cmd)
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
-
 	if network.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 	}
@@ -134,6 +131,8 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		ActiveConnectionTypes:    activeConnectionTypes,
 	}
 
+	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+
 	if phase == "READY" {
 		if network.Status.Cloud == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
@@ -160,6 +159,8 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
 		}
 	}
+
+	table := output.NewTable(cmd)
 
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(human)

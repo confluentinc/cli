@@ -21,12 +21,12 @@ type listPeeringOut struct {
 	Phase          string `human:"Phase" serialized:"phase"`
 }
 
-func (c *peeringCommand) newListCommand() *cobra.Command {
+func (c *command) newPeeringListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List peerings.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.peeringList,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -36,7 +36,7 @@ func (c *peeringCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *peeringCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) peeringList(cmd *cobra.Command, _ []string) error {
 	peerings, err := c.getPeerings()
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (c *peeringCommand) list(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
-		cloud, err := getCloud(peering)
+		cloud, err := getPeeringCloud(peering)
 		if err != nil {
 			return err
 		}

@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *transitGatewayAttachmentCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newTransitGatewayAttachmentDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a transit gateway attachment.",
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validTransitGatewayAttachmentArgs),
 		Args:              cobra.ExactArgs(1),
-		RunE:              c.describe,
+		RunE:              c.transitGatewayAttachmentDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe transit gateway attachment "tgwa-123456".`,
@@ -29,7 +29,7 @@ func (c *transitGatewayAttachmentCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *transitGatewayAttachmentCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) transitGatewayAttachmentDescribe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

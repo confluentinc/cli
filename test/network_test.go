@@ -84,6 +84,8 @@ func (s *CLITestSuite) TestNetworkCreate() {
 func (s *CLITestSuite) TestNetwork_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network describe ""`, login: "cloud", fixture: "network/describe-autocomplete.golden"},
+		{args: `__complete network update ""`, login: "cloud", fixture: "network/update-autocomplete.golden"},
+		{args: `__complete network delete ""`, login: "cloud", fixture: "network/delete-autocomplete.golden"},
 		{args: `__complete network create new-network --connection-types ""`, login: "cloud", fixture: "network/create-autocomplete-connection-types.golden"},
 		{args: `__complete network create new-network --dns-resolution ""`, login: "cloud", fixture: "network/create-autocomplete-dns-resolution.golden"},
 	}
@@ -174,6 +176,8 @@ func (s *CLITestSuite) TestNetworkPeeringCreate() {
 func (s *CLITestSuite) TestNetworkPeering_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network peering describe ""`, login: "cloud", fixture: "network/peering/describe-autocomplete.golden"},
+		{args: `__complete network peering update ""`, login: "cloud", fixture: "network/peering/update-autocomplete.golden"},
+		{args: `__complete network peering delete ""`, login: "cloud", fixture: "network/peering/delete-autocomplete.golden"},
 		{args: `__complete network peering create aws-peering --network ""`, login: "cloud", fixture: "network/peering/create-autocomplete.golden"},
 	}
 
@@ -261,6 +265,8 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentCreate() {
 func (s *CLITestSuite) TestNetworkTransitGatewayAttachment_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network transit-gateway-attachment describe ""`, login: "cloud", fixture: "network/transit-gateway-attachment/describe-autocomplete.golden"},
+		{args: `__complete network transit-gateway-attachment update ""`, login: "cloud", fixture: "network/transit-gateway-attachment/update-autocomplete.golden"},
+		{args: `__complete network transit-gateway-attachment delete ""`, login: "cloud", fixture: "network/transit-gateway-attachment/delete-autocomplete.golden"},
 		{args: `__complete network transit-gateway-attachment create tgwa --network ""`, login: "cloud", fixture: "network/transit-gateway-attachment/create-autocomplete.golden"},
 	}
 

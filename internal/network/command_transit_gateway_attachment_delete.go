@@ -13,13 +13,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func (c *transitGatewayAttachmentCommand) newDeleteCommand() *cobra.Command {
+func (c *command) newTransitGatewayAttachmentDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete one or more transit gateway attachments.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
-		RunE:              c.delete,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validTransitGatewayAttachmentArgsMultiple),
+		RunE:              c.transitGatewayAttachmentDelete,
 	}
 
 	pcmd.AddForceFlag(cmd)
@@ -29,7 +29,7 @@ func (c *transitGatewayAttachmentCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *transitGatewayAttachmentCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *command) transitGatewayAttachmentDelete(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *peeringCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newPeeringDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a peering.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.describe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validPeeringArgs),
+		RunE:              c.peeringDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe peering "peer-123456".`,
@@ -29,7 +29,7 @@ func (c *peeringCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *peeringCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) peeringDescribe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

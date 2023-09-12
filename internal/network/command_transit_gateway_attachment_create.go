@@ -9,12 +9,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *transitGatewayAttachmentCommand) newCreateCommand() *cobra.Command {
+func (c *command) newTransitGatewayAttachmentCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a transit gateway attachment.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.create,
+		RunE:  c.transitGatewayAttachmentCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a transit gateway attachment in AWS.",
@@ -39,7 +39,7 @@ func (c *transitGatewayAttachmentCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *transitGatewayAttachmentCommand) create(cmd *cobra.Command, args []string) error {
+func (c *command) transitGatewayAttachmentCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	network, err := cmd.Flags().GetString("network")

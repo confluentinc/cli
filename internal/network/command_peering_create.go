@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *peeringCommand) newCreateCommand() *cobra.Command {
+func (c *command) newPeeringCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a peering.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.create,
+		RunE:  c.peeringCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an AWS VPC peering.",
@@ -52,7 +52,7 @@ func (c *peeringCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *peeringCommand) create(cmd *cobra.Command, args []string) error {
+func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	cloud, err := cmd.Flags().GetString("cloud")
@@ -87,7 +87,7 @@ func (c *peeringCommand) create(cmd *cobra.Command, args []string) error {
 
 	switch cloud {
 	case CloudAws:
-		awsPeering, err := c.createAwsPeeringRequest(cmd, region)
+		awsPeering, err := createAwsPeeringRequest(cmd, region)
 		if err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func (c *peeringCommand) create(cmd *cobra.Command, args []string) error {
 			NetworkingV1AwsPeering: awsPeering,
 		}
 	case CloudGcp:
-		gcpPeering, err := c.createGcpPeeringRequest(cmd)
+		gcpPeering, err := createGcpPeeringRequest(cmd)
 		if err != nil {
 			return err
 		}
@@ -103,7 +103,7 @@ func (c *peeringCommand) create(cmd *cobra.Command, args []string) error {
 			NetworkingV1GcpPeering: gcpPeering,
 		}
 	case CloudAzure:
-		azurePeering, err := c.createAzurePeeringRequest(cmd, region)
+		azurePeering, err := createAzurePeeringRequest(cmd, region)
 		if err != nil {
 			return err
 		}
@@ -120,7 +120,7 @@ func (c *peeringCommand) create(cmd *cobra.Command, args []string) error {
 	return printPeeringTable(cmd, peering)
 }
 
-func (c *peeringCommand) createAwsPeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AwsPeering, error) {
+func createAwsPeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AwsPeering, error) {
 	account, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func (c *peeringCommand) createAwsPeeringRequest(cmd *cobra.Command, networkRegi
 	return awsPeering, nil
 }
 
-func (c *peeringCommand) createGcpPeeringRequest(cmd *cobra.Command) (*networkingv1.NetworkingV1GcpPeering, error) {
+func createGcpPeeringRequest(cmd *cobra.Command) (*networkingv1.NetworkingV1GcpPeering, error) {
 	project, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err
@@ -181,7 +181,7 @@ func (c *peeringCommand) createGcpPeeringRequest(cmd *cobra.Command) (*networkin
 	return gcpPeering, nil
 }
 
-func (c *peeringCommand) createAzurePeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AzurePeering, error) {
+func createAzurePeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AzurePeering, error) {
 	tenant, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err

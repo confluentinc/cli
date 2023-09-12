@@ -8,14 +8,9 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
-
-type transitGatewayAttachmentCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
 
 type transitGatewayAttachmentHumanOut struct {
 	Id                            string `human:"ID"`
@@ -39,7 +34,7 @@ type transitGatewayAttachmentSerializedOut struct {
 	Phase                         string   `serialized:"phase"`
 }
 
-func newTransitGatewayAttachmentCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newTransitGatewayAttachmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "transit-gateway-attachment",
 		Aliases: []string{"tgwa"},
@@ -47,18 +42,16 @@ func newTransitGatewayAttachmentCommand(prerunner pcmd.PreRunner) *cobra.Command
 		Args:    cobra.NoArgs,
 	}
 
-	c := &transitGatewayAttachmentCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-
-	cmd.AddCommand(c.newCreateCommand())
-	cmd.AddCommand(c.newDeleteCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newTransitGatewayAttachmentCreateCommand())
+	cmd.AddCommand(c.newTransitGatewayAttachmentDeleteCommand())
+	cmd.AddCommand(c.newTransitGatewayAttachmentDescribeCommand())
+	cmd.AddCommand(c.newTransitGatewayAttachmentListCommand())
+	cmd.AddCommand(c.newTransitGatewayAttachmentUpdateCommand())
 
 	return cmd
 }
 
-func (c *transitGatewayAttachmentCommand) getTransitGatewayAttachments() ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+func (c *command) getTransitGatewayAttachments() ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
@@ -67,14 +60,14 @@ func (c *transitGatewayAttachmentCommand) getTransitGatewayAttachments() ([]netw
 	return c.V2Client.ListTransitGatewayAttachments(environmentId)
 }
 
-func (c *transitGatewayAttachmentCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validTransitGatewayAttachmentArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
-	return c.validArgsMultiple(cmd, args)
+	return c.validTransitGatewayAttachmentArgsMultiple(cmd, args)
 }
 
-func (c *transitGatewayAttachmentCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+func (c *command) validTransitGatewayAttachmentArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -82,7 +75,7 @@ func (c *transitGatewayAttachmentCommand) validArgsMultiple(cmd *cobra.Command, 
 	return c.autocompleteTransitGatewayAttachments()
 }
 
-func (c *transitGatewayAttachmentCommand) autocompleteTransitGatewayAttachments() []string {
+func (c *command) autocompleteTransitGatewayAttachments() []string {
 	attachments, err := c.getTransitGatewayAttachments()
 	if err != nil {
 		return nil
@@ -96,14 +89,14 @@ func (c *transitGatewayAttachmentCommand) autocompleteTransitGatewayAttachments(
 }
 
 func printTransitGatewayAttachmentTable(cmd *cobra.Command, attachment networkingv1.NetworkingV1TransitGatewayAttachment) error {
-	table := output.NewTable(cmd)
-
 	if attachment.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 	}
 	if attachment.Status == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 	}
+
+	table := output.NewTable(cmd)
 
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(&transitGatewayAttachmentHumanOut{

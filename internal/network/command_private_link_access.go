@@ -86,7 +86,7 @@ func getPrivateLinkAccessCloud(access networkingv1.NetworkingV1PrivateLinkAccess
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
 }
 
-func (c *command) printPrivateLinkAccessTable(cmd *cobra.Command, access networkingv1.NetworkingV1PrivateLinkAccess) error {
+func printPrivateLinkAccessTable(cmd *cobra.Command, access networkingv1.NetworkingV1PrivateLinkAccess) error {
 	if access.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 	}
