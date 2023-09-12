@@ -84,6 +84,8 @@ func (s *CLITestSuite) TestNetworkCreate() {
 func (s *CLITestSuite) TestNetwork_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network describe ""`, login: "cloud", fixture: "network/describe-autocomplete.golden"},
+		{args: `__complete network update ""`, login: "cloud", fixture: "network/update-autocomplete.golden"},
+		{args: `__complete network delete ""`, login: "cloud", fixture: "network/delete-autocomplete.golden"},
 		{args: `__complete network create new-network --connection-types ""`, login: "cloud", fixture: "network/create-autocomplete-connection-types.golden"},
 		{args: `__complete network create new-network --dns-resolution ""`, login: "cloud", fixture: "network/create-autocomplete-dns-resolution.golden"},
 	}

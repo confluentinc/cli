@@ -90,9 +90,6 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
-	table := output.NewTable(cmd)
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
-
 	if network.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 	}
@@ -134,6 +131,8 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		ActiveConnectionTypes:    activeConnectionTypes,
 	}
 
+	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+
 	if phase == "READY" {
 		if network.Status.Cloud == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
@@ -160,6 +159,8 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
 		}
 	}
+
+	table := output.NewTable(cmd)
 
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(human)
