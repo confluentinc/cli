@@ -14,7 +14,7 @@ func (c *command) newTransitGatewayAttachmentCreateCommand() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create a transit gateway attachment.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.createTransitGatewayAttachment,
+		RunE:  c.transitGatewayAttachmentCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a transit gateway attachment in AWS.",
@@ -39,7 +39,7 @@ func (c *command) newTransitGatewayAttachmentCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) createTransitGatewayAttachment(cmd *cobra.Command, args []string) error {
+func (c *command) transitGatewayAttachmentCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	network, err := cmd.Flags().GetString("network")

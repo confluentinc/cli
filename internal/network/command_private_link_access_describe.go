@@ -13,7 +13,7 @@ func (c *command) newPrivateLinkAccessDescribeCommand() *cobra.Command {
 		Short:             "Describe a private link access.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validPrivateLinkAccessArgs),
-		RunE:              c.describePrivateLinkAccess,
+		RunE:              c.privateLinkAccessDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe private link access "pla-123456".`,
@@ -29,7 +29,7 @@ func (c *command) newPrivateLinkAccessDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describePrivateLinkAccess(cmd *cobra.Command, args []string) error {
+func (c *command) privateLinkAccessDescribe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

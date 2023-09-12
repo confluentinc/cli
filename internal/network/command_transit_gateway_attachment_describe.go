@@ -13,7 +13,7 @@ func (c *command) newTransitGatewayAttachmentDescribeCommand() *cobra.Command {
 		Short:             "Describe a transit gateway attachment.",
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validTransitGatewayAttachmentArgs),
 		Args:              cobra.ExactArgs(1),
-		RunE:              c.describeTransitGatewayAttachment,
+		RunE:              c.transitGatewayAttachmentDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe transit gateway attachment "tgwa-123456".`,
@@ -29,7 +29,7 @@ func (c *command) newTransitGatewayAttachmentDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describeTransitGatewayAttachment(cmd *cobra.Command, args []string) error {
+func (c *command) transitGatewayAttachmentDescribe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

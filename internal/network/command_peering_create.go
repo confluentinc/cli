@@ -16,7 +16,7 @@ func (c *command) newPeeringCreateCommand() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create a peering.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.createPeering,
+		RunE:  c.peeringCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an AWS VPC peering.",
@@ -52,7 +52,7 @@ func (c *command) newPeeringCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) createPeering(cmd *cobra.Command, args []string) error {
+func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	cloud, err := cmd.Flags().GetString("cloud")

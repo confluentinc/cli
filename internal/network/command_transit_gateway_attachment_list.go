@@ -16,7 +16,7 @@ func (c *command) newTransitGatewayAttachmentListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List transit gateway attachments.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listTransitGatewayAttachment,
+		RunE:  c.transitGatewayAttachmentList,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -26,7 +26,7 @@ func (c *command) newTransitGatewayAttachmentListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) listTransitGatewayAttachment(cmd *cobra.Command, _ []string) error {
+func (c *command) transitGatewayAttachmentList(cmd *cobra.Command, _ []string) error {
 	attachments, err := c.getTransitGatewayAttachments()
 	if err != nil {
 		return err

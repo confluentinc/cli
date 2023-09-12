@@ -19,7 +19,7 @@ func (c *command) newTransitGatewayAttachmentDeleteCommand() *cobra.Command {
 		Short:             "Delete one or more transit gateway attachments.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validTransitGatewayAttachmentArgsMultiple),
-		RunE:              c.deleteTransitGatewayAttachment,
+		RunE:              c.transitGatewayAttachmentDelete,
 	}
 
 	pcmd.AddForceFlag(cmd)
@@ -29,7 +29,7 @@ func (c *command) newTransitGatewayAttachmentDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) deleteTransitGatewayAttachment(cmd *cobra.Command, args []string) error {
+func (c *command) transitGatewayAttachmentDelete(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

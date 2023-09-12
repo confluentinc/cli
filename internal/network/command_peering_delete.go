@@ -19,7 +19,7 @@ func (c *command) newPeeringDeleteCommand() *cobra.Command {
 		Short:             "Delete one or more peerings.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validPeeringArgsMultiple),
-		RunE:              c.deletePeering,
+		RunE:              c.peeringDelete,
 	}
 
 	pcmd.AddForceFlag(cmd)
@@ -29,7 +29,7 @@ func (c *command) newPeeringDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) deletePeering(cmd *cobra.Command, args []string) error {
+func (c *command) peeringDelete(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

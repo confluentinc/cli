@@ -13,7 +13,7 @@ func (c *command) newPeeringDescribeCommand() *cobra.Command {
 		Short:             "Describe a peering.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validPeeringArgs),
-		RunE:              c.describePeering,
+		RunE:              c.peeringDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe peering "peer-123456".`,
@@ -29,7 +29,7 @@ func (c *command) newPeeringDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describePeering(cmd *cobra.Command, args []string) error {
+func (c *command) peeringDescribe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

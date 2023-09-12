@@ -26,7 +26,7 @@ func (c *command) newPeeringListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List peerings.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listPeering,
+		RunE:  c.peeringList,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -36,7 +36,7 @@ func (c *command) newPeeringListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) listPeering(cmd *cobra.Command, _ []string) error {
+func (c *command) peeringList(cmd *cobra.Command, _ []string) error {
 	peerings, err := c.getPeerings()
 	if err != nil {
 		return err

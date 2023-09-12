@@ -24,7 +24,7 @@ func (c *command) newPrivateLinkAccessListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List private link accesses.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listPrivateLinkAccesses,
+		RunE:  c.privateLinkAccessList,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -34,7 +34,7 @@ func (c *command) newPrivateLinkAccessListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) listPrivateLinkAccesses(cmd *cobra.Command, _ []string) error {
+func (c *command) privateLinkAccessList(cmd *cobra.Command, _ []string) error {
 	accesses, err := c.getPrivateLinkAccesses()
 	if err != nil {
 		return err
