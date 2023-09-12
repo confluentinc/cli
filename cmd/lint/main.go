@@ -114,6 +114,8 @@ var flagRules = []linter.FlagRule{
 		linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag(
 			"aws-account-id",
+			"aws-ram-share-arn",
+			"aws-transit-gateway",
 			"azure-subscription-id",
 			"ca-cert-path",
 			"client-cert-path",
@@ -204,6 +206,7 @@ var vocabWords = []string{
 	"acls",
 	"apac",
 	"api",
+	"arn",
 	"asyncapi",
 	"auth",
 	"avro",

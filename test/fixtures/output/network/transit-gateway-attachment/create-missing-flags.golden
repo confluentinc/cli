@@ -1,0 +1,23 @@
+Error: required flag(s) "aws-ram-share-arn", "aws-transit-gateway" not set
+Usage:
+  confluent network transit-gateway-attachment create <name> [flags]
+
+Examples:
+Create a transit gateway attachment in AWS.
+
+  $ confluent network transit-gateway-attachment create my-tgw-attachment --network n-123456 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10
+
+Flags:
+      --network string               REQUIRED: Network ID.
+      --aws-ram-share-arn string     REQUIRED: AWS Resource Name (ARN) for the AWS Resource Access Manager (RAM) Share of the AWS Transit Gateway that you want Confluent Cloud to be attached to.
+      --aws-transit-gateway string   REQUIRED: ID of the AWS Transit Gateway that you want Confluent Cloud to be attached to.
+      --routes strings               REQUIRED: A comma-separated list of CIDRs.
+      --context string               CLI context name.
+      --environment string           Environment ID.
+  -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

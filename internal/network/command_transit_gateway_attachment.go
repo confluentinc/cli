@@ -49,6 +49,7 @@ func newTransitGatewayAttachmentCommand(prerunner pcmd.PreRunner) *cobra.Command
 
 	c := &transitGatewayAttachmentCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
