@@ -87,7 +87,7 @@ func (c *command) createPeering(cmd *cobra.Command, args []string) error {
 
 	switch cloud {
 	case CloudAws:
-		awsPeering, err := c.createAwsPeeringRequest(cmd, region)
+		awsPeering, err := createAwsPeeringRequest(cmd, region)
 		if err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func (c *command) createPeering(cmd *cobra.Command, args []string) error {
 			NetworkingV1AwsPeering: awsPeering,
 		}
 	case CloudGcp:
-		gcpPeering, err := c.createGcpPeeringRequest(cmd)
+		gcpPeering, err := createGcpPeeringRequest(cmd)
 		if err != nil {
 			return err
 		}
@@ -103,7 +103,7 @@ func (c *command) createPeering(cmd *cobra.Command, args []string) error {
 			NetworkingV1GcpPeering: gcpPeering,
 		}
 	case CloudAzure:
-		azurePeering, err := c.createAzurePeeringRequest(cmd, region)
+		azurePeering, err := createAzurePeeringRequest(cmd, region)
 		if err != nil {
 			return err
 		}
@@ -120,7 +120,7 @@ func (c *command) createPeering(cmd *cobra.Command, args []string) error {
 	return printPeeringTable(cmd, peering)
 }
 
-func (c *command) createAwsPeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AwsPeering, error) {
+func createAwsPeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AwsPeering, error) {
 	account, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func (c *command) createAwsPeeringRequest(cmd *cobra.Command, networkRegion stri
 	return awsPeering, nil
 }
 
-func (c *command) createGcpPeeringRequest(cmd *cobra.Command) (*networkingv1.NetworkingV1GcpPeering, error) {
+func createGcpPeeringRequest(cmd *cobra.Command) (*networkingv1.NetworkingV1GcpPeering, error) {
 	project, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err
@@ -181,7 +181,7 @@ func (c *command) createGcpPeeringRequest(cmd *cobra.Command) (*networkingv1.Net
 	return gcpPeering, nil
 }
 
-func (c *command) createAzurePeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AzurePeering, error) {
+func createAzurePeeringRequest(cmd *cobra.Command, networkRegion string) (*networkingv1.NetworkingV1AzurePeering, error) {
 	tenant, err := cmd.Flags().GetString("cloud-account")
 	if err != nil {
 		return nil, err
