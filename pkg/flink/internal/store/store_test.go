@@ -7,10 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	cliConfig "github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
 	"io"
 	"net/http"
 	"reflect"
@@ -23,13 +19,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors/flink"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	flinkconfig "github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 type StoreTestSuite struct {
@@ -133,7 +133,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	}
 	expectedError := &types.StatementError{
 		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
-			timeout.Seconds(), config.ConfigKeyResultsTimeout),
+			timeout.Seconds(), flinkconfig.ConfigKeyResultsTimeout),
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
@@ -288,67 +288,67 @@ func TestCancelPendingStatement(t *testing.T) {
 }
 
 func (s *StoreTestSuite) TestIsSetStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("SET", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("SET key", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("SET key=value", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET   ", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    set   ", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", config.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET", flinkconfig.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key", flinkconfig.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key=value", flinkconfig.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", flinkconfig.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET   ", flinkconfig.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    set   ", flinkconfig.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", flinkconfig.ConfigOpSet))
 
-	assert.False(s.T(), false, statementStartsWithOp("SETting", config.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("USE", config.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("SETTING", config.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETting", flinkconfig.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("USE", flinkconfig.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETTING", flinkconfig.ConfigOpSet))
 }
 
 func (s *StoreTestSuite) TestIsUseStatement() {
-	assert.True(s.T(), statementStartsWithOp("USE", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE catalog", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE   ", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("use   ", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE", flinkconfig.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE catalog", flinkconfig.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", flinkconfig.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", flinkconfig.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE   ", flinkconfig.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("use   ", flinkconfig.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", flinkconfig.ConfigOpUse))
 
-	assert.False(s.T(), statementStartsWithOp("SET", config.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("USES", config.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("", config.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("should be false", config.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("SET", flinkconfig.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("USES", flinkconfig.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("", flinkconfig.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("should be false", flinkconfig.ConfigOpUse))
 }
 
 func (s *StoreTestSuite) TestIsResetStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("RESET", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET   ", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("reset   ", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET", flinkconfig.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key", flinkconfig.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET   ", flinkconfig.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("reset   ", flinkconfig.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.ConfigOpReset))
 
-	assert.False(s.T(), false, statementStartsWithOp("RESETting", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("USE", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("RESETTING", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETting", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("USE", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETTING", flinkconfig.ConfigOpReset))
 }
 
 func (s *StoreTestSuite) TestIsExitStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("EXIT", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit   ;", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exiT   ", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("Exit   ", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("eXit   ", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit ", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT", flinkconfig.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", flinkconfig.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit   ;", flinkconfig.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exiT   ", flinkconfig.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("Exit   ", flinkconfig.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("eXit   ", flinkconfig.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit", flinkconfig.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit ", flinkconfig.ConfigOpExit))
 
-	assert.False(s.T(), false, statementStartsWithOp("exits", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("exitt;", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("exi", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exits", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exitt;", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exi", flinkconfig.ConfigOpReset))
 }
 
 func (s *StoreTestSuite) TestParseSetStatement() {
@@ -522,11 +522,11 @@ func (s *StoreTestSuite) TestParseSetStatementError() {
 
 func (s *StoreTestSuite) TestParseUseStatement() {
 	key, value, _ := parseUseStatement("USE CATALOG c;")
-	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
+	assert.Equal(s.T(), flinkconfig.ConfigKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
 	key, value, _ = parseUseStatement("use   catalog   \nc   ")
-	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
+	assert.Equal(s.T(), flinkconfig.ConfigKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
 	key, value, _ = parseUseStatement("use   catalog     ")
@@ -538,7 +538,7 @@ func (s *StoreTestSuite) TestParseUseStatement() {
 	assert.Equal(s.T(), "", value)
 
 	key, value, _ = parseUseStatement("use     db   ")
-	assert.Equal(s.T(), config.ConfigKeyDatabase, key)
+	assert.Equal(s.T(), flinkconfig.ConfigKeyDatabase, key)
 	assert.Equal(s.T(), "db", value)
 
 	key, value, _ = parseUseStatement("dAtaBaSe  db   ")
@@ -546,7 +546,7 @@ func (s *StoreTestSuite) TestParseUseStatement() {
 	assert.Equal(s.T(), "", value)
 
 	key, value, _ = parseUseStatement("use     \ndatabase_name   ")
-	assert.Equal(s.T(), config.ConfigKeyDatabase, key)
+	assert.Equal(s.T(), flinkconfig.ConfigKeyDatabase, key)
 	assert.Equal(s.T(), "database_name", value)
 }
 
@@ -946,12 +946,12 @@ func TestCalcWaitTime(t *testing.T) {
 		retries          int
 		expectedWaitTime time.Duration
 	}{
-		{0, config.InitialWaitTime},
-		{3, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*0)*time.Millisecond},
-		{7, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*0)*time.Millisecond},
-		{10, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*1)*time.Millisecond},
-		{15, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*1)*time.Millisecond},
-		{32, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*3)*time.Millisecond},
+		{0, flinkconfig.InitialWaitTime},
+		{3, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*0)*time.Millisecond},
+		{7, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*0)*time.Millisecond},
+		{10, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*1)*time.Millisecond},
+		{15, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*1)*time.Millisecond},
+		{32, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*3)*time.Millisecond},
 	}
 
 	for _, testCase := range testCases {
@@ -970,21 +970,21 @@ func TestTimeout(t *testing.T) {
 		{
 			name: "results-timeout property set",
 			properties: map[string]string{
-				config.ConfigKeyResultsTimeout: "10000", // timeout in milliseconds
+				flinkconfig.ConfigKeyResultsTimeout: "10000", // timeout in milliseconds
 			},
 			expected: 10 * time.Second,
 		},
 		{
 			name:       "results-timeout property not set",
 			properties: map[string]string{},
-			expected:   config.DefaultTimeoutDuration,
+			expected:   flinkconfig.DefaultTimeoutDuration,
 		},
 		{
 			name: "invalid results-timeout property",
 			properties: map[string]string{
-				config.ConfigKeyResultsTimeout: "abc", // invalid duration
+				flinkconfig.ConfigKeyResultsTimeout: "abc", // invalid duration
 			},
-			expected: config.DefaultTimeoutDuration,
+			expected: flinkconfig.DefaultTimeoutDuration,
 		},
 	}
 
@@ -1038,8 +1038,8 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 
 	user := "u-1234"
-	contextState := &cliConfig.ContextState{
-		Auth: &cliConfig.AuthConfig{
+	contextState := &config.ContextState{
+		Auth: &config.AuthConfig{
 			User: &ccloudv1.User{
 				ResourceId: user,
 				Email:      "test-user@email",
@@ -1054,7 +1054,7 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 		EnvironmentId: "envId",
 		ComputePoolId: "computePoolId",
 		Context: &dynamicconfig.DynamicContext{
-			Context: &cliConfig.Context{State: contextState, Config: &cliConfig.Config{}},
+			Context: &config.Context{State: contextState, Config: &config.Config{}},
 		},
 	}
 	store := Store{
