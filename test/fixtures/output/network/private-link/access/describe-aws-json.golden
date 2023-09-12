@@ -1,0 +1,8 @@
+{
+  "id": "pla-111111",
+  "name": "aws-pla",
+  "network_id": "n-abcde1",
+  "cloud": "AWS",
+  "aws_account": "012345678901",
+  "phase": "READY"
+}

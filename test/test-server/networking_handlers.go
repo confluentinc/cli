@@ -93,6 +93,27 @@ func handleNetworkingTransitGatewayAttachments(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/private-link-accesses/{id}"
+func handleNetworkingPrivateLinkAccess(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingPrivateLinkAccessGet(t, id)(w, r)
+		}
+	}
+}
+
+// Handler for "/networking/v1/private-link-accesses"
+func handleNetworkingPrivateLinkAccesses(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingPrivateLinkAccessList(t)(w, r)
+		}
+	}
+}
+
 func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -643,5 +664,94 @@ func handleNetworkingTransitGatewayAttachmentCreate(t *testing.T) http.HandlerFu
 			err = json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
+	}
+}
+
+func handleNetworkingPrivateLinkAccessGet(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "pla-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The private-link-access pla-invalid was not found.")
+			require.NoError(t, err)
+		case "pla-111111":
+			attachment := getPrivateLinkAccess("pla-111111", "aws-pla", "AWS")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		case "pla-111112":
+			attachment := getPrivateLinkAccess("pla-111112", "gcp-pla", "GCP")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		case "pla-111113":
+			attachment := getPrivateLinkAccess("pla-111113", "azure-pla", "AZURE")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func getPrivateLinkAccess(id, name, cloud string) networkingv1.NetworkingV1PrivateLinkAccess {
+	access := networkingv1.NetworkingV1PrivateLinkAccess{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingv1.NetworkingV1PrivateLinkAccessSpec{
+			Cloud:       &networkingv1.NetworkingV1PrivateLinkAccessSpecCloudOneOf{},
+			DisplayName: networkingv1.PtrString(name),
+			Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+			Network:     &networkingv1.ObjectReference{Id: "n-abcde1"},
+		},
+		Status: &networkingv1.NetworkingV1PrivateLinkAccessStatus{
+			Phase: "READY",
+		},
+	}
+
+	switch cloud {
+	case "AWS":
+		access.Spec.Cloud.NetworkingV1AwsPrivateLinkAccess = &networkingv1.NetworkingV1AwsPrivateLinkAccess{
+			Kind:    "AwsPrivateLinkAccess",
+			Account: "012345678901",
+		}
+	case "GCP":
+		access.Spec.Cloud.NetworkingV1GcpPrivateServiceConnectAccess = &networkingv1.NetworkingV1GcpPrivateServiceConnectAccess{
+			Kind:    "GcpPrivateServiceConnectAccess",
+			Project: "temp-gear-123456",
+		}
+	case "AZURE":
+		access.Spec.Cloud.NetworkingV1AzurePrivateLinkAccess = &networkingv1.NetworkingV1AzurePrivateLinkAccess{
+			Kind:         "AzurePrivateLinkAccess",
+			Subscription: "1234abcd-12ab-34cd-1234-123456abcdef",
+		}
+	}
+
+	return access
+}
+
+func handleNetworkingPrivateLinkAccessList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		awsAccess := getPrivateLinkAccess("pla-111111", "aws-pla", "AWS")
+		gcpAccess := getPrivateLinkAccess("pla-111112", "gcp-pla", "GCP")
+		azureAccess := getPrivateLinkAccess("pla-111113", "azure-pla", "AZURE")
+
+		pageToken := r.URL.Query().Get("page_token")
+		var peeringList networkingv1.NetworkingV1PrivateLinkAccessList
+		switch pageToken {
+		case "azure":
+			peeringList = networkingv1.NetworkingV1PrivateLinkAccessList{
+				Data:     []networkingv1.NetworkingV1PrivateLinkAccess{azureAccess},
+				Metadata: networkingv1.ListMeta{},
+			}
+		case "gcp":
+			peeringList = networkingv1.NetworkingV1PrivateLinkAccessList{
+				Data:     []networkingv1.NetworkingV1PrivateLinkAccess{gcpAccess},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/private-link-accesses?environment=env-00000&page_size=1&page_token=azure"))},
+			}
+		default:
+			peeringList = networkingv1.NetworkingV1PrivateLinkAccessList{
+				Data:     []networkingv1.NetworkingV1PrivateLinkAccess{awsAccess},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/private-link-accesses?environment=env-00000&page_size=1&page_token=gcp"))},
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(peeringList)
+		require.NoError(t, err)
 	}
 }
