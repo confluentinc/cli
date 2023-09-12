@@ -176,14 +176,14 @@ func (s *CLITestSuite) TestConnectCustomPlugin() {
 	tests := []CLITest{
 		{args: "connect custom-plugin create CliPluginTest --plugin-file \"test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip\" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector", fixture: "connect/custom-plugin/create.golden"},
 		{args: "connect custom-plugin create CliPluginTest --plugin-file \"test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf\" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector", fixture: "connect/custom-plugin/create-invalid-extension.golden", exitCode: 1},
-		//{args: "connect custom-plugin list", fixture: "connect/custom-plugin/list.golden"},
+		{args: "connect custom-plugin list", fixture: "connect/custom-plugin/list.golden"},
 		{args: "connect custom-plugin list -o json", fixture: "connect/custom-plugin/list-json.golden"},
 		{args: "connect custom-plugin list -o yaml", fixture: "connect/custom-plugin/list-yaml.golden"},
 		{args: "connect custom-plugin describe ccp-123456", fixture: "connect/custom-plugin/describe.golden"},
 		{args: "connect custom-plugin describe ccp-123456 -o json", fixture: "connect/custom-plugin/describe-json.golden"},
 		{args: "connect custom-plugin describe ccp-123456 -o yaml", fixture: "connect/custom-plugin/describe-yaml.golden"},
 		{args: "connect custom-plugin delete ccp-123456 --force", fixture: "connect/custom-plugin/delete.golden"},
-		{args: "connect custom-plugin delete ccp-123456", input: "CliPluginTest\n", fixture: "connect/custom-plugin/delete-prompt.golden"},
+		{args: "connect custom-plugin delete ccp-123456", input: "CliPluginTest1\n", fixture: "connect/custom-plugin/delete-prompt.golden"},
 		{args: "connect custom-plugin update ccp-123456 --name CliPluginTestUpdate", fixture: "connect/custom-plugin/update.golden"},
 	}
 

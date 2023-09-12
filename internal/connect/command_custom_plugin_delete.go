@@ -1,23 +1,19 @@
 package connect
 
 import (
-	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
+	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/spf13/cobra"
 )
 
 func (c *customPluginCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "delete <id>",
-		Short:       "Delete a custom connector plugin.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.delete,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "delete <id>",
+		Short: "Delete a custom connector plugin.",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a custom connector plugin",
@@ -33,20 +29,39 @@ func (c *customPluginCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) delete(cmd *cobra.Command, args []string) error {
-	pluginId := args[0]
-	plugin, err := c.V2Client.DescribeCustomPlugin(pluginId)
+	pluginIdToName, err := c.mapPluginIdToName()
 	if err != nil {
 		return err
 	}
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Connector, pluginId, plugin.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, plugin.GetDisplayName()); err != nil {
+
+	existenceFunc := func(id string) bool {
+		_, ok := pluginIdToName[id]
+		return ok
+	}
+
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.CustomConnectorPlugin, pluginIdToName[args[0]]); err != nil {
 		return err
 	}
 
-	if err := c.V2Client.DeleteCustomPlugin(pluginId); err != nil {
+	deleteFunc := func(id string) error {
+		err := c.V2Client.DeleteCustomPlugin(id)
 		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.CustomConnectorPlugin, pluginId)
-	return nil
+	_, err = deletion.Delete(args, deleteFunc, resource.CustomConnectorPlugin)
+	return err
+}
+
+func (c *customPluginCommand) mapPluginIdToName() (map[string]string, error) {
+	plugins, err := c.V2Client.ListCustomPlugins()
+	if err != nil {
+		return nil, err
+	}
+
+	pluginIdToName := make(map[string]string)
+	for _, plugin := range plugins.GetData() {
+		pluginIdToName[plugin.GetId()] = plugin.GetDisplayName()
+	}
+
+	return pluginIdToName, nil
 }

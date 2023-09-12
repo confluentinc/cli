@@ -1,10 +1,9 @@
 package connect
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
 	"path/filepath"
 )
@@ -17,11 +16,10 @@ type pluginCreateOut struct {
 
 func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "create <name>",
-		Short:       "Create a custom connector plugin.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.createCustomPlugin,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "create <name>",
+		Short: "Create a custom connector plugin.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.createCustomPlugin,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a custom connector plugin ",
@@ -31,11 +29,11 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("plugin-file", "", "ZIP/JAR plugin file.")
-	cmd.Flags().String("description", "", "description of plugin")
-	cmd.Flags().String("documentation-link", "", "document link of plugin")
-	cmd.Flags().String("connector-class", "", "connector class of custom plugin")
-	cmd.Flags().String("connector-type", "", "connector type of custom plugin")
-	cmd.Flags().String("sensitive-properties", "", "sensitive properties config of custom plugin")
+	cmd.Flags().String("description", "", "Description of custom plugin.")
+	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
+	cmd.Flags().String("connector-class", "", "Connector class of custom plugin.")
+	cmd.Flags().String("connector-type", "", "Connector type of custom plugin.")
+	cmd.Flags().String("sensitive-properties", "", "Sensitive properties of custom plugin.")
 
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-class"))
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-type"))
@@ -56,7 +54,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 
 	extension := filepath.Ext(pluginFileName)[1:]
 	if extension != "zip" && extension != "jar" {
-		return errors.Errorf(errors.PluginInvalidExtensionErrorMsg)
+		return errors.Errorf("only ZIP/JAR plugin file is allowed")
 	}
 
 	resp, err := c.V2Client.GetPresignedUrl(extension)

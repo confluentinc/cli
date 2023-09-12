@@ -61,7 +61,6 @@ const (
 	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
 	InvalidCloudSuggestions            = "To list available connector plugin types, use `confluent connect plugin list`."
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
-	PluginInvalidExtensionErrorMsg     = "Only ZIP/JAR plugin file is allowed"
 
 	// environment & organization command
 	NoEnvironmentFoundErrorMsg    = "no environment found"

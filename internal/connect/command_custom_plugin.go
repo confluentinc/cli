@@ -1,10 +1,9 @@
 package connect
 
 import (
-	v1 "github.com/confluentinc/cli/internal/pkg/config"
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	v1 "github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/spf13/cobra"
-
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type customPluginCommand struct {
@@ -24,7 +23,7 @@ func newCustomPluginCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Com
 	cmd := &cobra.Command{
 		Use:         "custom-plugin",
 		Short:       "Manage Custom Plugin.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	c := new(customPluginCommand)

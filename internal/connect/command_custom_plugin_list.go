@@ -1,9 +1,9 @@
 package connect
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -14,11 +14,10 @@ type customPluginOutList struct {
 
 func (c *customPluginCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List custom connector plugins",
-		Args:        cobra.NoArgs,
-		RunE:        c.list,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "list",
+		Short: "List custom connector plugins",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List custom connector plugins in the org",

@@ -1,20 +1,19 @@
 package connect
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/spf13/cobra"
 )
 
 func (c *customPluginCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "update <id>",
-		Short:       "Update a custom connector plugin configuration.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.update,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "update <id>",
+		Short: "Update a custom connector plugin configuration.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.update,
 	}
 	cmd.Flags().String("name", "", "name of plugin")
 	cmd.Flags().String("description", "", "description of plugin")

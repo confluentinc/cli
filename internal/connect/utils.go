@@ -26,7 +26,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	}
 
 	connectorType := options["confluent.connector.type"]
-	if connectorType != "" {
+	if connectorType == "" {
 		connectorType = "MANAGED"
 	}
 

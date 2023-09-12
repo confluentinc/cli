@@ -3,7 +3,7 @@ package ccloudv2
 import (
 	"context"
 	ccpv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"strings"
 )
 
