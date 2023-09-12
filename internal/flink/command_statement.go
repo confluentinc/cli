@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -75,7 +74,7 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 
 	suggestions := make([]string, len(statements))
 	for i, statement := range statements {
-		suggestions[i] = fmt.Sprintf("%s\t%s", statement.GetName(), statement.Spec.GetStatement())
+		suggestions[i] = statement.GetName()
 	}
 	return suggestions
 }
