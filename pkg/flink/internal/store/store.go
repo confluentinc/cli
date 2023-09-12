@@ -107,7 +107,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 
 func createSqlV1beta1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1beta1.SqlV1beta1Statement {
 	return flinkgatewayv1beta1.SqlV1beta1Statement{
-		Name: &statementName,
+		Name: flinkgatewayv1beta1.StringPtr(statementName),
 		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
 			Statement:     &statement,
 			ComputePoolId: &computePoolId,
