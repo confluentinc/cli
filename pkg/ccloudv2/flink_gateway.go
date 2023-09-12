@@ -105,7 +105,7 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePool
 func (c *FlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	// add the service account header and remove it after the request
 	if principal != "" {
-		statement.Spec.Principal = &principal
+		statement.Spec.Principal = flinkgatewayv1beta1.PtrString(principal)
 	}
 	resp, httpResp, err := c.StatementsSqlV1beta1Api.CreateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId).SqlV1beta1Statement(statement).Execute()
 	return resp, flink.CatchError(err, httpResp)
