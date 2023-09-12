@@ -40,5 +40,5 @@ func (c *command) describePrivateLinkAccess(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	return c.printPrivateLinkAccessTable(cmd, access)
+	return printPrivateLinkAccessTable(cmd, access)
 }
