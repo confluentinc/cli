@@ -42,7 +42,7 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 	processedStatement.PrintStatusMessage()
 
 	if !processedStatement.IsLocalStatement && processedStatement.ServiceAccount == "" && processedStatement.IdentityPool == "" {
-		utils.OutputWarnf(`[WARN] To ensure that your statements run continuously, switch to using a service account instead of your user identity by running "SET '%s'='sa-123';". Otherwise, statements will stop running after 4 hours.`,
+		utils.OutputWarnf("[WARN] To ensure that your statements run continuously, switch to using a service account instead of your user identity by running `SET '%s'='sa-123';`. Otherwise, statements will stop running after 4 hours.",
 			config.ConfigKeyServiceAccount)
 	}
 
