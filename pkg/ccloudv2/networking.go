@@ -206,3 +206,13 @@ func (c *Client) GetPrivateLinkAccess(environment, id string) (networkingv1.Netw
 	resp, httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.GetNetworkingV1PrivateLinkAccess(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) UpdatePrivateLinkAccess(environment, id string, privateLinkAccessUpdate networkingv1.NetworkingV1PrivateLinkAccessUpdate) (networkingv1.NetworkingV1PrivateLinkAccess, error) {
+	resp, httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.UpdateNetworkingV1PrivateLinkAccess(c.networkingApiContext(), id).NetworkingV1PrivateLinkAccessUpdate(privateLinkAccessUpdate).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) DeletePrivateLinkAccess(environment, id string) error {
+	httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.DeleteNetworkingV1PrivateLinkAccess(c.networkingApiContext(), id).Environment(environment).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
