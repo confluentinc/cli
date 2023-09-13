@@ -33,15 +33,14 @@ func (c *customPluginCommand) describe(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return err
 	}
-	out := &customPluginOut{
+	table := output.NewTable(cmd)
+	table.Add(&customPluginOut{
 		Id:                  plugin.GetId(),
 		Name:                plugin.GetDisplayName(),
 		Description:         plugin.GetDescription(),
 		ConnectorClass:      plugin.GetConnectorClass(),
 		ConnectorType:       plugin.GetConnectorType(),
 		SensitiveProperties: plugin.GetSensitiveConfigProperties(),
-	}
-	table := output.NewTable(cmd)
-	table.Add(out)
+	})
 	return table.Print()
 }
