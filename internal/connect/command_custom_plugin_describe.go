@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *customPluginCommand) newDescribeCommand() *cobra.Command {
@@ -33,14 +32,6 @@ func (c *customPluginCommand) describe(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return err
 	}
-	table := output.NewTable(cmd)
-	table.Add(&customPluginOut{
-		Id:                  plugin.GetId(),
-		Name:                plugin.GetDisplayName(),
-		Description:         plugin.GetDescription(),
-		ConnectorClass:      plugin.GetConnectorClass(),
-		ConnectorType:       plugin.GetConnectorType(),
-		SensitiveProperties: plugin.GetSensitiveConfigProperties(),
-	})
-	return table.Print()
+
+	return printTable(cmd, plugin)
 }

@@ -23,7 +23,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.AddCommand(newClusterCommand(cfg, prerunner))
-	cmd.AddCommand(newCustomPluginCommand(cfg, prerunner))
+	cmd.AddCommand(newCustomPluginCommand(prerunner))
 	cmd.AddCommand(newEventCommand(prerunner))
 	cmd.AddCommand(newPluginCommand(cfg, prerunner))
 

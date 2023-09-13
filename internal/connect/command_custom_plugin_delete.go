@@ -5,22 +5,15 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *customPluginCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
-		Short: "Delete custom connector plugin.",
+		Short: "Delete one or more custom connector plugins.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Delete a custom connector plugin",
-				Code: "confluent connect custom-plugin delete ccp-123456",
-			},
-		),
 	}
 
 	pcmd.AddForceFlag(cmd)

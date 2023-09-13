@@ -1,26 +1,40 @@
 package connect
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/spf13/cobra"
 
+	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	v1 "github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type customPluginCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type customPluginOut struct {
-	Id                  string   `human:"ID" serialized:"id"`
-	Name                string   `human:"Name" serialized:"name"`
-	Description         string   `human:"Description" serialized:"description"`
-	ConnectorClass      string   `human:"Connector Class" serialized:"connector_class"`
-	ConnectorType       string   `human:"Connector Type" serialized:"connector_type"`
-	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
+type customPluginSerializedOut struct {
+	Id                  string   `serialized:"id"`
+	Name                string   `serialized:"name"`
+	Description         string   `serialized:"description"`
+	ConnectorClass      string   `serialized:"connector_class"`
+	ConnectorType       string   `serialized:"connector_type"`
+	SensitiveProperties []string `serialized:"sensitive_properties"`
 }
 
-func newCustomPluginCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+type customPluginHumanOut struct {
+	Id                  string `human:"ID"`
+	Name                string `human:"Name"`
+	Description         string `human:"Description"`
+	ConnectorClass      string `human:"Connector Class"`
+	ConnectorType       string `human:"Connector Type"`
+	SensitiveProperties string `human:"Sensitive Properties"`
+}
+
+func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "custom-plugin",
 		Short:       "Manage custom plugins.",
@@ -29,14 +43,39 @@ func newCustomPluginCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Com
 
 	c := new(customPluginCommand)
 
-	if cfg.IsCloudLogin() {
-		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
-		cmd.AddCommand(c.newCreateCommand())
-		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(c.newDescribeCommand())
-		cmd.AddCommand(c.newDeleteCommand())
-		cmd.AddCommand(c.newUpdateCommand())
-	}
+	c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
+}
+
+func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin) error {
+	table := output.NewTable(cmd)
+	sensitiveProperties := plugin.GetSensitiveConfigProperties()
+	sort.Strings(sensitiveProperties)
+	if output.GetFormat(cmd) == output.Human {
+		table.Add(&customPluginHumanOut{
+			Id:                  plugin.GetId(),
+			Name:                plugin.GetDisplayName(),
+			Description:         plugin.GetDescription(),
+			ConnectorClass:      plugin.GetConnectorClass(),
+			ConnectorType:       plugin.GetConnectorType(),
+			SensitiveProperties: strings.Join(sensitiveProperties, ","),
+		})
+	} else {
+		table.Add(&customPluginSerializedOut{
+			Id:                  plugin.GetId(),
+			Name:                plugin.GetDisplayName(),
+			Description:         plugin.GetDescription(),
+			ConnectorClass:      plugin.GetConnectorClass(),
+			ConnectorType:       plugin.GetConnectorType(),
+			SensitiveProperties: sensitiveProperties,
+		})
+	}
+
+	return table.Print()
 }

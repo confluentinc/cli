@@ -48,7 +48,7 @@ func (c *customPluginCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pluginResp, err := c.V2Client.UpdateCustomPlugin(id, name, description, documentationLink, sensitivePropertiesString)
+	customPlugin, err := c.V2Client.UpdateCustomPlugin(id, name, description, documentationLink, sensitivePropertiesString)
 	if err != nil {
 		return err
 	}
@@ -57,8 +57,8 @@ func (c *customPluginCommand) update(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&pluginCreateOut{
-		Id:   pluginResp.GetId(),
-		Name: pluginResp.GetDisplayName(),
+		Id:   customPlugin.GetId(),
+		Name: customPlugin.GetDisplayName(),
 	})
 	return table.Print()
 }

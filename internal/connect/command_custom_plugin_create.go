@@ -2,6 +2,7 @@ package connect
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -72,13 +73,9 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	extension := filepath.Ext(pluginFileName)
-	if extension == "" {
-		return errors.Errorf("unable to read plugin file extension")
-	}
-	extension = extension[1:]
-	if extension != "zip" && extension != "jar" {
-		return errors.Errorf("only ZIP/JAR plugin files are allowed")
+	extension := strings.TrimPrefix(filepath.Ext(pluginFileName), ".")
+	if strings.ToLower(extension) != "zip" && strings.ToLower(extension) != "jar" {
+		return errors.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
 	}
 
 	resp, err := c.V2Client.GetPresignedUrl(extension)
@@ -86,7 +83,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	if err = uploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
+	if err := uploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
 		return err
 	}
 
