@@ -41,9 +41,8 @@ func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := new(customPluginCommand)
+	c := &customPluginCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newDeleteCommand())
