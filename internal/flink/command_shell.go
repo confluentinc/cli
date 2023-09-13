@@ -180,8 +180,11 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func() {
-	return func() {
-		u := ppanic.CollectPanic(cmd, nil, cfg)
-		u.Report(cfg.GetCloudClientV2(unsafeTrace))
+	if cfg.IsNonGovCloudLogin() {
+		return func() {
+			u := ppanic.CollectPanic(cmd, nil, cfg)
+			u.Report(cfg.GetCloudClientV2(unsafeTrace))
+		}
 	}
+	return func() {}
 }
