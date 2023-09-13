@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
@@ -49,9 +50,24 @@ func (c *Client) CreateCustomPlugin(displayName string, description string, docu
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCustomPlugins() (connectcustompluginv1.ConnectV1CustomConnectorPluginList, error) {
-	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.ListConnectV1CustomConnectorPlugins(c.ccpApiContext()).PageSize(ccloudV2ListPageSize).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
+func (c *Client) ListCustomPlugins() ([]connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
+	var list []connectcustompluginv1.ConnectV1CustomConnectorPlugin
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListPlugins(pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
 }
 
 func (c *Client) DescribeCustomPlugin(id string) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
@@ -76,4 +92,12 @@ func (c *Client) UpdateCustomPlugin(id string, name string, description string, 
 	updateCustomPluginRequest.SetDocumentationLink(documentationLink)
 	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.UpdateConnectV1CustomConnectorPlugin(c.ccpApiContext(), id).ConnectV1CustomConnectorPluginUpdate(*updateCustomPluginRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) executeListPlugins(pageToken string) (connectcustompluginv1.ConnectV1CustomConnectorPluginList, *http.Response, error) {
+	req := c.CcpClient.CustomConnectorPluginsConnectV1Api.ListConnectV1CustomConnectorPlugins(c.ccpApiContext()).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
 }

@@ -59,7 +59,7 @@ func (c *customPluginCommand) mapPluginIdToName() (map[string]string, error) {
 	}
 
 	pluginIdToName := make(map[string]string)
-	for _, plugin := range plugins.GetData() {
+	for _, plugin := range plugins {
 		pluginIdToName[plugin.GetId()] = plugin.GetDisplayName()
 	}
 

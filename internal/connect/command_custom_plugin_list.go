@@ -40,7 +40,7 @@ func (c *customPluginCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, plugin := range plugins.GetData() {
+	for _, plugin := range plugins {
 		list.Add(&customPluginOutList{
 			Name: plugin.GetDisplayName(),
 			Id:   plugin.GetId(),
