@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
@@ -251,11 +252,25 @@ func handleCustomPlugin(t *testing.T) http.HandlerFunc {
 func handleCustomPluginWithId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:             PtrString("ccp-123456"),
-				DisplayName:    PtrString("CliPluginTest"),
-				ConnectorType:  PtrString("source"),
-				ConnectorClass: PtrString("io.confluent.kafka.connect.test"),
+			vars := mux.Vars(r)
+			id := vars["id"]
+			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
+			if id == "ccp-123456" {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:             PtrString("ccp-123456"),
+					DisplayName:    PtrString("CliPluginTest"),
+					ConnectorType:  PtrString("source"),
+					ConnectorClass: PtrString("io.confluent.kafka.connect.test"),
+				}
+			} else {
+				sensitiveProperties := []string{"aws.key", "aws.secret"}
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:                        PtrString("ccp-123456"),
+					DisplayName:               PtrString("CliPluginTest"),
+					ConnectorType:             PtrString("source"),
+					ConnectorClass:            PtrString("io.confluent.kafka.connect.test"),
+					SensitiveConfigProperties: &sensitiveProperties,
+				}
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)

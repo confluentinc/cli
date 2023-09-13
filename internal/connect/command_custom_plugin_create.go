@@ -73,8 +73,8 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	extension := strings.TrimPrefix(filepath.Ext(pluginFileName), ".")
-	if strings.ToLower(extension) != "zip" && strings.ToLower(extension) != "jar" {
+	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(pluginFileName), "."))
+	if extension != "zip" && extension != "jar" {
 		return errors.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
 	}
 

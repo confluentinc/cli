@@ -180,6 +180,7 @@ func (s *CLITestSuite) TestConnectCustomPlugin() {
 		{args: "connect custom-plugin list -o json", fixture: "connect/custom-plugin/list-json.golden"},
 		{args: "connect custom-plugin list -o yaml", fixture: "connect/custom-plugin/list-yaml.golden"},
 		{args: "connect custom-plugin describe ccp-123456", fixture: "connect/custom-plugin/describe.golden"},
+		{args: "connect custom-plugin describe ccp-789012", fixture: "connect/custom-plugin/describe-with-sensitive-properties.golden"},
 		{args: "connect custom-plugin describe ccp-123456 -o json", fixture: "connect/custom-plugin/describe-json.golden"},
 		{args: "connect custom-plugin describe ccp-123456 -o yaml", fixture: "connect/custom-plugin/describe-yaml.golden"},
 		{args: "connect custom-plugin delete ccp-123456 --force", fixture: "connect/custom-plugin/delete.golden"},
