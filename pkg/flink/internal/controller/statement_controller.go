@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/v3/pkg/color"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -39,6 +40,11 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 	}
 	c.createdStatementName = processedStatement.StatementName
 	processedStatement.PrintStatusMessage()
+
+	if !processedStatement.IsLocalStatement && processedStatement.ServiceAccount == "" && processedStatement.IdentityPool == "" {
+		utils.OutputWarnf(`Warning: to ensure that your statements run continuously, switch to using a service account instead of your user identity by running "SET '%s'='sa-123';". Otherwise, statements will stop running after 4 hours.`,
+			config.ConfigKeyServiceAcount)
+	}
 
 	processedStatement, err = c.waitForStatementToBeReadyOrError(*processedStatement)
 	if err != nil {

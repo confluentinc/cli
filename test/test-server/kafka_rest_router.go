@@ -663,7 +663,7 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 		link := mux.Vars(r)["link"]
 		switch r.Method {
 		case http.MethodGet:
-			if link == "link-1" {
+			if link == "link-1" || link == "myLink_1" {
 				switch cluster {
 				case "cluster-1":
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{

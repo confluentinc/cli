@@ -167,7 +167,7 @@ func (c *Client) ListIamInvitations() ([]iamv2.IamV2Invitation, error) {
 }
 
 func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2InvitationList, *http.Response, error) {
-	req := c.IamClient.InvitationsIamV2Api.ListIamV2Invitations(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
+	req := c.IamClient.InvitationsIamV2Api.ListIamV2Invitations(c.iamApiContext()).PageSize(99)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

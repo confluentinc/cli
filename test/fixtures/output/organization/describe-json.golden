@@ -1,5 +1,6 @@
 {
   "is_current": true,
   "id": "abc-123",
-  "name": "default"
+  "name": "default",
+  "jit_enabled": true
 }

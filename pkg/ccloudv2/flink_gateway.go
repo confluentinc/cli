@@ -2,19 +2,22 @@ package ccloudv2
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"github.com/google/uuid"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors/flink"
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 type GatewayClientInterface interface {
 	DeleteStatement(environmentId, statementName, orgId string) error
 	GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementList, error)
-	CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
+	CreateStatement(statement, computePoolId string, properties map[string]string, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error)
 	GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error)
 }
@@ -27,7 +30,23 @@ type FlinkGatewayClient struct {
 func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
 	cfg := flinkgatewayv1alpha1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClientWithRedirect(unsafeTrace,
+		func(req *http.Request, via []*http.Request) error {
+			// Default net/http implementation allows 10 redirects - https://go.dev/src/net/http/client.go.
+			// Lowered the redirect limit to fail fast in case of redirect cycles
+			if len(via) >= 5 {
+				return errors.New("stopped after 5 redirects")
+			}
+			log.CliLogger.Debugf("Following redirect with authorization to %s", req.URL)
+			// Customize the redirect to add authorization header on 307 Redirect.
+			// This is required as the Location header returned by the gateway may not be an exact subdomain and Authorization
+			// header is copied only when the hostname is exactly the same or an exact subdomain of the hostname
+			// Ideally, we should check the status code returned in via[0].Response. However, via[0].Response is nil in underlying
+			// retryable http implementation
+			req.Header.Add("Authorization", "Bearer "+authToken)
+
+			return nil
+		})
 	cfg.Servers = flinkgatewayv1alpha1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -84,17 +103,24 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePool
 	return allStatements, nil
 }
 
-func (c *FlinkGatewayClient) CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+func (c *FlinkGatewayClient) CreateStatement(statement, computePoolId string, properties map[string]string, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
 	statementName := uuid.New().String()[:18]
 
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName:  &statementName,
-			Statement:      &statement,
-			ComputePoolId:  &computePoolId,
-			IdentityPoolId: &identityPoolId,
-			Properties:     &properties,
+			StatementName: &statementName,
+			Statement:     &statement,
+			ComputePoolId: &computePoolId,
+			Properties:    &properties,
 		},
+	}
+	if serviceAccountId != "" {
+		// add the service account header and remove it after the request
+		c.GetConfig().AddDefaultHeader("Service-Account-Id", serviceAccountId)
+		defer delete(c.GetConfig().DefaultHeader, "Service-Account-Id")
+	} else {
+		// if this is also empty we have the interactive query/AUMP case
+		statementObj.Spec.IdentityPoolId = &identityPoolId
 	}
 	resp, httpResp, err := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statementObj).OrgId(orgId).Execute()
 	return resp, flink.CatchError(err, httpResp)
