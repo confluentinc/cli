@@ -306,9 +306,42 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAccessDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkPrivateLinkAccessUpdate() {
+	tests := []CLITest{
+		{args: "network private-link access update", fixture: "network/private-link/access/update-missing-args.golden", exitCode: 1},
+		{args: "network private-link access update pla-111111", fixture: "network/private-link/access/update-missing-flags.golden", exitCode: 1},
+		{args: "network pl access update pla-111111 --name new-name", fixture: "network/private-link/access/update.golden"},
+		{args: "network private-link access update pla-111111 --name new-name", fixture: "network/private-link/access/update.golden"},
+		{args: "network private-link access update pla-invalid --name new-name", fixture: "network/private-link/access/update-pla-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAccessDelete() {
+	tests := []CLITest{
+		{args: "network private-link access delete pla-111111 --force", fixture: "network/private-link/access/delete.golden"},
+		{args: "network private-link access delete pla-111111", input: "y\n", fixture: "network/private-link/access/delete-prompt.golden"},
+		{args: "network private-link access delete pla-111111 pla-222222", input: "n\n", fixture: "network/private-link/access/delete-multiple-refuse.golden"},
+		{args: "network private-link access delete pla-111111 pla-222222", input: "y\n", fixture: "network/private-link/access/delete-multiple-success.golden"},
+		{args: "network private-link access delete pla-111111 pla-invalid", fixture: "network/private-link/access/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network private-link access delete pla-invalid --force", fixture: "network/private-link/access/delete-pla-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkPrivateLinkAccess_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network private-link access describe ""`, login: "cloud", fixture: "network/private-link/access/describe-autocomplete.golden"},
+		{args: `__complete network private-link access update ""`, login: "cloud", fixture: "network/private-link/access/update-autocomplete.golden"},
+		{args: `__complete network private-link access delete ""`, login: "cloud", fixture: "network/private-link/access/delete-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

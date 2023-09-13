@@ -4,8 +4,10 @@ Usage:
   confluent network private-link access [command]
 
 Available Commands:
+  delete      Delete one or more private link accesses.
   describe    Describe a private link access.
   list        List private link accesses.
+  update      Update an existing private link access.
 
 Global Flags:
   -h, --help            Show help for this command.

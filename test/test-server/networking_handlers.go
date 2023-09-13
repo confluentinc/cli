@@ -100,6 +100,10 @@ func handleNetworkingPrivateLinkAccess(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPrivateLinkAccessGet(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingPrivateLinkAccessUpdate(t, id)(w, r)
+		case http.MethodDelete:
+			handleNetworkingPrivateLinkAccessDelete(t, id)(w, r)
 		}
 	}
 }
@@ -753,5 +757,37 @@ func handleNetworkingPrivateLinkAccessList(t *testing.T) http.HandlerFunc {
 
 		err := json.NewEncoder(w).Encode(peeringList)
 		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingPrivateLinkAccessUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "pla-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The private-link-access pla-invalid was not found.")
+			require.NoError(t, err)
+		case "pla-111111":
+			body := &networkingv1.NetworkingV1Network{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			attachment := getPrivateLinkAccess("pla-111111", body.Spec.GetDisplayName(), "AWS")
+			err = json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingPrivateLinkAccessDelete(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "pla-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The private-link-access pla-invalid was not found.")
+			require.NoError(t, err)
+		case "pla-111111", "pla-222222":
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}
 }
