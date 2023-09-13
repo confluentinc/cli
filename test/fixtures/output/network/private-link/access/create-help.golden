@@ -1,0 +1,30 @@
+Create a private link access.
+
+Usage:
+  confluent network private-link access create <name> [flags]
+
+Examples:
+Create an AWS Private Link access.
+
+  $ confluent network private-link access create aws-private-link-access --network n-123456 --cloud aws --cloud-account 123456789012
+
+Create a GCP Private Service Connect access.
+
+  $ confluent network private-link access create gcp-private-link-access --network n-123456 --cloud gcp --cloud-account temp-123456
+
+Create an Azure Private Link access.
+
+  $ confluent network private-link access create azure-private-link-access --network n-123456 --cloud azure --cloud-account 1234abcd-12ab-34cd-1234-123456abcdef
+
+Flags:
+      --network string         REQUIRED: Network ID.
+      --cloud string           REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --cloud-account string   REQUIRED: AWS account ID for the account containing the VPCs you want to connect from using AWS PrivateLink, or GCP project ID for the account containing the VPCs that you want to connect from using Private Service Connect, or Azure subscription ID for the account containing the VNets you want to connect from using Azure Private Link.
+      --context string         CLI context name.
+      --environment string     Environment ID.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

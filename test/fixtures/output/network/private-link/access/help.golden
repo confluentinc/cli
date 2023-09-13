@@ -4,6 +4,7 @@ Usage:
   confluent network private-link access [command]
 
 Available Commands:
+  create      Create a private link access.
   delete      Delete one or more private link accesses.
   describe    Describe a private link access.
   list        List private link accesses.

@@ -337,11 +337,28 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAccessDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkPrivateLinkAccessCreate() {
+	tests := []CLITest{
+		{args: "network private-link access create pla --network n-abcde1", fixture: "network/private-link/access/create-missing-flags.golden", exitCode: 1},
+		{args: "network private-link access create aws-pla --network n-abcde1 --cloud aws --cloud-account 012345678901", fixture: "network/private-link/access/create-aws.golden"},
+		{args: "network private-link access create gcp-pla --network n-abcde1 --cloud gcp --cloud-account temp-123456", fixture: "network/private-link/access/create-gcp.golden"},
+		{args: "network private-link access create azure-pla --network n-abcde1 --cloud azure --cloud-account 1234abcd-12ab-34cd-1234-123456abcdef", fixture: "network/private-link/access/create-azure.golden"},
+		{args: "network private-link access create aws-pla --network n-azure --cloud aws --cloud-account 012345678901", fixture: "network/private-link/access/create-duplicate.golden", exitCode: 1},
+		{args: "network private-link access create aws-pla --network n-duplicate --cloud aws --cloud-account 012345678901", fixture: "network/private-link/access/create-wrong-network-cloud.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkPrivateLinkAccess_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network private-link access describe ""`, login: "cloud", fixture: "network/private-link/access/describe-autocomplete.golden"},
 		{args: `__complete network private-link access update ""`, login: "cloud", fixture: "network/private-link/access/update-autocomplete.golden"},
 		{args: `__complete network private-link access delete ""`, login: "cloud", fixture: "network/private-link/access/delete-autocomplete.golden"},
+		{args: `__complete network private-link access create pla --network ""`, login: "cloud", fixture: "network/private-link/access/create-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

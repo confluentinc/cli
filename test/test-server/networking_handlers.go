@@ -114,6 +114,8 @@ func handleNetworkingPrivateLinkAccesses(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPrivateLinkAccessList(t)(w, r)
+		case http.MethodPost:
+			handleNetworkingPrivateLinkAccessCreate(t)(w, r)
 		}
 	}
 }
@@ -788,6 +790,43 @@ func handleNetworkingPrivateLinkAccessDelete(t *testing.T, id string) http.Handl
 			require.NoError(t, err)
 		case "pla-111111", "pla-222222":
 			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
+func handleNetworkingPrivateLinkAccessCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkingv1.NetworkingV1PrivateLinkAccess{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		networkId := body.Spec.Network.GetId()
+
+		switch networkId {
+		case "n-duplicate":
+			w.WriteHeader(http.StatusConflict)
+			err := writeErrorJson(w, "Private link already exists.")
+			require.NoError(t, err)
+		case "n-azure":
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, "The provided network n-azure resides in AZURE which differs from AWS, the cloud specified for this resource.")
+			require.NoError(t, err)
+		default:
+			access := networkingv1.NetworkingV1PrivateLinkAccess{
+				Id:   networkingv1.PtrString("pla-123456"),
+				Kind: networkingv1.PtrString("PrivateLinkAccess"),
+				Spec: &networkingv1.NetworkingV1PrivateLinkAccessSpec{
+					Cloud:       body.Spec.Cloud,
+					DisplayName: networkingv1.PtrString(body.Spec.GetDisplayName()),
+					Environment: &networkingv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+					Network:     &networkingv1.ObjectReference{Id: body.Spec.Network.GetId()},
+				},
+				Status: &networkingv1.NetworkingV1PrivateLinkAccessStatus{
+					Phase: "PROVISIONING",
+				},
+			}
+			err = json.NewEncoder(w).Encode(access)
+			require.NoError(t, err)
 		}
 	}
 }

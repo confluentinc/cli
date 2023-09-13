@@ -29,6 +29,7 @@ func (c *command) newPrivateLinkAccessCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
+	cmd.AddCommand(c.newPrivateLinkAccessCreateCommand())
 	cmd.AddCommand(c.newPrivateLinkAccessDeleteCommand())
 	cmd.AddCommand(c.newPrivateLinkAccessDescribeCommand())
 	cmd.AddCommand(c.newPrivateLinkAccessListCommand())
