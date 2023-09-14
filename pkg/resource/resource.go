@@ -21,6 +21,7 @@ const (
 	Cloud                       = "cloud"
 	ClusterLink                 = "cluster link"
 	Connector                   = "connector"
+	CustomConnectorPlugin       = "custom connector plugin"
 	ConsumerShare               = "consumer share"
 	Context                     = "context"
 	Environment                 = "environment"
