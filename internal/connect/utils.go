@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
@@ -111,7 +113,10 @@ func uploadFile(url, filePath string, formFields map[string]any) error {
 		return err
 	}
 
-	_, err = sling.New().Base(url).Set("Content-Type", writer.FormDataContentType()).Post("").Body(&buffer).ReceiveSuccess(nil)
+	client := &http.Client{
+		Timeout: 20 * time.Minute,
+	}
+	_, err = sling.New().Client(client).Base(url).Set("Content-Type", writer.FormDataContentType()).Post("").Body(&buffer).ReceiveSuccess(nil)
 	if err != nil {
 		return err
 	}
