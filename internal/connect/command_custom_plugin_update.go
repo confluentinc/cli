@@ -3,6 +3,8 @@ package connect
 import (
 	"github.com/spf13/cobra"
 
+	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -30,35 +32,41 @@ func (c *customPluginCommand) update(cmd *cobra.Command, args []string) error {
 	if err := errors.CheckNoUpdate(cmd.Flags(), "name", "description", "documentation-link", "sensitive-properties"); err != nil {
 		return err
 	}
+
 	id := args[0]
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
+	updateCustomPluginRequest := connectcustompluginv1.NewConnectV1CustomConnectorPluginUpdate()
+
+	if cmd.Flags().Changed("name") {
+		if name, err := cmd.Flags().GetString("name"); err != nil {
+			return err
+		} else {
+			updateCustomPluginRequest.SetDisplayName(name)
+		}
 	}
-	description, err := cmd.Flags().GetString("description")
-	if err != nil {
-		return err
+	if cmd.Flags().Changed("description") {
+		if description, err := cmd.Flags().GetString("description"); err != nil {
+			return err
+		} else {
+			updateCustomPluginRequest.SetDescription(description)
+		}
 	}
-	documentationLink, err := cmd.Flags().GetString("documentation-link")
-	if err != nil {
-		return err
+	if cmd.Flags().Changed("documentation-link") {
+		if documentationLink, err := cmd.Flags().GetString("documentation-link"); err != nil {
+			return err
+		} else {
+			updateCustomPluginRequest.SetDocumentationLink(documentationLink)
+		}
 	}
-	sensitiveProperties, err := cmd.Flags().GetStringSlice("sensitive-properties")
-	if err != nil {
-		return err
+	if cmd.Flags().Changed("sensitive-properties") {
+		if sensitiveProperties, err := cmd.Flags().GetString("sensitive-properties"); err != nil {
+			return err
+		} else {
+			updateCustomPluginRequest.SetDisplayName(sensitiveProperties)
+		}
 	}
 
-	customPlugin, err := c.V2Client.UpdateCustomPlugin(id, name, description, documentationLink, sensitiveProperties)
-	if err != nil {
-		return err
-	}
+	if _, err := c.V2Client.UpdateCustomPlugin(id, *updateCustomPluginRequest); err != nil {return err}
 
 	output.Printf(errors.UpdatedResourceMsg, resource.CustomConnectorPlugin, args[0])
-
-	table := output.NewTable(cmd)
-	table.Add(&pluginCreateOut{
-		Id:   customPlugin.GetId(),
-		Name: customPlugin.GetDisplayName(),
-	})
-	return table.Print()
+	return nil
 }

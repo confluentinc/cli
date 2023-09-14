@@ -1,7 +1,6 @@
 package connect
 
 import (
-	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -55,7 +54,6 @@ func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin) error {
 	table := output.NewTable(cmd)
 	sensitiveProperties := plugin.GetSensitiveConfigProperties()
-	sort.Strings(sensitiveProperties)
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(&customPluginHumanOut{
 			Id:                  plugin.GetId(),

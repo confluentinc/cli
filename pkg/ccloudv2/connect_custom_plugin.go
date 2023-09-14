@@ -23,25 +23,13 @@ func (c *Client) connectCustomPluginApiContext() context.Context {
 	return context.WithValue(context.Background(), connectcustompluginv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) GetPresignedUrl(extension string) (connectcustompluginv1.ConnectV1PresignedUrl, error) {
-	request := *connectcustompluginv1.NewConnectV1PresignedUrlRequest()
-	request.SetContentFormat(extension)
+func (c *Client) GetPresignedUrl(request connectcustompluginv1.ConnectV1PresignedUrlRequest) (connectcustompluginv1.ConnectV1PresignedUrl, error) {
 	resp, httpResp, err := c.CcpClient.PresignedUrlsConnectV1Api.PresignedUploadUrlConnectV1PresignedUrl(c.connectCustomPluginApiContext()).ConnectV1PresignedUrlRequest(request).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreateCustomPlugin(displayName, description, documentationLink, connectorClass, connectorType, uploadId string, sensitiveProperties []string) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
-	createCustomPluginRequest := connectcustompluginv1.NewConnectV1CustomConnectorPlugin()
-	createCustomPluginRequest.SetDisplayName(displayName)
-	createCustomPluginRequest.SetDescription(description)
-	createCustomPluginRequest.SetDocumentationLink(documentationLink)
-	createCustomPluginRequest.SetConnectorClass(connectorClass)
-	createCustomPluginRequest.SetConnectorType(connectorType)
-	createCustomPluginRequest.SetSensitiveConfigProperties(sensitiveProperties)
-	createCustomPluginRequest.SetUploadSource(
-		connectcustompluginv1.ConnectV1UploadSourcePresignedUrlAsConnectV1CustomConnectorPluginUploadSourceOneOf(
-			connectcustompluginv1.NewConnectV1UploadSourcePresignedUrl("PRESIGNED_URL_LOCATION", uploadId)))
-	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.CreateConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext()).ConnectV1CustomConnectorPlugin(*createCustomPluginRequest).Execute()
+func (c *Client) CreateCustomPlugin(createCustomPluginRequest connectcustompluginv1.ConnectV1CustomConnectorPlugin) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
+	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.CreateConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext()).ConnectV1CustomConnectorPlugin(createCustomPluginRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -75,13 +63,8 @@ func (c *Client) DeleteCustomPlugin(id string) error {
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateCustomPlugin(id, name, description, documentationLink string, sensitiveProperties []string) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
-	updateCustomPluginRequest := connectcustompluginv1.NewConnectV1CustomConnectorPluginUpdate()
-	updateCustomPluginRequest.SetSensitiveConfigProperties(sensitiveProperties)
-	updateCustomPluginRequest.SetDisplayName(name)
-	updateCustomPluginRequest.SetDescription(description)
-	updateCustomPluginRequest.SetDocumentationLink(documentationLink)
-	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.UpdateConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext(), id).ConnectV1CustomConnectorPluginUpdate(*updateCustomPluginRequest).Execute()
+func (c *Client) UpdateCustomPlugin(id string, updateCustomPluginRequest connectcustompluginv1.ConnectV1CustomConnectorPluginUpdate) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
+	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.UpdateConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext(), id).ConnectV1CustomConnectorPluginUpdate(updateCustomPluginRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
