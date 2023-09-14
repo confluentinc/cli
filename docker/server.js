@@ -8,14 +8,23 @@ const wss = new WebSocket.Server({ server: httpServer });
 
 const textDecoder = new TextDecoder();
 
+console.log('Server script starting up...');
+
 wss.on('connection', (ws, req) => {
   console.log('WebSocket connection established.');
 
   ws.on('message', (message) => {
-    console.log('Received message:', message);
+    textMessage = textDecoder.decode(message)
+    // Check if the message is empty or just whitespace
+    if (!textMessage.trim()) {
+      console.log('Received an empty message, ignoring it.');
+      return; // Exit the function early, not processing the message further
+    }
+    
+    console.log('Received message:', textMessage);
 
     // Execute the received command in the shell
-    exec(textDecoder.decode(message), (error, stdout, stderr) => {
+    exec(textMessage, (error, stdout, stderr) => {
       if (error) {
         console.error('Error executing command:', error.message);
         ws.send('Error executing command: ' + error.message);
@@ -43,5 +52,5 @@ wss.on('headers', (headers, req) => {
 });
 
 httpServer.listen(8443, () => {
-  console.log('HTTP server listening on port 8443.');
+  console.log('HTTP server listening on port 8443. This is the HTTP server being used for ws connection.');
 });
