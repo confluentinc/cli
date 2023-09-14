@@ -35,7 +35,7 @@ func (c *command) newPrivateLinkAccessCreateCommand() *cobra.Command {
 
 	addNetworkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("cloud-account", "", "AWS account ID for the account containing the VPCs you want to connect from using AWS PrivateLink, or GCP project ID for the account containing the VPCs that you want to connect from using Private Service Connect, or Azure subscription ID for the account containing the VNets you want to connect from using Azure Private Link.")
+	cmd.Flags().String("cloud-account", "", "AWS account ID for the account containing the VPCs you want to connect from using AWS PrivateLink. GCP project ID for the account containing the VPCs that you want to connect from using Private Service Connect. Azure subscription ID for the account containing the VNets you want to connect from using Azure Private Link.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)

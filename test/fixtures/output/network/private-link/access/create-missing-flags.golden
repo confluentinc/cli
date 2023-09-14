@@ -18,7 +18,7 @@ Create an Azure Private Link access.
 Flags:
       --network string         REQUIRED: Network ID.
       --cloud string           REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --cloud-account string   REQUIRED: AWS account ID for the account containing the VPCs you want to connect from using AWS PrivateLink, or GCP project ID for the account containing the VPCs that you want to connect from using Private Service Connect, or Azure subscription ID for the account containing the VNets you want to connect from using Azure Private Link.
+      --cloud-account string   REQUIRED: AWS account ID for the account containing the VPCs you want to connect from using AWS PrivateLink. GCP project ID for the account containing the VPCs that you want to connect from using Private Service Connect. Azure subscription ID for the account containing the VNets you want to connect from using Azure Private Link.
       --context string         CLI context name.
       --environment string     Environment ID.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
