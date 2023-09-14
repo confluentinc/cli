@@ -15,7 +15,7 @@ You can then open the coverage.html file from the repository root in your browse
 We have generated mocked as we need them. We have a make target for controllers, store and client. You can look at the mock_generator.go file as an example if you need to mock other things.
 
 ```
-go generate test/mock/mock_generator.go
+go generate pkg/flink/test/mock/mock_generator.go
 ```
 
 More info on how to generate mocks: https://github.com/golang/mock
