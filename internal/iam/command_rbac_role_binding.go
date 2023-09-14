@@ -163,8 +163,8 @@ func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLI
 	if isCloudLogin {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
-		cmd.Flags().String("cloud-cluster", "", "Flink region for the role binding.")
-		cmd.Flags().String("flink-region", "", "Cloud cluster ID for the role binding.")
+		cmd.Flags().String("flink-region", "", "Flink region  ID for the role binding.")
+		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
