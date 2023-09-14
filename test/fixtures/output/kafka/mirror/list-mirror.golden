@@ -1,4 +1,7 @@
-  Link Name | Mirror Topic Name | Source Topic Name | Mirror Status | Status Time (ms) | Num Partition | Max Per Partition Mirror Lag  
-------------+-------------------+-------------------+---------------+------------------+---------------+-------------------------------
-  link-1    | dest-topic-1      | src-topic-1       | ACTIVE        |        111111111 |             3 |                       571428  
-  link-2    | dest-topic-2      | src-topic-2       | STOPPED       |        222222222 |             2 |                            0  
+  Link Name | Mirror Topic Name | Source Topic Name |   Mirror Status    | Status Time (ms) | Num Partition | Max Per Partition Mirror Lag  
+------------+-------------------+-------------------+--------------------+------------------+---------------+-------------------------------
+  link-1    | dest-topic-1      | src-topic-1       | ACTIVE             |        111111111 |             3 |                       571428  
+  link-2    | dest-topic-2      | src-topic-2       | STOPPED            |        222222222 |             2 |                            0  
+  link-3    | dest-topic-3      | src-topic-3       | LINK_FAILED        |        222222222 |             2 |                            0  
+  link-4    | dest-topic-4      | src-topic-4       | LINK_PAUSED        |        222222222 |             2 |                            0  
+  link-5    | dest-topic-5      | src-topic-5       | SOURCE_UNAVAILABLE |        222222222 |             2 |                            0  

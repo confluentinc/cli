@@ -914,6 +914,72 @@ func handleKafkaRestMirrors(t *testing.T) http.HandlerFunc {
 					MirrorStatus: cckafkarestv3.STOPPED,
 					StateTimeMs:  222222222,
 				},
+				{
+					LinkName:        "link-3",
+					MirrorTopicName: "dest-topic-3",
+					SourceTopicName: "src-topic-3",
+					NumPartitions:   2,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+						},
+					},
+					MirrorStatus: cckafkarestv3.LINK_FAILED,
+					StateTimeMs:  222222222,
+				},
+				{
+					LinkName:        "link-4",
+					MirrorTopicName: "dest-topic-4",
+					SourceTopicName: "src-topic-4",
+					NumPartitions:   2,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+						},
+					},
+					MirrorStatus: cckafkarestv3.LINK_PAUSED,
+					StateTimeMs:  222222222,
+				},
+				{
+					LinkName:        "link-5",
+					MirrorTopicName: "dest-topic-5",
+					SourceTopicName: "src-topic-5",
+					NumPartitions:   2,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+						},
+					},
+					MirrorStatus: cckafkarestv3.SOURCE_UNAVAILABLE,
+					StateTimeMs:  222222222,
+				},
 			}})
 			require.NoError(t, err)
 		}
