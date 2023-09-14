@@ -3,7 +3,6 @@ package ccloudv2
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
@@ -31,12 +30,8 @@ func (c *Client) GetPresignedUrl(extension string) (connectcustompluginv1.Connec
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreateCustomPlugin(displayName string, description string, documentationLink string, connectorClass string, connectorType string, sensitivePropertiesString string, uploadId string) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
+func (c *Client) CreateCustomPlugin(displayName, description, documentationLink, connectorClass, connectorType, uploadId string, sensitiveProperties []string) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
 	createCustomPluginRequest := connectcustompluginv1.NewConnectV1CustomConnectorPlugin()
-	var sensitiveProperties []string
-	if len(sensitivePropertiesString) > 0 {
-		sensitiveProperties = strings.Split(sensitivePropertiesString, ",")
-	}
 	createCustomPluginRequest.SetDisplayName(displayName)
 	createCustomPluginRequest.SetDescription(description)
 	createCustomPluginRequest.SetDocumentationLink(documentationLink)
@@ -80,13 +75,9 @@ func (c *Client) DeleteCustomPlugin(id string) error {
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateCustomPlugin(id string, name string, description string, documentationLink string, sensitivePropertiesString string) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
+func (c *Client) UpdateCustomPlugin(id, name, description, documentationLink string, sensitiveProperties []string) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
 	updateCustomPluginRequest := connectcustompluginv1.NewConnectV1CustomConnectorPluginUpdate()
-	var sensitiveProperties []string
-	if len(sensitivePropertiesString) > 0 {
-		sensitiveProperties = strings.Split(sensitivePropertiesString, ",")
-		updateCustomPluginRequest.SetSensitiveConfigProperties(sensitiveProperties)
-	}
+	updateCustomPluginRequest.SetSensitiveConfigProperties(sensitiveProperties)
 	updateCustomPluginRequest.SetDisplayName(name)
 	updateCustomPluginRequest.SetDescription(description)
 	updateCustomPluginRequest.SetDocumentationLink(documentationLink)

@@ -20,7 +20,7 @@ func (c *customPluginCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Name of custom plugin.")
 	cmd.Flags().String("description", "", "Description of custom plugin.")
 	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
-	cmd.Flags().String("sensitive-properties", "", "Sensitive properties of custom plugin.")
+	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
@@ -43,12 +43,12 @@ func (c *customPluginCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	sensitivePropertiesString, err := cmd.Flags().GetString("sensitive-properties")
+	sensitiveProperties, err := cmd.Flags().GetStringSlice("sensitive-properties")
 	if err != nil {
 		return err
 	}
 
-	customPlugin, err := c.V2Client.UpdateCustomPlugin(id, name, description, documentationLink, sensitivePropertiesString)
+	customPlugin, err := c.V2Client.UpdateCustomPlugin(id, name, description, documentationLink, sensitiveProperties)
 	if err != nil {
 		return err
 	}
