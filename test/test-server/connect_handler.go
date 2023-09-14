@@ -267,6 +267,7 @@ func handleCustomPluginWithId(t *testing.T) http.HandlerFunc {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 					Id:                        PtrString("ccp-123456"),
 					DisplayName:               PtrString("CliPluginTest"),
+					Description:               PtrString("Source datagen plugin"),
 					ConnectorType:             PtrString("source"),
 					ConnectorClass:            PtrString("io.confluent.kafka.connect.test"),
 					SensitiveConfigProperties: &sensitiveProperties,

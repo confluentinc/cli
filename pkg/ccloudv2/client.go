@@ -61,7 +61,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
 		BillingClient:          newBillingClient(url, userAgent, unsafeTrace),
 		ByokClient:             newByokV1Client(url, userAgent, unsafeTrace),
-		CcpClient:              newCcpClient(url, userAgent, unsafeTrace),
+		CcpClient:              newConnectCustomPluginClient(url, userAgent, unsafeTrace),
 		CdxClient:              newCdxClient(url, userAgent, unsafeTrace),
 		CliClient:              newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),

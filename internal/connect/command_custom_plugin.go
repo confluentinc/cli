@@ -37,7 +37,7 @@ type customPluginHumanOut struct {
 func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "custom-plugin",
-		Short:       "Manage custom plugins.",
+		Short:       "Manage custom connector plugins.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

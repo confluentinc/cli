@@ -174,8 +174,8 @@ func (s *CLITestSuite) deleteZip() {
 
 func (s *CLITestSuite) TestConnectCustomPlugin() {
 	tests := []CLITest{
-		{args: "connect custom-plugin create my-custom-plugin --plugin-file \"test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip\" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector", fixture: "connect/custom-plugin/create.golden"},
-		{args: "connect custom-plugin create my-custom-plugin --plugin-file \"test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf\" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector", fixture: "connect/custom-plugin/create-invalid-extension.golden", exitCode: 1},
+		{args: `connect custom-plugin create my-custom-plugin --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector`, fixture: "connect/custom-plugin/create.golden"},
+		{args: `connect custom-plugin create my-custom-plugin --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector`, fixture: "connect/custom-plugin/create-invalid-extension.golden", exitCode: 1},
 		{args: "connect custom-plugin list", fixture: "connect/custom-plugin/list.golden"},
 		{args: "connect custom-plugin list -o json", fixture: "connect/custom-plugin/list-json.golden"},
 		{args: "connect custom-plugin list -o yaml", fixture: "connect/custom-plugin/list-yaml.golden"},

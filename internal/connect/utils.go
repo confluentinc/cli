@@ -103,11 +103,11 @@ func uploadFile(url, filePath string, formFields map[string]any) error {
 	if err != nil {
 		return err
 	}
-	if _, err = io.Copy(part, file); err != nil {
+	if _, err := io.Copy(part, file); err != nil {
 		return err
 	}
 
-	if err = writer.Close(); err != nil {
+	if err := writer.Close(); err != nil {
 		return err
 	}
 
