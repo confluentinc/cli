@@ -1,0 +1,8 @@
++----------------------+---------------------------------+
+| ID                   | ccp-123456                      |
+| Name                 | CliPluginTest                   |
+| Description          |                                 |
+| Connector Class      | io.confluent.kafka.connect.test |
+| Connector Type       | source                          |
+| Sensitive Properties | aws.key,aws.secret              |
++----------------------+---------------------------------+
