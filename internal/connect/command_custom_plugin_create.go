@@ -8,7 +8,6 @@ import (
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
-
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -82,7 +81,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	}
 
 	request := *connectcustompluginv1.NewConnectV1PresignedUrlRequest()
-    	request.SetContentFormat(extension)
+	request.SetContentFormat(extension)
 
 	resp, err := c.V2Client.GetPresignedUrl(request)
 	if err != nil {
@@ -94,15 +93,15 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	}
 
 	createCustomPluginRequest := connectcustompluginv1.NewConnectV1CustomConnectorPlugin()
-    	createCustomPluginRequest.SetDisplayName(displayName)
-    	createCustomPluginRequest.SetDescription(description)
-    	createCustomPluginRequest.SetDocumentationLink(documentationLink)
-    	createCustomPluginRequest.SetConnectorClass(connectorClass)
-    	createCustomPluginRequest.SetConnectorType(connectorType)
-    	createCustomPluginRequest.SetSensitiveConfigProperties(sensitiveProperties)
-    	createCustomPluginRequest.SetUploadSource(
-    		connectcustompluginv1.ConnectV1UploadSourcePresignedUrlAsConnectV1CustomConnectorPluginUploadSourceOneOf(
-    			connectcustompluginv1.NewConnectV1UploadSourcePresignedUrl("PRESIGNED_URL_LOCATION", resp.GetUploadId())))
+	createCustomPluginRequest.SetDisplayName(displayName)
+	createCustomPluginRequest.SetDescription(description)
+	createCustomPluginRequest.SetDocumentationLink(documentationLink)
+	createCustomPluginRequest.SetConnectorClass(connectorClass)
+	createCustomPluginRequest.SetConnectorType(connectorType)
+	createCustomPluginRequest.SetSensitiveConfigProperties(sensitiveProperties)
+	createCustomPluginRequest.SetUploadSource(
+		connectcustompluginv1.ConnectV1UploadSourcePresignedUrlAsConnectV1CustomConnectorPluginUploadSourceOneOf(
+			connectcustompluginv1.NewConnectV1UploadSourcePresignedUrl("PRESIGNED_URL_LOCATION", resp.GetUploadId())))
 
 	pluginResp, err := c.V2Client.CreateCustomPlugin(*createCustomPluginRequest)
 	if err != nil {

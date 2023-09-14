@@ -65,7 +65,9 @@ func (c *customPluginCommand) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if _, err := c.V2Client.UpdateCustomPlugin(id, *updateCustomPluginRequest); err != nil {return err}
+	if _, err := c.V2Client.UpdateCustomPlugin(id, *updateCustomPluginRequest); err != nil {
+		return err
+	}
 
 	output.Printf(errors.UpdatedResourceMsg, resource.CustomConnectorPlugin, args[0])
 	return nil
