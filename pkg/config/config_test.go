@@ -43,6 +43,7 @@ var (
 		"stag.cpdev.cloud",
 		"confluent.cloud",
 		"premium-oryx.gcp.priv.cpdev.cloud",
+		"confluentgov-internal.com",
 	}
 	regularOrgContextState = &ContextState{
 		Auth: &AuthConfig{
@@ -971,6 +972,27 @@ func TestConfig_IsCloud_False(t *testing.T) {
 		}
 		require.False(t, cfg.IsCloudLogin(), platform+" should be false")
 	}
+}
+
+func TestConfig_IsCloud_NonGov(t *testing.T) {
+	cfg := &Config{
+		Contexts: map[string]*Context{"context": {
+			PlatformName: "https://confluent.cloud",
+		}},
+		CurrentContext: "context",
+	}
+
+	require.True(t, cfg.IsCloudLogin() && !cfg.HasGovHostname())
+
+	cfg = &Config{
+		Contexts: map[string]*Context{"context": {
+			PlatformName: "https://confluentgov-internal.com",
+		}},
+		CurrentContext: "context",
+	}
+
+	require.True(t, cfg.IsCloudLogin())
+	require.False(t, cfg.IsCloudLogin() && !cfg.HasGovHostname())
 }
 
 func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {

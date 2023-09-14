@@ -731,20 +731,19 @@ func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
 }
 
-func (c *Config) IsNonGovCloudLogin() bool {
+func (c *Config) HasGovHostname() bool {
 	ctx := c.Context()
 	if ctx == nil {
 		return false
 	}
 
-	isGovHostname := false
 	for _, hostname := range ccloudv2.GovHostnames {
 		if strings.Contains(ctx.PlatformName, hostname) {
-			isGovHostname = true
+			return true
 		}
 	}
 
-	return c.IsCloudLogin() && !isGovHostname
+	return false
 }
 
 func (c *Config) IsOnPremLogin() bool {

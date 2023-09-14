@@ -187,7 +187,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, u *usage.Usage) error {
-	if cfg.IsNonGovCloudLogin() && u.Command != nil && *(u.Command) != "" {
+	if cfg.IsCloudLogin() && !cfg.HasGovHostname() && u.Command != nil && *(u.Command) != "" {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return err
