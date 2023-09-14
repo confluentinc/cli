@@ -26,7 +26,6 @@ type ProcessedStatement struct {
 	StatementName     string `json:"statement_name"`
 	Kind              string `json:"statement"`
 	ComputePool       string `json:"compute_pool"`
-	IdentityPool      string `json:"identity_pool"`
 	ServiceAccount    string `json:"service_account"`
 	Status            PHASE  `json:"status"`
 	StatusDetail      string `json:"status_detail,omitempty"` // Shown at the top before the table
