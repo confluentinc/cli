@@ -58,10 +58,10 @@ func (c *customPluginCommand) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if cmd.Flags().Changed("sensitive-properties") {
-		if sensitiveProperties, err := cmd.Flags().GetString("sensitive-properties"); err != nil {
+		if sensitiveProperties, err := cmd.Flags().GetStringSlice("sensitive-properties"); err != nil {
 			return err
 		} else {
-			updateCustomPluginRequest.SetDisplayName(sensitiveProperties)
+			updateCustomPluginRequest.SetSensitiveConfigProperties(sensitiveProperties)
 		}
 	}
 
