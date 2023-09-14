@@ -92,18 +92,19 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	createCustomPluginRequest := connectcustompluginv1.NewConnectV1CustomConnectorPlugin()
-	createCustomPluginRequest.SetDisplayName(displayName)
-	createCustomPluginRequest.SetDescription(description)
-	createCustomPluginRequest.SetDocumentationLink(documentationLink)
-	createCustomPluginRequest.SetConnectorClass(connectorClass)
-	createCustomPluginRequest.SetConnectorType(connectorType)
-	createCustomPluginRequest.SetSensitiveConfigProperties(sensitiveProperties)
-	createCustomPluginRequest.SetUploadSource(
-		connectcustompluginv1.ConnectV1UploadSourcePresignedUrlAsConnectV1CustomConnectorPluginUploadSourceOneOf(
-			connectcustompluginv1.NewConnectV1UploadSourcePresignedUrl("PRESIGNED_URL_LOCATION", resp.GetUploadId())))
+	createCustomPluginRequest := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+		DisplayName:               connectcustompluginv1.PtrString(displayName),
+		Description:               connectcustompluginv1.PtrString(description),
+		DocumentationLink:         connectcustompluginv1.PtrString(documentationLink),
+		ConnectorClass:            connectcustompluginv1.PtrString(connectorClass),
+		ConnectorType:             connectcustompluginv1.PtrString(connectorType),
+		SensitiveConfigProperties: &sensitiveProperties,
+		UploadSource: &connectcustompluginv1.ConnectV1CustomConnectorPluginUploadSourceOneOf{
+			ConnectV1UploadSourcePresignedUrl: connectcustompluginv1.NewConnectV1UploadSourcePresignedUrl("PRESIGNED_URL_LOCATION", resp.GetUploadId()),
+		},
+	}
 
-	pluginResp, err := c.V2Client.CreateCustomPlugin(*createCustomPluginRequest)
+	pluginResp, err := c.V2Client.CreateCustomPlugin(createCustomPluginRequest)
 	if err != nil {
 		return err
 	}
