@@ -16,7 +16,8 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
-	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
+	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
@@ -107,7 +108,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
+	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/bufbuild/protocompile v0.4.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
