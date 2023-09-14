@@ -5,22 +5,16 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type partitionOut struct {
-	ClusterId   string `human:"Cluster" serialized:"cluster_id"`
-	TopicName   string `human:"Topic Name" serialized:"topic_name"`
-	PartitionId int32  `human:"Partition ID" serialized:"partition_id"`
-	LeaderId    int32  `human:"Leader ID" serialized:"leader_id"`
-}
-
-func (c *partitionCommand) newDescribeCommand() *cobra.Command {
+func (c *partitionCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Kafka partition.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		RunE:  c.describeOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe partition "1" for topic "my_topic".`,
@@ -30,9 +24,7 @@ func (c *partitionCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("topic", "", "Topic name to list partitions of.")
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
@@ -40,13 +32,13 @@ func (c *partitionCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *partitionCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *partitionCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 	partitionId, err := partitionIdFromArg(args)
 	if err != nil {
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -56,17 +48,17 @@ func (c *partitionCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	partition, err := kafkaREST.CloudClient.GetKafkaPartition(topic, partitionId)
+	partition, resp, err := restClient.PartitionV3Api.GetKafkaPartition(restContext, clusterId, topic, partitionId)
 	if err != nil {
-		return err
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&partitionOut{
-		ClusterId:   partition.GetClusterId(),
-		TopicName:   partition.GetTopicName(),
-		PartitionId: partition.GetPartitionId(),
-		LeaderId:    parseLeaderId(partition.GetLeader().Related),
+		ClusterId:   partition.ClusterId,
+		TopicName:   partition.TopicName,
+		PartitionId: partition.PartitionId,
+		LeaderId:    parseLeaderId(partition.Leader.Related),
 	})
 	return table.Print()
 }
