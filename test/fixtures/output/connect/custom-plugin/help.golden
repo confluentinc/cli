@@ -1,14 +1,13 @@
 Manage custom connector plugins.
 
-
 Usage:
   confluent connect custom-plugin [command]
 
 Available Commands:
   create      Create a custom connector plugin.
-  delete      Delete a custom connector plugin.
+  delete      Delete one or more custom connector plugins.
   describe    Describe a custom connector plugin.
-  list        List custom connector plugins
+  list        List custom connector plugins.
   update      Update a custom connector plugin configuration.
 
 Global Flags:
