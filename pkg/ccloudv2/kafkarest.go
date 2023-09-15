@@ -244,8 +244,14 @@ func (c *KafkaRestClient) GetKafkaConsumerLag(consumerGroupId, topicName string,
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaPartitions(topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {
-	return c.PartitionV3Api.ListKafkaPartitions(c.context(), c.ClusterId, topicName).Execute()
+func (c *KafkaRestClient) GetKafkaPartition(topicName string, partitionId int32) (kafkarestv3.PartitionData, error) {
+	res, httpResp, err := c.PartitionV3Api.GetKafkaPartition(c.context(), c.ClusterId, topicName, partitionId).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
+func (c *KafkaRestClient) ListKafkaPartitions(topicName string) (kafkarestv3.PartitionDataList, error) {
+	res, httpResp, err := c.PartitionV3Api.ListKafkaPartitions(c.context(), c.ClusterId, topicName).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
 func (c *KafkaRestClient) CreateKafkaTopic(data kafkarestv3.CreateTopicRequestData) (kafkarestv3.TopicData, *http.Response, error) {

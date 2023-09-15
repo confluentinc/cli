@@ -1,6 +1,6 @@
 +--------------+-----------+
-| Cluster      | lkc-12345 |
+| Cluster      | cluster-1 |
 | Topic Name   | topic1    |
 | Partition ID | 0         |
-| Leader ID    | 1         |
+| Leader ID    | 2         |
 +--------------+-----------+

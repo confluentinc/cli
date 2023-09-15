@@ -312,7 +312,7 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 		return nil, err
 	}
 	var numPartitions int32
-	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(topicName)
+	partitionsResp, err := kafkaREST.CloudClient.ListKafkaPartitions(topicName)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
 	}
