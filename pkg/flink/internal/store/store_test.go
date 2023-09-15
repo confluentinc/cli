@@ -985,7 +985,7 @@ func TestTimeout(t *testing.T) {
 
 	// Iterate over test cases and run the function for each input, comparing output to expected value
 	for _, tc := range testCases {
-		store := Store{Properties: NewUserProperties(tc.properties)}
+		store := Store{Properties: NewUserProperties(tc.properties, map[string]string{})}
 		result := store.getTimeout()
 		require.Equal(t, tc.expected, result, tc.name)
 	}
@@ -1000,7 +1000,7 @@ func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
 		IdentityPoolId: "identityPoolId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1032,7 +1032,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	}
 	serviceAccountId := "sa-123"
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1065,7 +1065,7 @@ func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAc
 		ComputePoolId: "computePoolId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1097,7 +1097,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		IdentityPoolId: "identityPoolId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1131,7 +1131,7 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1161,7 +1161,7 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:     client,
 	}
 
@@ -1177,7 +1177,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:     client,
 	}
 
@@ -1195,7 +1195,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1233,7 +1233,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,

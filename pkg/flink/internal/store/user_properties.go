@@ -17,10 +17,11 @@ type UserProperties struct {
 	properties        map[string]string
 }
 
-func NewUserProperties(defaultProperties map[string]string) UserProperties {
+// add initial props
+func NewUserProperties(defaultProperties map[string]string, initialProperties map[string]string) UserProperties {
 	userProperties := UserProperties{
 		defaultProperties: defaultProperties,
-		properties:        map[string]string{},
+		properties:        initialProperties,
 	}
 	userProperties.addDefaultProperties()
 	return userProperties
