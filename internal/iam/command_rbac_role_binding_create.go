@@ -54,7 +54,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345",
 			},
 			examples.Example{
-				Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345" for the compute pool "lfcp-123456" in the Flink region "us-east-2":`,
+				Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345" for the ComputePool "lfcp-123456" in the Flink region "us-east-2":`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345 --flink-region aws.us-east-2 --resource compute-pool:lfcp-123456",
 			},
 		)

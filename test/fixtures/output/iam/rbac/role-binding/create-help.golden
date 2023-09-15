@@ -36,7 +36,7 @@ Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environ
 
   $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345
 
-Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345" for the compute pool "lfcp-123456" in the flink-region "us-east-2"':
+Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345" for the ComputePool "lfcp-123456" in the flink-region "us-east-2"':
 
   $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345 --flink-region aws.us-east-2 --resource compute-pool:lfcp-123456
 
