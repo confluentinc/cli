@@ -52,7 +52,7 @@
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=19) "GMT+02:00 (default)"
+          Value: (string) (len=10) "London/GMT"
         }
       }
     }

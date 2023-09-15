@@ -130,6 +130,8 @@ func TestProcessResetStatement(t *testing.T) {
 		ServiceAccountId: "sa-123",
 	}
 	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
+	s.Properties.Set(config.ConfigKeyLocalTimeZone, "London/GMT")
+
 	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
 		{config.ConfigKeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
 		{config.ConfigKeyServiceAcount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
