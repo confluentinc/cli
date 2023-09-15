@@ -82,7 +82,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, &types.ApplicationOptions{}, tokenRefreshFunc).(*Store)
+	s := NewStore(client, nil, &types.ApplicationOptions{EnvironmentName: "env-123"}, tokenRefreshFunc).(*Store)
 	// This is just a string, so really doesn't matter
 	s.Properties.Set(config.ConfigKeyLocalTimeZone, "London/GMT")
 
@@ -130,11 +130,21 @@ func TestProcessResetStatement(t *testing.T) {
 		ServiceAccountId: "sa-123",
 	}
 	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
+	s.Properties.Set(config.ConfigKeyLocalTimeZone, "London/GMT")
+
 	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
-		{config.ConfigKeyCatalog, fmt.Sprintf("%s (default)", appOptions.EnvironmentName)},
-		{config.ConfigKeyDatabase, fmt.Sprintf("%s (default)", appOptions.Database)},
 		{config.ConfigKeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
 		{config.ConfigKeyServiceAcount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
+	})
+
+	t.Run("should return all keys and values including default and initial values before reseting", func(t *testing.T) {
+		result, err := s.processSetStatement("set")
+		assert.Nil(t, err)
+		assert.EqualValues(t, types.COMPLETED, result.Status)
+
+		assert.Equal(t, 2, len(result.StatementResults.Headers))
+		assert.Equal(t, len(s.Properties.GetProperties()), len(result.StatementResults.Rows))
+		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
