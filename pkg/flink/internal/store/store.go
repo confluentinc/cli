@@ -251,7 +251,7 @@ func extractPageToken(nextUrl string) (string, error) {
 
 func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
 	return &Store{
-		Properties:       NewUserProperties(getDefaultProperties(appOptions)),
+		Properties:       NewUserProperties(getDefaultProperties(appOptions), getInitialProperties(appOptions)),
 		client:           client,
 		exitApplication:  exitApplication,
 		appOptions:       appOptions,
@@ -261,10 +261,21 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 
 func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
 	properties := map[string]string{
-		config.ConfigKeyCatalog:       appOptions.GetEnvironmentName(),
-		config.ConfigKeyDatabase:      appOptions.GetDatabase(),
 		config.ConfigKeyServiceAcount: appOptions.GetServiceAccountId(),
 		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
+	}
+
+	return properties
+}
+
+func getInitialProperties(appOptions *types.ApplicationOptions) map[string]string {
+	properties := map[string]string{}
+
+	if appOptions.GetEnvironmentName() != "" {
+		properties[config.ConfigKeyCatalog] = appOptions.GetEnvironmentName()
+	}
+	if appOptions.GetDatabase() != "" {
+		properties[config.ConfigKeyDatabase] = appOptions.GetDatabase()
 	}
 
 	return properties
