@@ -974,25 +974,23 @@ func TestConfig_IsCloud_False(t *testing.T) {
 	}
 }
 
-func TestConfig_IsCloud_NonGov(t *testing.T) {
+func TestConfig_GovHostname(t *testing.T) {
 	cfg := &Config{
-		Contexts: map[string]*Context{"context": {
-			PlatformName: "https://confluent.cloud",
-		}},
-		CurrentContext: "context",
-	}
-
-	require.True(t, cfg.IsCloudLogin() && !cfg.HasGovHostname())
-
-	cfg = &Config{
 		Contexts: map[string]*Context{"context": {
 			PlatformName: "https://confluentgov-internal.com",
 		}},
 		CurrentContext: "context",
 	}
 
-	require.True(t, cfg.IsCloudLogin())
-	require.False(t, cfg.IsCloudLogin() && !cfg.HasGovHostname())
+	require.True(t, cfg.HasGovHostname())
+
+	cfg = &Config{
+		Contexts: map[string]*Context{"context": {
+			PlatformName: "https://confluent.cloud",
+		}},
+		CurrentContext: "context",
+	}
+	require.False(t, cfg.HasGovHostname())
 }
 
 func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
