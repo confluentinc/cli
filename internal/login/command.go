@@ -165,7 +165,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		// only print error and do not return it, since end-of-free-trial users should still be able to log in.
 		output.ErrPrintf("Error: %s", endOfFreeTrialErr.Error())
 		output.ErrPrint(errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError()))
-	} else {
+	} else if !c.cfg.HasGovHostname() {
 		c.printRemainingFreeCredit(client, currentOrg)
 	}
 
