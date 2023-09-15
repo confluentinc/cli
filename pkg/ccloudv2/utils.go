@@ -24,6 +24,11 @@ type NullableString interface {
 	IsSet() bool
 }
 
+var GovHostnames = []string{
+	"confluentgov-internal.com",
+	"confluentgov.com",
+}
+
 var Hostnames = []string{
 	"confluent.cloud",
 	"confluentgov-internal.com",
