@@ -1,0 +1,21 @@
+List the partitions that belong to a specified topic.
+
+Usage:
+  confluent kafka partition list [flags]
+
+Examples:
+List the partitions of topic "my_topic".
+
+  $ confluent kafka partition list --topic my_topic
+
+Flags:
+      --topic string         REQUIRED: Topic name to list partitions of.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
