@@ -1445,31 +1445,53 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 func handleKafkaTopicPartitions(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		topicName := vars["topic_name"]
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionDataList{
-				Data: []cpkafkarestv3.PartitionData{
-					{
-						ClusterId:   vars["cluster_id"],
-						PartitionId: 0,
-						TopicName:   vars["topic_name"],
-						Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+			if clusterId == "lkc-12345" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.PartitionDataList{
+					Data: []cckafkarestv3.PartitionData{
+						{
+							ClusterId:   clusterId,
+							PartitionId: 0,
+							TopicName:   topicName,
+							Leader:      &cckafkarestv3.Relationship{Related: fmt.Sprintf("https://pkc-00000.region.provider.confluent.cloud/kafka/v3/clusters/%s/topics/%s/partitions/0/replicas/2", clusterId, topicName)},
+						},
+						{
+							ClusterId:   clusterId,
+							PartitionId: 1,
+							TopicName:   topicName,
+							Leader:      &cckafkarestv3.Relationship{Related: fmt.Sprintf("https://pkc-00000.region.provider.confluent.cloud/kafka/v3/clusters/%s/topics/%s/partitions/0/replicas/1", clusterId, topicName)},
+						},
 					},
-					{
-						ClusterId:   vars["cluster_id"],
-						PartitionId: 1,
-						TopicName:   vars["topic_name"],
-						Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/1"},
+				})
+				require.NoError(t, err)
+			} else {
+				err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionDataList{
+					Data: []cpkafkarestv3.PartitionData{
+						{
+							ClusterId:   clusterId,
+							PartitionId: 0,
+							TopicName:   topicName,
+							Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+						},
+						{
+							ClusterId:   clusterId,
+							PartitionId: 1,
+							TopicName:   topicName,
+							Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/1"},
+						},
+						{
+							ClusterId:   vars["cluster_id"],
+							PartitionId: 2,
+							TopicName:   topicName,
+							Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/0"},
+						},
 					},
-					{
-						ClusterId:   vars["cluster_id"],
-						PartitionId: 2,
-						TopicName:   vars["topic_name"],
-						Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/0"},
-					},
-				},
-			})
-			require.NoError(t, err)
+				})
+				require.NoError(t, err)
+			}
 		}
 	}
 }
@@ -1478,18 +1500,30 @@ func handleKafkaTopicPartitions(t *testing.T) http.HandlerFunc {
 func handleKafkaTopicPartitionId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		topicName := vars["topic_name"]
 		partitionIdStr := vars["partition_id"]
 		partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
 		require.NoError(t, err)
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionData{
-				ClusterId:   vars["cluster_id"],
-				PartitionId: int32(partitionId),
-				TopicName:   vars["topic_name"],
-				Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
-			})
-			require.NoError(t, err)
+			if clusterId == "lkc-12345" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.PartitionData{
+					ClusterId:   clusterId,
+					PartitionId: int32(partitionId),
+					TopicName:   topicName,
+					Leader:      &cckafkarestv3.Relationship{Related: fmt.Sprintf("https://pkc-00000.region.provider.confluent.cloud/kafka/v3/clusters/%s/topics/%s/partitions/%s/replicas/1", clusterId, topicName, partitionIdStr)},
+				})
+				require.NoError(t, err)
+			} else {
+				err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionData{
+					ClusterId:   clusterId,
+					PartitionId: int32(partitionId),
+					TopicName:   topicName,
+					Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+				})
+				require.NoError(t, err)
+			}
 		}
 	}
 }
