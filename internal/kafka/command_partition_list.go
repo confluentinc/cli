@@ -56,7 +56,7 @@ func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 			ClusterId:   partition.GetClusterId(),
 			TopicName:   partition.GetTopicName(),
 			PartitionId: partition.GetPartitionId(),
-			LeaderId:    parseLeaderId(partition.GetLeader().Related),
+			LeaderId:    parseLeaderId(partition.Leader.GetRelated()),
 		})
 	}
 	return list.Print()
