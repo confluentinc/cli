@@ -86,7 +86,7 @@ func printPrivateLinkAttachmentTable(cmd *cobra.Command, attachment networkingpr
 		Phase:  attachment.Status.GetPhase(),
 	}
 
-	if attachment.Status.GetPhase() == "WAITING_FOR_CONNECTIONS" {
+	if attachment.Status.Cloud != nil && attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus != nil {
 		out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
 	}
 

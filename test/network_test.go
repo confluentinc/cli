@@ -384,6 +384,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDescribe() {
 	tests := []CLITest{
 		{args: "network pl attachment describe platt-111111", fixture: "network/private-link/attachment/describe-aws.golden"},
 		{args: "network private-link attachment describe platt-111111", fixture: "network/private-link/attachment/describe-aws.golden"},
+		{args: "network private-link attachment describe platt-111112", fixture: "network/private-link/attachment/describe-aws-provisioning.golden"},
 		{args: "network private-link attachment describe platt-111111 --output json", fixture: "network/private-link/attachment/describe-aws-json.golden"},
 		{args: "network private-link attachment describe", fixture: "network/private-link/attachment/describe-missing-id.golden", exitCode: 1},
 		{args: "network private-link attachment describe platt-invalid", fixture: "network/private-link/attachment/describe-invalid.golden", exitCode: 1},

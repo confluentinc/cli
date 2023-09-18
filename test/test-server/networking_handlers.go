@@ -860,14 +860,18 @@ func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.Hand
 			w.WriteHeader(http.StatusNotFound)
 			return
 		case "platt-111111":
-			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt")
+			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt", "WAITING_FOR_CONNECTIONS")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		case "platt-111112":
+			attachment := getPrivateLinkAttachment("platt-111112", "aws-platt", "PROVISIONING")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getPrivateLinkAttachment(id, name string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
+func getPrivateLinkAttachment(id, name, phase string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
 	attachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpec{
@@ -877,16 +881,19 @@ func getPrivateLinkAttachment(id, name string) networkingprivatelinkv1.Networkin
 			Environment: &networkingprivatelinkv1.ObjectReference{Id: "env-00000"},
 		},
 		Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatus{
-			Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatusCloudOneOf{
-				NetworkingV1AwsPrivateLinkAttachmentStatus: &networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentStatus{
-					Kind: "AwsPrivateLinkAttachmentStatus",
-					VpcEndpointService: networkingprivatelinkv1.NetworkingV1AwsVpcEndpointService{
-						VpcEndpointServiceName: "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef",
-					},
+			Phase: phase,
+		},
+	}
+
+	if phase != "PROVISIONING" {
+		attachment.Status.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatusCloudOneOf{
+			NetworkingV1AwsPrivateLinkAttachmentStatus: &networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentStatus{
+				Kind: "AwsPrivateLinkAttachmentStatus",
+				VpcEndpointService: networkingprivatelinkv1.NetworkingV1AwsVpcEndpointService{
+					VpcEndpointServiceName: "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef",
 				},
 			},
-			Phase: "WAITING_FOR_CONNECTIONS",
-		},
+		}
 	}
 
 	return attachment
@@ -894,9 +901,9 @@ func getPrivateLinkAttachment(id, name string) networkingprivatelinkv1.Networkin
 
 func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		attachment1 := getPrivateLinkAttachment("platt-111111", "aws-platt-1")
-		attachment2 := getPrivateLinkAttachment("platt-111112", "aws-platt-2")
-		attachment3 := getPrivateLinkAttachment("platt-111113", "aws-platt-3")
+		attachment1 := getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING")
+		attachment2 := getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS")
+		attachment3 := getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var attachmentList networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList

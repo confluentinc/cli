@@ -1,5 +1,5 @@
        ID      |    Name     | Cloud |  Region   |                AWS VPC Endpoint Service                 |          Phase           
 ---------------+-------------+-------+-----------+---------------------------------------------------------+--------------------------
-  platt-111111 | aws-platt-1 | AWS   | us-west-2 | com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef | WAITING_FOR_CONNECTIONS  
+  platt-111111 | aws-platt-1 | AWS   | us-west-2 |                                                         | PROVISIONING             
   platt-111112 | aws-platt-2 | AWS   | us-west-2 | com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef | WAITING_FOR_CONNECTIONS  
   platt-111113 | aws-platt-3 | AWS   | us-west-2 | com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef | WAITING_FOR_CONNECTIONS  
