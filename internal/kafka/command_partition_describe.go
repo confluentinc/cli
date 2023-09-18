@@ -29,7 +29,7 @@ func (c *partitionCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("topic", "", "Topic name to list partitions of.")
+	cmd.Flags().String("topic", "", "Topic name to describe a partition of.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

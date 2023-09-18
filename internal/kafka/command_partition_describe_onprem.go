@@ -23,7 +23,7 @@ func (c *partitionCommand) newDescribeCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("topic", "", "Topic name to list partitions of.")
+	cmd.Flags().String("topic", "", "Topic name to describe a partition of.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 

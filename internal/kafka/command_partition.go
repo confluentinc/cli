@@ -41,8 +41,8 @@ func newPartitionCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Co
 }
 
 func parseLeaderId(related string) int32 {
-	index := strings.LastIndex(related, "/")
-	idStr := related[index+1:]
+	relatedSlice := strings.Split(related, "/")
+	idStr := relatedSlice[len(relatedSlice)-1]
 	leaderId, _ := strconv.ParseInt(idStr, 10, 32)
 	return int32(leaderId)
 }
