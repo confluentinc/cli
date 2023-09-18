@@ -316,8 +316,8 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
 	}
-	if partitionsResp.Data != nil {
-		numPartitions = int32(len(partitionsResp.Data))
+	if partitions.Data != nil {
+		numPartitions = int32(len(partitions.Data))
 	}
 	customConfigMap := make(map[string]string)
 	topicConfigMap := make(map[string]any)
