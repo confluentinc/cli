@@ -69,7 +69,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("role", "", "Role name of the new role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+	addClusterFlags(cmd, c.cfg, c.CLICommand, c.Context)
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
