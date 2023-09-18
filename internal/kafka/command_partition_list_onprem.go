@@ -5,16 +5,17 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *partitionCommand) newListCommand() *cobra.Command {
+func (c *partitionCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka partitions.",
 		Long:  "List the partitions that belong to a specified topic.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.listOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List the partitions of topic "my_topic".`,
@@ -24,9 +25,7 @@ func (c *partitionCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("topic", "", "Topic name to list partitions of.")
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
@@ -34,8 +33,8 @@ func (c *partitionCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, err := c.GetKafkaREST()
+func (c *partitionCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -45,18 +44,18 @@ func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	partitions, err := kafkaREST.CloudClient.ListKafkaPartitions(topic)
+	partitionListResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topic)
 	if err != nil {
-		return err
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, partition := range partitions.GetData() {
+	for _, partition := range partitionListResp.Data {
 		list.Add(&partitionOut{
-			ClusterId:   partition.GetClusterId(),
-			TopicName:   partition.GetTopicName(),
-			PartitionId: partition.GetPartitionId(),
-			LeaderId:    parseLeaderId(partition.Leader.GetRelated()),
+			ClusterId:   partition.ClusterId,
+			TopicName:   partition.TopicName,
+			PartitionId: partition.PartitionId,
+			LeaderId:    parseLeaderId(partition.Leader.Related),
 		})
 	}
 	return list.Print()
