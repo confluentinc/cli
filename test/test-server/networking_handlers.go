@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
+	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 )
 
@@ -116,6 +117,27 @@ func handleNetworkingPrivateLinkAccesses(t *testing.T) http.HandlerFunc {
 			handleNetworkingPrivateLinkAccessList(t)(w, r)
 		case http.MethodPost:
 			handleNetworkingPrivateLinkAccessCreate(t)(w, r)
+		}
+	}
+}
+
+// Handler for "/networking/v1/private-link-attachments/{id}"
+func handleNetworkingPrivateLinkAttachment(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingPrivateLinkAttachmentGet(t, id)(w, r)
+		}
+	}
+}
+
+// Handler for "/networking/v1/private-link-attachments"
+func handleNetworkingPrivateLinkAttachments(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingPrivateLinkAttachmentList(t)(w, r)
 		}
 	}
 }
@@ -681,16 +703,16 @@ func handleNetworkingPrivateLinkAccessGet(t *testing.T, id string) http.HandlerF
 			err := writeErrorJson(w, "The private-link-access pla-invalid was not found.")
 			require.NoError(t, err)
 		case "pla-111111":
-			attachment := getPrivateLinkAccess("pla-111111", "aws-pla", "AWS")
-			err := json.NewEncoder(w).Encode(attachment)
+			access := getPrivateLinkAccess("pla-111111", "aws-pla", "AWS")
+			err := json.NewEncoder(w).Encode(access)
 			require.NoError(t, err)
 		case "pla-111112":
-			attachment := getPrivateLinkAccess("pla-111112", "gcp-pla", "GCP")
-			err := json.NewEncoder(w).Encode(attachment)
+			access := getPrivateLinkAccess("pla-111112", "gcp-pla", "GCP")
+			err := json.NewEncoder(w).Encode(access)
 			require.NoError(t, err)
 		case "pla-111113":
-			attachment := getPrivateLinkAccess("pla-111113", "azure-pla", "AZURE")
-			err := json.NewEncoder(w).Encode(attachment)
+			access := getPrivateLinkAccess("pla-111113", "azure-pla", "AZURE")
+			err := json.NewEncoder(w).Encode(access)
 			require.NoError(t, err)
 		}
 	}
@@ -828,5 +850,75 @@ func handleNetworkingPrivateLinkAccessCreate(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(access)
 			require.NoError(t, err)
 		}
+	}
+}
+
+func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "platt-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "platt-111111":
+			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func getPrivateLinkAttachment(id, name string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
+	attachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpec{
+			Cloud:       networkingprivatelinkv1.PtrString("AWS"),
+			Region:      networkingprivatelinkv1.PtrString("us-west-2"),
+			DisplayName: networkingprivatelinkv1.PtrString(name),
+			Environment: &networkingprivatelinkv1.ObjectReference{Id: "env-00000"},
+		},
+		Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatus{
+			Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatusCloudOneOf{
+				NetworkingV1AwsPrivateLinkAttachmentStatus: &networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentStatus{
+					Kind: "AwsPrivateLinkAttachmentStatus",
+					VpcEndpointService: networkingprivatelinkv1.NetworkingV1AwsVpcEndpointService{
+						VpcEndpointServiceName: "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef",
+					},
+				},
+			},
+			Phase: "WAITING_FOR_CONNECTIONS",
+		},
+	}
+
+	return attachment
+}
+
+func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		attachment1 := getPrivateLinkAttachment("platt-111111", "aws-platt-1")
+		attachment2 := getPrivateLinkAttachment("platt-111112", "aws-platt-2")
+		attachment3 := getPrivateLinkAttachment("platt-111113", "aws-platt-3")
+
+		pageToken := r.URL.Query().Get("page_token")
+		var attachmentList networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList
+		switch pageToken {
+		case "aws-platt-3":
+			attachmentList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{
+				Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{attachment3},
+				Metadata: networkingprivatelinkv1.ListMeta{},
+			}
+		case "aws-platt-2":
+			attachmentList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{
+				Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{attachment2},
+				Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-platt-3"))},
+			}
+		default:
+			attachmentList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{
+				Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{attachment1},
+				Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-platt-2"))},
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(attachmentList)
+		require.NoError(t, err)
 	}
 }
