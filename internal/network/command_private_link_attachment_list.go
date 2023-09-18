@@ -41,12 +41,15 @@ func (c *command) privateLinkAttachmentList(cmd *cobra.Command, _ []string) erro
 		}
 
 		out := &privateLinkAttachmentOut{
-			Id:                    attachment.GetId(),
-			Name:                  attachment.Spec.GetDisplayName(),
-			Cloud:                 attachment.Spec.GetCloud(),
-			Region:                attachment.Spec.GetRegion(),
-			AwsVpcEndpointService: attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName(),
-			Phase:                 attachment.Status.GetPhase(),
+			Id:     attachment.GetId(),
+			Name:   attachment.Spec.GetDisplayName(),
+			Cloud:  attachment.Spec.GetCloud(),
+			Region: attachment.Spec.GetRegion(),
+			Phase:  attachment.Status.GetPhase(),
+		}
+
+		if attachment.Status.GetPhase() == "WAITING_FOR_CONNECTIONS" {
+			out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
 		}
 
 		list.Add(out)
