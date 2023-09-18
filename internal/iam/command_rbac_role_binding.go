@@ -55,6 +55,7 @@ type roleBindingCommand struct {
 }
 
 type roleBindingOut struct {
+	Id             string `human:"Id,omitempty" serialized:"id,omitempty"`
 	Principal      string `human:"Principal" serialized:"principal"`
 	Email          string `human:"Email" serialized:"email"`
 	Role           string `human:"Role" serialized:"role"`
@@ -345,6 +346,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
 
 	out := &roleBindingOut{
+		Id:        roleBinding.GetId(),
 		Principal: roleBinding.GetPrincipal(),
 		Role:      roleBinding.GetRoleName(),
 	}
@@ -381,7 +383,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
-			fields = []string{"Principal", "Role"}
+			fields = []string{"Id", "Principal", "Role"}
 		}
 	} else {
 		if resource != "" {
@@ -392,7 +394,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 				return err
 			}
 			out.Email = user.GetEmail()
-			fields = []string{"Principal", "Email", "Role"}
+			fields = []string{"Id", "Principal", "Email", "Role"}
 		}
 	}
 
