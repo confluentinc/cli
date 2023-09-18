@@ -366,3 +366,43 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAccess_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentList() {
+	tests := []CLITest{
+		{args: "network pl attachment list", fixture: "network/private-link/attachment/list.golden"},
+		{args: "network private-link attachment list", fixture: "network/private-link/attachment/list.golden"},
+		{args: "network private-link attachment list --output json", fixture: "network/private-link/attachment/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDescribe() {
+	tests := []CLITest{
+		{args: "network pl attachment describe platt-111111", fixture: "network/private-link/attachment/describe-aws.golden"},
+		{args: "network private-link attachment describe platt-111111", fixture: "network/private-link/attachment/describe-aws.golden"},
+		{args: "network private-link attachment describe platt-111112", fixture: "network/private-link/attachment/describe-aws-provisioning.golden"},
+		{args: "network private-link attachment describe platt-111111 --output json", fixture: "network/private-link/attachment/describe-aws-json.golden"},
+		{args: "network private-link attachment describe", fixture: "network/private-link/attachment/describe-missing-id.golden", exitCode: 1},
+		{args: "network private-link attachment describe platt-invalid", fixture: "network/private-link/attachment/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachment_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network private-link attachment describe ""`, login: "cloud", fixture: "network/private-link/attachment/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
