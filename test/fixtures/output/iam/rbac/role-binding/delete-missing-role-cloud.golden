@@ -13,7 +13,7 @@ Flags:
       --force                            Skip the deletion confirmation prompt.
       --environment string               Environment ID for scope of role-binding operation.
       --current-environment              Use current environment ID for scope.
-      --flink-region string              Flink region  ID for the role binding.
+      --flink-region string              Flink region ID for the role binding.
       --cloud-cluster string             Cloud cluster ID for the role binding.
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
