@@ -49,6 +49,14 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-12345":`,
 				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"`,
 			},
+			examples.Example{
+				Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345",
+			},
+			examples.Example{
+				Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345" for the compute pool "lfcp-123456" in the Flink region "us-east-2":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456",
+			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
@@ -61,7 +69,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("role", "", "Role name of the new role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+	addClusterFlags(cmd, c.cfg, c.CLICommand, c.Context)
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
