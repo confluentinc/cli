@@ -59,6 +59,11 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 			return err
 		}
 		roles = append(roles, flinkRoles...)
+		workloadRoles, err := c.namespaceRoles(workloadNamespace)
+		if err != nil {
+			return err
+		}
+		roles = append(roles, workloadRoles...)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
