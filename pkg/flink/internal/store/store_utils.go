@@ -64,6 +64,12 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
 		}
 	}
+	if configKey == config.ConfigKeyStatementName && strings.TrimSpace(configVal) == "" {
+		return nil, &types.StatementError{
+			Message:    "cannot set an empty statement name",
+			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
+		}
+	}
 	s.Properties.Set(configKey, configVal)
 
 	return &types.ProcessedStatement{
