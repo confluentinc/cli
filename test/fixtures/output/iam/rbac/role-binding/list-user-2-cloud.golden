@@ -1,3 +1,3 @@
-    ID   |  Principal   |        Email         |       Role        | Environment | Cloud Cluster | Cluster Type | Logical Cluster | Resource Type | Name | Pattern Type  
----------+--------------+----------------------+-------------------+-------------+---------------+--------------+-----------------+---------------+------+---------------
-  rb-2bb | User:u-22bbb | u-22bbb@confluent.io | CloudClusterAdmin | a-595       | lkc-1111aaa   |              |                 |               |      |               
+     ID    |  Principal   |        Email         |       Role        | Environment | Cloud Cluster | Cluster Type | Logical Cluster | Resource Type | Name | Pattern Type  
+-----------+--------------+----------------------+-------------------+-------------+---------------+--------------+-----------------+---------------+------+---------------
+  rb-22bbb | User:u-22bbb | u-22bbb@confluent.io | CloudClusterAdmin | a-595       | lkc-1111aaa   |              |                 |               |      |               
