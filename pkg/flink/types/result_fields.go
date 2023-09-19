@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 )
 
 const (
