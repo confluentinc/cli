@@ -12,6 +12,7 @@ func (c *command) newPrivateLinkCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newPrivateLinkAccessCommand())
+	cmd.AddCommand(c.newPrivateLinkAttachmentCommand())
 
 	return cmd
 }

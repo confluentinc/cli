@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newNetowrkingClient(url, userAgent string, unsafeTrace bool) *networkingv1.APIClient {
+func newNetworkingClient(url, userAgent string, unsafeTrace bool) *networkingv1.APIClient {
 	cfg := networkingv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
