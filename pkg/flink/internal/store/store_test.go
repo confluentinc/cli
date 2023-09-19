@@ -60,7 +60,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.True(t, result.IsLocalStatement)
 
-	result, err = s.ProcessLocalStatement("USE my_database;")
+	result, err = s.ProcessLocalStatement("USE CATALOG my_catalog;")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.True(t, result.IsLocalStatement)
