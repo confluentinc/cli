@@ -7,11 +7,9 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/flink"
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
 
@@ -111,17 +109,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 
 	serviceAccount := c.Context.GetCurrentServiceAccount()
-
-	identityPool, err := cmd.Flags().GetString("identity-pool")
-	if err != nil {
-		return err
-	}
-	if identityPool == "" {
-	}
-
-	if serviceAccount == "" && identityPool == "" {
-		output.ErrPrintln(flink.ServiceAccountWarning)
-	}
 
 	database, err := cmd.Flags().GetString("database")
 	if err != nil {
