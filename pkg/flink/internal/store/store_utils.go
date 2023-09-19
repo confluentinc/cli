@@ -105,6 +105,14 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 		return nil, &types.StatementError{Message: err.Error()}
 	}
 
+	// require catalog to be set before running USE <database>
+	if configKey == config.ConfigKeyDatabase && !s.Properties.HasKey(config.ConfigKeyCatalog) {
+		return nil, &types.StatementError{
+			Message:    "no catalog was set",
+			Suggestion: `please set a catalog first with "USE CATALOG 'catalog-name'" before setting a database`,
+		}
+	}
+
 	s.Properties.Set(configKey, configVal)
 
 	return &types.ProcessedStatement{

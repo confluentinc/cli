@@ -223,6 +223,18 @@ func TestProcessUseStatement(t *testing.T) {
 		_, err := s.processUseStatement("use db1 catalog metadata")
 		require.Error(t, err)
 	})
+
+	t.Run("use database should fail if no catalog was set", func(t *testing.T) {
+		// delete the catalog
+		catalogName := s.Properties.Get(config.ConfigKeyCatalog)
+		s.Properties.Delete(config.ConfigKeyCatalog)
+
+		_, err := s.processUseStatement("use db1")
+		require.Error(t, err)
+
+		// restore previous props state
+		s.Properties.Set(config.ConfigKeyCatalog, catalogName)
+	})
 }
 
 func TestStartsWithValidSQL(t *testing.T) {
