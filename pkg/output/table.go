@@ -9,11 +9,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-yaml/yaml"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sevlyar/retag"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
+	"gopkg.in/yaml.v3"
 )
 
 type Table struct {

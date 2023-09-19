@@ -10,7 +10,6 @@ import (
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
 
@@ -104,38 +103,12 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		catalog = environment.GetDisplayName()
 	}
 
-	computePool, err := cmd.Flags().GetString("compute-pool")
-	if err != nil {
-		return err
-	}
+	computePool := c.Context.GetCurrentFlinkComputePool()
 	if computePool == "" {
-		if c.Context.GetCurrentFlinkComputePool() == "" {
-			return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
-		}
-		computePool = c.Context.GetCurrentFlinkComputePool()
+		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 	}
 
-	identityPool, err := cmd.Flags().GetString("identity-pool")
-	if err != nil {
-		return err
-	}
-	if identityPool == "" {
-		identityPool = c.Context.GetCurrentIdentityPool()
-	}
-
-	serviceAccount, err := cmd.Flags().GetString("service-account")
-	if err != nil {
-		return err
-	}
-	if serviceAccount == "" {
-		serviceAccount = c.Context.GetCurrentServiceAccount()
-	}
-
-	if serviceAccount == "" && identityPool == "" {
-		output.ErrPrintln("Warning: no service account provided. To ensure that your statements run continuously, " +
-			"switch to using a service account instead of your user identity with `confluent iam service-account use` or `--service-account`. " +
-			"Otherwise, statements will stop running after 4 hours.")
-	}
+	serviceAccount := c.Context.GetCurrentServiceAccount()
 
 	database, err := cmd.Flags().GetString("database")
 	if err != nil {
