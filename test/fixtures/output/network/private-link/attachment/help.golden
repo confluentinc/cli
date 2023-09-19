@@ -4,8 +4,11 @@ Usage:
   confluent network private-link attachment [command]
 
 Available Commands:
+  create      Create a private link attachment.
+  delete      Delete one or more private link attachments.
   describe    Describe a private link attachment.
   list        List private link attachments.
+  update      Update an existing private link attachment.
 
 Global Flags:
   -h, --help            Show help for this command.

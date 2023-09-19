@@ -1,14 +1,16 @@
-Error: accepts 1 arg(s), received 0
+Create a private link attachment.
+
 Usage:
-  confluent network peering update <id> [flags]
+  confluent network private-link attachment create <name> [flags]
 
 Examples:
-Update the name of peering "peer-123456".
+Create an AWS PrivateLink attachment.
 
-  $ confluent network peering update peer-123456 --name "new name"
+  $ confluent network private-link attachment create aws-private-link-attachment --cloud aws --region us-west-2
 
 Flags:
-      --name string          Name of the peering.
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        REQUIRED: Cloud service provider region where the resources to be accessed using the private link attachment are located.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
@@ -17,4 +19,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-

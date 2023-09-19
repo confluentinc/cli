@@ -4,7 +4,7 @@ Usage:
   confluent network private-link access create <name> [flags]
 
 Examples:
-Create an AWS Private Link access.
+Create an AWS PrivateLink access.
 
   $ confluent network private-link access create aws-private-link-access --network n-123456 --cloud aws --cloud-account 123456789012
 
