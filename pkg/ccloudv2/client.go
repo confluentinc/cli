@@ -42,8 +42,8 @@ type Client struct {
 	KsqlClient                  *ksqlv2.APIClient
 	KafkaQuotasClient           *kafkaquotasv1.APIClient
 	MdsClient                   *mdsv2.APIClient
-	NetworkingPrivateLinkClient *networkingprivatelinkv1.APIClient
 	NetworkingClient            *networkingv1.APIClient
+	NetworkingPrivateLinkClient *networkingprivatelinkv1.APIClient
 	OrgClient                   *orgv2.APIClient
 	SchemaRegistryClient        *srcmv2.APIClient
 	SsoClient                   *ssov2.APIClient
@@ -73,8 +73,8 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		KsqlClient:                  newKsqlClient(url, userAgent, unsafeTrace),
 		KafkaQuotasClient:           newKafkaQuotasClient(url, userAgent, unsafeTrace),
 		MdsClient:                   newMdsClient(url, userAgent, unsafeTrace),
-		NetworkingPrivateLinkClient: newNetworkingPrivateLinkClient(url, userAgent, unsafeTrace),
 		NetworkingClient:            newNetworkingClient(url, userAgent, unsafeTrace),
+		NetworkingPrivateLinkClient: newNetworkingPrivateLinkClient(url, userAgent, unsafeTrace),
 		OrgClient:                   newOrgClient(url, userAgent, unsafeTrace),
 		SchemaRegistryClient:        newSchemaRegistryClient(url, userAgent, unsafeTrace),
 		SsoClient:                   newSsoClient(url, userAgent, unsafeTrace),

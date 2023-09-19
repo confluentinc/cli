@@ -24,7 +24,6 @@ func (c *command) newPrivateLinkAttachmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "attachment",
 		Short: "Manage private link attachments.",
-		Args:  cobra.NoArgs,
 	}
 
 	cmd.AddCommand(c.newPrivateLinkAttachmentDescribeCommand())
