@@ -97,7 +97,10 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return err
 	}
 
-	_, err = c.V2Client.DeleteIamRoleBinding(roleBindings[idx].GetId())
+	id := roleBindings[idx].GetId()
+	deleteRoleBinding.SetId(id)
+
+	_, err = c.V2Client.DeleteIamRoleBinding(id)
 	return err
 }
 
