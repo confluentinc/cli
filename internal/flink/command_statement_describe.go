@@ -15,8 +15,10 @@ func (c *command) newStatementDescribeCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
 		RunE:              c.statementDescribe,
 	}
+
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
+	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
