@@ -18,7 +18,7 @@ func (c *command) newPrivateLinkAttachmentUpdateCommand() *cobra.Command {
 		RunE:              c.privateLinkAttachmentUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name of private link attachment "platt-123456"`,
+				Text: `Update the name of private link attachment "platt-123456".`,
 				Code: `confluent network private-link attachment update platt-123456 --name "new name"`,
 			},
 		),

@@ -10,7 +10,7 @@ Create an AWS PrivateLink attachment.
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string        REQUIRED: Cloud service provider region where the resources to be accessed using the PrivateLink attachment are located.
+      --region string        REQUIRED: Cloud service provider region where the resources to be accessed using the private link attachment are located.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

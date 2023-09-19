@@ -26,7 +26,7 @@ func (c *command) newPrivateLinkAttachmentCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("region", "", "Cloud service provider region where the resources to be accessed using the PrivateLink attachment are located.")
+	cmd.Flags().String("region", "", "Cloud service provider region where the resources to be accessed using the private link attachment are located.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
