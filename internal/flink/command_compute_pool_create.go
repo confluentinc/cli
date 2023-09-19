@@ -84,12 +84,13 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&computePoolOut{
-		IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
-		Id:        computePool.GetId(),
-		Name:      computePool.Spec.GetDisplayName(),
-		Cfu:       computePool.Spec.GetMaxCfu(),
-		Region:    computePool.Spec.GetRegion(),
-		Status:    computePool.Status.GetPhase(),
+		IsCurrent:  computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
+		Id:         computePool.GetId(),
+		Name:       computePool.Spec.GetDisplayName(),
+		CurrentCfu: computePool.Status.GetCurrentCfu(),
+		MaxCfu:     computePool.Spec.GetMaxCfu(),
+		Region:     computePool.Spec.GetRegion(),
+		Status:     computePool.Status.GetPhase(),
 	})
 	return table.Print()
 }
