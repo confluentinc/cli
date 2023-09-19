@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
 )
 
 type command struct {
@@ -29,9 +28,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", dc.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(c.newIamBindingCommand())
-	}
 
 	return cmd
 }
