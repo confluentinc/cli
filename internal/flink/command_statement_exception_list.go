@@ -20,6 +20,7 @@ func (c *command) newStatementExceptionListCommand() *cobra.Command {
 	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -43,7 +44,6 @@ func (c *command) statementExceptionList(cmd *cobra.Command, args []string) erro
 	}
 
 	list := output.NewList(cmd)
-
 	for _, exception := range exceptions.Data {
 		list.Add(&exceptionOut{
 			Name:       exception.GetName(),
@@ -51,6 +51,5 @@ func (c *command) statementExceptionList(cmd *cobra.Command, args []string) erro
 			StackTrace: exception.GetStacktrace(),
 		})
 	}
-
 	return list.Print()
 }
