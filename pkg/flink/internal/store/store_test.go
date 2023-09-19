@@ -65,7 +65,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.True(t, result.IsLocalStatement)
 
-	result, err = s.ProcessLocalStatement("USE my_database;")
+	result, err = s.ProcessLocalStatement("USE CATALOG my_catalog;")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.True(t, result.IsLocalStatement)
@@ -1005,7 +1005,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	}
 	serviceAccountId := "sa-123"
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
+		Properties:       NewUserProperties(map[string]string{flinkconfig.ConfigKeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1095,7 +1095,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		ComputePoolId: "computePoolId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
+		Properties:       NewUserProperties(map[string]string{flinkconfig.ConfigKeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1126,6 +1126,48 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	processedStatement, err := store.ProcessStatement(statement)
 	require.Nil(s.T(), processedStatement)
 	require.Equal(s.T(), expectedError, err)
+}
+
+func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+		ComputePoolId: "computePoolId",
+	}
+	serviceAccountId := "sa-123"
+	statementName := "test-statement"
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{flinkconfig.ConfigKeyServiceAccount: serviceAccountId}, map[string]string{flinkconfig.ConfigKeyStatementName: statementName}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statement := "SELECT * FROM table"
+	statusDetailMessage := "Test status detail message"
+
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
+	}
+
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrgResourceId).
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+	// statement name should be cleared after submission
+	require.False(s.T(), store.Properties.HasKey(flinkconfig.ConfigKeyStatementName))
 }
 
 func (s *StoreTestSuite) TestWaitPendingStatement() {
@@ -1607,15 +1649,18 @@ type SqlV1beta1StatementMatcher struct {
 	Expected flinkgatewayv1beta1.SqlV1beta1Statement
 }
 
-// statementName is set inside the process function, we can only computePoolId, properties and statement
 func (p SqlV1beta1StatementMatcher) Matches(x interface{}) bool {
 	actual, ok := x.(flinkgatewayv1beta1.SqlV1beta1Statement)
 	if !ok {
 		return false
 	}
-	return *actual.Spec.ComputePoolId == *p.Expected.Spec.ComputePoolId &&
+	statementMatches := *actual.Spec.ComputePoolId == *p.Expected.Spec.ComputePoolId &&
 		reflect.DeepEqual(actual.Spec.Properties, p.Expected.Spec.Properties) &&
 		*actual.Spec.Statement == *p.Expected.Spec.Statement
+	if p.Expected.Name == nil {
+		return statementMatches
+	}
+	return statementMatches && *actual.Name == *p.Expected.Name
 }
 
 func (p SqlV1beta1StatementMatcher) String() string {

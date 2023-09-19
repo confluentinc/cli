@@ -19,4 +19,5 @@ const (
 	ConfigKeyLocalTimeZone  = "sql.local-time-zone"
 	ConfigKeyResultsTimeout = "client.results-timeout"
 	ConfigKeyServiceAccount = "client.service-account"
+	ConfigKeyStatementName  = "client.statement-name"
 )
