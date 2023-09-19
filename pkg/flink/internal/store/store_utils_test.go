@@ -187,6 +187,16 @@ func TestProcessResetStatement(t *testing.T) {
 		assert.ElementsMatch(t, defaultSetOutput.GetHeaders(), result.StatementResults.GetHeaders())
 		assert.ElementsMatch(t, defaultSetOutput.GetRows(), result.StatementResults.GetRows())
 	})
+
+	t.Run("should reset database if catalog is reset", func(t *testing.T) {
+		s.Properties.Set(config.ConfigKeyCatalog, "catalog")
+		s.Properties.Set(config.ConfigKeyDatabase, "db")
+		statement := fmt.Sprintf("reset '%s'", config.ConfigKeyCatalog)
+		_, err := s.processResetStatement(statement)
+		assert.Nil(t, err)
+		assert.False(t, s.Properties.HasKey(config.ConfigKeyCatalog))
+		assert.False(t, s.Properties.HasKey(config.ConfigKeyDatabase))
+	})
 }
 
 func TestProcessUseStatement(t *testing.T) {
@@ -244,6 +254,20 @@ func TestProcessUseStatement(t *testing.T) {
 
 		// restore previous props state
 		s.Properties.Set(config.ConfigKeyCatalog, catalogName)
+	})
+
+	t.Run("use catalog should reset the current database", func(t *testing.T) {
+		// set a test DB
+		dbName := s.Properties.Get(config.ConfigKeyDatabase)
+		s.Properties.Set(config.ConfigKeyDatabase, "test-db")
+
+		// use catalog should remove the DB property
+		_, err := s.processUseStatement("use catalog test")
+		require.Nil(t, err)
+		require.False(t, s.Properties.HasKey(config.ConfigKeyDatabase))
+
+		// restore previous props state
+		s.Properties.Set(config.ConfigKeyDatabase, dbName)
 	})
 }
 

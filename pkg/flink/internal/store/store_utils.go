@@ -89,20 +89,23 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
-	} else {
-		if !s.Properties.HasKey(configKey) {
-			return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
-		}
-
-		s.Properties.Delete(configKey)
-		return &types.ProcessedStatement{
-			Kind:             config.ConfigOpReset,
-			StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
-			Status:           types.COMPLETED,
-			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
-			IsLocalStatement: true,
-		}, nil
 	}
+	if !s.Properties.HasKey(configKey) {
+		return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
+	}
+	// if catalog is reset, also reset the database
+	if configKey == config.ConfigKeyCatalog {
+		s.Properties.Delete(config.ConfigKeyDatabase)
+	}
+
+	s.Properties.Delete(configKey)
+	return &types.ProcessedStatement{
+		Kind:             config.ConfigOpReset,
+		StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
+		Status:           types.COMPLETED,
+		StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
+		IsLocalStatement: true,
+	}, nil
 }
 
 func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
@@ -117,6 +120,11 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 			Message:    "no catalog was set",
 			Suggestion: `please set a catalog first with "USE CATALOG catalog-name" before setting a database`,
 		}
+	}
+
+	// USE CATALOG <catalog> will remove the current database
+	if configKey == config.ConfigKeyCatalog {
+		s.Properties.Delete(config.ConfigKeyDatabase)
 	}
 
 	s.Properties.Set(configKey, configVal)
