@@ -6,10 +6,10 @@ import (
 
 	"github.com/bradleyjkemp/cupaloy"
 	"github.com/gdamore/tcell/v2"
-	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"

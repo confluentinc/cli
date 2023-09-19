@@ -33,6 +33,10 @@ func (c *FakeFlinkGatewayClient) DeleteStatement(environmentId, statementName, o
 	return nil
 }
 
+func (c *FakeFlinkGatewayClient) UpdateStatement(environmentId, statementName, orgId string, statement flinkgatewayv1beta1.SqlV1beta1Statement) error {
+	return nil
+}
+
 func (c *FakeFlinkGatewayClient) GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	secondsToWait := time.Duration(rapid.IntRange(1, 3).Example())
 	time.Sleep(secondsToWait * time.Second)

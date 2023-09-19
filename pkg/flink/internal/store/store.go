@@ -176,6 +176,21 @@ func (s *Store) DeleteStatement(statementName string) bool {
 	return true
 }
 
+func (s *Store) StopStatement(statementName string) bool {
+	statement := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Statement: flinkgatewayv1beta1.PtrString(statementName),
+			Stopped:   flinkgatewayv1beta1.PtrBool(true),
+		},
+	}
+	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId(), statement); err != nil {
+		log.CliLogger.Warnf("Failed to stop the statement: %v", err)
+		return false
+	}
+	log.CliLogger.Infof("Successfully stopped statement: %s", statementName)
+	return true
+}
+
 func (s *Store) waitForPendingStatement(ctx context.Context, statementName string, timeout time.Duration) (*types.ProcessedStatement, *types.StatementError) {
 	retries := 0
 	waitTime := calcWaitTime(retries)

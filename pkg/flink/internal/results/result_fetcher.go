@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
@@ -185,12 +184,9 @@ func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema(statement types
 
 func (t *ResultFetcher) Close() {
 	t.refreshState.setState(types.Paused)
-	// This was used to delete statements after their execution to save system resources, which should not be
-	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
-	// TODO: remove this completely once we are sure we won't need it in the future
 	statement := t.GetStatement()
-	if config.ShouldCleanupStatements || statement.Status == types.RUNNING {
-		go t.store.DeleteStatement(statement.StatementName)
+	if statement.Status == types.RUNNING {
+		go t.store.StopStatement(statement.StatementName)
 	}
 }
 
