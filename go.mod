@@ -89,11 +89,11 @@ require (
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.12.0
+	golang.org/x/crypto v0.13.0
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
 	golang.org/x/oauth2 v0.11.0
 	golang.org/x/term v0.12.0
-	golang.org/x/text v0.12.0
+	golang.org/x/text v0.13.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/apimachinery v0.28.0
