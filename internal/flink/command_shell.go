@@ -158,7 +158,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		OrgResourceId:    resourceId,
 		Database:         database,
 		ComputePoolId:    computePool,
-		IdentityPoolId:   identityPool,
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
 	}, reportUsage(cmd, c.Config.Config, unsafeTrace))

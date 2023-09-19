@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"pgregory.net/rapid"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
@@ -23,8 +22,8 @@ const (
 )
 
 type FakeFlinkGatewayClient struct {
-	statement  flinkgatewayv1alpha1.SqlV1alpha1Statement
-	statements []flinkgatewayv1alpha1.SqlV1alpha1Statement
+	statement  flinkgatewayv1beta1.SqlV1beta1Statement
+	statements []flinkgatewayv1beta1.SqlV1beta1Statement
 	fakeCount  int
 }
 
@@ -36,50 +35,26 @@ func (c *FakeFlinkGatewayClient) DeleteStatement(environmentId, statementName, o
 	return nil
 }
 
-func (c *FakeFlinkGatewayClient) GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+func (c *FakeFlinkGatewayClient) GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	secondsToWait := time.Duration(rapid.IntRange(1, 3).Example())
 	time.Sleep(secondsToWait * time.Second)
 	c.statement.Status.Phase = "RUNNING"
 	return c.statement, nil
 }
 
-func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementList, error) {
-	return flinkgatewayv1alpha1.SqlV1alpha1StatementList{Data: c.statements}, nil
+func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error) {
+	return flinkgatewayv1beta1.SqlV1beta1StatementList{Data: c.statements}, nil
 }
 
-func (c *FakeFlinkGatewayClient) CreateStatementForShell(statement, computePoolId string, properties map[string]string, serviceAccountId, identityPoolId, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
-	columnDetails := c.getFakeResultSchema(statement)
-	statementName := uuid.New().String()[:20]
-
+func (c *FakeFlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	c.fakeCount = 0
-	creationTime := time.Now()
-	c.statement = flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		ApiVersion: nil,
-		Kind:       nil,
-		Metadata: &flinkgatewayv1alpha1.ObjectMeta{
-			Self:      "",
-			CreatedAt: &creationTime,
-			UpdatedAt: nil,
-		},
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName:  &statementName,
-			Statement:      &statement,
-			Properties:     &properties,
-			ComputePoolId:  &computePoolId,
-			IdentityPoolId: &identityPoolId,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase:        "PENDING",
-			ResultSchema: &flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{Columns: &columnDetails},
-			Detail:       nil,
-		},
-	}
+	c.statement = statement
 	c.statements = append(c.statements, c.statement)
 
 	return c.statement, nil
 }
 
-func (c *FakeFlinkGatewayClient) getFakeResultSchema(statement string) []flinkgatewayv1alpha1.ColumnDetails {
+func (c *FakeFlinkGatewayClient) getFakeResultSchema(statement string) []flinkgatewayv1beta1.ColumnDetails {
 	switch statement {
 	case staticQuery:
 		return c.getStaticFakeResultSchema()
@@ -89,15 +64,15 @@ func (c *FakeFlinkGatewayClient) getFakeResultSchema(statement string) []flinkga
 	return nil
 }
 
-func (c *FakeFlinkGatewayClient) getStaticFakeResultSchema() []flinkgatewayv1alpha1.ColumnDetails {
+func (c *FakeFlinkGatewayClient) getStaticFakeResultSchema() []flinkgatewayv1beta1.ColumnDetails {
 	return generators.MockResultColumns(5, 2).Example()
 }
 
-func (c *FakeFlinkGatewayClient) getDynamicFakeResultSchema() []flinkgatewayv1alpha1.ColumnDetails {
-	return []flinkgatewayv1alpha1.ColumnDetails{
+func (c *FakeFlinkGatewayClient) getDynamicFakeResultSchema() []flinkgatewayv1beta1.ColumnDetails {
+	return []flinkgatewayv1beta1.ColumnDetails{
 		{
 			Name: "Count",
-			Type: flinkgatewayv1alpha1.DataType{
+			Type: flinkgatewayv1beta1.DataType{
 				Nullable: false,
 				Type:     "INTEGER",
 			},
@@ -105,11 +80,11 @@ func (c *FakeFlinkGatewayClient) getDynamicFakeResultSchema() []flinkgatewayv1al
 	}
 }
 
-func (c *FakeFlinkGatewayClient) GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
+func (c *FakeFlinkGatewayClient) GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error) {
 	resultData, nextUrl := c.getFakeResults()
-	result := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{Next: &nextUrl},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &resultData},
+	result := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{Next: &nextUrl},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{Data: &resultData},
 	}
 	return result, nil
 }
@@ -155,6 +130,6 @@ func (c *FakeFlinkGatewayClient) getFakeResultsRunningCounter() ([]any, string) 
 	return results, fmt.Sprintf("https://devel.cpdev.cloud/some/results?page_token=%s", "not-empty")
 }
 
-func (c *FakeFlinkGatewayClient) GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error) {
-	return flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, nil
+func (c *FakeFlinkGatewayClient) GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1beta1.SqlV1beta1StatementExceptionList, error) {
+	return flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{}, nil
 }

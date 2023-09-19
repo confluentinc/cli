@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -58,6 +58,18 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 			IsLocalStatement: true,
 		}, nil
 	}
+	if configKey == config.ConfigKeyDatabase || configKey == config.ConfigKeyCatalog {
+		return nil, &types.StatementError{
+			Message:    "cannot set a catalog or a database with SET command",
+			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
+		}
+	}
+	if configKey == config.ConfigKeyStatementName && strings.TrimSpace(configVal) == "" {
+		return nil, &types.StatementError{
+			Message:    "cannot set an empty statement name",
+			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
+		}
+	}
 	s.Properties.Set(configKey, configVal)
 
 	return &types.ProcessedStatement{
@@ -83,26 +95,42 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
-	} else {
-		if !s.Properties.HasKey(configKey) {
-			return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
-		}
-
-		s.Properties.Delete(configKey)
-		return &types.ProcessedStatement{
-			Kind:             config.ConfigOpReset,
-			StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
-			Status:           types.COMPLETED,
-			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
-			IsLocalStatement: true,
-		}, nil
 	}
+	if !s.Properties.HasKey(configKey) {
+		return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
+	}
+	// if catalog is reset, also reset the database
+	if configKey == config.ConfigKeyCatalog {
+		s.Properties.Delete(config.ConfigKeyDatabase)
+	}
+
+	s.Properties.Delete(configKey)
+	return &types.ProcessedStatement{
+		Kind:             config.ConfigOpReset,
+		StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
+		Status:           types.COMPLETED,
+		StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
+		IsLocalStatement: true,
+	}, nil
 }
 
 func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, configVal, err := parseUseStatement(statement)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
+	}
+
+	// require catalog to be set before running USE <database>
+	if configKey == config.ConfigKeyDatabase && !s.Properties.HasKey(config.ConfigKeyCatalog) {
+		return nil, &types.StatementError{
+			Message:    "no catalog was set",
+			Suggestion: `please set a catalog first with "USE CATALOG catalog-name" before setting a database`,
+		}
+	}
+
+	// USE CATALOG <catalog> will remove the current database
+	if configKey == config.ConfigKeyCatalog {
+		s.Properties.Delete(config.ConfigKeyDatabase)
 	}
 
 	s.Properties.Set(configKey, configVal)
@@ -329,7 +357,7 @@ func processHttpErrors(resp *http.Response, err error) error {
 			}
 		}
 
-		statementErr := flinkgatewayv1alpha1.NewError()
+		statementErr := flinkgatewayv1beta1.NewError()
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {

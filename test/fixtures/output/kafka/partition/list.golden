@@ -1,5 +1,4 @@
    Cluster  | Topic Name | Partition ID | Leader ID  
 ------------+------------+--------------+------------
-  cluster-1 | topic1     |            0 |         2  
-  cluster-1 | topic1     |            1 |         1  
-  cluster-1 | topic1     |            2 |         0  
+  lkc-12345 | topic1     |            0 |         2  
+  lkc-12345 | topic1     |            1 |         1  

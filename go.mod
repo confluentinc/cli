@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.327
+	github.com/aws/aws-sdk-go v1.45.12
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
@@ -16,13 +16,14 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
-	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1
+	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.5.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.14.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.15.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
@@ -43,7 +44,7 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.0.24
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.1
-	github.com/docker/docker v24.0.5+incompatible
+	github.com/docker/docker v24.0.6+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/fatih/color v1.15.0
 	github.com/gdamore/tcell/v2 v2.6.0
@@ -87,11 +88,11 @@ require (
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.12.0
+	golang.org/x/crypto v0.13.0
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
 	golang.org/x/oauth2 v0.11.0
-	golang.org/x/term v0.11.0
-	golang.org/x/text v0.12.0
+	golang.org/x/term v0.12.0
+	golang.org/x/text v0.13.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -107,7 +108,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
+	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/bufbuild/protocompile v0.4.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
@@ -169,7 +170,7 @@ require (
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230119192704-9d59e20e5cd1 // indirect

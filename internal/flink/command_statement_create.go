@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/flink"
@@ -53,17 +53,17 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-		StatementName: flinkgatewayv1alpha1.PtrString(name),
-		Statement:     flinkgatewayv1alpha1.PtrString(sql),
-	}}
+	statement := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString(name),
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{Statement: flinkgatewayv1beta1.PtrString(sql)},
+	}
 
 	client, err := c.GetFlinkGatewayClient()
 	if err != nil {
 		return err
 	}
 
-	statement, err = client.CreateStatement(serviceAccount, environmentId, statement, c.Context.LastOrgId)
+	statement, err = client.CreateStatement(statement, serviceAccount, environmentId, c.Context.LastOrgId)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	table := output.NewTable(cmd)
 	table.Add(&statementOut{
 		CreationDate: statement.Metadata.GetCreatedAt(),
-		Name:         statement.Spec.GetStatementName(),
+		Name:         statement.GetName(),
 		Statement:    statement.Spec.GetStatement(),
 		ComputePool:  statement.Spec.GetComputePoolId(),
 		Status:       statement.Status.GetPhase(),

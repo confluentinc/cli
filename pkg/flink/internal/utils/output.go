@@ -22,7 +22,7 @@ func OutputInfo(s string) {
 }
 
 func OutputInfof(s string, args ...any) {
-	output.Printf(s+"\n", args...)
+	output.Printf(s, args...)
 }
 
 func OutputWarn(s string) {
