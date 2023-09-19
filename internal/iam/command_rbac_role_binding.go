@@ -55,7 +55,7 @@ type roleBindingCommand struct {
 }
 
 type roleBindingOut struct {
-	Id             string `human:"Id,omitempty" serialized:"id,omitempty"`
+	Id             string `human:"ID,omitempty" serialized:"id,omitempty"`
 	Principal      string `human:"Principal" serialized:"principal"`
 	Email          string `human:"Email" serialized:"email"`
 	Role           string `human:"Role" serialized:"role"`

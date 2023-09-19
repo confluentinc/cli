@@ -22,31 +22,31 @@ var (
 	keyStoreV2       = map[string]*apikeysv2.IamV2ApiKey{}
 	keyTime          = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	roleBindingStore = []mdsv2.IamV2RoleBinding{
-		buildRoleBinding(identityPoolResourceId, "OrganizationAdmin",
+		buildRoleBinding("rb-000", identityPoolResourceId, "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderResourceId),
-		buildRoleBinding("u-11aaa", "OrganizationAdmin",
+		buildRoleBinding("rb-1aa", "u-11aaa", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
-		buildRoleBinding("sa-12345", "OrganizationAdmin",
+		buildRoleBinding("rb-123", "sa-12345", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
-		buildRoleBinding("u-11aaa", "CloudClusterAdmin",
+		buildRoleBinding("rb-1aa", "u-11aaa", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
-		buildRoleBinding("u-22bbb", "CloudClusterAdmin",
+		buildRoleBinding("rb-2bb", "u-22bbb", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
-		buildRoleBinding("u-22bbb", "EnvironmentAdmin",
+		buildRoleBinding("rb-22b", "u-22bbb", "EnvironmentAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595"),
-		buildRoleBinding("u-33ccc", "CloudClusterAdmin",
+		buildRoleBinding("rb-3cc", "u-33ccc", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
-		buildRoleBinding("u-44ddd", "CloudClusterAdmin",
+		buildRoleBinding("rb-4dd", "u-44ddd", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
-		buildRoleBinding("u-55eee", "ResourceOwner",
+		buildRoleBinding("rb-5ee", "u-55eee", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/group=readers"),
-		buildRoleBinding("u-55eee", "ResourceOwner",
+		buildRoleBinding("rb-55e", "u-55eee", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/topic=clicks-*"),
-		buildRoleBinding("u-55eee", "ResourceOwner",
+		buildRoleBinding("rb-eee", "u-55eee", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/topic=payroll"),
-		buildRoleBinding("u-66fff", "ResourceOwner",
+		buildRoleBinding("rb-6ff", "u-66fff", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/ksql=ksql-cluster-name-2222bbb"),
-		buildRoleBinding("u-77ggg", "ResourceOwner",
+		buildRoleBinding("rb-7gg", "u-77ggg", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/schema-registry=lsrc-3333ccc/subject=clicks"),
 	}
 )
@@ -541,9 +541,9 @@ func buildIamProvider(id, name, description, issuer, jwksUri string) identitypro
 	}
 }
 
-func buildRoleBinding(user, roleName, crn string) mdsv2.IamV2RoleBinding {
+func buildRoleBinding(id, user, roleName, crn string) mdsv2.IamV2RoleBinding {
 	return mdsv2.IamV2RoleBinding{
-		Id:         mdsv2.PtrString("0"),
+		Id:         mdsv2.PtrString(id),
 		Principal:  mdsv2.PtrString("User:" + user),
 		RoleName:   mdsv2.PtrString(roleName),
 		CrnPattern: mdsv2.PtrString(crn),
