@@ -68,7 +68,6 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		DisplayName: flinkv2.PtrString(args[0]),
 		Cloud:       flinkv2.PtrString(cloud),
 		Region:      flinkv2.PtrString(region),
-		Config:      &flinkv2.FcpmV2ComputePoolSpecConfigOneOf{FcpmV2Standard: &flinkv2.FcpmV2Standard{Kind: "Standard"}},
 		MaxCfu:      flinkv2.PtrInt32(cfu),
 		Environment: &flinkv2.GlobalObjectReference{
 			Id:           environmentId,
