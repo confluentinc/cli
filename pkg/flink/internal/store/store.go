@@ -78,7 +78,8 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return result, sErr
 	}
 
-	statementName := uuid.New().String()[:18]
+	statementName := s.Properties.GetOrDefault(config.ConfigKeyStatementName, uuid.New().String()[:18])
+	defer s.Properties.Delete(config.ConfigKeyStatementName)
 
 	// Process remote statements
 	computePoolId := s.appOptions.GetComputePoolId()

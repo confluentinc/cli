@@ -120,13 +120,27 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should fail if user wants to set the catalog", func(t *testing.T) {
-		_, err := s.processSetStatement("set" + config.ConfigKeyCatalog)
-		assert.NotNil(t, err)
+		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.ConfigKeyCatalog, "catalog-name"))
+		assert.Equal(t, &types.StatementError{
+			Message:    "cannot set a catalog or a database with SET command",
+			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
+		}, err)
 	})
 
 	t.Run("should fail if user wants to set the database", func(t *testing.T) {
-		_, err := s.processSetStatement("set" + config.ConfigKeyDatabase)
-		assert.NotNil(t, err)
+		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.ConfigKeyDatabase, "db-name"))
+		assert.Equal(t, &types.StatementError{
+			Message:    "cannot set a catalog or a database with SET command",
+			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
+		}, err)
+	})
+
+	t.Run("should fail if user wants to set an empty statement name", func(t *testing.T) {
+		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.ConfigKeyStatementName, ""))
+		assert.Equal(t, &types.StatementError{
+			Message:    "cannot set an empty statement name",
+			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
+		}, err)
 	})
 }
 
