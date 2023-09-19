@@ -118,6 +118,16 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Equal(t, len(s.Properties.GetProperties()), len(result.StatementResults.Rows))
 		cupaloy.SnapshotT(t, result.StatementResults)
 	})
+
+	t.Run("should fail if user wants to set the catalog", func(t *testing.T) {
+		_, err := s.processSetStatement("set" + config.ConfigKeyCatalog)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("should fail if user wants to set the database", func(t *testing.T) {
+		_, err := s.processSetStatement("set" + config.ConfigKeyDatabase)
+		assert.NotNil(t, err)
+	})
 }
 
 func TestProcessResetStatement(t *testing.T) {

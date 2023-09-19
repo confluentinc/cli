@@ -58,6 +58,12 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 			IsLocalStatement: true,
 		}, nil
 	}
+	if configKey == config.ConfigKeyDatabase || configKey == config.ConfigKeyCatalog {
+		return nil, &types.StatementError{
+			Message:    "cannot set a catalog or a database with SET command",
+			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
+		}
+	}
 	s.Properties.Set(configKey, configVal)
 
 	return &types.ProcessedStatement{
