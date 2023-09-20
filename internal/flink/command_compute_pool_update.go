@@ -21,7 +21,7 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update name and CFU count of a Flink compute pool.`,
-				Code: `confluent flink compute-pool update my-compute-pool --name "new name" --cfu 2`,
+				Code: `confluent flink compute-pool update my-compute-pool --name "new name" --max-cfu 2`,
 			},
 		),
 	}
