@@ -23,8 +23,9 @@ const (
 
 // Custom Internal type that shall be used internally by the client
 type ProcessedStatement struct {
+	Statement         string `json:"statement"`
 	StatementName     string `json:"statement_name"`
-	Kind              string `json:"statement"`
+	Kind              string `json:"kind"`
 	ComputePool       string `json:"compute_pool"`
 	Principal         string `json:"principal"`
 	Status            PHASE  `json:"status"`
@@ -39,6 +40,7 @@ type ProcessedStatement struct {
 func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) *ProcessedStatement {
 	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
 	return &ProcessedStatement{
+		Statement:         statementObj.Spec.GetStatement(),
 		StatementName:     statementObj.GetName(),
 		ComputePool:       statementObj.Spec.GetComputePoolId(),
 		Principal:         statementObj.Spec.GetPrincipal(),

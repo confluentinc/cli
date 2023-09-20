@@ -74,8 +74,21 @@ func (c *StatementController) shouldDisplayUserIdentityWarning(processedStatemen
 	if processedStatement.IsLocalStatement {
 		return false
 	}
+	// the warning is only needed for INSERT INTO and STATEMENT SET statements
+	if !c.isInsertOrStatementSetStatement(processedStatement) {
+		return false
+	}
 	principal := strings.ToLower(strings.TrimSpace(processedStatement.Principal))
 	return strings.HasPrefix(principal, "u-")
+}
+
+func (c *StatementController) isInsertOrStatementSetStatement(processedStatement *types.ProcessedStatement) bool {
+	// transform statement to uppercase and remove duplicated white spaces
+	statement := strings.ToUpper(strings.Join(strings.Fields(processedStatement.Statement), " "))
+	if strings.HasPrefix(statement, "INSERT") || strings.HasPrefix(statement, "EXECUTE STATEMENT SET") {
+		return true
+	}
+	return false
 }
 
 func (c *StatementController) waitForStatementToBeReadyOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {

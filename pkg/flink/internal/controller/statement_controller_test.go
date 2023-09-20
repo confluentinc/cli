@@ -158,8 +158,56 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 }
 
 func (s *StatementControllerTestSuite) TestExecuteStatementPrintsWarningWhenNoServiceAccountIsUsed() {
+	statementToExecute := "insert into table values (1,2);"
+	processedStatement := types.ProcessedStatement{
+		Statement:     statementToExecute,
+		StatementName: "test-statement",
+		StatusDetail:  "status detail message",
+		Status:        types.PENDING,
+		Principal:     "u-123",
+	}
+	completedStatement := processedStatement
+	completedStatement.Status = types.COMPLETED
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&completedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		_, _ = s.statementController.ExecuteStatement(statementToExecute)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementPrintsNoWarningForLocalStatements() {
+	statementToExecute := "insert into table values (1,2);"
+	processedStatement := types.ProcessedStatement{
+		Statement:        statementToExecute,
+		StatementName:    "test-statement",
+		StatusDetail:     "status detail message",
+		Status:           types.PENDING,
+		Principal:        "u-123",
+		IsLocalStatement: true,
+	}
+	completedStatement := processedStatement
+	completedStatement.Status = types.COMPLETED
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&completedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		_, _ = s.statementController.ExecuteStatement(statementToExecute)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementPrintsNoWarningForStatementsOtherThanInsertOrStatementSet() {
 	statementToExecute := "select 1;"
 	processedStatement := types.ProcessedStatement{
+		Statement:     statementToExecute,
 		StatementName: "test-statement",
 		StatusDetail:  "status detail message",
 		Status:        types.PENDING,
