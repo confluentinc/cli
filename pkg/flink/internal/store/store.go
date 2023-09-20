@@ -177,16 +177,20 @@ func (s *Store) DeleteStatement(statementName string) bool {
 }
 
 func (s *Store) StopStatement(statementName string) bool {
-	statement := flinkgatewayv1beta1.SqlV1beta1Statement{
-		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Statement: flinkgatewayv1beta1.PtrString(statementName),
-			Stopped:   flinkgatewayv1beta1.PtrBool(true),
-		},
+	statement, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+
+	if err != nil {
+		log.CliLogger.Warnf("Failed to fetch statement to stop it: %v", err)
+		return false
 	}
+
+	statement.Spec.SetStopped(true)
+
 	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId(), statement); err != nil {
 		log.CliLogger.Warnf("Failed to stop the statement: %v", err)
 		return false
 	}
+
 	log.CliLogger.Infof("Successfully stopped statement: %s", statementName)
 	return true
 }
