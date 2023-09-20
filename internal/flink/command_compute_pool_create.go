@@ -21,7 +21,7 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink compute pool "my-compute-pool" in AWS with 2 CFUs.`,
-				Code: "confluent flink compute-pool create my-compute-pool --cloud aws --region us-west-2 --cfu 2",
+				Code: "confluent flink compute-pool create my-compute-pool --cloud aws --region us-west-2 --max-cfu 2",
 			},
 		),
 	}
