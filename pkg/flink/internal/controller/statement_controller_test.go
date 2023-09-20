@@ -163,6 +163,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsWarningWhenNoSe
 		StatementName: "test-statement",
 		StatusDetail:  "status detail message",
 		Status:        types.PENDING,
+		Principal:     "u-123",
 	}
 	completedStatement := processedStatement
 	completedStatement.Status = types.COMPLETED

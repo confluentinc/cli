@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	fColor "github.com/fatih/color"
@@ -41,7 +42,7 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 	c.createdStatementName = processedStatement.StatementName
 	processedStatement.PrintStatusMessage()
 
-	if !processedStatement.IsLocalStatement && processedStatement.Principal == "" {
+	if c.shouldDisplayUserIdentityWarning(processedStatement) {
 		utils.OutputWarnf("[WARN] To ensure that your statements run continuously, switch to using a service account instead of your user identity by running `SET '%s'='sa-123';`. Otherwise, statements will stop running after 4 hours.",
 			config.ConfigKeyServiceAccount)
 	}
@@ -67,6 +68,14 @@ func (c *StatementController) handleStatementError(err types.StatementError) {
 	if err.StatusCode == http.StatusUnauthorized {
 		c.applicationController.ExitApplication()
 	}
+}
+
+func (c *StatementController) shouldDisplayUserIdentityWarning(processedStatement *types.ProcessedStatement) bool {
+	if processedStatement.IsLocalStatement {
+		return false
+	}
+	principal := strings.ToLower(strings.TrimSpace(processedStatement.Principal))
+	return strings.HasPrefix(principal, "u-")
 }
 
 func (c *StatementController) waitForStatementToBeReadyOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
