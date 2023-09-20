@@ -138,10 +138,10 @@ func (s *StatementControllerTestSuite) TestExecuteStatementCancelsAndDeletesStat
 func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 	statementToExecute := "select 1;"
 	processedStatement := types.ProcessedStatement{
-		StatementName:  "test-statement",
-		StatusDetail:   "status detail message",
-		Status:         types.PENDING,
-		ServiceAccount: "sa-123",
+		StatementName: "test-statement",
+		StatusDetail:  "status detail message",
+		Status:        types.PENDING,
+		Principal:     "sa-123",
 	}
 	completedStatement := processedStatement
 	completedStatement.Status = types.COMPLETED
@@ -158,11 +158,60 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 }
 
 func (s *StatementControllerTestSuite) TestExecuteStatementPrintsWarningWhenNoServiceAccountIsUsed() {
-	statementToExecute := "select 1;"
+	statementToExecute := "insert into table values (1,2);"
 	processedStatement := types.ProcessedStatement{
+		Statement:     statementToExecute,
 		StatementName: "test-statement",
 		StatusDetail:  "status detail message",
 		Status:        types.PENDING,
+		Principal:     "u-123",
+	}
+	completedStatement := processedStatement
+	completedStatement.Status = types.COMPLETED
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&completedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		_, _ = s.statementController.ExecuteStatement(statementToExecute)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementPrintsNoWarningForLocalStatements() {
+	statementToExecute := "insert into table values (1,2);"
+	processedStatement := types.ProcessedStatement{
+		Statement:        statementToExecute,
+		StatementName:    "test-statement",
+		StatusDetail:     "status detail message",
+		Status:           types.PENDING,
+		Principal:        "u-123",
+		IsLocalStatement: true,
+	}
+	completedStatement := processedStatement
+	completedStatement.Status = types.COMPLETED
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&completedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		_, _ = s.statementController.ExecuteStatement(statementToExecute)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementPrintsNoWarningForStatementsOtherThanInsertOrStatementSet() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{
+		Statement:     statementToExecute,
+		StatementName: "test-statement",
+		StatusDetail:  "status detail message",
+		Status:        types.PENDING,
+		Principal:     "u-123",
 	}
 	completedStatement := processedStatement
 	completedStatement.Status = types.COMPLETED
@@ -180,7 +229,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsWarningWhenNoSe
 
 func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForCompletedState() {
 	statementToExecute := "select 1;"
-	processedStatement := types.ProcessedStatement{Status: types.PENDING, ServiceAccount: "sa-123"}
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123"}
 	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
 	completedStatement := types.ProcessedStatement{Status: types.COMPLETED}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
@@ -200,7 +249,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForCompletedStat
 
 func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForFailedState() {
 	statementToExecute := "select 1;"
-	processedStatement := types.ProcessedStatement{Status: types.PENDING, ServiceAccount: "sa-123"}
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123"}
 	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
 	failedStatement := types.ProcessedStatement{Status: types.FAILED}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
@@ -220,7 +269,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForFailedState()
 
 func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForNonEmptyPageToken() {
 	statementToExecute := "select 1;"
-	processedStatement := types.ProcessedStatement{Status: types.PENDING, ServiceAccount: "sa-123"}
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123"}
 	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
 	runningStatementWithNextPage := types.ProcessedStatement{Status: types.RUNNING, PageToken: "not-empty"}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
@@ -240,7 +289,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForNonEmptyPageT
 
 func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWhenUserDetaches() {
 	statementToExecute := "select 1;"
-	processedStatement := types.ProcessedStatement{Status: types.PENDING, ServiceAccount: "sa-123"}
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123"}
 	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)

@@ -7,8 +7,10 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 )
 
 func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
@@ -19,8 +21,10 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
+	var exs []examples.Example
+
 	if c.cfg.IsCloudLogin() {
-		cmd.Example = examples.BuildExampleString(
+		exs = append(exs,
 			examples.Example{
 				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the cloud cluster "lkc-123456":`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
@@ -50,8 +54,20 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"`,
 			},
 		)
+		if c.cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", c.Context, config.CliLaunchDarklyClient, true, false) {
+			exs = append(exs,
+				examples.Example{
+					Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345":`,
+					Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345",
+				},
+				examples.Example{
+					Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345" for the compute pool "lfcp-123456" in the Flink region "us-east-2":`,
+					Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456",
+				},
+			)
+		}
 	} else {
-		cmd.Example = examples.BuildExampleString(
+		exs = append(exs,
 			examples.Example{
 				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
 				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster $KAFKA_CLUSTER_ID",
@@ -59,9 +75,11 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		)
 	}
 
+	cmd.Example = examples.BuildExampleString(exs...)
+
 	cmd.Flags().String("role", "", "Role name of the new role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+	addClusterFlags(cmd, c.cfg, c.CLICommand, c.Context)
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
@@ -81,9 +99,11 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		if _, err := c.V2Client.CreateIamRoleBinding(createRoleBinding); err != nil {
+		resp, err := c.V2Client.CreateIamRoleBinding(createRoleBinding)
+		if err != nil {
 			return err
 		}
+		createRoleBinding.SetId(resp.GetId())
 
 		return c.displayCCloudCreateAndDeleteOutput(cmd, createRoleBinding)
 	} else {

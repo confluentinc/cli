@@ -78,23 +78,3 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		s.runIntegrationTest(test)
 	}
 }
-
-func (s *CLITestSuite) TestFlinkIamBinding() {
-	tests := []CLITest{
-		{args: "flink iam-binding create --cloud aws --region us-west-2 --identity-pool pool-1234", fixture: "flink/iam-binding/create.golden"},
-		{args: "flink iam-binding create --cloud aws --region us-west-2 --identity-pool pool-1234 --environment env-123", fixture: "flink/iam-binding/create-environment.golden"},
-		{args: "flink iam-binding delete fiam-123 --force", fixture: "flink/iam-binding/delete.golden"},
-		{args: "flink iam-binding delete fiam-123 fiam-456", input: "n\n", fixture: "flink/iam-binding/delete-multiple-refuse.golden"},
-		{args: "flink iam-binding delete fiam-123 fiam-456", input: "y\n", fixture: "flink/iam-binding/delete-multiple-success.golden"},
-		{args: "flink iam-binding delete fiam-123 fiam-321", fixture: "flink/iam-binding/delete-multiple-fail.golden", exitCode: 1},
-		{args: "flink iam-binding list", fixture: "flink/iam-binding/list.golden"},
-		{args: "flink iam-binding list --cloud aws", fixture: "flink/iam-binding/list-cloud.golden"},
-		{args: "flink iam-binding list --region us-west-1", fixture: "flink/iam-binding/list-region.golden"},
-		{args: "flink iam-binding list --identity-pool pool-123", fixture: "flink/iam-binding/list-identity-pool.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}

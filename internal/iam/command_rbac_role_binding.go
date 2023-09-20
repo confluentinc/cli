@@ -14,7 +14,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -55,6 +57,7 @@ type roleBindingCommand struct {
 }
 
 type roleBindingOut struct {
+	Id             string `human:"ID,omitempty" serialized:"id,omitempty"`
 	Principal      string `human:"Principal" serialized:"principal"`
 	Email          string `human:"Email" serialized:"email"`
 	Role           string `human:"Role" serialized:"role"`
@@ -159,10 +162,13 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 /*
 Helper function to add flags for all the legal scopes/clusters for the command.
 */
-func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLICommand) {
-	if isCloudLogin {
+func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CLICommand, ctx *dynamicconfig.DynamicContext) {
+	if cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
+		if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", ctx, config.CliLaunchDarklyClient, true, false) {
+			cmd.Flags().String("flink-region", "", "Flink region ID for the role binding.")
+		}
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
@@ -345,6 +351,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
 
 	out := &roleBindingOut{
+		Id:        roleBinding.GetId(),
 		Principal: roleBinding.GetPrincipal(),
 		Role:      roleBinding.GetRoleName(),
 	}
@@ -381,7 +388,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
-			fields = []string{"Principal", "Role"}
+			fields = []string{"Id", "Principal", "Role"}
 		}
 	} else {
 		if resource != "" {
@@ -392,7 +399,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 				return err
 			}
 			out.Email = user.GetEmail()
-			fields = []string{"Principal", "Email", "Role"}
+			fields = []string{"Id", "Principal", "Email", "Role"}
 		}
 	}
 
@@ -523,6 +530,14 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		crnPattern += "/environment=" + environment
+	}
+
+	if cmd.Flags().Changed("flink-region") {
+		flinkRegion, err := cmd.Flags().GetString("flink-region")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/flink-region=" + flinkRegion
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") {
