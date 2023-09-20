@@ -1,7 +1,7 @@
 Create a Flink compute pool.
 
 Usage:
-  confluent flink compute-pool create <id> [flags]
+  confluent flink compute-pool create <name> [flags]
 
 Examples:
 Create Flink compute pool "my-compute-pool" in AWS with 2 CFUs.
@@ -11,7 +11,7 @@ Create Flink compute pool "my-compute-pool" in AWS with 2 CFUs.
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --region string        REQUIRED: Cloud region for compute pool (use "confluent flink region list" to see all).
-      --cfu int32            Number of Confluent Flink Units (CFU). (default 1)
+      --max-cfu int32        Number of Confluent Flink Units (CFU). (default 5)
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
