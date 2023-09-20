@@ -184,7 +184,12 @@ func (s *Store) StopStatement(statementName string) bool {
 		return false
 	}
 
-	statement.Spec.SetStopped(true)
+	spec, isSpecOk := statement.GetSpecOk()
+	if isSpecOk != true {
+		log.CliLogger.Warnf("Spec for statement that should be stopped is nil")
+		return false
+	}
+	spec.SetStopped(true)
 
 	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId(), statement); err != nil {
 		log.CliLogger.Warnf("Failed to stop the statement: %v", err)

@@ -183,7 +183,7 @@ func (s *ResultFetcherTestSuite) TestCloseShouldDeleteRunningStatements() {
 	}
 	s.resultFetcher.setStatement(statement)
 	done := make(chan bool)
-	s.mockStore.EXPECT().DeleteStatement(statement.StatementName).Do(
+	s.mockStore.EXPECT().StopStatement(statement.StatementName).Do(
 		func(statementName string) {
 			done <- true
 		})
