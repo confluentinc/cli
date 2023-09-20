@@ -186,7 +186,7 @@ func (s *Store) StopStatement(statementName string) bool {
 	}
 
 	spec, isSpecOk := statement.GetSpecOk()
-	if isSpecOk != true {
+	if !isSpecOk {
 		log.CliLogger.Warnf("Spec for statement that should be stopped is nil")
 		return false
 	}
