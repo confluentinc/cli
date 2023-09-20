@@ -14,7 +14,7 @@ import (
 
 func (c *command) newComputePoolCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <id>",
+		Use:   "create <name>",
 		Short: "Create a Flink compute pool.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.computePoolCreate,
@@ -28,7 +28,7 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
-	cmd.Flags().Int32("cfu", 1, "Number of Confluent Flink Units (CFU).")
+	cmd.Flags().Int32("max-cfu", 5, "Number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -49,7 +49,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cfu, err := cmd.Flags().GetInt32("cfu")
+	cfu, err := cmd.Flags().GetInt32("max-cfu")
 	if err != nil {
 		return err
 	}
