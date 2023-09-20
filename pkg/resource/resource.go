@@ -37,6 +37,7 @@ const (
 	Organization                = "organization"
 	Peering                     = "peering"
 	PrivateLinkAccess           = "private link access"
+	PrivateLinkAttachment       = "private link attachment"
 	ProviderShare               = "provider share"
 	Pipeline                    = "pipeline"
 	SchemaExporter              = "schema exporter"

@@ -396,9 +396,56 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentUpdate() {
+	tests := []CLITest{
+		{args: "network private-link attachment update", fixture: "network/private-link/attachment/update-missing-args.golden", exitCode: 1},
+		{args: "network private-link attachment update platt-111111", fixture: "network/private-link/attachment/update-missing-flags.golden", exitCode: 1},
+		{args: "network pl attachment update platt-111111 --name new-name", fixture: "network/private-link/attachment/update.golden"},
+		{args: "network private-link attachment update platt-111111 --name new-name", fixture: "network/private-link/attachment/update.golden"},
+		{args: "network private-link attachment update platt-invalid --name new-name", fixture: "network/private-link/attachment/update-platt-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDelete() {
+	tests := []CLITest{
+		{args: "network private-link attachment delete platt-111111 --force", fixture: "network/private-link/attachment/delete.golden"},
+		{args: "network private-link attachment delete platt-111111", input: "y\n", fixture: "network/private-link/attachment/delete-prompt.golden"},
+		{args: "network private-link attachment delete platt-111111 platt-222222", input: "n\n", fixture: "network/private-link/attachment/delete-multiple-refuse.golden"},
+		{args: "network private-link attachment delete platt-111111 platt-222222", input: "y\n", fixture: "network/private-link/attachment/delete-multiple-success.golden"},
+		{args: "network private-link attachment delete platt-111111 platt-invalid", fixture: "network/private-link/attachment/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network private-link attachment delete platt-invalid --force", fixture: "network/private-link/attachment/delete-platt-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentCreate() {
+	tests := []CLITest{
+		{args: "network private-link attachment create platt", fixture: "network/private-link/attachment/create-missing-flags.golden", exitCode: 1},
+		{args: "network private-link attachment create aws-platt --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-aws.golden"},
+		{args: "network private-link attachment create gcp-platt --cloud gcp --region us-central1", fixture: "network/private-link/attachment/create-gcp-fail.golden", exitCode: 1},
+		{args: "network private-link attachment create azure-platt --cloud azure --region eastus2", fixture: "network/private-link/attachment/create-azure-fail.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkPrivateLinkAttachment_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network private-link attachment describe ""`, login: "cloud", fixture: "network/private-link/attachment/describe-autocomplete.golden"},
+		{args: `__complete network private-link attachment update ""`, login: "cloud", fixture: "network/private-link/attachment/update-autocomplete.golden"},
+		{args: `__complete network private-link attachment delete ""`, login: "cloud", fixture: "network/private-link/attachment/delete-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

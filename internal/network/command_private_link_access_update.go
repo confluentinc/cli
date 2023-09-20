@@ -18,7 +18,7 @@ func (c *command) newPrivateLinkAccessUpdateCommand() *cobra.Command {
 		RunE:              c.privateLinkAccessUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name of private link access "pla-123456"`,
+				Text: `Update the name of private link access "pla-123456".`,
 				Code: `confluent network private-link access update pla-123456 --name "new name"`,
 			},
 		),

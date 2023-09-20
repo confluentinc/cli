@@ -2,8 +2,10 @@ package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -128,6 +130,10 @@ func handleNetworkingPrivateLinkAttachment(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPrivateLinkAttachmentGet(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingPrivateLinkAttachmentUpdate(t, id)(w, r)
+		case http.MethodDelete:
+			handleNetworkingPrivateLinkAttachmentDelete(t, id)(w, r)
 		}
 	}
 }
@@ -138,6 +144,8 @@ func handleNetworkingPrivateLinkAttachments(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPrivateLinkAttachmentList(t)(w, r)
+		case http.MethodPost:
+			handleNetworkingPrivateLinkAttachmentCreate(t)(w, r)
 		}
 	}
 }
@@ -492,7 +500,7 @@ func handleNetworkingPeeringUpdate(t *testing.T, id string) http.HandlerFunc {
 			err := writeErrorJson(w, "The peering peer-invalid was not found.")
 			require.NoError(t, err)
 		case "peer-111111":
-			body := &networkingv1.NetworkingV1Network{}
+			body := &networkingv1.NetworkingV1Peering{}
 			err := json.NewDecoder(r.Body).Decode(body)
 			require.NoError(t, err)
 
@@ -622,7 +630,7 @@ func handleNetworkingTransitGatewayAttachmentUpdate(t *testing.T, id string) htt
 			w.WriteHeader(http.StatusNotFound)
 			return
 		case "tgwa-111111":
-			body := &networkingv1.NetworkingV1Network{}
+			body := &networkingv1.NetworkingV1TransitGatewayAttachment{}
 			err := json.NewDecoder(r.Body).Decode(body)
 			require.NoError(t, err)
 
@@ -792,7 +800,7 @@ func handleNetworkingPrivateLinkAccessUpdate(t *testing.T, id string) http.Handl
 			err := writeErrorJson(w, "The private-link-access pla-invalid was not found.")
 			require.NoError(t, err)
 		case "pla-111111":
-			body := &networkingv1.NetworkingV1Network{}
+			body := &networkingv1.NetworkingV1PrivateLinkAccess{}
 			err := json.NewDecoder(r.Body).Decode(body)
 			require.NoError(t, err)
 
@@ -927,5 +935,69 @@ func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 
 		err := json.NewEncoder(w).Encode(attachmentList)
 		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingPrivateLinkAttachmentUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "platt-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "platt-111111":
+			body := &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			attachment := getPrivateLinkAttachment("platt-111111", body.Spec.GetDisplayName(), "WAITING_FOR_CONNECTIONS")
+			err = json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingPrivateLinkAttachmentDelete(_ *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "platt-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "platt-111111", "platt-222222":
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
+func handleNetworkingPrivateLinkAttachmentCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		cloud := body.Spec.GetCloud()
+		region := body.Spec.GetRegion()
+
+		switch cloud {
+		case "AWS":
+			attachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
+				Id:   networkingprivatelinkv1.PtrString("pla-123456"),
+				Kind: networkingprivatelinkv1.PtrString("PrivateLinkAttachment"),
+				Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpec{
+					Cloud:       networkingprivatelinkv1.PtrString(cloud),
+					Region:      networkingprivatelinkv1.PtrString(region),
+					DisplayName: networkingprivatelinkv1.PtrString(body.Spec.GetDisplayName()),
+					Environment: &networkingprivatelinkv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+				},
+				Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatus{
+					Phase: "PROVISIONING",
+				},
+			}
+			err = json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, fmt.Sprintf("The private link attachment region '%s' for the cloud provider '%s' is not supported.", region, strings.ToLower(cloud)))
+			require.NoError(t, err)
+		}
 	}
 }

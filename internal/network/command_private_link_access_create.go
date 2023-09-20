@@ -19,7 +19,7 @@ func (c *command) newPrivateLinkAccessCreateCommand() *cobra.Command {
 		RunE:  c.privateLinkAccessCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an AWS Private Link access.",
+				Text: "Create an AWS PrivateLink access.",
 				Code: "confluent network private-link access create aws-private-link-access --network n-123456 --cloud aws --cloud-account 123456789012",
 			},
 			examples.Example{
