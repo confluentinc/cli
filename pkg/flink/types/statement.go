@@ -26,7 +26,7 @@ type ProcessedStatement struct {
 	StatementName     string `json:"statement_name"`
 	Kind              string `json:"statement"`
 	ComputePool       string `json:"compute_pool"`
-	ServiceAccount    string `json:"service_account"`
+	Principal         string `json:"principal"`
 	Status            PHASE  `json:"status"`
 	StatusDetail      string `json:"status_detail,omitempty"` // Shown at the top before the table
 	IsLocalStatement  bool
@@ -41,7 +41,7 @@ func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement)
 	return &ProcessedStatement{
 		StatementName:     statementObj.GetName(),
 		ComputePool:       statementObj.Spec.GetComputePoolId(),
-		ServiceAccount:    statementObj.Spec.GetPrincipal(),
+		Principal:         statementObj.Spec.GetPrincipal(),
 		StatusDetail:      statementObj.Status.GetDetail(),
 		Status:            PHASE(statementObj.Status.GetPhase()),
 		ResultSchema:      statementObj.Status.GetResultSchema(),
