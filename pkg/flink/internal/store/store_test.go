@@ -794,8 +794,14 @@ func (s *StoreTestSuite) TestStopStatement() {
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
-	statementObj.Spec.SetStopped(true)
-	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementObj).Return(nil)
+
+	statementUpdated := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	specUpdated := flinkgatewayv1beta1.NewSqlV1beta1StatementSpecWithDefaults()
+	statementUpdated.SetName(statementName)
+	specUpdated.SetStopped(true)
+	statementUpdated.SetSpec(*specUpdated)
+
+	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementUpdated).Return(nil)
 
 	wasStatementDeleted := store.StopStatement(statementName)
 	require.True(s.T(), wasStatementDeleted)
