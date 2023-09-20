@@ -27,7 +27,7 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the compute pool.")
-	cmd.Flags().Int32("cfu", 0, "Number of Confluent Flink Units (CFU).")
+	cmd.Flags().Int32("max-cfu", 0, "Number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -35,7 +35,7 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 }
 
 func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
-	if err := errors.CheckNoUpdate(cmd.Flags(), "name", "cfu"); err != nil {
+	if err := errors.CheckNoUpdate(cmd.Flags(), "name", "max-cfu"); err != nil {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	cfu, err := cmd.Flags().GetInt32("cfu")
+	cfu, err := cmd.Flags().GetInt32("max-cfu")
 	if err != nil {
 		return err
 	}
