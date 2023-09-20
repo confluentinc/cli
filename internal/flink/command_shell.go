@@ -24,8 +24,6 @@ func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) 
 	}
 
 	c.addComputePoolFlag(cmd)
-	//TODO: remove as soon v1beta1 migration is complete (https://confluentinc.atlassian.net/browse/KFS-941)
-	cmd.Flags().String("identity-pool", "", "Identity pool ID (deprecated).")
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
@@ -104,34 +102,13 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		catalog = environment.GetDisplayName()
 	}
 
-	computePool, err := cmd.Flags().GetString("compute-pool")
-	if err != nil {
-		return err
-	}
+	computePool := c.Context.GetCurrentFlinkComputePool()
 	if computePool == "" {
-		if c.Context.GetCurrentFlinkComputePool() == "" {
-			return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
-		}
-		computePool = c.Context.GetCurrentFlinkComputePool()
+		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 	}
 
-	identityPool, err := cmd.Flags().GetString("identity-pool")
-	if err != nil {
-		return err
-	}
-	if identityPool == "" {
-		identityPool = c.Context.GetCurrentIdentityPool()
-	}
-
-	serviceAccount, err := cmd.Flags().GetString("service-account")
-	if err != nil {
-		return err
-	}
+	serviceAccount := c.Context.GetCurrentServiceAccount()
 	if serviceAccount == "" {
-		serviceAccount = c.Context.GetCurrentServiceAccount()
-	}
-
-	if serviceAccount == "" && identityPool == "" {
 		output.ErrPrintln("Warning: no service account provided. To ensure that your statements run continuously, " +
 			"switch to using a service account instead of your user identity with `confluent iam service-account use` or `--service-account`. " +
 			"Otherwise, statements will stop running after 4 hours.")
