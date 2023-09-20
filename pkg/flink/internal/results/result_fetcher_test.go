@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
@@ -183,7 +183,7 @@ func (s *ResultFetcherTestSuite) TestCloseShouldDeleteRunningStatements() {
 	}
 	s.resultFetcher.setStatement(statement)
 	done := make(chan bool)
-	s.mockStore.EXPECT().DeleteStatement(statement.StatementName).Do(
+	s.mockStore.EXPECT().StopStatement(statement.StatementName).Do(
 		func(statementName string) {
 			done <- true
 		})
