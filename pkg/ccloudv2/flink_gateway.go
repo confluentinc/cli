@@ -66,9 +66,7 @@ func (c *FlinkGatewayClient) GetStatement(environmentId, statementName, orgId st
 }
 
 func (c *FlinkGatewayClient) UpdateStatement(environmentId, statementName, orgId string, statement flinkgatewayv1beta1.SqlV1beta1Statement) error {
-	httpResp, err := c.StatementsSqlV1beta1Api.UpdateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId, statementName).
-		SqlV1beta1Statement(statement).
-		Execute()
+	httpResp, err := c.StatementsSqlV1beta1Api.UpdateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId, statementName).SqlV1beta1Statement(statement).Execute()
 	return flink.CatchError(err, httpResp)
 }
 
