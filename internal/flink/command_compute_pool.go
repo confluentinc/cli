@@ -26,6 +26,7 @@ func (c *command) newComputePoolCommand() *cobra.Command {
 	cmd.AddCommand(c.newComputePoolListCommand())
 	cmd.AddCommand(c.newComputePoolUpdateCommand())
 	cmd.AddCommand(c.newComputePoolUseCommand())
+	cmd.AddCommand(c.newComputePoolUnsetCommand())
 
 	return cmd
 }
