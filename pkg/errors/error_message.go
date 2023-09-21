@@ -200,7 +200,7 @@ const (
 	JavaExecNotFondErrorMsg         = "could not find java executable, please install java or set JAVA_HOME"
 	NothingToDestroyErrorMsg        = "nothing to destroy"
 	ComputePoolNotFoundErrorMsg     = `Flink compute pool "%s" not found or access forbidden.`
-	ComputePoolNotFoundSuggestions  = "List available Flink compute pools with `confluent flink compute-pool list`"
+	ComputePoolNotFoundSuggestions  = "List available Flink compute pools with `confluent flink compute-pool list` and make sure you have selected the compute pool's environment with `confluent environment use env-123`"
 	FailedToReadPortsErrorMsg       = "failed to read local ports from config"
 	FailedToReadPortsSuggestions    = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
 	InstallAndStartDockerSuggestion = "Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running."
