@@ -19,8 +19,6 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 		RunE:              c.computePoolUse,
 	}
 
-	pcmd.AddOutputFlag(cmd)
-
 	return cmd
 }
 
