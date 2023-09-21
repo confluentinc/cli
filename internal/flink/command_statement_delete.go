@@ -19,7 +19,6 @@ func (c *command) newStatementDeleteCommand() *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
-	c.addComputePoolFlag(cmd)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)

@@ -3,29 +3,31 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c *command) newStatementDescribeCommand() *cobra.Command {
+func (c *command) newStatementStopCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <name>",
-		Short:             "Describe a Flink SQL statement.",
+		Use:               "stop <name>",
+		Short:             "Stop a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
-		RunE:              c.statementDescribe,
+		RunE:              c.statementStop,
 	}
 
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) statementDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) statementStop(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -40,15 +42,12 @@ func (c *command) statementDescribe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	statement.Spec.Stopped = flinkgatewayv1beta1.PtrBool(true)
 
-	table := output.NewTable(cmd)
-	table.Add(&statementOut{
-		CreationDate: statement.Metadata.GetCreatedAt(),
-		Name:         statement.GetName(),
-		Statement:    statement.Spec.GetStatement(),
-		ComputePool:  statement.Spec.GetComputePoolId(),
-		Status:       statement.Status.GetPhase(),
-		StatusDetail: statement.Status.GetDetail(),
-	})
-	return table.Print()
+	if err := client.UpdateStatement(environmentId, args[0], c.Context.LastOrgId, statement); err != nil {
+		return err
+	}
+
+	output.Printf(`Requested to stop %s "%s".`, resource.FlinkStatement, args[0])
+	return nil
 }
