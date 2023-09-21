@@ -190,7 +190,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		_ = os.RemoveAll(schemaPath)
 	}()
 
-	subject := topicNameStrategy(topic)
+	subject := topic
 	schemaRegistryContext, err := cmd.Flags().GetString("schema-registry-context")
 	if err != nil {
 		return err
