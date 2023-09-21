@@ -18,8 +18,8 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1
-	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.5.0
-	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.8.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
@@ -52,7 +52,6 @@ require (
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.1
@@ -89,6 +88,7 @@ require (
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
+	go.uber.org/mock v0.3.0
 	golang.org/x/crypto v0.13.0
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
 	golang.org/x/oauth2 v0.11.0
@@ -125,6 +125,7 @@ require (
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -167,7 +168,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
-	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect

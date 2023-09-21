@@ -23,10 +23,11 @@ const (
 
 // Custom Internal type that shall be used internally by the client
 type ProcessedStatement struct {
+	Statement         string `json:"statement"`
 	StatementName     string `json:"statement_name"`
-	Kind              string `json:"statement"`
+	Kind              string `json:"kind"`
 	ComputePool       string `json:"compute_pool"`
-	ServiceAccount    string `json:"service_account"`
+	Principal         string `json:"principal"`
 	Status            PHASE  `json:"status"`
 	StatusDetail      string `json:"status_detail,omitempty"` // Shown at the top before the table
 	IsLocalStatement  bool
@@ -39,9 +40,10 @@ type ProcessedStatement struct {
 func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) *ProcessedStatement {
 	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
 	return &ProcessedStatement{
+		Statement:         statementObj.Spec.GetStatement(),
 		StatementName:     statementObj.GetName(),
 		ComputePool:       statementObj.Spec.GetComputePoolId(),
-		ServiceAccount:    statementObj.Spec.GetPrincipal(),
+		Principal:         statementObj.Spec.GetPrincipal(),
 		StatusDetail:      statementObj.Status.GetDetail(),
 		Status:            PHASE(statementObj.Status.GetPhase()),
 		ResultSchema:      statementObj.Status.GetResultSchema(),

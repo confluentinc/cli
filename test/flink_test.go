@@ -6,7 +6,7 @@ func (s *CLITestSuite) TestFlinkComputePool() {
 		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
 		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
 		{args: "flink compute-pool list --region us-west-2", fixture: "flink/compute-pool/list-region.golden"},
-		{args: "flink compute-pool update lfcp-123456 --cfu 2", fixture: "flink/compute-pool/update.golden"},
+		{args: "flink compute-pool update lfcp-123456 --max-cfu 2", fixture: "flink/compute-pool/update.golden"},
 	}
 
 	for _, test := range tests {
@@ -34,7 +34,7 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 		{args: "flink compute-pool use lfcp-123456", login: "cloud", fixture: "flink/compute-pool/use.golden"},
 		{args: "flink compute-pool describe", fixture: "flink/compute-pool/describe-after-use.golden"},
 		{args: "flink compute-pool list", fixture: "flink/compute-pool/list-after-use.golden"},
-		{args: "flink compute-pool update --cfu 2", fixture: "flink/compute-pool/update-after-use.golden"},
+		{args: "flink compute-pool update --max-cfu 2", fixture: "flink/compute-pool/update-after-use.golden"},
 	}
 
 	for _, test := range tests {
@@ -66,26 +66,6 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement exception list my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/exception/list.golden"},
 		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
 		{args: "flink statement stop my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/stop.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestFlinkIamBinding() {
-	tests := []CLITest{
-		{args: "flink iam-binding create --cloud aws --region us-west-2 --identity-pool pool-1234", fixture: "flink/iam-binding/create.golden"},
-		{args: "flink iam-binding create --cloud aws --region us-west-2 --identity-pool pool-1234 --environment env-123", fixture: "flink/iam-binding/create-environment.golden"},
-		{args: "flink iam-binding delete fiam-123 --force", fixture: "flink/iam-binding/delete.golden"},
-		{args: "flink iam-binding delete fiam-123 fiam-456", input: "n\n", fixture: "flink/iam-binding/delete-multiple-refuse.golden"},
-		{args: "flink iam-binding delete fiam-123 fiam-456", input: "y\n", fixture: "flink/iam-binding/delete-multiple-success.golden"},
-		{args: "flink iam-binding delete fiam-123 fiam-321", fixture: "flink/iam-binding/delete-multiple-fail.golden", exitCode: 1},
-		{args: "flink iam-binding list", fixture: "flink/iam-binding/list.golden"},
-		{args: "flink iam-binding list --cloud aws", fixture: "flink/iam-binding/list-cloud.golden"},
-		{args: "flink iam-binding list --region us-west-1", fixture: "flink/iam-binding/list-region.golden"},
-		{args: "flink iam-binding list --identity-pool pool-123", fixture: "flink/iam-binding/list-identity-pool.golden"},
 	}
 
 	for _, test := range tests {
