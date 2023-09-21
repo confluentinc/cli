@@ -31,6 +31,7 @@ func (c *command) newComputePoolCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(c.newComputePoolListCommand())
 	cmd.AddCommand(c.newComputePoolUpdateCommand())
 	cmd.AddCommand(c.newComputePoolUseCommand())
+	cmd.AddCommand(c.newComputePoolUnsetCommand())
 
 	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
