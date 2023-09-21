@@ -10,7 +10,7 @@ Update name and CFU count of a Flink compute pool.
 
 Flags:
       --name string          Name of the compute pool.
-      --max-cfu int32        Number of Confluent Flink Units (CFU).
+      --max-cfu int32        Maximum number of Confluent Flink Units (CFU).
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
