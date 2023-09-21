@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	v1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -357,7 +357,7 @@ func processHttpErrors(resp *http.Response, err error) error {
 			}
 		}
 
-		statementErr := flinkgatewayv1alpha1.NewError()
+		statementErr := v1beta1.NewError()
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {
