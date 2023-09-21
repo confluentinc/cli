@@ -31,7 +31,7 @@ func (c *command) statementExceptionList(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}

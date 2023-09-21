@@ -49,7 +49,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 			return err
 		}
 
-		flinkGatewayClient, err := c.GetFlinkGatewayClient()
+		flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	flinkGatewayClient, err := c.GetFlinkGatewayClient()
+	flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
 	if err != nil {
 		return err
 	}

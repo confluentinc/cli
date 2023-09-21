@@ -62,7 +62,7 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 		return nil
 	}
 
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return nil
 	}

@@ -20,8 +20,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
-	pcmd.AddCloudFlag(cmd)
-	c.addRegionFlag(cmd)
+	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -58,7 +57,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{Statement: flinkgatewayv1beta1.PtrString(sql)},
 	}
 
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(true)
 	if err != nil {
 		return err
 	}
