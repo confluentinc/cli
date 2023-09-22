@@ -83,7 +83,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 
 	// Process remote statements
 	computePoolId := s.appOptions.GetComputePoolId()
-	properties := s.Properties.GetSqlProperties()
+	properties := s.Properties.GetNonLocalProperties()
 
 	var principal string
 	serviceAccount := s.Properties.Get(config.ConfigKeyServiceAccount)
