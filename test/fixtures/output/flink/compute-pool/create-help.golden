@@ -4,9 +4,9 @@ Usage:
   confluent flink compute-pool create <name> [flags]
 
 Examples:
-Create Flink compute pool "my-compute-pool" in AWS with 2 CFUs.
+Create Flink compute pool "my-compute-pool" in AWS with 5 CFUs.
 
-  $ confluent flink compute-pool create my-compute-pool --cloud aws --region us-west-2 --max-cfu 2
+  $ confluent flink compute-pool create my-compute-pool --cloud aws --region us-west-2 --max-cfu 5
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
