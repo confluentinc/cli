@@ -4,6 +4,7 @@ Usage:
   confluent network private-link attachment [command]
 
 Available Commands:
+  connection  Manage private link attachment connections.
   create      Create a private link attachment.
   delete      Delete one or more private link attachments.
   describe    Describe a private link attachment.
