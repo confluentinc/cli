@@ -71,3 +71,38 @@ func (c *Client) CreatePrivateLinkAttachment(attachment networkingprivatelinkv1.
 	resp, httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentsNetworkingV1Api.CreateNetworkingV1PrivateLinkAttachment(c.networkingPrivateLinkApiContext()).NetworkingV1PrivateLinkAttachment(attachment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) ListPrivateLinkAttachmentConnections(environment, attachmentId string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
+	var list []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, err := c.executeListPrivateLinkAttachmentConnections(environment, attachmentId, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListPrivateLinkAttachmentConnections(environment, attachmentId, pageToken string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList, error) {
+	req := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentConnectionsNetworkingV1Api.ListNetworkingV1PrivateLinkAttachmentConnections(c.networkingPrivateLinkApiContext()).Environment(environment).SpecPrivateLinkAttachment(attachmentId).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetPrivateLinkAttachmentConnection(environment, id string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
+	resp, httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentConnectionsNetworkingV1Api.GetNetworkingV1PrivateLinkAttachmentConnection(c.networkingPrivateLinkApiContext(), id).Environment(environment).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}

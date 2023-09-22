@@ -26,6 +26,7 @@ func (c *command) newPrivateLinkAttachmentCommand() *cobra.Command {
 		Short: "Manage private link attachments.",
 	}
 
+	cmd.AddCommand(c.newPrivateLinkAttachmentConnectionCommand())
 	cmd.AddCommand(c.newPrivateLinkAttachmentCreateCommand())
 	cmd.AddCommand(c.newPrivateLinkAttachmentDeleteCommand())
 	cmd.AddCommand(c.newPrivateLinkAttachmentDescribeCommand())

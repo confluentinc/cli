@@ -1,0 +1,28 @@
+[
+  {
+    "id": "plattc-111111",
+    "name": "aws-plattc-1",
+    "cloud": "AWS",
+    "private_link_attachment_id": "platt-111111",
+    "phase": "PROVISIONING",
+    "aws_vpc_endpoint_id": "vpce-01234567890abcdef"
+  },
+  {
+    "id": "plattc-111112",
+    "name": "aws-plattc-2",
+    "cloud": "AWS",
+    "private_link_attachment_id": "platt-111111",
+    "phase": "READY",
+    "aws_vpc_endpoint_id": "vpce-01234567890abcdef",
+    "aws_vpc_endpoint_service_name": "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef"
+  },
+  {
+    "id": "plattc-111113",
+    "name": "aws-plattc-3",
+    "cloud": "AWS",
+    "private_link_attachment_id": "platt-111111",
+    "phase": "READY",
+    "aws_vpc_endpoint_id": "vpce-01234567890abcdef",
+    "aws_vpc_endpoint_service_name": "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef"
+  }
+]
