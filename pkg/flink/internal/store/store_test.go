@@ -1121,13 +1121,14 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
 
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
 		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
 			Statement:     &statement,
 		},
@@ -1173,13 +1174,14 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 
 	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
 		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
 			Statement:     &statement,
 		},
@@ -1210,12 +1212,13 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 
 	statement := "SELECT * FROM table"
 	statusDetailMessage := "test status detail message"
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Detail: &statusDetailMessage,
 		},
 		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
 			Statement:     &statement,
 		},
