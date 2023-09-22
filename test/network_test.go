@@ -456,11 +456,11 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachment_Autocomplete() {
 
 func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionList() {
 	tests := []CLITest{
-		{args: "network pl attachment connection list platt-111111", fixture: "network/private-link/attachment/connection/list.golden"},
-		{args: "network private-link attachment connection list", fixture: "network/private-link/attachment/connection/list-missing-args.golden", exitCode: 1},
-		{args: "network private-link attachment connection list platt-111111", fixture: "network/private-link/attachment/connection/list.golden"},
-		{args: "network private-link attachment connection list platt-invalid", fixture: "network/private-link/attachment/connection/list-invalid.golden"},
-		{args: "network private-link attachment connection list platt-111111 --output json", fixture: "network/private-link/attachment/connection/list-json.golden"},
+		{args: "network pl attachment connection list --attachment platt-111111", fixture: "network/private-link/attachment/connection/list.golden"},
+		{args: "network private-link attachment connection list", fixture: "network/private-link/attachment/connection/list-missing-flags.golden", exitCode: 1},
+		{args: "network private-link attachment connection list --attachment platt-111111", fixture: "network/private-link/attachment/connection/list.golden"},
+		{args: "network private-link attachment connection list --attachment platt-invalid", fixture: "network/private-link/attachment/connection/list-invalid.golden"},
+		{args: "network private-link attachment connection list --attachment platt-111111 --output json", fixture: "network/private-link/attachment/connection/list-json.golden"},
 	}
 
 	for _, test := range tests {
@@ -477,6 +477,17 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDescribe() {
 		{args: "network private-link attachment connection describe plattc-111111 --output json", fixture: "network/private-link/attachment/connection/describe-aws-json.golden"},
 		{args: "network private-link attachment connection describe", fixture: "network/private-link/attachment/connection/describe-missing-id.golden", exitCode: 1},
 		{args: "network private-link attachment connection describe plattc-invalid", fixture: "network/private-link/attachment/connection/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnection_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network private-link attachment connection list --attachment ""`, login: "cloud", fixture: "network/private-link/attachment/connection/list-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

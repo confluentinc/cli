@@ -234,3 +234,8 @@ func addNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
 		return autocompleteNetworks(c.V2Client, environmentId)
 	})
 }
+
+func (c *command) addPrivateLinkAttachmentFlag(cmd *cobra.Command) {
+	cmd.Flags().String("attachment", "", "ID of the private link attachment.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "attachment", c.validPrivateLinkAttachmentArgs)
+}

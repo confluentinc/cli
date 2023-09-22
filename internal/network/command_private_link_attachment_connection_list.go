@@ -7,32 +7,46 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newPrivateLinkAttachmentConnectionListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "list <private-link-attachment-id>",
-		Short:             "List connections for a private link attachment.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validPrivateLinkAttachmentArgs),
-		RunE:              c.privateLinkAttachmentConnectionList,
+		Use:   "list",
+		Short: "List connections for a private link attachment.",
+		Args:  cobra.NoArgs,
+		RunE:  c.privateLinkAttachmentConnectionList,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `List connections for private link attachment "platt-123456".`,
+				Code: "confluent network private-link attachment connection list --attachment platt-123456",
+			},
+		),
 	}
 
+	c.addPrivateLinkAttachmentFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagRequired("attachment"))
+
 	return cmd
 }
 
-func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, args []string) error {
+func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []string) error {
+	attachment, err := cmd.Flags().GetString("attachment")
+	if err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	connections, err := c.V2Client.ListPrivateLinkAttachmentConnections(environmentId, args[0])
+	connections, err := c.V2Client.ListPrivateLinkAttachmentConnections(environmentId, attachment)
 	if err != nil {
 		return err
 	}
