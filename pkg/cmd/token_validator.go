@@ -48,7 +48,8 @@ func (v *JWTValidatorImpl) Validate(context *config.Context) error {
 		return errors.New("malformed token: no expiration")
 	}
 
-	if float64(v.Clock.Now().Unix()) > exp {
+	// Add a time buffer of 1 minute to the token validator
+	if float64(v.Clock.Now().Unix()+60) > exp {
 		return errors.NewErrorWithSuggestions(errors.ExpiredTokenErrorMsg, errors.ExpiredTokenSuggestions)
 	}
 
