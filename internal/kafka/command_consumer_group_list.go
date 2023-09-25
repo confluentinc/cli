@@ -4,23 +4,15 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *consumerGroupCommand) newListCommand() *cobra.Command {
+func (c *consumerCommand) newGroupListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List all consumer groups.",
-				Code: "confluent kafka consumer-group list",
-			},
-		),
-		Hidden: true,
+		RunE:  c.groupList,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -31,23 +23,23 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *consumerCommand) groupList(cmd *cobra.Command, _ []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	groupCmdResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups()
+	groups, err := kafkaREST.CloudClient.ListKafkaConsumerGroups()
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, group := range groupCmdResp.Data {
+	for _, group := range groups.Data {
 		list.Add(&consumerGroupOut{
 			ClusterId:         group.GetClusterId(),
 			ConsumerGroupId:   group.GetConsumerGroupId(),
-			Coordinator:       getStringBroker(group.GetCoordinator()),
+			Coordinator:       getStringBroker(group.GetCoordinator().Related),
 			IsSimple:          group.GetIsSimple(),
 			PartitionAssignor: group.GetPartitionAssignor(),
 			State:             group.GetState(),
