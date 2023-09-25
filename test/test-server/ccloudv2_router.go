@@ -57,6 +57,7 @@ var ccloudV2Routes = []route{
 	{"/kafka-quotas/v1/client-quotas/{id}", handleKafkaClientQuota},
 	{"/ksqldbcm/v2/clusters", handleKsqlClusters},
 	{"/ksqldbcm/v2/clusters/{id}", handleKsqlCluster},
+	{"/networking/v1/ip-addresses", handleNetworkingIpAddresses},
 	{"/networking/v1/networks", handleNetworkingNetworks},
 	{"/networking/v1/networks/{id}", handleNetworkingNetwork},
 	{"/networking/v1/peerings", handleNetworkingPeerings},
