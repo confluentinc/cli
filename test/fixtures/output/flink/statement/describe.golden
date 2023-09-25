@@ -3,6 +3,5 @@
 | Name          | my-statement                  |
 | Statement     | CREATE TABLE test;            |
 | Compute Pool  | pool-123456                   |
-| Status        | TODO                          |
-| Status Detail | TODO                          |
+| Status        | PENDING                       |
 +---------------+-------------------------------+
