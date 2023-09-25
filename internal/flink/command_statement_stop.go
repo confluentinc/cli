@@ -38,13 +38,13 @@ func (c *command) statementStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statement, err := client.GetStatement(environmentId, args[0], c.Context.LastOrgId)
+	statement, err := client.GetStatement(environmentId, args[0], c.Context.GetCurrentOrganization())
 	if err != nil {
 		return err
 	}
 	statement.Spec.Stopped = flinkgatewayv1beta1.PtrBool(true)
 
-	if err := client.UpdateStatement(environmentId, args[0], c.Context.LastOrgId, statement); err != nil {
+	if err := client.UpdateStatement(environmentId, args[0], c.Context.GetCurrentOrganization(), statement); err != nil {
 		return err
 	}
 

@@ -67,7 +67,7 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 		return nil
 	}
 
-	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.LastOrgId, "", "")
+	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), "", "")
 	if err != nil {
 		return nil
 	}
