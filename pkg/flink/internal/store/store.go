@@ -226,7 +226,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 				return nil, types.NewStatementErrorFailureMsg(err, statusDetail)
 			}
 
-			// TODO: HACK TO IMPROVE LATENCY
+			// TODO: remove this if backend fixes latency problem/the RUNNING state is set with the ResultsSchema
 			if statementObj.Status.ResultSchema != nil {
 				processedStatement := types.NewProcessedStatement(statementObj)
 				// if it's a SELECT statement we manually set the status to RUNNING, otherwise COMPLETED
