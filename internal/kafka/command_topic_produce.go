@@ -240,7 +240,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		_ = os.RemoveAll(schemaDir)
 	}()
 
-	subject := topicNameStrategy(topic)
+	subject := topicNameStrategy(topic, mode)
 
 	// Deprecated
 	var schemaId optional.Int32

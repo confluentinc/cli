@@ -46,7 +46,6 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 
 			return nil
 		})
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = flinkgatewayv1beta1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

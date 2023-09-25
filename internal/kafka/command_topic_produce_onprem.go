@@ -183,7 +183,7 @@ func prepareSerializer(cmd *cobra.Command, topic, mode string) (string, string, 
 		return "", "", nil, err
 	}
 
-	return valueFormat, topicNameStrategy(topic), serializer, nil
+	return valueFormat, topicNameStrategy(topic, mode), serializer, nil
 }
 
 func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {

@@ -3,7 +3,7 @@
 | ID          | lfcp-123456       |
 | Name        | my-compute-pool-1 |
 | Current CFU | 0                 |
-| Max CFU     | 2                 |
+| Max CFU     | 5                 |
 | Region      | us-west-2         |
 | Status      | PROVISIONED       |
 +-------------+-------------------+
