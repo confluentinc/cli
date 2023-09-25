@@ -105,6 +105,15 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return err
+	}
+
+	if cmd.Flags().Changed("key-format") && !parseKey {
+		return errors.New("`--parse-key` must be set when `key-format` is set")
+	}
+
 	keySchema, err := cmd.Flags().GetString("key-schema")
 	if err != nil {
 		return err
@@ -174,7 +183,7 @@ func prepareSerializer(cmd *cobra.Command, topic, mode string) (string, string, 
 		return "", "", nil, err
 	}
 
-	return valueFormat, topicNameStrategy(topic), serializer, nil
+	return valueFormat, topicNameStrategy(topic, mode), serializer, nil
 }
 
 func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {

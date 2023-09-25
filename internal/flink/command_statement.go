@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -28,6 +27,7 @@ func (c *command) newStatementCommand() *cobra.Command {
 	cmd.AddCommand(c.newStatementDescribeCommand())
 	cmd.AddCommand(c.newStatementExceptionCommand())
 	cmd.AddCommand(c.newStatementListCommand())
+	cmd.AddCommand(c.newStatementStopCommand())
 
 	return cmd
 }
@@ -67,7 +67,7 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 		return nil
 	}
 
-	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.LastOrgId, "", "")
+	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), "", "")
 	if err != nil {
 		return nil
 	}
@@ -75,7 +75,7 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 
 	suggestions := make([]string, len(statements))
 	for i, statement := range statements {
-		suggestions[i] = fmt.Sprintf("%s\t%s", statement.Spec.GetStatementName(), statement.Spec.GetStatement())
+		suggestions[i] = statement.GetName()
 	}
 	return suggestions
 }

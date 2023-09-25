@@ -55,7 +55,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	if featureflags.Manager.BoolVariation("flink.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
-		namespacesList = append(namespacesList, flinkNamespace.Value())
+		namespacesList = append(namespacesList, flinkNamespace.Value(), workloadNamespace.Value())
 	}
 
 	namespaces := optional.NewString(strings.Join(namespacesList, ","))

@@ -10,6 +10,7 @@ Available Commands:
   consumer       Manage Kafka consumers.
   link           Manage inter-cluster links.
   mirror         Manage cluster linking mirror topics.
+  partition      Manage Kafka partitions.
   quota          Manage Kafka client quotas.
   region         Manage Confluent Cloud regions.
   topic          Manage Kafka topics.

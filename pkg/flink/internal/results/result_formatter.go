@@ -1,6 +1,10 @@
 package results
 
-import "github.com/samber/lo"
+import (
+	"github.com/samber/lo"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
+)
 
 type truncatedColumn struct {
 	idx            int
@@ -53,7 +57,7 @@ func GetTruncatedColumnWidths(columnWidths []int, maxCharacters int) []int {
 }
 
 func TruncateString(str string, maxCharCountToDisplay int) string {
-	if len(str) > maxCharCountToDisplay {
+	if utils.GetMaxStrWidth(str) > maxCharCountToDisplay {
 		if maxCharCountToDisplay <= 3 {
 			return "..."
 		}

@@ -19,9 +19,6 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 		RunE:              c.computePoolUse,
 	}
 
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddOutputFlag(cmd)
-
 	return cmd
 }
 

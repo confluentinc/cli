@@ -142,6 +142,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka link delete link-1 link-2", input: "y\n", fixture: "kafka/link/delete-link-multiple.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link delete link-1 link-2 link-dne", fixture: "kafka/link/delete-link-multiple-fail.golden", useKafka: "lkc-describe-topic", exitCode: 1},
 		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/link/describe-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration-list-plain.golden", useKafka: "lkc-describe-topic"},
@@ -310,14 +311,25 @@ func (s *CLITestSuite) TestKafkaBroker() {
 }
 
 func (s *CLITestSuite) TestKafkaPartition() {
-	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list.golden"},
-		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partition/list-json.golden"},
-		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partition/list-yaml.golden"},
-		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partition/describe.golden"},
-		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partition/describe-json.golden"},
-		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partition/describe-yaml.golden"},
+		{args: "kafka partition describe 0 --topic topic1 --cluster lkc-12345", fixture: "kafka/partition/describe.golden"},
+		{args: "kafka partition describe 0 --topic topic1 --cluster lkc-12345 -o json", fixture: "kafka/partition/describe-json.golden"},
+		{args: "kafka partition list --topic topic1 --cluster lkc-12345", fixture: "kafka/partition/list.golden"},
+		{args: "kafka partition list --topic topic1 --cluster lkc-12345 -o json", fixture: "kafka/partition/list-json.golden"},
+	}
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list-onprem.golden"},
+		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partition/list-json-onprem.golden"},
+		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partition/list-yaml-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partition/describe-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partition/describe-json-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partition/describe-yaml-onprem.golden"},
 		{args: "kafka partition reassignment list", fixture: "kafka/partition/reassignment/list.golden"},
 		{args: "kafka partition reassignment list -o json", fixture: "kafka/partition/reassignment/list-json.golden"},
 		{args: "kafka partition reassignment list --topic topic1", fixture: "kafka/partition/reassignment/list-by-topic.golden"},

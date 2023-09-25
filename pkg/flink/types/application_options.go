@@ -12,7 +12,6 @@ type ApplicationOptions struct {
 	OrgResourceId    string
 	Database         string
 	ComputePoolId    string
-	IdentityPoolId   string
 	ServiceAccountId string
 	Verbose          bool
 	Context          *dynamicconfig.DynamicContext
@@ -63,13 +62,6 @@ func (a *ApplicationOptions) GetDatabase() string {
 func (a *ApplicationOptions) GetComputePoolId() string {
 	if a != nil {
 		return a.ComputePoolId
-	}
-	return ""
-}
-
-func (a *ApplicationOptions) GetIdentityPoolId() string {
-	if a != nil {
-		return a.IdentityPoolId
 	}
 	return ""
 }

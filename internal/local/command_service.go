@@ -74,7 +74,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	return c.Command
 }
 
-func (c *Command) runServiceLogCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServiceLogCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
 
 	exists, err := c.cc.HasLogFile(service)
@@ -124,7 +124,7 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Comm
 	return c.Command
 }
 
-func (c *Command) runServiceStartCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServiceStartCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(); err != nil {
@@ -157,7 +157,7 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 	return c.Command
 }
 
-func (c *Command) runServiceStatusCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServiceStatusCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(); err != nil {
@@ -179,7 +179,7 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 	return c.Command
 }
 
-func (c *Command) runServiceStopCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServiceStopCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
 
 	if err := c.notifyConfluentCurrent(); err != nil {
@@ -207,7 +207,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 	return c.Command
 }
 
-func (c *Command) runServiceTopCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServiceTopCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
 
 	isUp, err := c.isRunning(service)
@@ -239,7 +239,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 	return c.Command
 }
 
-func (c *Command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
 
 	ver, err := c.ch.GetVersion(service)
@@ -251,7 +251,11 @@ func (c *Command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 	return nil
 }
 
-func (c *Command) startService(service, configFile string) error {
+func (c *command) startService(service, configFile string) error {
+	if err := c.checkJavaVersion(service); err != nil {
+		return err
+	}
+
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -260,7 +264,7 @@ func (c *Command) startService(service, configFile string) error {
 		return c.printStatus(service)
 	}
 
-	if err := c.checkService(service); err != nil {
+	if err := c.checkOSVersion(); err != nil {
 		return err
 	}
 
@@ -281,19 +285,7 @@ func (c *Command) startService(service, configFile string) error {
 	return c.printStatus(service)
 }
 
-func (c *Command) checkService(service string) error {
-	if err := c.checkOSVersion(); err != nil {
-		return err
-	}
-
-	if err := c.checkJavaVersion(service); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Command) configService(service, configFile string) error {
+func (c *command) configService(service, configFile string) error {
 	port, err := c.ch.ReadServicePort(service)
 	if err != nil {
 		if err.Error() != "no port specified" {
@@ -367,7 +359,7 @@ func injectConfig(data []byte, config map[string]string) []byte {
 	return data
 }
 
-func (c *Command) startProcess(service string) error {
+func (c *command) startProcess(service string) error {
 	scriptFile, err := c.ch.GetServiceScript("start", service)
 	if err != nil {
 		return err
@@ -442,7 +434,7 @@ func (c *Command) startProcess(service string) error {
 	return nil
 }
 
-func (c *Command) stopService(service string) error {
+func (c *command) stopService(service string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -464,7 +456,7 @@ func (c *Command) stopService(service string) error {
 	return c.printStatus(service)
 }
 
-func (c *Command) stopProcess(service string) error {
+func (c *command) stopProcess(service string) error {
 	scriptFile, err := c.ch.GetServiceScript("stop", service)
 	if err != nil {
 		return err
@@ -522,7 +514,7 @@ func (c *Command) stopProcess(service string) error {
 	return nil
 }
 
-func (c *Command) killProcess(service string) error {
+func (c *command) killProcess(service string) error {
 	pid, err := c.cc.ReadPid(service)
 	if err != nil {
 		return err
@@ -560,7 +552,7 @@ func (c *Command) killProcess(service string) error {
 	}
 }
 
-func (c *Command) printStatus(service string) error {
+func (c *command) printStatus(service string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -575,7 +567,7 @@ func (c *Command) printStatus(service string) error {
 	return nil
 }
 
-func (c *Command) isRunning(service string) (bool, error) {
+func (c *command) isRunning(service string) (bool, error) {
 	hasPidFile, err := c.cc.HasPidFile(service)
 	if err != nil {
 		return false, err
@@ -654,7 +646,7 @@ func setServiceEnvs(service string) error {
 	return nil
 }
 
-func (c *Command) checkOSVersion() error {
+func (c *command) checkOSVersion() error {
 	if runtime.GOOS == "darwin" {
 		required, _ := version.NewSemver("10.13")
 		// CLI-584 CP 6.0 now requires at least 10.14
@@ -683,7 +675,7 @@ func (c *Command) checkOSVersion() error {
 	return nil
 }
 
-func (c *Command) checkJavaVersion(service string) error {
+func (c *command) checkJavaVersion(service string) error {
 	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
 	if os.Getenv("JAVA_HOME") == "" {
 		out, err := exec.Command("which", "java").Output()
