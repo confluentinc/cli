@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/go-yaml/yaml"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
