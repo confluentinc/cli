@@ -64,11 +64,6 @@ func (c *FlinkGatewayClient) GetStatement(environmentId, statementName, orgId st
 	return resp, flink.CatchError(err, httpResp)
 }
 
-func (c *FlinkGatewayClient) UpdateStatement(environmentId, statementName, orgId string, statement flinkgatewayv1beta1.SqlV1beta1Statement) error {
-	httpResp, err := c.StatementsSqlV1beta1Api.UpdateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId, statementName).SqlV1beta1Statement(statement).Execute()
-	return flink.CatchError(err, httpResp)
-}
-
 func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName, orgId string) error {
 	httpResp, err := c.StatementsSqlV1beta1Api.DeleteSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId, statementName).Execute()
 	return flink.CatchError(err, httpResp)
@@ -113,6 +108,11 @@ func (c *FlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1
 	}
 	resp, httpResp, err := c.StatementsSqlV1beta1Api.CreateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId).SqlV1beta1Statement(statement).Execute()
 	return resp, flink.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) UpdateStatement(environmentId, statementName, organizationId string, statement flinkgatewayv1beta1.SqlV1beta1Statement) error {
+	httpResp, err := c.StatementsSqlV1beta1Api.UpdateSqlv1beta1Statement(c.flinkGatewayApiContext(), organizationId, environmentId, statementName).SqlV1beta1Statement(statement).Execute()
+	return flink.CatchError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) GetStatementResults(environmentId, statementName, orgId, pageToken string) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error) {
