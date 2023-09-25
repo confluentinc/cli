@@ -1,0 +1,6 @@
+creation_date: !!timestamp 2022-01-01T00:00:00Z
+name: my-statement
+statement: CREATE TABLE test;
+compute_pool: pool-123456
+status: TODO
+status_detail: TODO
