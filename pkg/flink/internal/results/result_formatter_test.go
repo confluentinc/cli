@@ -348,3 +348,39 @@ func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 		require.Equal(s.T(), testCase.expected, formattedField)
 	}
 }
+
+func (s *ResultFormatterTestSuite) TestTruncateMultiLineStringShouldNotTruncate() {
+	testCases := []struct {
+		input                 string
+		expected              string
+		maxCharCountToDisplay int
+	}{
+		{
+			input:                 "SELECT * FROM \n table",
+			expected:              "SELECT * FROM \n table",
+			maxCharCountToDisplay: 15,
+		},
+		{
+			input:                 "SELECT * FROM \n table",
+			expected:              "SELECT * FR...",
+			maxCharCountToDisplay: 14,
+		},
+		// this looks strange in a table, because not the whole width of the cell is used, but then the text
+		// is still suddenly truncated. We could improve this case to only truncate starting from the line that actually
+		// crossed the max width threshold. The desired output in this case would be:
+		// SELECT * FROM
+		// table-with-a-real...
+		{
+			input:    "SELECT * FROM \n table-with-a-really-long-table-name",
+			expected: "SELECT * FROM \n t...",
+			// TODO: we should fix this to output this instead
+			// expected:              "SELECT * FROM \n table-with-a-real...",
+			maxCharCountToDisplay: 20,
+		},
+	}
+
+	for idx, testCase := range testCases {
+		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		require.Equal(s.T(), testCase.expected, TruncateString(testCase.input, testCase.maxCharCountToDisplay))
+	}
+}

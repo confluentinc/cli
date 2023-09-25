@@ -73,6 +73,7 @@ func (c *BasicOutputController) createTable(rows [][]string) *tablewriter.Table 
 	rawTable := tablewriter.NewWriter(os.Stdout)
 	rawTable.SetAutoFormatHeaders(false)
 	rawTable.SetHeader(materializedStatementResults.GetHeaders())
+	rawTable.SetAutoWrapText(false)
 	rawTable.AppendBulk(rows)
 	return rawTable
 }
