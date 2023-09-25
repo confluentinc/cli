@@ -26,8 +26,8 @@ func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) 
 
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
+	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsTest {
 		cmd.Flags().Bool("fake-gateway", false, "Test the SQL client with fake gateway data.")
