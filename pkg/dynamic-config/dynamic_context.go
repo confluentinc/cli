@@ -40,6 +40,13 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		}
 	}
 
+	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
+		ctx := d.Config.Context()
+		if err := ctx.SetCurrentFlinkCloudProvider(cloud); err != nil {
+			return err
+		}
+	}
+
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
 		if d.GetCredentialType() == config.APIKey {
 			output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
@@ -65,9 +72,9 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		}
 	}
 
-	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
+	if serviceAccount, _ := cmd.Flags().GetString("service-account"); serviceAccount != "" {
 		ctx := d.Config.Context()
-		if err := ctx.SetCurrentFlinkCloudProvider(cloud); err != nil {
+		if err := ctx.SetCurrentServiceAccount(serviceAccount); err != nil {
 			return err
 		}
 	}
