@@ -91,10 +91,10 @@ func TestTable_NoAutoWrap(t *testing.T) {
 			"id: 1",
 			"name: lkc-123456",
 			"description: |-",
-			"  {",
-			`    "A": 1,`,
-			`    "B": 2`,
-			"  }",
+			"    {",
+			`      "A": 1,`,
+			`      "B": 2`,
+			"    }",
 		},
 	}
 
