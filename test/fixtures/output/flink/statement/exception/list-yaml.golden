@@ -1,0 +1,6 @@
+- timestamp: !!timestamp 2022-01-01T00:00:00Z
+  name: Bad exception
+  stack_trace: exception in foo.go
+- timestamp: !!timestamp 2022-01-01T00:00:00Z
+  name: another Bad exception
+  stack_trace: exception in bar.go
