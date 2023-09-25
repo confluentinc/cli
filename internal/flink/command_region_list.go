@@ -11,9 +11,10 @@ import (
 )
 
 type regionOut struct {
-	Id    string `human:"ID" serialized:"id"`
-	Name  string `human:"Name" serialized:"name"`
-	Cloud string `human:"Cloud" serialized:"cloud"`
+	Id         string `human:"ID" serialized:"id"`
+	Name       string `human:"Name" serialized:"name"`
+	Cloud      string `human:"Cloud" serialized:"cloud"`
+	RegionName string `human:"Region Name" serialized:"region_name"`
 }
 
 func (c *command) newRegionListCommand() *cobra.Command {
@@ -50,9 +51,10 @@ func (c *command) regionList(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for _, region := range regions {
 		list.Add(&regionOut{
-			Id:    region.GetRegionName(),
-			Name:  region.GetDisplayName(),
-			Cloud: region.GetCloud(),
+			Id:         region.GetId(),
+			Name:       region.GetDisplayName(),
+			Cloud:      region.GetCloud(),
+			RegionName: region.GetRegionName(),
 		})
 	}
 	return list.Print()
