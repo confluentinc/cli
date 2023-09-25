@@ -18,8 +18,8 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1
-	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
@@ -84,7 +84,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/swaggest/go-asyncapi v0.8.0
-	github.com/tidwall/gjson v1.16.0
+	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
