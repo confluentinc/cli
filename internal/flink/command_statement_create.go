@@ -7,6 +7,7 @@ import (
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -32,14 +33,9 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 }
 
 func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
-	serviceAccount := c.Context.GetCurrentServiceAccount()
-	if serviceAccount == "" {
-		output.ErrPrintln(flink.ServiceAccountWarning)
-	}
-
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return err
+	computePool := c.Context.GetCurrentFlinkComputePool()
+	if computePool == "" {
+		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 	}
 
 	name := uuid.New().String()
@@ -54,7 +50,10 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	statement := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Name: flinkgatewayv1beta1.PtrString(name),
-		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{Statement: flinkgatewayv1beta1.PtrString(sql)},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			ComputePoolId: flinkgatewayv1beta1.PtrString(computePool),
+			Statement:     flinkgatewayv1beta1.PtrString(sql),
+		},
 	}
 
 	client, err := c.GetFlinkGatewayClient(true)
@@ -62,7 +61,18 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statement, err = client.CreateStatement(statement, serviceAccount, environmentId, c.Context.LastOrgId)
+	principal := c.Context.GetCurrentServiceAccount()
+	if principal == "" {
+		output.ErrPrintln(flink.ServiceAccountWarning)
+		principal = c.Context.GetUser().GetResourceId()
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	statement, err = client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
 	if err != nil {
 		return err
 	}
