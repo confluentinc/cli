@@ -27,6 +27,7 @@ func (c *command) newStatementCommand() *cobra.Command {
 	cmd.AddCommand(c.newStatementDescribeCommand())
 	cmd.AddCommand(c.newStatementExceptionCommand())
 	cmd.AddCommand(c.newStatementListCommand())
+	cmd.AddCommand(c.newStatementStopCommand())
 
 	return cmd
 }
@@ -66,7 +67,7 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 		return nil
 	}
 
-	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.LastOrgId, "", "")
+	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), "", "")
 	if err != nil {
 		return nil
 	}

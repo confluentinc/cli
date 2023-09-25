@@ -97,10 +97,7 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 					Statement:     flinkgatewayv1beta1.PtrString("CREATE TABLE test;"),
 					ComputePoolId: flinkgatewayv1beta1.PtrString("pool-123456"),
 				},
-				Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
-					Phase:  "TODO",
-					Detail: flinkgatewayv1beta1.PtrString("TODO"),
-				},
+				Status:   &flinkgatewayv1beta1.SqlV1beta1StatementStatus{Phase: "PENDING"},
 				Metadata: &flinkgatewayv1beta1.ObjectMeta{CreatedAt: &statementCreatedAt},
 			}
 			err := json.NewEncoder(w).Encode(statement)
