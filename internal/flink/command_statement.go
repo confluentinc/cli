@@ -23,6 +23,7 @@ func (c *command) newStatementCommand() *cobra.Command {
 		Short: "Manage Flink SQL statements.",
 	}
 
+	cmd.AddCommand(c.newStatementCreateCommand())
 	cmd.AddCommand(c.newStatementDeleteCommand())
 	cmd.AddCommand(c.newStatementDescribeCommand())
 	cmd.AddCommand(c.newStatementExceptionCommand())
@@ -61,7 +62,7 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 		return nil
 	}
 
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return nil
 	}

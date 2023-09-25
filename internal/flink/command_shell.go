@@ -7,6 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/flink"
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -47,7 +48,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 			return err
 		}
 
-		flinkGatewayClient, err := c.GetFlinkGatewayClient()
+		flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
 		if err != nil {
 			return err
 		}
@@ -101,29 +102,14 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		catalog = environment.GetDisplayName()
 	}
 
-	computePool, err := cmd.Flags().GetString("compute-pool")
-	if err != nil {
-		return err
-	}
+	computePool := c.Context.GetCurrentFlinkComputePool()
 	if computePool == "" {
-		if c.Context.GetCurrentFlinkComputePool() == "" {
-			return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
-		}
-		computePool = c.Context.GetCurrentFlinkComputePool()
+		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 	}
 
-	serviceAccount, err := cmd.Flags().GetString("service-account")
-	if err != nil {
-		return err
-	}
+	serviceAccount := c.Context.GetCurrentServiceAccount()
 	if serviceAccount == "" {
-		serviceAccount = c.Context.GetCurrentServiceAccount()
-	}
-
-	if serviceAccount == "" {
-		output.ErrPrintln("Warning: no service account provided. To ensure that your statements run continuously, " +
-			"switch to using a service account instead of your user identity with `confluent iam service-account use` or `--service-account`. " +
-			"Otherwise, statements will stop running after 4 hours.")
+		output.ErrPrintln(flink.ServiceAccountWarning)
 	}
 
 	database, err := cmd.Flags().GetString("database")
@@ -143,7 +129,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	flinkGatewayClient, err := c.GetFlinkGatewayClient()
+	flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
 	if err != nil {
 		return err
 	}

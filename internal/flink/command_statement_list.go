@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -25,7 +26,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 }
 
 func (c *command) statementList(cmd *cobra.Command, args []string) error {
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
@@ -35,12 +36,12 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	computePoolId, err := cmd.Flags().GetString("compute-pool")
-	if err != nil {
-		return err
+	computePool := c.Context.GetCurrentFlinkComputePool()
+	if computePool == "" {
+		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 	}
 
-	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId, computePoolId)
+	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId, computePool)
 	if err != nil {
 		return err
 	}
