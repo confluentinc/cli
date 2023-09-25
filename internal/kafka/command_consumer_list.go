@@ -50,7 +50,7 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, consumer := range consumers.Data {
+	for _, consumer := range consumers.GetData() {
 		list.Add(&consumerOut{
 			ConsumerGroupId: consumer.GetConsumerGroupId(),
 			ConsumerId:      consumer.GetConsumerId(),
