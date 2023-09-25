@@ -83,7 +83,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 
 	// Process remote statements
 	computePoolId := s.appOptions.GetComputePoolId()
-	properties := s.Properties.GetSqlProperties()
+	properties := s.Properties.GetNonLocalProperties()
 
 	var principal string
 	serviceAccount := s.Properties.Get(config.ConfigKeyServiceAccount)
@@ -174,6 +174,30 @@ func (s *Store) DeleteStatement(statementName string) bool {
 		return false
 	}
 	log.CliLogger.Infof("Successfully deleted statement: %s", statementName)
+	return true
+}
+
+func (s *Store) StopStatement(statementName string) bool {
+	statement, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+
+	if err != nil {
+		log.CliLogger.Warnf("Failed to fetch statement to stop it: %v", err)
+		return false
+	}
+
+	spec, isSpecOk := statement.GetSpecOk()
+	if !isSpecOk {
+		log.CliLogger.Warnf("Spec for statement that should be stopped is nil")
+		return false
+	}
+	spec.SetStopped(true)
+
+	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId(), statement); err != nil {
+		log.CliLogger.Warnf("Failed to stop the statement: %v", err)
+		return false
+	}
+
+	log.CliLogger.Infof("Successfully stopped statement: %s", statementName)
 	return true
 }
 

@@ -168,9 +168,12 @@ func (s *UserPropertiesTestSuite) TestToSortedSlice() {
 	})
 }
 
-func (s *UserPropertiesTestSuite) TestShouldOnlyReturnSqlNamespaceProperties() {
+func (s *UserPropertiesTestSuite) TestShouldOnlyReturnNonLocalNamespaceProperties() {
 	s.userProperties.Set(config.ConfigKeyResultsTimeout, "1000")
 	s.userProperties.Set(config.ConfigKeyCatalog, "test-catalog")
 
-	require.Equal(s.T(), map[string]string{config.ConfigKeyCatalog: "test-catalog"}, s.userProperties.GetSqlProperties())
+	require.Equal(s.T(), map[string]string{
+		config.ConfigKeyCatalog: "test-catalog",
+		"default-key":           "default-value",
+	}, s.userProperties.GetNonLocalProperties())
 }

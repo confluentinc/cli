@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
@@ -774,6 +774,113 @@ func generateCloserFromObject(obj interface{}) io.ReadCloser {
 	return io.NopCloser(reader)
 }
 
+func (s *StoreTestSuite) TestStopStatement() {
+	ctrl := gomock.NewController(s.T())
+	statementName := "TEST_STATEMENT"
+	statementObj := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	spec := flinkgatewayv1beta1.NewSqlV1beta1StatementSpecWithDefaults()
+	statementObj.SetName(statementName)
+	statementObj.SetSpec(*spec)
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
+
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
+
+	statementUpdated := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	specUpdated := flinkgatewayv1beta1.NewSqlV1beta1StatementSpecWithDefaults()
+	statementUpdated.SetName(statementName)
+	specUpdated.SetStopped(true)
+	statementUpdated.SetSpec(*specUpdated)
+
+	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementUpdated).Return(nil)
+
+	wasStatementDeleted := store.StopStatement(statementName)
+	require.True(s.T(), wasStatementDeleted)
+}
+
+func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
+	ctrl := gomock.NewController(s.T())
+	statementName := "TEST_STATEMENT"
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
+
+	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1beta1.SqlV1beta1Statement{}, flinkError)
+
+	wasStatementDeleted := store.StopStatement(statementName)
+	require.False(s.T(), wasStatementDeleted)
+}
+
+func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
+	ctrl := gomock.NewController(s.T())
+	statementName := "TEST_STATEMENT"
+	statementObj := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	statementObj.SetName(statementName)
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
+
+	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1beta1.SqlV1beta1Statement{}, flinkError)
+
+	wasStatementDeleted := store.StopStatement(statementName)
+	require.False(s.T(), wasStatementDeleted)
+}
+
+func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
+	ctrl := gomock.NewController(s.T())
+	statementName := "TEST_STATEMENT"
+	statementObj := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	spec := flinkgatewayv1beta1.NewSqlV1beta1StatementSpecWithDefaults()
+	statementObj.SetName(statementName)
+	statementObj.SetSpec(*spec)
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
+
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
+	statementObj.Spec.SetStopped(true)
+	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementObj).Return(flinkError)
+
+	wasStatementDeleted := store.StopStatement(statementName)
+	require.False(s.T(), wasStatementDeleted)
+}
+
 func (s *StoreTestSuite) TestDeleteStatement() {
 	ctrl := gomock.NewController(s.T())
 
@@ -1014,13 +1121,14 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
 
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
 		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
 			Statement:     &statement,
 		},
@@ -1066,13 +1174,14 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 
 	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
 		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
 			Statement:     &statement,
 		},
@@ -1103,12 +1212,13 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 
 	statement := "SELECT * FROM table"
 	statusDetailMessage := "test status detail message"
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
 		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Detail: &statusDetailMessage,
 		},
 		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
 			Statement:     &statement,
 		},

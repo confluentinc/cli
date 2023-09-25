@@ -7,17 +7,19 @@ import (
 
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
+	"github.com/confluentinc/cli/v3/pkg/errors/flink"
 	flinkerror "github.com/confluentinc/cli/v3/pkg/errors/flink"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 type GatewayClientInterface interface {
-	DeleteStatement(environmentId, statementName, orgId string) error
 	GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error)
 	CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error)
 	GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1beta1.SqlV1beta1StatementExceptionList, error)
+	DeleteStatement(environmentId, statementName, orgId string) error
+	UpdateStatement(environmentId, statementName, orgId string, statement flinkgatewayv1beta1.SqlV1beta1Statement) error
 }
 
 type FlinkGatewayClient struct {
@@ -45,7 +47,6 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 
 			return nil
 		})
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = flinkgatewayv1beta1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -67,6 +68,11 @@ func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName, orgId
 func (c *FlinkGatewayClient) GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	resp, httpResp, err := c.StatementsSqlV1beta1Api.GetSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId, statementName).Execute()
 	return resp, flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) UpdateStatement(environmentId, statementName, orgId string, statement flinkgatewayv1beta1.SqlV1beta1Statement) error {
+	httpResp, err := c.StatementsSqlV1beta1Api.UpdateSqlv1beta1Statement(c.flinkGatewayApiContext(), orgId, environmentId, statementName).SqlV1beta1Statement(statement).Execute()
+	return flink.CatchError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error) {

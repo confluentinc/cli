@@ -329,3 +329,22 @@ func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
 
 	s.runIntegrationTest(test)
 }
+
+func (s *CLITestSuite) TestLogin_RemoveSlashFromPlatformName() {
+	resetConfiguration(s.T(), false)
+
+	configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
+
+	args := fmt.Sprintf("login --url %s/", s.TestBackend.GetCloudUrl())
+	env := []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+
+	_ = runCommand(s.T(), testBin, env, args, 0, "")
+
+	got, err := os.ReadFile(configFile)
+	s.NoError(err)
+	data := config.Config{}
+	err = json.Unmarshal(got, &data)
+	s.NoError(err)
+
+	s.Equal(s.TestBackend.GetCloudUrl(), data.Context().PlatformName)
+}

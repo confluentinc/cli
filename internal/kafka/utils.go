@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	_nethttp "net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -168,6 +169,6 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 	return cluster.Status.Phase
 }
 
-func topicNameStrategy(topic string) string {
-	return topic + "-value"
+func topicNameStrategy(topic, mode string) string {
+	return fmt.Sprintf("%s-%s", topic, mode)
 }
