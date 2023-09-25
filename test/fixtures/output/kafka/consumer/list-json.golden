@@ -1,0 +1,14 @@
+[
+  {
+    "consumer_group_id": "consumer-group-1",
+    "consumer_id": "consumer-1",
+    "instance_id": "consumer-instance-1",
+    "client_id": "client-1"
+  },
+  {
+    "consumer_group_id": "consumer-group-1",
+    "consumer_id": "consumer-2",
+    "instance_id": "consumer-instance-2",
+    "client_id": "client-2"
+  }
+]
