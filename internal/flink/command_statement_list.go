@@ -40,7 +40,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId, computePoolId)
+	statements, err := client.ListAllStatements(environmentId, c.Context.GetCurrentOrganization(), computePoolId)
 	if err != nil {
 		return err
 	}
