@@ -13,9 +13,9 @@ type consumerCommand struct {
 
 type consumerOut struct {
 	ConsumerGroupId string `human:"Consumer Group" serialized:"consumer_group_id"`
-	ConsumerId      string `human:"Consumer" serialized:"consumer"`
-	InstanceId      string `human:"Instance" serialized:"instance"`
-	ClientId        string `human:"Client" serialized:"client"`
+	ConsumerId      string `human:"Consumer" serialized:"consumer_id"`
+	InstanceId      string `human:"Instance" serialized:"instance_id"`
+	ClientId        string `human:"Client" serialized:"client_id"`
 }
 
 func newConsumerCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {

@@ -17,7 +17,7 @@ func (c *consumerCommand) newListCommandOnPrem() *cobra.Command {
 		RunE:  c.listOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List all consumers for consumer group "my-consumer-group".`,
+				Text: `List all consumers in consumer group "my-consumer-group".`,
 				Code: "confluent kafka consumer list --group my-consumer-group",
 			},
 		),

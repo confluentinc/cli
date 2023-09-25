@@ -4,7 +4,7 @@ Usage:
   confluent kafka consumer list [flags]
 
 Examples:
-List all consumers for consumer group "my-consumer-group".
+List all consumers in consumer group "my-consumer-group".
 
   $ confluent kafka consumer list --group my-consumer-group
 
