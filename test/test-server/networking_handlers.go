@@ -150,6 +150,27 @@ func handleNetworkingPrivateLinkAttachments(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/private-link-attachment-connections/{id}"
+func handleNetworkingPrivateLinkAttachmentConnection(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingPrivateLinkAttachmentConnectionGet(t, id)(w, r)
+		}
+	}
+}
+
+// Handler for "/networking/v1/private-link-attachment-connections"
+func handleNetworkingPrivateLinkAttachmentConnections(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingPrivateLinkAttachmentConnectionList(t)(w, r)
+		}
+	}
+}
+
 func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -997,6 +1018,98 @@ func handleNetworkingPrivateLinkAttachmentCreate(t *testing.T) http.HandlerFunc 
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 			err := writeErrorJson(w, fmt.Sprintf("The private link attachment region '%s' for the cloud provider '%s' is not supported.", region, strings.ToLower(cloud)))
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingPrivateLinkAttachmentConnectionGet(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "plattc-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "plattc-111111":
+			connection := getPrivateLinkAttachmentConnection("plattc-111111", "aws-plattc", "READY")
+			err := json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		case "plattc-111112":
+			connection := getPrivateLinkAttachmentConnection("plattc-111112", "aws-plattc", "PROVISIONING")
+			err := json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func getPrivateLinkAttachmentConnection(id, name, phase string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection {
+	connection := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpec{
+			PrivateLinkAttachment: &networkingprivatelinkv1.ObjectReference{Id: "platt-111111"},
+			Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
+				NetworkingV1AwsPrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentConnection{
+					Kind:          "AwsPrivateLinkAttachmentConnection",
+					VpcEndpointId: "vpce-01234567890abcdef",
+				},
+			},
+			DisplayName: networkingprivatelinkv1.PtrString(name),
+			Environment: &networkingprivatelinkv1.ObjectReference{Id: "env-00000"},
+		},
+		Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatus{
+			Phase: phase,
+			Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
+				NetworkingV1AwsPrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus{
+					Kind:                   "AwsPrivateLinkAttachmentConnectionStatus",
+					VpcEndpointId:          "vpce-01234567890abcdef",
+					VpcEndpointServiceName: "",
+				},
+			},
+		},
+	}
+
+	if phase != "PROVISIONING" {
+		connection.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus.VpcEndpointServiceName = "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef"
+	}
+
+	return connection
+}
+
+func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		connection1 := getPrivateLinkAttachmentConnection("plattc-111111", "aws-plattc-1", "PROVISIONING")
+		connection2 := getPrivateLinkAttachmentConnection("plattc-111112", "aws-plattc-2", "READY")
+		connection3 := getPrivateLinkAttachmentConnection("plattc-111113", "aws-plattc-3", "READY")
+
+		privateLinkAttachment := r.URL.Query().Get("spec.private_link_attachment")
+		switch privateLinkAttachment {
+		case "platt-invalid":
+			err := json.NewEncoder(w).Encode(networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
+				Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{},
+				Metadata: networkingprivatelinkv1.ListMeta{},
+			})
+			require.NoError(t, err)
+		case "platt-111111":
+			pageToken := r.URL.Query().Get("page_token")
+			var connectionList networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList
+			switch pageToken {
+			case "aws-plattc-3":
+				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
+					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection3},
+					Metadata: networkingprivatelinkv1.ListMeta{},
+				}
+			case "aws-plattc-2":
+				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
+					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection2},
+					Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-plattc-3"))},
+				}
+			default:
+				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
+					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection1},
+					Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-plattc-2"))},
+				}
+			}
+
+			err := json.NewEncoder(w).Encode(connectionList)
 			require.NoError(t, err)
 		}
 	}
