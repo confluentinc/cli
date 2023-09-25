@@ -41,7 +41,7 @@ func (c *consumerCommand) describe(cmd *cobra.Command, args []string) error {
 	table.Add(&consumerGroupOut{
 		ClusterId:         group.GetClusterId(),
 		ConsumerGroupId:   group.GetConsumerGroupId(),
-		Coordinator:       getStringBroker(group.GetCoordinator().Related),
+		Coordinator:       getStringBroker(group.Coordinator.GetRelated()),
 		IsSimple:          group.GetIsSimple(),
 		PartitionAssignor: group.GetPartitionAssignor(),
 		State:             group.GetState(),
