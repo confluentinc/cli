@@ -59,6 +59,5 @@ func printPrivateLinkAttachmentConnectionTable(cmd *cobra.Command, connection ne
 
 	table := output.NewTable(cmd)
 	table.Add(out)
-
 	return table.Print()
 }
