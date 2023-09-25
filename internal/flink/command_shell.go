@@ -24,13 +24,10 @@ func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) 
 	}
 
 	c.addComputePoolFlag(cmd)
-	//TODO: remove as soon v1beta1 migration is complete (https://confluentinc.atlassian.net/browse/KFS-941)
-	cmd.Flags().String("identity-pool", "", "Identity pool ID (deprecated).")
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
 	if cfg.IsTest {
 		cmd.Flags().Bool("fake-gateway", false, "Test the SQL client with fake gateway data.")
 	}
@@ -115,14 +112,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		computePool = c.Context.GetCurrentFlinkComputePool()
 	}
 
-	identityPool, err := cmd.Flags().GetString("identity-pool")
-	if err != nil {
-		return err
-	}
-	if identityPool == "" {
-		identityPool = c.Context.GetCurrentIdentityPool()
-	}
-
 	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
@@ -131,7 +120,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		serviceAccount = c.Context.GetCurrentServiceAccount()
 	}
 
-	if serviceAccount == "" && identityPool == "" {
+	if serviceAccount == "" {
 		output.ErrPrintln("Warning: no service account provided. To ensure that your statements run continuously, " +
 			"switch to using a service account instead of your user identity with `confluent iam service-account use` or `--service-account`. " +
 			"Otherwise, statements will stop running after 4 hours.")
