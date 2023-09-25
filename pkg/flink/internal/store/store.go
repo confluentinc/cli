@@ -226,6 +226,18 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 				return nil, types.NewStatementErrorFailureMsg(err, statusDetail)
 			}
 
+			// TODO: HACK TO IMPROVE LATENCY
+			if statementObj.Status.ResultSchema != nil {
+				processedStatement := types.NewProcessedStatement(statementObj)
+				// if it's a SELECT statement we manually set the status to RUNNING, otherwise COMPLETED
+				processedStatement.Status = types.COMPLETED
+				if processedStatement.IsSelectStatement {
+					processedStatement.Status = types.RUNNING
+				}
+				processedStatement.StatusDetail = statusDetail
+				return processedStatement, nil
+			}
+
 			phase = types.PHASE(statementObj.Status.GetPhase())
 			if phase != types.PENDING {
 				processedStatement := types.NewProcessedStatement(statementObj)
