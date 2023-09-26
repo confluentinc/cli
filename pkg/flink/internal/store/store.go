@@ -90,7 +90,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	if serviceAccount != "" {
 		principal = serviceAccount
 	} else {
-		principal = s.appOptions.GetContext().GetUser().ResourceId
+		principal = s.appOptions.GetContext().GetUser().GetResourceId()
 	}
 
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(

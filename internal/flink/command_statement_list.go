@@ -25,7 +25,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 }
 
 func (c *command) statementList(cmd *cobra.Command, args []string) error {
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
@@ -35,12 +35,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	computePoolId, err := cmd.Flags().GetString("compute-pool")
-	if err != nil {
-		return err
-	}
-
-	statements, err := client.ListAllStatements(environmentId, c.Context.GetCurrentOrganization(), computePoolId)
+	statements, err := client.ListAllStatements(environmentId, c.Context.GetCurrentOrganization(), c.Context.GetCurrentFlinkComputePool())
 	if err != nil {
 		return err
 	}
