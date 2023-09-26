@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *clusterCommand) newUseCommand(cfg *config.Config) *cobra.Command {
@@ -41,6 +41,6 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	color.ErrPrintf(c.Config.EnableColor, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironment())
+	output.ErrPrintf(c.Config.EnableColor, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironment())
 	return nil
 }

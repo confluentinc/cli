@@ -18,11 +18,11 @@ import (
 
 	"github.com/confluentinc/cli/v3/internal/kafka"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
@@ -169,7 +169,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err := c.countAsyncApiUsage(accountDetails); err != nil {
 		log.CliLogger.Debug(err)
 	}
-	color.Printf(c.Config.EnableColor, "AsyncAPI specification written to \"%s\".\n", flags.file)
+	output.Printf(c.Config.EnableColor, "AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
 }
 
@@ -205,7 +205,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
 	details.channelDetails.mapOfMessageCompat = mapOfMessageCompat
-	color.Printf(c.Config.EnableColor, "Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
+	output.Printf(c.Config.EnableColor, "Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
 	return nil
 }
 

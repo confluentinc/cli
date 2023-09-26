@@ -6,9 +6,9 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -115,6 +115,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	color.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
 	return nil
 }

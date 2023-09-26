@@ -19,7 +19,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -187,7 +186,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 	for topicName, topicDetails := range spec.Channels {
 		if err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite); err != nil {
 			if err.Error() == parseErrorMessage {
-				color.Printf(c.Config.EnableColor, "WARNING: topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
+				output.Printf(c.Config.EnableColor, "WARNING: topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
 			} else {
 				log.CliLogger.Warn(err)
 			}
@@ -243,7 +242,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 			spec.Channels[topicName].Description); err != nil {
 			return fmt.Errorf("unable to update topic description: %v", err)
 		}
-		color.Printf(c.Config.EnableColor, "Added description to topic \"%s\".\n", topicName)
+		output.Printf(c.Config.EnableColor, "Added description to topic \"%s\".\n", topicName)
 	}
 	return nil
 }
@@ -299,7 +298,7 @@ func (c *command) createTopic(topicName string, kafkaBinding kafkaBinding) (bool
 		}
 		return false, kafkarest.NewError(kafkaRest.CloudClient.GetUrl(), err, httpResp)
 	}
-	color.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return true, nil
 }
 
@@ -336,7 +335,7 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 			return fmt.Errorf("unable to update topic configs: %v", err)
 		}
 	}
-	color.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Topic, topicName)
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Topic, topicName)
 	return nil
 }
 
@@ -415,7 +414,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %v", err)
 		}
-		output.Printf("Registered schema \"%d\" under subject \"%s\".\n", id.Id, subject)
+		output.Printf(false, "Registered schema \"%d\" under subject \"%s\".\n", id.Id, subject)
 		return id.Id, nil
 	}
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
@@ -429,7 +428,7 @@ func updateSubjectCompatibility(details *accountDetails, compatibility, subject 
 	if err != nil {
 		return fmt.Errorf("failed to update subject level compatibility: %v", err)
 	}
-	output.Printf("Subject level compatibility updated to \"%s\" for subject \"%s\".\n", config.Compatibility, subject)
+	output.Printf(false, "Subject level compatibility updated to \"%s\" for subject \"%s\".\n", config.Compatibility, subject)
 	return nil
 }
 
@@ -458,7 +457,7 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 		if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 			return err
 		}
-		output.Printf("Tag(s) %s added to schema \"%d\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
+		output.Printf(false, "Tag(s) %s added to schema \"%d\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
 	}
 	return nil
 }
@@ -488,7 +487,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 		return err
 	}
-	output.Printf("Tag(s) %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
+	output.Printf(false, "Tag(s) %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
 	return nil
 }
 

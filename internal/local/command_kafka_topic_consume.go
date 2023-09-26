@@ -10,10 +10,10 @@ import (
 
 	"github.com/confluentinc/cli/v3/internal/kafka"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *Command) newKafkaTopicConsumeCommand() *cobra.Command {
@@ -105,7 +105,7 @@ func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	color.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
+	output.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
 
 	groupHandler := &kafka.GroupHandler{
 		Out:         cmd.OutOrStdout(),

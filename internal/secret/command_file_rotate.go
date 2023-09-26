@@ -3,7 +3,6 @@ package secret
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -69,7 +68,7 @@ func (c *command) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		color.ErrPrintln(c.Config.EnableColor, errors.SaveTheMasterKeyMsg)
+		output.ErrPrintln(c.Config.EnableColor, errors.SaveTheMasterKeyMsg)
 		table := output.NewTable(cmd)
 		table.Add(&rotateOut{MasterKey: masterKey})
 		return table.Print()

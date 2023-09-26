@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -79,8 +79,8 @@ func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, warning := range warnings {
-		color.ErrPrintln(c.Config.EnableColor, warning)
-		color.ErrPrintln(c.Config.EnableColor, "")
+		output.ErrPrintln(c.Config.EnableColor, warning)
+		output.ErrPrintln(c.Config.EnableColor, "")
 	}
 
 	enc := json.NewEncoder(c.OutOrStdout())

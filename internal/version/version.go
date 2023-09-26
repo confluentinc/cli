@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
@@ -32,6 +32,6 @@ func New(prerunner pcmd.PreRunner, ver *pversion.Version) *cobra.Command {
 }
 
 func (c *command) version(_ *cobra.Command, _ []string) error {
-	color.Println(c.Config.EnableColor, c.ver.String())
+	output.Println(c.Config.EnableColor, c.ver.String())
 	return nil
 }

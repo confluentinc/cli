@@ -9,7 +9,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -123,7 +122,7 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return catchSchemaNotFoundError(err, subject, version)
 		}
-		color.Printf(c.Config.EnableColor, "Successfully %s deleted all versions for subject \"%s\".\n", deleteType, subject)
+		output.Printf(c.Config.EnableColor, "Successfully %s deleted all versions for subject \"%s\".\n", deleteType, subject)
 		versions = v
 	} else {
 		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
@@ -131,7 +130,7 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return catchSchemaNotFoundError(err, subject, version)
 		}
-		color.Printf(c.Config.EnableColor, "Successfully %s deleted version \"%s\" for subject \"%s\".\n", deleteType, version, subject)
+		output.Printf(c.Config.EnableColor, "Successfully %s deleted version \"%s\" for subject \"%s\".\n", deleteType, version, subject)
 		versions = []int32{v}
 	}
 

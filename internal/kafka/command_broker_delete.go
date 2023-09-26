@@ -10,9 +10,9 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -62,9 +62,9 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 	deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
 	if len(deletedIds) == 1 {
-		color.Printf(c.Config.EnableColor, deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIds[0]))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		color.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err

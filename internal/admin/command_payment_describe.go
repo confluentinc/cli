@@ -5,8 +5,8 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -31,20 +31,20 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 
 	marketplace := user.GetOrganization().GetMarketplace()
 	if marketplace.GetPartner() != ccloudv1.MarketplacePartner_UNKNOWN {
-		color.Printf(c.Config.EnableColor, "Organization is currently linked to %s Marketplace account.\n", marketplace.GetPartner())
+		output.Printf(c.Config.EnableColor, "Organization is currently linked to %s Marketplace account.\n", marketplace.GetPartner())
 	}
 
 	if card == nil {
-		color.Println(c.Config.EnableColor, "No credit card found. Add one using `confluent admin payment update`.")
+		output.Println(c.Config.EnableColor, "No credit card found. Add one using `confluent admin payment update`.")
 
 		ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 		if featureflags.Manager.BoolVariation("cloud_growth.marketplace_linking_advertisement_experiment.enable", c.Context, ldClient, true, false) {
-			color.Println(c.Config.EnableColor, "Alternatively, you can also link to AWS, GCP, or Azure Marketplace as your payment option. For more information, visit https://confluent.cloud/add-payment.")
+			output.Println(c.Config.EnableColor, "Alternatively, you can also link to AWS, GCP, or Azure Marketplace as your payment option. For more information, visit https://confluent.cloud/add-payment.")
 		}
 
 		return nil
 	}
 
-	color.Printf(c.Config.EnableColor, "%s ending in %s\n", card.GetBrand(), card.GetLast4())
+	output.Printf(c.Config.EnableColor, "%s ending in %s\n", card.GetBrand(), card.GetLast4())
 	return nil
 }

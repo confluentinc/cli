@@ -13,10 +13,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type Service struct {
@@ -175,7 +175,7 @@ func (c *Command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 		serviceNames[i] = writeServiceName(service)
 	}
 
-	color.Printf(c.Config.EnableColor, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+	output.Printf(c.Config.EnableColor, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -470,6 +470,6 @@ func (c *Command) notifyConfluentCurrent() error {
 		return err
 	}
 
-	color.Printf(c.Config.EnableColor, errors.UsingConfluentCurrentMsg, dir)
+	output.Printf(c.Config.EnableColor, errors.UsingConfluentCurrentMsg, dir)
 	return nil
 }

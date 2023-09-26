@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/plugin"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -56,7 +56,7 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	color.Printf(c.Config.EnableColor, "Installed plugin \"%s\".\n", args[0])
+	output.Printf(c.Config.EnableColor, "Installed plugin \"%s\".\n", args[0])
 
 	return nil
 }

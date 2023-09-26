@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -80,6 +80,6 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	color.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Connector, args[0])
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Connector, args[0])
 	return nil
 }

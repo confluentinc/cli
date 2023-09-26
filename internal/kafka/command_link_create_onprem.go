@@ -9,9 +9,9 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/utils"
@@ -142,7 +142,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}
-	color.Print(c.Config.EnableColor, msg)
+	output.Print(c.Config.EnableColor, msg)
 
 	return nil
 }

@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -67,9 +67,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 	deleteMsg := "Requested to delete %s %s.\n"
 	if len(deletedIds) == 1 {
-		color.Printf(c.Config.EnableColor, deleteMsg, resource.Pipeline, fmt.Sprintf(`"%s"`, deletedIds[0]))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.Pipeline, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		color.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.Pipeline), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.Pipeline), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err

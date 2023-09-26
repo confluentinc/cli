@@ -45,7 +45,6 @@ import (
 	"github.com/confluentinc/cli/v3/internal/version"
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -53,6 +52,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/help"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 	pplugin "github.com/confluentinc/cli/v3/pkg/plugin"
 	secrets "github.com/confluentinc/cli/v3/pkg/secret"
@@ -159,7 +159,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 			}
 			u := ppanic.CollectPanic(cmd, args, cfg)
 			if err := reportUsage(cmd, cfg, u); err != nil {
-				color.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
+				output.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
 			}
 			pcmd.CheckErr(cfg.EnableColor, r)
 		}

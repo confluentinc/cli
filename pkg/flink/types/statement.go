@@ -80,10 +80,10 @@ func (s ProcessedStatement) GetPageSize() int {
 
 func (s ProcessedStatement) PrintStatementDoneStatus() {
 	if s.Status != "" {
-		output.Printf("Statement phase is %s.\n", s.Status)
+		output.Printf(false, "Statement phase is %s.\n", s.Status)
 	}
 	if s.StatusDetail != "" {
-		output.Printf("%s.\n", s.StatusDetail)
+		output.Printf(false, "%s.\n", s.StatusDetail)
 	}
 }
 

@@ -173,9 +173,9 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 
 func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckafka.Producer) error {
 	if runtime.GOOS == "windows" {
-		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C")
+		output.ErrPrintf(false, errors.StartingProducerMsg, "Ctrl-C")
 	} else {
-		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
+		output.ErrPrintf(false, errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
 	}
 
 	var scanErr error
@@ -213,13 +213,13 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 				scanErr = err
 				break
 			}
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
+			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
 		}
 
 		e := <-deliveryChan                // read a ckafka event from the channel
 		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
 		go scan()
 	}

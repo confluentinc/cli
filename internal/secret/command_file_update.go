@@ -3,8 +3,8 @@ package secret
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -49,6 +49,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	color.ErrPrintln(c.Config.EnableColor, errors.UpdateSecretFileMsg)
+	output.ErrPrintln(c.Config.EnableColor, errors.UpdateSecretFileMsg)
 	return nil
 }

@@ -157,7 +157,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingConsumerMsg)
+	output.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
 
 	keyFormat, err := cmd.Flags().GetString("key-format")
 	if err != nil {

@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -61,6 +61,6 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	color.Printf(c.Config.EnableColor, "Deleted Schema Registry cluster for environment \"%s\".\n", environmentId)
+	output.Printf(c.Config.EnableColor, "Deleted Schema Registry cluster for environment \"%s\".\n", environmentId)
 	return nil
 }

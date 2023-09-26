@@ -16,7 +16,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -167,7 +166,7 @@ func (c *clientConfigCommand) create(configId string, srApiAvailable bool) func(
 		}
 
 		// print configuration file to stdout
-		color.Println(c.Config.EnableColor, configFile)
+		output.Println(c.Config.EnableColor, configFile)
 		return nil
 	}
 }
@@ -353,7 +352,7 @@ func replaceTemplates(configFile string, m map[string]string) string {
 
 func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) string {
 	warning := errors.NewWarningWithSuggestions(errors.SRInConfigFileWarning, reason, suggestions+"\n"+errors.SRInConfigFileSuggestions)
-	output.ErrPrint(warning.DisplayWarningWithSuggestions())
+	output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
 
 	return commentSchemaRegistryLines(configFile)
 }

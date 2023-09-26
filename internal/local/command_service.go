@@ -18,8 +18,8 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
-	pcolor "github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/spinner"
 )
 
@@ -247,7 +247,7 @@ func (c *Command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 		return err
 	}
 
-	pcolor.Println(c.Config.EnableColor, ver)
+	output.Println(c.Config.EnableColor, ver)
 	return nil
 }
 
@@ -268,7 +268,7 @@ func (c *Command) startService(service, configFile string) error {
 		return err
 	}
 
-	pcolor.Printf(c.Config.EnableColor, errors.StartingServiceMsg, writeServiceName(service))
+	output.Printf(c.Config.EnableColor, errors.StartingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -451,7 +451,7 @@ func (c *Command) stopService(service string) error {
 		return c.printStatus(service)
 	}
 
-	pcolor.Printf(c.Config.EnableColor, errors.StoppingServiceMsg, writeServiceName(service))
+	output.Printf(c.Config.EnableColor, errors.StoppingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -571,7 +571,7 @@ func (c *Command) printStatus(service string) error {
 		status = color.GreenString("UP")
 	}
 
-	pcolor.Printf(c.Config.EnableColor, errors.ServiceStatusMsg, writeServiceName(service), status)
+	output.Printf(c.Config.EnableColor, errors.ServiceStatusMsg, writeServiceName(service), status)
 	return nil
 }
 

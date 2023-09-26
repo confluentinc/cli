@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 const deprecationPrefix = "DEPRECATED: "
@@ -116,9 +116,9 @@ func PrintAnnouncements(cfg *config.Config, featureFlag string, ctx *dynamicconf
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
 			if len(flagsAndMsg.Flags) == 0 {
 				if featureFlag == DeprecationNotices {
-					color.ErrPrintf(cfg.EnableColor, "`confluent %s` is deprecated: %s\n", name, flagsAndMsg.CommandMessage)
+					output.ErrPrintf(cfg.EnableColor, "`confluent %s` is deprecated: %s\n", name, flagsAndMsg.CommandMessage)
 				} else {
-					color.ErrPrintln(cfg.EnableColor, flagsAndMsg.CommandMessage)
+					output.ErrPrintln(cfg.EnableColor, flagsAndMsg.CommandMessage)
 				}
 			} else {
 				for i, flag := range flagsAndMsg.Flags {
@@ -137,7 +137,7 @@ func PrintAnnouncements(cfg *config.Config, featureFlag string, ctx *dynamicconf
 					} else {
 						msg = flagsAndMsg.FlagMessages[i]
 					}
-					color.ErrPrintln(cfg.EnableColor, msg)
+					output.ErrPrintln(cfg.EnableColor, msg)
 				}
 			}
 		}

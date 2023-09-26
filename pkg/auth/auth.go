@@ -43,7 +43,7 @@ func GetEnvWithFallback(current, deprecated string) string {
 	}
 
 	if val := os.Getenv(deprecated); val != "" {
-		output.ErrPrintf(errors.DeprecatedEnvVarWarningMsg, deprecated, current)
+		output.ErrPrintf(false, errors.DeprecatedEnvVarWarningMsg, deprecated, current)
 		return val
 	}
 

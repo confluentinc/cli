@@ -4,47 +4,68 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
-//
-// These printers are needed because we want to write to stdout, not stderr
-// as (cobra.Command).Print* does by default. So we also add ErrPrint* too.
-//
+var (
+	codeSnippetRegexp = regexp.MustCompile("`[^`]+`")
+	linkRegexp        = regexp.MustCompile(`https?://(www\.)?[a-z\-]+\.[/a-z\-]+`)
+)
 
-// Print formats using the default formats for its operands and writes to stdout.
-// Spaces are added between operands when neither is a string.
-func Print(s string) {
-	printTo(os.Stdout, s)
+func Print(color bool, s string) {
+	printTo(os.Stdout, color, s)
 }
 
-// Println formats using the default formats for its operands and writes to stdout.
-// Spaces are always added between operands and a newline is appended.
-func Println(s string) {
-	printTo(os.Stdout, s+"\n")
+func Println(color bool, s string) {
+	printTo(os.Stdout, color, s+"\n")
 }
 
-// Printf formats according to a format specifier and writes to stdout.
-func Printf(s string, args ...any) {
-	printTo(os.Stdout, fmt.Sprintf(s, args...))
+func Printf(color bool, s string, args ...any) {
+	printTo(os.Stdout, color, fmt.Sprintf(s, args...))
 }
 
-// ErrPrint formats using the default formats for its operands and writes to stderr.
-// Spaces are always added between operands.
-func ErrPrint(s string) {
-	printTo(os.Stderr, s)
+func ErrPrint(color bool, s string) {
+	printTo(os.Stderr, color, s)
 }
 
-// ErrPrintln formats using the default formats for its operands and writes to stderr.
-// Spaces are always added between operands and a newline is appended.
-func ErrPrintln(s string) {
-	printTo(os.Stderr, s+"\n")
+func ErrPrintln(color bool, s string) {
+	printTo(os.Stderr, color, s+"\n")
 }
 
-// ErrPrintf formats according to a format specifier and writes to stderr.
-func ErrPrintf(s string, args ...any) {
-	printTo(os.Stderr, fmt.Sprintf(s, args...))
+func ErrPrintf(color bool, s string, args ...any) {
+	printTo(os.Stderr, color, fmt.Sprintf(s, args...))
 }
 
-func printTo(w io.Writer, s string) {
+func printTo(w io.Writer, color bool, s string) {
+	if color {
+		s = colorCodeSnippets(s)
+		s = colorErrors(s)
+		s = colorLinks(s)
+	}
 	_, _ = fmt.Fprint(w, s)
+}
+
+func colorCodeSnippets(s string) string {
+	return codeSnippetRegexp.ReplaceAllStringFunc(s, func(s string) string {
+		style := lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Background(lipgloss.AdaptiveColor{Light: "254", Dark: "236"})
+		return style.Render(s[1 : len(s)-1])
+	})
+}
+
+func colorErrors(s string) string {
+	if strings.HasPrefix(s, "Error: ") {
+		style := lipgloss.NewStyle().Foreground(lipgloss.Color("203"))
+		return style.Render(s)
+	}
+	return s
+}
+
+func colorLinks(s string) string {
+	return linkRegexp.ReplaceAllStringFunc(s, func(s string) string {
+		style := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "36", Dark: "30"}).Underline(true)
+		return style.Render(s)
+	})
 }

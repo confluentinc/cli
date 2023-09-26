@@ -6,7 +6,6 @@ import (
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -63,10 +62,10 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key *byokv1.ByokV
 	table.Print()
 
 	if output.GetFormat(cmd) == output.Human {
-		color.ErrPrintln(c.Config.EnableColor, "")
-		color.ErrPrintf(c.Config.EnableColor, "%s\n", getPostCreateStepInstruction(key))
-		color.ErrPrintln(c.Config.EnableColor, "")
-		color.ErrPrintln(c.Config.EnableColor, postCreationStepInstructions)
+		output.ErrPrintln(c.Config.EnableColor, "")
+		output.ErrPrintf(c.Config.EnableColor, "%s\n", getPostCreateStepInstruction(key))
+		output.ErrPrintln(c.Config.EnableColor, "")
+		output.ErrPrintln(c.Config.EnableColor, postCreationStepInstructions)
 	}
 
 	return nil

@@ -209,7 +209,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 		if int(lastProgressUpdateTime.Seconds()) > capturedErrorsLimit {
 			lastProgressUpdateTime = time.Second * 0
-			output.Printf("Waiting for statement to be ready. Statement phase is %s. (Timeout %ds/%ds) \n", phase, int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
+			output.Printf(false, "Waiting for statement to be ready. Statement phase is %s. (Timeout %ds/%ds) \n", phase, int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
 		}
 		waitTime = calcWaitTime(retries)
 
@@ -291,7 +291,7 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 	for !statement.IsTerminalState() {
 		select {
 		case <-ctx.Done():
-			output.Println("Detached from statement.")
+			output.Println(false, "Detached from statement.")
 			return &statement, nil
 		default:
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId())
@@ -305,7 +305,7 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 			}
 
 			if statusDetail != "" {
-				output.Println(statusDetail)
+				output.Println(false, statusDetail)
 			}
 
 			statement.Status = types.PHASE(statementObj.Status.GetPhase())

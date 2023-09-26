@@ -8,7 +8,6 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -64,9 +63,9 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		color.Println(c.Config.EnableColor, "")
-		color.Println(c.Config.EnableColor, "Consumers")
-		color.Println(c.Config.EnableColor, "")
+		output.Println(c.Config.EnableColor, "")
+		output.Println(c.Config.EnableColor, "Consumers")
+		output.Println(c.Config.EnableColor, "")
 
 		list := output.NewList(cmd)
 		for _, consumer := range groupData.Consumers {

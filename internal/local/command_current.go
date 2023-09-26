@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -37,6 +37,6 @@ func (c *Command) runCurrentCommand(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	color.Println(c.Config.EnableColor, dir)
+	output.Println(c.Config.EnableColor, dir)
 	return nil
 }

@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -38,6 +38,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	color.Printf(c.Config.EnableColor, errors.UsingResourceMsg, resource.Environment, id)
+	output.Printf(c.Config.EnableColor, errors.UsingResourceMsg, resource.Environment, id)
 	return nil
 }

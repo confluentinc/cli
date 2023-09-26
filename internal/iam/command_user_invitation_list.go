@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -36,7 +35,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 	}
 
 	if len(invitations) == 0 {
-		color.Println(c.Config.EnableColor, "No invitations found.")
+		output.Println(c.Config.EnableColor, "No invitations found.")
 		return nil
 	}
 

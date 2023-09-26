@@ -190,7 +190,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 		"You can set the active Kafka cluster with `confluent kafka cluster use`.\n"
 	if !k.EnvContext {
 		if _, ok := k.KafkaClusterConfigs[k.ActiveKafkaCluster]; k.ActiveKafkaCluster != "" && !ok {
-			output.ErrPrintf(errMsg, k.ActiveKafkaCluster, k.Context.Name)
+			output.ErrPrintf(false, errMsg, k.ActiveKafkaCluster, k.Context.Name)
 			k.ActiveKafkaCluster = ""
 			if err := k.Context.Save(); err != nil {
 				panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s'.", k.Context.Name))
@@ -199,7 +199,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 	} else {
 		for env, kafkaEnvContext := range k.KafkaEnvContexts {
 			if _, ok := kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]; kafkaEnvContext.ActiveKafkaCluster != "" && !ok {
-				output.ErrPrintf(errMsg, kafkaEnvContext.ActiveKafkaCluster, k.Context.Name)
+				output.ErrPrintf(false, errMsg, kafkaEnvContext.ActiveKafkaCluster, k.Context.Name)
 				kafkaEnvContext.ActiveKafkaCluster = ""
 				if err := k.Context.Save(); err != nil {
 					panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s', environment '%s'.", k.Context.Name, env))
@@ -220,7 +220,7 @@ func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *KafkaClusterCo
 		}
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		output.ErrPrintf(errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, k.Context.Name, cluster.ID)
+		output.ErrPrintf(false, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, k.Context.Name, cluster.ID)
 		cluster.APIKey = ""
 		if err := k.Context.Save(); err != nil {
 			panic(fmt.Sprintf("Unable to reset current APIKey for cluster '%s' in context '%s'.", cluster.ID, k.Context.Name))

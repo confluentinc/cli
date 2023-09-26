@@ -6,9 +6,9 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *clusterCommand) newResumeCommand() *cobra.Command {
@@ -65,7 +65,7 @@ func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 			return err
 		}
 
-		color.Printf(c.Config.EnableColor, errors.ResumedConnectorMsg, id)
+		output.Printf(c.Config.EnableColor, errors.ResumedConnectorMsg, id)
 	}
 
 	return nil
