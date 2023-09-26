@@ -243,6 +243,7 @@ var vocabWords = []string{
 	"gzip",
 	"hostname",
 	"iam",
+	"ip",
 	"json",
 	"jit",
 	"jsonschema",

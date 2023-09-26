@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
+	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 )
@@ -167,6 +168,16 @@ func handleNetworkingPrivateLinkAttachmentConnections(t *testing.T) http.Handler
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPrivateLinkAttachmentConnectionList(t)(w, r)
+		}
+	}
+}
+
+// Handler for "/networking/v1/ip-addresses"
+func handleNetworkingIpAddresses(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingIpAddressList(t)(w, r)
 		}
 	}
 }
@@ -1112,5 +1123,53 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 			err := json.NewEncoder(w).Encode(connectionList)
 			require.NoError(t, err)
 		}
+	}
+}
+
+func handleNetworkingIpAddressList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		anyIpAddress := getIpAddress("10.200.0.0/28", "ANY", "global", []string{"EXTERNAL_OAUTH"})
+		awsIpAddress := getIpAddress("10.201.0.0/28", "AWS", "us-west-2", []string{"CONNECT"})
+		gcpIpAddress := getIpAddress("10.202.0.0/28", "GCP", "us-central1", []string{"KAFKA"})
+		azureIpAddress := getIpAddress("10.203.0.0/28", "AZURE", "centralus", []string{"KAFKA", "CONNECT"})
+
+		pageToken := r.URL.Query().Get("page_token")
+		var ipAddressList networkingipv1.NetworkingV1IpAddressList
+		switch pageToken {
+		case "azure":
+			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
+				Data:     []networkingipv1.NetworkingV1IpAddress{azureIpAddress},
+				Metadata: networkingipv1.ListMeta{},
+			}
+		case "gcp":
+			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
+				Data:     []networkingipv1.NetworkingV1IpAddress{gcpIpAddress},
+				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=azure"))},
+			}
+		case "aws":
+			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
+				Data:     []networkingipv1.NetworkingV1IpAddress{awsIpAddress},
+				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=gcp"))},
+			}
+		default:
+			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
+				Data:     []networkingipv1.NetworkingV1IpAddress{anyIpAddress},
+				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=aws"))},
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(ipAddressList)
+		require.NoError(t, err)
+	}
+}
+
+func getIpAddress(ipPrefix, cloud, region string, services []string) networkingipv1.NetworkingV1IpAddress {
+	return networkingipv1.NetworkingV1IpAddress{
+		Kind:        networkingipv1.PtrString("IpAddress"),
+		AddressType: networkingipv1.PtrString("EGRESS"),
+		IpPrefix:    networkingipv1.PtrString(ipPrefix),
+		Cloud:       networkingipv1.PtrString(cloud),
+		Region:      networkingipv1.PtrString(region),
+		Services:    &networkingipv1.NetworkingV1Services{Items: services},
 	}
 }
