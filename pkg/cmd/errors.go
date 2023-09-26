@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func CheckErr(enableColor bool, msg interface{}) {
+func CheckErr(enableColor bool, msg any) {
 	if msg == nil {
 		return
 	}
