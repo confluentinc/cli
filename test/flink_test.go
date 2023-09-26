@@ -62,12 +62,12 @@ func (s *CLITestSuite) TestFlinkRegion() {
 
 func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
-		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --cloud aws --region eu-west-1 --service-account sa-123456`, fixture: "flink/statement/create.golden"},
-		{args: `flink statement create --sql "INSERT * INTO table;" --cloud aws --region eu-west-1 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},
-		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --cloud aws --region eu-west-1`, fixture: "flink/statement/create-service-account-warning.golden"},
+		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/statement/create.golden"},
+		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
+		{args: `flink statement create --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},
 		{args: "flink statement delete my-statement --force --cloud aws --region eu-west-1", fixture: "flink/statement/delete.golden"},
-		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
-		{args: "flink statement list --compute-pool lfcp-123456 -o yaml", fixture: "flink/statement/list-yaml.golden"},
+		{args: "flink statement list --cloud aws --region eu-west-1", fixture: "flink/statement/list.golden"},
+		{args: "flink statement list --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/list-yaml.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-yaml.golden"},
 		{args: "flink statement stop my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/stop.golden"},

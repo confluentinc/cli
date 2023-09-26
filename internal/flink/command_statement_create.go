@@ -84,8 +84,13 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	principal := c.Context.GetCurrentServiceAccount()
-	if principal == "" {
+	serviceAccount, err := cmd.Flags().GetString("service-account")
+	if err != nil {
+		return err
+	}
+
+	principal := serviceAccount
+	if serviceAccount == "" {
 		output.ErrPrintln(flink.ServiceAccountWarning)
 		principal = c.Context.GetUser().GetResourceId()
 	}

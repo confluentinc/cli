@@ -107,7 +107,13 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 	}
 
-	serviceAccount := c.Context.GetCurrentServiceAccount()
+	serviceAccount, err := cmd.Flags().GetString("service-account")
+	if err != nil {
+		return err
+	}
+	if serviceAccount == "" {
+		serviceAccount = c.Context.GetCurrentServiceAccount()
+	}
 	if serviceAccount == "" {
 		output.ErrPrintln(flink.ServiceAccountWarning)
 	}
