@@ -1,6 +1,6 @@
 +-------------+---------------------------------------------+
 | ID          | op-12345                                    |
-| Name        | identity_provider                           |
+| Name        | identity-provider                           |
 | Description | providing identities.                       |
 | Issuer URI  | https://company.provider.com                |
 | JWKS URI    | https://company.provider.com/oauth2/v1/keys |

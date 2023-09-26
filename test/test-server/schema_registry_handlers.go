@@ -42,6 +42,10 @@ func handleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
+		case http.MethodDelete:
+			res := `{"compatibilityLevel":"BACKWARD"}`
+			_, err := w.Write([]byte(res))
+			require.NoError(t, err)
 		}
 	}
 }
@@ -424,6 +428,10 @@ func handleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
+		case http.MethodDelete:
+			res := `{"compatibilityLevel":"BACKWARD"}`
+			_, err := w.Write([]byte(res))
+			require.NoError(t, err)
 		}
 	}
 }
@@ -431,8 +439,8 @@ func handleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 // Handler for: "/mode/{subject}"
 func handleSRSubjectMode(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req srsdk.ModeUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
+		req := &srsdk.ModeUpdateRequest{}
+		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
 		err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
 		require.NoError(t, err)

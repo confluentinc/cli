@@ -2,5 +2,5 @@
 ----------+--------------+-----------
           | a-595        | default   
           | env-123      | env123    
+  *       | env-595      | other     
           | env-srUpdate | srUpdate  
-  *       | not-595      | other     

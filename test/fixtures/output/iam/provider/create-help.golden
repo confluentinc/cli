@@ -4,14 +4,15 @@ Usage:
   confluent iam provider create <name> [flags]
 
 Examples:
-Create an identity provider named "DemoIdentityProvider".
+Create an identity provider named "demo-identity-provider".
 
-  $ confluent iam provider create DemoIdentityProvider --description "description of provider" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com
+  $ confluent iam provider create demo-identity-provider --description "new description" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com
 
 Flags:
       --issuer-uri string    REQUIRED: URI of the identity provider issuer.
       --jwks-uri string      REQUIRED: JWKS (JSON Web Key Set) URI of the identity provider.
       --description string   Description of the identity provider.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

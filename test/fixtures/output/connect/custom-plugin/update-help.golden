@@ -1,0 +1,16 @@
+Update a custom connector plugin configuration.
+
+Usage:
+  confluent connect custom-plugin update <id> [flags]
+
+Flags:
+      --name string                    Name of custom plugin.
+      --description string             Description of custom plugin.
+      --documentation-link string      Document link of custom plugin.
+      --sensitive-properties strings   A comma-separated list of sensitive property names.
+      --context string                 CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

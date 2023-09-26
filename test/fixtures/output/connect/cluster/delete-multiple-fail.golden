@@ -1,0 +1,4 @@
+Error: connectors "lcc-456", "lcc-789", and "lcc-101112" not found
+
+Suggestions:
+    List available connectors with `confluent connect cluster list`.

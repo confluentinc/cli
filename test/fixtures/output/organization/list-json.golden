@@ -2,16 +2,19 @@
   {
     "is_current": true,
     "id": "abc-123",
-    "name": "org1"
+    "name": "org1",
+    "jit_enabled": true
   },
   {
     "is_current": false,
     "id": "abc-456",
-    "name": "org2"
+    "name": "org2",
+    "jit_enabled": true
   },
   {
     "is_current": false,
     "id": "abc-789",
-    "name": "org3"
+    "name": "org3",
+    "jit_enabled": true
   }
 ]

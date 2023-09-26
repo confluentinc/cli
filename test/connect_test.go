@@ -17,6 +17,9 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/create.golden"},
 		{args: "connect cluster delete lcc-123 --cluster lkc-123 --force", fixture: "connect/cluster/delete.golden"},
 		{args: "connect cluster delete lcc-123 --cluster lkc-123", input: "az-connector\n", fixture: "connect/cluster/delete-prompt.golden"},
+		{args: "connect cluster delete lcc-123 lcc-456 lcc-789 lcc-101112 --cluster lkc-123", input: "y\n", fixture: "connect/cluster/delete-multiple-fail.golden", exitCode: 1},
+		{args: "connect cluster delete lcc-123 lcc-111 --cluster lkc-123", input: "n\n", fixture: "connect/cluster/delete-multiple-refuse.golden"},
+		{args: "connect cluster delete lcc-123 lcc-111 --cluster lkc-123", input: "y\n", fixture: "connect/cluster/delete-multiple-success.golden"},
 		{args: "connect cluster describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/cluster/describe-json.golden"},
 		{args: "connect cluster describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/cluster/describe-yaml.golden"},
 		{args: "connect cluster describe lcc-123 --cluster lkc-123", fixture: "connect/cluster/describe.golden"},
@@ -167,4 +170,26 @@ func (s *CLITestSuite) deleteZip() {
 
 	err := os.Remove("test/fixtures/input/connect/test-plugin.zip")
 	req.NoError(err)
+}
+
+func (s *CLITestSuite) TestConnectCustomPlugin() {
+	tests := []CLITest{
+		{args: `connect custom-plugin create my-custom-plugin --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector`, fixture: "connect/custom-plugin/create.golden"},
+		{args: `connect custom-plugin create my-custom-plugin --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector`, fixture: "connect/custom-plugin/create-invalid-extension.golden", exitCode: 1},
+		{args: "connect custom-plugin list", fixture: "connect/custom-plugin/list.golden"},
+		{args: "connect custom-plugin list -o json", fixture: "connect/custom-plugin/list-json.golden"},
+		{args: "connect custom-plugin list -o yaml", fixture: "connect/custom-plugin/list-yaml.golden"},
+		{args: "connect custom-plugin describe ccp-123456", fixture: "connect/custom-plugin/describe.golden"},
+		{args: "connect custom-plugin describe ccp-789012", fixture: "connect/custom-plugin/describe-with-sensitive-properties.golden"},
+		{args: "connect custom-plugin describe ccp-123456 -o json", fixture: "connect/custom-plugin/describe-json.golden"},
+		{args: "connect custom-plugin describe ccp-123456 -o yaml", fixture: "connect/custom-plugin/describe-yaml.golden"},
+		{args: "connect custom-plugin delete ccp-123456 --force", fixture: "connect/custom-plugin/delete.golden"},
+		{args: "connect custom-plugin delete ccp-123456", input: "CliPluginTest1\n", fixture: "connect/custom-plugin/delete-prompt.golden"},
+		{args: "connect custom-plugin update ccp-123456 --name CliPluginTestUpdate", fixture: "connect/custom-plugin/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }

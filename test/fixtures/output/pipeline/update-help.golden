@@ -10,11 +10,11 @@ Request to update Stream Designer pipeline "pipe-12345", with new name and new d
 
 Grant privilege to activate Stream Designer pipeline "pipe-12345".
 
-  $ confluent pipeline update pipe-12345 --activation-privilege true
+  $ confluent pipeline update pipe-12345 --activation-privilege=true
 
 Revoke privilege to activate Stream Designer pipeline "pipe-12345".
 
-  $ confluent pipeline update pipe-12345 --activation-privilege false
+  $ confluent pipeline update pipe-12345 --activation-privilege=false
 
 Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456".
 

@@ -6,10 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
 // Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
@@ -22,7 +21,9 @@ var (
 )
 
 func main() {
-	cfg, err := load.LoadAndMigrate(v1.New())
+	cfg := config.New()
+
+	err := cfg.Load()
 	cobra.CheckErr(err)
 
 	disableUpdates, err := strconv.ParseBool(disableUpdates)
@@ -35,9 +36,9 @@ func main() {
 	cfg.IsTest = isTest
 	cfg.Version = pversion.NewVersion(version, commit, date)
 
-	cmd := pcmd.NewConfluentCommand(cfg)
+	cmd := internal.NewConfluentCommand(cfg)
 
-	if err := pcmd.Execute(cmd, os.Args[1:], cfg); err != nil {
+	if err := internal.Execute(cmd, os.Args[1:], cfg); err != nil {
 		os.Exit(1)
 	}
 }

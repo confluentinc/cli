@@ -1,6 +1,6 @@
-Error: accepts 1 arg(s), received 0
+Error: requires at least 1 arg(s), only received 0
 Usage:
-  confluent kafka cluster delete <id> [flags]
+  confluent kafka cluster delete <id-1> [id-2] ... [id-n] [flags]
 
 Flags:
       --force                Skip the deletion confirmation prompt.

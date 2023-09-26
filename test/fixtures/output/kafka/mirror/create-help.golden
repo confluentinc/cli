@@ -10,7 +10,7 @@ Create a mirror topic "my-topic" under cluster link "my-link":
 
 Create a mirror topic with a custom replication factor and configuration file:
 
-  $ confluent kafka mirror create my-topic --link my-link --replication-factor 5 --config-file my-config.txt
+  $ confluent kafka mirror create my-topic --link my-link --replication-factor 5 --config my-config.txt
 
 Create a mirror topic "src_my-topic" where "src_" is the prefix configured on the link:
 
@@ -19,7 +19,7 @@ Create a mirror topic "src_my-topic" where "src_" is the prefix configured on th
 Flags:
       --link string                REQUIRED: Name of cluster link.
       --replication-factor int32   Replication factor. (default 3)
-      --config-file string         Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.
+      --config strings             A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --source-topic string        Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.
       --cluster string             Kafka cluster ID.
       --context string             CLI context name.

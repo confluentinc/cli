@@ -1,0 +1,5 @@
++-----------+-----------------+
+| Name      | disable_plugins |
+| Value     | true            |
+| Read-Only | false           |
++-----------+-----------------+

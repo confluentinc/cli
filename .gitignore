@@ -1,8 +1,8 @@
-dist/
-docs/
-legal/
-prebuilt/
-release-notes/
+/dist/
+/docs/
+/legal/
+/prebuilt/
+/release-notes/
 
 # Editor configurations
 *.el

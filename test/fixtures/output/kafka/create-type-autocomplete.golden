@@ -1,5 +1,6 @@
 basic
 standard
+enterprise
 dedicated
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

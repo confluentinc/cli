@@ -1,8 +1,17 @@
-  Current |       Key        |          Description           |  Owner  |   Owner Email    |  Resource Type  |  Resource   |       Created         
-----------+------------------+--------------------------------+---------+------------------+-----------------+-------------+-----------------------
-          | MULTICLUSTERKEY1 | works for two clusters         | u-44ddd | mhe@confluent.io | kafka           | lkc-abc     | 1999-02-24T00:00:00Z  
-          | MULTICLUSTERKEY1 | works for two clusters         | u-44ddd | mhe@confluent.io | schema-registry | lsrc-1234   | 1999-02-24T00:00:00Z  
-          | MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd | mhe@confluent.io | kafka           | lkc-abc     | 1999-02-24T00:00:00Z  
-          |                  | a different sr cluster         |         |                  |                 |             |                       
-          | MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd | mhe@confluent.io | schema-registry | lsrc-abc123 | 1999-02-24T00:00:00Z  
-          |                  | a different sr cluster         |         |                  |                 |             |                       
+  Current |       Key        |          Description           |  Owner  |   Owner Email    |  Resource Type  |   Resource   |       Created         
+----------+------------------+--------------------------------+---------+------------------+-----------------+--------------+-----------------------
+          | MULTICLUSTERKEY1 | works for two clusters         | u-44ddd | mhe@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
+          | MULTICLUSTERKEY1 | works for two clusters         | u-44ddd | mhe@confluent.io | schema-registry | lsrc-1234    | 1999-02-24T00:00:00Z  
+          | MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd | mhe@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
+          |                  | a different sr cluster         |         |                  |                 |              |                       
+          | MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd | mhe@confluent.io | schema-registry | lsrc-abc123  | 1999-02-24T00:00:00Z  
+          |                  | a different sr cluster         |         |                  |                 |              |                       
+          | MYKEY13          | human-output                   | u-44ddd | mhe@confluent.io | kafka           | lkc-other1   | 1999-02-24T00:00:00Z  
+          | MYKEY14          | json-output                    | u-44ddd | mhe@confluent.io | kafka           | lkc-other1   | 1999-02-24T00:00:00Z  
+          | MYKEY15          | yaml-output                    | u-44ddd | mhe@confluent.io | kafka           | lkc-other1   | 1999-02-24T00:00:00Z  
+          | MYKEY16          | my-cool-app                    | u-44ddd | mhe@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+          | MYKEY3           |                                | u-44ddd | mhe@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+          | MYKEY4           | my-cool-app                    | u-44ddd | mhe@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+          | MYKEY6           | my-ksql-app                    | u-44ddd | mhe@confluent.io | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+          | MYKEY7           |                                | u-44ddd | mhe@confluent.io | schema-registry | lsrc-1234    | 1999-02-24T00:00:00Z  
+          | MYKEY8           |                                | u-44ddd | mhe@confluent.io | cloud           |              | 1999-02-24T00:00:00Z  

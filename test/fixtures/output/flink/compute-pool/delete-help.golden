@@ -1,7 +1,7 @@
-Delete a Flink compute pool.
+Delete one or more Flink compute pools.
 
 Usage:
-  confluent flink compute-pool delete <id> [flags]
+  confluent flink compute-pool delete <id-1> [id-2] ... [id-n] [flags]
 
 Flags:
       --force                Skip the deletion confirmation prompt.

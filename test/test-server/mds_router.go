@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/types"
+	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 var mdsRoutes = []route{

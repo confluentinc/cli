@@ -9,7 +9,7 @@
   },
   {
     "config_name": "dest.cluster.id",
-    "config_value": "cluster-1",
+    "config_value": "lkc-describe-topic",
     "read_only": true,
     "sensitive": true,
     "source": "",

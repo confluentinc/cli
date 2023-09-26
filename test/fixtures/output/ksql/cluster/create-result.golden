@@ -4,7 +4,7 @@ IMPORTANT: Confirm that the users or service accounts that will interact with th
 | Name                    | account ksql             |
 | Topic Prefix            | pksqlc-abcde             |
 | Kafka                   | lkc-qwert                |
-| Storage                 |                      101 |
+| Storage                 | 101                      |
 | Endpoint                | SASL_SSL://ksql-endpoint |
 | Status                  | PROVISIONING             |
 | Detailed Processing Log | true                     |

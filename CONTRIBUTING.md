@@ -134,13 +134,13 @@ As a basic demonstration, we'll be implementing a command which prints the name 
 
 #### Creating the Command
 
-Like all other commands, this command will reside in `internal/cmd`. First, we must create a directory for this command:
+Like all other commands, this command will reside in `internal`. First, we must create a directory for this command:
 
-    mkdir internal/cmd/config
+    mkdir internal/config
 
 Next, we create two files, one for the top-level command `config`, and another for `describe`.
 
-`internal/cmd/config/command.go`:
+`internal/config/command.go`:
 
 ```go
 package config
@@ -148,7 +148,7 @@ package config
 import (
     "github.com/spf13/cobra"
 
-    pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+    pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 type command struct {
@@ -166,7 +166,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 }
 ```
 
-`internal/cmd/config/command_describe.go`:
+`internal/config/command_describe.go`:
 
 ```go
 package config
@@ -176,8 +176,8 @@ import (
 
     "github.com/spf13/cobra"
 
-    "github.com/confluentinc/cli/internal/pkg/errors"
-    "github.com/confluentinc/cli/internal/pkg/utils"
+    "github.com/confluentinc/cli/v3/pkg/errors"
+    "github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -210,7 +210,7 @@ func (c *command) describe(_ *cobra.Command, args []string) error {
 #### Registering the Command
 
 Finally, we must add the newly created `config` command as a child of the root command.
-Add the following line to `internal/cmd/command.go`, and make sure to import its package:
+Add the following line to `internal/command.go`, and make sure to import its package:
 
     cmd.AddCommand(config.New(prerunner))
 
@@ -264,7 +264,12 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 ```
 
-See the [Autocompletion](internal/pkg/cmd/AUTOCOMPLETION.md) resource for implementation details.
+See the [Autocompletion](pkg/cmd/AUTOCOMPLETION.md) resource for implementation details.
+
+#### Adding a New Delete Command
+
+For most resource types, a `delete` command should support multiple arguments. The exceptions are resources which do not have an ID (e.g. ACLs, role bindings) or unique resources (e.g. the Schema Registry cluster).
+See [Supporting Multiple Deletion](pkg/deletion/README.md) for instructions on how to write such commands.
 
 ### Opening a PR
 
@@ -279,7 +284,7 @@ Note: If there is a JIRA ticket associated with your PR, please format the PR de
 
 Please familiarize yourself with the following resources before writing your first CLI command:
 
-* [Cloud and On-Prem Annotations](internal/pkg/cmd/ANNOTATIONS.md)
-* [CLI Error Handling](internal/pkg/errors/README.md)
-* [Autocompletion](internal/pkg/cmd/AUTOCOMPLETION.md)
+* [Cloud and On-Prem Annotations](pkg/cmd/ANNOTATIONS.md)
+* [CLI Error Handling](pkg/errors/README.md)
+* [Autocompletion](pkg/cmd/AUTOCOMPLETION.md)
 * TODO: REST Proxy Commands

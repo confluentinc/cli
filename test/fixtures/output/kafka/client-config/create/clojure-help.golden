@@ -25,7 +25,7 @@ Flags:
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
       --api-key string       API key.
-      --api-secret string    API key secret.
+      --api-secret string    API secret.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -8,11 +8,11 @@ Usage:
 Examples:
 Produce message to topic "my_topic" with SASL_SSL/PLAIN protocol (providing username and password).
 
-  $ confluent kafka topic produce my_topic --protocol SASL_SSL --sasl-mechanism PLAIN --bootstrap "localhost:19091" --username user --password secret --ca-location my-cert.crt
+  $ confluent kafka topic produce my_topic --protocol SASL_SSL --sasl-mechanism PLAIN --bootstrap localhost:19091 --username user --password secret --ca-location my-cert.crt
 
 Produce message to topic "my_topic" with SSL protocol, and SSL verification enabled.
 
-  $ confluent kafka topic produce my_topic --protocol SSL --bootstrap "localhost:18091" --ca-location my-cert.crt
+  $ confluent kafka topic produce my_topic --protocol SSL --bootstrap localhost:18091 --ca-location my-cert.crt
 
 Flags:
       --bootstrap string                  REQUIRED: Comma-separated list of broker hosts, each formatted as "host" or "host:port".
@@ -22,10 +22,12 @@ Flags:
       --cert-location string              Path to client's public key (PEM) used for SSL authentication.
       --key-location string               Path to client's private key (PEM) used for SSL authentication.
       --key-password string               Private key passphrase for SSL authentication.
-      --protocol string                   Security protocol used to communicate with brokers. (default "SSL")
+      --protocol string                   Specify the broker communication protocol as "PLAINTEXT", "SASL_SSL", or "SSL". (default "SSL")
       --sasl-mechanism string             SASL_SSL mechanism used for authentication. (default "PLAIN")
-      --schema string                     The path to the local schema file.
-      --value-format string               Format message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
+      --key-schema string                 The filepath of the message key schema.
+      --schema string                     The filepath of the message value schema.
+      --key-format string                 Format of message key as "string", "avro", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
+      --value-format string               Format message value as "string", "avro", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --references string                 The path to the references file.
       --parse-key                         Parse key from the message.
       --delimiter string                  The delimiter separating each key and value. (default ":")

@@ -1,0 +1,4 @@
+Error: provider share "ss-12346" not found
+
+Suggestions:
+    List available provider shares with `confluent stream-share provider share list`.

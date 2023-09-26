@@ -1,1 +1,4 @@
-Error: REST request failed: This server does not host this topic-partition. (40403)
+Error: topic "topic-not-exist" not found
+
+Suggestions:
+    List available topics with `confluent kafka topic list`.

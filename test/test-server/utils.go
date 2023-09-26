@@ -1,29 +1,23 @@
 package testserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"sort"
-	"strings"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 )
 
-var (
-	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
-	roleNameInvalidErrMsg       = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
-	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
-	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
-	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
-)
+type ErrorJson struct {
+	Message string `json:"message"`
+}
 
 type ApiKeyListV2 []apikeysv2.IamV2ApiKey
 
@@ -136,7 +130,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("SERVICEACCOUNTKEY1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceID},
+			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -144,7 +138,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("DEACTIVATEDUSERKEY"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceID},
+			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -239,31 +233,36 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 	return byokStoreV1
 }
 
+func writeErrorJson(w http.ResponseWriter, message string) error {
+	errorJson, err := json.Marshal(ErrorJson{Message: message})
+	if err != nil {
+		return err
+	}
+	_, err = io.WriteString(w, string(errorJson))
+	return err
+}
+
 func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
-	_, err := io.WriteString(w, serviceAccountInvalidErrMsg)
-	return err
+	return writeErrorJson(w, "service account is not valid")
 }
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
-	_, err := io.WriteString(w, resourceNotFoundErrMsg)
-	return err
+	return writeErrorJson(w, "resource not found")
 }
 
 func writeInvalidRoleNameError(w http.ResponseWriter, roleName string) error {
 	w.WriteHeader(http.StatusBadRequest)
-	_, err := io.WriteString(w, fmt.Sprintf(roleNameInvalidErrMsg, roleName))
-	return err
+	return writeErrorJson(w, fmt.Sprintf("Invalid role name : %s", roleName))
 }
 
 func writeUserConflictError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusConflict)
-	_, err := io.WriteString(w, userConflictErrMsg)
-	return err
+	return writeErrorJson(w, "This user already exists within the Organization")
 }
 
-func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
+func getCmkBasicDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			DisplayName: cmkv2.PtrString(name),
@@ -283,7 +282,7 @@ func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
 	}
 }
 
-func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.CmkV2Cluster {
+func getCmkDedicatedDescribeCluster(id, name string, cku int32) *cmkv2.CmkV2Cluster {
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			DisplayName: cmkv2.PtrString(name),
@@ -327,44 +326,4 @@ func buildUser(id int32, email, firstName, lastName, resourceId string) *ccloudv
 		LastName:   lastName,
 		ResourceId: resourceId,
 	}
-}
-
-func buildIamUser(email, name, resourceId, authType string) iamv2.IamV2User {
-	return iamv2.IamV2User{
-		Email:    iamv2.PtrString(email),
-		FullName: iamv2.PtrString(name),
-		Id:       iamv2.PtrString(resourceId),
-		AuthType: iamv2.PtrString(authType),
-	}
-}
-
-func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation {
-	return iamv2.IamV2Invitation{
-		Id:     iamv2.PtrString(id),
-		Email:  iamv2.PtrString(email),
-		User:   &iamv2.GlobalObjectReference{Id: userId},
-		Status: iamv2.PtrString(status),
-	}
-}
-
-func buildRoleBinding(user, roleName, crn string) mdsv2.IamV2RoleBinding {
-	return mdsv2.IamV2RoleBinding{
-		Id:         mdsv2.PtrString("0"),
-		Principal:  mdsv2.PtrString("User:" + user),
-		RoleName:   mdsv2.PtrString(roleName),
-		CrnPattern: mdsv2.PtrString(crn),
-	}
-}
-
-func isRoleBindingMatch(rolebinding mdsv2.IamV2RoleBinding, principal, roleName, crnPattern string) bool {
-	if !strings.Contains(*rolebinding.CrnPattern, strings.TrimSuffix(crnPattern, "/*")) {
-		return false
-	}
-	if principal != "" && principal != *rolebinding.Principal {
-		return false
-	}
-	if roleName != "" && roleName != *rolebinding.RoleName {
-		return false
-	}
-	return true
 }

@@ -3,7 +3,7 @@
     "link_name": "link-1",
     "mirror_topic_name": "dest-topic-1",
     "source_topic_name": "src-topic-1",
-    "mirror_status": "active",
+    "mirror_status": "ACTIVE",
     "status_time_ms": 111111111,
     "num_partition": 3,
     "max_per_partition_mirror_lag": 571428
@@ -12,7 +12,7 @@
     "link_name": "link-2",
     "mirror_topic_name": "dest-topic-2",
     "source_topic_name": "src-topic-2",
-    "mirror_status": "stopped",
+    "mirror_status": "STOPPED",
     "status_time_ms": 222222222,
     "num_partition": 2,
     "max_per_partition_mirror_lag": 0

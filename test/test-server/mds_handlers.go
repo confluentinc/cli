@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 // Handler for: "/security/1.0/registry/clusters"
@@ -79,7 +79,7 @@ func handleRegistryClusters(t *testing.T) http.HandlerFunc {
 		}
 
 		if r.Method == http.MethodPost {
-			var clusterInfos []*mds.ClusterInfo
+			var clusterInfos []*mdsv1.ClusterInfo
 			err := json.NewDecoder(r.Body).Decode(&clusterInfos)
 			require.NoError(t, err)
 			require.NotEmpty(t, clusterInfos)
@@ -96,7 +96,7 @@ func handleRegistryClusters(t *testing.T) http.HandlerFunc {
 // Handler for: "/security/1.0/authenticate"
 func handleAuthenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		reply := &mds.AuthenticationResponse{
+		reply := &mdsv1.AuthenticationResponse{
 			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
 			TokenType: "dunno",
 			ExpiresIn: 9999999999,

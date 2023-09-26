@@ -1,0 +1,26 @@
+Delete top-level or subject-level schema configuration.
+
+Usage:
+  confluent schema-registry config delete [flags]
+
+Examples:
+Delete the top-level configuration.
+
+  $ confluent schema-registry config delete --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Delete the subject-level configuration of subject "payments".
+
+  $ confluent schema-registry config delete --subject payments --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Flags:
+      --subject string                    Subject of the schema.
+      --context string                    CLI context name.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+      --force                             Skip the deletion confirmation prompt.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

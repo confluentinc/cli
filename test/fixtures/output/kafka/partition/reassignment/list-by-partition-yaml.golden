@@ -2,8 +2,8 @@
   topic_name: topic1
   partition_id: 0
   adding_replicas:
-  - 1
-  - 2
-  - 3
+    - 1
+    - 2
+    - 3
   removing_replicas:
-  - 4
+    - 4

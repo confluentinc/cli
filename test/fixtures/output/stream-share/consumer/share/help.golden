@@ -4,7 +4,7 @@ Usage:
   confluent stream-share consumer share [command]
 
 Available Commands:
-  delete      Delete a consumer share.
+  delete      Delete one or more consumer shares.
   describe    Describe a consumer share.
   list        List consumer shares.
 

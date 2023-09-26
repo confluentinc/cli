@@ -1,7 +1,7 @@
-Delete a service account.
+Delete one or more service accounts.
 
 Usage:
-  confluent iam service-account delete <id> [flags]
+  confluent iam service-account delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
 Delete service account "sa-123456".
@@ -9,7 +9,8 @@ Delete service account "sa-123456".
   $ confluent iam service-account delete sa-123456
 
 Flags:
-      --force   Skip the deletion confirmation prompt.
+      --context string   CLI context name.
+      --force            Skip the deletion confirmation prompt.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -1,1 +1,4 @@
-Error: resource not found: 403 Forbidden
+Error: identity pool "pool-1" not found
+
+Suggestions:
+    List available identity pools with `confluent iam pool list`.

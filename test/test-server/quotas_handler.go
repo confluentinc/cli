@@ -74,7 +74,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 	}
 }
 
-func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment string, network string, kafkaCluster string, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
+func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment, network, kafkaCluster, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
 	// filter by environment id
 	filtered := []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	if environment != "" {

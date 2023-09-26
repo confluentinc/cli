@@ -1,0 +1,4 @@
+Are you sure you want to delete environments "env-595", "env-srUpdate", "env-000", and "env-111"? (y/n): Deleted environments "env-595" and "env-srUpdate".
+Error: 2 errors occurred:
+	* failed to delete env-000: 403 Forbidden
+	* failed to delete env-111: 403 Forbidden

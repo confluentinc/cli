@@ -1,2 +1,2 @@
 Are you sure you want to delete client quota "cq-1234"?
-To confirm, type "cq-1234". To cancel, press Ctrl-C: Deleted client quota "cq-1234".
+To confirm, type "quotaName". To cancel, press Ctrl-C: Deleted client quota "cq-1234".

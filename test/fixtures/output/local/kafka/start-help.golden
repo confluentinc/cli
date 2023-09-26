@@ -1,11 +1,12 @@
-Start a single-node instance of Apache Kafka.
+Start a local Apache Kafka instance.
 
 Usage:
   confluent local kafka start [flags]
 
 Flags:
-      --kafka-rest-port string   The port number for Kafka REST. (default "8082")
-      --plaintext-port string    The port number for plaintext producer and consumer clients. If not specified, a random free port will be used.
+      --kafka-rest-port string    Kafka REST port number. (default "8082")
+      --plaintext-ports strings   A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.
+      --brokers int32             Number of brokers (between 1 and 4, inclusive) in the Confluent Local Kafka cluster. (default 1)
 
 Global Flags:
   -h, --help            Show help for this command.

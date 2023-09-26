@@ -1,4 +1,4 @@
-Manage Connect log events configuration.
+Manage log events for managed connectors.
 
 Usage:
   confluent connect event [command]

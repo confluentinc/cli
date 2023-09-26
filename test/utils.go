@@ -24,7 +24,7 @@ func fixturePath(t *testing.T, fixture string) string {
 	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
 }
 
-func getInputFixturePath(directoryName string, file string) string {
+func getInputFixturePath(directoryName, file string) string {
 	_, callerFileName, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("problems recovering caller information")

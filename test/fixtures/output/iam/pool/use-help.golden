@@ -5,6 +5,7 @@ Usage:
 
 Flags:
       --provider string   REQUIRED: ID of this pool's identity provider.
+      --context string    CLI context name.
   -o, --output string     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

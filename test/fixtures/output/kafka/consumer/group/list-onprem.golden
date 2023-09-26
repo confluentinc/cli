@@ -1,0 +1,5 @@
+   Cluster  |  Consumer Group  | Coordinator | Simple |                  Partition Assignor                  |        State         
+------------+------------------+-------------+--------+------------------------------------------------------+----------------------
+  cluster-1 | consumer-group-1 | broker-1    | true   | org.apache.kafka.clients.consumer.RoundRobinAssignor | STABLE               
+  cluster-1 | consumer-group-2 | broker-2    | false  | org.apache.kafka.clients.consumer.StickyAssignor     | PREPARING_REBALANCE  
+  cluster-1 | consumer-group-3 | broker-3    | false  | org.apache.kafka.clients.consumer.RangeAssignor      | DEAD                 
