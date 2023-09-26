@@ -41,7 +41,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 	}
 
-	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId, computePool)
+	statements, err := client.ListAllStatements(environmentId, c.Context.GetCurrentOrganization(), computePool)
 	if err != nil {
 		return err
 	}

@@ -38,7 +38,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
+		_, err := client.GetStatement(environmentId, id, c.Context.GetCurrentOrganization())
 		return err == nil
 	}
 
@@ -47,7 +47,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		return client.DeleteStatement(environmentId, id, c.Context.LastOrgId)
+		return client.DeleteStatement(environmentId, id, c.Context.GetCurrentOrganization())
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkStatement)
