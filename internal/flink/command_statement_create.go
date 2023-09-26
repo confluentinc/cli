@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/flink"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -19,6 +20,16 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 		Short: "Create a Flink SQL statement.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.statementCreate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a Flink SQL statement in the current compute pool.",
+				Code: `confluent flink statement create --sql "SELECT * FROM table;"`,
+			},
+			examples.Example{
+				Text: `Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" with service account "sa-123456" and using Kafka cluster "my-cluster" as the default database.`,
+				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-cluster.my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster`,
+			},
+		),
 	}
 
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")

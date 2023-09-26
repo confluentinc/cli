@@ -45,5 +45,5 @@ func (c *command) addComputePoolFlag(cmd *cobra.Command) {
 }
 
 func (c *command) addDatabaseFlag(cmd *cobra.Command) {
-	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster name.")
+	cmd.Flags().String("database", "", "The database which will be used as the default database. When using Kafka, this is the cluster name.")
 }
