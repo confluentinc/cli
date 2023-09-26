@@ -3,5 +3,6 @@
 | Name          | my-statement                  |
 | Statement     | CREATE TABLE test;            |
 | Compute Pool  | pool-123456                   |
-| Status        | PENDING                       |
+| Status        | COMPLETED                     |
+| Status Detail | SQL statement is completed    |
 +---------------+-------------------------------+

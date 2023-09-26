@@ -31,3 +31,19 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	return cmd
 }
+
+func (c *command) addComputePoolFlag(cmd *cobra.Command) {
+	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "compute-pool", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return c.autocompleteComputePools()
+	})
+}
+
+func (c *command) addDatabaseFlag(cmd *cobra.Command) {
+	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
+}
