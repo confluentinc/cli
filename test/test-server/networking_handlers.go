@@ -1170,8 +1170,6 @@ func getIpAddress(ipPrefix, cloud, region string, services []string) networkingi
 		IpPrefix:    networkingipv1.PtrString(ipPrefix),
 		Cloud:       networkingipv1.PtrString(cloud),
 		Region:      networkingipv1.PtrString(region),
-		Services: &networkingipv1.NetworkingV1Services{
-			Items: services,
-		},
+		Services:    &networkingipv1.NetworkingV1Services{Items: services},
 	}
 }

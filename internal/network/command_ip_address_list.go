@@ -16,6 +16,7 @@ type listIpAddressHumanOut struct {
 	Region      string `human:"Region"`
 	Services    string `human:"Services"`
 }
+
 type listIpAddressSerializedOut struct {
 	AddressType string   `serialized:"address_type"`
 	IpPrefix    string   `serialized:"ip_prefix"`
