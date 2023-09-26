@@ -488,6 +488,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDescribe() {
 func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnection_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network private-link attachment connection list --attachment ""`, login: "cloud", fixture: "network/private-link/attachment/connection/list-autocomplete.golden"},
+		{args: `__complete network private-link attachment connection create platt-connection --attachment ""`, login: "cloud", fixture: "network/private-link/attachment/connection/create-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
