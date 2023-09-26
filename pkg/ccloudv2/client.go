@@ -14,6 +14,7 @@ import (
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
@@ -43,6 +44,7 @@ type Client struct {
 	KafkaQuotasClient           *kafkaquotasv1.APIClient
 	MdsClient                   *mdsv2.APIClient
 	NetworkingClient            *networkingv1.APIClient
+	NetworkingIpClient          *networkingipv1.APIClient
 	NetworkingPrivateLinkClient *networkingprivatelinkv1.APIClient
 	OrgClient                   *orgv2.APIClient
 	SchemaRegistryClient        *srcmv2.APIClient
@@ -74,6 +76,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		KafkaQuotasClient:           newKafkaQuotasClient(url, userAgent, unsafeTrace),
 		MdsClient:                   newMdsClient(url, userAgent, unsafeTrace),
 		NetworkingClient:            newNetworkingClient(url, userAgent, unsafeTrace),
+		NetworkingIpClient:          newNetworkingIpClient(url, userAgent, unsafeTrace),
 		NetworkingPrivateLinkClient: newNetworkingPrivateLinkClient(url, userAgent, unsafeTrace),
 		OrgClient:                   newOrgClient(url, userAgent, unsafeTrace),
 		SchemaRegistryClient:        newSchemaRegistryClient(url, userAgent, unsafeTrace),

@@ -495,3 +495,15 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnection_Autocomplete()
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkIpAddressList() {
+	tests := []CLITest{
+		{args: "network ip-address list", fixture: "network/ip-address/list.golden"},
+		{args: "network ip-address list --output json", fixture: "network/ip-address/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
