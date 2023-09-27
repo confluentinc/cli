@@ -33,6 +33,6 @@ func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	output.Printf("An email invitation has been sent to \"%s\".\n", invitation.GetEmail())
+	output.Printf(c.Config.EnableColor, "An email invitation has been sent to \"%s\".\n", invitation.GetEmail())
 	return nil
 }

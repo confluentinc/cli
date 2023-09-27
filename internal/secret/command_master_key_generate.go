@@ -64,7 +64,7 @@ func (c *command) generate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.SaveTheMasterKeyMsg)
+	output.ErrPrintln(c.Config.EnableColor, errors.SaveTheMasterKeyMsg)
 	table := output.NewTable(cmd)
 	table.Add(&rotateOut{MasterKey: masterKey})
 	return table.Print()

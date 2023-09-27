@@ -144,7 +144,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingConsumerMsg)
+	output.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
 
 	var srClient *schemaregistry.Client
 	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {

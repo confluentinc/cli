@@ -3,9 +3,8 @@ package completion
 import (
 	"bytes"
 
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/spf13/cobra"
 )
 
 const longDescription = `Use this command to print the shell completion
@@ -85,7 +84,7 @@ func New() *cobra.Command {
 				return err
 			}
 
-			output.Println(out)
+			output.Println(false, out)
 			return nil
 		},
 	}

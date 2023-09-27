@@ -55,6 +55,6 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
 
-	output.ErrPrintf(errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
+	output.ErrPrintf(c.Config.EnableColor, errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
 	return nil
 }

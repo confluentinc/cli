@@ -144,6 +144,6 @@ func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UpdatedResourceMsg, resource.SchemaExporter, args[0])
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.SchemaExporter, args[0])
 	return nil
 }
