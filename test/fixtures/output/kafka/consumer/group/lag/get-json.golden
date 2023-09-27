@@ -1,12 +1,12 @@
 {
-  "cluster": "lkc-1234",
-  "consumer_group": "consumer-group-1",
+  "cluster_id": "lkc-1234",
+  "consumer_group_id": "consumer-group-1",
   "lag": 100,
   "log_end_offset": 101,
   "current_offset": 1,
-  "consumer": "consumer-1",
-  "instance": "instance-1",
-  "client": "client-1",
+  "consumer_id": "consumer-1",
+  "instance_id": "instance-1",
+  "client_id": "client-1",
   "topic": "topic-1",
-  "partition": 1
+  "partition_id": 1
 }
