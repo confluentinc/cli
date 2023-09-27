@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -24,6 +25,12 @@ func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.configureACLs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Configure ACLs for ksqlDB cluster "lksqlc-12345" for topics "topic_1" and "topic_2":`,
+				Code: "confluent ksql cluster configure-acls lksqlc-12345 topic_1 topic_2",
+			},
+		),
 	}
 
 	pcmd.AddDryRunFlag(cmd)
