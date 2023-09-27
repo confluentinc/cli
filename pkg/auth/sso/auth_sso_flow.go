@@ -25,7 +25,7 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		// it prints the url and has the user copy this into their browser instead
 		url := state.getAuthorizationCodeUrl(connectionName, isOkta)
 
-		output.Println("Navigate to the following link in your browser to authenticate:", url)
+		output.Println("Navigate to the following link in your browser to authenticate:")
 		output.Println(url)
 		output.Println()
 		output.Println("After authenticating in your browser, paste the code here:")
