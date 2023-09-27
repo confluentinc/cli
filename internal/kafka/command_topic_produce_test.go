@@ -1,0 +1,88 @@
+package kafka
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/confluentinc/cli/v3/pkg/errors"
+)
+
+type splitTest struct {
+	Data      string
+	Delimiter string
+	Key       string
+	Value     string
+}
+
+func TestGetKeyAndValue(t *testing.T) {
+	testCases := []splitTest{
+		// Different delimiters
+		{Data: `{"CustomerId": 1, "Name": "My Name"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"};message`, Delimiter: ";", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}"message`, Delimiter: "\"", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"},message`, Delimiter: ",", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}{message`, Delimiter: "{", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}}message`, Delimiter: "}", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}1message`, Delimiter: "1", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+
+		// Extra spaces
+		{Data: `  {"CustomerId": 1, "Name": "My Name"} : message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+		{Data: `{ "CustomerId": 1, "Name": "My Name" }:message`, Delimiter: ":", Key: `{ "CustomerId": 1, "Name": "My Name" }`, Value: "message"},
+
+		// Different values
+		{Data: `{"CustomerId": 1}:{"Name": "My Name"}`, Delimiter: ":", Key: `{"CustomerId": 1}`, Value: `{"Name": "My Name"}`},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}::`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: ":"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: ""},
+
+		// JSON special characters inside JSON strings
+		{Data: `{"CustomerId": 1, "Name": "My Name}"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name}"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name\"}"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name\"}"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name\\"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name\\"}`, Value: "message"},
+	}
+
+	for _, testCase := range testCases {
+		key, value, err := getKeyAndValue(true, testCase.Data, testCase.Delimiter)
+		assert.NoError(t, err)
+		assert.Equal(t, testCase.Key, key)
+		assert.Equal(t, testCase.Value, value)
+	}
+}
+
+func TestGetKeyAndValue_StringKey(t *testing.T) {
+	testCases := []splitTest{
+		{Data: `key:{"CustomerId": 1, "Name": "My Name"}`, Delimiter: ":", Key: "key", Value: `{"CustomerId": 1, "Name": "My Name"}`},
+		{Data: `:{"CustomerId": 1, "Name": "My Name"}`, Delimiter: ":", Key: "", Value: `{"CustomerId": 1, "Name": "My Name"}`},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}`, Delimiter: ":", Key: `{"CustomerId"`, Value: `1, "Name": "My Name"}`},
+	}
+
+	for _, testCase := range testCases {
+		key, value, err := getKeyAndValue(false, testCase.Data, testCase.Delimiter)
+		assert.NoError(t, err)
+		assert.Equal(t, testCase.Key, key)
+		assert.Equal(t, testCase.Value, value)
+	}
+}
+
+func TestGetKeyAndValue_Fail(t *testing.T) {
+	// Missing or malformed key
+	testCases := []splitTest{
+		{Data: `{"CustomerId": 1, "Name": "My Name"}:message`, Delimiter: "|"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}:message`, Delimiter: ","},
+		{Data: `{"CustomerId": 1, "Name": "My Name\\"}"}:message`, Delimiter: ":"},
+		{Data: `{"CustomerId": 1, "Name": "My Name}\"}:message`, Delimiter: ":"},
+		{Data: `:message`, Delimiter: ":"},
+		{Data: `message`, Delimiter: ":"},
+	}
+
+	for _, testCase := range testCases {
+		_, _, err := getKeyAndValue(true, testCase.Data, testCase.Delimiter)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), errors.MissingOrMalformedKeyErrorMsg)
+	}
+
+	// Missing key (non-schema key format)
+	_, _, err := getKeyAndValue(false, testCases[0].Data, testCases[0].Delimiter)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), errors.MissingKeyOrValueErrorMsg)
+}
