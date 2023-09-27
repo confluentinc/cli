@@ -166,7 +166,7 @@ func (c *clientConfigCommand) create(configId string, srApiAvailable bool) func(
 		}
 
 		// print configuration file to stdout
-		output.Println(configFile)
+		output.Println(c.Config.EnableColor, configFile)
 		return nil
 	}
 }
@@ -352,7 +352,7 @@ func replaceTemplates(configFile string, m map[string]string) string {
 
 func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) string {
 	warning := errors.NewWarningWithSuggestions(errors.SRInConfigFileWarning, reason, suggestions+"\n"+errors.SRInConfigFileSuggestions)
-	output.ErrPrint(warning.DisplayWarningWithSuggestions())
+	output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
 
 	return commentSchemaRegistryLines(configFile)
 }

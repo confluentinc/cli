@@ -49,6 +49,6 @@ func (c *command) exporterReset(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.ExporterActionMsg, "Reset", args[0])
+	output.Printf(c.Config.EnableColor, errors.ExporterActionMsg, "Reset", args[0])
 	return nil
 }

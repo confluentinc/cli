@@ -125,8 +125,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln(errors.APIKeyTime)
-		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
+		output.ErrPrintln(c.Config.EnableColor, errors.APIKeyTime)
+		output.ErrPrintln(c.Config.EnableColor, errors.APIKeyNotRetrievableMsg)
 	}
 
 	table := output.NewTable(cmd)
@@ -155,7 +155,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(errors.UseAPIKeyMsg, userKey.Key)
+		output.Printf(c.Config.EnableColor, errors.UseAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

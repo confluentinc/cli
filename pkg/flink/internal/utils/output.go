@@ -11,30 +11,30 @@ import (
 
 func OutputErr(s string) {
 	c := fColor.New(color.ErrorColor)
-	output.Println(c.Sprintf(s))
+	output.Println(false, c.Sprintf(s))
 }
 
 func OutputErrf(s string, args ...any) {
 	c := fColor.New(color.ErrorColor)
-	output.Printf(c.Sprintln(s), args...)
+	output.Printf(false, c.Sprint(s), args...)
 }
 
 func OutputInfo(s string) {
-	output.Println(s)
+	output.Println(false, s)
 }
 
 func OutputInfof(s string, args ...any) {
-	output.Printf(s, args...)
+	output.Printf(false, s, args...)
 }
 
 func OutputWarn(s string) {
 	c := fColor.New(color.WarnColor)
-	output.Println(c.Sprint(s))
+	output.Println(false, c.Sprint(s))
 }
 
 func OutputWarnf(s string, args ...any) {
 	c := fColor.New(color.WarnColor)
-	output.Printf(c.Sprintln(s), args...)
+	output.Printf(false, c.Sprint(s), args...)
 }
 
 func GetMaxStrWidth(str string) int {

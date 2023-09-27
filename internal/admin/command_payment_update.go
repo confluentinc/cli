@@ -18,7 +18,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	output.Println("Edit credit card")
+	output.Println(c.Config.EnableColor, "Edit credit card")
 
 	f := form.New(
 		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
@@ -45,6 +45,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println("Updated.")
+	output.Println(c.Config.EnableColor, "Updated.")
 	return nil
 }
