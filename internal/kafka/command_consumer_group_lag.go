@@ -15,7 +15,7 @@ type lagOut struct {
 	ConsumerId      string `human:"Consumer" serialized:"consumer_id"`
 	InstanceId      string `human:"Instance" serialized:"instance_id"`
 	ClientId        string `human:"Client" serialized:"client_id"`
-	TopicName       string `human:"Topic" serialized:"topic"`
+	Topic           string `human:"Topic" serialized:"topic"`
 	PartitionId     int32  `human:"Partition" serialized:"partition_id"`
 }
 
