@@ -515,7 +515,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 			if !test.wantErr {
 				require.NoError(t, err)
-				require.NotContains(t, out, errors.AutoLoginMsg)
+				require.NotContains(t, out, "Successful auto log in with non-interactive credentials.\n")
 				require.NotContains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, username))
 			} else {
 				require.Error(t, err)

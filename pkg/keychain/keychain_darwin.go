@@ -54,7 +54,7 @@ func Delete(isCloud bool, ctxName string) error {
 				return err
 			}
 
-			log.CliLogger.Warnf(errors.RemoveKeychainCredentialsMsg, username)
+			log.CliLogger.Warnf(`Removed credentials for user "%s" from keychain`, username)
 			break
 		}
 	}
