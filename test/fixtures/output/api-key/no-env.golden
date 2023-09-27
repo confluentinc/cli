@@ -1,4 +1,5 @@
-Error: no environment found
+Error: no environment found or selected
 
 Suggestions:
-    This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.
+    Set an active environment with `confluent environment use`.
+    This issue may also occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.

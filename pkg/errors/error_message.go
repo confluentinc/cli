@@ -63,8 +63,8 @@ const (
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
 
 	// environment & organization command
-	NoEnvironmentFoundErrorMsg    = "no environment found"
-	NoEnvironmentFoundSuggestions = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
+	NoEnvironmentFoundErrorMsg    = "no environment found or selected"
+	NoEnvironmentFoundSuggestions = "Set an active environment with `confluent environment use`.\nThis issue may also occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
@@ -183,7 +183,7 @@ const (
 	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
 
 	// ksql commands
-	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB cluster, "%s", because it was created with user-level access to the Kafka cluster`
+	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB cluster "%s" because it was created with user-level access to the Kafka cluster`
 	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
 
 	// local commands
