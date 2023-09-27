@@ -2,7 +2,6 @@ package sso
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/pkg/browser"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func Login(authURL string, noBrowser bool, connectionName string) (string, string, error) {
@@ -23,8 +23,10 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 	if noBrowser {
 		// no browser flag does not need to launch the server
 		// it prints the url and has the user copy this into their browser instead
-		url := state.getAuthorizationCodeUrl(connectionName, isOkta)
-		fmt.Printf(errors.NoBrowserSSOInstructionsMsg, url)
+		output.Println("Navigate to the following link in your browser to authenticate:")
+		output.Println(state.getAuthorizationCodeUrl(connectionName, isOkta))
+		output.Println()
+		output.Println("After authenticating in your browser, paste the code here:")
 
 		// wait for the user to paste the code
 		// the code should come in the format {state}/{auth0_auth_code}

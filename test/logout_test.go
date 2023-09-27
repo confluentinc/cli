@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -51,7 +50,7 @@ func (s *CLITestSuite) TestLogout_RemoveUsernamePassword() {
 		s.Require().Contains(utils.NormalizeNewLines(string(got)), "saved_credentials")
 
 		output = runCommand(s.T(), test.bin, env, "logout -vvvv", 0, "")
-		s.Contains(output, errors.LoggedOutMsg)
+		s.Contains(output, "You are now logged out.")
 
 		got, err = os.ReadFile(configFile)
 		s.NoError(err)
@@ -97,7 +96,7 @@ func (s *CLITestSuite) TestLogout_RemoveUsernamePasswordFail() {
 		// run login to provide context, then logout command and check output
 		runCommand(s.T(), test.bin, env, "login --url "+test.loginURL, 0, "") // without save flag so the netrc file won't be modified
 		output := runCommand(s.T(), test.bin, env, "logout", 0, "")
-		s.Contains(output, errors.LoggedOutMsg)
+		s.Contains(output, "You are now logged out.")
 
 		got, err = os.ReadFile(configFile)
 		s.NoError(err)

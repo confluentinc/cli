@@ -196,7 +196,8 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
 	if remainingFreeCredit > 0 {
-		output.ErrPrintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintf("Free credits: $%.2f USD remaining\n", admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintln("You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.")
 	}
 }
 
