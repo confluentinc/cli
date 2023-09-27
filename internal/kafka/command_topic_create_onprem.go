@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -18,6 +20,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
+
+const brokerSep = ":"
 
 func (c *command) newCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
@@ -46,6 +50,7 @@ func (c *command) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().Uint32("replication-factor", 0, "Number of replicas.")
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
+	cmd.Flags().StringSlice("replica-assignment", nil, "A comma-separated list of replicas assignment ('brokerId_1:brokerId_2:...') for the topic being created.")
 
 	return cmd
 }
@@ -97,9 +102,29 @@ func CreateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		i++
 	}
 
+	replicas, err := cmd.Flags().GetStringSlice("replica-assignment")
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%+v\n", replicas)
+
+	replicaAssignments := make([]kafkarestv3.CreateTopicRequestDataReplicasAssignments, len(replicas))
+	for j := 0; j < len(replicas); j++ {
+		brokerList, err := parseBrokerList(replicas[j])
+		if err != nil {
+			return err
+		}
+		replicaAssignments[j] = kafkarestv3.CreateTopicRequestDataReplicasAssignments{
+			PartitionId: int32(j),
+			BrokerIds:   brokerList,
+		}
+	}
+	fmt.Printf("%+v\n", replicaAssignments)
+
 	data := kafkarestv3.CreateTopicRequestData{
-		TopicName: topicName,
-		Configs:   topicConfigs,
+		TopicName:           topicName,
+		Configs:             topicConfigs,
+		ReplicasAssignments: replicaAssignments,
 	}
 
 	if cmd.Flags().Changed("partitions") {
@@ -132,4 +157,17 @@ func CreateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 
 	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
+}
+
+func parseBrokerList(brokerString string) ([]int32, error) {
+	brokers := strings.Split(brokerString, brokerSep)
+	brokerList := make([]int32, len(brokers))
+	for i := 0; i < len(brokers); i++ {
+		brokerId, err := strconv.ParseInt(brokers[i], 10, 32)
+		if err != nil {
+			return []int32{}, err
+		}
+		brokerList[i] = int32(brokerId)
+	}
+	return brokerList, nil
 }
