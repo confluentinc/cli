@@ -31,12 +31,7 @@ func (c *consumerCommand) newLagListCommandOnPrem() *cobra.Command {
 }
 
 func (c *consumerCommand) lagListOnPrem(cmd *cobra.Command, args []string) error {
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
