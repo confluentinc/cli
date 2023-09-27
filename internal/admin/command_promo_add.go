@@ -1,8 +1,9 @@
 package admin
 
 import (
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newAddCommand() *cobra.Command {
