@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -49,6 +48,6 @@ func (c *command) exporterReset(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.ExporterActionMsg, "Reset", args[0])
+	output.Printf(exporterActionMsg, "Reset", args[0])
 	return nil
 }

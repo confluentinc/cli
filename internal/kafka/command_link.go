@@ -12,6 +12,8 @@ const (
 	dryrunFlagName     = "dry-run"
 )
 
+const createdLinkResourceMsg = "Created %s \"%s\" with configs:\n%s\n"
+
 type linkCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }

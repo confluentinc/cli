@@ -29,6 +29,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
+const autoLoginMsg = "Successful auto-login with non-interactive credentials.\n"
+
 type wrongLoginCommandError struct {
 	errorString      string
 	suggestionString string
@@ -281,7 +283,7 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 		return err
 	}
 
-	log.CliLogger.Debug(errors.AutoLoginMsg)
+	log.CliLogger.Debug(autoLoginMsg)
 	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv)
 
@@ -509,7 +511,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false); err != nil {
 		return err
 	}
-	log.CliLogger.Debug(errors.AutoLoginMsg)
+	log.CliLogger.Debug(autoLoginMsg)
 	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
 	return nil
 }
@@ -613,7 +615,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.Context.GetAuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
-					output.Println(errors.MDSTokenNotFoundMsg)
+					output.Println("No session token found, please enter user credentials. To avoid being prompted, run `confluent login`.")
 				}
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
@@ -790,14 +792,19 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 		if !strings.HasPrefix(latestMajorVersion, "v") {
 			latestMajorVersion = "v" + latestMajorVersion
 		}
-		output.ErrPrintf(errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
+		output.ErrPrintf("A major version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMajorVersion)
+		output.ErrPrintln("To view release notes and install the update, please run `confluent update --major`.")
+		output.ErrPrintln()
 	}
 
 	if latestMinorVersion != "" {
 		if !strings.HasPrefix(latestMinorVersion, "v") {
 			latestMinorVersion = "v" + latestMinorVersion
 		}
-		output.ErrPrintf(errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
+
+		output.ErrPrintf("A minor version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMinorVersion)
+		output.ErrPrintln("To view release notes and install the update, please run `confluent update`.")
+		output.ErrPrintln()
 	}
 }
 

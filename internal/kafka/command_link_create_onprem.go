@@ -138,7 +138,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	msg := fmt.Sprintf(errors.CreatedLinkResourceMsg, resource.ClusterLink, linkName, linkConfigsCommandOutput(configMap))
+	msg := fmt.Sprintf(createdLinkResourceMsg, resource.ClusterLink, linkName, linkConfigsCommandOutput(configMap))
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}
