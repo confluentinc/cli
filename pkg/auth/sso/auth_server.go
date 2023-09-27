@@ -61,7 +61,7 @@ func (s *authServer) startServer() error {
 		// https://go.googlesource.com/go/+/master/src/net/http/server.go#2854
 		// So don't surface that error to the user.
 		if serverErr != nil && serverErr.Error() != "http: Server closed" {
-			output.ErrPrintf(errors.AuthServerRunningErrorMsg, serverErr.Error())
+			output.ErrPrintf(false, errors.AuthServerRunningErrorMsg, serverErr.Error())
 		}
 	}()
 
@@ -82,7 +82,7 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	defer func() {
 		serverErr := s.server.Shutdown(context.Background())
 		if serverErr != nil {
-			output.ErrPrintf(errors.AuthServerShutdownErrorMsg, serverErr.Error())
+			output.ErrPrintf(false, errors.AuthServerShutdownErrorMsg, serverErr.Error())
 		}
 	}()
 

@@ -1,7 +1,8 @@
 {
-  "disable_update_check": false,
-  "disable_plugins": false,
   "disable_feature_flags": false,
+  "disable_plugins": false,
+  "disable_update_check": false,
+  "enable_color": false,
   "no_browser": false,
   "platforms": {
     "http://test": {

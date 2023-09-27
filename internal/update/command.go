@@ -110,24 +110,24 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.CheckingForUpdatesMsg)
+	output.ErrPrintln(c.Config.EnableColor, errors.CheckingForUpdatesMsg)
 	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
 	}
 
 	if latestMajorVersion == "" && latestMinorVersion == "" {
-		output.Println(errors.UpToDateMsg)
+		output.Println(c.Config.EnableColor, errors.UpToDateMsg)
 		return nil
 	}
 
 	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
-		output.Printf(errors.MajorVersionUpdateMsg, pversion.CLIName)
+		output.Printf(c.Config.EnableColor, errors.MajorVersionUpdateMsg, pversion.CLIName)
 		return nil
 	}
 
 	if latestMajorVersion == "" && major {
-		output.Print(errors.NoMajorVersionUpdateMsg)
+		output.Print(c.Config.EnableColor, errors.NoMajorVersionUpdateMsg)
 		return nil
 	}
 

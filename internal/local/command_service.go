@@ -247,7 +247,7 @@ func (c *command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 		return err
 	}
 
-	output.Println(ver)
+	output.Println(c.Config.EnableColor, ver)
 	return nil
 }
 
@@ -272,7 +272,7 @@ func (c *command) startService(service, configFile string) error {
 		return err
 	}
 
-	output.Printf(errors.StartingServiceMsg, writeServiceName(service))
+	output.Printf(c.Config.EnableColor, errors.StartingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -443,7 +443,7 @@ func (c *command) stopService(service string) error {
 		return c.printStatus(service)
 	}
 
-	output.Printf(errors.StoppingServiceMsg, writeServiceName(service))
+	output.Printf(c.Config.EnableColor, errors.StoppingServiceMsg, writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -563,7 +563,7 @@ func (c *command) printStatus(service string) error {
 		status = color.GreenString("UP")
 	}
 
-	output.Printf(errors.ServiceStatusMsg, writeServiceName(service), status)
+	output.Printf(c.Config.EnableColor, errors.ServiceStatusMsg, writeServiceName(service), status)
 	return nil
 }
 

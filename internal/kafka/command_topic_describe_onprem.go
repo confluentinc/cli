@@ -131,9 +131,9 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 	}
 
 	// Output partitions info
-	output.Printf("Topic: %s\n", topic.TopicName)
-	output.Printf("PartitionCount: %d\n", topic.PartitionCount)
-	output.Printf("ReplicationFactor: %d\n\n", topic.ReplicationFactor)
+	output.Printf(false, "Topic: %s\n", topic.TopicName)
+	output.Printf(false, "PartitionCount: %d\n", topic.PartitionCount)
+	output.Printf(false, "ReplicationFactor: %d\n\n", topic.ReplicationFactor)
 
 	list := output.NewList(cmd)
 	for _, partition := range topic.Partitions {
@@ -142,11 +142,11 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 	if err := list.Print(); err != nil {
 		return err
 	}
-	output.Println()
+	output.Println(false, "")
 
 	// Output config info
-	output.Println("Configuration")
-	output.Println()
+	output.Println(false, "Configuration")
+	output.Println(false, "")
 	list = output.NewList(cmd)
 	for name, value := range topic.Configs {
 		list.Add(&broker.ConfigOut{

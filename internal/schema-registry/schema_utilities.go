@@ -64,7 +64,7 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 			return 0, err
 		}
 	} else {
-		output.Printf(errors.RegisteredSchemaMsg, response.Id)
+		output.Printf(false, errors.RegisteredSchemaMsg, response.Id)
 	}
 
 	return response.Id, nil
