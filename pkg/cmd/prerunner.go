@@ -29,7 +29,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
-const autoLoginMsg = "Successful auto-login with non-interactive credentials.\n"
+const autoLoginMsg = "Successful auto-login with non-interactive credentials."
 
 type wrongLoginCommandError struct {
 	errorString      string

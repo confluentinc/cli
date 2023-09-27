@@ -49,7 +49,7 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 	if c.Config.Config.Context() != nil {
 		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().GetNetrcMachineName())
 		if err == nil {
-			log.CliLogger.Warnf("Removed credentials for user \"%s\" from netrc file \"%s\"\n", username, c.netrcHandler.GetFileName())
+			log.CliLogger.Warnf(`Removed credentials for user "%s" from netrc file "%s"`, username, c.netrcHandler.GetFileName())
 		} else if !strings.Contains(err.Error(), "login credentials not found") && !strings.Contains(err.Error(), "keyword expected") {
 			// return err when other than NetrcCredentialsNotFoundErrorMsg or parsing error
 			return err

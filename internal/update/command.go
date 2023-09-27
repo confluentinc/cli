@@ -122,12 +122,12 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
-		output.Printf("The only available update is a major version update. Use `%s update --major` to accept the update.\n", pversion.CLIName)
+		output.Println("The only available update is a major version update. Use `confluent update --major` to accept the update.")
 		return nil
 	}
 
 	if latestMajorVersion == "" && major {
-		output.Print("No major version updates are available.\n")
+		output.Println("No major version updates are available.")
 		return nil
 	}
 

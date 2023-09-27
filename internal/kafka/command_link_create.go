@@ -196,11 +196,13 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	msg := fmt.Sprintf(createdLinkResourceMsg, resource.ClusterLink, linkName, linkConfigsCommandOutput(configMap))
+	msg := fmt.Sprintf(createdLinkResourceMsg, resource.ClusterLink, linkName)
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}
-	output.Print(msg)
+
+	output.Println(msg)
+	output.Println(linkConfigsCommandOutput(configMap))
 
 	return nil
 }
