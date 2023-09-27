@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -205,22 +206,22 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 }
 
 func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
-	var serializedKey, val string
+	var serializedKey []byte
+	var val string
 	if parseKey {
-		x := strings.SplitN(data, delimiter, 2)
-		if len(x) != 2 {
-			return nil, nil, errors.New(errors.MissingKeyErrorMsg)
-		}
-
-		out, err := keySerializer.Serialize(strings.TrimSpace(x[0]))
+		key, value, err := getKeyAndValue(keySerializer.SchemaBased(), data, delimiter)
 		if err != nil {
 			return nil, nil, err
 		}
-		serializedKey = string(out)
 
-		val = strings.TrimSpace(x[1])
+		serializedKey, err = keySerializer.Serialize(key)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		val = value
 	} else {
-		val = strings.TrimSpace(data)
+		val = data
 	}
 
 	serializedValue, err := valueSerializer.Serialize(val)
@@ -229,6 +230,33 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 	}
 
 	return append(keyMetaInfo, serializedKey...), append(valueMetaInfo, serializedValue...), nil
+}
+
+func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
+	if !schemaBased {
+		dataSplit := strings.SplitN(data, delimiter, 2)
+		if len(dataSplit) != 2 {
+			return "", "", errors.New(errors.MissingKeyOrValueErrorMsg)
+		}
+
+		return strings.TrimSpace(dataSplit[0]), strings.TrimSpace(dataSplit[1]), nil
+	}
+
+	dataSplit := strings.Split(data, delimiter)
+
+	key := dataSplit[0]
+	if json.Valid([]byte(strings.TrimSpace(key))) {
+		return strings.TrimSpace(key), strings.TrimSpace(strings.Join(dataSplit[1:], delimiter)), nil
+	}
+
+	for i, substr := range dataSplit[1:] {
+		key += delimiter + substr
+		if json.Valid([]byte(strings.TrimSpace(key))) {
+			return strings.TrimSpace(key), strings.TrimSpace(strings.Join(dataSplit[i+2:], delimiter)), nil
+		}
+	}
+
+	return "", "", errors.New(errors.MissingOrMalformedKeyErrorMsg)
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {

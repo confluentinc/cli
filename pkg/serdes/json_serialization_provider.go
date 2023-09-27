@@ -27,6 +27,10 @@ func (j *JsonSerializationProvider) GetSchemaName() string {
 	return JsonSchemaBackendName
 }
 
+func (j *JsonSerializationProvider) SchemaBased() bool {
+	return true
+}
+
 func (j *JsonSerializationProvider) Serialize(str string) ([]byte, error) {
 	documentLoader := gojsonschema.NewStringLoader(str)
 
