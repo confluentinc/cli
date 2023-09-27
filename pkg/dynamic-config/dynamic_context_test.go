@@ -1,22 +1,16 @@
 package dynamicconfig
 
 import (
-	"context"
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
-	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
-
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	pmock "github.com/confluentinc/cli/v3/pkg/mock"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 var (
@@ -47,6 +41,9 @@ func TestFindKafkaCluster_Unexpired(t *testing.T) {
 func TestFindKafkaCluster_Expired(t *testing.T) {
 	update := time.Now().Add(-7 * 24 * time.Hour)
 
+	testBackend := testserver.StartTestBackend(t, false)
+	defer testBackend.Close()
+
 	d := &DynamicContext{
 		Context: &config.Context{
 			CurrentEnvironment:  "env-123456",
@@ -55,36 +52,7 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 			State:               &config.ContextState{AuthToken: "token"},
 			Config:              &config.Config{},
 		},
-		V2Client: &ccloudv2.Client{
-			CmkClient: &cmkv2.APIClient{
-				ClustersCmkV2Api: &cmkmock.ClustersCmkV2Api{
-					GetCmkV2ClusterFunc: func(_ context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
-						return cmkv2.ApiGetCmkV2ClusterRequest{}
-					},
-					GetCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
-						cluster := cmkv2.CmkV2Cluster{
-							Id: cmkv2.PtrString("lkc-123456"),
-							Spec: &cmkv2.CmkV2ClusterSpec{
-								DisplayName:            cmkv2.PtrString(""),
-								KafkaBootstrapEndpoint: cmkv2.PtrString(""),
-								HttpEndpoint:           cmkv2.PtrString(""),
-							},
-						}
-						return cluster, nil, nil
-					},
-				},
-			},
-			OrgClient: &orgv2.APIClient{
-				EnvironmentsOrgV2Api: &orgmock.EnvironmentsOrgV2Api{
-					GetOrgV2EnvironmentFunc: func(_ context.Context, _ string) orgv2.ApiGetOrgV2EnvironmentRequest {
-						return orgv2.ApiGetOrgV2EnvironmentRequest{}
-					},
-					GetOrgV2EnvironmentExecuteFunc: func(_ orgv2.ApiGetOrgV2EnvironmentRequest) (orgv2.OrgV2Environment, *http.Response, error) {
-						return orgv2.OrgV2Environment{}, nil, nil
-					},
-				},
-			},
-		},
+		V2Client: ccloudv2.NewClient("", true, "", "", false),
 	}
 
 	config, err := d.FindKafkaCluster("lkc-123456")

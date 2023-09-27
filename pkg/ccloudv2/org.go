@@ -29,8 +29,7 @@ func (c *Client) CreateOrgEnvironment(environment orgv2.OrgV2Environment) (orgv2
 }
 
 func (c *Client) GetOrgEnvironment(envId string) (orgv2.OrgV2Environment, error) {
-	req := c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2Environment(c.orgApiContext(), envId)
-	res, httpResp, err := c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2EnvironmentExecute(req) // calling Execute() instead will cause mock calls to fail
+	res, httpResp, err := c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2Environment(c.orgApiContext(), envId).Execute()
 	return res, errors.CatchCCloudV2ResourceNotFoundError(err, envId, httpResp)
 }
 
