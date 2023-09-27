@@ -1,0 +1,4 @@
+- id: ccp-123456
+  name: CliPluginTest1
+- id: ccp-789012
+  name: CliPluginTest2

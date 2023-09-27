@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"os/signal"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -18,7 +16,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
 
@@ -92,6 +89,15 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return err
+	}
+
+	if cmd.Flags().Changed("key-format") && !parseKey {
+		return errors.New("`--parse-key` must be set when `key-format` is set")
+	}
+
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -118,59 +124,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if runtime.GOOS == "windows" {
-		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C")
-	} else {
-		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
-	}
-
-	var scanErr error
-	input, scan := PrepareInputChannel(&scanErr)
-
-	// Trap SIGINT to trigger a shutdown.
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	go func() {
-		<-signals
-		select {
-		case <-input:
-		default:
-			close(input)
-		}
-	}()
-	// Prime reader
-	go scan()
-
-	deliveryChan := make(chan ckafka.Event)
-	for data := range input {
-		if data == "" {
-			go scan()
-			continue
-		}
-
-		message, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
-		if err != nil {
-			return err
-		}
-		if err := producer.Produce(message, deliveryChan); err != nil {
-			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
-			if isProduceToCompactedTopicError {
-				scanErr = err
-				close(input)
-				break
-			}
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
-		}
-
-		e := <-deliveryChan                // read a ckafka event from the channel
-		m := e.(*ckafka.Message)           // extract the message from the event
-		if m.TopicPartition.Error != nil { // catch all other errors
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
-		}
-		go scan()
-	}
-	close(deliveryChan)
-	return scanErr
+	return ProduceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
 }
 
 func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
@@ -286,7 +240,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		_ = os.RemoveAll(schemaDir)
 	}()
 
-	subject := topicNameStrategy(topic)
+	subject := topicNameStrategy(topic, mode)
 
 	// Deprecated
 	var schemaId optional.Int32

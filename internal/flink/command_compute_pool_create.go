@@ -14,21 +14,21 @@ import (
 
 func (c *command) newComputePoolCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <id>",
+		Use:   "create <name>",
 		Short: "Create a Flink compute pool.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.computePoolCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create Flink compute pool "my-compute-pool" in AWS with 2 CFUs.`,
-				Code: "confluent flink compute-pool create my-compute-pool --cloud aws --region us-west-2 --cfu 2",
+				Text: `Create Flink compute pool "my-compute-pool" in AWS with 5 CFUs.`,
+				Code: "confluent flink compute-pool create my-compute-pool --cloud aws --region us-west-2 --max-cfu 5",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
-	cmd.Flags().Int32("cfu", 1, "Number of Confluent Flink Units (CFU).")
+	cmd.Flags().Int32("max-cfu", 5, "Maximum number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -49,7 +49,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cfu, err := cmd.Flags().GetInt32("cfu")
+	maxCfu, err := cmd.Flags().GetInt32("max-cfu")
 	if err != nil {
 		return err
 	}
@@ -68,8 +68,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		DisplayName: flinkv2.PtrString(args[0]),
 		Cloud:       flinkv2.PtrString(cloud),
 		Region:      flinkv2.PtrString(region),
-		Config:      &flinkv2.FcpmV2ComputePoolSpecConfigOneOf{FcpmV2Standard: &flinkv2.FcpmV2Standard{Kind: "Standard"}},
-		MaxCfu:      flinkv2.PtrInt32(cfu),
+		MaxCfu:      flinkv2.PtrInt32(maxCfu),
 		Environment: &flinkv2.GlobalObjectReference{
 			Id:           environmentId,
 			Related:      environment.Metadata.GetSelf(),
@@ -84,12 +83,13 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&computePoolOut{
-		IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
-		Id:        computePool.GetId(),
-		Name:      computePool.Spec.GetDisplayName(),
-		Cfu:       computePool.Spec.GetMaxCfu(),
-		Region:    computePool.Spec.GetRegion(),
-		Status:    computePool.Status.GetPhase(),
+		IsCurrent:  computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
+		Id:         computePool.GetId(),
+		Name:       computePool.Spec.GetDisplayName(),
+		CurrentCfu: computePool.Status.GetCurrentCfu(),
+		MaxCfu:     computePool.Spec.GetMaxCfu(),
+		Region:     computePool.Spec.GetRegion(),
+		Status:     computePool.Status.GetPhase(),
 	})
 	return table.Print()
 }

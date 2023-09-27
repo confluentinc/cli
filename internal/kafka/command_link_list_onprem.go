@@ -49,12 +49,7 @@ func (c *linkCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	client, ctx, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(client, ctx)
+	client, ctx, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

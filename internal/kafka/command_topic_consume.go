@@ -3,6 +3,7 @@ package kafka
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -17,7 +18,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 func (c *command) newConsumeCommand() *cobra.Command {
@@ -170,7 +170,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	var srClient *schemaregistry.Client
-	if types.Contains(serdes.SchemaBasedFormats, valueFormat) {
+	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) || slices.Contains(serdes.SchemaBasedFormats, keyFormat) {
 		// Only initialize client and context when schema is specified.
 		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
@@ -190,7 +190,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		_ = os.RemoveAll(schemaPath)
 	}()
 
-	subject := topicNameStrategy(topic)
+	subject := topic
 	schemaRegistryContext, err := cmd.Flags().GetString("schema-registry-context")
 	if err != nil {
 		return err

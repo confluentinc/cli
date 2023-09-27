@@ -12,12 +12,13 @@ import (
 )
 
 type computePoolOut struct {
-	IsCurrent bool   `human:"Current" serialized:"is_current"`
-	Id        string `human:"ID" serialized:"id"`
-	Name      string `human:"Name" serialized:"name"`
-	Cfu       int32  `human:"CFU" serialized:"cfu"`
-	Region    string `human:"Region" serialized:"region"`
-	Status    string `human:"Status" serialized:"status"`
+	IsCurrent  bool   `human:"Current" serialized:"is_current"`
+	Id         string `human:"ID" serialized:"id"`
+	Name       string `human:"Name" serialized:"name"`
+	CurrentCfu int32  `human:"Current CFU" serialized:"currrent_cfu"`
+	MaxCfu     int32  `human:"Max CFU" serialized:"max_cfu"`
+	Region     string `human:"Region" serialized:"region"`
+	Status     string `human:"Status" serialized:"status"`
 }
 
 func (c *command) newComputePoolCommand(cfg *config.Config) *cobra.Command {
@@ -46,6 +47,10 @@ func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []stri
 		return nil
 	}
 
+	return c.validComputePoolArgsMultiple(cmd, args)
+}
+
+func (c *command) validComputePoolArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

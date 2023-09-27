@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 )
 
 type UserPropertiesTestSuite struct {
@@ -24,7 +26,7 @@ func TestUserPropertiesTestSuite(t *testing.T) {
 func (s *UserPropertiesTestSuite) SetupTest() {
 	s.defaultKey = "default-key"
 	s.defaultValue = "default-value"
-	s.userProperties = NewUserProperties(map[string]string{s.defaultKey: s.defaultValue})
+	s.userProperties = NewUserProperties(map[string]string{s.defaultKey: s.defaultValue}, map[string]string{})
 	require.Equal(s.T(), s.defaultValue, s.userProperties.Get(s.defaultKey))
 }
 
@@ -152,7 +154,26 @@ func (s *UserPropertiesTestSuite) TestToSortedSlice() {
 		userPropertiesWithEmptyDefault := NewUserProperties(map[string]string{
 			s.defaultKey:                 s.defaultValue,
 			"default-key-with-empty-val": "",
-		})
+		}, map[string]string{})
 		cupaloy.SnapshotT(t, userPropertiesWithEmptyDefault.ToSortedSlice(true))
 	})
+	s.T().Run("with initial values", func(t *testing.T) {
+		userPropertiesWithInitialValues := NewUserProperties(map[string]string{
+			s.defaultKey: s.defaultValue,
+		}, map[string]string{
+			"initial.key.1": "value1",
+			"initial.key.2": "value2",
+		})
+		cupaloy.SnapshotT(t, userPropertiesWithInitialValues.ToSortedSlice(true))
+	})
+}
+
+func (s *UserPropertiesTestSuite) TestShouldOnlyReturnNonLocalNamespaceProperties() {
+	s.userProperties.Set(config.ConfigKeyResultsTimeout, "1000")
+	s.userProperties.Set(config.ConfigKeyCatalog, "test-catalog")
+
+	require.Equal(s.T(), map[string]string{
+		config.ConfigKeyCatalog: "test-catalog",
+		"default-key":           "default-value",
+	}, s.userProperties.GetNonLocalProperties())
 }

@@ -3,9 +3,10 @@
 package featureflags
 
 import (
-	b64 "encoding/base64"
+	"encoding/base64"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -21,7 +22,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/version"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
@@ -193,7 +193,7 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.Launch
 		log.CliLogger.Debug(resp)
 		if !ld.hideTimeoutWarning && !ld.timeoutWarningPrinted {
 			output.ErrPrintln("WARNING: Failed to fetch feature flags.")
-			output.ErrPrintln(errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`))
+			output.ErrPrintln(errors.ComposeSuggestionsMessage("Check connectivity to https://confluent.cloud or disable feature flags using `confluent configuration update disable_feature_flags true`."))
 			ld.timeoutWarningPrinted = true
 		}
 
@@ -238,7 +238,7 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return b64.URLEncoding.EncodeToString(userBytes), nil
+	return base64.URLEncoding.EncodeToString(userBytes), nil
 }
 
 func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext) lduser.User {
@@ -291,7 +291,7 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 }
 
 func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
-	if !types.Contains(attributes, key) {
+	if !slices.Contains(attributes, key) {
 		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
 	}
 	custom.Set(key, value)

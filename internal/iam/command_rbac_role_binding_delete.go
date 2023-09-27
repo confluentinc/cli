@@ -3,15 +3,16 @@ package iam
 import (
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/spf13/cobra"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 )
 
 const rbacPromptMsg = "Are you sure you want to delete this role binding?"
@@ -36,7 +37,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	pcmd.AddForceFlag(cmd)
-	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+	addClusterFlags(cmd, c.cfg, c.CLICommand)
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
@@ -85,31 +86,26 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return err
 	}
 
-	var roleBindingToDelete mdsv2.IamV2RoleBinding
-	found := false
-
-	for _, roleBinding := range roleBindings {
-		if roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
-			roleBindingToDelete = roleBinding
-			found = true
-			break
-		}
-	}
-
-	if !found {
+	idx := slices.IndexFunc(roleBindings, func(roleBinding mdsv2.IamV2RoleBinding) bool {
+		return roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern()
+	})
+	if idx == -1 {
 		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
 	}
 
-	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return err
 	}
 
-	_, err = c.V2Client.DeleteIamRoleBinding(roleBindingToDelete.GetId())
+	id := roleBindings[idx].GetId()
+	deleteRoleBinding.SetId(id)
+
+	_, err = c.V2Client.DeleteIamRoleBinding(id)
 	return err
 }
 
 func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
-	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return nil, err
 	}
 

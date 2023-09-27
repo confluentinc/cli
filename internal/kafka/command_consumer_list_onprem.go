@@ -17,7 +17,7 @@ func (c *consumerCommand) newListCommandOnPrem() *cobra.Command {
 		RunE:  c.listOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List all consumers for consumer group "my-consumer-group".`,
+				Text: `List all consumers in consumer group "my-consumer-group".`,
 				Code: "confluent kafka consumer list --group my-consumer-group",
 			},
 		),
@@ -34,12 +34,7 @@ func (c *consumerCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *consumerCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

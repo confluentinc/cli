@@ -83,12 +83,7 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

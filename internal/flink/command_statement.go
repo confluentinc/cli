@@ -1,12 +1,9 @@
 package flink
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
-
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 type statementOut struct {
@@ -24,24 +21,14 @@ func (c *command) newStatementCommand() *cobra.Command {
 		Short: "Manage Flink SQL statements.",
 	}
 
+	cmd.AddCommand(c.newStatementCreateCommand())
 	cmd.AddCommand(c.newStatementDeleteCommand())
 	cmd.AddCommand(c.newStatementDescribeCommand())
 	cmd.AddCommand(c.newStatementExceptionCommand())
 	cmd.AddCommand(c.newStatementListCommand())
+	cmd.AddCommand(c.newStatementStopCommand())
 
 	return cmd
-}
-
-func (c *command) addComputePoolFlag(cmd *cobra.Command) {
-	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
-
-	pcmd.RegisterFlagCompletionFunc(cmd, "compute-pool", func(cmd *cobra.Command, args []string) []string {
-		if err := c.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
-
-		return c.autocompleteComputePools()
-	})
 }
 
 func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string {
@@ -49,6 +36,10 @@ func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string
 		return nil
 	}
 
+	return c.validStatementArgsMultiple(cmd, args)
+}
+
+func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -58,12 +49,12 @@ func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string
 		return nil
 	}
 
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return nil
 	}
 
-	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.LastOrgId, "", "")
+	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), "", "")
 	if err != nil {
 		return nil
 	}
@@ -71,7 +62,7 @@ func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string
 
 	suggestions := make([]string, len(statements))
 	for i, statement := range statements {
-		suggestions[i] = fmt.Sprintf("%s\t%s", statement.Spec.GetStatementName(), statement.Spec.GetStatement())
+		suggestions[i] = statement.GetName()
 	}
 	return suggestions
 }

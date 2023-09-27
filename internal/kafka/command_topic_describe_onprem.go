@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -58,11 +59,7 @@ func (c *command) describeOnPrem(cmd *cobra.Command, args []string) error {
 	// Parse Args
 	topicName := args[0]
 
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -152,7 +149,7 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 	output.Println()
 	list = output.NewList(cmd)
 	for name, value := range topic.Configs {
-		list.Add(&configOut{
+		list.Add(&broker.ConfigOut{
 			Name:  name,
 			Value: value,
 		})

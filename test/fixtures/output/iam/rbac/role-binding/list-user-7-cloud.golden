@@ -1,3 +1,3 @@
-   Principal   | Email |     Role      | Environment | Cloud Cluster |  Cluster Type   | Logical Cluster | Resource Type |  Name  | Pattern Type  
----------------+-------+---------------+-------------+---------------+-----------------+-----------------+---------------+--------+---------------
-  User:u-77ggg |       | ResourceOwner | a-595       |               | Schema Registry | lsrc-3333ccc    | Subject       | clicks | LITERAL       
+     ID    |  Principal   | Email |     Role      | Environment | Cloud Cluster |  Cluster Type   | Logical Cluster | Resource Type |  Name  | Pattern Type  
+-----------+--------------+-------+---------------+-------------+---------------+-----------------+-----------------+---------------+--------+---------------
+  rb-77ggg | User:u-77ggg |       | ResourceOwner | a-595       |               | Schema Registry | lsrc-3333ccc    | Subject       | clicks | LITERAL       

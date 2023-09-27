@@ -572,6 +572,26 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidths() {
 	require.Equal(s.T(), []int{5, 2}, materializedStatementResults.GetMaxWidthPerColumn())
 }
 
+func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsWithMultiLineValues() {
+	headers := []string{"1234", "12"}
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults.Append(types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "12345 \n 123456789",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "1\n123",
+			},
+		},
+	})
+
+	require.Equal(s.T(), []int{10, 3}, materializedStatementResults.GetMaxWidthPerColumn())
+}
+
 func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode() {
 	headers := []string{"1234", "12"}
 	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)

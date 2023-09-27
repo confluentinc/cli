@@ -5,8 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -43,7 +41,7 @@ func (c *consumerCommand) describe(cmd *cobra.Command, args []string) error {
 	table.Add(&consumerGroupOut{
 		ClusterId:         group.GetClusterId(),
 		ConsumerGroupId:   group.GetConsumerGroupId(),
-		Coordinator:       getStringBroker(group.GetCoordinator()),
+		Coordinator:       getStringBroker(group.Coordinator.GetRelated()),
 		IsSimple:          group.GetIsSimple(),
 		PartitionAssignor: group.GetPartitionAssignor(),
 		State:             group.GetState(),
@@ -51,9 +49,9 @@ func (c *consumerCommand) describe(cmd *cobra.Command, args []string) error {
 	return table.Print()
 }
 
-func getStringBroker(relationship kafkarestv3.Relationship) string {
-	// relationship.Related will look like ".../v3/clusters/{cluster_id}/brokers/{broker_id}
-	splitString := strings.SplitAfter(relationship.Related, "brokers/")
+func getStringBroker(relationship string) string {
+	// relationship will look like ".../v3/clusters/{cluster_id}/brokers/{broker_id}
+	splitString := strings.SplitAfter(relationship, "brokers/")
 	// if relationship was an empty string or did not contain "brokers/"
 	if len(splitString) < 2 {
 		return ""

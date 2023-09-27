@@ -3,15 +3,16 @@ package asyncapi
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/antihax/optional"
-	"github.com/go-yaml/yaml"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	spec2 "github.com/swaggest/go-asyncapi/spec-2.4.0"
+	"gopkg.in/yaml.v3"
 	yaml3 "k8s.io/apimachinery/pkg/util/yaml"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -26,7 +27,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/retry"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -321,7 +321,7 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 	}
 	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
 		value := configValue
-		if types.Contains(modifiableConfigs, configName) {
+		if slices.Contains(modifiableConfigs, configName) {
 			updateConfigs = append(updateConfigs, kafkarestv3.AlterConfigBatchRequestDataData{
 				Name:  configName,
 				Value: *kafkarestv3.NewNullableString(&value),

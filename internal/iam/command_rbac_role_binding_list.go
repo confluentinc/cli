@@ -11,7 +11,7 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -226,7 +226,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 						})
 					}
 				}
-				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
+				if len(resourcePatterns) == 0 && clusterScopedRoles.Contains(roleName) {
 					list.Add(&roleBindingOut{
 						Principal:    principalName,
 						Role:         roleName,
@@ -240,7 +240,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	return list.Print()
 }
 
-func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal, role string) error {
+func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mdsv1.MdsScope, principal, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
@@ -264,7 +264,7 @@ func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 				PatternType:  pattern.PatternType,
 			})
 		}
-		if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
+		if len(resourcePatterns) == 0 && clusterScopedRoles.Contains(roleName) {
 			list.Add(&roleBindingOut{
 				Role:         roleName,
 				ResourceType: "Cluster",
@@ -333,7 +333,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 	}
 
 	if currentUser {
-		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.Context.State.Auth.User.GetResourceId())
+		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.Context.State.Auth.GetUser().GetResourceId())
 	}
 
 	inclusive, err := cmd.Flags().GetBool("inclusive")
@@ -363,6 +363,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 	}
 
 	for _, rolebinding := range roleBindings {
+		id := rolebinding.GetId()
 		roleName := rolebinding.GetRoleName()
 		if role != "" && role != roleName {
 			continue
@@ -413,6 +414,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 			patternType = prefixedPatternType
 		}
 		list.Add(&roleBindingOut{
+			Id:             id,
 			Principal:      principalName,
 			Email:          principalEmail,
 			Role:           roleName,

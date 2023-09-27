@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -27,7 +27,7 @@ type AuthenticatedCLICommand struct {
 
 	Client            *ccloudv1.Client
 	KafkaRESTProvider *KafkaRESTProvider
-	MDSClient         *mds.APIClient
+	MDSClient         *mdsv1.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	V2Client          *ccloudv2.Client
 
@@ -51,18 +51,21 @@ func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) 
 	return c
 }
 
-func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewayClient, error) {
+func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*ccloudv2.FlinkGatewayClient, error) {
 	if c.flinkGatewayClient == nil {
 		ctx := c.Config.Context()
-		computePoolId := ctx.GetCurrentFlinkComputePool()
 
 		var url string
 		var err error
 
-		if computePoolId != "" {
-			url, err = c.getGatewayUrlForComputePool(computePoolId, ctx)
-			if err != nil {
-				return nil, err
+		if computePoolOnly {
+			if computePoolId := ctx.GetCurrentFlinkComputePool(); computePoolId != "" {
+				url, err = c.getGatewayUrlForComputePool(computePoolId, ctx)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 			}
 		} else if ctx.GetCurrentFlinkRegion() != "" && ctx.GetCurrentFlinkCloudProvider() != "" {
 			url, err = c.getGatewayUrlForRegion(ctx.GetCurrentFlinkCloudProvider(), ctx.GetCurrentFlinkRegion())
@@ -70,7 +73,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 				return nil, err
 			}
 		} else {
-			return nil, errors.NewErrorWithSuggestions("no compute pool or cloud provider and region selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`. Alternatively you can also select a cloud provider and region with `--cloud` and `--region`")
+			return nil, errors.NewErrorWithSuggestions("no cloud provider and region selected", "Select a cloud provider and region with `confluent flink region use` or `--cloud` and `--region`.")
 		}
 
 		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")

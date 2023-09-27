@@ -42,6 +42,10 @@ func handleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
+		case http.MethodDelete:
+			res := `{"compatibilityLevel":"BACKWARD"}`
+			_, err := w.Write([]byte(res))
+			require.NoError(t, err)
 		}
 	}
 }
@@ -423,6 +427,10 @@ func handleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 				},
 			}
 			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			res := `{"compatibilityLevel":"BACKWARD"}`
+			_, err := w.Write([]byte(res))
 			require.NoError(t, err)
 		}
 	}

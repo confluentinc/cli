@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
@@ -29,7 +30,18 @@ func NewACLConfig() *ACLConfiguration {
 }
 
 // parse returns ACLConfiguration from the contents of cmd
-func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
+func parse(context *dynamicconfig.DynamicContext, cmd *cobra.Command) ([]*ACLConfiguration, error) {
+	serviceAccount, err := cmd.Flags().GetString("service-account")
+	if err != nil {
+		return nil, err
+	}
+	// if there was no service account flag, but instead we have it in context, we set the flag to that value
+	if serviceAccount == "" && context.GetCurrentServiceAccount() != "" {
+		if err := cmd.Flags().Set("service-account", context.GetCurrentServiceAccount()); err != nil {
+			return nil, err
+		}
+	}
+
 	if cmd.Name() == "list" {
 		aclConfig := NewACLConfig()
 		cmd.Flags().Visit(fromArgs(aclConfig))

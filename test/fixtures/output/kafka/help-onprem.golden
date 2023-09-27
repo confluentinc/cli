@@ -4,14 +4,14 @@ Usage:
   confluent kafka [command]
 
 Available Commands:
-  acl           Manage Kafka ACLs.
-  broker        Manage Kafka brokers.
-  cluster       Manage Kafka clusters.
-  consumer      Manage Kafka consumers.
-  link          Manage inter-cluster links.
-  partition     Manage Kafka partitions.
-  replica       Manage Kafka replicas.
-  topic         Manage Kafka topics.
+  acl            Manage Kafka ACLs.
+  broker         Manage Kafka brokers.
+  cluster        Manage Kafka clusters.
+  consumer       Manage Kafka consumers.
+  link           Manage inter-cluster links.
+  partition      Manage Kafka partitions.
+  replica        Manage Kafka replicas.
+  topic          Manage Kafka topics.
 
 Global Flags:
   -h, --help            Show help for this command.

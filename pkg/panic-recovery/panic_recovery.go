@@ -3,11 +3,11 @@ package panic_recovery
 import (
 	"runtime"
 	"runtime/debug"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/exp/slices"
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 

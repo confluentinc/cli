@@ -109,7 +109,7 @@ func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Cl
 
 func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, orgResourceId string, save bool) error {
 	platform := &config.Platform{
-		Name:       strings.TrimPrefix(url, "https://"),
+		Name:       strings.TrimSuffix(strings.TrimPrefix(url, "https://"), "/"),
 		Server:     url,
 		CaCertPath: caCertPath,
 	}

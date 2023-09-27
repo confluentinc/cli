@@ -37,7 +37,7 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
-	linter.RequireValidExamples(),
+	linter.Filter(linter.RequireValidExamples(), linter.ExcludeCommand("pipeline update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -172,6 +172,7 @@ var properNouns = []string{
 	"Clients",
 	"Clojure",
 	"Confluent Cloud",
+	"Confluent Local",
 	"Confluent Platform",
 	"Confluent",
 	"Connect",
@@ -238,6 +239,7 @@ var vocabWords = []string{
 	"hostname",
 	"iam",
 	"json",
+	"jit",
 	"jsonschema",
 	"jwks",
 	"kafka",

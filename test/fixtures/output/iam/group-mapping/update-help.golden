@@ -4,9 +4,9 @@ Usage:
   confluent iam group-mapping update <id> [flags]
 
 Examples:
-Update the description of group mapping "pool-123456".
+Update the description of group mapping "group-123456".
 
-  $ confluent iam group-mapping update pool-123456 --description "updated description"
+  $ confluent iam group-mapping update group-123456 --description "updated description"
 
 Flags:
       --name string          Name of the group mapping.

@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	_nethttp "net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -53,20 +54,6 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) cckafkarestv3.A
 		i++
 	}
 	return cckafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
-}
-
-func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkarestv3.AlterConfigBatchRequestData {
-	kafkaRestConfigs := make([]cpkafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
-	i := 0
-	for key, val := range configsMap {
-		v := val
-		kafkaRestConfigs[i] = cpkafkarestv3.AlterConfigBatchRequestDataData{
-			Name:  key,
-			Value: &v,
-		}
-		i++
-	}
-	return cpkafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
 }
 
 func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
@@ -182,6 +169,6 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 	return cluster.Status.Phase
 }
 
-func topicNameStrategy(topic string) string {
-	return topic + "-value"
+func topicNameStrategy(topic, mode string) string {
+	return fmt.Sprintf("%s-%s", topic, mode)
 }

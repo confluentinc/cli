@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
-	"github.com/go-yaml/yaml"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sevlyar/retag"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
-
-	"github.com/confluentinc/cli/v3/pkg/types"
+	"gopkg.in/yaml.v3"
 )
 
 type Table struct {
@@ -161,7 +160,7 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 		var header []string
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
-			if !types.Contains(tag, "-") {
+			if !slices.Contains(tag, "-") {
 				header = append(header, tag[0])
 			}
 		}
@@ -174,7 +173,7 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 			var row []string
 			for i := 0; i < reflect.TypeOf(object).Elem().NumField(); i++ {
 				tag := strings.Split(reflect.TypeOf(object).Elem().Field(i).Tag.Get(t.format.String()), ",")
-				if !types.Contains(tag, "-") {
+				if !slices.Contains(tag, "-") {
 					val := reflect.ValueOf(object).Elem().Field(i)
 					row = append(row, getValueAsString(val, tag))
 				}
@@ -182,14 +181,16 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 			w.Append(row)
 		}
 	} else if t.isMap() {
+		w.SetAlignment(tablewriter.ALIGN_LEFT)
 		for k, v := range t.objects[0].(map[string]string) {
 			w.Append([]string{k, v})
 		}
 	} else {
+		w.SetAlignment(tablewriter.ALIGN_LEFT)
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
 			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
-			if !types.Contains(tag, "-") && !(types.Contains(tag, "omitempty") && val.IsZero()) {
+			if !slices.Contains(tag, "-") && !(slices.Contains(tag, "omitempty") && val.IsZero()) {
 				w.Append([]string{tag[0], fmt.Sprint(val)})
 			}
 		}
@@ -201,7 +202,7 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 }
 
 func getValueAsString(val reflect.Value, tag []string) string {
-	if types.Contains(tag, "Current") {
+	if slices.Contains(tag, "Current") {
 		if val.Bool() {
 			return "*"
 		} else {

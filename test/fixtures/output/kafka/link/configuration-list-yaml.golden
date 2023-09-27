@@ -22,5 +22,5 @@
   sensitive: false
   source: source-1
   synonyms:
-  - rfmb
-  - bmfr
+    - rfmb
+    - bmfr

@@ -9,14 +9,17 @@ import (
 	"github.com/spf13/pflag"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 var (
@@ -25,21 +28,15 @@ var (
 	// ccloud has Email as additional field
 	ccloudResourcePatternListFields = []string{"Principal", "Email", "Role", "Environment", "CloudCluster", "ClusterType", "LogicalCluster", "ResourceType", "Name", "PatternType"}
 
-	clusterScopedRoles = map[string]bool{
-		"SystemAdmin":   true,
-		"ClusterAdmin":  true,
-		"SecurityAdmin": true,
-		"UserAdmin":     true,
-		"Operator":      true,
-	}
-
-	clusterScopedRolesV2 = map[string]bool{
-		"CloudClusterAdmin": true,
-	}
-
-	environmentScopedRoles = map[string]bool{
-		"EnvironmentAdmin": true,
-	}
+	clusterScopedRoles = types.NewSet(
+		"ClusterAdmin",
+		"Operator",
+		"SecurityAdmin",
+		"SystemAdmin",
+		"UserAdmin",
+	)
+	clusterScopedRolesV2   = types.NewSet("CloudClusterAdmin")
+	environmentScopedRoles = types.NewSet("EnvironmentAdmin")
 
 	literalPatternType  = "LITERAL"
 	prefixedPatternType = "PREFIXED"
@@ -50,8 +47,8 @@ type roleBindingOptions struct {
 	resource         string
 	prefix           bool
 	principal        string
-	mdsScope         mds.MdsScope
-	resourcesRequest mds.ResourcesRequest
+	mdsScope         mdsv1.MdsScope
+	resourcesRequest mdsv1.ResourcesRequest
 }
 
 type roleBindingCommand struct {
@@ -60,6 +57,7 @@ type roleBindingCommand struct {
 }
 
 type roleBindingOut struct {
+	Id             string `human:"ID,omitempty" serialized:"id,omitempty"`
 	Principal      string `human:"Principal" serialized:"principal"`
 	Email          string `human:"Email" serialized:"email"`
 	Role           string `human:"Role" serialized:"role"`
@@ -125,7 +123,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		return nil, err
 	}
 
-	var resourcesRequest mds.ResourcesRequest
+	var resourcesRequest mdsv1.ResourcesRequest
 	if resource != "" {
 		parsedResourcePattern, err := parseAndValidateResourcePattern(resource, prefix)
 		if err != nil {
@@ -145,9 +143,9 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 			}
 		}
 
-		resourcesRequest = mds.ResourcesRequest{
+		resourcesRequest = mdsv1.ResourcesRequest{
 			Scope:            *scope,
-			ResourcePatterns: []mds.ResourcePattern{parsedResourcePattern},
+			ResourcePatterns: []mdsv1.ResourcePattern{parsedResourcePattern},
 		}
 	}
 	return &roleBindingOptions{
@@ -164,10 +162,17 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 /*
 Helper function to add flags for all the legal scopes/clusters for the command.
 */
-func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLICommand) {
-	if isCloudLogin {
+func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CLICommand) {
+	if cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
+
+		dc := dynamicconfig.New(cfg, nil)
+		_ = dc.ParseFlagsIntoConfig(cmd)
+		if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", dc.Context(), config.CliLaunchDarklyClient, true, false) {
+			cmd.Flags().String("flink-region", "", "Flink region ID for the role binding.")
+		}
+
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
@@ -190,8 +195,8 @@ func (c *roleBindingCommand) validatePrincipalFormat(principal string) error {
 	return nil
 }
 
-func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.MdsScope, error) {
-	scope := &mds.MdsScopeClusters{}
+func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.MdsScope, error) {
+	scope := &mdsv1.MdsScopeClusters{}
 	nonKafkaScopesSet := 0
 
 	clusterName, err := cmd.Flags().GetString("cluster-name")
@@ -232,10 +237,10 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 			return nil, errors.New(errors.MoreThanOneNonKafkaErrorMsg)
 		}
 
-		return &mds.MdsScope{Clusters: *scope}, nil
+		return &mdsv1.MdsScope{Clusters: *scope}, nil
 	}
 
-	return &mds.MdsScope{ClusterName: clusterName}, nil
+	return &mdsv1.MdsScope{ClusterName: clusterName}, nil
 }
 
 func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
@@ -271,8 +276,8 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 	return nil
 }
 
-func parseAndValidateResourcePattern(resource string, prefix bool) (mds.ResourcePattern, error) {
-	var result mds.ResourcePattern
+func parseAndValidateResourcePattern(resource string, prefix bool) (mdsv1.ResourcePattern, error) {
+	var result mdsv1.ResourcePattern
 	if prefix {
 		result.PatternType = "PREFIXED"
 	} else {
@@ -325,11 +330,11 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 		return err
 	}
 
-	allResourceTypes := make(map[string]bool)
+	allResourceTypes := []string{}
 	found := false
 	for _, role := range roles {
 		for _, operation := range role.AccessPolicy.AllowedOperations {
-			allResourceTypes[operation.ResourceType] = true
+			allResourceTypes = append(allResourceTypes, operation.ResourceType)
 			if operation.ResourceType == resourceType {
 				found = true
 				break
@@ -338,10 +343,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 	}
 
 	if !found {
-		uniqueResourceTypes := []string{}
-		for rt := range allResourceTypes {
-			uniqueResourceTypes = append(uniqueResourceTypes, rt)
-		}
+		uniqueResourceTypes := types.RemoveDuplicates(allResourceTypes)
 		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
 	}
@@ -353,6 +355,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
 
 	out := &roleBindingOut{
+		Id:        roleBinding.GetId(),
 		Principal: roleBinding.GetPrincipal(),
 		Role:      roleBinding.GetRoleName(),
 	}
@@ -389,7 +392,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
-			fields = []string{"Principal", "Role"}
+			fields = []string{"Id", "Principal", "Role"}
 		}
 	} else {
 		if resource != "" {
@@ -400,7 +403,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 				return err
 			}
 			out.Email = user.GetEmail()
-			fields = []string{"Principal", "Email", "Role"}
+			fields = []string{"Id", "Principal", "Email", "Role"}
 		}
 	}
 
@@ -441,7 +444,7 @@ func (c *roleBindingCommand) createContext() context.Context {
 	if c.cfg.IsCloudLogin() {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.Context.GetAuthToken())
 	} else {
-		return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
+		return context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 	}
 }
 
@@ -494,6 +497,12 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		if resourceType == "Cluster" {
 			resourceType = "kafka"
 		}
+		if resourceType == "ServiceAccount" {
+			resourceType = "service-account"
+		}
+		if resourceType == "ComputePool" {
+			resourceType = "compute-pool"
+		}
 
 		if role == "" {
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
@@ -533,6 +542,14 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		crnPattern += "/environment=" + environment
 	}
 
+	if cmd.Flags().Changed("flink-region") {
+		flinkRegion, err := cmd.Flags().GetString("flink-region")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/flink-region=" + flinkRegion
+	}
+
 	if cmd.Flags().Changed("cloud-cluster") {
 		cloudCluster, err := cmd.Flags().GetString("cloud-cluster")
 		if err != nil {
@@ -570,10 +587,10 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		if err != nil {
 			return "", err
 		}
-		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
+		if clusterScopedRolesV2.Contains(role) && !cmd.Flags().Changed("cloud-cluster") {
 			return "", errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
-		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
+		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 			return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
 		}
 	}

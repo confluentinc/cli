@@ -49,6 +49,14 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 		}
 
+		if err := ctx.Config.ContextStates[ctx.Name].DecryptContextStateAuthToken(ctx.Name); err != nil {
+			return err
+		}
+
+		if err := ctx.Config.ContextStates[ctx.Name].DecryptContextStateAuthRefreshToken(ctx.Name); err != nil {
+			return err
+		}
+
 		delete(ctx.Config.Contexts, ctx.Name)
 		delete(ctx.Config.ContextStates, ctx.Name)
 

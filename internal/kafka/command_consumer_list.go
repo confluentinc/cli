@@ -16,7 +16,7 @@ func (c *consumerCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List all consumers for consumer group "my-consumer-group".`,
+				Text: `List all consumers in consumer group "my-consumer-group".`,
 				Code: "confluent kafka consumer list --group my-consumer-group",
 			},
 		),
@@ -50,7 +50,7 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, consumer := range consumers.Data {
+	for _, consumer := range consumers.GetData() {
 		list.Add(&consumerOut{
 			ConsumerGroupId: consumer.GetConsumerGroupId(),
 			ConsumerId:      consumer.GetConsumerId(),

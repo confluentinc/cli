@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -22,7 +23,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	mdsmock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
 	"github.com/confluentinc/cli/v3/internal/logout"
@@ -133,7 +134,7 @@ var (
 				return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
 			}
 		},
-		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
+		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials) (string, error) {
 			return testToken1, nil
 		},
 	}
@@ -290,7 +291,7 @@ func TestLoginSuccess(t *testing.T) {
 			args:    []string{},
 		},
 		{
-			args: []string{"--url=http://localhost:8090"},
+			args: []string{"--url", "http://localhost:8090"},
 		},
 		{
 			isCloud: true,
@@ -312,7 +313,7 @@ func TestLoginSuccess(t *testing.T) {
 		}
 		if s.orgId != "" {
 			org2 = s.orgId == org2Id
-			s.args = append(s.args, "--organization-id="+s.orgId)
+			s.args = append(s.args, "--organization-id", s.orgId)
 		}
 		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
@@ -464,7 +465,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, mockNetrcHandler, AuthTokenHandler, loginCredentialsManager, LoginOrganizationManager)
 			var loginArgs []string
 			if !test.isCloud {
-				loginArgs = []string{"--url=http://localhost:8090"}
+				loginArgs = []string{"--url", "http://localhost:8090"}
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
 			req.NoError(err)
@@ -527,13 +528,12 @@ func TestPromptLoginFlag(t *testing.T) {
 						return wrongCreds, nil
 					}
 				},
-				SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
-				},
+				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 			}
 			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 			loginArgs := []string{"--prompt"}
 			if !test.isCloud {
-				loginArgs = append(loginArgs, "--url=http://localhost:8090")
+				loginArgs = append(loginArgs, "--url", "http://localhost:8090")
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
 			req.NoError(err)
@@ -629,7 +629,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 				expectedCaCert = test.caCertPathFlag
 			}
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, expectedCaCert)
-			_, err := pcmd.ExecuteCommand(loginCmd, "--url=http://localhost:8090", fmt.Sprintf("--ca-cert-path=%s", test.caCertPathFlag))
+			_, err := pcmd.ExecuteCommand(loginCmd, "--url", "http://localhost:8090", "--ca-cert-path", test.caCertPathFlag)
 			req.NoError(err)
 
 			ctx := cfg.Context()
@@ -664,7 +664,6 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	}{
 		{
 			name:               "use existing caCertPath in config",
-			useCaCertPathFlag:  false,
 			expectedCaCertPath: originalCaCertPath,
 		},
 		{
@@ -680,10 +679,11 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
 
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, test.expectedCaCertPath)
-			args := []string{"--url=http://localhost:8090"}
+			args := []string{"--url", "http://localhost:8090"}
 			if test.useCaCertPathFlag {
-				args = append(args, "--ca-cert-path=")
+				args = append(args, "--ca-cert-path", "")
 			}
+			fmt.Println(args)
 			_, err := pcmd.ExecuteCommand(loginCmd, args...)
 			req.NoError(err)
 
@@ -696,8 +696,8 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 }
 
 func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *config.Config, expectedCaCertPath string) *cobra.Command {
-	mdsConfig := mds.NewConfiguration()
-	mdsClient := mds.NewAPIClient(mdsConfig)
+	mdsConfig := mdsv1.NewConfiguration()
+	mdsClient := mdsv1.NewAPIClient(mdsConfig)
 
 	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
 
@@ -716,20 +716,16 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 	cert, err := x509.ParseCertificate(certBytes)
 	req.NoError(err, "Couldn't reparse certificate")
 	mdsClient.TokensAndAuthenticationApi = &mdsmock.TokensAndAuthenticationApi{
-		GetTokenFunc: func(ctx context.Context) (mds.AuthenticationResponse, *http.Response, error) {
+		GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
 			req.NotEqual(http.DefaultClient, mdsClient)
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
 			req.True(ok)
 			req.NotEqual(http.DefaultTransport, transport)
-			found := false
-			for _, actualSubject := range transport.TLSClientConfig.RootCAs.Subjects() { //nolint:staticcheck
-				if bytes.Equal(cert.RawSubject, actualSubject) {
-					found = true
-					break
-				}
-			}
+			found := slices.ContainsFunc(transport.TLSClientConfig.RootCAs.Subjects(), func(subject []byte) bool { //nolint
+				return bytes.Equal(cert.RawSubject, subject)
+			})
 			req.True(found, "Certificate not found in client.")
-			return mds.AuthenticationResponse{
+			return mdsv1.AuthenticationResponse{
 				AuthToken: testToken1,
 				TokenType: "JWT",
 				ExpiresIn: 100,
@@ -737,7 +733,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 		},
 	}
 	mdsClientManager := &climock.MDSClientManager{
-		GetMDSClientFunc: func(_, caCertPath string, _ bool) (*mds.APIClient, error) {
+		GetMDSClientFunc: func(_, caCertPath string, _ bool) (*mdsv1.APIClient, error) {
 			// ensure the right caCertPath is used
 			req.Contains(caCertPath, expectedCaCertPath)
 			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, tls.Certificate{})
@@ -783,7 +779,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 			args:    []string{},
 		},
 		{
-			args: []string{"--url=http://localhost:8090"},
+			args: []string{"--url", "http://localhost:8090"},
 		},
 	}
 
@@ -903,13 +899,13 @@ func TestValidateUrl(t *testing.T) {
 func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.New()
-	var mdsClient *mds.APIClient
+	var mdsClient *mdsv1.APIClient
 	if !isCloud {
-		mdsConfig := mds.NewConfiguration()
-		mdsClient = mds.NewAPIClient(mdsConfig)
+		mdsConfig := mdsv1.NewConfiguration()
+		mdsClient = mdsv1.NewAPIClient(mdsConfig)
 		mdsClient.TokensAndAuthenticationApi = &mdsmock.TokensAndAuthenticationApi{
-			GetTokenFunc: func(ctx context.Context) (mds.AuthenticationResponse, *http.Response, error) {
-				return mds.AuthenticationResponse{
+			GetTokenFunc: func(ctx context.Context) (mdsv1.AuthenticationResponse, *http.Response, error) {
+				return mdsv1.AuthenticationResponse{
 					AuthToken: testToken1,
 					TokenType: "JWT",
 					ExpiresIn: 100,
@@ -931,7 +927,7 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 		},
 	}
 	mdsClientManager := &climock.MDSClientManager{
-		GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
+		GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
 			return mdsClient, nil
 		},
 	}

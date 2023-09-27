@@ -8,13 +8,13 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/secret"
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
@@ -64,6 +64,15 @@ var (
 		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Use the "--help" flag to see available commands.`,
 	)
 )
+
+// Whitelist is the configuration fields that are visible by the `config` subcommands.
+var Whitelist = []string{
+	"disable_update_check",
+	"disable_updates",
+	"disable_plugins",
+	"disable_feature_flags",
+	"no_browser",
+}
 
 // Config represents the CLI configuration.
 type Config struct {
@@ -312,7 +321,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		"devel.confluentgov-internal.com",
 		"infra.confluentgov-internal.com",
 	}
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && types.Contains(environments, c.Context().PlatformName)
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && slices.Contains(environments, c.Context().PlatformName)
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)

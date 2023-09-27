@@ -2,8 +2,6 @@ package local
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
 
 	"github.com/spf13/cobra"
 
@@ -14,11 +12,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
 
-func (c *Command) newKafkaTopicProduceCommand() *cobra.Command {
+func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -45,11 +42,11 @@ func (c *Command) newKafkaTopicProduceCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	producer, err := newOnPremProducer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
+	producer, err := newOnPremProducer(cmd, c.getPlaintextBootstrapServers())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}
@@ -73,51 +70,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
-	output.ErrPrintln("Type a message and press ENTER to produce to the topic.")
-
-	var scanErr error
-	input, scan := kafka.PrepareInputChannel(&scanErr)
-
-	signals := make(chan os.Signal, 1) // Trap SIGINT to trigger a shutdown.
-	signal.Notify(signals, os.Interrupt)
-	go func() {
-		<-signals
-		close(input)
-	}()
-	go scan() // Prime reader
-
-	deliveryChan := make(chan ckafka.Event)
-	for data := range input {
-		if data == "" {
-			go scan()
-			continue
-		}
-
-		msg, err := kafka.GetProduceMessage(cmd, make([]byte, 4), make([]byte, 4), topicName, data, nil, serializationProvider)
-		if err != nil {
-			return err
-		}
-		err = producer.Produce(msg, deliveryChan)
-		if err != nil {
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
-		}
-
-		e := <-deliveryChan                // read a ckafka event from the channel
-		m := e.(*ckafka.Message)           // extract the message from the event
-		if m.TopicPartition.Error != nil { // catch all other errors
-			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topicName)
-			if isProduceToCompactedTopicError {
-				scanErr = err
-				close(input)
-				break
-			}
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
-		}
-		go scan()
-	}
-	close(deliveryChan)
-	return scanErr
+	return kafka.ProduceToTopic(cmd, []byte{}, []byte{}, topicName, serializationProvider, serializationProvider, producer)
 }
 
 func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, error) {

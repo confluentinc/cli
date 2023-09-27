@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -132,7 +133,7 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runKafkaConsumeCommand(cmd *cobra.Command, args []string) error {
+func (c *command) runKafkaConsumeCommand(cmd *cobra.Command, args []string) error {
 	return c.runKafkaCommand(cmd, args, "consume", kafkaConsumeDefaultValues)
 }
 
@@ -161,11 +162,11 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runKafkaProduceCommand(cmd *cobra.Command, args []string) error {
+func (c *command) runKafkaProduceCommand(cmd *cobra.Command, args []string) error {
 	return c.runKafkaCommand(cmd, args, "produce", kafkaProduceDefaultValues)
 }
 
-func (c *Command) initFlags(mode string) {
+func (c *command) initFlags(mode string) {
 	// CLI Flags
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
 	defaultConfig := fmt.Sprintf("%s/.confluent/config", os.Getenv("HOME"))
@@ -196,7 +197,7 @@ func (c *Command) initFlags(mode string) {
 	}
 }
 
-func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
+func (c *command) runKafkaCommand(cmd *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
 	cloud, err := cmd.Flags().GetBool("cloud")
 	if err != nil {
 		return err
@@ -260,7 +261,7 @@ func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string
 		configFileFlag := fmt.Sprintf("--%s.config", modeNoun)
 		kafkaArgs = append(kafkaArgs, configFileFlag, config)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
-	} else if !types.Contains(kafkaArgs, "--bootstrap-server") {
+	} else if !slices.Contains(kafkaArgs, "--bootstrap-server") {
 		defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
 	}

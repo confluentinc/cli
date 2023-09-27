@@ -39,7 +39,7 @@ func (c *consumerCommand) groupList(cmd *cobra.Command, _ []string) error {
 		list.Add(&consumerGroupOut{
 			ClusterId:         group.GetClusterId(),
 			ConsumerGroupId:   group.GetConsumerGroupId(),
-			Coordinator:       getStringBroker(group.GetCoordinator()),
+			Coordinator:       getStringBroker(group.GetCoordinator().Related),
 			IsSimple:          group.GetIsSimple(),
 			PartitionAssignor: group.GetPartitionAssignor(),
 			State:             group.GetState(),

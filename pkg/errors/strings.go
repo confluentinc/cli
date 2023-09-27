@@ -6,15 +6,14 @@ const (
 	UseAPIKeyMsg    = "Using API Key \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
-	LoggedInAsMsgWithOrg          = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
-	LoggedInUsingEnvMsg           = "Using environment \"%s\".\n"
-	LoggedOutMsg                  = "You are now logged out."
-	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
-	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
-	RemoveKeychainCredentialsMsg  = "Removed credentials for user \"%s\" from keychain\n"
-	StopNonInteractiveMsg         = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
-	FoundEnvCredMsg               = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
+	LoggedInAsMsg                = "Logged in as \"%s\".\n"
+	LoggedInAsMsgWithOrg         = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg          = "Using environment \"%s\".\n"
+	LoggedOutMsg                 = "You are now logged out."
+	RemoveNetrcCredentialsMsg    = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
+	RemoveKeychainCredentialsMsg = "Removed credentials for user \"%s\" from keychain\n"
+	StopNonInteractiveMsg        = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg              = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
@@ -109,7 +108,6 @@ const (
 	// General
 	CreatedResourceMsg            = "Created %s \"%s\".\n"
 	CreatedLinkResourceMsg        = "Created %s \"%s\" with configs:\n%s\n"
-	DeletedResourceMsg            = "Deleted %s \"%s\".\n"
 	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
 	DeleteResourceConfirmYesNoMsg = `Are you sure you want to delete %s "%s"?`
 	DeleteACLConfirmMsg           = "Are you sure you want to delete the ACL corresponding to these parameters?"
@@ -117,8 +115,9 @@ const (
 	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
 	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
 	UsingResourceMsg              = "Using %s \"%s\".\n"
+	UnsetResourceMsg              = "Unset %s \"%s\".\n"
 
-	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
+	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%v\".\n"
 
 	// Stream Sharing commands
 	ResendInviteMsg = "Sent invitation for \"%s\".\n"
