@@ -8,21 +8,20 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *lagCommand) newGetCommand() *cobra.Command {
+func (c *consumerCommand) newLagGetCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "get <consumer-group>",
+		Use:               "get <group>",
 		Short:             "Get consumer lag for a Kafka topic partition.",
 		Long:              "Get consumer lag for a Kafka topic partition consumed by a consumer group.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.getLag,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
+		RunE:              c.get,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Get the consumer lag for topic `my-topic` partition `0` consumed by consumer-group `my-consumer-group`.",
-				Code: "confluent kafka consumer-group lag get my-consumer-group --topic my-topic --partition 0",
+				Text: "Get the consumer lag for topic `my-topic` partition `0` consumed by consumer group `my-consumer-group`.",
+				Code: "confluent kafka consumer group lag get my-consumer-group --topic my-topic --partition 0",
 			},
 		),
-		Hidden: true,
 	}
 
 	cmd.Flags().String("topic", "", "Topic name.")
@@ -38,9 +37,7 @@ func (c *lagCommand) newGetCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *lagCommand) getLag(cmd *cobra.Command, args []string) error {
-	consumerGroupId := args[0]
-
+func (c *consumerCommand) get(cmd *cobra.Command, args []string) error {
 	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err
@@ -56,12 +53,23 @@ func (c *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	lagGetResp, err := kafkaREST.CloudClient.GetKafkaConsumerLag(consumerGroupId, topic, partition)
+	consumerLag, err := kafkaREST.CloudClient.GetKafkaConsumerLag(args[0], topic, partition)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(convertLagToStruct(lagGetResp))
+	table.Add(&lagOut{
+		ClusterId:       consumerLag.GetClusterId(),
+		ConsumerGroupId: consumerLag.GetConsumerGroupId(),
+		Lag:             consumerLag.GetLag(),
+		LogEndOffset:    consumerLag.GetLogEndOffset(),
+		CurrentOffset:   consumerLag.GetCurrentOffset(),
+		ConsumerId:      consumerLag.GetConsumerId(),
+		InstanceId:      consumerLag.GetInstanceId(),
+		ClientId:        consumerLag.GetClientId(),
+		TopicName:       consumerLag.GetTopicName(),
+		PartitionId:     consumerLag.GetPartitionId(),
+	})
 	return table.Print()
 }
