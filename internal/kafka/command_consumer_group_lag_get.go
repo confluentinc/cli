@@ -18,7 +18,7 @@ func (c *consumerCommand) newLagGetCommand() *cobra.Command {
 		RunE:              c.get,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Get the consumer lag for topic `my-topic` partition `0` consumed by consumer group `my-consumer-group`.",
+				Text: `Get the consumer lag for topic "my-topic" partition "0" consumed by consumer group "my-consumer-group".`,
 				Code: "confluent kafka consumer group lag get my-consumer-group --topic my-topic --partition 0",
 			},
 		),
