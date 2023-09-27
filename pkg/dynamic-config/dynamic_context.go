@@ -172,11 +172,12 @@ func (d *DynamicContext) HasLogin() bool {
 }
 
 func (d *DynamicContext) EnvironmentId() (string, error) {
-	if id := d.GetCurrentEnvironment(); id != "" {
-		return id, nil
+	id := d.GetCurrentEnvironment()
+	if _, err := d.V2Client.GetOrgEnvironment(id); err != nil {
+		return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
 	}
 
-	return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
+	return id, nil
 }
 
 // AuthenticatedState returns the context's state if authenticated, and an error otherwise.

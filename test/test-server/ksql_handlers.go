@@ -106,7 +106,7 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
-		if id != "lksqlc-ksql1" && id != "lksqlc-12345" {
+		if id != "lksqlc-ksql1" && id != "lksqlc-ksql2" && id != "lksqlc-12345" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -144,6 +144,25 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 						},
 						Environment:        &ksqlv2.ObjectReference{Id: "25"},
 						CredentialIdentity: ksqlv2.NewObjectReference("sa-12345", "", ""),
+					},
+					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
+						HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
+						TopicPrefix:  ksqlv2.PtrString("pksqlc-zxcvb"),
+						Storage:      130,
+						Phase:        "PROVISIONING",
+					},
+				}
+			case "lksqlc-ksql2":
+				cluster = ksqlv2.KsqldbcmV2Cluster{
+					Id: ksqlv2.PtrString("lksqlc-ksql2"),
+					Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
+						DisplayName: ksqlv2.PtrString("account ksql"),
+						KafkaCluster: &ksqlv2.ObjectReference{
+							Id:          "lkc-abcde",
+							Environment: ksqlv2.PtrString("25"),
+						},
+						Environment:        &ksqlv2.ObjectReference{Id: "25"},
+						CredentialIdentity: ksqlv2.NewObjectReference("u-abc123", "", ""),
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 						HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
