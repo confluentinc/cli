@@ -415,5 +415,5 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 		problems = append(problems, errors.APISecretMissingMsg)
 	}
 	problemString := strings.Join(problems, ", ")
-	output.ErrPrintf(errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
+	output.ErrPrintf(false, errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
 }

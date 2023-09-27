@@ -95,8 +95,8 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 			}
 			// announcement and deprecation check, print out msg
 			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil)
-			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
-			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
+			featureflags.PrintAnnouncements(r.Config, featureflags.Announcements, ctx, cmd)
+			featureflags.PrintAnnouncements(r.Config, featureflags.DeprecationNotices, ctx, cmd)
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
@@ -613,7 +613,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.Context.GetAuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
-					output.Println(errors.MDSTokenNotFoundMsg)
+					output.Println(r.Config.EnableColor, errors.MDSTokenNotFoundMsg)
 				}
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
@@ -790,14 +790,14 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 		if !strings.HasPrefix(latestMajorVersion, "v") {
 			latestMajorVersion = "v" + latestMajorVersion
 		}
-		output.ErrPrintf(errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
+		output.ErrPrintf(r.Config.EnableColor, errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
 	}
 
 	if latestMinorVersion != "" {
 		if !strings.HasPrefix(latestMinorVersion, "v") {
 			latestMinorVersion = "v" + latestMinorVersion
 		}
-		output.ErrPrintf(errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
+		output.ErrPrintf(r.Config.EnableColor, errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
 	}
 }
 
@@ -813,14 +813,14 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
-		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln()
+		output.ErrPrintln(false, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln(false, "")
 		return
 	}
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") && !strings.HasPrefix(cmd.CommandPath(), "confluent local kafka") {
-		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 will no longer be supported.")
-		output.ErrPrintln()
+		output.ErrPrintln(false, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln(false, "As of Confluent Platform 8.0, Java 8 will no longer be supported.")
+		output.ErrPrintln(false, "")
 	}
 }
 

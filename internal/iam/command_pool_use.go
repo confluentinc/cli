@@ -46,6 +46,6 @@ func (c *identityPoolCommand) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UsingResourceMsg, resource.IdentityPool, args[0])
+	output.Printf(c.Config.EnableColor, errors.UsingResourceMsg, resource.IdentityPool, args[0])
 	return nil
 }

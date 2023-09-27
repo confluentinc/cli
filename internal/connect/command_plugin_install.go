@@ -150,7 +150,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		successStr = utils.AddDryRunPrefix(successStr)
 	}
-	output.Printf("\n%s", successStr)
+	output.Printf(c.Config.EnableColor, "\n%s", successStr)
 
 	return nil
 }
@@ -281,12 +281,12 @@ func existingPluginInstallation(pluginDir string, pluginManifest *cpstructs.Mani
 
 func removePluginInstallations(previousInstallations []string, prompt form.Prompt, dryRun, force bool) error {
 	if len(previousInstallations) > 0 {
-		output.Println("A version of this plugin is already installed and must be removed to continue.")
+		output.Println(false, "A version of this plugin is already installed and must be removed to continue.")
 	}
 
 	for _, previousInstallation := range previousInstallations {
 		if force {
-			output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", previousInstallation)
+			output.Printf(false, "Uninstalling the existing version of the plugin located at \"%s\".\n", previousInstallation)
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",
@@ -303,7 +303,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 
 		uninstallStr := "Successfully removed existing version.\n"
 		if dryRun {
-			output.Println(utils.AddDryRunPrefix(uninstallStr))
+			output.Println(false, utils.AddDryRunPrefix(uninstallStr))
 			return nil
 		}
 
@@ -311,11 +311,11 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 			return err
 		}
 
-		output.Println(uninstallStr)
+		output.Println(false, uninstallStr)
 	}
 
 	if len(previousInstallations) > 0 {
-		output.Print("\n")
+		output.Println(false, "")
 	}
 	return nil
 }
@@ -323,10 +323,10 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstructs.Manifest, archivePath, pluginDir string, dryRun bool) error {
 	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
-		output.Printf(utils.AddDryRunPrefix(installStr))
+		output.Printf(c.Config.EnableColor, utils.AddDryRunPrefix(installStr))
 		return nil
 	}
-	output.Print(installStr)
+	output.Print(c.Config.EnableColor, installStr)
 
 	if utils.DoesPathExist(archivePath) {
 		return installFromLocal(pluginManifest, archivePath, pluginDir)
@@ -415,7 +415,7 @@ func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, plugi
 func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prompt, force bool) error {
 	for _, license := range pluginManifest.Licenses {
 		if force {
-			output.Printf("Implicitly agreeing to the following license: %s (%s)\n", license.Name, license.Url)
+			output.Printf(false, "Implicitly agreeing to the following license: %s (%s)\n", license.Name, license.Url)
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",
@@ -430,7 +430,7 @@ func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prom
 			}
 		}
 	}
-	output.Print("\n")
+	output.Println(false, "")
 
 	return nil
 }
@@ -444,7 +444,7 @@ func updateWorkerConfigs(pluginDir string, workerConfigs []string, dryRun bool) 
 		for _, workerConfig := range workerConfigs {
 			updateWorkerMsg = fmt.Sprintf("%s\n\t* %v", updateWorkerMsg, workerConfig)
 		}
-		output.Println(updateWorkerMsg)
+		output.Println(false, updateWorkerMsg)
 	}
 
 	for _, workerConfig := range workerConfigs {

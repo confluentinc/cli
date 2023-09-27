@@ -122,7 +122,7 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return catchSchemaNotFoundError(err, subject, version)
 		}
-		output.Printf("Successfully %s deleted all versions for subject \"%s\".\n", deleteType, subject)
+		output.Printf(c.Config.EnableColor, "Successfully %s deleted all versions for subject \"%s\".\n", deleteType, subject)
 		versions = v
 	} else {
 		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
@@ -130,7 +130,7 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return catchSchemaNotFoundError(err, subject, version)
 		}
-		output.Printf("Successfully %s deleted version \"%s\" for subject \"%s\".\n", deleteType, version, subject)
+		output.Printf(c.Config.EnableColor, "Successfully %s deleted version \"%s\" for subject \"%s\".\n", deleteType, version, subject)
 		versions = []int32{v}
 	}
 

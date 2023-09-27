@@ -142,7 +142,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}
-	output.Print(msg)
+	output.Print(c.Config.EnableColor, msg)
 
 	return nil
 }
