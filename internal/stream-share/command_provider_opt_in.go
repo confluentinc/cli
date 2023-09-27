@@ -20,6 +20,6 @@ func (c *command) optIn(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(errors.OptInMsg)
+	output.Println(c.Config.EnableColor, errors.OptInMsg)
 	return nil
 }

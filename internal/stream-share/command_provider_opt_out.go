@@ -21,7 +21,7 @@ func (c *command) optOut(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if !isDeleteConfirmed {
-		output.Println("Operation terminated.")
+		output.Println(c.Config.EnableColor, "Operation terminated.")
 		return nil
 	}
 
@@ -29,6 +29,6 @@ func (c *command) optOut(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(errors.OptOutMsg)
+	output.Println(c.Config.EnableColor, errors.OptOutMsg)
 	return nil
 }

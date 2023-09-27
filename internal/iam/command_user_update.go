@@ -43,6 +43,6 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.Errorf(errors.UpdateResourceErrorMsg, resource.User, resourceId, err)
 	}
 
-	output.ErrPrintf(errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)
+	output.ErrPrintf(c.Config.EnableColor, errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)
 	return nil
 }
