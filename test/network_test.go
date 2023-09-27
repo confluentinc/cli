@@ -485,9 +485,58 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionUpdate() {
+	tests := []CLITest{
+		{args: "network private-link attachment connection update", fixture: "network/private-link/attachment/connection/update-missing-args.golden", exitCode: 1},
+		{args: "network private-link attachment connection update plattc-111111", fixture: "network/private-link/attachment/connection/update-missing-flags.golden", exitCode: 1},
+		{args: "network pl attachment connection update plattc-111111 --name new-name", fixture: "network/private-link/attachment/connection/update.golden"},
+		{args: "network private-link attachment connection update plattc-111111 --name new-name", fixture: "network/private-link/attachment/connection/update.golden"},
+		{args: "network private-link attachment connection update plattc-invalid --name new-name", fixture: "network/private-link/attachment/connection/update-plattc-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDelete() {
+	tests := []CLITest{
+		{args: "network private-link attachment connection delete plattc-111111 --force", fixture: "network/private-link/attachment/connection/delete.golden"},
+		{args: "network private-link attachment connection delete plattc-111111", input: "y\n", fixture: "network/private-link/attachment/connection/delete-prompt.golden"},
+		{args: "network private-link attachment connection delete plattc-111111 plattc-222222", input: "n\n", fixture: "network/private-link/attachment/connection/delete-multiple-refuse.golden"},
+		{args: "network private-link attachment connection delete plattc-111111 plattc-222222", input: "y\n", fixture: "network/private-link/attachment/connection/delete-multiple-success.golden"},
+		{args: "network private-link attachment connection delete plattc-111111 plattc-invalid", fixture: "network/private-link/attachment/connection/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network private-link attachment connection delete plattc-invalid --force", fixture: "network/private-link/attachment/connection/delete-plattc-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionCreate() {
+	tests := []CLITest{
+		{args: "network private-link attachment connection create", fixture: "network/private-link/attachment/connection/create-missing-args.golden", exitCode: 1},
+		{args: "network private-link attachment connection create plattc", fixture: "network/private-link/attachment/connection/create-missing-flags.golden", exitCode: 1},
+		{args: "network private-link attachment connection create plattc-wrong-cloud --cloud invalid --endpoint vpce-1234567890abcdef0 --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-invalid-cloud.golden", exitCode: 1},
+		{args: "network private-link attachment connection create aws-plattc --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-aws.golden"},
+		{args: "network private-link attachment connection create aws-plattc-wrong-endpoint --cloud aws --endpoint vpce-invalid --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-aws-invalid-endpoint.golden", exitCode: 1},
+		{args: "network private-link attachment connection create aws-plattc-invalid-platt --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-invalid", fixture: "network/private-link/attachment/connection/create-aws-platt-not-found.golden", exitCode: 1},
+		{args: "network private-link attachment connection create gcp-plattc-wrong-platt-cloud --cloud gcp --endpoint vpce-1234567890abcdef0 --attachment platt-aws123", fixture: "network/private-link/attachment/connection/create-wrong-platt-cloud.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnection_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network private-link attachment connection list --attachment ""`, login: "cloud", fixture: "network/private-link/attachment/connection/list-autocomplete.golden"},
+		{args: `__complete network private-link attachment connection create platt-connection --attachment ""`, login: "cloud", fixture: "network/private-link/attachment/connection/create-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

@@ -158,6 +158,10 @@ func handleNetworkingPrivateLinkAttachmentConnection(t *testing.T) http.HandlerF
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPrivateLinkAttachmentConnectionGet(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingPrivateLinkAttachmentConnectionUpdate(t, id)(w, r)
+		case http.MethodDelete:
+			handleNetworkingPrivateLinkAttachmentConnectionDelete(t, id)(w, r)
 		}
 	}
 }
@@ -168,6 +172,8 @@ func handleNetworkingPrivateLinkAttachmentConnections(t *testing.T) http.Handler
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingPrivateLinkAttachmentConnectionList(t)(w, r)
+		case http.MethodPost:
+			handleNetworkingPrivateLinkAttachmentConnectionCreate(t)(w, r)
 		}
 	}
 }
@@ -1122,6 +1128,97 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 
 			err := json.NewEncoder(w).Encode(connectionList)
 			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingPrivateLinkAttachmentConnectionUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "plattc-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "plattc-111111":
+			body := &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			connection := getPrivateLinkAttachmentConnection("plattc-111111", body.Spec.GetDisplayName(), "READY")
+			err = json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingPrivateLinkAttachmentConnectionDelete(_ *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "plattc-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "plattc-111111", "plattc-222222":
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
+func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		if body.Spec.Cloud == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, "The request body is malformed (missing cloud).")
+			require.NoError(t, err)
+			return
+		}
+
+		name := body.Spec.GetDisplayName()
+
+		switch body.Spec.Cloud.GetActualInstance().(type) {
+		case *networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentConnection:
+			switch name {
+			case "aws-plattc":
+				connection := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{
+					Id:   networkingprivatelinkv1.PtrString("plattc-123456"),
+					Kind: networkingprivatelinkv1.PtrString("PrivateLinkAttachmentConnection"),
+					Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpec{
+						Cloud:                 body.Spec.Cloud,
+						DisplayName:           body.Spec.DisplayName,
+						Environment:           &networkingprivatelinkv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+						PrivateLinkAttachment: &networkingprivatelinkv1.ObjectReference{Id: body.Spec.PrivateLinkAttachment.GetId()},
+					},
+					Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatus{
+						Phase: "PROVISIONING",
+						Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
+							NetworkingV1AwsPrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus{
+								Kind:                   "AwsPrivateLinkAttachmentConnectionStatus",
+								VpcEndpointId:          body.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId(),
+								VpcEndpointServiceName: "",
+							},
+						},
+					},
+				}
+				err = json.NewEncoder(w).Encode(connection)
+				require.NoError(t, err)
+			case "aws-plattc-wrong-endpoint":
+				w.WriteHeader(http.StatusBadRequest)
+				err := writeErrorJson(w, "The AWS VPC Endpoint ID is invalid.")
+				require.NoError(t, err)
+			case "aws-plattc-invalid-platt":
+				w.WriteHeader(http.StatusBadRequest)
+				err := writeErrorJson(w, "The private link attachment was not found.")
+				require.NoError(t, err)
+			}
+		case *networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnection:
+			switch name {
+			case "gcp-plattc-wrong-platt-cloud":
+				w.WriteHeader(http.StatusBadRequest)
+				err := writeErrorJson(w, "The AWS spec for the private link attachment connection must be provided.")
+				require.NoError(t, err)
+			}
 		}
 	}
 }
