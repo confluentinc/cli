@@ -16,7 +16,7 @@ func OutputErr(s string) {
 
 func OutputErrf(s string, args ...any) {
 	c := fColor.New(color.ErrorColor)
-	output.Printf(false, c.Sprint(s), args...)
+	output.Printf(false, c.Sprintln(s), args...)
 }
 
 func OutputInfo(s string) {
@@ -34,7 +34,7 @@ func OutputWarn(s string) {
 
 func OutputWarnf(s string, args ...any) {
 	c := fColor.New(color.WarnColor)
-	output.Printf(false, c.Sprint(s), args...)
+	output.Printf(false, c.Sprintln(s), args...)
 }
 
 func GetMaxStrWidth(str string) int {
