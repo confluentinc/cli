@@ -379,7 +379,7 @@ func (s *ResultFormatterTestSuite) TestTruncateMultiLineStringShouldNotTruncate(
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%v", idx)
 		require.Equal(s.T(), testCase.expected, TruncateString(testCase.input, testCase.maxCharCountToDisplay))
 	}
 }
