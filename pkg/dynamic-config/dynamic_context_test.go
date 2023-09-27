@@ -11,6 +11,8 @@ import (
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
@@ -69,6 +71,16 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 							},
 						}
 						return cluster, nil, nil
+					},
+				},
+			},
+			OrgClient: &orgv2.APIClient{
+				EnvironmentsOrgV2Api: &orgmock.EnvironmentsOrgV2Api{
+					GetOrgV2EnvironmentFunc: func(_ context.Context, _ string) orgv2.ApiGetOrgV2EnvironmentRequest {
+						return orgv2.ApiGetOrgV2EnvironmentRequest{}
+					},
+					GetOrgV2EnvironmentExecuteFunc: func(_ orgv2.ApiGetOrgV2EnvironmentRequest) (orgv2.OrgV2Environment, *http.Response, error) {
+						return orgv2.OrgV2Environment{}, nil, nil
 					},
 				},
 			},
