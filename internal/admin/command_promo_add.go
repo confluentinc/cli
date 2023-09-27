@@ -1,9 +1,8 @@
 package admin
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/spf13/cobra"
 )
 
 func (c *command) newAddCommand() *cobra.Command {
@@ -25,6 +24,6 @@ func (c *command) add(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Println("Your promo code was successfully added.")
+	output.Println(c.Config.EnableColor, "Your promo code was successfully added.")
 	return nil
 }
