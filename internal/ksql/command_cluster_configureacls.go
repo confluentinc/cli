@@ -27,8 +27,8 @@ func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 		RunE:              c.configureACLs,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Configure ACLs for ksqlDB cluster lksqlc-12345 for topics topic_1 and topic_2:",
-				Code: "confluent ksql cluster configureacls lksqlc-12345 topic_1 topic_2",
+				Text: `Configure ACLs for ksqlDB cluster "lksqlc-12345" for topics "topic_1" and "topic_2":`,
+				Code: "confluent ksql cluster configure-acls lksqlc-12345 topic_1 topic_2",
 			},
 		),
 	}
