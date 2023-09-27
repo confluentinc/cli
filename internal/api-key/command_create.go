@@ -155,7 +155,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(errors.UseAPIKeyMsg, userKey.Key)
+		output.Printf(useAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

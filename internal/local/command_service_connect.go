@@ -345,7 +345,8 @@ func (c *command) runConnectPluginListCommand(_ *cobra.Command, _ []string) erro
 		return err
 	}
 
-	output.Printf(errors.AvailableConnectPluginsMsg, out)
+	output.Println("Available Connect Plugins:")
+	output.Println(out)
 	return nil
 }
 

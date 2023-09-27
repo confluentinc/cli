@@ -103,7 +103,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
 		// topicCount is 0 when err != nil, and will be omitted by `omitempty`
 		if err != nil {
-			log.CliLogger.Infof(errors.OmitTopicCountMsg, err)
+			log.CliLogger.Infof("The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v", err)
 		}
 		out.TopicCount = topicCount
 	}

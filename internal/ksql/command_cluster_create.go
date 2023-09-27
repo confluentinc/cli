@@ -82,7 +82,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	ticker.Stop()
 	if endpoint == "" {
-		output.ErrPrintln(errors.EndPointNotPopulatedMsg)
+		output.ErrPrintln("Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`.")
 	}
 
 	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
