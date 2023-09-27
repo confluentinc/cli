@@ -29,6 +29,7 @@ func (c *consumerCommand) newGroupCommand(cfg *config.Config) *cobra.Command {
 		cmd.AddCommand(c.newGroupDescribeCommandOnPrem())
 		cmd.AddCommand(c.newGroupListCommandOnPrem())
 	}
+	cmd.AddCommand(c.newLagCommand(cfg))
 
 	return cmd
 }
