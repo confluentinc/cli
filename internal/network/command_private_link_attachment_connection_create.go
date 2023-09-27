@@ -64,7 +64,6 @@ func (c *command) privateLinkAttachmentConnectionCreate(cmd *cobra.Command, args
 	createPrivateLinkAttachmentConnection := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{
 		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpec{
 			DisplayName:           networkingprivatelinkv1.PtrString(args[0]),
-			Cloud:                 &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{},
 			Environment:           &networkingprivatelinkv1.ObjectReference{Id: environmentId},
 			PrivateLinkAttachment: &networkingprivatelinkv1.ObjectReference{Id: attachment},
 		},

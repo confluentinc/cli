@@ -238,5 +238,5 @@ func addNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
 
 func (c *command) addPrivateLinkAttachmentFlag(cmd *cobra.Command) {
 	cmd.Flags().String("attachment", "", "Private link attachment ID.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "attachment", c.validPrivateLinkAttachmentArgs)
+	pcmd.RegisterFlagCompletionFunc(cmd, "attachment", c.validPrivateLinkAttachmentArgsMultiple)
 }
