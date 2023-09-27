@@ -84,6 +84,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	if serviceAccount == "" {
+		serviceAccount = c.Context.GetCurrentServiceAccount()
+	}
 
 	owner := serviceAccount
 	if owner == "" {

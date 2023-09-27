@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -93,7 +94,7 @@ func UpdateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 
 	list := output.NewList(cmd)
 	for _, config := range data {
-		list.Add(&configOut{
+		list.Add(&broker.ConfigOut{
 			Name:  config.Name,
 			Value: *config.Value,
 		})

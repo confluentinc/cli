@@ -21,12 +21,12 @@ const (
 	Cloud                       = "cloud"
 	ClusterLink                 = "cluster link"
 	Connector                   = "connector"
+	CustomConnectorPlugin       = "custom connector plugin"
 	ConsumerShare               = "consumer share"
 	Context                     = "context"
 	Environment                 = "environment"
 	FlinkComputePool            = "Flink compute pool"
 	FlinkRegion                 = "Flink region"
-	FlinkIamBinding             = "Flink IAM binding"
 	FlinkStatement              = "Flink SQL statement"
 	IdentityPool                = "identity pool"
 	IdentityProvider            = "identity provider"
@@ -46,7 +46,6 @@ const (
 )
 
 const (
-	ClusterLinkPrefix           = "link"
 	EnvironmentPrefix           = "env"
 	IdentityPoolPrefix          = "pool"
 	IdentityProviderPrefix      = "op"
@@ -58,7 +57,6 @@ const (
 )
 
 var prefixToResource = map[string]string{
-	ClusterLinkPrefix:           ClusterLink,
 	EnvironmentPrefix:           Environment,
 	IdentityPoolPrefix:          IdentityPool,
 	IdentityProviderPrefix:      IdentityProvider,
@@ -70,7 +68,6 @@ var prefixToResource = map[string]string{
 }
 
 var resourceToPrefix = map[string]string{
-	ClusterLink:           ClusterLinkPrefix,
 	Environment:           EnvironmentPrefix,
 	IdentityPool:          IdentityPoolPrefix,
 	IdentityProvider:      IdentityProviderPrefix,

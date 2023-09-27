@@ -47,7 +47,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
-	acls, err := parse(cmd)
+	acls, err := parse(c.Context, cmd)
 	if err != nil {
 		return err
 	}

@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
-	"github.com/go-yaml/yaml"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	spec2 "github.com/swaggest/go-asyncapi/spec-2.4.0"
+	"gopkg.in/yaml.v3"
 	yaml3 "k8s.io/apimachinery/pkg/util/yaml"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"

@@ -115,6 +115,7 @@ const (
 	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
 	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
 	UsingResourceMsg              = "Using %s \"%s\".\n"
+	UnsetResourceMsg              = "Unset %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%v\".\n"
 

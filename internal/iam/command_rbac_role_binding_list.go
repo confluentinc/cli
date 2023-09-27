@@ -363,6 +363,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 	}
 
 	for _, rolebinding := range roleBindings {
+		id := rolebinding.GetId()
 		roleName := rolebinding.GetRoleName()
 		if role != "" && role != roleName {
 			continue
@@ -413,6 +414,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 			patternType = prefixedPatternType
 		}
 		list.Add(&roleBindingOut{
+			Id:             id,
 			Principal:      principalName,
 			Email:          principalEmail,
 			Role:           roleName,

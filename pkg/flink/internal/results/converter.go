@@ -1,7 +1,7 @@
 package results
 
 import (
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
@@ -13,7 +13,7 @@ var nullField = types.AtomicStatementResultField{
 
 type SDKToStatementResultFieldConverter func(any) types.StatementResultField
 
-func GetConverterForType(dataType flinkgatewayv1alpha1.DataType) SDKToStatementResultFieldConverter {
+func GetConverterForType(dataType flinkgatewayv1beta1.DataType) SDKToStatementResultFieldConverter {
 	fieldType := types.NewResultFieldType(dataType)
 	switch fieldType {
 	case types.ARRAY:
@@ -21,7 +21,7 @@ func GetConverterForType(dataType flinkgatewayv1alpha1.DataType) SDKToStatementR
 		return toArrayStatementResultFieldConverter(elementType)
 	case types.MULTISET:
 		keyType := dataType.GetElementType()
-		valueType := flinkgatewayv1alpha1.DataType{
+		valueType := flinkgatewayv1beta1.DataType{
 			Nullable: false,
 			Type:     "INTEGER",
 		}
@@ -51,7 +51,7 @@ func toAtomicStatementResultFieldConverter(fieldType types.StatementResultFieldT
 	}
 }
 
-func toArrayStatementResultFieldConverter(elementType flinkgatewayv1alpha1.DataType) SDKToStatementResultFieldConverter {
+func toArrayStatementResultFieldConverter(elementType flinkgatewayv1beta1.DataType) SDKToStatementResultFieldConverter {
 	toStatementResultFieldConverter := GetConverterForType(elementType)
 	return func(field any) types.StatementResultField {
 		arrayField, ok := field.([]any)
@@ -70,7 +70,7 @@ func toArrayStatementResultFieldConverter(elementType flinkgatewayv1alpha1.DataT
 	}
 }
 
-func toMapStatementResultFieldConverter(fieldType types.StatementResultFieldType, keyType, valueType flinkgatewayv1alpha1.DataType) SDKToStatementResultFieldConverter {
+func toMapStatementResultFieldConverter(fieldType types.StatementResultFieldType, keyType, valueType flinkgatewayv1beta1.DataType) SDKToStatementResultFieldConverter {
 	keyToStatementResultFieldConverter := GetConverterForType(keyType)
 	valueToStatementResultFieldConverter := GetConverterForType(valueType)
 	return func(field any) types.StatementResultField {
@@ -102,7 +102,7 @@ func toMapStatementResultFieldConverter(fieldType types.StatementResultFieldType
 	}
 }
 
-func toRowStatementResultFieldConverter(elementTypes []flinkgatewayv1alpha1.RowFieldType) SDKToStatementResultFieldConverter {
+func toRowStatementResultFieldConverter(elementTypes []flinkgatewayv1beta1.RowFieldType) SDKToStatementResultFieldConverter {
 	return func(field any) types.StatementResultField {
 		rowField, ok := field.([]any)
 		if !ok || len(rowField) != len(elementTypes) {

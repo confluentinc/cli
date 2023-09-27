@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
 
-func (c *Command) newKafkaTopicProduceCommand() *cobra.Command {
+func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -42,11 +42,11 @@ func (c *Command) newKafkaTopicProduceCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	producer, err := newOnPremProducer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
+	producer, err := newOnPremProducer(cmd, c.getPlaintextBootstrapServers())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}
@@ -70,7 +70,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return kafka.ProduceToTopic(cmd, make([]byte, 4), make([]byte, 4), topicName, nil, serializationProvider, producer)
+	return kafka.ProduceToTopic(cmd, []byte{}, []byte{}, topicName, serializationProvider, serializationProvider, producer)
 }
 
 func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, error) {

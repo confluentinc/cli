@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -73,7 +73,7 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		atomicDataType := generators.AtomicDataType().Draw(t, "atomic data type")
 		atomicField := generators.GetResultItemGeneratorForType(atomicDataType).Draw(t, "atomic result field")
-		convertedField := convertToInternalField(atomicField, flinkgatewayv1alpha1.ColumnDetails{
+		convertedField := convertToInternalField(atomicField, flinkgatewayv1beta1.ColumnDetails{
 			Name: "Test_Column",
 			Type: atomicDataType,
 		})
@@ -345,5 +345,41 @@ func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
 		}
 		require.Equal(s.T(), testCase.expected, formattedField)
+	}
+}
+
+func (s *ResultFormatterTestSuite) TestTruncateMultiLineStringShouldNotTruncate() {
+	testCases := []struct {
+		input                 string
+		expected              string
+		maxCharCountToDisplay int
+	}{
+		{
+			input:                 "SELECT * FROM \n table",
+			expected:              "SELECT * FROM \n table",
+			maxCharCountToDisplay: 15,
+		},
+		{
+			input:                 "SELECT * FROM \n table",
+			expected:              "SELECT * FR...",
+			maxCharCountToDisplay: 14,
+		},
+		// this looks strange in a table, because not the whole width of the cell is used, but then the text
+		// is still suddenly truncated. We could improve this case to only truncate starting from the line that actually
+		// crossed the max width threshold. The desired output in this case would be:
+		// SELECT * FROM
+		// table-with-a-real...
+		{
+			input:    "SELECT * FROM \n table-with-a-really-long-table-name",
+			expected: "SELECT * FROM \n t...",
+			// TODO: we should fix this to output this instead
+			// expected:              "SELECT * FROM \n table-with-a-real...",
+			maxCharCountToDisplay: 20,
+		},
+	}
+
+	for idx, testCase := range testCases {
+		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		require.Equal(s.T(), testCase.expected, TruncateString(testCase.input, testCase.maxCharCountToDisplay))
 	}
 }

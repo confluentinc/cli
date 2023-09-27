@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
-const cliPluginsUrl = "https://github.com/confluentinc/cli/v3-plugins.git"
+const cliPluginsUrl = "https://github.com/confluentinc/cli-plugins.git"
 
 type command struct {
 	*pcmd.CLICommand

@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func (c serviceAccountCommand) newDescribeCommand() *cobra.Command {
+func (c *serviceAccountCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a service account.",
@@ -22,7 +22,7 @@ func (c serviceAccountCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *serviceAccountCommand) describe(cmd *cobra.Command, args []string) error {
 	serviceAccountId := args[0]
 
 	serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)

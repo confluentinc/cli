@@ -55,6 +55,19 @@ func NewRetryableHttpClient(unsafeTrace bool) *http.Client {
 	return client.StandardClient()
 }
 
+func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(req *http.Request, via []*http.Request) error) *http.Client {
+	client := retryablehttp.NewClient()
+	client.Logger = plog.NewLeveledLogger(unsafeTrace)
+	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp == nil {
+			return false, err
+		}
+		return resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500, err
+	}
+	client.HTTPClient.CheckRedirect = checkRedirect
+	return client.StandardClient()
+}
+
 func getServerUrl(baseURL string) string {
 	u, err := url.Parse(baseURL)
 	if err != nil {

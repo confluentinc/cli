@@ -19,7 +19,7 @@ func NewVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runVersionCommand(_ *cobra.Command, _ []string) error {
+func (c *command) runVersionCommand(_ *cobra.Command, _ []string) error {
 	isCP, err := c.ch.IsConfluentPlatform()
 	if err != nil {
 		return err

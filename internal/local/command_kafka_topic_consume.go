@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *Command) newKafkaTopicConsumeCommand() *cobra.Command {
+func (c *command) newKafkaTopicConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -49,7 +49,7 @@ func (c *Command) newKafkaTopicConsumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	consumer, err := newOnPremConsumer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
+	consumer, err := newOnPremConsumer(cmd, c.getPlaintextBootstrapServers())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}
@@ -101,6 +101,9 @@ func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	}
 
 	rebalanceCallback := kafka.GetRebalanceCallback(offset, partitionFilter)
+	if cmd.Flags().Changed("group") && !cmd.Flags().Changed("from-beginning") && !cmd.Flags().Changed("offset") {
+		rebalanceCallback = nil
+	}
 	if err := consumer.Subscribe(topicName, rebalanceCallback); err != nil {
 		return err
 	}

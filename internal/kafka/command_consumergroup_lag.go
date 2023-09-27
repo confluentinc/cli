@@ -65,18 +65,5 @@ func (c *lagCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return c.autocompleteConsumerGroups()
-}
-
-func (c *lagCommand) autocompleteConsumerGroups() []string {
-	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedCLICommand)
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(consumerGroupDataList.Data))
-	for i, consumerGroup := range consumerGroupDataList.Data {
-		suggestions[i] = consumerGroup.ConsumerGroupId
-	}
-	return suggestions
+	return pcmd.AutocompleteConsumerGroups(c.AuthenticatedCLICommand)
 }

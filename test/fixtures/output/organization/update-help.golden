@@ -4,7 +4,8 @@ Usage:
   confluent organization update [flags]
 
 Flags:
-      --name string     REQUIRED: Name of the Confluent Cloud organization.
+      --name string     Name of the Confluent Cloud organization.
+      --jit-enabled     Toggle Just-In-Time (JIT) user provisioning for SSO-enabled organizations.
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
