@@ -42,7 +42,7 @@ func (c *command) feedback(_ *cobra.Command, _ []string) error {
 		if err := c.V2Client.CreateCliFeedback(feedbackReq); err != nil {
 			return err
 		}
-		output.Println("Thanks for your feedback.")
+		output.Println(c.Config.EnableColor, "Thanks for your feedback.")
 	}
 	return nil
 }
@@ -64,7 +64,7 @@ func getFeedback(prompt form.Prompt) (string, error) {
 	}
 	feedback := strings.TrimSpace(f.Responses["feedback"].(string))
 	if !f.Responses["proceed"].(bool) {
-		output.Println("Your feedback was not submitted.")
+		output.Println(false, "Your feedback was not submitted.")
 		return "", nil
 	}
 	return feedback, nil

@@ -63,6 +63,6 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return cluster.HandleClusterError(err, httpResp)
 	}
 
-	output.Printf(errors.UnregisteredClusterMsg, clusterName)
+	output.Printf(c.Config.EnableColor, errors.UnregisteredClusterMsg, clusterName)
 	return nil
 }

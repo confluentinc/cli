@@ -57,7 +57,7 @@ func SetServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 			protocolMsg = errors.AssumingHttpProtocol
 		}
 		if i, _ := cmd.Flags().GetCount("verbose"); i > 0 {
-			output.ErrPrintf(protocolMsg)
+			output.ErrPrintf(false, protocolMsg)
 		}
 	}
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")

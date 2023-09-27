@@ -57,7 +57,7 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 	if err := c.cfg.Save(); err != nil {
 		return err
 	}
-	output.Print(fmt.Sprintf(errors.UpdateSuccessMsg, "value", "config field", field, value))
+	output.Printf(c.Config.EnableColor, errors.UpdateSuccessMsg, "value", "config field", field, value)
 	return nil
 }
 
@@ -92,7 +92,7 @@ func confirmSet(field string, prompt form.Prompt) (bool, error) {
 		return false, err
 	}
 	if !f.Responses["proceed"].(bool) {
-		output.Println(fmt.Sprintf(`Configuration field "%s" was not updated.`, field))
+		output.Printf(false, "Configuration field \"%s\" was not updated.\n", field)
 		return false, nil
 	}
 	return true, nil

@@ -35,6 +35,6 @@ func (c *command) resendEmailInvite(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.ResendInviteMsg, shareId)
+	output.Printf(c.Config.EnableColor, errors.ResendInviteMsg, shareId)
 	return nil
 }

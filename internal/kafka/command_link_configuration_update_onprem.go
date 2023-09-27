@@ -76,6 +76,6 @@ func (c *linkCommand) configurationUpdateOnPrem(cmd *cobra.Command, args []strin
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	output.Printf(errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }
