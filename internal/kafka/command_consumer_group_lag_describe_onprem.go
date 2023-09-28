@@ -18,7 +18,7 @@ func (c *consumerCommand) newLagDescribeCommandOnPrem() *cobra.Command {
 		RunE:  c.groupLagDescribeOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the consumer lag for topic `my-topic` partition `0` consumed by consumer group `my-consumer-group`.",
+				Text: `Describe the consumer lag for topic "my-topic" partition "0" consumed by consumer group "my-consumer-group".`,
 				Code: "confluent kafka consumer group lag describe my-consumer-group --topic my-topic --partition 0",
 			},
 		),
