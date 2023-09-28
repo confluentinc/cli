@@ -142,6 +142,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka link delete link-1 link-2", input: "y\n", fixture: "kafka/link/delete-link-multiple.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link delete link-1 link-2 link-dne", fixture: "kafka/link/delete-link-multiple-fail.golden", useKafka: "lkc-describe-topic", exitCode: 1},
 		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/link/describe-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration-list-plain.golden", useKafka: "lkc-describe-topic"},
@@ -310,14 +311,25 @@ func (s *CLITestSuite) TestKafkaBroker() {
 }
 
 func (s *CLITestSuite) TestKafkaPartition() {
-	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list.golden"},
-		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partition/list-json.golden"},
-		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partition/list-yaml.golden"},
-		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partition/describe.golden"},
-		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partition/describe-json.golden"},
-		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partition/describe-yaml.golden"},
+		{args: "kafka partition describe 0 --topic topic1 --cluster lkc-12345", fixture: "kafka/partition/describe.golden"},
+		{args: "kafka partition describe 0 --topic topic1 --cluster lkc-12345 -o json", fixture: "kafka/partition/describe-json.golden"},
+		{args: "kafka partition list --topic topic1 --cluster lkc-12345", fixture: "kafka/partition/list.golden"},
+		{args: "kafka partition list --topic topic1 --cluster lkc-12345 -o json", fixture: "kafka/partition/list-json.golden"},
+	}
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list-onprem.golden"},
+		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partition/list-json-onprem.golden"},
+		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partition/list-yaml-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partition/describe-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partition/describe-json-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partition/describe-yaml-onprem.golden"},
 		{args: "kafka partition reassignment list", fixture: "kafka/partition/reassignment/list.golden"},
 		{args: "kafka partition reassignment list -o json", fixture: "kafka/partition/reassignment/list-json.golden"},
 		{args: "kafka partition reassignment list --topic topic1", fixture: "kafka/partition/reassignment/list-by-topic.golden"},
@@ -511,8 +523,91 @@ func (s *CLITestSuite) TestKafkaQuota() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaConsumer() {
+	tests := []CLITest{
+		{args: "kafka consumer list --group consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/list.golden"},
+		{args: "kafka consumer list --group consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	test := CLITest{
+		login:   "onprem",
+		env:     []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()},
+		args:    "kafka consumer list --group consumer-group-1",
+		fixture: "kafka/consumer/list-onprem.golden",
+	}
+
+	s.runIntegrationTest(test)
+}
+
+func (s *CLITestSuite) TestKafkaConsumerGroup() {
+	tests := []CLITest{
+		{args: "kafka consumer group list --cluster lkc-1234", fixture: "kafka/consumer/group/list.golden"},
+		{args: "kafka consumer group list --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/list-json.golden"},
+		{args: "kafka consumer group describe consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/describe.golden"},
+		{args: "kafka consumer group describe consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/describe-json.golden"},
+		{args: "kafka consumer group describe consumer-group-1234 --cluster lkc-1234", fixture: "kafka/consumer/group/describe-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka consumer group list", fixture: "kafka/consumer/group/list-onprem.golden"},
+		{args: "kafka consumer group describe consumer-group-1", fixture: "kafka/consumer/group/describe-onprem.golden"},
+		{args: "kafka consumer group describe consumer-group-1234", fixture: "kafka/consumer/group/describe-onprem-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaConsumerGroupLag() {
+	tests := []CLITest{
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe.golden"},
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer/group/lag/describe-json.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/list.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/list-json.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/summarize.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/summarize-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka consumer group lag describe consumer-group-1 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe-onprem.golden"},
+		{args: "kafka consumer group lag list consumer-group-1", fixture: "kafka/consumer/group/lag/list-onprem.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1", fixture: "kafka/consumer/group/lag/summarize-onprem.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
+		{args: `__complete kafka consumer list --cluster lkc-1234 --group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
+		{args: `__complete kafka consumer group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/autocomplete.golden"},
+		{args: `__complete kafka consumer group lag describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/describe-autocomplete.golden"},
+		{args: `__complete kafka consumer group lag list --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/list-autocomplete.golden"},
+		{args: `__complete kafka consumer group lag summarize --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/summarize-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},

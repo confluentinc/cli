@@ -4,8 +4,8 @@ Usage:
   confluent connect [command]
 
 Available Commands:
-  cluster     Manage Connect clusters.
-  plugin      Manage plugins for managed connectors.
+  cluster       Manage Connect clusters.
+  plugin        Manage plugins for managed connectors.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -5,16 +5,16 @@ cloud: AWS
 region: us-east-1
 cidr: 10.200.0.0/16
 zones:
-- use1-az1
-- use1-az2
-- use1-az3
+    - use1-az1
+    - use1-az2
+    - use1-az3
 dns_resolution: CHASED_PRIVATE
 phase: READY
 supported_connection_types:
-- PRIVATELINK
-- TRANSITGATEWAY
+    - PRIVATELINK
+    - TRANSITGATEWAY
 active_connection_types:
-- PRIVATELINK
-- TRANSITGATEWAY
+    - PRIVATELINK
+    - TRANSITGATEWAY
 aws_vpc: vpc-00000000000000000
 aws_account: "000000000000"

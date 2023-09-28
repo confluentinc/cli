@@ -170,7 +170,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	var srClient *schemaregistry.Client
-	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {
+	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) || slices.Contains(serdes.SchemaBasedFormats, keyFormat) {
 		// Only initialize client and context when schema is specified.
 		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
@@ -190,7 +190,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		_ = os.RemoveAll(schemaPath)
 	}()
 
-	subject := topicNameStrategy(topic)
+	subject := topic
 	schemaRegistryContext, err := cmd.Flags().GetString("schema-registry-context")
 	if err != nil {
 		return err

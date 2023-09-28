@@ -55,6 +55,7 @@ type roleBindingCommand struct {
 }
 
 type roleBindingOut struct {
+	Id             string `human:"ID,omitempty" serialized:"id,omitempty"`
 	Principal      string `human:"Principal" serialized:"principal"`
 	Email          string `human:"Email" serialized:"email"`
 	Role           string `human:"Role" serialized:"role"`
@@ -159,11 +160,12 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 /*
 Helper function to add flags for all the legal scopes/clusters for the command.
 */
-func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLICommand) {
-	if isCloudLogin {
+func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CLICommand) {
+	if cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
+		cmd.Flags().String("flink-region", "", "Flink region ID for the role binding.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
@@ -345,6 +347,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
 
 	out := &roleBindingOut{
+		Id:        roleBinding.GetId(),
 		Principal: roleBinding.GetPrincipal(),
 		Role:      roleBinding.GetRoleName(),
 	}
@@ -381,7 +384,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
-			fields = []string{"Principal", "Role"}
+			fields = []string{"Id", "Principal", "Role"}
 		}
 	} else {
 		if resource != "" {
@@ -392,7 +395,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 				return err
 			}
 			out.Email = user.GetEmail()
-			fields = []string{"Principal", "Email", "Role"}
+			fields = []string{"Id", "Principal", "Email", "Role"}
 		}
 	}
 
@@ -486,6 +489,12 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		if resourceType == "Cluster" {
 			resourceType = "kafka"
 		}
+		if resourceType == "ServiceAccount" {
+			resourceType = "service-account"
+		}
+		if resourceType == "ComputePool" {
+			resourceType = "compute-pool"
+		}
 
 		if role == "" {
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
@@ -523,6 +532,14 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		crnPattern += "/environment=" + environment
+	}
+
+	if cmd.Flags().Changed("flink-region") {
+		flinkRegion, err := cmd.Flags().GetString("flink-region")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/flink-region=" + flinkRegion
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") {

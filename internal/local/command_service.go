@@ -252,6 +252,10 @@ func (c *command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 }
 
 func (c *command) startService(service, configFile string) error {
+	if err := c.checkJavaVersion(service); err != nil {
+		return err
+	}
+
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -260,7 +264,7 @@ func (c *command) startService(service, configFile string) error {
 		return c.printStatus(service)
 	}
 
-	if err := c.checkService(service); err != nil {
+	if err := c.checkOSVersion(); err != nil {
 		return err
 	}
 
@@ -268,7 +272,7 @@ func (c *command) startService(service, configFile string) error {
 		return err
 	}
 
-	output.Printf(errors.StartingServiceMsg, writeServiceName(service))
+	output.Printf("Starting %s\n", writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -279,18 +283,6 @@ func (c *command) startService(service, configFile string) error {
 	}
 
 	return c.printStatus(service)
-}
-
-func (c *command) checkService(service string) error {
-	if err := c.checkOSVersion(); err != nil {
-		return err
-	}
-
-	if err := c.checkJavaVersion(service); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *command) configService(service, configFile string) error {
@@ -451,7 +443,7 @@ func (c *command) stopService(service string) error {
 		return c.printStatus(service)
 	}
 
-	output.Printf(errors.StoppingServiceMsg, writeServiceName(service))
+	output.Printf("Stopping %s\n", writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -571,7 +563,7 @@ func (c *command) printStatus(service string) error {
 		status = color.GreenString("UP")
 	}
 
-	output.Printf(errors.ServiceStatusMsg, writeServiceName(service), status)
+	output.Printf("%s is [%s]\n", writeServiceName(service), status)
 	return nil
 }
 

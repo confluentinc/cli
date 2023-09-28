@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/bradleyjkemp/cupaloy"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
@@ -65,7 +65,7 @@ func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintTable() 
 func getStatementWithResultsExample() types.ProcessedStatement {
 	statement := types.ProcessedStatement{
 		StatementName: "example-statement",
-		ResultSchema:  flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{},
+		ResultSchema:  flinkgatewayv1beta1.SqlV1beta1ResultSchema{},
 		StatementResults: &types.StatementResults{
 			Headers: []string{"Count"},
 			Rows:    []types.StatementResultRow{},

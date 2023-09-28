@@ -19,8 +19,10 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
+	var exs []examples.Example
+
 	if c.cfg.IsCloudLogin() {
-		cmd.Example = examples.BuildExampleString(
+		exs = append(exs,
 			examples.Example{
 				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the cloud cluster "lkc-123456":`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
@@ -49,9 +51,17 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-12345":`,
 				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"`,
 			},
+			examples.Example{
+				Text: `Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-12345":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345",
+			},
+			examples.Example{
+				Text: `Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-12345" for compute pool "lfcp-123456" in Flink region "us-east-2":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456",
+			},
 		)
 	} else {
-		cmd.Example = examples.BuildExampleString(
+		exs = append(exs,
 			examples.Example{
 				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
 				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster $KAFKA_CLUSTER_ID",
@@ -59,9 +69,11 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		)
 	}
 
+	cmd.Example = examples.BuildExampleString(exs...)
+
 	cmd.Flags().String("role", "", "Role name of the new role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+	addClusterFlags(cmd, c.cfg, c.CLICommand)
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
@@ -81,9 +93,11 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		if _, err := c.V2Client.CreateIamRoleBinding(createRoleBinding); err != nil {
+		resp, err := c.V2Client.CreateIamRoleBinding(createRoleBinding)
+		if err != nil {
 			return err
 		}
+		createRoleBinding.SetId(resp.GetId())
 
 		return c.displayCCloudCreateAndDeleteOutput(cmd, createRoleBinding)
 	} else {

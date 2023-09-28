@@ -172,11 +172,11 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 }
 
 func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckafka.Producer) error {
+	keys := "Ctrl-C or Ctrl-D"
 	if runtime.GOOS == "windows" {
-		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C")
-	} else {
-		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
+		keys = "Ctrl-C"
 	}
+	output.ErrPrintf("Starting Kafka Producer. Use %s to exit.\n", keys)
 
 	var scanErr error
 	input, scan := PrepareInputChannel(&scanErr)

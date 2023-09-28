@@ -6,37 +6,30 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
 )
 
 type computePoolOut struct {
-	IsCurrent bool   `human:"Current" serialized:"is_current"`
-	Id        string `human:"ID" serialized:"id"`
-	Name      string `human:"Name" serialized:"name"`
-	Cfu       int32  `human:"CFU" serialized:"cfu"`
-	Region    string `human:"Region" serialized:"region"`
-	Status    string `human:"Status" serialized:"status"`
+	IsCurrent  bool   `human:"Current" serialized:"is_current"`
+	Id         string `human:"ID" serialized:"id"`
+	Name       string `human:"Name" serialized:"name"`
+	CurrentCfu int32  `human:"Current CFU" serialized:"currrent_cfu"`
+	MaxCfu     int32  `human:"Max CFU" serialized:"max_cfu"`
+	Region     string `human:"Region" serialized:"region"`
+	Status     string `human:"Status" serialized:"status"`
 }
 
-func (c *command) newComputePoolCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newComputePoolCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "compute-pool",
 		Short: "Manage Flink compute pools.",
 	}
 
+	cmd.AddCommand(c.newComputePoolCreateCommand())
+	cmd.AddCommand(c.newComputePoolDeleteCommand())
 	cmd.AddCommand(c.newComputePoolDescribeCommand())
 	cmd.AddCommand(c.newComputePoolListCommand())
 	cmd.AddCommand(c.newComputePoolUpdateCommand())
 	cmd.AddCommand(c.newComputePoolUseCommand())
-
-	dc := dynamicconfig.New(cfg, nil)
-	_ = dc.ParseFlagsIntoConfig(cmd)
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", dc.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(c.newComputePoolCreateCommand())
-		cmd.AddCommand(c.newComputePoolDeleteCommand())
-	}
 
 	return cmd
 }
