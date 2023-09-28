@@ -10,7 +10,7 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share provider share delete ss-12345 ss-54321", input: "n\n", fixture: "stream-share/delete-provider-share-multiple-refuse.golden"},
 		{args: "stream-share provider share delete ss-12345 ss-54321", input: "y\n", fixture: "stream-share/delete-provider-share-multiple-success.golden"},
 
-		{args: "stream-share provider invite create --email user@example.com --topic topic-12345 --environment env-12345 --cluster lkc-12345 --schema-registry-subjects sub1,sub2,sub3", fixture: "stream-share/create-invite.golden"},
+		{args: "stream-share provider invite create --email user@example.com --topic topic-12345 --environment env-123456 --cluster lkc-12345 --schema-registry-subjects sub1,sub2,sub3", fixture: "stream-share/create-invite.golden"},
 		{args: "stream-share provider invite resend ss-12345", fixture: "stream-share/resend-invite.golden"},
 
 		{args: "stream-share provider opt-in", fixture: "stream-share/opt-in.golden"},

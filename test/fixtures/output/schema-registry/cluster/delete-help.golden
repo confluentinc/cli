@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry cluster delete [flags]
 
 Examples:
-Delete the Schema Registry cluster for environment "env-12345".
+Delete the Schema Registry cluster for environment "env-123456".
 
   $ confluent schema-registry cluster delete --environment env-12345
 

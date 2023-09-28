@@ -26,43 +26,43 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	if c.cfg.IsCloudLogin() {
 		exs = append(exs,
 			examples.Example{
-				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the cloud cluster "lkc-123456":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
+				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-123456" for the cloud cluster "lkc-123456":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456",
 			},
 			examples.Example{
-				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-12345" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-12345 --kafka-cluster lkc-123456",
+				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-123456" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --kafka-cluster lkc-123456",
 			},
 			examples.Example{
 				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
 				Code: "confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer",
 			},
 			examples.Example{
-				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects for Schema Registry cluster "lsrc-123456" in environment "env-12345":`,
-				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject:*"`,
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects for Schema Registry cluster "lsrc-123456" in environment "env-123456":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject:*"`,
 			},
 			examples.Example{
-				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" for the Schema Registry cluster "lsrc-123456" in the environment "env-12345":`,
-				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject:test"`,
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" for the Schema Registry cluster "lsrc-123456" in the environment "env-123456":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject:test"`,
 			},
 			examples.Example{
-				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects in schema context "schema_context" for Schema Registry cluster "lsrc-123456" in the environment "env-12345":`,
-				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:*"`,
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects in schema context "schema_context" for Schema Registry cluster "lsrc-123456" in the environment "env-123456":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:*"`,
 			},
 			examples.Example{
-				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-12345":`,
-				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"`,
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-123456":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"`,
 			},
 		)
 		if c.cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", c.Context, config.CliLaunchDarklyClient, true, false) {
 			exs = append(exs,
 				examples.Example{
-					Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345":`,
-					Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345",
+					Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-123456":`,
+					Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456",
 				},
 				examples.Example{
-					Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-12345" for the compute pool "lfcp-123456" in the Flink region "us-east-2":`,
-					Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456",
+					Text: `Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-123456" for the compute pool "lfcp-123456" in the Flink region "us-east-2":`,
+					Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456",
 				},
 			)
 		}

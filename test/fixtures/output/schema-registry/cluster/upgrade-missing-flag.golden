@@ -3,7 +3,7 @@ Usage:
   confluent schema-registry cluster upgrade [flags]
 
 Examples:
-Upgrade Schema Registry to the "advanced" package for environment "env-12345".
+Upgrade Schema Registry to the "advanced" package for environment "env-123456".
 
   $ confluent schema-registry cluster upgrade --package advanced --environment env-12345
 
