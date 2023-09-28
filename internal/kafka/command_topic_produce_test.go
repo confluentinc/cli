@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 type splitTest struct {
