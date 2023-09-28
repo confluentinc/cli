@@ -267,7 +267,7 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
-			output.ErrPrintln(errors.StoppingConsumerMsg)
+			output.ErrPrintln("Stopping Consumer.")
 			if _, err := consumer.Commit(); err != nil {
 				log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
 			}

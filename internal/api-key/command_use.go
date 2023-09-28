@@ -11,6 +11,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
+const useAPIKeyMsg = "Using API Key \"%s\".\n"
+
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "use <api-key>",
@@ -53,6 +55,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, args[0]))
 	}
 
-	output.Printf(errors.UseAPIKeyMsg, args[0])
+	output.Printf(useAPIKeyMsg, args[0])
 	return nil
 }
