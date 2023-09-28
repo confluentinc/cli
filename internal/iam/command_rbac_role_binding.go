@@ -14,9 +14,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -166,14 +164,8 @@ func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CL
 	if cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
-
-		dc := dynamicconfig.New(cfg, nil)
-		_ = dc.ParseFlagsIntoConfig(cmd)
-		if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", dc.Context(), config.CliLaunchDarklyClient, true, false) {
-			cmd.Flags().String("flink-region", "", "Flink region ID for the role binding.")
-		}
-
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
+		cmd.Flags().String("flink-region", "", "Flink region ID for the role binding.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
