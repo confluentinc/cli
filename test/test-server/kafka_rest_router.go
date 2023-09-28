@@ -827,24 +827,18 @@ func handleKafkaRestConsumers(t *testing.T) http.HandlerFunc {
 				Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
 				Data: []cpkafkarestv3.ConsumerData{
 					{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
 						ClusterId:       "cluster-1",
 						ConsumerGroupId: "consumer-group-1",
 						ConsumerId:      "consumer-1",
 						InstanceId:      &instance1,
 						ClientId:        "client-1",
-						Assignments:     cpkafkarestv3.Relationship{},
 					},
 					{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
 						ClusterId:       "cluster-1",
 						ConsumerGroupId: "consumer-group-1",
 						ConsumerId:      "consumer-2",
 						InstanceId:      &instance2,
 						ClientId:        "client-2",
-						Assignments:     cpkafkarestv3.Relationship{},
 					},
 				},
 			})
@@ -1249,8 +1243,6 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 					Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
 					Data: []cpkafkarestv3.ConsumerLagData{
 						{
-							Kind:            "",
-							Metadata:        cpkafkarestv3.ResourceMetadata{},
 							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
 							TopicName:       "topic-1",
@@ -1263,8 +1255,6 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 							ClientId:        "client-1",
 						},
 						{
-							Kind:            "",
-							Metadata:        cpkafkarestv3.ResourceMetadata{},
 							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
 							TopicName:       "topic-1",
@@ -1410,8 +1400,6 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 					instance := "instance-1"
 					partitionId, _ := strconv.Atoi(requestedPartition)
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerLagData{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
 						ClusterId:       vars["cluster_id"],
 						ConsumerGroupId: "consumer-group-1",
 						TopicName:       vars["topic_name"],
