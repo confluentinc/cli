@@ -65,7 +65,7 @@ func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		output.Printf(errors.PausedConnectorMsg, id)
+		output.Printf("Paused connector \"%s\".\n", id)
 	}
 
 	return nil
