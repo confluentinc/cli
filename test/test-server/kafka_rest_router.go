@@ -827,24 +827,18 @@ func handleKafkaRestConsumers(t *testing.T) http.HandlerFunc {
 				Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
 				Data: []cpkafkarestv3.ConsumerData{
 					{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
 						ClusterId:       "cluster-1",
 						ConsumerGroupId: "consumer-group-1",
 						ConsumerId:      "consumer-1",
 						InstanceId:      &instance1,
 						ClientId:        "client-1",
-						Assignments:     cpkafkarestv3.Relationship{},
 					},
 					{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
 						ClusterId:       "cluster-1",
 						ConsumerGroupId: "consumer-group-1",
 						ConsumerId:      "consumer-2",
 						InstanceId:      &instance2,
 						ClientId:        "client-2",
-						Assignments:     cpkafkarestv3.Relationship{},
 					},
 				},
 			})
@@ -994,9 +988,7 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				instance := "instance-1"
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupLagSummaryData{
-					Kind:              "",
-					Metadata:          cpkafkarestv3.ResourceMetadata{},
-					ClusterId:         "cluster-1",
+					ClusterId:         vars["cluster_id"],
 					ConsumerGroupId:   "consumer-group-1",
 					MaxLagConsumerId:  "consumer-1",
 					MaxLagInstanceId:  &instance,
@@ -1005,8 +997,6 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 					MaxLagPartitionId: 1,
 					MaxLag:            100,
 					TotalLag:          110,
-					MaxLagConsumer:    cpkafkarestv3.Relationship{},
-					MaxLagPartition:   cpkafkarestv3.Relationship{},
 				})
 				require.NoError(t, err)
 			} else {
@@ -1253,9 +1243,7 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 					Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
 					Data: []cpkafkarestv3.ConsumerLagData{
 						{
-							Kind:            "",
-							Metadata:        cpkafkarestv3.ResourceMetadata{},
-							ClusterId:       "cluster-1",
+							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
 							TopicName:       "topic-1",
 							PartitionId:     1,
@@ -1267,9 +1255,7 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 							ClientId:        "client-1",
 						},
 						{
-							Kind:            "",
-							Metadata:        cpkafkarestv3.ResourceMetadata{},
-							ClusterId:       "cluster-1",
+							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
 							TopicName:       "topic-1",
 							PartitionId:     2,
@@ -1410,15 +1396,13 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 				}
 				requestedPartition := vars["partition_id"]
 				offsets := partitionOffsetsMap[requestedPartition]
-				if vars["topic_name"] == "topic-1" && offsets != (partitionOffsets{}) {
+				if offsets != (partitionOffsets{}) {
 					instance := "instance-1"
 					partitionId, _ := strconv.Atoi(requestedPartition)
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerLagData{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
-						ClusterId:       "cluster-1",
+						ClusterId:       vars["cluster_id"],
 						ConsumerGroupId: "consumer-group-1",
-						TopicName:       "topic-1",
+						TopicName:       vars["topic_name"],
 						PartitionId:     int32(partitionId),
 						CurrentOffset:   offsets.currentOffset,
 						LogEndOffset:    offsets.logEndOffset,

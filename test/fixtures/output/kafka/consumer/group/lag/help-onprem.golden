@@ -1,0 +1,16 @@
+View consumer group lag.
+
+Usage:
+  confluent kafka consumer group lag [command]
+
+Available Commands:
+  describe    Describe consumer lag for a Kafka topic partition.
+  list        List consumer lags for a Kafka consumer group.
+  summarize   Summarize consumer lag for a Kafka consumer group.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka consumer group lag [command] --help" for more information about a command.
