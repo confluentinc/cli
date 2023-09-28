@@ -994,9 +994,7 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				instance := "instance-1"
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupLagSummaryData{
-					Kind:              "",
-					Metadata:          cpkafkarestv3.ResourceMetadata{},
-					ClusterId:         "cluster-1",
+					ClusterId:         vars["cluster_id"],
 					ConsumerGroupId:   "consumer-group-1",
 					MaxLagConsumerId:  "consumer-1",
 					MaxLagInstanceId:  &instance,
@@ -1005,8 +1003,6 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 					MaxLagPartitionId: 1,
 					MaxLag:            100,
 					TotalLag:          110,
-					MaxLagConsumer:    cpkafkarestv3.Relationship{},
-					MaxLagPartition:   cpkafkarestv3.Relationship{},
 				})
 				require.NoError(t, err)
 			} else {
@@ -1255,7 +1251,7 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 						{
 							Kind:            "",
 							Metadata:        cpkafkarestv3.ResourceMetadata{},
-							ClusterId:       "cluster-1",
+							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
 							TopicName:       "topic-1",
 							PartitionId:     1,
@@ -1269,7 +1265,7 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 						{
 							Kind:            "",
 							Metadata:        cpkafkarestv3.ResourceMetadata{},
-							ClusterId:       "cluster-1",
+							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
 							TopicName:       "topic-1",
 							PartitionId:     2,
@@ -1410,15 +1406,15 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 				}
 				requestedPartition := vars["partition_id"]
 				offsets := partitionOffsetsMap[requestedPartition]
-				if vars["topic_name"] == "topic-1" && offsets != (partitionOffsets{}) {
+				if offsets != (partitionOffsets{}) {
 					instance := "instance-1"
 					partitionId, _ := strconv.Atoi(requestedPartition)
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerLagData{
 						Kind:            "",
 						Metadata:        cpkafkarestv3.ResourceMetadata{},
-						ClusterId:       "cluster-1",
+						ClusterId:       vars["cluster_id"],
 						ConsumerGroupId: "consumer-group-1",
-						TopicName:       "topic-1",
+						TopicName:       vars["topic_name"],
 						PartitionId:     int32(partitionId),
 						CurrentOffset:   offsets.currentOffset,
 						LogEndOffset:    offsets.logEndOffset,
