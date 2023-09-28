@@ -34,7 +34,7 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 	return AvroSchemaBackendName
 }
 
-func (a *AvroSerializationProvider) SchemaBased() bool {
+func (a *AvroSerializationProvider) IsSchemaBased() bool {
 	return true
 }
 
