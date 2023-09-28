@@ -4,7 +4,7 @@ Usage:
   confluent kafka consumer group lag describe <group> [flags]
 
 Examples:
-Describe the consumer lag for topic `my-topic` partition `0` consumed by consumer group `my-consumer-group`.
+Describe the consumer lag for topic "my-topic" partition "0" consumed by consumer group "my-consumer-group".
 
   $ confluent kafka consumer group lag describe my-consumer-group --topic my-topic --partition 0
 
