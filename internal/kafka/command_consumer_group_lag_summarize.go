@@ -4,36 +4,28 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type summarizeOut struct {
 	ClusterId         string `human:"Cluster" serialized:"cluster_id"`
-	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group"`
+	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group_id"`
 	TotalLag          int64  `human:"Total Lag" serialized:"total_lag"`
 	MaxLag            int64  `human:"Max Lag" serialized:"max_lag"`
-	MaxLagConsumerId  string `human:"Max Lag Consumer" serialized:"max_lag_consumer"`
-	MaxLagInstanceId  string `human:"Max Lag Instance" serialized:"max_lag_instance"`
-	MaxLagClientId    string `human:"Max Lag Client" serialized:"max_lag_client"`
-	MaxLagTopicName   string `human:"Max Lag Topic" serialized:"max_lag_topic"`
-	MaxLagPartitionId int32  `human:"Max Lag Partition" serialized:"max_lag_partition"`
+	MaxLagConsumerId  string `human:"Max Lag Consumer" serialized:"max_lag_consumer_id"`
+	MaxLagInstanceId  string `human:"Max Lag Instance" serialized:"max_lag_instance_id"`
+	MaxLagClientId    string `human:"Max Lag Client" serialized:"max_lag_client_id"`
+	MaxLagTopic       string `human:"Max Lag Topic" serialized:"max_lag_topic"`
+	MaxLagPartitionId int32  `human:"Max Lag Partition" serialized:"max_lag_partition_id"`
 }
 
-func (c *lagCommand) newSummarizeCommand() *cobra.Command {
+func (c *consumerCommand) newLagSummarizeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "summarize <consumer-group>",
+		Use:               "summarize <group>",
 		Short:             "Summarize consumer lag for a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.summarize,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Summarize the lag for the `my-consumer-group` consumer-group.",
-				Code: "confluent kafka consumer-group lag summarize my-consumer-group",
-			},
-		),
-		Hidden: true,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
+		RunE:              c.groupLagSummarize,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -44,15 +36,13 @@ func (c *lagCommand) newSummarizeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *lagCommand) summarize(cmd *cobra.Command, args []string) error {
-	consumerGroupId := args[0]
-
+func (c *consumerCommand) groupLagSummarize(cmd *cobra.Command, args []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	summary, err := kafkaREST.CloudClient.GetKafkaConsumerGroupLagSummary(consumerGroupId)
+	summary, err := kafkaREST.CloudClient.GetKafkaConsumerGroupLagSummary(args[0])
 	if err != nil {
 		return err
 	}
@@ -66,7 +56,7 @@ func (c *lagCommand) summarize(cmd *cobra.Command, args []string) error {
 		MaxLagConsumerId:  summary.GetMaxLagConsumerId(),
 		MaxLagInstanceId:  summary.GetMaxLagInstanceId(),
 		MaxLagClientId:    summary.GetMaxLagClientId(),
-		MaxLagTopicName:   summary.GetMaxLagTopicName(),
+		MaxLagTopic:       summary.GetMaxLagTopicName(),
 		MaxLagPartitionId: summary.GetMaxLagPartitionId(),
 	})
 	return table.Print()
