@@ -31,13 +31,13 @@ func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
+	cobra.CheckErr(cmd.MarkFlagRequired("link"))
 
 	return cmd
 }
 
 func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
-	linkName, err := cmd.Flags().GetString(linkFlagName)
+	link, err := cmd.Flags().GetString("link")
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 
 	alterMirrorsRequestData := kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: &args}
 
-	results, err := kafkaREST.CloudClient.UpdateKafkaMirrorTopicsPromote(linkName, dryRun, alterMirrorsRequestData)
+	results, err := kafkaREST.CloudClient.UpdateKafkaMirrorTopicsPromote(link, dryRun, alterMirrorsRequestData)
 	if err != nil {
 		return err
 	}

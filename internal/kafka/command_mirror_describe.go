@@ -29,7 +29,7 @@ func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
+	cobra.CheckErr(cmd.MarkFlagRequired("link"))
 
 	return cmd
 }
@@ -37,7 +37,7 @@ func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	mirrorTopicName := args[0]
 
-	linkName, err := cmd.Flags().GetString(linkFlagName)
+	link, err := cmd.Flags().GetString("link")
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	mirror, err := kafkaREST.CloudClient.ReadKafkaMirrorTopic(linkName, mirrorTopicName)
+	mirror, err := kafkaREST.CloudClient.ReadKafkaMirrorTopic(link, mirrorTopicName)
 	if err != nil {
 		return err
 	}
