@@ -15,7 +15,7 @@ func (c *consumerCommand) newGroupDescribeCommand() *cobra.Command {
 		Short:             "Describe a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
-		RunE:              c.describe,
+		RunE:              c.groupDescribe,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -26,7 +26,7 @@ func (c *consumerCommand) newGroupDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) groupDescribe(cmd *cobra.Command, args []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
