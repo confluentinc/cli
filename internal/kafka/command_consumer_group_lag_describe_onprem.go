@@ -11,11 +11,11 @@ import (
 
 func (c *consumerCommand) newLagDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <group>",
-		Short:             "Describe consumer lag for a Kafka topic partition.",
-		Long:              "Describe consumer lag for a Kafka topic partition consumed by a consumer group.",
-		Args:              cobra.ExactArgs(1),
-		RunE:              c.groupLagDescribeOnPrem,
+		Use:   "describe <group>",
+		Short: "Describe consumer lag for a Kafka topic partition.",
+		Long:  "Describe consumer lag for a Kafka topic partition consumed by a consumer group.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.groupLagDescribeOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the consumer lag for topic `my-topic` partition `0` consumed by consumer group `my-consumer-group`.",

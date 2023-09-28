@@ -10,10 +10,10 @@ import (
 
 func (c *consumerCommand) newLagSummarizeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "summarize <group>",
-		Short:             "Summarize consumer lag for a Kafka consumer group.",
-		Args:              cobra.ExactArgs(1),
-		RunE:              c.groupLagSummarizeOnPrem,
+		Use:   "summarize <group>",
+		Short: "Summarize consumer lag for a Kafka consumer group.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.groupLagSummarizeOnPrem,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())

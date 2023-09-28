@@ -11,10 +11,10 @@ import (
 
 func (c *consumerCommand) newLagListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "list <group>",
-		Short:             "List consumer lags for a Kafka consumer group.",
-		Args:              cobra.ExactArgs(1),
-		RunE:              c.groupLagListOnPrem,
+		Use:   "list <group>",
+		Short: "List consumer lags for a Kafka consumer group.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.groupLagListOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List consumer lags in consumer group "my-consumer-group".`,

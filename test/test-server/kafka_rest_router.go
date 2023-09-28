@@ -1410,7 +1410,7 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 				}
 				requestedPartition := vars["partition_id"]
 				offsets := partitionOffsetsMap[requestedPartition]
-				if  offsets != (partitionOffsets{}) {
+				if offsets != (partitionOffsets{}) {
 					instance := "instance-1"
 					partitionId, _ := strconv.Atoi(requestedPartition)
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerLagData{
