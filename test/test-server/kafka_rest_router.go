@@ -994,8 +994,6 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				instance := "instance-1"
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupLagSummaryData{
-					Kind:              "",
-					Metadata:          cpkafkarestv3.ResourceMetadata{},
 					ClusterId:         vars["cluster_id"],
 					ConsumerGroupId:   "consumer-group-1",
 					MaxLagConsumerId:  "consumer-1",
@@ -1005,8 +1003,6 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 					MaxLagPartitionId: 1,
 					MaxLag:            100,
 					TotalLag:          110,
-					MaxLagConsumer:    cpkafkarestv3.Relationship{},
-					MaxLagPartition:   cpkafkarestv3.Relationship{},
 				})
 				require.NoError(t, err)
 			} else {
