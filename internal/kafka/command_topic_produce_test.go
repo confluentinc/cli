@@ -38,7 +38,12 @@ func TestGetKeyAndValue(t *testing.T) {
 		// JSON special characters inside JSON strings
 		{Data: `{"CustomerId": 1, "Name": "My Name}"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name}"}`, Value: "message"},
 		{Data: `{"CustomerId": 1, "Name": "My Name\"}"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name\"}"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name\\\"}"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name\\\"}"}`, Value: "message"},
 		{Data: `{"CustomerId": 1, "Name": "My Name\\"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name\\"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name\\\\"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name\\\\"}`, Value: "message"},
+
+		// Case with all JSON types
+		{Data: `{"Key1": "string", "Key2": 42, "Key3": true, "Key4": null, "Key5":{"CustomerId": 1, "Name": "My Name"}, "Key6":["Name1", "Name2"]}:message`, Delimiter: ":", Key:`{"Key1": "string", "Key2": 42, "Key3": true, "Key4": null, "Key5":{"CustomerId": 1, "Name": "My Name"}, "Key6":["Name1", "Name2"]}`, Value: "message"},
 	}
 
 	for _, testCase := range testCases {
