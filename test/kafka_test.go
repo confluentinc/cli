@@ -572,10 +572,42 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaConsumerGroupLag() {
+	tests := []CLITest{
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe.golden"},
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer/group/lag/describe-json.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/list.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/list-json.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/summarize.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/summarize-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka consumer group lag describe consumer-group-1 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe-onprem.golden"},
+		{args: "kafka consumer group lag list consumer-group-1", fixture: "kafka/consumer/group/lag/list-onprem.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1", fixture: "kafka/consumer/group/lag/summarize-onprem.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete kafka consumer list --cluster lkc-1234 --group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
 		{args: `__complete kafka consumer group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/autocomplete.golden"},
+		{args: `__complete kafka consumer group lag describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/describe-autocomplete.golden"},
+		{args: `__complete kafka consumer group lag list --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/list-autocomplete.golden"},
+		{args: `__complete kafka consumer group lag summarize --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/summarize-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
