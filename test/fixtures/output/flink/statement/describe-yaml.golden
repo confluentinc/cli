@@ -2,4 +2,5 @@ creation_date: 2022-01-01T00:00:00Z
 name: my-statement
 statement: CREATE TABLE test;
 compute_pool: pool-123456
-status: PENDING
+status: COMPLETED
+status_detail: SQL statement is completed

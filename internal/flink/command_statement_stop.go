@@ -33,7 +33,7 @@ func (c *command) statementStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
