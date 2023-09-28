@@ -207,7 +207,7 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 
 func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
 	var serializedKey []byte
-	var val string
+	val := data
 	if parseKey {
 		key, value, err := getKeyAndValue(keySerializer.SchemaBased(), data, delimiter)
 		if err != nil {
