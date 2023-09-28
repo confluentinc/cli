@@ -45,14 +45,14 @@ func (c *command) privateLinkAttachmentUpdate(cmd *cobra.Command, args []string)
 		return err
 	}
 
-	UpdatePrivateLinkAttachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentUpdate{
+	updatePrivateLinkAttachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentUpdate{
 		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpecUpdate{
 			DisplayName: networkingprivatelinkv1.PtrString(name),
 			Environment: &networkingprivatelinkv1.ObjectReference{Id: environmentId},
 		},
 	}
 
-	attachment, err := c.V2Client.UpdatePrivateLinkAttachment(environmentId, args[0], UpdatePrivateLinkAttachment)
+	attachment, err := c.V2Client.UpdatePrivateLinkAttachment(environmentId, args[0], updatePrivateLinkAttachment)
 	if err != nil {
 		return err
 	}
