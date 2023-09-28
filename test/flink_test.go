@@ -31,8 +31,8 @@ func (s *CLITestSuite) TestFlinkComputePoolDelete() {
 
 func (s *CLITestSuite) TestFlinkComputePoolUnset() {
 	tests := []CLITest{
-		{args: "flink compute-pool unset", login: "cloud", fixture: "flink/compute-pool/unset_before_use.golden"},
-		{args: "flink compute-pool use lfcp-123456", login: "cloud", fixture: "flink/compute-pool/use_before_unset.golden"},
+		{args: "flink compute-pool unset", login: "cloud", fixture: "flink/compute-pool/unset-before-use.golden"},
+		{args: "flink compute-pool use lfcp-123456", login: "cloud", fixture: "flink/compute-pool/use-before-unset.golden"},
 		{args: "flink compute-pool unset", login: "cloud", fixture: "flink/compute-pool/unset.golden"},
 	}
 
