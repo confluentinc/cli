@@ -29,7 +29,7 @@ func (p *ProtobufSerializationProvider) GetSchemaName() string {
 	return ProtobufSchemaBackendName
 }
 
-func (p *ProtobufSerializationProvider) SchemaBased() bool {
+func (p *ProtobufSerializationProvider) IsSchemaBased() bool {
 	return true
 }
 

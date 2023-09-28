@@ -14,6 +14,6 @@ func (s *StringSerializationProvider) GetSchemaName() string {
 	return ""
 }
 
-func (s *StringSerializationProvider) SchemaBased() bool {
+func (s *StringSerializationProvider) IsSchemaBased() bool {
 	return false
 }

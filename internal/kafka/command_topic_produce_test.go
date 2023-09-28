@@ -81,7 +81,7 @@ func TestGetKeyAndValue_Fail(t *testing.T) {
 	for _, testCase := range testCases {
 		_, _, err := getKeyAndValue(true, testCase.Data, testCase.Delimiter)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), errors.MissingOrMalformedKeyErrorMsg)
+		assert.Equal(t, err.Error(), missingOrMalformedKeyErrorMsg)
 	}
 
 	// Missing key (non-schema key format)
@@ -93,6 +93,6 @@ func TestGetKeyAndValue_Fail(t *testing.T) {
 	for _, testCase := range testCases {
 		_, _, err := getKeyAndValue(false, testCase.Data, testCase.Delimiter)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), errors.MissingKeyOrValueErrorMsg)
+		assert.Equal(t, err.Error(), missingKeyOrValueErrorMsg)
 	}
 }

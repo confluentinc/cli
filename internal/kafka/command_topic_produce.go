@@ -20,6 +20,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
 
+const (
+	missingKeyOrValueErrorMsg     = "missing key or value in message"
+	missingOrMalformedKeyErrorMsg = "missing or malformed key in message"
+)
+
 func (c *command) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "produce <topic>",
@@ -209,7 +214,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 	var serializedKey []byte
 	val := data
 	if parseKey {
-		key, value, err := getKeyAndValue(keySerializer.SchemaBased(), data, delimiter)
+		key, value, err := getKeyAndValue(keySerializer.IsSchemaBased(), data, delimiter)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -220,8 +225,6 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 		}
 
 		val = value
-	} else {
-		val = data
 	}
 
 	serializedValue, err := valueSerializer.Serialize(val)
@@ -235,7 +238,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
 	dataSplit := strings.Split(data, delimiter)
 	if len(dataSplit) < 2 {
-		return "", "", errors.New(errors.MissingKeyOrValueErrorMsg)
+		return "", "", errors.New(missingKeyOrValueErrorMsg)
 	}
 
 	if !schemaBased {
@@ -254,7 +257,7 @@ func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, e
 		}
 	}
 
-	return "", "", errors.New(errors.MissingOrMalformedKeyErrorMsg)
+	return "", "", errors.New(missingOrMalformedKeyErrorMsg)
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {

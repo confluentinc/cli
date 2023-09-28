@@ -27,7 +27,7 @@ func (j *JsonSerializationProvider) GetSchemaName() string {
 	return JsonSchemaBackendName
 }
 
-func (j *JsonSerializationProvider) SchemaBased() bool {
+func (j *JsonSerializationProvider) IsSchemaBased() bool {
 	return true
 }
 

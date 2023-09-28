@@ -27,6 +27,6 @@ func (s *IntegerSerializationProvider) GetSchemaName() string {
 	return ""
 }
 
-func (s *IntegerSerializationProvider) SchemaBased() bool {
+func (s *IntegerSerializationProvider) IsSchemaBased() bool {
 	return false
 }
