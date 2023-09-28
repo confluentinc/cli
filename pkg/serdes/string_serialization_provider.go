@@ -13,3 +13,7 @@ func (s *StringSerializationProvider) Serialize(str string) ([]byte, error) {
 func (s *StringSerializationProvider) GetSchemaName() string {
 	return ""
 }
+
+func (s *StringSerializationProvider) IsSchemaBased() bool {
+	return false
+}
