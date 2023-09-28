@@ -233,16 +233,14 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 }
 
 func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
-	if !schemaBased {
-		dataSplit := strings.SplitN(data, delimiter, 2)
-		if len(dataSplit) != 2 {
-			return "", "", errors.New(errors.MissingKeyOrValueErrorMsg)
-		}
-
-		return strings.TrimSpace(dataSplit[0]), strings.TrimSpace(dataSplit[1]), nil
+	dataSplit := strings.Split(data, delimiter)
+	if len(dataSplit) < 2 {
+		return "", "", errors.New(errors.MissingKeyOrValueErrorMsg)
 	}
 
-	dataSplit := strings.Split(data, delimiter)
+	if !schemaBased {
+		return strings.TrimSpace(dataSplit[0]), strings.TrimSpace(strings.Join(dataSplit[1:], delimiter)), nil
+	}
 
 	key := dataSplit[0]
 	if json.Valid([]byte(strings.TrimSpace(key))) {

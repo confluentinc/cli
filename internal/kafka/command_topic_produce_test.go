@@ -67,12 +67,10 @@ func TestGetKeyAndValue_StringKey(t *testing.T) {
 func TestGetKeyAndValue_Fail(t *testing.T) {
 	// Missing or malformed key
 	testCases := []splitTest{
-		{Data: `{"CustomerId": 1, "Name": "My Name"}:message`, Delimiter: "|"},
 		{Data: `{"CustomerId": 1, "Name": "My Name"}:message`, Delimiter: ","},
 		{Data: `{"CustomerId": 1, "Name": "My Name\\"}"}:message`, Delimiter: ":"},
 		{Data: `{"CustomerId": 1, "Name": "My Name}\"}:message`, Delimiter: ":"},
 		{Data: `:message`, Delimiter: ":"},
-		{Data: `message`, Delimiter: ":"},
 	}
 
 	for _, testCase := range testCases {
@@ -82,7 +80,14 @@ func TestGetKeyAndValue_Fail(t *testing.T) {
 	}
 
 	// Missing key (non-schema key format)
-	_, _, err := getKeyAndValue(false, testCases[0].Data, testCases[0].Delimiter)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), errors.MissingKeyOrValueErrorMsg)
+	testCases = []splitTest{
+		{Data: `{"CustomerId": 1, "Name": "My Name"}:message`, Delimiter: "|"},
+		{Data: `message`, Delimiter: ":"},
+	}
+
+	for _, testCase := range testCases {
+		_, _, err := getKeyAndValue(false, testCase.Data, testCase.Delimiter)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), errors.MissingKeyOrValueErrorMsg)
+	}
 }
