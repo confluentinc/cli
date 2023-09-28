@@ -26,11 +26,11 @@ func (c *consumerCommand) newLagCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newLagGetCommand())
+		cmd.AddCommand(c.newLagDescribeCommand())
 		cmd.AddCommand(c.newLagListCommand())
 		cmd.AddCommand(c.newLagSummarizeCommand())
 	} else {
-		cmd.AddCommand(c.newLagGetCommandOnPrem())
+		cmd.AddCommand(c.newLagDescribeCommandOnPrem())
 		cmd.AddCommand(c.newLagListCommandOnPrem())
 		cmd.AddCommand(c.newLagSummarizeCommandOnPrem())
 	}

@@ -4,7 +4,7 @@ Usage:
   confluent kafka consumer group lag [command]
 
 Available Commands:
-  get         Get consumer lag for a Kafka topic partition.
+  describe    Describe consumer lag for a Kafka topic partition.
   list        List consumer lags for a Kafka consumer group.
   summarize   Summarize consumer lag for a Kafka consumer group.
 

@@ -1,12 +1,12 @@
-Get consumer lag for a Kafka topic partition consumed by a consumer group.
+Describe consumer lag for a Kafka topic partition consumed by a consumer group.
 
 Usage:
-  confluent kafka consumer group lag get <group> [flags]
+  confluent kafka consumer group lag describe <group> [flags]
 
 Examples:
-Get the consumer lag for topic `my-topic` partition `0` consumed by consumer group `my-consumer-group`.
+Describe the consumer lag for topic "my-topic" partition "0" consumed by consumer group "my-consumer-group".
 
-  $ confluent kafka consumer group lag get my-consumer-group --topic my-topic --partition 0
+  $ confluent kafka consumer group lag describe my-consumer-group --topic my-topic --partition 0
 
 Flags:
       --topic string         REQUIRED: Topic name.

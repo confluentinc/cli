@@ -9,17 +9,17 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *consumerCommand) newLagGetCommandOnPrem() *cobra.Command {
+func (c *consumerCommand) newLagDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "get <group>",
-		Short:             "Get consumer lag for a Kafka topic partition.",
-		Long:              "Get consumer lag for a Kafka topic partition consumed by a consumer group.",
+		Use:               "describe <group>",
+		Short:             "Describe consumer lag for a Kafka topic partition.",
+		Long:              "Describe consumer lag for a Kafka topic partition consumed by a consumer group.",
 		Args:              cobra.ExactArgs(1),
-		RunE:              c.getOnPrem,
+		RunE:              c.groupLagDescribeOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Get the consumer lag for topic `my-topic` partition `0` consumed by consumer group `my-consumer-group`.",
-				Code: "confluent kafka consumer group lag get my-consumer-group --topic my-topic --partition 0",
+				Text: "Describe the consumer lag for topic `my-topic` partition `0` consumed by consumer group `my-consumer-group`.",
+				Code: "confluent kafka consumer group lag describe my-consumer-group --topic my-topic --partition 0",
 			},
 		),
 	}
@@ -36,7 +36,7 @@ func (c *consumerCommand) newLagGetCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) getOnPrem(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) groupLagDescribeOnPrem(cmd *cobra.Command, args []string) error {
 	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (c *consumerCommand) getOnPrem(cmd *cobra.Command, args []string) error {
 		ConsumerId:      consumerLag.ConsumerId,
 		InstanceId:      instanceId,
 		ClientId:        consumerLag.ClientId,
-		TopicName:       consumerLag.TopicName,
+		Topic:           consumerLag.TopicName,
 		PartitionId:     consumerLag.PartitionId,
 	})
 	return table.Print()

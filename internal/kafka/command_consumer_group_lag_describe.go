@@ -8,18 +8,18 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *consumerCommand) newLagGetCommand() *cobra.Command {
+func (c *consumerCommand) newLagDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "get <group>",
-		Short:             "Get consumer lag for a Kafka topic partition.",
-		Long:              "Get consumer lag for a Kafka topic partition consumed by a consumer group.",
+		Use:               "describe <group>",
+		Short:             "Describe consumer lag for a Kafka topic partition.",
+		Long:              "Describe consumer lag for a Kafka topic partition consumed by a consumer group.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
-		RunE:              c.get,
+		RunE:              c.groupLagDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Get the consumer lag for topic "my-topic" partition "0" consumed by consumer group "my-consumer-group".`,
-				Code: "confluent kafka consumer group lag get my-consumer-group --topic my-topic --partition 0",
+				Text: `Describe the consumer lag for topic "my-topic" partition "0" consumed by consumer group "my-consumer-group".`,
+				Code: "confluent kafka consumer group lag describe my-consumer-group --topic my-topic --partition 0",
 			},
 		),
 	}
@@ -37,7 +37,7 @@ func (c *consumerCommand) newLagGetCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) get(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) groupLagDescribe(cmd *cobra.Command, args []string) error {
 	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func (c *consumerCommand) get(cmd *cobra.Command, args []string) error {
 		ConsumerId:      consumerLag.GetConsumerId(),
 		InstanceId:      consumerLag.GetInstanceId(),
 		ClientId:        consumerLag.GetClientId(),
-		TopicName:       consumerLag.GetTopicName(),
+		Topic:           consumerLag.GetTopicName(),
 		PartitionId:     consumerLag.GetPartitionId(),
 	})
 	return table.Print()

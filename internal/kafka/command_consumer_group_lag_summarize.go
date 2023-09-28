@@ -9,14 +9,14 @@ import (
 
 type summarizeOut struct {
 	ClusterId         string `human:"Cluster" serialized:"cluster_id"`
-	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group"`
+	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group_id"`
 	TotalLag          int64  `human:"Total Lag" serialized:"total_lag"`
 	MaxLag            int64  `human:"Max Lag" serialized:"max_lag"`
-	MaxLagConsumerId  string `human:"Max Lag Consumer" serialized:"max_lag_consumer"`
-	MaxLagInstanceId  string `human:"Max Lag Instance" serialized:"max_lag_instance"`
-	MaxLagClientId    string `human:"Max Lag Client" serialized:"max_lag_client"`
-	MaxLagTopicName   string `human:"Max Lag Topic" serialized:"max_lag_topic"`
-	MaxLagPartitionId int32  `human:"Max Lag Partition" serialized:"max_lag_partition"`
+	MaxLagConsumerId  string `human:"Max Lag Consumer" serialized:"max_lag_consumer_id"`
+	MaxLagInstanceId  string `human:"Max Lag Instance" serialized:"max_lag_instance_id"`
+	MaxLagClientId    string `human:"Max Lag Client" serialized:"max_lag_client_id"`
+	MaxLagTopic       string `human:"Max Lag Topic" serialized:"max_lag_topic"`
+	MaxLagPartitionId int32  `human:"Max Lag Partition" serialized:"max_lag_partition_id"`
 }
 
 func (c *consumerCommand) newLagSummarizeCommand() *cobra.Command {
@@ -25,7 +25,7 @@ func (c *consumerCommand) newLagSummarizeCommand() *cobra.Command {
 		Short:             "Summarize consumer lag for a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
-		RunE:              c.summarize,
+		RunE:              c.groupLagSummarize,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -36,7 +36,7 @@ func (c *consumerCommand) newLagSummarizeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) summarize(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) groupLagSummarize(cmd *cobra.Command, args []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (c *consumerCommand) summarize(cmd *cobra.Command, args []string) error {
 		MaxLagConsumerId:  summary.GetMaxLagConsumerId(),
 		MaxLagInstanceId:  summary.GetMaxLagInstanceId(),
 		MaxLagClientId:    summary.GetMaxLagClientId(),
-		MaxLagTopicName:   summary.GetMaxLagTopicName(),
+		MaxLagTopic:       summary.GetMaxLagTopicName(),
 		MaxLagPartitionId: summary.GetMaxLagPartitionId(),
 	})
 	return table.Print()

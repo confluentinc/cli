@@ -13,7 +13,7 @@ func (c *consumerCommand) newLagSummarizeCommandOnPrem() *cobra.Command {
 		Use:               "summarize <group>",
 		Short:             "Summarize consumer lag for a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
-		RunE:              c.summarizeOnPrem,
+		RunE:              c.groupLagSummarizeOnPrem,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -23,7 +23,7 @@ func (c *consumerCommand) newLagSummarizeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) summarizeOnPrem(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) groupLagSummarizeOnPrem(cmd *cobra.Command, args []string) error {
 	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (c *consumerCommand) summarizeOnPrem(cmd *cobra.Command, args []string) err
 		MaxLagConsumerId:  summary.MaxLagConsumerId,
 		MaxLagInstanceId:  maxLagInstanceId,
 		MaxLagClientId:    summary.MaxLagClientId,
-		MaxLagTopicName:   summary.MaxLagTopicName,
+		MaxLagTopic:       summary.MaxLagTopicName,
 		MaxLagPartitionId: summary.MaxLagPartitionId,
 	})
 	return table.Print()
