@@ -34,6 +34,10 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 	return AvroSchemaBackendName
 }
 
+func (a *AvroSerializationProvider) IsSchemaBased() bool {
+	return true
+}
+
 func (a *AvroSerializationProvider) Serialize(str string) ([]byte, error) {
 	textual := []byte(str)
 

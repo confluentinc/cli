@@ -22,6 +22,7 @@ type SerializationProvider interface {
 	LoadSchema(string, map[string]string) error
 	Serialize(string) ([]byte, error)
 	GetSchemaName() string
+	IsSchemaBased() bool
 }
 
 type DeserializationProvider interface {
