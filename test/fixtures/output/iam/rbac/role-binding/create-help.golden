@@ -32,11 +32,11 @@ Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" i
 
   $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"
 
-Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-123456":
+Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456
 
-Grant the role "FlinkDeveloper" to the principal "User:u-123456", in the environment "env-123456" for the compute pool "lfcp-123456" in the Flink region "us-east-2":
+Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-123456" for compute pool "lfcp-123456" in Flink region "us-east-2":
 
   $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456
 
@@ -45,8 +45,8 @@ Flags:
       --principal string                 REQUIRED: Qualified principal name for the role binding.
       --environment string               Environment ID for scope of role-binding operation.
       --current-environment              Use current environment ID for scope.
-      --flink-region string              Flink region ID for the role binding.
       --cloud-cluster string             Cloud cluster ID for the role binding.
+      --flink-region string              Flink region ID for the role binding.
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster name for the role binding.

@@ -1,6 +1,9 @@
 package flink
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
@@ -12,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/flink"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/retry"
 )
 
 func (c *command) newStatementCreateCommand() *cobra.Command {
@@ -36,6 +40,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
+	cmd.Flags().Bool("wait", false, "Block until the statement is running or has failed.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -109,6 +114,28 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	statement, err = client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
 	if err != nil {
 		return err
+	}
+
+	wait, err := cmd.Flags().GetBool("wait")
+	if err != nil {
+		return err
+	}
+	if wait {
+		err := retry.Retry(time.Second, time.Minute, func() error {
+			statement, err = client.GetStatement(environmentId, name, c.Context.LastOrgId)
+			if err != nil {
+				return err
+			}
+
+			if statement.Status.GetPhase() == "PENDING" {
+				return fmt.Errorf(`statement phase is "%s"`, statement.Status.GetPhase())
+			}
+
+			return nil
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	table := output.NewTable(cmd)

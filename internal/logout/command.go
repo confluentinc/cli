@@ -9,7 +9,6 @@ import (
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -50,7 +49,7 @@ func (c *command) logout(cmd *cobra.Command, _ []string) error {
 	if c.Config.Config.Context() != nil {
 		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().GetNetrcMachineName())
 		if err == nil {
-			log.CliLogger.Warnf(errors.RemoveNetrcCredentialsMsg, username, c.netrcHandler.GetFileName())
+			log.CliLogger.Warnf(`Removed credentials for user "%s" from netrc file "%s"`, username, c.netrcHandler.GetFileName())
 		} else if !strings.Contains(err.Error(), "login credentials not found") && !strings.Contains(err.Error(), "keyword expected") {
 			// return err when other than NetrcCredentialsNotFoundErrorMsg or parsing error
 			return err
@@ -61,6 +60,6 @@ func (c *command) logout(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(errors.LoggedOutMsg)
+	output.Println("You are now logged out.")
 	return nil
 }
