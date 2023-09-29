@@ -53,10 +53,7 @@ func (c *InputController) HasUserInitiatedExit(userInput string) bool {
 	// the user input should actually never be an empty string. The only case in which go-prompt returns an empty string,
 	// is when the user presses CtrlD. This is why we need to specifically handle this case here.
 	userPressedCtrlD := userInput == ""
-	if c.shouldExit || userPressedCtrlD {
-		return true
-	}
-	return false
+	return c.shouldExit || userPressedCtrlD
 }
 
 func (c *InputController) HasUserEnabledReverseSearch() bool {

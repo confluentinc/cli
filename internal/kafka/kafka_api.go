@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -128,8 +129,7 @@ func setResourcePattern(conf *ACLConfiguration, n, v string) {
 		return
 	}
 
-	n = strings.ToUpper(n)
-	n = strings.ReplaceAll(n, "-", "_")
+	n = ccloudv2.ToUpper(n)
 
 	conf.Pattern.ResourceType = ccstructs.ResourceTypes_ResourceType(ccstructs.ResourceTypes_ResourceType_value[n])
 
@@ -155,8 +155,7 @@ OUTER:
 		if v == "CLUSTER" {
 			v = "cluster-scope"
 		}
-		v = strings.ReplaceAll(v, "_", "-")
-		ops = append(ops, strings.ToLower(v))
+		ops = append(ops, ccloudv2.ToLower(v))
 	}
 
 	sort.Strings(ops)
@@ -164,8 +163,7 @@ OUTER:
 }
 
 func getAclOperation(operation string) (ccstructs.ACLOperations_ACLOperation, error) {
-	op := strings.ToUpper(operation)
-	op = strings.ReplaceAll(op, "-", "_")
+	op := ccloudv2.ToUpper(operation)
 	if operation, ok := ccstructs.ACLOperations_ACLOperation_value[op]; ok {
 		return ccstructs.ACLOperations_ACLOperation(operation), nil
 	}

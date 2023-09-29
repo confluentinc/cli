@@ -6,13 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
-const (
-	replicationFactorFlagName = "replication-factor"
-	mirrorStatusFlagName      = "mirror-status"
-	linkFlagName              = "link"
-	sourceTopicFlagName       = "source-topic"
-)
-
 type mirrorOut struct {
 	LinkName                 string `human:"Link Name" serialized:"link_name"`
 	MirrorTopicName          string `human:"Mirror Topic Name" serialized:"mirror_topic_name"`
@@ -69,8 +62,8 @@ func (c *mirrorCommand) validArgsMultiple(cmd *cobra.Command, args []string) []s
 }
 
 func (c *mirrorCommand) autocompleteMirrorTopics(cmd *cobra.Command) []string {
-	linkName, err := cmd.Flags().GetString(linkFlagName)
-	if err != nil || linkName == "" {
+	link, err := cmd.Flags().GetString("link")
+	if err != nil || link == "" {
 		return nil
 	}
 
@@ -79,7 +72,7 @@ func (c *mirrorCommand) autocompleteMirrorTopics(cmd *cobra.Command) []string {
 		return nil
 	}
 
-	mirrors, err := kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(linkName, nil)
+	mirrors, err := kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(link, nil)
 	if err != nil {
 		return nil
 	}
