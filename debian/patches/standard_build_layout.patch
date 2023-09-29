@@ -1,4 +1,4 @@
---- cli/Makefile	2023-09-28 18:35:44.000000000 -0700
+--- cli/Makefile	2023-09-28 18:44:28.000000000 -0700
 +++ debian/Makefile	2023-09-22 14:40:16.000000000 -0700
 @@ -1,120 +1,130 @@
 -SHELL := /bin/bash
@@ -182,7 +182,7 @@
 -	export GOCOVERDIR=test/coverage && \
 -	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
 -	mkdir $${GOCOVERDIR} && \
--	gotestsum -timeout 3m --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
+-	gotestsum --junitfile integration-test-report.xml -- -timeout 3m -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
 -	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 +
