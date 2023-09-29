@@ -102,12 +102,21 @@ endif
 .PHONY: integration-test
 integration-test:
 ifdef CI
-	go install gotest.tools/gotestsum@v1.8.2 && \
-	export GOCOVERDIR=test/coverage && \
-	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
-	mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+    ifneq (,$(findstring Linux,$(shell uname)))
+		go install gotest.tools/gotestsum@v1.8.2 && \
+		export GOCOVERDIR=test/coverage && \
+		if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
+		mkdir $${GOCOVERDIR} && \
+		gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
+		go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+    else
+		go install gotest.tools/gotestsum@v1.8.2 && \
+		export GOCOVERDIR=test/coverage && \
+		if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
+		mkdir $${GOCOVERDIR} && \
+		gotestsum --junitfile integration-test-report.xml -- -timeout 3m -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
+		go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+    endif
 else
 	go test -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
 endif
