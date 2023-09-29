@@ -45,3 +45,11 @@ func TestGetServerUrl(t *testing.T) {
 		assert.Equal(t, serverUrl, getServerUrl(baseUrl))
 	}
 }
+
+func TestToLower(t *testing.T) {
+	require.Equal(t, "sasl-ssl", ToLower("SASL_SSL"))
+}
+
+func TestToUpper(t *testing.T) {
+	require.Equal(t, "SASL_SSL", ToUpper("sasl-ssl"))
+}

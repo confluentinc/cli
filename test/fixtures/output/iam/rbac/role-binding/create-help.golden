@@ -4,41 +4,41 @@ Usage:
   confluent iam rbac role-binding create [flags]
 
 Examples:
-Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the cloud cluster "lkc-123456":
+Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-123456" for the cloud cluster "lkc-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456
 
-Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-12345" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":
+Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-123456" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-12345 --kafka-cluster lkc-123456
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --kafka-cluster lkc-123456
 
 Grant the role "MetricsViewer" to service account "sa-123456":
 
   $ confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer
 
-Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects for Schema Registry cluster "lsrc-123456" in environment "env-12345":
+Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects for Schema Registry cluster "lsrc-123456" in environment "env-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject:*"
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject:*"
 
-Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" for the Schema Registry cluster "lsrc-123456" in the environment "env-12345":
+Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" for the Schema Registry cluster "lsrc-123456" in the environment "env-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject:test"
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject:test"
 
-Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects in schema context "schema_context" for Schema Registry cluster "lsrc-123456" in the environment "env-12345":
+Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects in schema context "schema_context" for Schema Registry cluster "lsrc-123456" in the environment "env-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:*"
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:*"
 
-Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-12345":
+Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"
 
-Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-12345":
+Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456
 
-Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-12345" for compute pool "lfcp-123456" in Flink region "us-east-2":
+Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-123456" for compute pool "lfcp-123456" in Flink region "us-east-2":
 
-  $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-12345 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456
 
 Flags:
       --role string                      REQUIRED: Role name of the new role binding.
