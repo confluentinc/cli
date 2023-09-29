@@ -15,6 +15,7 @@ import (
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -145,8 +146,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 		case "host":
 			conf.Host = v
 		case "operation":
-			v = strings.ToUpper(v)
-			v = strings.ReplaceAll(v, "-", "_")
+			v = ccloudv2.ToUpper(v)
 			enumUtils := utils.EnumUtils{}
 			enumUtils.Init(
 				"UNKNOWN",
@@ -189,8 +189,7 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	}
 
 	// Normalize the resource pattern name
-	n = strings.ToUpper(n)
-	n = strings.ReplaceAll(n, "-", "_")
+	n = ccloudv2.ToUpper(n)
 
 	enumUtils := utils.EnumUtils{}
 	enumUtils.Init(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
@@ -214,8 +213,7 @@ func convertToFlags(operations ...any) string {
 		if v == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
-		ops[i] = fmt.Sprintf("`--%s`", s)
+		ops[i] = fmt.Sprintf("`--%s`", ccloudv2.ToLower(fmt.Sprint(v)))
 	}
 
 	sort.Strings(ops)
@@ -226,10 +224,10 @@ func ConvertToLower[T any](operations []T) string {
 	ops := make([]string, len(operations))
 
 	for i, v := range operations {
-		ops[i] = strings.ReplaceAll(fmt.Sprint(v), "_", "-")
+		ops[i] = ccloudv2.ToLower(fmt.Sprint(v))
 	}
 
-	return strings.ToLower(strings.Join(ops, ", "))
+	return strings.Join(ops, ", ")
 }
 
 func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithError) *AclRequestDataWithError {
