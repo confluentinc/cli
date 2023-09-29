@@ -144,8 +144,10 @@ error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply erro
 */
 func catchCCloudBackendUnmarshallingError(err error) error {
 	if regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`).MatchString(err.Error()) {
-		errorMsg := fmt.Sprintf("unexpected CCloud backend output: protobuf unmarshalling error")
-		return NewErrorWithSuggestions(errorMsg, "Please submit a support ticket.")
+		return NewErrorWithSuggestions(
+			"unexpected CCloud backend output: protobuf unmarshalling error",
+			"Please submit a support ticket.",
+		)
 	}
 	return err
 }
