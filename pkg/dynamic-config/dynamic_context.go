@@ -176,7 +176,7 @@ func (d *DynamicContext) EnvironmentId() (string, error) {
 		return id, nil
 	}
 
-	return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
+	return "", errors.NewErrorWithSuggestions("no environment found", "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
 }
 
 // AuthenticatedState returns the context's state if authenticated, and an error otherwise.

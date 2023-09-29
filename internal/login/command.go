@@ -394,7 +394,7 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
 		if strings.Contains(url, ccloudv2.Hostnames[0]) {
 			if !strings.HasSuffix(strings.TrimSuffix(url, "/"), ccloudv2.Hostnames[0]) {
-				return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
+				return url, "", errors.NewErrorWithSuggestions("there is no need to pass the `--url` flag if you are logging in to Confluent Cloud", "Log in to Confluent Cloud with `confluent login`.")
 			}
 		}
 	}

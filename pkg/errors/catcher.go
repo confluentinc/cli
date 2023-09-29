@@ -80,7 +80,7 @@ func catchMDSErrors(err error) error {
 		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
 		if strings.Contains(err.Error(), "Forbidden Access") {
-			return NewErrorWithSuggestions(UnauthorizedErrorMsg, UnauthorizedSuggestions)
+			return NewErrorWithSuggestions("user is unauthorized to perform this action", "Check the user's privileges by running `confluent iam rbac role-binding list`.\nGive the user the appropriate permissions using `confluent iam rbac role-binding create`.")
 		}
 		openAPIError, parseErr := parseMDSOpenAPIErrorType1(err)
 		if parseErr == nil {
@@ -144,8 +144,8 @@ error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply erro
 */
 func catchCCloudBackendUnmarshallingError(err error) error {
 	if regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`).MatchString(err.Error()) {
-		errorMsg := fmt.Sprintf(prefixFormat, UnexpectedBackendOutputPrefix, BackendUnmarshallingErrorMsg)
-		return NewErrorWithSuggestions(errorMsg, UnexpectedBackendOutputSuggestions)
+		errorMsg := fmt.Sprintf("unexpected CCloud backend output: protobuf unmarshalling error")
+		return NewErrorWithSuggestions(errorMsg, "Please submit a support ticket.")
 	}
 	return err
 }
@@ -264,7 +264,7 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), ApiKeyNotFoundSuggestions)
 	}
 	return CatchCCloudV2Error(err, r)
 }
@@ -303,8 +303,7 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 
 	err = CatchCCloudV2Error(err, r)
 	if strings.Contains(err.Error(), "Service name is already in use") {
-		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
-		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
+		return NewErrorWithSuggestions(fmt.Sprintf(`service name "%s" is already in use`, serviceName), "To list all service account, use `confluent iam service-account list`.")
 	}
 
 	return err

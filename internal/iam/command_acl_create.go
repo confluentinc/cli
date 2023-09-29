@@ -51,10 +51,10 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 	if err != nil {
-		return c.handleACLError(cmd, err, response)
+		return c.handleAclError(cmd, err, response)
 	}
 
-	return printACLs(cmd, acl.CreateAclRequest.Scope.Clusters.KafkaCluster, []mdsv1.AclBinding{acl.CreateAclRequest.AclBinding})
+	return printAcls(cmd, acl.CreateAclRequest.Scope.Clusters.KafkaCluster, []mdsv1.AclBinding{acl.CreateAclRequest.AclBinding})
 }
 
 func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration {

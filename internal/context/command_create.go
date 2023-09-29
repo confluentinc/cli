@@ -82,7 +82,7 @@ func (c *command) parseStringFlag(cmd *cobra.Command, name, prompt string, secur
 
 	val = strings.TrimSpace(val)
 	if val == "" {
-		return "", errors.Errorf(errors.CannotBeEmptyErrorMsg, name)
+		return "", errors.Errorf("%s cannot be empty", name)
 	}
 
 	return val, nil

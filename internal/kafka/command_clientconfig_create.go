@@ -299,7 +299,9 @@ func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.Kafk
 	timeout := 5 * time.Second
 	if _, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds())); err != nil {
 		if err.Error() == ckafka.ErrTransport.String() {
-			err = errors.NewErrorWithSuggestions(errors.KafkaCredsValidationFailedErrorMsg, errors.KafkaCredsValidationFailedSuggestions)
+			err = errors.NewErrorWithSuggestions("failed to validate Kafka API credential", "Verify that the correct Kafka API credential is used.\n"+
+				"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store --force`.\n"+
+				"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`.")
 		}
 		return err
 	}
@@ -316,7 +318,7 @@ func (c *clientConfigCommand) validateSchemaRegistryCredentials(cluster *srcmv2.
 	client := schemaregistry.NewClientWithApiKey(srConfig, apiKeyPair.Key, apiKeyPair.Secret)
 
 	if err := client.Get(); err != nil {
-		return errors.NewErrorWithSuggestions(errors.SRCredsValidationFailedErrorMsg, errors.SRCredsValidationFailedSuggestions)
+		return errors.NewErrorWithSuggestions("failed to validate Schema Registry API credential", "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and `--schema-registry-api-secret`.")
 	}
 	return nil
 }
@@ -330,7 +332,7 @@ func fetchConfigFile(configId string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.Errorf(errors.FetchConfigFileErrorMsg, resp.StatusCode)
+		return "", errors.Errorf("failed to get config file: error code %d", resp.StatusCode)
 	}
 
 	defer resp.Body.Close()

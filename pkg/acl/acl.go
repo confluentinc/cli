@@ -174,7 +174,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 
 func setAclRequestPermission(conf *AclRequestDataWithError, permission string) {
 	if conf.Permission != "" {
-		conf.Errors = multierror.Append(conf.Errors, errors.Errorf(errors.OnlySetAllowOrDenyErrorMsg))
+		conf.Errors = multierror.Append(conf.Errors, errors.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL"))
 	}
 	conf.Permission = permission
 }

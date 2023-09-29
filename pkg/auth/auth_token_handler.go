@@ -157,7 +157,7 @@ func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client
 		return err
 	}
 	if getMeReply.GetUser().GetEmail() != loginEmail {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentialsErrorMsg, loginEmail, getMeReply.GetUser().GetEmail()), errors.SSOCredentialsDoNotMatchSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf("expected SSO credentials for %s but got credentials for %s", loginEmail, getMeReply.GetUser().GetEmail()), "Please re-login and use the same email at the prompt and in the SSO portal.")
 	}
 	return nil
 }

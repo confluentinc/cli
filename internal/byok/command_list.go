@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	errorMsgs "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -65,7 +64,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		case key.Key.ByokV1AzureKey != nil:
 			keyString = key.Key.ByokV1AzureKey.KeyId
 		default:
-			return errors.New(errorMsgs.ByokUnknownKeyTypeErrorMsg)
+			return errors.New(byokUnknownKeyTypeErrorMsg)
 		}
 
 		updatedAt := ""

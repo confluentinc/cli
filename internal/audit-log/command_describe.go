@@ -43,7 +43,7 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 
 	auditLog := user.GetOrganization().GetAuditLog()
 	if auditLog.GetServiceAccountId() == 0 {
-		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
+		return errors.New("audit logs are not enabled for this organization")
 	}
 
 	table := output.NewTable(cmd)

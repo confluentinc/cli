@@ -106,7 +106,7 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeC
 	}
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-		return nil, errors.New(errors.MustSpecifyOneClusterIDErrorMsg)
+		return nil, errors.New("must specify at least one cluster ID")
 	}
 
 	if nonKafkaScopesSet > 1 {
@@ -153,6 +153,6 @@ func (c *registerCommand) parseProtocol(cmd *cobra.Command) (mdsv1.Protocol, err
 	case "HTTPS":
 		return mdsv1.PROTOCOL_HTTPS, nil
 	default:
-		return "", errors.Errorf(errors.ProtocolNotSupportedErrorMsg, protocol)
+		return "", errors.Errorf("protocol %s is currently not supported", protocol)
 	}
 }

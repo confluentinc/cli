@@ -119,7 +119,7 @@ func NewCorruptedConfigError(format, contextName, configFile string) CLITypedErr
 	}
 	// logging stack trace of the error use pkg/errors error type
 	log.CliLogger.Debugf("%+v", errorWithStackTrace)
-	e.errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorWithStackTrace.Error())
+	e.errorMsg = fmt.Sprintf("%s: %v", CorruptedConfigErrorPrefix, errorWithStackTrace)
 	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile)
 	return e
 }
@@ -150,8 +150,10 @@ func (e *UpdateClientError) Error() string {
 }
 
 func (e *UpdateClientError) UserFacingError() error {
-	errMsg := fmt.Sprintf(prefixFormat, UpdateClientFailurePrefix, e.errorMsg)
-	return NewErrorWithSuggestions(errMsg, UpdateClientFailureSuggestions)
+	errMsg := fmt.Sprintf("update client failure: %s", e.errorMsg)
+	return NewErrorWithSuggestions(errMsg, "Please submit a support ticket.\n"+
+		"In the meantime, see link for other ways to download the latest CLI version:\n"+
+		"https://docs.confluent.io/current/cli/installing.html")
 }
 
 type MDSV2Alpha1ErrorType1 struct {

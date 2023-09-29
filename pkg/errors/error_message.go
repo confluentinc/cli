@@ -5,122 +5,23 @@ package errors
 */
 
 const (
-	// format
-	prefixFormat = "%s: %s"
-
-	// admin commands
-	BadResourceIDErrorMsg  = `failed parsing resource ID: missing prefix "%s-" is required`
-	BadEmailFormatErrorMsg = "invalid email structure"
-
-	// api-key commands
-	BadServiceAccountIDErrorMsg         = `failed to parse service account id: ensure service account id begins with "sa-"`
-	UnableToStoreAPIKeyErrorMsg         = "unable to store API key locally"
-	NonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
-	RefuseToOverrideSecretErrorMsg      = `refusing to overwrite existing secret for API Key "%s"`
-	RefuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
-	APIKeyUseFailedErrorMsg             = "unable to set active API key"
-	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
-	APIKeyNotValidForClusterErrorMsg    = "the provided API key does not belong to the target cluster"
-	APIKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
-	APIKeyNotFoundErrorMsg              = "unknown API key %s"
-	APIKeyNotFoundSuggestions           = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
-	ServiceAccountNotFoundErrorMsg      = `service account "%s" not found`
-	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
-
-	// audit-log command
-	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
-	UnableToAccessEndpointErrorMsg    = "unable to access endpoint"
-	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
-	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization"
-	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
-
-	// byok commands
-	ByokKeyNotFoundSuggestions = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
-	ByokUnknownKeyTypeErrorMsg = "unknown byok key type"
-
-	// login command
-	UnneccessaryUrlFlagForCloudLoginErrorMsg         = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
-	UnneccessaryUrlFlagForCloudLoginSuggestions      = "Log in to Confluent Cloud with `confluent login`."
-	SSOCredentialsDoNotMatchLoginCredentialsErrorMsg = "expected SSO credentials for %s but got credentials for %s"
-	SSOCredentialsDoNotMatchSuggestions              = "Please re-login and use the same email at the prompt and in the SSO portal."
-	EndOfFreeTrialErrorMsg                           = `organization "%s" has been suspended because your free trial has ended`
-	EndOfFreeTrialSuggestions                        = "To continue using Confluent Cloud, please enter a credit card with `confluent admin payment update` or claim a promo code with `confluent admin promo add`. To enter payment via the UI, please go to https://confluent.cloud/login"
-
-	// confluent cluster commands
-	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
-	AccessClusterRegistryErrorMsg    = "unable to access Cluster Registry"
-	AccessClusterRegistrySuggestions = EnsureCPSixPlusSuggestions
-	MustSpecifyOneClusterIDErrorMsg  = "must specify at least one cluster ID"
-	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
-	UnknownClusterErrorMsg           = `unknown cluster "%s"`
-
-	// connect and connector-catalog commands
-	UnknownConnectorIdErrorMsg         = `unknown connector ID "%s"`
-	EmptyConfigFileErrorMsg            = `connector config file "%s" is empty`
-	MissingRequiredConfigsErrorMsg     = `required configs "name" and "connector.class" missing from connector config file "%s"`
-	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
-	InvalidCloudSuggestions            = "To list available connector plugin types, use `confluent connect plugin list`."
-	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
-
-	// environment & organization command
-	NoEnvironmentFoundErrorMsg    = "no environment found"
-	NoEnvironmentFoundSuggestions = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
-
-	// iam acl & kafka acl commands
-	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
-	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg    = "`--allow` or `--deny` must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg    = "only `--allow` or `--deny` may be set when adding or deleting an ACL"
-	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
-	InvalidOperationValueErrorMsg = "invalid operation value: %s"
-	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
-
-	// iam rbac role commands
-	UnknownRoleErrorMsg    = `unknown role "%s"`
-	UnknownRoleSuggestions = "The available roles are: %s."
-
-	// iam rbac role-binding commands
-	PrincipalFormatErrorMsg         = "incorrect principal format specified"
-	PrincipalFormatSuggestions      = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
-	ResourceFormatErrorMsg          = "incorrect resource format specified"
-	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
-	LookUpRoleErrorMsg              = `failed to look up role "%s"`
-	LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
-	InvalidResourceTypeErrorMsg     = `invalid resource type "%s"`
-	InvalidResourceTypeSuggestions  = "The available resource types are: %s."
-	SpecifyKafkaIDErrorMsg          = "must specify `--kafka-cluster` to uniquely identify the scope"
-	SpecifyCloudClusterErrorMsg     = "must specify `--cloud-cluster` to indicate role binding scope"
-	SpecifyEnvironmentErrorMsg      = "must specify `--environment` to indicate role binding scope"
-	BothClusterNameAndScopeErrorMsg = "cannot specify both cluster name and cluster scope"
-	SpecifyClusterErrorMsg          = "must specify either cluster ID to indicate role binding scope or the cluster name"
-	MoreThanOneNonKafkaErrorMsg     = "cannot specify more than one non-Kafka cluster ID for a scope"
-	PrincipalOrRoleRequiredErrorMsg = "must specify either principal or role"
-	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
-	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
-	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
-	UnauthorizedSuggestions         = "Check the user's privileges by running `confluent iam rbac role-binding list`.\nGive the user the appropriate permissions using `confluent iam rbac role-binding create`."
-	RoleBindingNotFoundErrorMsg     = "failed to look up matching role binding"
-	RoleBindingNotFoundSuggestions  = "To list role bindings, use `confluent iam rbac role-binding list`."
-
-	// iam service-account commands
-	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
-	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
-
-	// init command
-	CannotBeEmptyErrorMsg = "%s cannot be empty"
-
-	// kafka client-config package
-	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
-	KafkaCredsValidationFailedErrorMsg    = "failed to validate Kafka API credential"
-	KafkaCredsValidationFailedSuggestions = "Verify that the correct Kafka API credential is used.\n" +
-		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store --force`.\n" +
-		"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`."
-	SRCredsValidationFailedErrorMsg    = "failed to validate Schema Registry API credential"
-	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and `--schema-registry-api-secret`."
+	ApiKeyNotFoundSuggestions         = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
+	BadServiceAccountIdErrorMsg       = `failed to parse service account id: ensure service account id begins with "sa-"`
+	ByokKeyNotFoundSuggestions        = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
+	EndOfFreeTrialErrorMsg            = `organization "%s" has been suspended because your free trial has ended`
+	EndOfFreeTrialSuggestions         = "To continue using Confluent Cloud, please enter a credit card with `confluent admin payment update` or claim a promo code with `confluent admin promo add`. To enter payment via the UI, please go to https://confluent.cloud/login."
+	EnsureCpSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
+	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
+	MoreThanOneNonKafkaErrorMsg       = "cannot specify more than one non-Kafka cluster ID for a scope"
+	MustSetAllowOrDenyErrorMsg        = "`--allow` or `--deny` must be set when adding or deleting an ACL"
+	MustSetResourceTypeErrorMsg       = "exactly one resource type (%s) must be set"
+	ServiceAccountNotFoundErrorMsg    = `service account "%s" not found`
+	ServiceAccountNotFoundSuggestions = "List service accounts with `confluent service-account list`."
+	SpecifyKafkaIDErrorMsg            = "must specify `--kafka-cluster` to uniquely identify the scope"
+	UnknownConnectorIdErrorMsg        = `unknown connector ID "%s"`
 
 	// kafka cluster commands
 	ListTopicSuggestions                             = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
-	FailedToRenderKeyPolicyErrorMsg                  = "BYOK error: failed to render key policy"
 	FailedToReadConfirmationErrorMsg                 = "BYOK error: failed to read your confirmation"
 	FailedToReadClusterResizeConfirmationErrorMsg    = "cluster resize error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg                        = "BYOK error: please authorize the key for the accounts (%s)x"
@@ -165,7 +66,7 @@ const (
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = `topic "%s" already exists for Kafka cluster "%s"`
-	TopicExistsSuggestions               = ListTopicSuggestions
+	TopicExistsSuggestions               = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
 	NoAPISecretStoredOrPassedErrorMsg    = `no API secret for API key "%s" of resource "%s" passed via flag or stored in local CLI state`
 	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag `--api-secret` or store with `confluent api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
@@ -227,10 +128,6 @@ const (
 	PipePassphraseErrorMsg    = "pipe your passphrase over stdin"
 
 	// update command
-	UpdateClientFailurePrefix      = "update client failure"
-	UpdateClientFailureSuggestions = "Please submit a support ticket.\n" +
-		"In the meantime, see link for other ways to download the latest CLI version:\n" +
-		"https://docs.confluent.io/current/cli/installing.html"
 	ReadingYesFlagErrorMsg              = "error reading `--yes` flag as bool"
 	CheckingForUpdateErrorMsg           = "error checking for updates"
 	UpdateBinaryErrorMsg                = "error updating CLI binary"
@@ -363,12 +260,10 @@ const (
 	NoVersionFoundErrorMsg = "no version found in plugin manifest"
 
 	// catcher
-	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
-	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
-	UnexpectedBackendOutputSuggestions = "Please submit a support ticket."
-	BackendUnmarshallingErrorMsg       = "protobuf unmarshalling error"
-	ResourceNotFoundErrorMsg           = `resource "%s" not found`
-	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
+	CCloudBackendErrorPrefix      = "Confluent Cloud backend error"
+	UnexpectedBackendOutputPrefix = "unexpected CCloud backend output"
+	ResourceNotFoundErrorMsg      = `resource "%s" not found`
+	ResourceNotFoundSuggestions   = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
 		"To check Schema Registry cluster information, use `confluent schema-registry cluster describe`.\n" +
 		"To list KSQL clusters, use `confluent ksql cluster list`."

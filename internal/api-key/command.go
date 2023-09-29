@@ -15,17 +15,26 @@ import (
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-type command struct {
-	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
-	flagResolver pcmd.FlagResolver
-}
-
 const (
 	deleteOperation = "deleting"
 	getOperation    = "getting"
 	updateOperation = "updating"
 )
+
+const (
+	apiKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
+	apiKeyUseFailedErrorMsg             = "unable to set active API key"
+	apiKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
+	nonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
+	refuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use the `--force` flag."
+	unableToStoreApiKeyErrorMsg         = "unable to store API key locally"
+)
+
+type command struct {
+	*pcmd.AuthenticatedCLICommand
+	keystore     keystore.KeyStore
+	flagResolver pcmd.FlagResolver
+}
 
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
