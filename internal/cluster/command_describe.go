@@ -88,7 +88,7 @@ func getURL(cmd *cobra.Command) (string, error) {
 		return url, nil
 	}
 
-	return "", errors.New(errors.MdsUrlNotFoundSuggestions)
+	return "", errors.New("pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable")
 }
 
 func getCACertPath(cmd *cobra.Command) (string, error) {

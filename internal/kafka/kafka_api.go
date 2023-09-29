@@ -64,7 +64,7 @@ func parse(context *dynamicconfig.DynamicContext, cmd *cobra.Command) ([]*ACLCon
 	aclConfigs := make([]*ACLConfiguration, len(operations))
 	for i, operation := range operations {
 		aclConfig := NewACLConfig()
-		op, err := getACLOperation(operation)
+		op, err := getAclOperation(operation)
 		if err != nil {
 			return nil, err
 		}
@@ -162,10 +162,10 @@ OUTER:
 	return strings.Join(ops, ", ")
 }
 
-func getACLOperation(operation string) (ccstructs.ACLOperations_ACLOperation, error) {
+func getAclOperation(operation string) (ccstructs.ACLOperations_ACLOperation, error) {
 	op := ccloudv2.ToUpper(operation)
 	if operation, ok := ccstructs.ACLOperations_ACLOperation_value[op]; ok {
 		return ccstructs.ACLOperations_ACLOperation(operation), nil
 	}
-	return ccstructs.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
+	return ccstructs.ACLOperations_UNKNOWN, fmt.Errorf("invalid operation value: %s", op)
 }

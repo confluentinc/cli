@@ -120,7 +120,7 @@ func (c *Context) DeleteUserAuth() error {
 	c.State.AuthRefreshToken = ""
 
 	err := c.Save()
-	return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
+	return errors.Wrap(err, "unable to delete user auth")
 }
 
 func (c *Context) UpdateAuthTokens(token, refreshToken string) error {

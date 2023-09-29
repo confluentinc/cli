@@ -36,7 +36,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	_, classExists := options["connector.class"]
 
 	if connectorType != "CUSTOM" && (!nameExists || !classExists) {
-		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, configFile)
+		return nil, errors.Errorf(`required configs "name" and "connector.class" missing from connector config file "%s"`, configFile)
 	}
 
 	return &options, nil
@@ -48,7 +48,7 @@ func parseConfigFile(filename string) (map[string]string, error) {
 		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
 	}
 	if len(jsonFile) == 0 {
-		return nil, errors.Errorf(errors.EmptyConfigFileErrorMsg, filename)
+		return nil, errors.Errorf(`connector config file "%s" is empty`, filename)
 	}
 
 	kvPairs := make(map[string]string)

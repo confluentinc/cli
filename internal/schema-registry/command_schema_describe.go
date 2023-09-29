@@ -83,9 +83,9 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 && (subject != "" || version != "") {
-		return errors.New(errors.BothSchemaAndSubjectErrorMsg)
+		return errors.New("cannot specify both schema ID and subject/version")
 	} else if len(args) == 0 && (subject == "" || version == "") {
-		return errors.New(errors.SchemaOrSubjectErrorMsg)
+		return errors.New("must specify either schema ID or subject/version")
 	}
 
 	client, err := c.GetSchemaRegistryClient(cmd)
@@ -116,7 +116,10 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 func describeById(id string, client *schemaregistry.Client) error {
 	schemaId, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, id), errors.SchemaIntegerSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`invalid schema ID "%s"`, id),
+			"Schema ID must be an integer.",
+		)
 	}
 
 	schemaString, err := client.GetSchema(int32(schemaId), nil)

@@ -18,9 +18,11 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey, clusterID string) error {
 	ok := key.Spec.Resource.Id == clusterID
 	// this means the requested api-key belongs to a different cluster
 	if !ok {
-		errorMsg := fmt.Sprintf(errors.InvalidAPIKeyErrorMsg, apiKey, clusterID)
-		suggestionsMsg := fmt.Sprintf(errors.InvalidAPIKeySuggestions, clusterID, clusterID, clusterID, clusterID)
-		return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`invalid API key "%s" for resource "%s"`, apiKey, clusterID),
+			fmt.Sprintf("To list API key that belongs to resource \"%s\", use `confluent api-key list --resource %s`.\n"+
+				"To create new API key for resource \"%s\", use `confluent api-key create --resource %s`.", clusterID, clusterID, clusterID, clusterID),
+		)
 	}
 	// the requested api-key exists, but the secret is not saved locally
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}

@@ -239,13 +239,13 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 		// comment out SR and warn users
 		if apiKeyPair.Key == "" && apiKeyPair.Secret == "" {
 			// both key and secret empty
-			configFile = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
+			configFile = commentAndWarnAboutSchemaRegistry("no Schema Registry API key or secret specified", "Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret.", configFile)
 		} else if apiKeyPair.Key == "" {
 			// only key empty
-			configFile = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
+			configFile = commentAndWarnAboutSchemaRegistry("no Schema Registry API key specified", "Pass the `--schema-registry-api-key` flag to specify the Schema Registry API key.", configFile)
 		} else {
 			// only secret empty
-			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, apiKeyPair.Key), errors.SRSecretNotSetSuggestions, configFile)
+			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf("no Schema Registry API secret for key \"%s\" specified", apiKeyPair.Key), "Pass the `--schema-registry-api-secret` flag to specify the Schema Registry API secret.", configFile)
 		}
 
 		return configFile, nil
@@ -299,7 +299,9 @@ func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.Kafk
 	timeout := 5 * time.Second
 	if _, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds())); err != nil {
 		if err.Error() == ckafka.ErrTransport.String() {
-			err = errors.NewErrorWithSuggestions(errors.KafkaCredsValidationFailedErrorMsg, errors.KafkaCredsValidationFailedSuggestions)
+			err = errors.NewErrorWithSuggestions("failed to validate Kafka API credential", "Verify that the correct Kafka API credential is used.\n"+
+				"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store --force`.\n"+
+				"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`.")
 		}
 		return err
 	}
@@ -316,7 +318,7 @@ func (c *clientConfigCommand) validateSchemaRegistryCredentials(cluster *srcmv2.
 	client := schemaregistry.NewClientWithApiKey(srConfig, apiKeyPair.Key, apiKeyPair.Secret)
 
 	if err := client.Get(); err != nil {
-		return errors.NewErrorWithSuggestions(errors.SRCredsValidationFailedErrorMsg, errors.SRCredsValidationFailedSuggestions)
+		return errors.NewErrorWithSuggestions("failed to validate Schema Registry API credential", "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and `--schema-registry-api-secret`.")
 	}
 	return nil
 }
@@ -330,7 +332,7 @@ func fetchConfigFile(configId string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.Errorf(errors.FetchConfigFileErrorMsg, resp.StatusCode)
+		return "", errors.Errorf("failed to get config file: error code %d", resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
@@ -351,7 +353,7 @@ func replaceTemplates(configFile string, m map[string]string) string {
 }
 
 func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) string {
-	warning := errors.NewWarningWithSuggestions(errors.SRInConfigFileWarning, reason, suggestions+"\n"+errors.SRInConfigFileSuggestions)
+	warning := errors.NewWarningWithSuggestions("created client configuration file but Schema Registry is not fully configured.", reason, suggestions+"\nAlternatively, you can configure Schema Registry manually in the client configuration file before using it.")
 	output.ErrPrint(warning.DisplayWarningWithSuggestions())
 
 	return commentSchemaRegistryLines(configFile)
