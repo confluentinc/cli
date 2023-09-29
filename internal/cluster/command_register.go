@@ -102,7 +102,7 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeC
 	})
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-		return nil, errors.New(errors.SpecifyKafkaIDErrorMsg)
+		return nil, errors.New(errors.SpecifyKafkaIdErrorMsg)
 	}
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {

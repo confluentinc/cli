@@ -125,8 +125,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln(errors.APIKeyTime)
-		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
+		output.ErrPrintln("It may take a couple of minutes for the API key to be ready.")
+		output.ErrPrintln("Save the API key and secret. The secret is not retrievable later.")
 	}
 
 	table := output.NewTable(cmd)

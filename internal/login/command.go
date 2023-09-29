@@ -103,7 +103,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if warningMsg != "" {
-		output.ErrPrintf(errors.UsingLoginURLDefaults, warningMsg)
+		output.ErrPrintf("Assuming %s.\n", warningMsg)
 	}
 
 	if isCCloud {

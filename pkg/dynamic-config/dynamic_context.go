@@ -204,7 +204,10 @@ func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, 
 	}
 
 	if apiKey == "" && apiSecret != "" {
-		return "", "", errors.NewErrorWithSuggestions(errors.PassedSecretButNotKeyErrorMsg, errors.PassedSecretButNotKeySuggestions)
+		return "", "", errors.NewErrorWithSuggestions(
+			"no API key specified",
+			"Use the `--api-key` flag to specify an API key.",
+		)
 	}
 
 	return apiKey, apiSecret, nil

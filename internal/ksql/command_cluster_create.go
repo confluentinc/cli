@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -87,7 +86,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 
 	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if _, ok := srCluster.GetIdOk(); ok {
-		output.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
+		output.ErrPrintln("IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
 	}
 
 	table := output.NewTable(cmd)

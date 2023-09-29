@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -231,7 +230,7 @@ func (c *command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []stri
 			return err
 		}
 		if configFile == "" {
-			return fmt.Errorf(errors.InvalidConnectorErrorMsg, connector)
+			return fmt.Errorf("invalid connector: %s", connector)
 		}
 	}
 

@@ -19,179 +19,84 @@ const (
 	MustSetResourceTypeErrorMsg       = "exactly one resource type (%s) must be set"
 	ServiceAccountNotFoundErrorMsg    = `service account "%s" not found`
 	ServiceAccountNotFoundSuggestions = "List service accounts with `confluent service-account list`."
-	SpecifyKafkaIDErrorMsg            = "must specify `--kafka-cluster` to uniquely identify the scope"
+	SpecifyKafkaIdErrorMsg            = "must specify `--kafka-cluster` to uniquely identify the scope"
 	UnknownConnectorIdErrorMsg        = `unknown connector ID "%s"`
 
 	// kafka cluster commands
-	ListTopicSuggestions                             = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
-	CKUMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
+	CkuMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
 	TopicDoesNotExistOrMissingPermissionsErrorMsg    = `topic "%s" does not exist or user does not have the ACLs or role bindings required to describe it`
 	TopicDoesNotExistOrMissingPermissionsSuggestions = "To list topics for Kafka cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`.\nTo list role bindings use `confluent iam rbac role-binding list`."
 	KafkaClusterNotFoundErrorMsg                     = `Kafka cluster "%s" not found`
-	KafkaClusterUpdateFailedSuggestions              = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
 	ChooseRightEnvironmentSuggestions                = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg              = `unknown topic "%s"`
-	MdsUrlNotFoundSuggestions         = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
 	KafkaClusterMissingPrefixErrorMsg = `Kafka cluster "%s" is missing required prefix "lkc-"`
 
 	// kafka topic commands
-	FailedToCreateProducerErrorMsg       = "failed to create producer: %v"
-	FailedToCreateConsumerErrorMsg       = "failed to create consumer: %v"
-	FailedToCreateAdminClientErrorMsg    = "failed to create confluent-kafka-go admin client: %v"
-	InvalidOffsetErrorMsg                = "offset value must be a non-negative integer"
-	InvalidSecurityProtocolErrorMsg      = "security protocol not supported: %v"
-	TopicExistsOnPremErrorMsg            = `topic "%s" already exists for the Kafka cluster`
-	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
-	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
-	MissingKeyErrorMsg                   = "missing key in message"
-	UnknownValueFormatErrorMsg           = "unknown value schema format"
-	TopicExistsErrorMsg                  = `topic "%s" already exists for Kafka cluster "%s"`
-	TopicExistsSuggestions               = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
-	NoAPISecretStoredOrPassedErrorMsg    = `no API secret for API key "%s" of resource "%s" passed via flag or stored in local CLI state`
-	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag `--api-secret` or store with `confluent api-key store %s --resource %s`."
-	PassedSecretButNotKeyErrorMsg        = "no API key specified"
-	PassedSecretButNotKeySuggestions     = "Use the `--api-key` flag to specify an API key."
-	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
-	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
-		"If your topic is compacted, ensure you are producing a record with a key."
-	ExceedPartitionLimitSuggestions = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
+	FailedToCreateProducerErrorMsg    = "failed to create producer: %v"
+	FailedToCreateConsumerErrorMsg    = "failed to create consumer: %v"
+	FailedToCreateAdminClientErrorMsg = "failed to create confluent-kafka-go admin client: %v"
+	FailedToProduceErrorMsg           = "failed to produce offset %d: %s\n"
+	UnknownValueFormatErrorMsg        = "unknown value schema format"
+	ExceedPartitionLimitSuggestions   = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
 
 	// serialization/deserialization commands
-	JsonSchemaInvalidErrorMsg         = "the JSON schema is invalid"
 	JsonDocumentInvalidErrorMsg       = "the JSON document is invalid"
 	AvroReferenceNotSupportedErrorMsg = "avro reference not supported in cloud CLI"
 	ProtoSchemaInvalidErrorMsg        = "the protobuf schema is invalid"
 	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
 
 	// ksql commands
-	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB cluster, "%s", because it was created with user-level access to the Kafka cluster`
-	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
+	KsqldbNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB cluster, "%s", because it was created with user-level access to the Kafka cluster`
 
 	// local commands
-	NoServicesRunningErrorMsg = "no services running"
-	TopNotAvailableErrorMsg   = "top command not available on platform: %s"
-	InvalidConnectorErrorMsg  = "invalid connector: %s"
-	FailedToStartErrorMsg     = "%s failed to start"
-	FailedToStopErrorMsg      = "%s failed to stop"
-	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
-		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
-		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
-	NoLogFoundErrorMsg             = "no log found: to run %s, use `confluent local services %s start`"
-	MacVersionErrorMsg             = "macOS version >= %s is required (detected: %s)"
-	JavaExecNotFondErrorMsg        = "could not find java executable, please install java or set JAVA_HOME"
-	NothingToDestroyErrorMsg       = "nothing to destroy"
-	ComputePoolNotFoundErrorMsg    = `Flink compute pool "%s" not found or access forbidden`
-	ComputePoolNotFoundSuggestions = "List available Flink compute pools with `confluent flink compute-pool list`.\nMake sure you have selected the compute pool's environment with `confluent environment use`."
-	FailedToReadPortsErrorMsg      = "failed to read local ports from config"
-	FailedToReadPortsSuggestions   = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
+	FailedToStartErrorMsg        = "%s failed to start"
+	FailedToReadPortsErrorMsg    = "failed to read local ports from config"
+	FailedToReadPortsSuggestions = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
 
 	// schema-registry commands
 	CompatibilityOrModeErrorMsg = "must pass either `--compatibility` or `--mode` flag"
 
 	// auth package
-	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
-	ReadCertErrorMsg                 = "failed to read certificate"
-	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
-	SRCaCertSuggestions              = "Please specify `--ca-location` to enable Schema Registry client."
-	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = `unable to write to netrc file "%s"`
 	NetrcCredentialsNotFoundErrorMsg = `login credentials not found in netrc file "%s"`
-	FailedToObtainedUserSSOErrorMsg  = `unable to obtain SSO info for user "%s"`
-	NonSSOUserErrorMsg               = `tried to obtain SSO token for non SSO user "%s"`
 	NoCredentialsFoundErrorMsg       = "no credentials found"
-	NoURLEnvVarErrorMsg              = "no URL env var"
+	NoUrlEnvVarErrorMsg              = "no URL env var"
 	InvalidInputFormatErrorMsg       = `"%s" is not of valid format for field "%s"`
-	ParseKeychainCredentialsErrorMsg = "unable to parse credentials in keychain access"
-
-	// cmd package
-	InvalidAPIKeyErrorMsg    = `invalid API key "%s" for resource "%s"`
-	InvalidAPIKeySuggestions = "To list API key that belongs to resource \"%s\", use `confluent api-key list --resource %s`.\n" +
-		"To create new API key for resource \"%s\", use `confluent api-key create --resource %s`."
-	SRNotEnabledErrorMsg    = "Schema Registry not enabled"
-	SRNotEnabledSuggestions = "Schema Registry must be enabled for the environment in order to run the command.\n" +
-		"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`."
 
 	// config package
-	CorruptedConfigErrorPrefix = "corrupted CLI config"
-	CorruptedConfigSuggestions = "Your configuration file \"%s\" is corrupted.\n" +
-		"Remove config file, and run `confluent login` or `confluent context create`.\n" +
-		"Unfortunately, your active CLI state will be lost as a result.\n" +
-		"Please file a support ticket with details about your config file to help us address this issue.\n" +
-		"Please rerun the command with the verbosity flag `-vvvv` and attach the output with the support ticket."
 	UnableToReadConfigurationFileErrorMsg = `unable to read configuration file "%s"`
 	NoNameContextErrorMsg                 = "one of the existing contexts has no name"
-	MissingKafkaClusterContextErrorMsg    = `context "%s" missing KafkaClusterContext`
-	MarshalConfigErrorMsg                 = "unable to marshal config"
-	CreateConfigDirectoryErrorMsg         = "unable to create config directory: %s"
-	CreateConfigFileErrorMsg              = "unable to write config to file: %s"
-	CurrentContextNotExistErrorMsg        = `the current context "%s" does not exist`
 	ContextDoesNotExistErrorMsg           = `context "%s" does not exist`
 	ContextAlreadyExistsErrorMsg          = `context "%s" already exists`
-	CredentialNotFoundErrorMsg            = `credential "%s" not found`
-	PlatformNotFoundErrorMsg              = `platform "%s" not found`
-	NoNameCredentialErrorMsg              = "credential must have a name"
-	SavedCredentialNoContextErrorMsg      = "saved credential must match a context"
-	KeychainNotAvailableErrorMsg          = "keychain not available on platforms other than darwin"
-	NoValidKeychainCredentialErrorMsg     = "no matching credentials found in keychain"
-	NoNamePlatformErrorMsg                = "platform must have a name"
 	UnspecifiedPlatformErrorMsg           = `context "%s" has corrupted platform`
 	UnspecifiedCredentialErrorMsg         = `context "%s" has corrupted credentials`
-	ContextStateMismatchErrorMsg          = `context state mismatch for context "%s"`
-	ContextStateNotMappedErrorMsg         = `context state mapping error for context "%s"`
-	DeleteUserAuthErrorMsg                = "unable to delete user auth"
 
 	// secret package
-	DataCorruptedErrorMsg              = "failed to decrypt the cipher: data is corrupted"
-	ConfigNotInJAASErrorMsg            = `the configuration "%s" not present in JAAS configuration`
-	OperationNotSupportedErrorMsg      = `the operation "%s" is not supported`
-	InvalidJAASConfigErrorMsg          = "invalid JAAS configuration: %s"
-	ExpectedConfigNameErrorMsg         = `expected a configuration name but received "%s"`
-	LoginModuleControlFlagErrorMsg     = "login module control flag is not specified"
-	ConvertPropertiesToJAASErrorMsg    = "failed to convert the properties to a JAAS configuration"
-	ValueNotSpecifiedForKeyErrorMsg    = `value is not specified for the key "%s"`
-	MissSemicolonErrorMsg              = "configuration not terminated with a ';'"
-	EmptyPassphraseErrorMsg            = "master key passphrase cannot be empty"
-	AlreadyGeneratedErrorMsg           = "master key is already generated"
-	AlreadyGeneratedSuggestions        = "You can rotate the key with `confluent secret file rotate`."
-	InvalidConfigFilePathErrorMsg      = `invalid config file path "%s"`
-	InvalidSecretFilePathErrorMsg      = `invalid secrets file path "%s"`
-	UnwrapDataKeyErrorMsg              = "failed to unwrap the data key: invalid master key or corrupted data key"
-	DecryptConfigErrorMsg              = `failed to decrypt config "%s": corrupted data`
-	SecretConfigFileMissingKeyErrorMsg = `missing config key "%s" in secret config file`
-	IncorrectPassphraseErrorMsg        = "authentication failure: incorrect master key passphrase"
-	SamePassphraseErrorMsg             = "new master key passphrase may not be the same as the previous passphrase"
-	EmptyNewConfigListErrorMsg         = "add failed: empty list of new configs"
-	EmptyUpdateConfigListErrorMsg      = "update failed: empty list of update configs"
-	ConfigKeyNotEncryptedErrorMsg      = `configuration key "%s" is not encrypted`
-	FileTypeNotSupportedErrorMsg       = `file type "%s" currently not supported`
-	ConfigKeyNotInJSONErrorMsg         = `configuration key "%s" not present in JSON configuration file`
-	MasterKeyNotExportedErrorMsg       = "master key is not exported in `%s` environment variable"
-	MasterKeyNotExportedSuggestions    = "Set the environment variable `%s` to the master key and execute this command again."
-	ConfigKeyNotPresentErrorMsg        = `configuration key "%s" not present in the configuration file`
-	InvalidJSONFileFormatErrorMsg      = "invalid json file format"
-	InvalidFilePathErrorMsg            = `invalid file path "%s"`
-	UnsupportedFileFormatErrorMsg      = `unsupported file format for file "%s"`
-	InvalidAlgorithmErrorMsg           = `invalid algorithm "%s"`
-	IncorrectNonceLengthErrorMsg       = `incorrect nonce length from ~/.confluent/config.json passed into encryption`
+	ConfigNotInJaasErrorMsg         = `the configuration "%s" not present in JAAS configuration`
+	InvalidJaasConfigErrorMsg       = "invalid JAAS configuration: %s"
+	ExpectedConfigNameErrorMsg      = `expected a configuration name but received "%s"`
+	LoginModuleControlFlagErrorMsg  = "login module control flag is not specified"
+	EmptyPassphraseErrorMsg         = "master key passphrase cannot be empty"
+	InvalidConfigFilePathErrorMsg   = `invalid config file path "%s"`
+	UnwrapDataKeyErrorMsg           = "failed to unwrap the data key: invalid master key or corrupted data key"
+	DecryptConfigErrorMsg           = `failed to decrypt config "%s": corrupted data`
+	IncorrectPassphraseErrorMsg     = "authentication failure: incorrect master key passphrase"
+	SamePassphraseErrorMsg          = "new master key passphrase may not be the same as the previous passphrase"
+	ConfigKeyNotEncryptedErrorMsg   = `configuration key "%s" is not encrypted`
+	ConfigKeyNotInJsonErrorMsg      = `configuration key "%s" not present in JSON configuration file`
+	MasterKeyNotExportedErrorMsg    = "master key is not exported in `%s` environment variable"
+	MasterKeyNotExportedSuggestions = "Set the environment variable `%s` to the master key and execute this command again."
+	ConfigKeyNotPresentErrorMsg     = `configuration key "%s" not present in the configuration file`
+	InvalidJsonFileFormatErrorMsg   = "invalid json file format"
+	InvalidFilePathErrorMsg         = `invalid file path "%s"`
+	UnsupportedFileFormatErrorMsg   = `unsupported file format for file "%s"`
+	IncorrectNonceLengthErrorMsg    = `incorrect nonce length from ~/.confluent/config.json passed into encryption`
 
 	// sso package
-	StartHTTPServerErrorMsg            = "unable to start HTTP server"
-	AuthServerRunningErrorMsg          = "CLI HTTP auth server encountered error while running: %s\n"
-	AuthServerShutdownErrorMsg         = "CLI HTTP auth server encountered error while shutting down: %s\n"
-	BrowserAuthTimedOutErrorMsg        = "timed out while waiting for browser authentication to occur"
-	BrowserAuthTimedOutSuggestions     = "Try logging in again."
-	LoginFailedCallbackURLErrorMsg     = "authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail"
-	LoginFailedQueryStringErrorMsg     = "authentication callback URL did not contain code parameter in query string; login will fail"
-	PastedInputErrorMsg                = "pasted input had invalid format"
-	LoginFailedStateParamErrorMsg      = "authentication code either did not contain a state parameter or the state parameter was invalid; login will fail"
-	OpenWebBrowserErrorMsg             = "unable to open web browser for authorization"
-	GenerateRandomSSOProviderErrorMsg  = "unable to generate random bytes for SSO provider state"
-	GenerateRandomCodeVerifierErrorMsg = "unable to generate random bytes for code verifier"
-	ComputeHashErrorMsg                = "unable to compute hash for code challenge"
-	FmtMissingOAuthFieldErrorMsg       = `oauth token response body did not contain field "%s"`
-	ConstructOAuthRequestErrorMsg      = "failed to construct oauth token request"
-	UnmarshalOAuthTokenErrorMsg        = "failed to unmarshal response body in oauth token request"
+	BrowserAuthTimedOutErrorMsg    = "timed out while waiting for browser authentication to occur"
+	BrowserAuthTimedOutSuggestions = "Try logging in again."
+	FmtMissingOauthFieldErrorMsg   = `oauth token response body did not contain field "%s"`
 
 	// update package
 	ParseVersionErrorMsg      = "unable to parse %s version %s"
@@ -231,26 +136,20 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with `confluent login`."
 
 	// Special error handling
-	QuotaExceededSuggestions = "Look up Confluent Cloud service quota limits with `confluent service-quota list`."
-	AvoidTimeoutSuggestions  = "To avoid session timeouts, non-SSO users can save their credentials with `confluent login --save`."
-	NotLoggedInErrorMsg      = "not logged in"
-	AuthTokenSuggestions     = "You must be logged in to retrieve an oauthbearer token.\n" +
+	AvoidTimeoutSuggestions = "To avoid session timeouts, non-SSO users can save their credentials with `confluent login --save`."
+	NotLoggedInErrorMsg     = "not logged in"
+	AuthTokenSuggestions    = "You must be logged in to retrieve an oauthbearer token.\n" +
 		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and Schema Registry."
-	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
-	NotLoggedInSuggestions       = "You must be logged in to run this command.\n" +
-		AvoidTimeoutSuggestions
+	OnPremConfigGuideSuggestions   = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
 	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client with token"
-	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--schema-registry-endpoint) or be logged in using `confluent login` to run this command.\n" +
-		AvoidTimeoutSuggestions
-	CorruptedTokenErrorMsg    = "corrupted auth token"
-	CorruptedTokenSuggestions = "Please log in again.\n" +
+	CorruptedTokenErrorMsg         = "corrupted auth token"
+	CorruptedTokenSuggestions      = "Please log in again.\n" +
 		AvoidTimeoutSuggestions
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
 		AvoidTimeoutSuggestions
-	InvalidEmailErrorMsg         = `user "%s" not found`
 	InvalidLoginURLErrorMsg      = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
 	InvalidLoginErrorMsg         = "incorrect email, password, or organization ID"
 	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +

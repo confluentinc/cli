@@ -206,7 +206,10 @@ func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka
 			return nil, err
 		}
 	default:
-		return nil, errors.NewErrorWithSuggestions(fmt.Errorf(errors.InvalidSecurityProtocolErrorMsg, protocol).Error(), errors.OnPremConfigGuideSuggestions)
+		return nil, errors.NewErrorWithSuggestions(
+			fmt.Errorf("security protocol not supported: %s", protocol).Error(),
+			errors.OnPremConfigGuideSuggestions,
+		)
 	}
 	return configMap, nil
 }
@@ -301,7 +304,7 @@ func GetOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 			return ckafka.OffsetInvalid, err
 		}
 		if offset < 0 {
-			return ckafka.OffsetInvalid, errors.New(errors.InvalidOffsetErrorMsg)
+			return ckafka.OffsetInvalid, errors.New("offset value must be a non-negative integer")
 		}
 		return ckafka.NewOffset(offset)
 	} else {

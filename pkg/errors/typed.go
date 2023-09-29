@@ -18,7 +18,7 @@ func (e *NotLoggedInError) Error() string {
 }
 
 func (e *NotLoggedInError) UserFacingError() error {
-	return NewErrorWithSuggestions(NotLoggedInErrorMsg, NotLoggedInSuggestions)
+	return NewErrorWithSuggestions(NotLoggedInErrorMsg, "You must be logged in to run this command.\n"+AvoidTimeoutSuggestions)
 }
 
 type EndOfFreeTrialError struct {
@@ -40,7 +40,7 @@ func (e *SRNotAuthenticatedError) Error() string {
 }
 
 func (e *SRNotAuthenticatedError) UserFacingError() error {
-	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, SRNotAuthenticatedSuggestions)
+	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, "You must specify the endpoint for a Schema Registry cluster (`--schema-registry-endpoint`) or be logged in using `confluent login` to run this command.\n"+AvoidTimeoutSuggestions)
 }
 
 type SRNotEnabledError struct {
@@ -49,7 +49,11 @@ type SRNotEnabledError struct {
 }
 
 func NewSRNotEnabledError() CLITypedError {
-	return &SRNotEnabledError{ErrorMsg: SRNotEnabledErrorMsg, SuggestionsMsg: SRNotEnabledSuggestions}
+	return &SRNotEnabledError{
+		ErrorMsg: "Schema Registry not enabled",
+		SuggestionsMsg: "Schema Registry must be enabled for the environment in order to run the command.\n" +
+			"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`.",
+	}
 }
 
 func (e *SRNotEnabledError) Error() string {
@@ -112,7 +116,6 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 }
 
 func NewCorruptedConfigError(format, contextName, configFile string) CLITypedError {
-	e := &CorruptedConfigError{}
 	var errorWithStackTrace error
 	if contextName != "" {
 		errorWithStackTrace = Errorf(format, contextName)
@@ -121,9 +124,14 @@ func NewCorruptedConfigError(format, contextName, configFile string) CLITypedErr
 	}
 	// logging stack trace of the error use pkg/errors error type
 	log.CliLogger.Debugf("%+v", errorWithStackTrace)
-	e.errorMsg = fmt.Sprintf("%s: %v", CorruptedConfigErrorPrefix, errorWithStackTrace)
-	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile)
-	return e
+	return &CorruptedConfigError{
+		errorMsg: fmt.Sprintf("corrupted CLI config: %v", errorWithStackTrace),
+		suggestionsMsg: fmt.Sprintf("Your configuration file \"%s\" is corrupted.\n"+
+			"Remove config file, and run `confluent login` or `confluent context create`.\n"+
+			"Unfortunately, your active CLI state will be lost as a result.\n"+
+			"Please file a support ticket with details about your configuration file to help us address this issue.\n"+
+			"Please rerun the command with `--unsafe-trace` and attach the output with the support ticket.", configFile),
+	}
 }
 
 type CorruptedConfigError struct {

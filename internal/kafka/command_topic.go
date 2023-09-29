@@ -164,8 +164,9 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 
 	if pair, ok := cluster.APIKeys[cluster.APIKey]; !ok || pair.Secret == "" {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, apiKey, cluster.ID),
-			fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, apiKey, cluster.ID))
+			fmt.Sprintf(`no secret for API key "%s" of resource "%s" passed via flag or stored in local CLI state`, apiKey, cluster.ID),
+			fmt.Sprintf("Pass the API secret with flag `--api-secret` or store with `confluent api-key store %s --resource %s`.", apiKey, cluster.ID),
+		)
 	}
 
 	return nil

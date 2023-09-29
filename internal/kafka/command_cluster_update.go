@@ -88,7 +88,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 
 	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
 	if err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
+		return errors.NewWrapErrorWithSuggestions(err, "failed to update Kafka cluster", "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes.")
 	}
 
 	ctx := c.Context.Config.Context()
@@ -108,7 +108,7 @@ func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cl
 		return 0, errors.New("`--cku` value must be greater than 1 for high durability")
 	}
 	if cku == 0 {
-		return 0, errors.New(errors.CKUMoreThanZeroErrorMsg)
+		return 0, errors.New(errors.CkuMoreThanZeroErrorMsg)
 	}
 	// Cluster can't be resized while it's provisioning or being expanded already.
 	// Name _can_ be changed during these times, though.

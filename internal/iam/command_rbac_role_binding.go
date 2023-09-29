@@ -3,6 +3,7 @@ package iam
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -232,7 +233,7 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.M
 
 	if clusterName == "" {
 		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-			return nil, errors.New(errors.SpecifyKafkaIDErrorMsg)
+			return nil, errors.New(errors.SpecifyKafkaIdErrorMsg)
 		}
 
 		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
@@ -283,11 +284,9 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 }
 
 func parseAndValidateResourcePattern(resource string, prefix bool) (mdsv1.ResourcePattern, error) {
-	var result mdsv1.ResourcePattern
+	result := mdsv1.ResourcePattern{PatternType: "LITERAL"}
 	if prefix {
 		result.PatternType = "PREFIXED"
-	} else {
-		result.PatternType = "LITERAL"
 	}
 
 	parts := strings.SplitN(resource, ":", 2)
@@ -301,15 +300,14 @@ func parseAndValidateResourcePattern(resource string, prefix bool) (mdsv1.Resour
 }
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName, resourceType string) error {
-	ctx := c.createContext()
-	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
-	if err != nil || resp.StatusCode == 204 {
-		errorMsg := fmt.Sprintf(`failed to look up role "%s"`, roleName)
-		if err == nil {
-			return errors.NewErrorWithSuggestions(errorMsg, lookUpRoleSuggestions)
-		} else {
-			return errors.NewWrapErrorWithSuggestions(err, errorMsg, lookUpRoleSuggestions)
-		}
+	errorMsg := fmt.Sprintf(`failed to look up role "%s"`, roleName)
+
+	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), roleName)
+	if err != nil {
+		return errors.NewWrapErrorWithSuggestions(err, errorMsg, lookUpRoleSuggestions)
+	}
+	if resp.StatusCode == http.StatusNoContent {
+		return errors.NewErrorWithSuggestions(errorMsg, lookUpRoleSuggestions)
 	}
 
 	allResourceTypes := make([]string, len(role.AccessPolicy.AllowedOperations))
@@ -323,8 +321,10 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName, resourceTyp
 	}
 
 	if !found {
-		suggestionsMsg := fmt.Sprintf(invalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType),
+			fmt.Sprintf(invalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", ")),
+		)
 	}
 
 	return nil

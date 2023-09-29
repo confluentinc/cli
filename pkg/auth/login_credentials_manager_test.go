@@ -286,7 +286,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	suite.setCPEnvVars()
 	creds, err = suite.loginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar()()
 	suite.require.Error(err)
-	suite.require.Equal(errors.NoURLEnvVarErrorMsg, err.Error())
+	suite.require.Equal(errors.NoUrlEnvVarErrorMsg, err.Error())
 	suite.require.Nil(creds)
 
 	// Set URL

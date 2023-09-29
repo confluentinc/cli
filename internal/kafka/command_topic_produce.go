@@ -209,7 +209,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 	if parseKey {
 		x := strings.SplitN(data, delimiter, 2)
 		if len(x) != 2 {
-			return nil, nil, errors.New(errors.MissingKeyErrorMsg)
+			return nil, nil, errors.New("missing key in message")
 		}
 
 		out, err := keySerializer.Serialize(strings.TrimSpace(x[0]))

@@ -225,7 +225,7 @@ func LoadJSONFile(path string) (string, error) {
 
 	jsonConfig := string(jsonByteArr)
 	if !gjson.Valid(jsonConfig) {
-		return "", errors.New(errors.InvalidJSONFileFormatErrorMsg)
+		return "", errors.New(errors.InvalidJsonFileFormatErrorMsg)
 	}
 
 	return jsonConfig, nil
@@ -248,7 +248,7 @@ func loadJSONConfig(path string, configKeys []string) (*properties.Properties, e
 				return nil, err
 			}
 		} else {
-			return nil, errors.Errorf(errors.ConfigKeyNotInJSONErrorMsg, key)
+			return nil, errors.Errorf(errors.ConfigKeyNotInJsonErrorMsg, key)
 		}
 	}
 

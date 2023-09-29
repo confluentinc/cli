@@ -165,8 +165,9 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	if len(resBody.Errors) > 0 {
 		detail := resBody.Errors[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewErrorWithSuggestions(detail, QuotaExceededSuggestions)
-		} else if detail != "" {
+			return NewErrorWithSuggestions(detail, "Look up Confluent Cloud service quota limits with `confluent service-quota list`.")
+		}
+		if detail != "" {
 			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
 				err = NewErrorWithSuggestions(err.Error(), resolution)
@@ -221,7 +222,11 @@ func CatchComputePoolNotFoundError(err error, computePoolId string, r *http.Resp
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(ComputePoolNotFoundErrorMsg, computePoolId), ComputePoolNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(
+			CatchCCloudV2Error(err, r),
+			fmt.Sprintf(`Flink compute pool "%s" not found or access forbidden`, computePoolId),
+			"List available Flink compute pools with `confluent flink compute-pool list`.\nMake sure you have selected the compute pool's environment with `confluent environment use`.",
+		)
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -348,8 +353,11 @@ func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error
 	}
 	compiledRegex := regexp.MustCompile(`Unknown error, how did this happen\? Error code = 87`)
 	if compiledRegex.MatchString(err.Error()) {
-		errorMsg := fmt.Sprintf(ProducingToCompactedTopicErrorMsg, topicName)
-		return true, NewErrorWithSuggestions(errorMsg, ProducingToCompactedTopicSuggestions)
+		return true, NewErrorWithSuggestions(
+			fmt.Sprintf("producer has detected an INVALID_RECORD error for topic %s", topicName),
+			"If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n"+
+				"If your topic is compacted, ensure you are producing a record with a key.",
+		)
 	}
 	return false, err
 }
