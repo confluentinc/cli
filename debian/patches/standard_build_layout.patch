@@ -1,4 +1,4 @@
---- cli/Makefile	2023-09-29 12:56:18.000000000 -0700
+--- cli/Makefile	2023-09-29 13:08:09.000000000 -0700
 +++ debian/Makefile	2023-09-22 14:40:16.000000000 -0700
 @@ -1,120 +1,130 @@
 -SHELL := /bin/bash
@@ -152,9 +152,9 @@
 -unit-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.8.2 && \
--	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
+-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
 -else
--	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
+-	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
 -endif
 +	chown -R root:root $(DESTDIR)$(PREFIX)
  
@@ -198,7 +198,7 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	go test -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
+-	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  
