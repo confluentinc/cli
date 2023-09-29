@@ -496,7 +496,13 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 		return err
 	}
-	output.Printf("Tag(s) %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
+
+	tag := "Tag"
+	if len(tagNames) > 1 {
+		tag += "s"
+	}
+
+	output.Printf("%s %s added to Kafka topic \"%s\".\n", tag, utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
 	return nil
 }
 

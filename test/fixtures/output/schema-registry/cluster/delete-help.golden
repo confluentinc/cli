@@ -6,7 +6,7 @@ Usage:
 Examples:
 Delete the Schema Registry cluster for environment "env-123456".
 
-  $ confluent schema-registry cluster delete --environment env-12345
+  $ confluent schema-registry cluster delete --environment env-123456
 
 Flags:
       --environment string   REQUIRED: Environment ID.
