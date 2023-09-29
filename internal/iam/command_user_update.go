@@ -40,7 +40,7 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 
 	update := iamv2.IamV2UserUpdate{FullName: iamv2.PtrString(fullName)}
 	if _, err := c.V2Client.UpdateIamUser(resourceId, update); err != nil {
-		return errors.Errorf(errors.UpdateResourceErrorMsg, resource.User, resourceId, err)
+		return errors.Errorf(`failed to update %s "%s": %v`, resource.User, resourceId, err)
 	}
 
 	output.ErrPrintf(errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)

@@ -47,7 +47,10 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	} else {
 		clusterId = c.Context.KafkaClusterContext.FindApiKeyClusterId(args[0])
 		if clusterId == "" {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(`API key "%s" and associated Kafka cluster are not stored in local CLI state`, args[0]), fmt.Sprintf(apiKeyUseFailedSuggestions, args[0]))
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(`API key "%s" and associated Kafka cluster are not stored in local CLI state`, args[0]),
+				fmt.Sprintf(apiKeyUseFailedSuggestions, args[0]),
+			)
 		}
 	}
 

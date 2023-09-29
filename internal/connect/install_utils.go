@@ -52,43 +52,50 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, fo
 	}
 
 	if len(installations) == 0 {
-		return nil, errors.NewErrorWithSuggestions("unable to detect a Confluent Platform installation", "Pass the plugin directory and worker configuration files with `--plugin-directory` and `--worker-configurations`.")
-	} else if force {
+		return nil, errors.NewErrorWithSuggestions(
+			"unable to detect a Confluent Platform installation",
+			"Pass the plugin directory and worker configuration files with `--plugin-directory` and `--worker-configurations`.",
+		)
+	}
+
+	if force {
 		output.Printf("Using the Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil
-	} else if len(installations) == 1 {
+	}
+
+	if len(installations) == 1 {
 		output.Printf("Using the only available Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil
-	} else {
-		list := output.NewList(cmd)
-		for i, installation := range installations {
-			list.Add(&listOut{
-				Number:      strconv.Itoa(i + 1),
-				Path:        installation.Location.Path,
-				Description: installation.Use,
-			})
-		}
-
-		listStr, err := list.PrintString()
-		if err != nil {
-			return nil, err
-		}
-
-		promptMsg := "The plugin can be installed in any of the following Confluent Platform installations. Enter the number corresponding to the installation you would like to use:\n%sTo cancel, press Ctrl-C"
-		f := form.New(form.Field{
-			ID:     "installation",
-			Prompt: fmt.Sprintf(promptMsg, listStr),
-			Regex:  `^\d$`,
-		})
-		if err := f.Prompt(prompt); err != nil {
-			return nil, err
-		}
-		choice, err := strconv.Atoi(f.Responses["installation"].(string))
-		if err != nil || choice < 1 || choice > len(installations) {
-			return nil, errors.Errorf("your choice must be in the range %d to %d (inclusive)", 1, len(installations))
-		}
-		return &installations[choice-1], nil
 	}
+
+	list := output.NewList(cmd)
+	for i, installation := range installations {
+		list.Add(&listOut{
+			Number:      strconv.Itoa(i + 1),
+			Path:        installation.Location.Path,
+			Description: installation.Use,
+		})
+	}
+
+	listStr, err := list.PrintString()
+	if err != nil {
+		return nil, err
+	}
+
+	promptMsg := "The plugin can be installed in any of the following Confluent Platform installations. Enter the number corresponding to the installation you would like to use:\n%sTo cancel, press Ctrl-C"
+	f := form.New(form.Field{
+		ID:     "installation",
+		Prompt: fmt.Sprintf(promptMsg, listStr),
+		Regex:  `^\d$`,
+	})
+	if err := f.Prompt(prompt); err != nil {
+		return nil, err
+	}
+	choice, err := strconv.Atoi(f.Responses["installation"].(string))
+	if err != nil || choice < 1 || choice > len(installations) {
+		return nil, errors.Errorf("your choice must be in the range %d to %d (inclusive)", 1, len(installations))
+	}
+	return &installations[choice-1], nil
 }
 
 func getPlatformInstallationFromFlag(cmd *cobra.Command) (*platformInstallation, error) {

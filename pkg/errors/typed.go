@@ -69,8 +69,10 @@ func (e *KafkaClusterNotFoundError) Error() string {
 }
 
 func (e *KafkaClusterNotFoundError) UserFacingError() error {
-	errMsg := fmt.Sprintf(KafkaNotFoundErrorMsg, e.ClusterID)
-	return NewErrorWithSuggestions(errMsg, KafkaNotFoundSuggestions)
+	return NewErrorWithSuggestions(
+		fmt.Sprintf(`Kafka cluster "%s" not found`, e.ClusterID),
+		"To list Kafka clusters, use `confluent kafka cluster list`.",
+	)
 }
 
 // UnspecifiedAPIKeyError means the user needs to set an api-key for this cluster
@@ -166,7 +168,7 @@ type MDSV2Alpha1ErrorType1 struct {
 func (e *MDSV2Alpha1ErrorType1) Error() string { return e.Message }
 
 func (e *MDSV2Alpha1ErrorType1) UserFacingError() error {
-	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Message)
+	return Errorf(ParsedGenericOpenApiErrorMsg, e.Message)
 }
 
 type MDSV2Alpha1ErrorType2 struct {
@@ -194,5 +196,5 @@ func (e *MDSV2Alpha1ErrorType2Array) Error() string {
 }
 
 func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error {
-	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Error())
+	return Errorf(ParsedGenericOpenApiErrorMsg, e.Error())
 }

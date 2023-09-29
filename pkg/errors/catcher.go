@@ -77,7 +77,7 @@ func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
 	case mdsv1.GenericOpenAPIError:
-		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+		return Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
 		if strings.Contains(err.Error(), "Forbidden Access") {
 			return NewErrorWithSuggestions("user is unauthorized to perform this action", "Check the user's privileges by running `confluent iam rbac role-binding list`.\nGive the user the appropriate permissions using `confluent iam rbac role-binding create`.")
@@ -90,7 +90,7 @@ func catchMDSErrors(err error) error {
 			if parseErr2 == nil {
 				return openAPIErrorType2.UserFacingError()
 			} else {
-				return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+				return Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
 			}
 		}
 	}
@@ -102,7 +102,7 @@ func catchMDSErrors(err error) error {
 // are supposed to be caught by more specific catchers.
 func catchCcloudV1Errors(err error) error {
 	if err, ok := err.(*ccloudv1.Error); ok {
-		return Wrap(err, CCloudBackendErrorPrefix)
+		return Wrap(err, "Confluent Cloud backend error")
 	}
 	return err
 }
@@ -236,7 +236,11 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), KafkaClusterInaccessibleSuggestions)
+		return NewWrapErrorWithSuggestions(
+			CatchCCloudV2Error(err, r),
+			fmt.Sprintf(`Kafka cluster "%s" not found or access forbidden`, clusterId),
+			ChooseRightEnvironmentSuggestions+"\nThe active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`.",
+		)
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -285,10 +289,14 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 	if err == nil {
 		return nil
 	}
+
 	if isResourceNotFoundError(err) {
-		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
-		return NewErrorWithSuggestions(errorMsg, KSQLNotFoundSuggestions)
+		return NewErrorWithSuggestions(
+			fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId),
+			"To list KSQL clusters, use `confluent ksql cluster list`.",
+		)
 	}
+
 	return err
 }
 

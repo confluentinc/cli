@@ -172,5 +172,8 @@ func getBrokerTaskType(taskName string) (kafkarestv3.BrokerTaskType, error) {
 			return taskType, nil
 		}
 	}
-	return "", errors.NewErrorWithSuggestions(errors.InvalidBrokerTaskTypeErrorMsg, errors.InvalidBrokerTaskTypeSuggestions)
+	return "", errors.NewErrorWithSuggestions(
+		"invalid broker task type",
+		`Valid broker task types are "remove-broker" and "add-broker".`,
+	)
 }

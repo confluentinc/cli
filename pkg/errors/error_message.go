@@ -8,10 +8,12 @@ const (
 	ApiKeyNotFoundSuggestions         = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
 	BadServiceAccountIdErrorMsg       = `failed to parse service account id: ensure service account id begins with "sa-"`
 	ByokKeyNotFoundSuggestions        = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
+	DeleteResourceErrorMsg            = `failed to delete %s "%s": %v`
 	EndOfFreeTrialErrorMsg            = `organization "%s" has been suspended because your free trial has ended`
 	EndOfFreeTrialSuggestions         = "To continue using Confluent Cloud, please enter a credit card with `confluent admin payment update` or claim a promo code with `confluent admin promo add`. To enter payment via the UI, please go to https://confluent.cloud/login."
 	EnsureCpSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
 	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
+	ListResourceSuggestions           = "List available %ss with `%s list`."
 	MoreThanOneNonKafkaErrorMsg       = "cannot specify more than one non-Kafka cluster ID for a scope"
 	MustSetAllowOrDenyErrorMsg        = "`--allow` or `--deny` must be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg       = "exactly one resource type (%s) must be set"
@@ -22,33 +24,12 @@ const (
 
 	// kafka cluster commands
 	ListTopicSuggestions                             = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
-	FailedToReadConfirmationErrorMsg                 = "BYOK error: failed to read your confirmation"
-	FailedToReadClusterResizeConfirmationErrorMsg    = "cluster resize error: failed to read your confirmation"
-	AuthorizeAccountsErrorMsg                        = "BYOK error: please authorize the key for the accounts (%s)x"
-	AuthorizeIdentityErrorMsg                        = "BYOK error: please authorize the key for the identity (%s)"
-	EncryptionKeySupportErrorMsg                     = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
 	CKUMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
-	CKUMoreThanOneErrorMsg                           = "`--cku` value must be greater than 1 for High Durability"
-	ClusterResizeNotSupportedErrorMsg                = "failed to update kafka cluster: cluster resize is only supported on dedicated clusters"
-	CloudRegionNotAvailableErrorMsg                  = `"%s" is not an available region for "%s"`
-	CloudRegionNotAvailableSuggestions               = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
-	CloudProviderNotAvailableErrorMsg                = `"%s" is not an available cloud provider`
-	CloudProviderNotAvailableSuggestions             = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
 	TopicDoesNotExistOrMissingPermissionsErrorMsg    = `topic "%s" does not exist or user does not have the ACLs or role bindings required to describe it`
 	TopicDoesNotExistOrMissingPermissionsSuggestions = "To list topics for Kafka cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`.\nTo list role bindings use `confluent iam rbac role-binding list`."
-	InvalidAvailableFlagErrorMsg                     = "invalid value \"%s\" for `--availability` flag"
-	InvalidAvailableFlagSuggestions                  = "Allowed values for `--availability` flag are: %s, %s."
-	InvalidTypeFlagErrorMsg                          = "invalid value \"%s\" for `--type` flag"
-	NonEmptyNameErrorMsg                             = "`--name` flag value must not be empty"
 	KafkaClusterNotFoundErrorMsg                     = `Kafka cluster "%s" not found`
-	KafkaClusterStillProvisioningErrorMsg            = "your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes"
 	KafkaClusterUpdateFailedSuggestions              = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
-	KafkaClusterExpandingErrorMsg                    = "your cluster is expanding; please wait for that operation to complete before updating again"
-	KafkaClusterShrinkingErrorMsg                    = "your cluster is shrinking; Please wait for that operation to complete before updating again"
-	KafkaClusterInaccessibleErrorMsg                 = `Kafka cluster "%s" not found or access forbidden`
-	KafkaClusterInaccessibleSuggestions              = ChooseRightEnvironmentSuggestions + "\n" +
-		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
-	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
+	ChooseRightEnvironmentSuggestions                = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg              = `unknown topic "%s"`
 	MdsUrlNotFoundSuggestions         = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
@@ -96,44 +77,17 @@ const (
 	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
 		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
 		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
-	NoLogFoundErrorMsg              = "no log found: to run %s, use `confluent local services %s start`"
-	MacVersionErrorMsg              = "macOS version >= %s is required (detected: %s)"
-	JavaExecNotFondErrorMsg         = "could not find java executable, please install java or set JAVA_HOME"
-	NothingToDestroyErrorMsg        = "nothing to destroy"
-	ComputePoolNotFoundErrorMsg     = `Flink compute pool "%s" not found or access forbidden`
-	ComputePoolNotFoundSuggestions  = "List available Flink compute pools with `confluent flink compute-pool list`.\nMake sure you have selected the compute pool's environment with `confluent environment use`."
-	FailedToReadPortsErrorMsg       = "failed to read local ports from config"
-	FailedToReadPortsSuggestions    = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
-	InstallAndStartDockerSuggestion = "Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running."
+	NoLogFoundErrorMsg             = "no log found: to run %s, use `confluent local services %s start`"
+	MacVersionErrorMsg             = "macOS version >= %s is required (detected: %s)"
+	JavaExecNotFondErrorMsg        = "could not find java executable, please install java or set JAVA_HOME"
+	NothingToDestroyErrorMsg       = "nothing to destroy"
+	ComputePoolNotFoundErrorMsg    = `Flink compute pool "%s" not found or access forbidden`
+	ComputePoolNotFoundSuggestions = "List available Flink compute pools with `confluent flink compute-pool list`.\nMake sure you have selected the compute pool's environment with `confluent environment use`."
+	FailedToReadPortsErrorMsg      = "failed to read local ports from config"
+	FailedToReadPortsSuggestions   = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
 
 	// schema-registry commands
-	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"
-	InvalidSchemaRegistryLocationSuggestions = `Geo must be either "us", "eu", or "apac".`
-	CompatibilityOrModeErrorMsg              = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg             = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg                    = `invalid schema ID "%s"`
-	SchemaIntegerSuggestions                 = "Schema ID must be an integer."
-	SchemaNotFoundErrorMsg                   = "Schema Registry subject or version not found"
-	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
-		"List available versions with `confluent schema-registry subject describe`."
-	SRInvalidPackageTypeErrorMsg = `"%s" is an invalid package type`
-	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
-	SRInvalidPackageUpgrade      = "Environment \"%s\" is already using the Stream Governance \"%s\" package.\n"
-
-	// secret commands
-	EnterInputTypeErrorMsg    = "enter %s"
-	PipeInputTypeErrorMsg     = "pipe %s over stdin"
-	SpecifyPassphraseErrorMsg = "specify `--passphrase -` if you intend to pipe your passphrase over stdin"
-	PipePassphraseErrorMsg    = "pipe your passphrase over stdin"
-
-	// update command
-	ReadingYesFlagErrorMsg              = "error reading `--yes` flag as bool"
-	CheckingForUpdateErrorMsg           = "error checking for updates"
-	UpdateBinaryErrorMsg                = "error updating CLI binary"
-	ObtainingReleaseNotesErrorMsg       = "error obtaining release notes: %s"
-	ReleaseNotesVersionCheckErrorMsg    = "unable to perform release notes and binary version check: %s"
-	ReleaseNotesVersionMismatchErrorMsg = "binary version (v%s) and latest release notes version (v%s) mismatch"
+	CompatibilityOrModeErrorMsg = "must pass either `--compatibility` or `--mode` flag"
 
 	// auth package
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
@@ -186,12 +140,6 @@ const (
 	ContextStateMismatchErrorMsg          = `context state mismatch for context "%s"`
 	ContextStateNotMappedErrorMsg         = `context state mapping error for context "%s"`
 	DeleteUserAuthErrorMsg                = "unable to delete user auth"
-
-	// local package
-	ConfluentHomeNotFoundErrorMsg         = "could not find %s in CONFLUENT_HOME"
-	SetConfluentHomeErrorMsg              = "set environment variable CONFLUENT_HOME"
-	KafkaScriptFormatNotSupportedErrorMsg = "format %s is not supported in this version"
-	KafkaScriptInvalidFormatErrorMsg      = "invalid format: %s"
 
 	// secret package
 	DataCorruptedErrorMsg              = "failed to decrypt the cipher: data is corrupted"
@@ -246,30 +194,19 @@ const (
 	UnmarshalOAuthTokenErrorMsg        = "failed to unmarshal response body in oauth token request"
 
 	// update package
-	ParseVersionErrorMsg            = "unable to parse %s version %s"
-	TouchLastCheckFileErrorMsg      = "unable to touch last check file"
-	GetTempDirErrorMsg              = "unable to get temp dir for %s"
-	DownloadVersionErrorMsg         = "unable to download %s version %s to %s"
-	SepNonEmptyErrorMsg             = "sep must be a non-empty string"
-	NoVersionsErrorMsg              = "no versions found"
-	GetBinaryVersionsErrorMsg       = "unable to get available binary versions"
-	GetReleaseNotesVersionsErrorMsg = "unable to get available release notes versions"
-	UnexpectedS3ResponseErrorMsg    = "received unexpected response from S3: %s"
+	ParseVersionErrorMsg      = "unable to parse %s version %s"
+	NoVersionsErrorMsg        = "no versions found"
+	GetBinaryVersionsErrorMsg = "unable to get available binary versions"
 
 	// plugin package
 	NoVersionFoundErrorMsg = "no version found in plugin manifest"
 
 	// catcher
-	CCloudBackendErrorPrefix      = "Confluent Cloud backend error"
-	UnexpectedBackendOutputPrefix = "unexpected CCloud backend output"
-	ResourceNotFoundErrorMsg      = `resource "%s" not found`
-	ResourceNotFoundSuggestions   = "Check that the resource \"%s\" exists.\n" +
+	ResourceNotFoundErrorMsg    = `resource "%s" not found`
+	ResourceNotFoundSuggestions = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
 		"To check Schema Registry cluster information, use `confluent schema-registry cluster describe`.\n" +
 		"To list KSQL clusters, use `confluent ksql cluster list`."
-	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
-	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
-	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
 	NoKafkaSelectedSuggestions    = "You must pass `--cluster` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `confluent kafka cluster use`."
@@ -321,24 +258,7 @@ const (
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
 	FailedToReadInputErrorMsg        = "failed to read input"
 
-	// Partition command errors
-	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
-
-	// Broker commands
-	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"
-	OnlySpecifyAllOrBrokerIDErrorMsg = "only specify broker ID argument OR `--all` flag"
-	InvalidBrokerTaskTypeErrorMsg    = "invalid broker task type"
-	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
-
 	// Special error types
-	GenericOpenAPIErrorMsg       = "metadata service backend error: %s: %s"
-	ParsedGenericOpenAPIErrorMsg = "metadata service backend error: %s"
-
-	// FeatureFlags errors
-	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
-
-	// General
-	DeleteResourceErrorMsg  = `failed to delete %s "%s": %v`
-	ListResourceSuggestions = "List available %ss with `%s list`."
-	UpdateResourceErrorMsg  = `failed to update %s "%s": %v`
+	GenericOpenApiErrorMsg       = "metadata service backend error: %s: %s"
+	ParsedGenericOpenApiErrorMsg = "metadata service backend error: %s"
 )

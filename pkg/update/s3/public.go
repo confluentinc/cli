@@ -177,7 +177,7 @@ func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBu
 func (r *PublicRepo) GetLatestReleaseNotesVersions(name, currentVersion string) (version.Collection, error) {
 	versions, err := r.GetAvailableReleaseNotesVersions(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, errors.GetReleaseNotesVersionsErrorMsg)
+		return nil, errors.Wrapf(err, "unable to get available release notes versions")
 	}
 
 	current, err := version.NewVersion(currentVersion)
@@ -292,7 +292,7 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 		if err == nil {
 			log.CliLogger.Tracef("Response from AWS: %s", string(body))
 		}
-		return nil, errors.Errorf(errors.UnexpectedS3ResponseErrorMsg, resp.Status)
+		return nil, errors.Errorf("received unexpected response from S3: %s", resp.Status)
 	}
 	return resp, nil
 }

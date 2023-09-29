@@ -102,7 +102,7 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 
 	// After fetching the latest version, we touch the file so that we don't make the request again for 24hrs.
 	if err := c.touchCheckFile(); err != nil {
-		return "", "", errors.Wrap(err, errors.TouchLastCheckFileErrorMsg)
+		return "", "", errors.Wrap(err, "unable to touch last check file")
 	}
 
 	var major, minor string
@@ -200,7 +200,7 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) error {
 	downloadDir, err := c.fs.MkdirTemp("", cliName)
 	if err != nil {
-		return errors.Wrapf(err, errors.GetTempDirErrorMsg, cliName)
+		return errors.Wrapf(err, "unable to get temp dir for %s", cliName)
 	}
 	defer func() {
 		if err := c.fs.RemoveAll(downloadDir); err != nil {
@@ -213,7 +213,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 
 	payload, err := c.Repository.DownloadVersion(cliName, version, downloadDir)
 	if err != nil {
-		return errors.Wrapf(err, errors.DownloadVersionErrorMsg, cliName, version, downloadDir)
+		return errors.Wrapf(err, "unable to download %s version %s to %s", cliName, version, downloadDir)
 	}
 
 	mb := float64(len(payload)) / 1024.0 / 1024.0

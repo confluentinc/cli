@@ -85,7 +85,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return errors.New(errors.BadServiceAccountIdErrorMsg)
 		}
 		if _, ok := resourceIdToUserIdMap[serviceAccount]; !ok {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccount), errors.ServiceAccountNotFoundSuggestions)
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccount),
+				errors.ServiceAccountNotFoundSuggestions,
+			)
 		}
 	}
 

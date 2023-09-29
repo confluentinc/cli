@@ -90,7 +90,10 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern()
 	})
 	if idx == -1 {
-		return errors.NewErrorWithSuggestions("failed to look up matching role binding", "To list role bindings, use `confluent iam rbac role-binding list`.")
+		return errors.NewErrorWithSuggestions(
+			"failed to look up matching role binding",
+			"To list role bindings, use `confluent iam rbac role-binding list`.",
+		)
 	}
 
 	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {

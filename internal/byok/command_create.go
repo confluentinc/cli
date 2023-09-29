@@ -18,6 +18,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
+const failedToRenderKeyPolicyErrorMsg = "BYOK error: failed to render key policy"
+
 var encryptionKeyPolicyAws = template.Must(template.New("encryptionKeyPolicyAws").Parse(`{
 	"Sid" : "Allow Confluent accounts to use the key",
 	"Effect" : "Allow",
@@ -153,7 +155,7 @@ func getPolicyCommand(key *byokv1.ByokV1Key) (string, error) {
 func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	buf := new(bytes.Buffer)
 	if err := encryptionKeyPolicyAws.Execute(buf, roles); err != nil {
-		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
+		return "", errors.New(failedToRenderKeyPolicyErrorMsg)
 	}
 	return buf.String(), nil
 }
@@ -164,7 +166,7 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	regex := regexp.MustCompile(`^https://([^/.]+).vault.azure.net`)
 	matches := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)
 	if matches == nil {
-		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
+		return "", errors.New(failedToRenderKeyPolicyErrorMsg)
 	}
 
 	vaultName := matches[1]

@@ -15,6 +15,12 @@ import (
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 )
 
+type command struct {
+	*pcmd.AuthenticatedCLICommand
+	keystore     keystore.KeyStore
+	flagResolver pcmd.FlagResolver
+}
+
 const (
 	deleteOperation = "deleting"
 	getOperation    = "getting"
@@ -29,12 +35,6 @@ const (
 	refuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use the `--force` flag."
 	unableToStoreApiKeyErrorMsg         = "unable to store API key locally"
 )
-
-type command struct {
-	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
-	flagResolver pcmd.FlagResolver
-}
 
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{

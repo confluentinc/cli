@@ -392,8 +392,10 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		clusterCreds = clusterConfig.APIKeys[clusterConfig.APIKey]
 	}
 	if clusterCreds == nil {
-		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster",
-			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.")
+		return errors.NewErrorWithSuggestions(
+			"API key not set for the Kafka cluster",
+			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.",
+		)
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
