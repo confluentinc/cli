@@ -97,8 +97,8 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&request)
 			require.NoError(t, err)
 			connector := &connectv1.ConnectV1Connector{
-				Name:   *request.Name,
-				Config: *request.Config,
+				Name:   request.GetName(),
+				Config: request.GetConfig(),
 			}
 			err = json.NewEncoder(w).Encode(connector)
 			require.NoError(t, err)

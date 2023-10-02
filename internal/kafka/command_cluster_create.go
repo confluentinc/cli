@@ -293,13 +293,14 @@ func catchClusterConfigurationNotValidError(err error, r *http.Response, cloud, 
 	}
 
 	err = errors.CatchCCloudV2Error(err, r)
-	if strings.Contains(err.Error(), "Service provider must be set to AWS, GCP or AZURE.") {
+
+	if err.Error() == "Service provider must be set to AWS, GCP or AZURE." {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`"%s" is not an available cloud provider`, cloud),
 			"To view a list of available cloud providers and regions, use `confluent kafka region list`.",
 		)
 	}
-	if strings.Contains(err.Error(), "Unable to schedule given the cloud and/or region in request is invalid or unavailable") {
+	if err.Error() == "Unable to schedule given the cloud and/or region in request is invalid or unavailable" {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`"%s" is not an available region for "%s"`, region, cloud),
 			fmt.Sprintf("To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`.", cloud, cloud),
