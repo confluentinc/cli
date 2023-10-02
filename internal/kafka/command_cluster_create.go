@@ -3,12 +3,12 @@ package kafka
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"strings"
 	"text/template"
 
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
@@ -92,15 +92,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	clouds, err := c.Client.EnvironmentMetadata.Get()
-	if err != nil {
-		return err
-	}
-
-	if err := checkCloudAndRegion(cloud, region, clouds); err != nil {
-		return err
-	}
-
 	availabilityString, err := cmd.Flags().GetString("availability")
 	if err != nil {
 		return err
@@ -156,17 +147,15 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		keyGlobalObjectReference = &cmkv2.GlobalObjectReference{Id: key.GetId()}
 	}
 
-	createCluster := cmkv2.CmkV2Cluster{
-		Spec: &cmkv2.CmkV2ClusterSpec{
-			Environment:  &cmkv2.EnvScopedObjectReference{Id: environmentId},
-			DisplayName:  cmkv2.PtrString(args[0]),
-			Cloud:        cmkv2.PtrString(cloud),
-			Region:       cmkv2.PtrString(region),
-			Availability: cmkv2.PtrString(availability),
-			Config:       setCmkClusterConfig(clusterType, 1, encryptionKey),
-			Byok:         keyGlobalObjectReference,
-		},
-	}
+	createCluster := cmkv2.CmkV2Cluster{Spec: &cmkv2.CmkV2ClusterSpec{
+		Environment:  &cmkv2.EnvScopedObjectReference{Id: environmentId},
+		DisplayName:  cmkv2.PtrString(args[0]),
+		Cloud:        cmkv2.PtrString(cloud),
+		Region:       cmkv2.PtrString(region),
+		Availability: cmkv2.PtrString(availability),
+		Config:       setCmkClusterConfig(clusterType, 1, encryptionKey),
+		Byok:         keyGlobalObjectReference,
+	}}
 
 	if cmd.Flags().Changed("cku") {
 		cku, err := cmd.Flags().GetInt("cku")
@@ -184,7 +173,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 
 	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
-		return errors.CatchClusterConfigurationNotValidError(err, httpResp)
+		return catchClusterConfigurationNotValidError(err, httpResp, cloud, region)
 	}
 
 	if output.GetFormat(cmd) == output.Human {
@@ -192,30 +181,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
-}
-
-func checkCloudAndRegion(cloudId, regionId string, clouds []*ccloudv1.CloudMetadata) error {
-	for _, cloud := range clouds {
-		if cloudId == cloud.GetId() {
-			for _, region := range cloud.GetRegions() {
-				if regionId == region.GetId() {
-					if region.GetIsSchedulable() {
-						return nil
-					} else {
-						break
-					}
-				}
-			}
-			return errors.NewErrorWithSuggestions(
-				fmt.Sprintf(`"%s" is not an available region for "%s"`, regionId, cloudId),
-				fmt.Sprintf("To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`.", cloudId, cloudId),
-			)
-		}
-	}
-	return errors.NewErrorWithSuggestions(
-		fmt.Sprintf(`"%s" is not an available cloud provider`, cloudId),
-		"To view a list of available cloud providers and regions, use `confluent kafka region list`.",
-	)
 }
 
 func (c *clusterCommand) validateGcpEncryptionKey(cloud, accountId string) error {
@@ -320,4 +285,33 @@ func getKafkaProvisionEstimate(sku ccstructs.Sku) string {
 	default:
 		return fmt.Sprintf(fmtEstimate, "5 minutes")
 	}
+}
+
+func catchClusterConfigurationNotValidError(err error, r *http.Response, cloud, region string) error {
+	if err == nil || r == nil {
+		return err
+	}
+
+	err = errors.CatchCCloudV2Error(err, r)
+
+	if err.Error() == "Service provider must be set to AWS, GCP or AZURE." {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`"%s" is not an available cloud provider`, cloud),
+			"To view a list of available cloud providers and regions, use `confluent kafka region list`.",
+		)
+	}
+	if err.Error() == "Unable to schedule given the cloud and/or region in request is invalid or unavailable" {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`"%s" is not an available region for "%s"`, region, cloud),
+			fmt.Sprintf("To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`.", cloud, cloud),
+		)
+	}
+	if strings.Contains(err.Error(), "CKU must be greater") {
+		return errors.New("CKU must be greater than 1 for multi-zone dedicated clusters")
+	}
+	if strings.Contains(err.Error(), "Durability must be HIGH for an Enterprise cluster") {
+		return errors.New(`availability must be "multi-zone" for enterprise clusters`)
+	}
+
+	return err
 }
