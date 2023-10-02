@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
