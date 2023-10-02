@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -63,11 +62,6 @@ func NormalizeByteArrayNewLines(raw []byte) []byte {
 	normalized := bytes.ReplaceAll(raw, []byte{13, 10}, []byte{10})
 	normalized = bytes.ReplaceAll(normalized, []byte{13}, []byte{10})
 	return normalized
-}
-
-func ValidateEmail(email string) bool {
-	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	return rgxEmail.MatchString(email)
 }
 
 func Abbreviate(s string, maxLength int) string {

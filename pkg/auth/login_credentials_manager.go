@@ -332,7 +332,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 	return func() (*Credentials, error) {
 		url := GetEnvWithFallback(ConfluentPlatformMDSURL, DeprecatedConfluentPlatformMDSURL)
 		if url == "" {
-			return nil, errors.New(errors.NoURLEnvVarErrorMsg)
+			return nil, errors.New(errors.NoUrlEnvVarErrorMsg)
 		}
 
 		envVars := environmentVariables{
@@ -380,9 +380,9 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *config.Con
 				log.CliLogger.Debugf(`Found credentials for user "%s" from keychain (%s)`, username, stopNonInteractiveMsg)
 				return &Credentials{Username: username, Password: password}, nil
 			}
-			return nil, errors.New(errors.NoValidKeychainCredentialErrorMsg)
+			return nil, errors.New("no matching credentials found in keychain")
 		}
-		return nil, errors.New(errors.KeychainNotAvailableErrorMsg)
+		return nil, errors.New("keychain not available on platforms other than darwin")
 	}
 }
 

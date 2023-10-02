@@ -57,7 +57,7 @@ func TestParseAclRequest(t *testing.T) {
 		{
 			args: []string{"--operation", "read", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
 			expectedAcl: AclRequestDataWithError{
-				Errors: multierror.Append(errors.Errorf(errMsgs.OnlySetAllowOrDenyErrorMsg)),
+				Errors: multierror.Append(errors.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL")),
 			},
 		},
 	}

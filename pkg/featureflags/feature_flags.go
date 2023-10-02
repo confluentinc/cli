@@ -292,7 +292,7 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 
 func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
 	if !slices.Contains(attributes, key) {
-		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
+		panic(fmt.Sprintf(`attribute "%s" is not one of the supported FeatureFlags targeting values`, key))
 	}
 	custom.Set(key, value)
 }

@@ -88,7 +88,10 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 	if environmentId == "" {
 		if c.Context.GetCurrentEnvironment() == "" {
-			return errors.NewErrorWithSuggestions("no environment provided", "Provide an environment with `confluent environment use env-123456` or `--environment`.")
+			return errors.NewErrorWithSuggestions(
+				"no environment provided",
+				"Provide an environment with `confluent environment use env-123456` or `--environment`.",
+			)
 		}
 		environmentId = c.Context.GetCurrentEnvironment()
 	}
@@ -104,7 +107,10 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	computePool := c.Context.GetCurrentFlinkComputePool()
 	if computePool == "" {
-		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
+		return errors.NewErrorWithSuggestions(
+			"no compute pool selected",
+			"Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.",
+		)
 	}
 
 	serviceAccount, err := cmd.Flags().GetString("service-account")

@@ -66,7 +66,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	if strings.ToLower(clusterSpec.GetPackage()) == packageDisplayName {
-		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
+		output.ErrPrintf("Environment \"%s\" is already using the Stream Governance \"%s\" package.\n", environmentId, packageDisplayName)
 		return nil
 	}
 

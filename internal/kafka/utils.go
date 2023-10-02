@@ -70,13 +70,13 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 
 func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
-		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
+		return errors.New("your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes")
 	}
 	if isExpanding(currentCluster) {
-		return errors.New(errors.KafkaClusterExpandingErrorMsg)
+		return errors.New("your cluster is expanding; please wait for that operation to complete before updating again")
 	}
 	if isShrinking(currentCluster) {
-		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
+		return errors.New("your cluster is shrinking; please wait for that operation to complete before updating again")
 	}
 	return nil
 }

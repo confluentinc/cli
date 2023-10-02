@@ -37,9 +37,11 @@ func getShortenedContainerId(id string) string {
 }
 
 func checkIsDockerRunning(dockerClient *client.Client) error {
-	_, err := dockerClient.Info(context.Background())
-	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.InstallAndStartDockerSuggestion)
+	if _, err := dockerClient.Info(context.Background()); err != nil {
+		return errors.NewErrorWithSuggestions(
+			err.Error(),
+			"Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running.",
+		)
 	}
 
 	return nil

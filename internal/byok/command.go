@@ -6,6 +6,8 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
+const byokUnknownKeyTypeErrorMsg = "unknown byok key type"
+
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 }

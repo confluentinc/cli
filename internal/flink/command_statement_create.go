@@ -63,7 +63,10 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	computePool := c.Context.GetCurrentFlinkComputePool()
 	if computePool == "" {
-		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
+		return errors.NewErrorWithSuggestions(
+			"no compute pool selected",
+			"Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.",
+		)
 	}
 
 	name := uuid.New().String()

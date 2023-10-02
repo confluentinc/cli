@@ -125,8 +125,10 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 
 func (c *command) validateLocation(location ccloudv1.GlobalSchemaRegistryLocation) error {
 	if location == ccloudv1.GlobalSchemaRegistryLocation_NONE {
-		return errors.NewErrorWithSuggestions(errors.InvalidSchemaRegistryLocationErrorMsg,
-			errors.InvalidSchemaRegistryLocationSuggestions)
+		return errors.NewErrorWithSuggestions(
+			"invalid input for flag `--geo`",
+			`Geo must be either "us", "eu", or "apac".`,
+		)
 	}
 	return nil
 }

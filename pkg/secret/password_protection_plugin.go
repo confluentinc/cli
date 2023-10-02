@@ -63,7 +63,10 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase, localSecureConfigP
 		}
 		// Data Key is already created
 		if cipherSuite.EncryptedDataKey != "" {
-			return "", errors.NewErrorWithSuggestions(errors.AlreadyGeneratedErrorMsg, errors.AlreadyGeneratedSuggestions)
+			return "", errors.NewErrorWithSuggestions(
+				"master key is already generated",
+				"You can rotate the key with `confluent secret file rotate`.",
+			)
 		}
 	}
 
@@ -150,7 +153,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath, local
 
 	// Check if secure config file path is valid
 	if !utils.DoesPathExist(localSecureConfigPath) {
-		return errors.Errorf(errors.InvalidSecretFilePathErrorMsg, localSecureConfigPath)
+		return errors.Errorf(`invalid secrets file path "%s"`, localSecureConfigPath)
 	}
 
 	var configKeys []string
@@ -199,7 +202,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath, local
 					return err
 				}
 			} else {
-				return errors.Errorf(errors.SecretConfigFileMissingKeyErrorMsg, key)
+				return errors.Errorf(`missing config key "%s" in secret config file`, key)
 			}
 		} else {
 			configProps.Delete(key)
@@ -394,7 +397,7 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath, localSec
 	}
 
 	if newConfigProps.Len() == 0 {
-		return errors.New(errors.EmptyNewConfigListErrorMsg)
+		return errors.New("add failed: empty list of new configs")
 	}
 
 	return c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
@@ -412,7 +415,7 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath, local
 	}
 
 	if newConfigProps.Len() == 0 {
-		return errors.New(errors.EmptyUpdateConfigListErrorMsg)
+		return errors.New("update failed: empty list of update configs")
 	}
 
 	configProps, err := LoadConfiguration(configFilePath, newConfigProps.Keys(), true)
@@ -458,7 +461,7 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath, local
 	case ".json":
 		err = c.removeJsonConfig(configFilePath, configs)
 	default:
-		err = errors.Errorf(errors.FileTypeNotSupportedErrorMsg, fileType)
+		err = errors.Errorf(`file type "%s" currently not supported`, fileType)
 	}
 	if err != nil {
 		return err
@@ -484,7 +487,7 @@ func (c *PasswordProtectionSuite) removeJsonConfig(configFilePath string, config
 				return err
 			}
 		} else {
-			return errors.Errorf(errors.ConfigKeyNotInJSONErrorMsg, key)
+			return errors.Errorf(errors.ConfigKeyNotInJsonErrorMsg, key)
 		}
 	}
 	return WriteFile(configFilePath, []byte(jsonConfig))

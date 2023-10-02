@@ -97,7 +97,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	yes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
-		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
+		return err
 	}
 
 	major, err := cmd.Flags().GetBool("major")
@@ -113,7 +113,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	output.ErrPrintln("Checking for updates...")
 	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
+		return errors.NewUpdateClientWrapError(err, "error checking for updates")
 	}
 
 	if latestMajorVersion == "" && latestMinorVersion == "" {
@@ -155,7 +155,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin, noVerify); err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
+		return errors.NewUpdateClientWrapError(err, "error updating CLI binary")
 	}
 
 	return nil
@@ -190,14 +190,14 @@ func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
 
 	var errMsg string
 	if err != nil {
-		errMsg = fmt.Sprintf(errors.ObtainingReleaseNotesErrorMsg, err)
+		errMsg = fmt.Sprintf("error obtaining release notes: %v", err)
 	} else {
 		isSameVersion, err := sameVersionCheck(latestBinaryVersion, latestReleaseNotesVersion)
 		if err != nil {
-			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionCheckErrorMsg, err)
+			errMsg = fmt.Sprintf("unable to perform release notes and binary version check: %v", err)
 		}
 		if !isSameVersion {
-			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionMismatchErrorMsg, latestBinaryVersion, latestReleaseNotesVersion)
+			errMsg = fmt.Sprintf("binary version (v%s) and latest release notes version (v%s) mismatch", latestBinaryVersion, latestReleaseNotesVersion)
 		}
 	}
 

@@ -98,7 +98,7 @@ func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
 			return user, nil
 		}
 	}
-	return iamv2.IamV2User{}, fmt.Errorf(errors.InvalidEmailErrorMsg, email)
+	return iamv2.IamV2User{}, fmt.Errorf(`user "%s" not found`, email)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
