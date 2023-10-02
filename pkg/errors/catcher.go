@@ -24,13 +24,13 @@ import (
 
 const quotaExceededRegex = ".* is currently limited to .*"
 
-type errorResponseBody struct {
-	Errors  []errorDetail `json:"errors"`
+type ErrorResponseBody struct {
+	Errors  []ErrorDetail `json:"errors"`
 	Error   errorBody     `json:"error"`
 	Message string        `json:"message"`
 }
 
-type errorDetail struct {
+type ErrorDetail struct {
 	Detail     string `json:"detail"`
 	Resolution string `json:"resolution"`
 }
@@ -162,7 +162,7 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	}
 
 	body, _ := io.ReadAll(r.Body)
-	var resBody errorResponseBody
+	var resBody ErrorResponseBody
 	_ = json.Unmarshal(body, &resBody)
 	if len(resBody.Errors) > 0 {
 		detail := resBody.Errors[0].Detail
@@ -170,7 +170,7 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 			return NewErrorWithSuggestions(detail, "Look up Confluent Cloud service quota limits with `confluent service-quota list`.")
 		}
 		if detail != "" {
-			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
+			err = errors.New(strings.TrimSuffix(detail, "\n"))
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
 				err = NewErrorWithSuggestions(err.Error(), resolution)
 			}
@@ -251,26 +251,6 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	return CatchCCloudV2Error(err, r)
-}
-
-func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	err = CatchCCloudV2Error(err, r)
-	if strings.Contains(err.Error(), "CKU must be greater") {
-		return New("CKU must be greater than 1 for multi-zone dedicated clusters")
-	}
-	if strings.Contains(err.Error(), "Durability must be HIGH for an Enterprise cluster") {
-		return New(`availability must be "multi-zone" for enterprise clusters`)
-	}
-
-	return err
 }
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {

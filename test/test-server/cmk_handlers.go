@@ -2,7 +2,6 @@ package testserver
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"testing"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 // Handler for POST "/cmk/v2/clusters"
@@ -46,9 +46,8 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			}
 			cluster.Status.Cku = cmkv2.PtrInt32(1)
 		} else if req.Spec.Config.CmkV2Enterprise != nil {
-			if *req.Spec.Availability == "SINGLE_ZONE" {
-				w.WriteHeader(http.StatusUnprocessableEntity)
-				_, err := io.WriteString(w, `{"errors":[{"status":"422","detail":"Durability must be HIGH for an Enterprise cluster"}]}`)
+			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
+				err := writeError(w, "Durability must be HIGH for an Enterprise cluster")
 				require.NoError(t, err)
 				return
 			}
@@ -57,9 +56,26 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}
 		}
 
+		if req.Spec.GetCloud() == "oops" {
+			err := writeError(w, "Service provider must be set to AWS, GCP or AZURE.")
+			require.NoError(t, err)
+			return
+		}
+
+		if req.Spec.GetRegion() == "oops" {
+			err := writeError(w, "Unable to schedule given the cloud and/or region in request is invalid or unavailable")
+			require.NoError(t, err)
+			return
+		}
+
 		err = json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}
+}
+
+func writeError(w http.ResponseWriter, s string) error {
+	body := errors.ErrorResponseBody{Errors: []errors.ErrorDetail{{Detail: s}}}
+	return json.NewEncoder(w).Encode(body)
 }
 
 // Handler for "/cmk/v2/clusters"
