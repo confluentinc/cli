@@ -38,7 +38,7 @@ func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Res
 	if response != nil {
 		switch status := response.StatusCode; status {
 		case http.StatusNotFound:
-			return errors.NewWrapErrorWithSuggestions(err, errors.UnableToAccessEndpointErrorMsg, errors.UnableToAccessEndpointSuggestions)
+			return errors.NewWrapErrorWithSuggestions(err, "unable to access endpoint", errors.EnsureCpSixPlusSuggestions)
 		case http.StatusForbidden:
 			switch e := err.(type) {
 			case mdsv1.GenericOpenAPIError:

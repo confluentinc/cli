@@ -188,7 +188,7 @@ func (c *EncryptEngineImpl) decrypt(crypt, key, iv []byte, algo string) ([]byte,
 		}
 		return decrypted, nil
 	} else {
-		return []byte{}, errors.Errorf(errors.InvalidAlgorithmErrorMsg, algo)
+		return []byte{}, errors.Errorf(`invalid algorithm "%s"`, algo)
 	}
 }
 
@@ -196,7 +196,7 @@ func (c *EncryptEngineImpl) pkcs5Trimming(encrypt []byte) ([]byte, error) {
 	padding := encrypt[len(encrypt)-1]
 	length := len(encrypt) - int(padding)
 	if length < 0 || length > len(encrypt) {
-		return nil, errors.New(errors.DataCorruptedErrorMsg)
+		return nil, errors.New("failed to decrypt the cipher: data is corrupted")
 	}
 	return encrypt[:len(encrypt)-int(padding)], nil
 }

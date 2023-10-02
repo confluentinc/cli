@@ -98,7 +98,7 @@ func (ch *ConfluentHomeManager) getRootDir() (string, error) {
 		return dir, nil
 	}
 
-	return "", errors.New(errors.SetConfluentHomeErrorMsg)
+	return "", errors.New("set environment variable CONFLUENT_HOME")
 }
 
 func (ch *ConfluentHomeManager) GetFile(path ...string) (string, error) {
@@ -234,7 +234,7 @@ func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
 		return "", err
 	}
 	if len(matches) == 0 {
-		return "", errors.Errorf(errors.ConfluentHomeNotFoundErrorMsg, pattern)
+		return "", errors.Errorf("could not find %s in CONFLUENT_HOME", pattern)
 	}
 
 	versionFile := matches[0]
@@ -250,16 +250,6 @@ func (ch *ConfluentHomeManager) GetConnectorConfigFile(connector string) (string
 func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, error) {
 	var script string
 
-	if format == "json" || format == "protobuf" {
-		supported, err := ch.IsAtLeastVersion("5.5")
-		if err != nil {
-			return "", err
-		}
-		if !supported {
-			return "", errors.Errorf(errors.KafkaScriptFormatNotSupportedErrorMsg, format)
-		}
-	}
-
 	switch format {
 	case "":
 		script = fmt.Sprintf("kafka-console-%s", mode)
@@ -270,7 +260,7 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 	case "protobuf":
 		script = fmt.Sprintf("kafka-protobuf-console-%s", mode)
 	default:
-		return "", errors.Errorf(errors.KafkaScriptInvalidFormatErrorMsg, format)
+		return "", errors.Errorf("invalid format: %s", format)
 	}
 
 	return ch.GetFile("bin", script)

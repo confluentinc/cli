@@ -17,7 +17,10 @@ import (
 func GetCAClient(caCertPath string) (*http.Client, error) {
 	caCert, err := os.ReadFile(caCertPath)
 	if err != nil {
-		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestions)
+		return nil, errors.NewErrorWithSuggestions(
+			"no CA certificate specified",
+			"Please specify `--ca-location` to enable Schema Registry client.",
+		)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
@@ -79,7 +82,7 @@ func CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath strin
 
 func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*http.Client, error) {
 	if caCertReader == nil && isEmptyClientCert(clientCert) {
-		return nil, errors.New(errors.NoReaderForCustomCertErrorMsg)
+		return nil, errors.New("no reader specified for reading custom certificates")
 	}
 	transport := DefaultTransport()
 
@@ -98,13 +101,13 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		// read custom certs
 		caCerts, err := io.ReadAll(caCertReader)
 		if err != nil {
-			return nil, errors.Wrap(err, errors.ReadCertErrorMsg)
+			return nil, errors.Wrap(err, "failed to read certificate")
 		}
 		log.CliLogger.Tracef("Specified CA certificate has been read")
 
 		// Append custom certs to the system pool
 		if ok := caCertPool.AppendCertsFromPEM(caCerts); !ok {
-			return nil, errors.New(errors.NoCertsAppendedErrorMsg)
+			return nil, errors.New("no certs appended, using system certs only")
 		}
 		log.CliLogger.Tracef("Successfully appended new certificate to the pool")
 		// Trust the updated cert pool in our client

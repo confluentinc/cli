@@ -83,10 +83,10 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 	connectionName, err := a.getSsoConnectionName(client, email, orgResourceId)
 	if err != nil {
 		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
-		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
+		return "", "", errors.Errorf(`unable to obtain SSO info for user "%s"`, email)
 	}
 	if connectionName == "" {
-		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
+		return "", "", errors.Errorf(`tried to obtain SSO token for non SSO user "%s"`, email)
 	}
 
 	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, connectionName)
@@ -157,7 +157,7 @@ func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client
 		return err
 	}
 	if getMeReply.GetUser().GetEmail() != loginEmail {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentialsErrorMsg, loginEmail, getMeReply.GetUser().GetEmail()), errors.SSOCredentialsDoNotMatchSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf("expected SSO credentials for %s but got credentials for %s", loginEmail, getMeReply.GetUser().GetEmail()), "Please re-login and use the same email at the prompt and in the SSO portal.")
 	}
 	return nil
 }

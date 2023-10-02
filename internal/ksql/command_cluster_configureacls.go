@@ -66,7 +66,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 
 	credentialIdentity := ksqlCluster.Spec.CredentialIdentity.GetId()
 	if resource.LookupType(credentialIdentity) != resource.ServiceAccount {
-		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, args[0])
+		return fmt.Errorf(errors.KsqldbNoServiceAccountErrorMsg, args[0])
 	}
 
 	serviceAccountId, err := c.getServiceAccount(&ksqlCluster)
@@ -109,7 +109,7 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (stri
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.GetId())
+	return "", errors.Errorf(errors.KsqldbNoServiceAccountErrorMsg, cluster.GetId())
 }
 
 func buildACLBindings(serviceAccountId string, cluster *ksqlv2.KsqldbcmV2Cluster, topics []string) []*ccstructs.ACLBinding {

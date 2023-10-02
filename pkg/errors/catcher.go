@@ -77,10 +77,10 @@ func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
 	case mdsv1.GenericOpenAPIError:
-		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+		return Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
 		if strings.Contains(err.Error(), "Forbidden Access") {
-			return NewErrorWithSuggestions(UnauthorizedErrorMsg, UnauthorizedSuggestions)
+			return NewErrorWithSuggestions("user is unauthorized to perform this action", "Check the user's privileges by running `confluent iam rbac role-binding list`.\nGive the user the appropriate permissions using `confluent iam rbac role-binding create`.")
 		}
 		openAPIError, parseErr := parseMDSOpenAPIErrorType1(err)
 		if parseErr == nil {
@@ -90,7 +90,7 @@ func catchMDSErrors(err error) error {
 			if parseErr2 == nil {
 				return openAPIErrorType2.UserFacingError()
 			} else {
-				return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+				return Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
 			}
 		}
 	}
@@ -102,7 +102,7 @@ func catchMDSErrors(err error) error {
 // are supposed to be caught by more specific catchers.
 func catchCcloudV1Errors(err error) error {
 	if err, ok := err.(*ccloudv1.Error); ok {
-		return Wrap(err, CCloudBackendErrorPrefix)
+		return Wrap(err, "Confluent Cloud backend error")
 	}
 	return err
 }
@@ -144,8 +144,10 @@ error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply erro
 */
 func catchCCloudBackendUnmarshallingError(err error) error {
 	if regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`).MatchString(err.Error()) {
-		errorMsg := fmt.Sprintf(prefixFormat, UnexpectedBackendOutputPrefix, BackendUnmarshallingErrorMsg)
-		return NewErrorWithSuggestions(errorMsg, UnexpectedBackendOutputSuggestions)
+		return NewErrorWithSuggestions(
+			"unexpected CCloud backend output: protobuf unmarshalling error",
+			"Please submit a support ticket.",
+		)
 	}
 	return err
 }
@@ -165,8 +167,9 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	if len(resBody.Errors) > 0 {
 		detail := resBody.Errors[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewErrorWithSuggestions(detail, QuotaExceededSuggestions)
-		} else if detail != "" {
+			return NewErrorWithSuggestions(detail, "Look up Confluent Cloud service quota limits with `confluent service-quota list`.")
+		}
+		if detail != "" {
 			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
 				err = NewErrorWithSuggestions(err.Error(), resolution)
@@ -221,7 +224,11 @@ func CatchComputePoolNotFoundError(err error, computePoolId string, r *http.Resp
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(ComputePoolNotFoundErrorMsg, computePoolId), ComputePoolNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(
+			CatchCCloudV2Error(err, r),
+			fmt.Sprintf(`Flink compute pool "%s" not found or access forbidden`, computePoolId),
+			"List available Flink compute pools with `confluent flink compute-pool list`.\nMake sure you have selected the compute pool's environment with `confluent environment use`.",
+		)
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -236,7 +243,11 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), KafkaClusterInaccessibleSuggestions)
+		return NewWrapErrorWithSuggestions(
+			CatchCCloudV2Error(err, r),
+			fmt.Sprintf(`Kafka cluster "%s" not found or access forbidden`, clusterId),
+			ChooseRightEnvironmentSuggestions+"\nThe active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`.",
+		)
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -264,7 +275,7 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), ApiKeyNotFoundSuggestions)
 	}
 	return CatchCCloudV2Error(err, r)
 }
@@ -285,10 +296,14 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 	if err == nil {
 		return nil
 	}
+
 	if isResourceNotFoundError(err) {
-		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
-		return NewErrorWithSuggestions(errorMsg, KSQLNotFoundSuggestions)
+		return NewErrorWithSuggestions(
+			fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId),
+			"To list KSQL clusters, use `confluent ksql cluster list`.",
+		)
 	}
+
 	return err
 }
 
@@ -303,8 +318,7 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 
 	err = CatchCCloudV2Error(err, r)
 	if strings.Contains(err.Error(), "Service name is already in use") {
-		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
-		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
+		return NewErrorWithSuggestions(fmt.Sprintf(`service name "%s" is already in use`, serviceName), "To list all service account, use `confluent iam service-account list`.")
 	}
 
 	return err
@@ -341,8 +355,11 @@ func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error
 	}
 	compiledRegex := regexp.MustCompile(`Unknown error, how did this happen\? Error code = 87`)
 	if compiledRegex.MatchString(err.Error()) {
-		errorMsg := fmt.Sprintf(ProducingToCompactedTopicErrorMsg, topicName)
-		return true, NewErrorWithSuggestions(errorMsg, ProducingToCompactedTopicSuggestions)
+		return true, NewErrorWithSuggestions(
+			fmt.Sprintf("producer has detected an INVALID_RECORD error for topic %s", topicName),
+			"If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n"+
+				"If your topic is compacted, ensure you are producing a record with a key.",
+		)
 	}
 	return false, err
 }

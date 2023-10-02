@@ -32,7 +32,7 @@ func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
 	auditLog := c.Context.GetOrganization().GetAuditLog()
 
 	if auditLog.GetClusterId() == "" {
-		return errors.New(errors.ConnectLogEventsNotEnabledErrorMsg)
+		return errors.New("Connect Log Events are not enabled for this organization")
 	}
 
 	table := output.NewTable(cmd)

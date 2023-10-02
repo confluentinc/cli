@@ -34,8 +34,10 @@ func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 		}
 	}
 
-	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SRInvalidPackageTypeErrorMsg, inputPackageDisplayName),
-		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
+	return "", errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`"%s" is an invalid package type`, inputPackageDisplayName),
+		fmt.Sprintf("Allowed values for `--package` flag are: %s.", getCommaDelimitedPackagesString()),
+	)
 }
 
 func getCommaDelimitedPackagesString() string {

@@ -73,7 +73,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		}
 
 		if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(httpStatusCodeErrorMsg, httpResp.StatusCode), httpStatusCodeSuggestions)
 		}
 
 		return displayCreateAndDeleteOutput(cmd, options)
@@ -90,7 +90,10 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern()
 	})
 	if idx == -1 {
-		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(
+			"failed to look up matching role binding",
+			"To list role bindings, use `confluent iam rbac role-binding list`.",
+		)
 	}
 
 	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
