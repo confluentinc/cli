@@ -101,7 +101,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster) (int32, error) {
 	// Ensure the cluster is a Dedicated Cluster
 	if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
-		return 0, errors.New("failed to update kafka cluster: cluster resize is only supported on dedicated clusters")
+		return 0, errors.New("failed to update Kafka cluster: cluster resize is only supported on dedicated clusters")
 	}
 	// Durability Checks
 	if currentCluster.Spec.GetAvailability() == highAvailability && cku <= 1 {

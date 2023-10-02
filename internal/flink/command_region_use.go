@@ -35,7 +35,7 @@ func (c *command) regionUse(cmd *cobra.Command, args []string) error {
 	split := strings.Split(args[0], ".")
 	if len(split) != 2 || split[0] == "" || split[1] == "" {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf("Flink region %s is invalid", args[0]),
+			fmt.Sprintf(`Flink region "%s" is invalid`, args[0]),
 			"Run `confluent flink region list` to see available regions.",
 		)
 	}
@@ -50,7 +50,7 @@ func (c *command) regionUse(cmd *cobra.Command, args []string) error {
 	})
 	if !found {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf("flink region %s is not available", args[0]),
+			fmt.Sprintf(`Flink region "%s" is not available`, args[0]),
 			"Run `confluent flink region list` to see available regions.",
 		)
 	}
