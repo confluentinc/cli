@@ -35,10 +35,10 @@ func CheckAllOrIdSpecified(cmd *cobra.Command, args []string, checkAll bool) (in
 	var err error
 	if checkAll {
 		if cmd.Flags().Changed("all") && len(args) > 0 {
-			return -1, false, errors.New(errors.OnlySpecifyAllOrBrokerIDErrorMsg)
+			return -1, false, errors.New("only specify broker ID argument OR `--all` flag")
 		}
 		if !cmd.Flags().Changed("all") && len(args) == 0 {
-			return -1, false, errors.New(errors.MustSpecifyAllOrBrokerIDErrorMsg)
+			return -1, false, errors.New("must pass broker ID argument or specify `--all` flag")
 		}
 		all, err = cmd.Flags().GetBool("all")
 		if err != nil {

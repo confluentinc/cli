@@ -35,7 +35,7 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 	}
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String(mirrorStatusFlagName, "", fmt.Sprintf("Mirror topic status. Can be one of %s. If not specified, list all mirror topics.", utils.ArrayToCommaDelimitedString(allowedMirrorTopicStatusValues, "or")))
+	cmd.Flags().String("mirror-status", "", fmt.Sprintf("Mirror topic status. Can be one of %s. If not specified, list all mirror topics.", utils.ArrayToCommaDelimitedString(allowedMirrorTopicStatusValues, "or")))
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -45,12 +45,12 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 }
 
 func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
-	linkName, err := cmd.Flags().GetString(linkFlagName)
+	link, err := cmd.Flags().GetString("link")
 	if err != nil {
 		return err
 	}
 
-	mirrorStatus, err := cmd.Flags().GetString(mirrorStatusFlagName)
+	mirrorStatus, err := cmd.Flags().GetString("mirror-status")
 	if err != nil {
 		return err
 	}
@@ -69,13 +69,13 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	var mirrors kafkarestv3.ListMirrorTopicsResponseDataList
-	if linkName == "" {
+	if link == "" {
 		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopics(mirrorTopicStatus)
 		if err != nil {
 			return err
 		}
 	} else {
-		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(linkName, mirrorTopicStatus)
+		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(link, mirrorTopicStatus)
 		if err != nil {
 			return err
 		}

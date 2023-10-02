@@ -55,7 +55,7 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return cluster.ClusterName == clusterName
 	})
 	if !found {
-		return errors.Errorf(errors.UnknownClusterErrorMsg, clusterName)
+		return errors.Errorf(`unknown cluster "%s"`, clusterName)
 	}
 
 	httpResp, err = c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(ctx, clusterName)
@@ -63,6 +63,6 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return cluster.HandleClusterError(err, httpResp)
 	}
 
-	output.Printf(errors.UnregisteredClusterMsg, clusterName)
+	output.Printf("Successfully unregistered cluster \"%s\" from the Cluster Registry.\n", clusterName)
 	return nil
 }

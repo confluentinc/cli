@@ -44,9 +44,12 @@ func (c *command) context(args []string) (*dynamicconfig.DynamicContext, error) 
 
 	if ctx := c.Config.Context(); ctx != nil {
 		return ctx, nil
-	} else {
-		return nil, errors.NewErrorWithSuggestions("no context selected", "Select an existing context with `confluent context use`, or supply a specific context name as an argument.")
 	}
+
+	return nil, errors.NewErrorWithSuggestions(
+		"no context selected",
+		"Select an existing context with `confluent context use`, or supply a specific context name as an argument.",
+	)
 }
 
 func (c *command) validArgs(cmd *cobra.Command, args []string) []string {

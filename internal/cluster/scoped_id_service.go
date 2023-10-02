@@ -66,7 +66,7 @@ func (s *ScopedIdService) DescribeCluster(url, caCertPath string) (*ScopedId, er
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf(errors.FetchClusterMetadataErrorMsg, resp.Status, body)
+		return nil, errors.Errorf("unable to fetch cluster metadata: %s - %s", resp.Status, body)
 	}
 
 	meta := &ScopedId{}

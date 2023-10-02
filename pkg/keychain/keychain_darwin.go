@@ -54,7 +54,7 @@ func Delete(isCloud bool, ctxName string) error {
 				return err
 			}
 
-			log.CliLogger.Warnf(errors.RemoveKeychainCredentialsMsg, username)
+			log.CliLogger.Warnf(`Removed credentials for user "%s" from keychain`, username)
 			break
 		}
 	}
@@ -86,7 +86,7 @@ func Read(isCloud bool, ctxName, url string) (string, string, error) {
 func parseCredentialsFromKeychain(data []byte) (string, string, error) {
 	substrings := strings.Split(string(data), separator)
 	if len(substrings) < 2 {
-		return "", "", errors.New(errors.ParseKeychainCredentialsErrorMsg)
+		return "", "", errors.New("unable to parse credentials in keychain access")
 	}
 	return substrings[0], substrings[1], nil
 }

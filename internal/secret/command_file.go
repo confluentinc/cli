@@ -53,9 +53,9 @@ func (c *command) getConfigs(configSource, inputType, prompt string, secure bool
 	if err != nil {
 		switch err {
 		case pcmd.ErrNoValueSpecified:
-			return "", errors.Errorf(errors.EnterInputTypeErrorMsg, inputType)
+			return "", errors.Errorf("enter %s", inputType)
 		case pcmd.ErrNoPipe:
-			return "", errors.Errorf(errors.PipeInputTypeErrorMsg, inputType)
+			return "", errors.Errorf("pipe %s over stdin", inputType)
 		}
 		return "", err
 	}

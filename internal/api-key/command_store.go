@@ -64,7 +64,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err == nil && clusterId != "" {
 		if resourceType != resource.KafkaCluster {
-			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
+			return errors.Errorf(nonKafkaNotImplementedErrorMsg)
 		}
 		cluster, err = c.Context.FindKafkaCluster(clusterId)
 		if err != nil {
@@ -74,7 +74,10 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		cluster, err = c.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			// Replace the error msg since it suggests flags which are unavailable with this command
-			return errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.APIKeyNotValidForClusterSuggestions)
+			return errors.NewErrorWithSuggestions(
+				errors.NoKafkaSelectedErrorMsg,
+				apiKeyNotValidForClusterSuggestions,
+			)
 		}
 	}
 
@@ -114,20 +117,26 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	apiKeyIsValidForTargetCluster := cluster.GetId() != "" && cluster.GetId() == apiKey.GetSpec().Resource.GetId()
 
 	if !apiKeyIsValidForTargetCluster {
-		return errors.NewErrorWithSuggestions(errors.APIKeyNotValidForClusterErrorMsg, errors.APIKeyNotValidForClusterSuggestions)
+		return errors.NewErrorWithSuggestions(
+			"the provided API key does not belong to the target cluster",
+			apiKeyNotValidForClusterSuggestions,
+		)
 	}
 
 	// API key exists server-side... now check if API key exists locally already
 	if found, err := c.keystore.HasAPIKey(key, cluster.ID); err != nil {
 		return err
 	} else if found && !force {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.RefuseToOverrideSecretErrorMsg, key),
-			fmt.Sprintf(errors.RefuseToOverrideSecretSuggestions, key))
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`refusing to overwrite existing secret for API Key "%s"`, key),
+			fmt.Sprintf(refuseToOverrideSecretSuggestions, key),
+		)
 	}
 
 	if err := c.keystore.StoreAPIKey(&config.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
-		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
+		return errors.Wrap(err, unableToStoreApiKeyErrorMsg)
 	}
-	output.ErrPrintf(errors.StoredAPIKeyMsg, key)
+
+	output.ErrPrintf("Stored secret for API key \"%s\".\n", key)
 	return nil
 }

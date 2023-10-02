@@ -13,7 +13,7 @@ func (c *consumerCommand) newGroupDescribeCommandOnPrem() *cobra.Command {
 		Use:   "describe <group>",
 		Short: "Describe a Kafka consumer group.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describeOnPrem,
+		RunE:  c.groupDescribeOnPrem,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -23,7 +23,7 @@ func (c *consumerCommand) newGroupDescribeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) groupDescribeOnPrem(cmd *cobra.Command, args []string) error {
 	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err

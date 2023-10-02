@@ -148,7 +148,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			ReadOnly: readOnlyConfigs[config.Name],
 		})
 		if readOnlyConfigs[config.Name] {
-			readOnlyConfigNotUpdatedString = fmt.Sprintf(" %s", errors.ReadOnlyConfigNotUpdatedMsg)
+			readOnlyConfigNotUpdatedString = " (read-only configs were not updated)"
 		}
 	}
 

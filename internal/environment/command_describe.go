@@ -35,7 +35,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		id = args[0]
 	}
 	if id == "" {
-		return errors.NewErrorWithSuggestions("no environment selected", "Select an environment with `confluent environment use` or as an argument.")
+		return errors.NewErrorWithSuggestions(
+			"no environment selected",
+			"Select an environment with `confluent environment use` or as an argument.",
+		)
 	}
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)

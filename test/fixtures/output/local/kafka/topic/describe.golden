@@ -1,6 +1,6 @@
 Topic: test
-PartitionCount: 1
-ReplicationFactor: 1
+Partition Count: 1
+Replication Factor: 1
 
   Topic | Partition | Leader | Replicas | ISR  
 --------+-----------+--------+----------+------

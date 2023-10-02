@@ -69,7 +69,7 @@ func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojson
 
 	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
-		return nil, errors.New(errors.JsonSchemaInvalidErrorMsg)
+		return nil, errors.New("the JSON schema is invalid")
 	}
 
 	return sl.Compile(gojsonschema.NewStringLoader(string(schema)))

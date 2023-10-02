@@ -18,6 +18,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
+const failedToRenderKeyPolicyErrorMsg = "BYOK error: failed to render key policy"
+
 var encryptionKeyPolicyAws = template.Must(template.New("encryptionKeyPolicyAws").Parse(`{
 	"Sid" : "Allow Confluent accounts to use the key",
 	"Effect" : "Allow",
@@ -153,7 +155,7 @@ func getPolicyCommand(key *byokv1.ByokV1Key) (string, error) {
 func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	buf := new(bytes.Buffer)
 	if err := encryptionKeyPolicyAws.Execute(buf, roles); err != nil {
-		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
+		return "", errors.New(failedToRenderKeyPolicyErrorMsg)
 	}
 	return buf.String(), nil
 }
@@ -164,7 +166,7 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	regex := regexp.MustCompile(`^https://([^/.]+).vault.azure.net`)
 	matches := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)
 	if matches == nil {
-		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
+		return "", errors.New(failedToRenderKeyPolicyErrorMsg)
 	}
 
 	vaultName := matches[1]
@@ -188,9 +190,9 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 func getPostCreateStepInstruction(key *byokv1.ByokV1Key) string {
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
-		return errors.CopyByokAwsPermissionsHeaderMsg
+		return `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
 	case key.Key.ByokV1AzureKey != nil:
-		return errors.RunByokAzurePermissionsHeaderMsg
+		return "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
 	default:
 		return ""
 	}

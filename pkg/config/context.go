@@ -120,7 +120,7 @@ func (c *Context) DeleteUserAuth() error {
 	c.State.AuthRefreshToken = ""
 
 	err := c.Save()
-	return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
+	return errors.Wrap(err, "unable to delete user auth")
 }
 
 func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
@@ -406,14 +406,17 @@ func (c *Context) GetNetrcMachineName() string {
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {
 	var problems []string
 	if missingKey {
-		problems = append(problems, errors.APIKeyMissingMsg)
+		problems = append(problems, "API key missing")
 	}
 	if mismatchKey {
-		problems = append(problems, errors.KeyPairMismatchMsg)
+		problems = append(problems, "key of the dictionary does not match API key of the pair")
 	}
 	if missingSecret {
-		problems = append(problems, errors.APISecretMissingMsg)
+		problems = append(problems, "API secret missing")
 	}
-	problemString := strings.Join(problems, ", ")
-	output.ErrPrintf(errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
+
+	output.ErrPrintf("There are malformed API key pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n", cluster.ID, contextName)
+	output.ErrPrintf("The issues are the following: %s.\n", strings.Join(problems, ", "))
+	output.ErrPrintln("Deleting the malformed entries.")
+	output.ErrPrintf("You can re-add the API key pair with `confluent api-key store --resource %s`\n", cluster.ID)
 }

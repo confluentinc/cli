@@ -129,7 +129,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	var encryptionKey string
 	if cmd.Flags().Changed("encryption-key") {
 		if cloud != "gcp" {
-			return errors.New(errors.EncryptionKeySupportErrorMsg)
+			return errors.New("BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys.")
 		}
 
 		encryptionKey, err = cmd.Flags().GetString("encryption-key")
@@ -177,7 +177,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return errors.NewErrorWithSuggestions("the `--cku` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type`.")
 		}
 		if cku <= 0 {
-			return errors.New(errors.CKUMoreThanZeroErrorMsg)
+			return errors.New(errors.CkuMoreThanZeroErrorMsg)
 		}
 		setClusterConfigCku(&createCluster, int32(cku))
 	}
@@ -206,12 +206,16 @@ func checkCloudAndRegion(cloudId, regionId string, clouds []*ccloudv1.CloudMetad
 					}
 				}
 			}
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.CloudRegionNotAvailableErrorMsg, regionId, cloudId),
-				fmt.Sprintf(errors.CloudRegionNotAvailableSuggestions, cloudId, cloudId))
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(`"%s" is not an available region for "%s"`, regionId, cloudId),
+				fmt.Sprintf("To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`.", cloudId, cloudId),
+			)
 		}
 	}
-	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.CloudProviderNotAvailableErrorMsg, cloudId),
-		errors.CloudProviderNotAvailableSuggestions)
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`"%s" is not an available cloud provider`, cloudId),
+		"To view a list of available cloud providers and regions, use `confluent kafka region list`.",
+	)
 }
 
 func (c *clusterCommand) validateGcpEncryptionKey(cloud, accountId string) error {
@@ -241,11 +245,11 @@ func (c *clusterCommand) validateGcpEncryptionKey(cloud, accountId string) error
 		})
 	for {
 		if err := f.Prompt(form.NewPrompt()); err != nil {
-			output.ErrPrintln(errors.FailedToReadConfirmationErrorMsg)
+			output.ErrPrintln("BYOK error: failed to read your confirmation")
 			continue
 		}
 		if !f.Responses["authorized"].(bool) {
-			return errors.Errorf(errors.AuthorizeIdentityErrorMsg, externalID)
+			return errors.Errorf("BYOK error: please authorize the key for the identity (%s)", externalID)
 		}
 		return nil
 	}
@@ -255,8 +259,10 @@ func stringToAvailability(s string) (string, error) {
 	if modelAvailability, ok := availabilitiesToModel[s]; ok {
 		return modelAvailability, nil
 	}
-	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
-		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
+	return "", errors.NewErrorWithSuggestions(
+		fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
+		fmt.Sprintf("Allowed values for `--availability` flag are: %s, %s.", singleZone, multiZone),
+	)
 }
 
 func stringToSku(skuType string) (ccstructs.Sku, error) {
@@ -265,8 +271,10 @@ func stringToSku(skuType string) (ccstructs.Sku, error) {
 	case ccstructs.Sku_BASIC, ccstructs.Sku_STANDARD, ccstructs.Sku_ENTERPRISE, ccstructs.Sku_DEDICATED:
 		break
 	default:
-		return ccstructs.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
-			fmt.Sprintf("Allowed values for `--type` flag are: %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "and")))
+		return ccstructs.Sku_UNKNOWN, errors.NewErrorWithSuggestions(
+			fmt.Sprintf("invalid value \"%s\" for `--type` flag", skuType),
+			fmt.Sprintf("Allowed values for `--type` flag are: %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "and")),
+		)
 	}
 	return sku, nil
 }
