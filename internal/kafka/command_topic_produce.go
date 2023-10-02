@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -17,6 +18,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
+)
+
+const (
+	missingKeyOrValueErrorMsg     = "missing key or value in message"
+	missingOrMalformedKeyErrorMsg = "missing or malformed key in message"
 )
 
 func (c *command) newProduceCommand() *cobra.Command {
@@ -205,22 +211,20 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 }
 
 func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
-	var serializedKey, val string
+	var serializedKey []byte
+	val := data
 	if parseKey {
-		x := strings.SplitN(data, delimiter, 2)
-		if len(x) != 2 {
-			return nil, nil, errors.New("missing key in message")
-		}
-
-		out, err := keySerializer.Serialize(strings.TrimSpace(x[0]))
+		key, value, err := getKeyAndValue(keySerializer.IsSchemaBased(), data, delimiter)
 		if err != nil {
 			return nil, nil, err
 		}
-		serializedKey = string(out)
 
-		val = strings.TrimSpace(x[1])
-	} else {
-		val = strings.TrimSpace(data)
+		serializedKey, err = keySerializer.Serialize(key)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		val = value
 	}
 
 	serializedValue, err := valueSerializer.Serialize(val)
@@ -229,6 +233,31 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 	}
 
 	return append(keyMetaInfo, serializedKey...), append(valueMetaInfo, serializedValue...), nil
+}
+
+func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
+	dataSplit := strings.Split(data, delimiter)
+	if len(dataSplit) < 2 {
+		return "", "", errors.New(missingKeyOrValueErrorMsg)
+	}
+
+	if !schemaBased {
+		return strings.TrimSpace(dataSplit[0]), strings.TrimSpace(strings.Join(dataSplit[1:], delimiter)), nil
+	}
+
+	key := dataSplit[0]
+	if json.Valid([]byte(strings.TrimSpace(key))) {
+		return strings.TrimSpace(key), strings.TrimSpace(strings.Join(dataSplit[1:], delimiter)), nil
+	}
+
+	for i, substr := range dataSplit[1:] {
+		key += delimiter + substr
+		if json.Valid([]byte(strings.TrimSpace(key))) {
+			return strings.TrimSpace(key), strings.TrimSpace(strings.Join(dataSplit[i+2:], delimiter)), nil
+		}
+	}
+
+	return "", "", errors.New(missingOrMalformedKeyErrorMsg)
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
