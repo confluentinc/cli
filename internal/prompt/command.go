@@ -43,7 +43,7 @@ func New(cfg *config.Config) *cobra.Command {
 		},
 		{
 			Name: 'e',
-			Desc: `The ID of the current environment in use. E.g., "a-4567"`,
+			Desc: `The ID of the current environment in use. E.g., "env-123456"`,
 			Func: func() string {
 				ctx := cfg.Context()
 				if ctx == nil {
