@@ -3,8 +3,8 @@ package cmd
 import (
 	"time"
 
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/jonboulle/clockwork"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
