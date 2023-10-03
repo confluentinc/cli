@@ -6,5 +6,5 @@
 | Egress      | 100 B/s         |
 | Principals  | sa-1234,sa-5678 |
 | Cluster     | lkc-1234        |
-| Environment | a-595           |
+| Environment | env-596         |
 +-------------+-----------------+

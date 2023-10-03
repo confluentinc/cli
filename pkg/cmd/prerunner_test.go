@@ -418,7 +418,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 							return &ccloudv1.GetMeReply{
 								User:         &ccloudv1.User{Id: 23},
 								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-								Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+								Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 							}, nil
 						},
 					}}
@@ -538,7 +538,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 					return &ccloudv1.GetMeReply{
 						User:         &ccloudv1.User{Id: 23},
 						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-						Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+						Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 					}, nil
 				},
 			}}

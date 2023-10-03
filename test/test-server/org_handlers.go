@@ -13,7 +13,7 @@ import (
 )
 
 var OrgEnvironments = []*orgv2.OrgV2Environment{
-	{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
+	{Id: orgv2.PtrString("env-596"), DisplayName: orgv2.PtrString("default")},
 	{Id: orgv2.PtrString("env-595"), DisplayName: orgv2.PtrString("other")},
 	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")},
 	{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate")},
@@ -69,7 +69,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 
 			environment := &orgv2.OrgV2Environment{
-				Id:          orgv2.PtrString("a-5555"),
+				Id:          orgv2.PtrString("env-5555"),
 				DisplayName: orgv2.PtrString(req.GetDisplayName()),
 			}
 			err = json.NewEncoder(w).Encode(environment)
