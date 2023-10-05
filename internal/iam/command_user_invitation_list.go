@@ -35,7 +35,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 	}
 
 	if len(invitations) == 0 {
-		output.Println("No invitations found.")
+		output.Println(c.Config.EnableColor, "No invitations found.")
 		return nil
 	}
 

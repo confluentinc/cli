@@ -38,6 +38,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UsingResourceMsg, resource.Environment, id)
+	output.Printf(c.Config.EnableColor, errors.UsingResourceMsg, resource.Environment, id)
 	return nil
 }

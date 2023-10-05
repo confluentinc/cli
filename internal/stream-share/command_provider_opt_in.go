@@ -19,6 +19,6 @@ func (c *command) optIn(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println("Successfully opted in to Stream Sharing.")
+	output.Println(c.Config.EnableColor, "Successfully opted in to Stream Sharing.")
 	return nil
 }

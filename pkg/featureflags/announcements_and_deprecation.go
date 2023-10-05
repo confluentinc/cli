@@ -109,16 +109,16 @@ func DeprecateFlags(cmd *cobra.Command, flags []string) {
 	}
 }
 
-func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, cmd *cobra.Command) {
+func PrintAnnouncements(cfg *config.Config, featureFlag string, ctx *dynamicconfig.DynamicContext, cmd *cobra.Command) {
 	flagResponse := Manager.JsonVariation(featureFlag, ctx, config.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := GetAnnouncementsOrDeprecation(flagResponse)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
 			if len(flagsAndMsg.Flags) == 0 {
 				if featureFlag == DeprecationNotices {
-					output.ErrPrintf("`confluent %s` is deprecated: %s\n", name, flagsAndMsg.CommandMessage)
+					output.ErrPrintf(cfg.EnableColor, "`confluent %s` is deprecated: %s\n", name, flagsAndMsg.CommandMessage)
 				} else {
-					output.ErrPrintln(flagsAndMsg.CommandMessage)
+					output.ErrPrintln(cfg.EnableColor, flagsAndMsg.CommandMessage)
 				}
 			} else {
 				for i, flag := range flagsAndMsg.Flags {
@@ -137,7 +137,7 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 					} else {
 						msg = flagsAndMsg.FlagMessages[i]
 					}
-					output.ErrPrintln(msg)
+					output.ErrPrintln(cfg.EnableColor, msg)
 				}
 			}
 		}

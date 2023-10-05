@@ -41,6 +41,6 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintf("Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n", clusterID, c.Context.GetCurrentEnvironment())
+	output.ErrPrintf(c.Config.EnableColor, "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n", clusterID, c.Context.GetCurrentEnvironment())
 	return nil
 }

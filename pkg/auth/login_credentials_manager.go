@@ -123,10 +123,10 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars envir
 		if email == "" {
 			email, password = h.getEnvVarCredentials(envVars.deprecatedUsername, envVars.deprecatedPassword)
 			if email != "" {
-				output.ErrPrintf(errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedUsername, envVars.username)
+				output.ErrPrintf(false, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedUsername, envVars.username)
 			}
 			if password != "" {
-				output.ErrPrintf(errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedPassword, envVars.password)
+				output.ErrPrintf(false, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedPassword, envVars.password)
 			}
 		}
 
@@ -264,7 +264,7 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMa
 
 func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(orgResourceId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		output.Println("Enter your Confluent Cloud credentials:")
+		output.Println(false, "Enter your Confluent Cloud credentials:")
 		email := h.promptForUser("Email")
 		if h.isSSOUser(email, orgResourceId) {
 			log.CliLogger.Debug("Entered email belongs to an SSO user.")
@@ -277,7 +277,7 @@ func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(orgResourceI
 
 func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromPrompt() func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		output.Println("Enter your Confluent credentials:")
+		output.Println(false, "Enter your Confluent credentials:")
 		username := h.promptForUser("Username")
 		password := h.promptForPassword()
 		return &Credentials{Username: username, Password: password}, nil

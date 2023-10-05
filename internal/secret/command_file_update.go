@@ -48,6 +48,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println("Updated the encrypted secrets.")
+	output.Println(c.Config.EnableColor, "Updated the encrypted secrets.")
 	return nil
 }

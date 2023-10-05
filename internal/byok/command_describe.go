@@ -62,8 +62,10 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key *byokv1.ByokV
 	table.Print()
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintf("\n%s\n\n", getPostCreateStepInstruction(key))
-		output.Println(postCreationStepInstructions)
+		output.ErrPrintln(c.Config.EnableColor, "")
+		output.ErrPrintf(c.Config.EnableColor, "%s\n", getPostCreateStepInstruction(key))
+		output.ErrPrintln(c.Config.EnableColor, "")
+		output.ErrPrintln(c.Config.EnableColor, postCreationStepInstructions)
 	}
 
 	return nil

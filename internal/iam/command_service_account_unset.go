@@ -36,6 +36,6 @@ func (c *serviceAccountCommand) unset(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UnsetResourceMsg, resource.ServiceAccount, serviceAccountToUnset)
+	output.Printf(c.Config.EnableColor, errors.UnsetResourceMsg, resource.ServiceAccount, serviceAccountToUnset)
 	return nil
 }
