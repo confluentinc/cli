@@ -214,7 +214,8 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 	var serializedKey []byte
 	val := data
 	if parseKey {
-		key, value, err := getKeyAndValue(keySerializer.IsSchemaBased(), data, delimiter)
+		schemaBased := keySerializer.GetSchemaName() != ""
+		key, value, err := getKeyAndValue(schemaBased, data, delimiter)
 		if err != nil {
 			return nil, nil, err
 		}

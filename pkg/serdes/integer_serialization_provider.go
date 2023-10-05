@@ -26,7 +26,3 @@ func (s *IntegerSerializationProvider) Serialize(str string) ([]byte, error) {
 func (s *IntegerSerializationProvider) GetSchemaName() string {
 	return ""
 }
-
-func (s *IntegerSerializationProvider) IsSchemaBased() bool {
-	return false
-}

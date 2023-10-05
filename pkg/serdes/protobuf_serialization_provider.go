@@ -29,10 +29,6 @@ func (p *ProtobufSerializationProvider) GetSchemaName() string {
 	return ProtobufSchemaBackendName
 }
 
-func (p *ProtobufSerializationProvider) IsSchemaBased() bool {
-	return true
-}
-
 func (p *ProtobufSerializationProvider) Serialize(str string) ([]byte, error) {
 	// Index array indicates which message in the file we're referring to.
 	// In our case, index array is always [0].
