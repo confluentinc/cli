@@ -177,7 +177,7 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 	if runtime.GOOS == "windows" {
 		keys = "Ctrl-C"
 	}
-	output.ErrPrintf("Starting Kafka Producer. Use %s to exit.\n", keys)
+	output.ErrPrintf(false, "Starting Kafka Producer. Use %s to exit.\n", keys)
 
 	var scanErr error
 	input, scan := PrepareInputChannel(&scanErr)
@@ -214,13 +214,13 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 				scanErr = err
 				break
 			}
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
+			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
 		}
 
 		e := <-deliveryChan                // read a ckafka event from the channel
 		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
 		go scan()
 	}

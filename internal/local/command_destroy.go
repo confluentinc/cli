@@ -42,7 +42,7 @@ func (c *command) runDestroyCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf("Deleting: %s\n", dir)
+	output.Printf(c.Config.EnableColor, "Deleting: %s\n", dir)
 	if err := c.cc.RemoveCurrentDir(); err != nil {
 		return err
 	}

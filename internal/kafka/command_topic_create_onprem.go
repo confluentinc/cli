@@ -133,6 +133,6 @@ func CreateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(false, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

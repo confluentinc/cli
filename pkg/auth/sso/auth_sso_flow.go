@@ -23,10 +23,10 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 	if noBrowser {
 		// no browser flag does not need to launch the server
 		// it prints the url and has the user copy this into their browser instead
-		output.Println("Navigate to the following link in your browser to authenticate:")
-		output.Println(state.getAuthorizationCodeUrl(connectionName, isOkta))
-		output.Println()
-		output.Println("After authenticating in your browser, paste the code here:")
+		output.Println(false, "Navigate to the following link in your browser to authenticate:")
+		output.Println(false, state.getAuthorizationCodeUrl(connectionName, isOkta))
+		output.Println(false, "")
+		output.Println(false, "After authenticating in your browser, paste the code here:")
 
 		// wait for the user to paste the code
 		// the code should come in the format {state}/{auth0_auth_code}

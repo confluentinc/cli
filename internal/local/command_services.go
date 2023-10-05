@@ -175,8 +175,8 @@ func (c *command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 		serviceNames[i] = writeServiceName(service)
 	}
 
-	output.Println("Available Services:")
-	output.Println(local.BuildTabbedList(serviceNames))
+	output.Println(c.Config.EnableColor, "Available Services:")
+	output.Println(c.Config.EnableColor, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -471,6 +471,6 @@ func (c *command) notifyConfluentCurrent() error {
 		return err
 	}
 
-	output.Printf("Using CONFLUENT_CURRENT: %s\n", dir)
+	output.Printf(c.Config.EnableColor, "Using CONFLUENT_CURRENT: %s\n", dir)
 	return nil
 }

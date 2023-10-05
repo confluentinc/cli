@@ -103,7 +103,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if warningMsg != "" {
-		output.ErrPrintf("Assuming %s.\n", warningMsg)
+		output.ErrPrintf(c.Config.EnableColor, "Assuming %s.\n", warningMsg)
 	}
 
 	if isCCloud {
@@ -154,7 +154,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	output.Printf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
+	output.Printf(c.Config.EnableColor, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
 	if currentEnvironment != "" {
 		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnvironment)
 	}
@@ -163,8 +163,8 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	// otherwise, print remaining free credit upon each login.
 	if isEndOfFreeTrialErr {
 		// only print error and do not return it, since end-of-free-trial users should still be able to log in.
-		output.ErrPrintf("Error: %s", endOfFreeTrialErr.Error())
-		output.ErrPrint(errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError()))
+		output.ErrPrintf(c.Config.EnableColor, "Error: %s", endOfFreeTrialErr.Error())
+		output.ErrPrint(c.Config.EnableColor, errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError()))
 	} else {
 		c.printRemainingFreeCredit(client, currentOrg)
 	}
@@ -196,8 +196,8 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
 	if remainingFreeCredit > 0 {
-		output.ErrPrintf("Free credits: $%.2f USD remaining\n", admin.ConvertToUSD(remainingFreeCredit))
-		output.ErrPrintln("You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.")
+		output.ErrPrintf(c.Config.EnableColor, "Free credits: $%.2f USD remaining\n", admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintln(c.Config.EnableColor, "You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.")
 	}
 }
 
@@ -376,7 +376,7 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 
 func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pauth.Credentials) error {
 	if credentials.IsSSO {
-		output.ErrPrintln("The `--save` flag was ignored since SSO credentials are not stored locally.")
+		output.ErrPrintln(c.cfg.EnableColor, "The `--save` flag was ignored since SSO credentials are not stored locally.")
 		return nil
 	}
 
@@ -385,7 +385,7 @@ func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pau
 		return err
 	}
 
-	output.ErrPrintln("Wrote login credentials to keychain.")
+	output.ErrPrintln(c.cfg.EnableColor, "Wrote login credentials to keychain.")
 
 	return nil
 }

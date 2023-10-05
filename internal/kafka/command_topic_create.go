@@ -128,6 +128,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

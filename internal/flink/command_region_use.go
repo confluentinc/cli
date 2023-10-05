@@ -66,6 +66,6 @@ func (c *command) regionUse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UsingResourceMsg, resource.FlinkRegion, reg.GetId())
+	output.Printf(c.Config.EnableColor, errors.UsingResourceMsg, resource.FlinkRegion, reg.GetId())
 	return nil
 }

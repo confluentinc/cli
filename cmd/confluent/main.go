@@ -4,9 +4,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/v3/internal"
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
@@ -24,13 +23,13 @@ func main() {
 	cfg := config.New()
 
 	err := cfg.Load()
-	cobra.CheckErr(err)
+	pcmd.CheckErr(cfg.EnableColor, err)
 
 	disableUpdates, err := strconv.ParseBool(disableUpdates)
-	cobra.CheckErr(err)
+	pcmd.CheckErr(cfg.EnableColor, err)
 
 	isTest, err := strconv.ParseBool(isTest)
-	cobra.CheckErr(err)
+	pcmd.CheckErr(cfg.EnableColor, err)
 
 	cfg.DisableUpdates = disableUpdates
 	cfg.IsTest = isTest
@@ -38,7 +37,6 @@ func main() {
 
 	cmd := internal.NewConfluentCommand(cfg)
 
-	if err := internal.Execute(cmd, os.Args[1:], cfg); err != nil {
-		os.Exit(1)
-	}
+	err = internal.Execute(cmd, os.Args[1:], cfg)
+	pcmd.CheckErr(cfg.EnableColor, err)
 }

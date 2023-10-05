@@ -60,8 +60,8 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	if ksqlCluster.Spec.KafkaCluster.GetId() != kafkaCluster.ID {
-		output.ErrPrintf("The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\n", args[0], ksqlCluster.Spec.KafkaCluster.GetId(), kafkaCluster.ID)
-		output.ErrPrintf("To switch to the correct cluster, use `confluent kafka cluster use %s`.\n", ksqlCluster.Spec.KafkaCluster.GetId())
+		output.ErrPrintf(c.Config.EnableColor, "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\n", args[0], ksqlCluster.Spec.KafkaCluster.GetId(), kafkaCluster.ID)
+		output.ErrPrintf(c.Config.EnableColor, "To switch to the correct cluster, use `confluent kafka cluster use %s`.\n", ksqlCluster.Spec.KafkaCluster.GetId())
 	}
 
 	credentialIdentity := ksqlCluster.Spec.CredentialIdentity.GetId()
