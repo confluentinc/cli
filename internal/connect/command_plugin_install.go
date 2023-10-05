@@ -150,7 +150,9 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		successStr = utils.AddDryRunPrefix(successStr)
 	}
-	output.Printf(c.Config.EnableColor, "\n%s", successStr)
+
+	output.Println(c.Config.EnableColor, "")
+	output.Printf(c.Config.EnableColor, successStr)
 
 	return nil
 }

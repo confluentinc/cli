@@ -121,7 +121,8 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		} else if response.Status == "Extracting" {
 			output.Printf(c.Config.EnableColor, "\rExtracting: %s", response.Progress)
 		} else {
-			output.Printf(c.Config.EnableColor, "\n%s", response.Status)
+			output.Println(c.Config.EnableColor, "")
+			output.Printf(c.Config.EnableColor, response.Status)
 		}
 	}
 	if err := scanner.Err(); err != nil {

@@ -176,6 +176,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 	}
 
 	err := cmd.Execute()
+	output.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
 
 	u.Error = cliv1.PtrBool(err != nil)
 	if err := reportUsage(cmd, cfg, u); err != nil {
