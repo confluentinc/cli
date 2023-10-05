@@ -72,7 +72,7 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("Saved source code for pipeline \"%s\" at \"%s\".\n", args[0], path)
+	output.Printf(c.Config.EnableColor, "Saved source code for pipeline \"%s\" at \"%s\".\n", args[0], path)
 	return nil
 }
 

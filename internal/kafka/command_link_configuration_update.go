@@ -72,6 +72,6 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	output.Printf(errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

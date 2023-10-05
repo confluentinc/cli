@@ -37,6 +37,6 @@ func (c *command) runCurrentCommand(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(dir)
+	output.Println(c.Config.EnableColor, dir)
 	return nil
 }

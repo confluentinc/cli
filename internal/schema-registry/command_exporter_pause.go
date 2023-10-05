@@ -48,6 +48,6 @@ func (c *command) exporterPause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(exporterActionMsg, "Paused", args[0])
+	output.Printf(c.Config.EnableColor, exporterActionMsg, "Paused", args[0])
 	return nil
 }
