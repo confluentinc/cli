@@ -20,7 +20,7 @@ func (c *command) optOut(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if !isDeleteConfirmed {
-		output.Println("Operation terminated.")
+		output.Println(c.Config.EnableColor, "Operation terminated.")
 		return nil
 	}
 
@@ -28,6 +28,6 @@ func (c *command) optOut(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println("Successfully opted out of Stream Sharing.")
+	output.Println(c.Config.EnableColor, "Successfully opted out of Stream Sharing.")
 	return nil
 }

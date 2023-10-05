@@ -153,7 +153,7 @@ func confirmShrink(promptMessage string) (bool, error) {
 		return false, errors.New("cluster resize error: failed to read your confirmation")
 	}
 	if !f.Responses["proceed"].(bool) {
-		output.Println("Not proceeding with kafka cluster shrink")
+		output.Println(false, "Not proceeding with kafka cluster shrink")
 		return false, nil
 	}
 	return true, nil

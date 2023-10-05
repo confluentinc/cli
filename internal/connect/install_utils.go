@@ -59,12 +59,12 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, fo
 	}
 
 	if force {
-		output.Printf("Using the Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
+		output.Printf(false, "Using the Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil
 	}
 
 	if len(installations) == 1 {
-		output.Printf("Using the only available Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
+		output.Printf(false, "Using the only available Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil
 	}
 
@@ -231,7 +231,7 @@ func choosePluginDir(installation *platformInstallation, prompt form.Prompt, for
 	}
 
 	if force {
-		output.Printf("Using \"%s\" as the plugin installation directory.\n\n", defaultPluginDir)
+		output.Printf(false, "Using \"%s\" as the plugin installation directory.\n\n", defaultPluginDir)
 		return defaultPluginDir, nil
 	}
 
@@ -244,7 +244,7 @@ func choosePluginDir(installation *platformInstallation, prompt form.Prompt, for
 		return "", err
 	}
 	if f.Responses["confirm"].(bool) {
-		output.Print("\n")
+		output.Println(false, "")
 		return defaultPluginDir, nil
 	}
 
@@ -265,7 +265,7 @@ func choosePluginDir(installation *platformInstallation, prompt form.Prompt, for
 		return "", errors.Errorf(invalidDirectoryErrorMsg, inputDir)
 	}
 
-	output.Print("\n")
+	output.Println(false, "")
 	return inputDir, nil
 }
 
@@ -377,11 +377,11 @@ func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation,
 
 	var filteredWorkerConfigs []WorkerConfig
 	if len(workerConfigs) == 0 {
-		output.Println("No worker configuration files found.")
+		output.Println(false, "No worker configuration files found.")
 		return []string{}, nil
 	}
 
-	output.Println("Detected the following worker configuration files:")
+	output.Println(false, "Detected the following worker configuration files:")
 	list := output.NewList(cmd)
 	for i, workerConfig := range workerConfigs {
 		list.Add(&listOut{
@@ -442,7 +442,7 @@ func updateWorkerConfig(pluginDir, workerConfigPath string, dryRun bool) error {
 	pluginPathElements := regexp.MustCompile(" *, *").Split(pluginPath, -1)
 	for _, pluginPathElement := range pluginPathElements {
 		if pluginPathElement == pluginDir {
-			output.Printf("This plugin is already in the plugin path for worker configuration file \"%s\".\n", workerConfigPath)
+			output.Printf(false, "This plugin is already in the plugin path for worker configuration file \"%s\".\n", workerConfigPath)
 			return nil
 		}
 	}

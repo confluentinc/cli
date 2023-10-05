@@ -8,6 +8,7 @@ require (
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
+	github.com/charmbracelet/lipgloss v0.8.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -108,6 +109,7 @@ require (
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
@@ -149,6 +151,8 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/runc v1.1.4 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect

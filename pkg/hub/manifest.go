@@ -35,7 +35,7 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*cpstructs.Mani
 		if err != nil {
 			return nil, err
 		}
-		log.CliLogger.Tracef("\n%s\n", string(dump))
+		log.CliLogger.Trace(string(dump))
 	}
 
 	r, err := c.Client.Do(req)
@@ -49,7 +49,7 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*cpstructs.Mani
 		if err != nil {
 			return nil, err
 		}
-		log.CliLogger.Tracef("\n%s\n", string(dump))
+		log.CliLogger.Trace(string(dump))
 	}
 
 	body, err := io.ReadAll(r.Body)
@@ -90,7 +90,7 @@ func (c *Client) GetRemoteArchive(pluginManifest *cpstructs.Manifest) ([]byte, e
 		if err != nil {
 			return nil, err
 		}
-		log.CliLogger.Tracef("\n%s\n", string(dump))
+		log.CliLogger.Trace(string(dump))
 	}
 
 	r, err := c.Client.Do(req)

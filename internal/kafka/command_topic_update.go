@@ -103,7 +103,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if dryRun {
-		output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
+		output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Topic, topicName)
 		return nil
 	}
 
@@ -154,7 +154,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	// Write current state of relevant config settings
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintf(updateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedString)
+		output.ErrPrintf(c.Config.EnableColor, updateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedString)
 	}
 
 	return list.Print()

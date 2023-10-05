@@ -415,8 +415,8 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 		problems = append(problems, "API secret missing")
 	}
 
-	output.ErrPrintf("There are malformed API key pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n", cluster.ID, contextName)
-	output.ErrPrintf("The issues are the following: %s.\n", strings.Join(problems, ", "))
-	output.ErrPrintln("Deleting the malformed entries.")
-	output.ErrPrintf("You can re-add the API key pair with `confluent api-key store --resource %s`\n", cluster.ID)
+	output.ErrPrintf(false, "There are malformed API key pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n", cluster.ID, contextName)
+	output.ErrPrintf(false, "The issues are the following: %s.\n", strings.Join(problems, ", "))
+	output.ErrPrintln(false, "Deleting the malformed entries.")
+	output.ErrPrintf(false, "You can re-add the API key pair with `confluent api-key store --resource %s`\n", cluster.ID)
 }

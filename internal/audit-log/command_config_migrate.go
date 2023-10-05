@@ -79,8 +79,8 @@ func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, warning := range warnings {
-		output.ErrPrintln(warning)
-		output.ErrPrintln()
+		output.ErrPrintln(c.Config.EnableColor, warning)
+		output.ErrPrintln(c.Config.EnableColor, "")
 	}
 
 	enc := json.NewEncoder(c.OutOrStdout())

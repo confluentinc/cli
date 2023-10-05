@@ -50,7 +50,7 @@ func (t *InteractiveOutputController) startTView() {
 
 func (t *InteractiveOutputController) close() {
 	t.resultFetcher.Close()
-	output.Println("Result retrieval aborted.")
+	output.Println(false, "Result retrieval aborted.")
 }
 
 func (t *InteractiveOutputController) init() {

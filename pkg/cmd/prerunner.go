@@ -97,8 +97,8 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 			}
 			// announcement and deprecation check, print out msg
 			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil)
-			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
-			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
+			featureflags.PrintAnnouncements(r.Config, featureflags.Announcements, ctx, cmd)
+			featureflags.PrintAnnouncements(r.Config, featureflags.DeprecationNotices, ctx, cmd)
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
@@ -615,7 +615,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.Context.GetAuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
-					output.Println("No session token found, please enter user credentials. To avoid being prompted, run `confluent login`.")
+					output.Println(r.Config.EnableColor, "No session token found, please enter user credentials. To avoid being prompted, run `confluent login`.")
 				}
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
@@ -792,9 +792,9 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 		if !strings.HasPrefix(latestMajorVersion, "v") {
 			latestMajorVersion = "v" + latestMajorVersion
 		}
-		output.ErrPrintf("A major version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMajorVersion)
-		output.ErrPrintln("To view release notes and install the update, please run `confluent update --major`.")
-		output.ErrPrintln()
+		output.ErrPrintf(r.Config.EnableColor, "A major version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMajorVersion)
+		output.ErrPrintln(r.Config.EnableColor, "To view release notes and install the update, please run `confluent update --major`.")
+		output.ErrPrintln(r.Config.EnableColor, "")
 	}
 
 	if latestMinorVersion != "" {
@@ -802,9 +802,9 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 			latestMinorVersion = "v" + latestMinorVersion
 		}
 
-		output.ErrPrintf("A minor version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMinorVersion)
-		output.ErrPrintln("To view release notes and install the update, please run `confluent update`.")
-		output.ErrPrintln()
+		output.ErrPrintf(r.Config.EnableColor, "A minor version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMinorVersion)
+		output.ErrPrintln(r.Config.EnableColor, "To view release notes and install the update, please run `confluent update`.")
+		output.ErrPrintln(r.Config.EnableColor, "")
 	}
 }
 
@@ -820,14 +820,14 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
-		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln()
+		output.ErrPrintln(false, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln(false, "")
 		return
 	}
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") && !strings.HasPrefix(cmd.CommandPath(), "confluent local kafka") {
-		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 will no longer be supported.")
-		output.ErrPrintln()
+		output.ErrPrintln(false, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln(false, "As of Confluent Platform 8.0, Java 8 will no longer be supported.")
+		output.ErrPrintln(false, "")
 	}
 }
 
