@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
