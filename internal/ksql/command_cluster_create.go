@@ -81,12 +81,12 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	ticker.Stop()
 	if endpoint == "" {
-		output.ErrPrintln("Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`.")
+		output.ErrPrintln(c.Config.EnableColor, "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`.")
 	}
 
 	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if _, ok := srCluster.GetIdOk(); ok {
-		output.ErrPrintln("IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
+		output.ErrPrintln(c.Config.EnableColor, "IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
 	}
 
 	table := output.NewTable(cmd)

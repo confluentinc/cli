@@ -110,7 +110,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
-	cmd.AddCommand(cloudsignup.New())
+	cmd.AddCommand(cloudsignup.New(prerunner))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner, flagResolver))
@@ -158,7 +158,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 			}
 			u := ppanic.CollectPanic(cmd, args, cfg)
 			if err := reportUsage(cmd, cfg, u); err != nil {
-				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
+				output.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
 			}
 			cobra.CheckErr(r)
 		}
@@ -176,9 +176,9 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 	}
 
 	err := cmd.Execute()
-	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
-	u.Error = cliv1.PtrBool(err != nil)
+	output.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
 
+	u.Error = cliv1.PtrBool(err != nil)
 	if err := reportUsage(cmd, cfg, u); err != nil {
 		return err
 	}

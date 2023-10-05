@@ -137,6 +137,6 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, unableToStoreApiKeyErrorMsg)
 	}
 
-	output.ErrPrintf("Stored secret for API key \"%s\".\n", key)
+	output.ErrPrintf(c.Config.EnableColor, "Stored secret for API key \"%s\".\n", key)
 	return nil
 }

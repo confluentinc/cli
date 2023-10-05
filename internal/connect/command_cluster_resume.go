@@ -65,7 +65,7 @@ func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 			return err
 		}
 
-		output.Printf("Resumed connector \"%s\".\n", id)
+		output.Printf(c.Config.EnableColor, "Resumed connector \"%s\".\n", id)
 	}
 
 	return nil

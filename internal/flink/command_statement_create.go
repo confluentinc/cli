@@ -110,7 +110,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	principal := serviceAccount
 	if serviceAccount == "" {
-		output.ErrPrintln(flink.ServiceAccountWarning)
+		output.ErrPrintln(c.Config.EnableColor, flink.ServiceAccountWarning)
 		principal = c.Context.GetUser().GetResourceId()
 	}
 

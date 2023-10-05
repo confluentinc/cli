@@ -62,7 +62,7 @@ func (c *command) configurationUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.Printf("Updated the following broker configurations for the Kafka cluster:\n")
+		output.Printf(c.Config.EnableColor, "Updated the following broker configurations for the Kafka cluster:\n")
 	}
 
 	list := output.NewList(cmd)

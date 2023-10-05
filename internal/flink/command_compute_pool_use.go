@@ -39,6 +39,6 @@ func (c *command) computePoolUse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UsingResourceMsg, resource.FlinkComputePool, args[0])
+	output.Printf(c.Config.EnableColor, errors.UsingResourceMsg, resource.FlinkComputePool, args[0])
 	return nil
 }

@@ -108,7 +108,7 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingConsumerMsg)
+	output.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
 
 	groupHandler := &kafka.GroupHandler{
 		Out:         cmd.OutOrStdout(),
