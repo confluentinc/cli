@@ -62,11 +62,10 @@ import (
 
 func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           pversion.CLIName,
-		Short:         fmt.Sprintf("%s.", pversion.FullCLIName),
-		Long:          getLongDescription(cfg),
-		Version:       cfg.Version.Version,
-		SilenceErrors: true,
+		Use:     pversion.CLIName,
+		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
+		Long:    getLongDescription(cfg),
+		Version: cfg.Version.Version,
 	}
 
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
@@ -161,7 +160,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 			if err := reportUsage(cmd, cfg, u); err != nil {
 				output.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
 			}
-			pcmd.CheckErr(cfg.EnableColor, r)
+			cobra.CheckErr(r)
 		}
 	}()
 	if !cfg.DisablePlugins {

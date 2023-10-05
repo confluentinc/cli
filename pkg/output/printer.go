@@ -5,14 +5,15 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 var (
 	codeSnippetRegexp = regexp.MustCompile("`[^`]+`")
 	linkRegexp        = regexp.MustCompile(`https?://(www\.)?[a-z\-]+\.[/a-z\-]+`)
+	resourceRegexp    = regexp.MustCompile(`"[^"]+"`)
 )
 
 func Print(color bool, s string) {
@@ -42,8 +43,8 @@ func ErrPrintf(color bool, s string, args ...any) {
 func printTo(w io.Writer, color bool, s string) {
 	if color {
 		s = colorCodeSnippets(s)
-		s = colorErrors(s)
 		s = colorLinks(s)
+		s = colorResources(s)
 	}
 	_, _ = fmt.Fprint(w, s)
 }
@@ -55,17 +56,21 @@ func colorCodeSnippets(s string) string {
 	})
 }
 
-func colorErrors(s string) string {
-	if strings.HasPrefix(s, "Error: ") {
-		style := lipgloss.NewStyle().Foreground(lipgloss.Color("203"))
-		return style.Render(s)
-	}
-	return s
-}
-
 func colorLinks(s string) string {
 	return linkRegexp.ReplaceAllStringFunc(s, func(s string) string {
 		style := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "36", Dark: "30"}).Underline(true)
 		return style.Render(s)
+	})
+}
+
+func colorResources(s string) string {
+	return resourceRegexp.ReplaceAllStringFunc(s, func(s string) string {
+		r := s[1 : len(s)-1]
+		if resource.LookupType(r) == resource.Unknown {
+			return s
+		}
+
+		style := lipgloss.NewStyle().Foreground(lipgloss.Color("#C69669"))
+		return style.Render(r)
 	})
 }

@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/confluentinc/cli/v3/internal"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/spf13/cobra"
 )
 
 // Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
@@ -23,13 +23,13 @@ func main() {
 	cfg := config.New()
 
 	err := cfg.Load()
-	pcmd.CheckErr(cfg.EnableColor, err)
+	cobra.CheckErr(err)
 
 	disableUpdates, err := strconv.ParseBool(disableUpdates)
-	pcmd.CheckErr(cfg.EnableColor, err)
+	cobra.CheckErr(err)
 
 	isTest, err := strconv.ParseBool(isTest)
-	pcmd.CheckErr(cfg.EnableColor, err)
+	cobra.CheckErr(err)
 
 	cfg.DisableUpdates = disableUpdates
 	cfg.IsTest = isTest
@@ -37,6 +37,7 @@ func main() {
 
 	cmd := internal.NewConfluentCommand(cfg)
 
-	err = internal.Execute(cmd, os.Args[1:], cfg)
-	pcmd.CheckErr(cfg.EnableColor, err)
+	if err := internal.Execute(cmd, os.Args[1:], cfg); err != nil {
+		os.Exit(1)
+	}
 }
