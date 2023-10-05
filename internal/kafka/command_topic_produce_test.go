@@ -18,7 +18,7 @@ func TestGetKeyAndValue(t *testing.T) {
 		// Different delimiters
 		{Data: `{"CustomerId": 1, "Name": "My Name"}:message`, Delimiter: ":", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
 		{Data: `{"CustomerId": 1, "Name": "My Name"};message`, Delimiter: ";", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
-		{Data: `{"CustomerId": 1, "Name": "My Name"}"message`, Delimiter: "\"", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
+		{Data: `{"CustomerId": 1, "Name": "My Name"}"message`, Delimiter: `"`, Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
 		{Data: `{"CustomerId": 1, "Name": "My Name"},message`, Delimiter: ",", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
 		{Data: `{"CustomerId": 1, "Name": "My Name"}{message`, Delimiter: "{", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
 		{Data: `{"CustomerId": 1, "Name": "My Name"}}message`, Delimiter: "}", Key: `{"CustomerId": 1, "Name": "My Name"}`, Value: "message"},
