@@ -61,7 +61,7 @@ func (s *authServer) startServer() error {
 		// https://go.googlesource.com/go/+/master/src/net/http/server.go#2854
 		// So don't surface that error to the user.
 		if serverErr != nil && serverErr.Error() != "http: Server closed" {
-			output.ErrPrintf("CLI HTTP auth server encountered error while running: %v\n", serverErr.Error())
+			output.ErrPrintf(false, "CLI HTTP auth server encountered error while running: %v\n", serverErr.Error())
 		}
 	}()
 
@@ -81,7 +81,7 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 
 	defer func() {
 		if err := s.server.Shutdown(context.Background()); err != nil {
-			output.ErrPrintf("CLI HTTP auth server encountered error while shutting down: %v\n", err)
+			output.ErrPrintf(false, "CLI HTTP auth server encountered error while shutting down: %v\n", err)
 		}
 	}()
 

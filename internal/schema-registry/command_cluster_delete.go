@@ -61,6 +61,6 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf("Deleted Schema Registry cluster for environment \"%s\".\n", environmentId)
+	output.Printf(c.Config.EnableColor, "Deleted Schema Registry cluster for environment \"%s\".\n", environmentId)
 	return nil
 }

@@ -113,7 +113,7 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject string, client
 		return catchSchemaNotFoundError(err, subject, "")
 	}
 
-	output.Printf("Successfully updated subject-level compatibility to \"%s\" for subject \"%s\".\n", req.Compatibility, subject)
+	output.Printf(c.Config.EnableColor, "Successfully updated subject-level compatibility to \"%s\" for subject \"%s\".\n", req.Compatibility, subject)
 	return nil
 }
 
@@ -123,6 +123,6 @@ func (c *command) updateMode(subject, mode string, client *schemaregistry.Client
 		return catchSchemaNotFoundError(err, "subject", "")
 	}
 
-	output.Printf("Successfully updated subject-level mode to \"%s\" for subject \"%s\".\n", res.Mode, subject)
+	output.Printf(c.Config.EnableColor, "Successfully updated subject-level mode to \"%s\" for subject \"%s\".\n", res.Mode, subject)
 	return nil
 }

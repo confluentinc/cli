@@ -201,8 +201,8 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		msg = utils.AddDryRunPrefix(msg)
 	}
 
-	output.Println(msg)
-	output.Println(linkConfigsCommandOutput(configMap))
+	output.Println(c.Config.EnableColor, msg)
+	output.Println(c.Config.EnableColor, linkConfigsCommandOutput(configMap))
 
 	return nil
 }

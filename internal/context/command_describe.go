@@ -56,12 +56,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if apiKey {
-		output.Println(ctx.Credential.APIKeyPair.Key)
+		output.Println(c.Config.EnableColor, ctx.Credential.APIKeyPair.Key)
 		return nil
 	}
 
 	if username {
-		output.Println(ctx.Credential.Username)
+		output.Println(c.Config.EnableColor, ctx.Credential.Username)
 		return nil
 	}
 

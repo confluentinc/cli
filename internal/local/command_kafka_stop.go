@@ -55,7 +55,7 @@ func (c *command) stopAndRemoveConfluentLocal(dockerClient *client.Client) error
 			}
 			log.CliLogger.Tracef("Confluent Local container removed")
 
-			output.Printf("Confluent Local has been stopped: removed container \"%s\".\n", getShortenedContainerId(container.ID))
+			output.Printf(c.Config.EnableColor, "Confluent Local has been stopped: removed container \"%s\".\n", getShortenedContainerId(container.ID))
 		}
 	}
 
