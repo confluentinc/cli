@@ -44,8 +44,8 @@ func (b *ErrorWithSuggestionsImpl) GetSuggestionsMsg() string {
 
 func DisplaySuggestionsMessage(err error) string {
 	if err, ok := err.(ErrorWithSuggestions); ok {
-		if suggestion := err.GetSuggestionsMsg(); suggestion != "" {
-			return ComposeSuggestionsMessage(suggestion)
+		if suggestionsMsg := err.GetSuggestionsMsg(); suggestionsMsg != "" {
+			return ComposeSuggestionsMessage(suggestionsMsg)
 		}
 	}
 	return ""

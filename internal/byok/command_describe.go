@@ -83,7 +83,7 @@ func (c *command) convertByokKeyToDescribeStruct(key *byokv1.ByokV1Key) (*descri
 		keyString = key.Key.ByokV1AzureKey.KeyId
 		roles = append(roles, key.Key.ByokV1AzureKey.GetApplicationId())
 	default:
-		return nil, errors.New(errors.ByokUnknownKeyTypeErrorMsg)
+		return nil, errors.New(byokUnknownKeyTypeErrorMsg)
 	}
 
 	updatedAt := ""

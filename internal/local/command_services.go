@@ -175,7 +175,8 @@ func (c *command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 		serviceNames[i] = writeServiceName(service)
 	}
 
-	output.Printf(c.Config.EnableColor, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+	output.Println(c.Config.EnableColor, "Available Services:")
+	output.Println(c.Config.EnableColor, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -335,7 +336,7 @@ func (c *command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	}
 
 	if len(pids) == 0 {
-		return errors.New(errors.NoServicesRunningErrorMsg)
+		return errors.New("no services running")
 	}
 
 	return top(pids)
@@ -441,7 +442,7 @@ func top(pids []int) error {
 		}
 		top = exec.Command("top", "-p", strings.Join(args, ","))
 	default:
-		return errors.Errorf(errors.TopNotAvailableErrorMsg, runtime.GOOS)
+		return errors.Errorf("`top` command not available on platform: %s", runtime.GOOS)
 	}
 
 	top.Stdin = os.Stdin
@@ -470,6 +471,6 @@ func (c *command) notifyConfluentCurrent() error {
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, errors.UsingConfluentCurrentMsg, dir)
+	output.Printf(c.Config.EnableColor, "Using CONFLUENT_CURRENT: %s\n", dir)
 	return nil
 }

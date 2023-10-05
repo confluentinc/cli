@@ -215,7 +215,7 @@ func (c *Config) Load() error {
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Config = c
 		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
 		context.State = c.ContextStates[context.Name]
@@ -264,17 +264,17 @@ func (c *Config) Save() error {
 
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
-		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
+		return errors.Wrapf(err, "unable to marshal config")
 	}
 
 	filename := c.GetFilename()
 
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
+		return errors.Wrapf(err, "unable to create config directory: %s", filename)
 	}
 
 	if err := os.WriteFile(filename, cfg, 0600); err != nil {
-		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
+		return errors.Wrapf(err, "unable to write config to file: %s", filename)
 	}
 
 	c.restoreOverwrittenContext(tempContext)
@@ -424,7 +424,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			log.CliLogger.Trace("current context does not exist")
-			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename)
+			return errors.NewCorruptedConfigError(`the current context "%s" does not exist`, c.CurrentContext, c.Filename)
 		}
 	}
 
@@ -449,7 +449,7 @@ func (c *Config) Validate() error {
 		}
 		if !c.IsTest && !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
-			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(`context state mismatch for context "%s"`, context.Name, c.Filename)
 		}
 	}
 
@@ -457,7 +457,7 @@ func (c *Config) Validate() error {
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
 			log.CliLogger.Trace("context state mapped to nonexistent context")
-			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.Filename)
+			return errors.NewCorruptedConfigError(`context state mapping error for context "%s"`, contextName, c.Filename)
 		}
 	}
 
@@ -495,12 +495,12 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 
 	credential, ok := c.Credentials[credentialName]
 	if !ok {
-		return fmt.Errorf(errors.CredentialNotFoundErrorMsg, credentialName)
+		return fmt.Errorf(`credential "%s" not found`, credentialName)
 	}
 
 	platform, ok := c.Platforms[platformName]
 	if !ok {
-		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
+		return fmt.Errorf(`platform "%s" not found`, platformName)
 	}
 
 	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, orgResourceId, envId)
@@ -569,7 +569,7 @@ func (c *Config) UseContext(name string) error {
 
 func (c *Config) SaveCredential(credential *Credential) error {
 	if credential.Name == "" {
-		return errors.New(errors.NoNameCredentialErrorMsg)
+		return errors.New("credential must have a name")
 	}
 	c.Credentials[credential.Name] = credential
 	return c.Save()
@@ -577,7 +577,7 @@ func (c *Config) SaveCredential(credential *Credential) error {
 
 func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCredential) error {
 	if ctxName == "" {
-		return errors.New(errors.SavedCredentialNoContextErrorMsg)
+		return errors.New("saved credential must match a context")
 	}
 	c.SavedCredentials[ctxName] = loginCredential
 	return c.Save()
@@ -585,7 +585,7 @@ func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCrede
 
 func (c *Config) SavePlatform(platform *Platform) error {
 	if platform.Name == "" {
-		return errors.New(errors.NoNamePlatformErrorMsg)
+		return errors.New("platform must have a name")
 	}
 	c.Platforms[platform.Name] = platform
 	return c.Save()

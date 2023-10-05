@@ -2,6 +2,7 @@
 package auth
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"slices"
@@ -21,6 +22,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
 )
+
+const stopNonInteractiveMsg = "remove these credentials or use the `--prompt` flag to bypass non-interactive login"
+
+var foundCredentialsForUserFromKeychainMessage = fmt.Sprintf(`Found credentials for user "%%s" from keychain (%s).`, stopNonInteractiveMsg)
 
 type Credentials struct {
 	Username string
@@ -143,7 +148,7 @@ func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(userEnvVar, passwordE
 	if password == "" {
 		return username, ""
 	}
-	log.CliLogger.Warnf(errors.FoundEnvCredMsg, username, userEnvVar, passwordEnvVar)
+	log.CliLogger.Warnf(`Found credentials for user "%s" from environment variables "%s" and "%s" (%s)`, username, userEnvVar, passwordEnvVar, stopNonInteractiveMsg)
 	return username, password
 }
 
@@ -240,7 +245,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc
 			return nil, err
 		}
 
-		log.CliLogger.Debugf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+		log.CliLogger.Debugf(foundCredentialsForUserFromKeychainMessage, netrcMachine.User, h.netrcHandler.GetFileName())
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
 	}
 }
@@ -327,7 +332,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 	return func() (*Credentials, error) {
 		url := GetEnvWithFallback(ConfluentPlatformMDSURL, DeprecatedConfluentPlatformMDSURL)
 		if url == "" {
-			return nil, errors.New(errors.NoURLEnvVarErrorMsg)
+			return nil, errors.New(errors.NoUrlEnvVarErrorMsg)
 		}
 
 		envVars := environmentVariables{
@@ -362,7 +367,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 		if err != nil {
 			return nil, err
 		}
-		log.CliLogger.Debugf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+		log.CliLogger.Debugf(foundCredentialsForUserFromKeychainMessage, netrcMachine.User, h.netrcHandler.GetFileName())
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, PrerunLoginURL: machineContextInfo.URL, PrerunLoginCaCertPath: machineContextInfo.CaCertPath}, nil
 	}
 }
@@ -372,12 +377,12 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *config.Con
 		if runtime.GOOS == "darwin" {
 			username, password, err := keychain.Read(isCloud, ctxName, url)
 			if err == nil && password != "" {
-				log.CliLogger.Debugf(errors.FoundKeychainCredMsg, username)
+				log.CliLogger.Debugf(`Found credentials for user "%s" from keychain (%s)`, username, stopNonInteractiveMsg)
 				return &Credentials{Username: username, Password: password}, nil
 			}
-			return nil, errors.New(errors.NoValidKeychainCredentialErrorMsg)
+			return nil, errors.New("no matching credentials found in keychain")
 		}
-		return nil, errors.New(errors.KeychainNotAvailableErrorMsg)
+		return nil, errors.New("keychain not available on platforms other than darwin")
 	}
 }
 

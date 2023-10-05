@@ -1,13 +1,14 @@
 package iam
 
 import (
+	"regexp"
+
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c invitationCommand) newCreateCommand() *cobra.Command {
@@ -20,13 +21,11 @@ func (c invitationCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) error {
-	email := args[0]
-
-	if ok := utils.ValidateEmail(email); !ok {
-		return errors.New(errors.BadEmailFormatErrorMsg)
+	if !validateEmail(args[0]) {
+		return errors.New("invalid email structure")
 	}
 
-	req := iamv2.IamV2Invitation{Email: iamv2.PtrString(email)}
+	req := iamv2.IamV2Invitation{Email: iamv2.PtrString(args[0])}
 
 	invitation, err := c.V2Client.CreateIamInvitation(req)
 	if err != nil {
@@ -35,4 +34,9 @@ func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) e
 
 	output.Printf(c.Config.EnableColor, "An email invitation has been sent to \"%s\".\n", invitation.GetEmail())
 	return nil
+}
+
+func validateEmail(email string) bool {
+	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return rgxEmail.MatchString(email)
 }

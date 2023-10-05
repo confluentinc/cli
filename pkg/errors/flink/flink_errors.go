@@ -46,9 +46,9 @@ func CatchError(err error, r *http.Response) error {
 		return nil
 	}
 	err = errors.CatchCCloudV2Error(err, r)
-	suggestion := ""
+	suggestionsMsg := ""
 	if suggester, ok := err.(errors.ErrorWithSuggestions); ok {
-		suggestion = suggester.GetSuggestionsMsg()
+		suggestionsMsg = suggester.GetSuggestionsMsg()
 	}
 	var statusCode int
 	if r != nil {
@@ -57,6 +57,6 @@ func CatchError(err error, r *http.Response) error {
 	return FlinkError{
 		statusCode:     statusCode,
 		errorMsg:       err.Error(),
-		suggestionsMsg: suggestion,
+		suggestionsMsg: suggestionsMsg,
 	}
 }

@@ -122,7 +122,10 @@ func CreateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 			}
 			if decodedError.Message == fmt.Sprintf("Topic '%s' already exists.", topicName) {
 				if !ifNotExists {
-					return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsOnPremErrorMsg, topicName), errors.TopicExistsOnPremSuggestions)
+					return errors.NewErrorWithSuggestions(
+						fmt.Sprintf(`topic "%s" already exists for the Kafka cluster`, topicName),
+						"To list topics for the cluster, use `confluent kafka topic list --url <url>`.",
+					)
 				} // ignore error if ifNotExists flag is set
 				return nil
 			}

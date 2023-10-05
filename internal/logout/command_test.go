@@ -141,7 +141,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
 	}

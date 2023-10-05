@@ -21,7 +21,7 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Invite a user with email "user@example.com":`,
-				Code: "confluent stream-share provider invite create --email user@example.com --topic topic-12345 --environment env-12345 --cluster lkc-12345",
+				Code: "confluent stream-share provider invite create --email user@example.com --topic topic-12345 --environment env-123456 --cluster lkc-12345",
 			},
 		),
 	}

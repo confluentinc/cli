@@ -47,7 +47,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIds))
 	if errs.ErrorOrNil() != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(err.Error(), errors.ApiKeyNotFoundSuggestions)
 	}
 
 	return nil

@@ -1,3 +1,3 @@
      ID    |  Principal   |        Email         |       Role        | Environment | Cloud Cluster | Cluster Type | Logical Cluster | Resource Type | Name | Pattern Type  
 -----------+--------------+----------------------+-------------------+-------------+---------------+--------------+-----------------+---------------+------+---------------
-  rb-111aa | User:u-11aaa | u-11aaa@confluent.io | CloudClusterAdmin | a-595       | lkc-1111aaa   |              |                 |               |      |               
+  rb-111aa | User:u-11aaa | u-11aaa@confluent.io | CloudClusterAdmin | env-596     | lkc-1111aaa   |              |                 |               |      |               

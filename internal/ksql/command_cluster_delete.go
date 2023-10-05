@@ -95,7 +95,7 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 		if err != nil {
 			return err
 		}
-		return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, clusterId, string(body))
+		return errors.Errorf(`failed to terminate ksqlDB cluster "%s" due to "%s"`, clusterId, string(body))
 	}
 	return nil
 }

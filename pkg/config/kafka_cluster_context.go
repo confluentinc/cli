@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -220,7 +219,9 @@ func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *KafkaClusterCo
 		}
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		output.ErrPrintf(false, errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, k.Context.Name, cluster.ID)
+		output.ErrPrintf(false, "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n", cluster.APIKey, cluster.ID, k.Context.Name)
+		output.ErrPrintln(false, "Removing current API key setting for the resource.")
+		output.ErrPrintf(false, "You can re-add the API key with `confluent api-key store --resource %s` and then set current API key with `confluent api-key use`.\n", cluster.ID)
 		cluster.APIKey = ""
 		if err := k.Context.Save(); err != nil {
 			panic(fmt.Sprintf("Unable to reset current APIKey for cluster '%s' in context '%s'.", cluster.ID, k.Context.Name))

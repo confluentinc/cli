@@ -11,7 +11,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -90,7 +89,7 @@ func UpdateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return output.SerializedOutput(cmd, data)
 	}
 
-	output.Printf(false, errors.UpdateTopicConfigMsg, topicName)
+	output.Printf(false, "Updated the following configuration values for topic \"%s\":\n", topicName)
 
 	list := output.NewList(cmd)
 	for _, config := range data {

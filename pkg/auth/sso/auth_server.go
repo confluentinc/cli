@@ -61,7 +61,7 @@ func (s *authServer) startServer() error {
 		// https://go.googlesource.com/go/+/master/src/net/http/server.go#2854
 		// So don't surface that error to the user.
 		if serverErr != nil && serverErr.Error() != "http: Server closed" {
-			output.ErrPrintf(false, errors.AuthServerRunningErrorMsg, serverErr.Error())
+			output.ErrPrintf(false, "CLI HTTP auth server encountered error while running: %v\n", serverErr.Error())
 		}
 	}()
 
@@ -80,9 +80,8 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	<-s.wait
 
 	defer func() {
-		serverErr := s.server.Shutdown(context.Background())
-		if serverErr != nil {
-			output.ErrPrintf(false, errors.AuthServerShutdownErrorMsg, serverErr.Error())
+		if err := s.server.Shutdown(context.Background()); err != nil {
+			output.ErrPrintf(false, "CLI HTTP auth server encountered error while shutting down: %v\n", err)
 		}
 	}()
 
@@ -93,7 +92,7 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
 	states, ok := r.URL.Query()["state"]
 	if !(ok && states[0] == s.State.SSOProviderState) {
-		s.bgErr = errors.New(errors.LoginFailedCallbackURLErrorMsg)
+		s.bgErr = errors.New("authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail")
 	}
 
 	fmt.Fprintln(w, ssoCallbackHTML)
@@ -102,7 +101,7 @@ func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
 	if ok {
 		s.State.SSOProviderAuthenticationCode = codes[0]
 	} else {
-		s.bgErr = errors.New(errors.LoginFailedQueryStringErrorMsg)
+		s.bgErr = errors.New("authentication callback URL did not contain code parameter in query string; login will fail")
 	}
 
 	s.wait <- true

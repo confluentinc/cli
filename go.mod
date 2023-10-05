@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.45.12
+	github.com/aws/aws-sdk-go v1.45.21
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
@@ -19,7 +19,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1
-	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
@@ -64,7 +64,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/imdario/mergo v0.3.16
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
-	github.com/jhump/protoreflect v1.15.2
+	github.com/jhump/protoreflect v1.15.3
 	github.com/jonboulle/clockwork v0.4.0
 	github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100
 	github.com/linkedin/goavro/v2 v2.12.0
@@ -95,7 +95,6 @@ require (
 	golang.org/x/term v0.12.0
 	golang.org/x/text v0.13.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
-	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.28.2
 	pgregory.net/rapid v1.1.0
@@ -125,6 +124,7 @@ require (
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.0
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

@@ -61,7 +61,7 @@ var (
 			return &ccloudv1.GetMeReply{
 				User:         &ccloudv1.User{Id: 23},
 				Organization: &ccloudv1.Organization{ResourceId: org1Id},
-				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -165,7 +165,7 @@ func TestCredentialsOverride(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &ccloudv1.Organization{ResourceId: org1Id},
-				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -228,7 +228,7 @@ func TestOrgIdOverride(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &ccloudv1.Organization{ResourceId: org2Id},
-				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -274,7 +274,7 @@ func TestLoginSuccess(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &ccloudv1.Organization{ResourceId: org},
-				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -764,7 +764,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 					FirstName: "Cody",
 				},
 				Organization: &ccloudv1.Organization{ResourceId: org1Id},
-				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
 	}
@@ -876,12 +876,12 @@ func TestValidateUrl(t *testing.T) {
 		{
 			urlIn:    "confluent.cloud:123",
 			isCCloud: true,
-			errMsg:   errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
+			errMsg:   errors.NewErrorWithSuggestions("there is no need to pass the `--url` flag if you are logging in to Confluent Cloud", "Log in to Confluent Cloud with `confluent login`.").Error(),
 		},
 		{
 			urlIn:    "https://confluent.cloud/login/sso/company",
 			isCCloud: true,
-			errMsg:   errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
+			errMsg:   errors.NewErrorWithSuggestions("there is no need to pass the `--url` flag if you are logging in to Confluent Cloud", "Log in to Confluent Cloud with `confluent login`.").Error(),
 		},
 	}
 	for _, s := range suite {

@@ -57,7 +57,7 @@ func (c *command) update(_ *cobra.Command, args []string) error {
 	if err := c.cfg.Save(); err != nil {
 		return err
 	}
-	output.Printf(c.Config.EnableColor, errors.UpdateSuccessMsg, "value", "config field", field, value)
+	output.Printf(c.Config.EnableColor, errors.UpdateSuccessMsg, "value", "configuration field", field, value)
 	return nil
 }
 
@@ -72,7 +72,7 @@ func convertValue(field, value string, whitelist map[string]*fieldInfo) (any, er
 	case reflect.Bool:
 		val, err := strconv.ParseBool(value)
 		if err != nil {
-			return nil, fmt.Errorf(`"%s" is not a valid value for config field "%s", which is of type: %s`, value, field, info.kind.String())
+			return nil, fmt.Errorf(`"%s" is not a valid value for configuration field "%s", which is of type: %s`, value, field, info.kind.String())
 		}
 		return val, nil
 	default:

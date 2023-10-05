@@ -10,7 +10,6 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -29,7 +28,7 @@ type aclCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func newACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newAclCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "acl",
 		Short:       "Manage centralized ACLs.",
@@ -45,15 +44,15 @@ func newACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func (c *aclCommand) handleACLError(cmd *cobra.Command, err error, response *http.Response) error {
+func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnableToPerformAclErrorMsg, cmd.Name(), err.Error()), errors.UnableToPerformAclSuggestions)
+		return fmt.Errorf("unable to %s ACLs: %v", cmd.Name(), err)
 	}
 	return err
 }
 
 // convertToFilter converts a CreateAclRequest to an AclFilterRequest
-func convertToACLFilterRequest(request *mdsv1.CreateAclRequest) mdsv1.AclFilterRequest {
+func convertToAclFilterRequest(request *mdsv1.CreateAclRequest) mdsv1.AclFilterRequest {
 	// ACE matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntryFilter.java#L102-L113
 
@@ -99,7 +98,7 @@ func convertToACLFilterRequest(request *mdsv1.CreateAclRequest) mdsv1.AclFilterR
 	}
 }
 
-func printACLs(cmd *cobra.Command, kafkaClusterId string, aclBindings []mdsv1.AclBinding) error {
+func printAcls(cmd *cobra.Command, kafkaClusterId string, aclBindings []mdsv1.AclBinding) error {
 	list := output.NewList(cmd)
 	for _, binding := range aclBindings {
 		list.Add(&out{

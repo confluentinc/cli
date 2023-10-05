@@ -44,9 +44,9 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return acl.errors
 	}
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 	if err != nil {
-		return c.handleACLError(cmd, err, response)
+		return c.handleAclError(cmd, err, response)
 	}
 
 	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)
@@ -57,10 +57,10 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	bindings, response, err = c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	bindings, response, err = c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 	if err != nil {
-		return c.handleACLError(cmd, err, response)
+		return c.handleAclError(cmd, err, response)
 	}
 
-	return printACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
+	return printAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }

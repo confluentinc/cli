@@ -156,7 +156,10 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 }
 
 func parsePluginId(plugin string) (string, string, string, error) {
-	err := errors.NewErrorWithSuggestions("plugin not found", "Provide a path to a local file or provide a plugin ID from Confluent Hub with the format: `<owner>/<name>:<version>`.")
+	err := errors.NewErrorWithSuggestions(
+		"plugin not found",
+		"Provide a path to a local file or provide a plugin ID from Confluent Hub with the format: `<owner>/<name>:<version>`.",
+	)
 
 	ownerNameSplit := strings.Split(plugin, "/")
 	if len(ownerNameSplit) != 2 || ownerNameSplit[0] == "" {

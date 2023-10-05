@@ -67,7 +67,7 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 	if len(aclDataList.Data) == 0 {
-		return errors.NewErrorWithSuggestions("ACL matching these parameters not found", ValidACLSuggestion)
+		return errors.NewErrorWithSuggestions("ACL matching these parameters not found", validACLSuggestion)
 	}
 
 	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)

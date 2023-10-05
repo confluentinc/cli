@@ -46,7 +46,7 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	}
 
 	if resource.LookupType(args[0]) != resource.ServiceAccount {
-		return errors.New(errors.BadServiceAccountIDErrorMsg)
+		return errors.New(errors.BadServiceAccountIdErrorMsg)
 	}
 	serviceAccountId := args[0]
 

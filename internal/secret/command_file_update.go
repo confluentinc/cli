@@ -3,7 +3,6 @@ package secret
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -49,6 +48,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.ErrPrintln(c.Config.EnableColor, errors.UpdateSecretFileMsg)
+	output.Println(c.Config.EnableColor, "Updated the encrypted secrets.")
 	return nil
 }

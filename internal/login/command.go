@@ -103,7 +103,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if warningMsg != "" {
-		output.ErrPrintf(c.cfg.EnableColor, errors.UsingLoginURLDefaults, warningMsg)
+		output.ErrPrintf(c.Config.EnableColor, "Assuming %s.\n", warningMsg)
 	}
 
 	if isCCloud {
@@ -196,7 +196,8 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
 	if remainingFreeCredit > 0 {
-		output.ErrPrintf(c.Config.EnableColor, errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintf(c.Config.EnableColor, "Free credits: $%.2f USD remaining\n", admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintln(c.Config.EnableColor, "You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.")
 	}
 }
 
@@ -393,7 +394,7 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
 		if strings.Contains(url, ccloudv2.Hostnames[0]) {
 			if !strings.HasSuffix(strings.TrimSuffix(url, "/"), ccloudv2.Hostnames[0]) {
-				return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
+				return url, "", errors.NewErrorWithSuggestions("there is no need to pass the `--url` flag if you are logging in to Confluent Cloud", "Log in to Confluent Cloud with `confluent login`.")
 			}
 		}
 	}

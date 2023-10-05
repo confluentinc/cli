@@ -29,7 +29,10 @@ func (c *command) computePoolDescribe(cmd *cobra.Command, args []string) error {
 		id = args[0]
 	}
 	if id == "" {
-		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or as an argument.")
+		return errors.NewErrorWithSuggestions(
+			"no compute pool selected",
+			"Select a compute pool with `confluent flink compute-pool use` or as an argument.",
+		)
 	}
 
 	environmentId, err := c.Context.EnvironmentId()

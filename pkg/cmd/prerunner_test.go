@@ -418,7 +418,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 							return &ccloudv1.GetMeReply{
 								User:         &ccloudv1.User{Id: 23},
 								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-								Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+								Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 							}, nil
 						},
 					}}
@@ -515,7 +515,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 			if !test.wantErr {
 				require.NoError(t, err)
-				require.NotContains(t, out, errors.AutoLoginMsg)
+				require.NotContains(t, out, "Successful auto log in with non-interactive credentials.\n")
 				require.NotContains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, username))
 			} else {
 				require.Error(t, err)
@@ -538,7 +538,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 					return &ccloudv1.GetMeReply{
 						User:         &ccloudv1.User{Id: 23},
 						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-						Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
+						Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 					}, nil
 				},
 			}}

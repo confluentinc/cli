@@ -437,10 +437,12 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 	tagConfigs := []srsdk.Tag{}
 	tagDefConfigs := []srsdk.TagDef{}
 	tagNames := []string{}
+
 	if components.Messages != nil {
 		if components.Messages[strcase.ToCamel(topicName)+"Message"].Tags == nil {
 			return nil
 		}
+
 		for _, tag := range components.Messages[strcase.ToCamel(topicName)+"Message"].Tags {
 			tagDefConfigs = append(tagDefConfigs, srsdk.TagDef{
 				// tag of type cf_entity so that it can be attached at any topic or schema level
@@ -454,10 +456,17 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 			})
 			tagNames = append(tagNames, tag.Name)
 		}
+
 		if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 			return err
 		}
-		output.Printf(false, "Tag(s) %s added to schema \"%d\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
+
+		tag := "Tag"
+		if len(tagNames) > 1 {
+			tag += "s"
+		}
+
+		output.Printf(false, "%s %s added to schema \"%d\".\n", tag, utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
 	}
 	return nil
 }
@@ -487,7 +496,13 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 		return err
 	}
-	output.Printf(false, "Tag(s) %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
+
+	tag := "Tag"
+	if len(tagNames) > 1 {
+		tag += "s"
+	}
+
+	output.Printf(false, "%s %s added to Kafka topic \"%s\".\n", tag, utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
 	return nil
 }
 

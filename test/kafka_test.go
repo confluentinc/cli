@@ -13,7 +13,7 @@ func (s *CLITestSuite) TestKafka() {
 	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
 	defer os.Remove(createBidirectionalLinkConfigFile)
 	tests := []CLITest{
-		{args: "environment use a-595", fixture: "kafka/0.golden"},
+		{args: "environment use env-596", fixture: "kafka/0.golden"},
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
 		{args: "kafka cluster list -o json", fixture: "kafka/7.golden"},
 		{args: "kafka cluster list -o yaml", fixture: "kafka/8.golden"},
@@ -23,7 +23,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
 		{args: "kafka cluster list --all", fixture: "kafka/47.golden"},
 
-		{args: "environment use a-595", fixture: "kafka/0.golden"},
+		{args: "environment use env-596", fixture: "kafka/0.golden"},
 		{args: "kafka cluster create", fixture: "kafka/1.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone", fixture: "kafka/2.golden"},
 		{args: "kafka cluster create my-failed-cluster --cloud oops --region us-east1 --availability single-zone", fixture: "kafka/cluster/create-cloud-provider-error.golden", exitCode: 1},
@@ -572,10 +572,42 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaConsumerGroupLag() {
+	tests := []CLITest{
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe.golden"},
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer/group/lag/describe-json.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/list.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/list-json.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/summarize.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/summarize-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka consumer group lag describe consumer-group-1 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe-onprem.golden"},
+		{args: "kafka consumer group lag list consumer-group-1", fixture: "kafka/consumer/group/lag/list-onprem.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1", fixture: "kafka/consumer/group/lag/summarize-onprem.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete kafka consumer list --cluster lkc-1234 --group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
 		{args: `__complete kafka consumer group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/autocomplete.golden"},
+		{args: `__complete kafka consumer group lag describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/describe-autocomplete.golden"},
+		{args: `__complete kafka consumer group lag list --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/list-autocomplete.golden"},
+		{args: `__complete kafka consumer group lag summarize --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/summarize-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},

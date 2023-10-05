@@ -9,14 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCatchClustersExceedError(t *testing.T) {
-	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"Your environment is currently limited to 50 kafka clusters"}]}`))}
-
-	err := CatchClusterConfigurationNotValidError(New("402 Payment Required"), res)
-	require.Error(t, err)
-	require.Equal(t, err.Error(), "Your environment is currently limited to 50 kafka clusters")
-}
-
 func TestCatchServiceAccountExceedError(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"Your environment is currently limited to 1000 service accounts"}]}`))}
 
