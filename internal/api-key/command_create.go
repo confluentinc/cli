@@ -125,8 +125,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln("It may take a couple of minutes for the API key to be ready.")
-		output.ErrPrintln("Save the API key and secret. The secret is not retrievable later.")
+		output.ErrPrintln(c.Config.EnableColor, "It may take a couple of minutes for the API key to be ready.")
+		output.ErrPrintln(c.Config.EnableColor, "Save the API key and secret. The secret is not retrievable later.")
 	}
 
 	table := output.NewTable(cmd)
@@ -155,7 +155,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(useAPIKeyMsg, userKey.Key)
+		output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

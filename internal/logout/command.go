@@ -60,6 +60,6 @@ func (c *command) logout(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println("You are now logged out.")
+	output.Println(c.Config.EnableColor, "You are now logged out.")
 	return nil
 }

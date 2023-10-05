@@ -46,6 +46,7 @@ const (
 )
 
 const (
+	ConnectorPrefix             = "lcc"
 	EnvironmentPrefix           = "env"
 	IdentityPoolPrefix          = "pool"
 	IdentityProviderPrefix      = "op"
@@ -57,6 +58,7 @@ const (
 )
 
 var prefixToResource = map[string]string{
+	ConnectorPrefix:             Connector,
 	EnvironmentPrefix:           Environment,
 	IdentityPoolPrefix:          IdentityPool,
 	IdentityProviderPrefix:      IdentityProvider,

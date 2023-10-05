@@ -13,7 +13,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type ResultFormatterTestSuite struct {
@@ -65,7 +64,7 @@ func (s *ResultFormatterTestSuite) TestGetTruncatedColumnWidthsDistributesLeftov
 	}
 
 	for idx, tc := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		require.Equal(s.T(), tc.expectedTruncatedColumnWidths, GetTruncatedColumnWidths(tc.columnWidths, tc.maxCharacters))
 	}
 }
@@ -145,7 +144,7 @@ func (s *ResultFormatterTestSuite) TestFormatArrayField() {
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		formattedField := TruncateString(arrayField.ToString(), testCase.maxCharCountToDisplay)
 		if testCase.maxCharCountToDisplay >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
@@ -210,7 +209,7 @@ func (s *ResultFormatterTestSuite) TestFormatMapField() {
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		formattedField := TruncateString(mapField.ToString(), testCase.maxCharCountToDisplay)
 		if testCase.maxCharCountToDisplay >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
@@ -266,7 +265,7 @@ func (s *ResultFormatterTestSuite) TestFormatRowField() {
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		formattedField := TruncateString(arrayField.ToString(), testCase.maxCharCountToDisplay)
 		if testCase.maxCharCountToDisplay >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
@@ -340,7 +339,7 @@ func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		formattedField := TruncateString(field.ToString(), testCase.maxCharCountToDisplay)
 		if testCase.maxCharCountToDisplay >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
@@ -380,7 +379,7 @@ func (s *ResultFormatterTestSuite) TestTruncateMultiLineStringShouldNotTruncate(
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		require.Equal(s.T(), testCase.expected, TruncateString(testCase.input, testCase.maxCharCountToDisplay))
 	}
 }

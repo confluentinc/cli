@@ -175,7 +175,7 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 			}
 		case ckafka.RevokedPartitions:
 			if consumer.AssignmentLost() {
-				output.ErrPrintln("%% Current assignment lost.")
+				output.ErrPrintln(false, "%% Current assignment lost.")
 			}
 			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
 			if err := consumer.IncrementalUnassign(parts); err != nil {
@@ -267,7 +267,7 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
-			output.ErrPrintln("Stopping Consumer.")
+			output.ErrPrintln(false, "Stopping Consumer.")
 			if _, err := consumer.Commit(); err != nil {
 				log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
 			}

@@ -115,6 +115,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
 	return nil
 }

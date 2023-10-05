@@ -58,6 +58,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, args[0]))
 	}
 
-	output.Printf(useAPIKeyMsg, args[0])
+	output.Printf(c.Config.EnableColor, useAPIKeyMsg, args[0])
 	return nil
 }

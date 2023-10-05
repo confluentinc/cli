@@ -177,7 +177,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln(getKafkaProvisionEstimate(sku))
+		output.ErrPrintln(c.Config.EnableColor, getKafkaProvisionEstimate(sku))
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
@@ -199,7 +199,7 @@ func (c *clusterCommand) validateGcpEncryptionKey(cloud, accountId string) error
 		return err
 	}
 	buf.WriteString("\n\n")
-	output.Println(buf.String())
+	output.Println(c.Config.EnableColor, buf.String())
 
 	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
 	f := form.New(
@@ -210,7 +210,7 @@ func (c *clusterCommand) validateGcpEncryptionKey(cloud, accountId string) error
 		})
 	for {
 		if err := f.Prompt(form.NewPrompt()); err != nil {
-			output.ErrPrintln("BYOK error: failed to read your confirmation")
+			output.ErrPrintln(c.Config.EnableColor, "BYOK error: failed to read your confirmation")
 			continue
 		}
 		if !f.Responses["authorized"].(bool) {

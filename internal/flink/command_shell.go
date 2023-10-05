@@ -121,7 +121,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		serviceAccount = c.Context.GetCurrentServiceAccount()
 	}
 	if serviceAccount == "" {
-		output.ErrPrintln(flink.ServiceAccountWarning)
+		output.ErrPrintln(c.Config.EnableColor, flink.ServiceAccountWarning)
 	}
 
 	database, err := cmd.Flags().GetString("database")
