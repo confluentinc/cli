@@ -69,6 +69,7 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement list --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/list-yaml.golden"},
 		{args: "flink statement resume my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/resume.golden"},
 		{args: "flink statement stop my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/stop.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-12345", fixture: "flink/statement/update.golden"},
 	}
 
 	for _, test := range tests {
