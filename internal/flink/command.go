@@ -1,11 +1,13 @@
 package flink
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 )
 
 type command struct {
@@ -26,24 +28,83 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newShellCommand(cfg, prerunner))
 	cmd.AddCommand(c.newStatementCommand())
 
-	dc := dynamicconfig.New(cfg, nil)
-	_ = dc.ParseFlagsIntoConfig(cmd)
-
 	return cmd
 }
 
 func (c *command) addComputePoolFlag(cmd *cobra.Command) {
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "compute-pool", c.autocompleteComputePools)
+}
 
-	pcmd.RegisterFlagCompletionFunc(cmd, "compute-pool", func(cmd *cobra.Command, args []string) []string {
-		if err := c.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
+func (c *command) autocompleteComputePools(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
 
-		return c.autocompleteComputePools()
-	})
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	computePools, err := c.V2Client.ListFlinkComputePools(environmentId, "")
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(computePools))
+	for i, computePool := range computePools {
+		suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), computePool.Spec.GetDisplayName())
+	}
+	return suggestions
 }
 
 func (c *command) addDatabaseFlag(cmd *cobra.Command) {
-	cmd.Flags().String("database", "", "The database which will be used as the default database. When using Kafka, this is the cluster name.")
+	cmd.Flags().String("database", "", "The database which will be used as the default database. When using Kafka, this is the cluster ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "database", c.autocompleteDatabases)
+}
+
+func (c *command) autocompleteDatabases(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	clusters, err := c.V2Client.ListKafkaClusters(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func (c *command) addRegionFlag(cmd *cobra.Command) {
+	cmd.Flags().String("region", "", `Cloud region for compute pool (use "confluent flink region list" to see all).`)
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", c.autocompleteRegions)
+}
+
+func (c *command) autocompleteRegions(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	cloud, _ := cmd.Flags().GetString("cloud")
+
+	regions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(regions))
+	for i, region := range regions {
+		suggestions[i] = region.GetRegionName()
+	}
+	return suggestions
 }
