@@ -16,7 +16,7 @@ Flags:
       --sql string               REQUIRED: The Flink SQL statement.
       --compute-pool string      Flink compute pool ID.
       --service-account string   Service account ID.
-      --database string          The database which will be used as the default database. When using Kafka, this is the cluster name.
+      --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
       --wait                     Block until the statement is running or has failed.
       --environment string       Environment ID.
       --context string           CLI context name.
