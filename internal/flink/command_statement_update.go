@@ -19,9 +19,9 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 		RunE:              c.statementUpdate,
 	}
 
+	c.addComputePoolFlag(cmd)
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
-	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
