@@ -61,6 +61,7 @@ func quotaToPrintable(quota kafkaquotasv1.KafkaQuotasV1ClientQuota, format outpu
 		out.Ingress += " B/s"
 		out.Egress += " B/s"
 	} else {
+		// TODO: Serialize array instead of string in next major version
 		out.Principals = principalsToStringSerialized(quota.Spec.GetPrincipals())
 	}
 
@@ -75,7 +76,6 @@ func principalsToString(principals []kafkaquotasv1.GlobalObjectReference) string
 	return strings.Join(ids, ", ")
 }
 
-// TODO: Serialize array instead of string in next major version
 func principalsToStringSerialized(principals []kafkaquotasv1.GlobalObjectReference) string {
 	principalStr := ""
 	for i, principal := range principals {
