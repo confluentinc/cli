@@ -125,14 +125,13 @@ func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, resp cdxv1.
 
 	networkDetails := getPrivateLinkNetworkDetails(network)
 	out.NetworkDnsDomain = network.GetDnsDomain()
+	out.NetworkZones = strings.Join(network.GetZones(), ", ")
 	out.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
 	out.NetworkKind = networkDetails.networkKind
 	out.NetworkPrivateLinkDataType = networkDetails.privateLinkDataType
 	out.NetworkPrivateLinkData = networkDetails.privateLinkData
 
-	if output.GetFormat(cmd) == output.Human {
-		out.NetworkZones = strings.Join(network.GetZones(), ", ")
-	} else {
+	if output.GetFormat(cmd).IsSerialized() {
 		// TODO: Serialize array instead of string in next major version
 		out.NetworkZones = strings.Join(network.GetZones(), ",")
 	}
