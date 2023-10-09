@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"sync"
 	"testing"
 
@@ -271,7 +272,7 @@ func (s *ApplicationTestSuite) TestPanicRecovery() {
 	s.statementController.EXPECT().CleanupStatement()
 
 	// When
-	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+	actual := test.RunAndCaptureSTDOUT(s.T(), utils.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery))
 
 	// Then
 	cupaloy.SnapshotT(s.T(), actual)
