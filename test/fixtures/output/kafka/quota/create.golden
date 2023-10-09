@@ -1,10 +1,10 @@
-+-------------+-----------------+
-| ID          | cq-1234         |
-| Name        | clientQuota     |
-| Description | description     |
-| Ingress     | 500 B/s         |
-| Egress      | 100 B/s         |
-| Principals  | sa-1234,sa-5678 |
-| Cluster     | lkc-1234        |
-| Environment | env-596         |
-+-------------+-----------------+
++-------------+------------------+
+| ID          | cq-1234          |
+| Name        | clientQuota      |
+| Description | description      |
+| Ingress     | 500 B/s          |
+| Egress      | 100 B/s          |
+| Principals  | sa-1234, sa-5678 |
+| Cluster     | lkc-1234         |
+| Environment | env-596          |
++-------------+------------------+
