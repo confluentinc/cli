@@ -1,9 +1,11 @@
 package utils
 
 import (
-	"github.com/bradleyjkemp/cupaloy"
-	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"testing"
+
+	"github.com/bradleyjkemp/cupaloy"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/test"
 )
 
 func TestDefaultPanicRecovery(t *testing.T) {
