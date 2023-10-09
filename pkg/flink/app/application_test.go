@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -271,7 +272,7 @@ func (s *ApplicationTestSuite) TestPanicRecovery() {
 	s.statementController.EXPECT().CleanupStatement()
 
 	// When
-	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+	actual := test.RunAndCaptureSTDOUT(s.T(), utils.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery))
 
 	// Then
 	cupaloy.SnapshotT(s.T(), actual)
