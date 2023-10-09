@@ -4,6 +4,8 @@ import (
 	"os"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 )
 
 func RunAndCaptureSTDOUT(t require.TestingT, test func()) string {
@@ -23,10 +25,10 @@ func RunAndCaptureSTDOUT(t require.TestingT, test func()) string {
 
 	// Read the output from the buffer
 	output := make(chan string)
-	go func() {
+	go utils.WithPanicRecovery(func() {
 		buf := make([]byte, 1024)
 		n, _ := r.Read(buf)
 		output <- string(buf[:n])
-	}()
+	})()
 	return <-output
 }
