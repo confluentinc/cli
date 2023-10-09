@@ -47,7 +47,6 @@ func (c *command) newRedeemCommand() *cobra.Command {
 	cmd.Flags().String("aws-account-id", "", "Consumer's AWS account ID for PrivateLink access.")
 	cmd.Flags().String("azure-subscription-id", "", "Consumer's Azure subscription ID for PrivateLink access.")
 	cmd.Flags().String("gcp-project-id", "", "Consumer's GCP project ID for Private Service Connect access.")
-
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -126,11 +125,17 @@ func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, resp cdxv1.
 
 	networkDetails := getPrivateLinkNetworkDetails(network)
 	out.NetworkDnsDomain = network.GetDnsDomain()
-	out.NetworkZones = strings.Join(network.GetZones(), ",")
 	out.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
 	out.NetworkKind = networkDetails.networkKind
 	out.NetworkPrivateLinkDataType = networkDetails.privateLinkDataType
 	out.NetworkPrivateLinkData = networkDetails.privateLinkData
+
+	if output.GetFormat(cmd) == output.Human {
+		out.NetworkZones = strings.Join(network.GetZones(), ", ")
+	} else {
+		// TODO: Serialize array instead of string in next major version
+		out.NetworkZones = strings.Join(network.GetZones(), ",")
+	}
 
 	table := output.NewTable(cmd)
 	table.Add(out)
