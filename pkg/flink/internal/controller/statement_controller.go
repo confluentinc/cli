@@ -95,7 +95,9 @@ func (c *StatementController) waitForStatementToBeReadyOrError(processedStatemen
 	ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 	defer cancelWaitPendingStatement()
 
-	go c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isCancelEvent), cancelWaitPendingStatement)
+	go utils.WithPanicRecovery(func() {
+		c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isCancelEvent), cancelWaitPendingStatement)
+	})()
 
 	readyStatement, err := c.store.WaitPendingStatement(ctx, processedStatement)
 	if err != nil {
@@ -132,7 +134,9 @@ func (c *StatementController) waitForStatementToBeInTerminalStateOrError(process
 	ctx, cancelWaitForTerminalStatementState := context.WithCancel(context.Background())
 	defer cancelWaitForTerminalStatementState()
 
-	go c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isDetachEvent, isCancelEvent), cancelWaitForTerminalStatementState)
+	go utils.WithPanicRecovery(func() {
+		c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isDetachEvent, isCancelEvent), cancelWaitForTerminalStatementState)
+	})()
 
 	output.Printf(false, "Statement phase is %s.\n", readyStatementWithResults.Status)
 	col := fColor.New(color.AccentColor)
