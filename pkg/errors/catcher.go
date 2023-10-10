@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
@@ -170,7 +168,7 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 			return NewErrorWithSuggestions(detail, "Look up Confluent Cloud service quota limits with `confluent service-quota list`.")
 		}
 		if detail != "" {
-			err = errors.New(strings.TrimSuffix(detail, "\n"))
+			err = New(strings.TrimSuffix(detail, "\n"))
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
 				err = NewErrorWithSuggestions(err.Error(), resolution)
 			}

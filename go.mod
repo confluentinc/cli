@@ -75,7 +75,6 @@ require (
 	github.com/panta/machineid v1.0.2
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pkg/errors v0.9.1
 	github.com/rivo/tview v0.0.0-20230511053024-822bd067b165
 	github.com/samber/lo v1.38.1
 	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
@@ -156,6 +155,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/runc v1.1.4 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect

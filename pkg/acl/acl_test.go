@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	errMsgs "github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 func TestParseAclRequest(t *testing.T) {
@@ -95,9 +94,10 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 		},
 		{
 			initialAcl: AclRequestDataWithError{Host: "*"},
-			expectedAcl: AclRequestDataWithError{Errors: multierror.Append(errors.Errorf(errMsgs.MustSetAllowOrDenyErrorMsg), errors.Errorf(errMsgs.MustSetResourceTypeErrorMsg,
-				convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-					kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))},
+			expectedAcl: AclRequestDataWithError{Errors: multierror.Append(
+				errors.Errorf(errors.MustSetAllowOrDenyErrorMsg),
+				errors.Errorf(errors.MustSetResourceTypeErrorMsg, convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP, kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)),
+			)},
 		},
 	}
 	req := require.New(t)

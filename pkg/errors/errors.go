@@ -2,24 +2,22 @@ package errors
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 func New(msg string) error {
-	return errors.New(msg)
+	return fmt.Errorf(msg)
 }
 
 func Wrap(err error, msg string) error {
-	return errors.Wrap(err, msg)
+	return fmt.Errorf("%s: %w", msg, err)
 }
 
-func Wrapf(err error, fmt string, args ...any) error {
-	return errors.Wrapf(err, fmt, args...)
+func Wrapf(err error, format string, args ...any) error {
+	return fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), err)
 }
 
-func Errorf(fmt string, args ...any) error {
-	return errors.Errorf(fmt, args...)
+func Errorf(format string, args ...any) error {
+	return fmt.Errorf(format, args...)
 }
 
 func CustomMultierrorList(errors []error) string {
