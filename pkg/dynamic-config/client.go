@@ -20,8 +20,7 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey, clusterId string) error {
 	if !ok {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`invalid API key "%s" for resource "%s"`, apiKey, clusterId),
-			fmt.Sprintf("To list API key that belongs to resource \"%s\", use `confluent api-key list --resource %s`.\n"+
-				"To create new API key for resource \"%s\", use `confluent api-key create --resource %s`.", clusterId, clusterId, clusterId, clusterId),
+			fmt.Sprintf("To list API key that belongs to resource \"%[1]s\", use `confluent api-key list --resource %[1]s`.\nTo create new API key for resource \"%[1]s\", use `confluent api-key create --resource %[1]s`.", clusterId),
 		)
 	}
 	// the requested api-key exists, but the secret is not saved locally

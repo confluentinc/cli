@@ -119,7 +119,7 @@ func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluste
 		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic),
-			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID, cluster.ID, cluster.ID),
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID),
 		)
 	}
 
