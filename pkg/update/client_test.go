@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	pio "github.com/confluentinc/cli/v3/pkg/io"
 	"github.com/confluentinc/cli/v3/pkg/mock"
 	updateMock "github.com/confluentinc/cli/v3/pkg/update/mock"
@@ -100,7 +99,7 @@ func TestCheckForUpdates(t *testing.T) {
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
-						return nil, nil, errors.New("zap")
+						return nil, nil, fmt.Errorf("zap")
 					},
 				},
 			}),
@@ -148,7 +147,7 @@ func TestCheckForUpdates(t *testing.T) {
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						require.Fail(t, "Shouldn't be called")
-						return nil, nil, errors.New("whoops")
+						return nil, nil, fmt.Errorf("whoops")
 					},
 				},
 				// This check file was created by the TmpFile process, modtime is current, so should skip check
@@ -220,7 +219,7 @@ func TestCheckForUpdates(t *testing.T) {
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						require.Fail(t, "Shouldn't be called")
-						return nil, nil, errors.New("whoops")
+						return nil, nil, fmt.Errorf("whoops")
 					},
 				},
 				DisableCheck: true,
@@ -235,7 +234,7 @@ func TestCheckForUpdates(t *testing.T) {
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
-						return nil, nil, errors.New("whoops")
+						return nil, nil, fmt.Errorf("whoops")
 					},
 				},
 			}),
@@ -465,7 +464,7 @@ func TestVerifyChecksum(t *testing.T) {
 			if version == "2.5.1" {
 				return checksums, nil
 			} else {
-				return "", errors.New("No checksums for given version")
+				return "", fmt.Errorf("No checksums for given version")
 			}
 		},
 	}
@@ -475,7 +474,7 @@ func TestVerifyChecksum(t *testing.T) {
 			if strings.Contains(checksums, newBin) {
 				return nil
 			}
-			return errors.New("checksum verification failed")
+			return fmt.Errorf("checksum verification failed")
 		},
 	}
 
@@ -561,7 +560,7 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestReleaseNotesVersionsFunc: func(_, _ string) (version.Collection, error) {
-						return nil, errors.New("whoops")
+						return nil, fmt.Errorf("whoops")
 					},
 					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
 						return "", nil
@@ -579,7 +578,7 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 						return version.Collection{v1}, nil
 					},
 					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
-						return "", errors.New("whoops")
+						return "", fmt.Errorf("whoops")
 					},
 				},
 			}),
@@ -654,7 +653,7 @@ func TestUpdateBinary(t *testing.T) {
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
-							return nil, errors.New("out of disk!")
+							return nil, fmt.Errorf("out of disk!")
 						},
 					},
 				},
@@ -687,7 +686,7 @@ func TestUpdateBinary(t *testing.T) {
 				fs: &mock.PassThroughFileSystem{
 					Mock: &mock.FileSystem{
 						MoveFunc: func(src, dst string) error {
-							return errors.New("move func intentionally failed")
+							return fmt.Errorf("move func intentionally failed")
 						},
 					},
 					FS: &pio.RealFileSystem{},

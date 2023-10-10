@@ -83,9 +83,9 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 && (subject != "" || version != "") {
-		return errors.New("cannot specify both schema ID and subject/version")
+		return fmt.Errorf("cannot specify both schema ID and subject/version")
 	} else if len(args) == 0 && (subject == "" || version == "") {
-		return errors.New("must specify either schema ID or subject/version")
+		return fmt.Errorf("must specify either schema ID or subject/version")
 	}
 
 	client, err := c.GetSchemaRegistryClient(cmd)

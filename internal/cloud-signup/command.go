@@ -1,11 +1,12 @@
 package cloudsignup
 
 import (
+	"fmt"
+
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -36,7 +37,7 @@ func (c *command) cloudSignup(cmd *cobra.Command, _ []string) error {
 	}
 
 	if err := browser.OpenURL(signupUrl); err != nil {
-		return errors.Wrap(err, "unable to open web browser for cloud signup")
+		return fmt.Errorf("unable to open web browser for cloud signup: %w", err)
 	}
 
 	return nil

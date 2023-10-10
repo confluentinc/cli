@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -80,21 +80,21 @@ func (c *InputController) getMaxCol() (int, error) {
 	p := c.prompt
 	v := reflect.ValueOf(p)
 	if v.Kind() != reflect.Pointer {
-		return -1, errors.New("could not reflect prompt")
+		return -1, fmt.Errorf("could not reflect prompt")
 	} else {
 		v = v.Elem()
 	}
 
 	v = v.FieldByName("renderer")
 	if v.Kind() != reflect.Pointer {
-		return -1, errors.New("could not reflect prompt.renderer")
+		return -1, fmt.Errorf("could not reflect prompt.renderer")
 	} else {
 		v = v.Elem()
 	}
 
 	v = v.FieldByName("col")
 	if v.Kind() != reflect.Uint16 {
-		return -1, errors.New("could not reflect prompt.renderer.col")
+		return -1, fmt.Errorf("could not reflect prompt.renderer.col")
 	}
 
 	maxCol := v.Uint()

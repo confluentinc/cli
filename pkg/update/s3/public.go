@@ -67,13 +67,13 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version.Version) (*version.Version, *version.Version, error) {
 	versions, err := r.GetAvailableBinaryVersions(name)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf("%s: %w", errors.GetBinaryVersionsErrorMsg, err)
 	}
 
 	// The index of the largest available version. This may be a major version update.
 	majorIdx := len(versions) - 1
 	if majorIdx < 0 {
-		return nil, nil, errors.New(errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf(errors.GetBinaryVersionsErrorMsg)
 	}
 	major := versions[majorIdx]
 	if current.Segments()[0] == major.Segments()[0] {
@@ -90,7 +90,7 @@ func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version
 	}) - 1
 
 	if minorIdx < 0 {
-		return nil, nil, errors.New(errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf(errors.GetBinaryVersionsErrorMsg)
 	}
 	minor := versions[minorIdx]
 
@@ -107,7 +107,7 @@ func (r *PublicRepo) GetAvailableBinaryVersions(name string) (version.Collection
 		return nil, err
 	}
 	if len(availableVersions) == 0 {
-		return nil, errors.New(errors.NoVersionsErrorMsg)
+		return nil, fmt.Errorf(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }
@@ -177,7 +177,7 @@ func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBu
 func (r *PublicRepo) GetLatestReleaseNotesVersions(name, currentVersion string) (version.Collection, error) {
 	versions, err := r.GetAvailableReleaseNotesVersions(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get available release notes versions")
+		return nil, fmt.Errorf("unable to get available release notes versions: %w", err)
 	}
 
 	current, err := version.NewVersion(currentVersion)
@@ -197,7 +197,7 @@ func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Coll
 	}
 	availableVersions := r.getMatchedReleaseNotesVersionsFromListBucketResult(name, listBucketResult)
 	if len(availableVersions) == 0 {
-		return nil, errors.New(errors.NoVersionsErrorMsg)
+		return nil, fmt.Errorf(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }
@@ -292,7 +292,7 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 		if err == nil {
 			log.CliLogger.Tracef("Response from AWS: %s", string(body))
 		}
-		return nil, errors.Errorf("received unexpected response from S3: %s", resp.Status)
+		return nil, fmt.Errorf("received unexpected response from S3: %s", resp.Status)
 	}
 	return resp, nil
 }

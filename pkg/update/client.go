@@ -84,7 +84,8 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
-		return "", "", errors.Wrapf(err, errors.ParseVersionErrorMsg, cliName, currentVersion)
+		message := fmt.Sprintf(errors.ParseVersionErrorMsg, cliName, currentVersion)
+		return "", "", fmt.Errorf("%s: %w", message, err)
 	}
 
 	latestMajorVersion, latestMinorVersion, err := c.Repository.GetLatestMajorAndMinorVersion(cliName, currVersion)
@@ -102,7 +103,7 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 
 	// After fetching the latest version, we touch the file so that we don't make the request again for 24hrs.
 	if err := c.touchCheckFile(); err != nil {
-		return "", "", errors.Wrap(err, "unable to touch last check file")
+		return "", "", fmt.Errorf("unable to touch last check file: %w", err)
 	}
 
 	var major, minor string
@@ -200,7 +201,7 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) error {
 	downloadDir, err := c.fs.MkdirTemp("", cliName)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get temp dir for %s", cliName)
+		return fmt.Errorf("unable to get temporary directory for %s: %w", cliName, err)
 	}
 	defer func() {
 		if err := c.fs.RemoveAll(downloadDir); err != nil {
@@ -213,7 +214,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 
 	payload, err := c.Repository.DownloadVersion(cliName, version, downloadDir)
 	if err != nil {
-		return errors.Wrapf(err, "unable to download %s version %s to %s", cliName, version, downloadDir)
+		return fmt.Errorf("unable to download %s version %s to %s: %w", cliName, version, downloadDir, err)
 	}
 
 	mb := float64(len(payload)) / 1024.0 / 1024.0
@@ -224,7 +225,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	if !noVerify {
 		content, err := c.Repository.DownloadChecksums(cliName, version)
 		if err != nil {
-			return errors.Wrapf(err, "failed to download checksums file")
+			return fmt.Errorf("failed to download checksums file: %w", err)
 		}
 
 		binary := getBinaryName(version, c.OS, runtime.GOARCH)

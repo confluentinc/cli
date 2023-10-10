@@ -6,10 +6,10 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
+	"fmt"
 
 	"golang.org/x/crypto/pbkdf2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
@@ -188,7 +188,7 @@ func (c *EncryptEngineImpl) decrypt(crypt, key, iv []byte, algo string) ([]byte,
 		}
 		return decrypted, nil
 	} else {
-		return []byte{}, errors.Errorf(`invalid algorithm "%s"`, algo)
+		return []byte{}, fmt.Errorf(`invalid algorithm "%s"`, algo)
 	}
 }
 
@@ -196,7 +196,7 @@ func (c *EncryptEngineImpl) pkcs5Trimming(encrypt []byte) ([]byte, error) {
 	padding := encrypt[len(encrypt)-1]
 	length := len(encrypt) - int(padding)
 	if length < 0 || length > len(encrypt) {
-		return nil, errors.New("failed to decrypt the cipher: data is corrupted")
+		return nil, fmt.Errorf("failed to decrypt the cipher: data is corrupted")
 	}
 	return encrypt[:len(encrypt)-int(padding)], nil
 }

@@ -31,7 +31,7 @@ func FileExists(filename string) bool {
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
-		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
+		return nil, fmt.Errorf(errors.InvalidFilePathErrorMsg, path)
 	}
 
 	loader := new(properties.Loader)

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-jose/go-jose/v3/jwt"
@@ -47,7 +48,7 @@ func (v *JWTValidatorImpl) Validate(context *config.Context) error {
 
 	exp, ok := claims["exp"].(float64)
 	if !ok {
-		return errors.New("malformed token: no expiration")
+		return fmt.Errorf("malformed token: no expiration")
 	}
 
 	// Add a time buffer of 1 minute to the token validator

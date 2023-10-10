@@ -121,7 +121,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	} else if isAWSKey(keyString) {
 		keyReq = c.createAwsKeyRequest(keyString)
 	} else {
-		return errors.New(fmt.Sprintf("invalid key format: %s", keyString))
+		return fmt.Errorf("invalid key format: %s", keyString)
 	}
 
 	key, httpResp, err := c.V2Client.CreateByokKey(*keyReq)
@@ -155,7 +155,7 @@ func getPolicyCommand(key *byokv1.ByokV1Key) (string, error) {
 func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	buf := new(bytes.Buffer)
 	if err := encryptionKeyPolicyAws.Execute(buf, roles); err != nil {
-		return "", errors.New(failedToRenderKeyPolicyErrorMsg)
+		return "", fmt.Errorf(failedToRenderKeyPolicyErrorMsg)
 	}
 	return buf.String(), nil
 }
@@ -166,7 +166,7 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	regex := regexp.MustCompile(`^https://([^/.]+).vault.azure.net`)
 	matches := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)
 	if matches == nil {
-		return "", errors.New(failedToRenderKeyPolicyErrorMsg)
+		return "", fmt.Errorf(failedToRenderKeyPolicyErrorMsg)
 	}
 
 	vaultName := matches[1]

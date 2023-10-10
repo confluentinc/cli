@@ -174,7 +174,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 
 func setAclRequestPermission(conf *AclRequestDataWithError, permission string) {
 	if conf.Permission != "" {
-		conf.Errors = multierror.Append(conf.Errors, errors.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL"))
+		conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL"))
 	}
 	conf.Permission = permission
 }
@@ -235,7 +235,7 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.Permission == "" {
-		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if aclConfiguration.PatternType == "" {
@@ -243,7 +243,7 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 	}
 
 	if aclConfiguration.ResourceType == "" {
-		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
+		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
 			convertToFlags(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
 				cpkafkarestv3.ACLRESOURCETYPE_CLUSTER, cpkafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
@@ -348,7 +348,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.Acl
 func principalHasIntegerId(principal string) (bool, error) {
 	x := strings.Split(principal, ":")
 	if len(x) < 2 {
-		return false, errors.Errorf("unrecognized principal format %s", principal)
+		return false, fmt.Errorf("unrecognized principal format %s", principal)
 	}
 	suffix := x[1]
 
