@@ -178,7 +178,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		if err.Error() == protobufErrorMessage {
 			return err
 		}
-		return fmt.Errorf("failed to get schema details: %v", err)
+		return fmt.Errorf("failed to get schema details: %w", err)
 	}
 	if err := details.getTags(); err != nil {
 		log.CliLogger.Warnf("Failed to get tags: %v", err)
@@ -261,11 +261,11 @@ func handlePanic() {
 func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.Client, valueFormatFlag string) (any, error) {
 	defer handlePanic()
 	if err := consumer.Subscribe(topicName, nil); err != nil {
-		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
+		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %w`, topicName, err)
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
 	if err != nil {
-		return nil, fmt.Errorf(`no example received for topic "%s": %v`, topicName, err)
+		return nil, fmt.Errorf(`no example received for topic "%s": %w`, topicName, err)
 	}
 	value := message.Value
 	var valueFormat string
@@ -314,7 +314,7 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 	var numPartitions int32
 	partitions, err := kafkaREST.CloudClient.ListKafkaPartitions(topicName)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
+		return nil, fmt.Errorf("unable to get topic partitions: %w", err)
 	}
 	if partitions.Data != nil {
 		numPartitions = int32(len(partitions.Data))
@@ -375,7 +375,7 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
 	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
+		return fmt.Errorf(`failed to find Kafka cluster: %w`, err)
 	}
 
 	if err := clusterConfig.DecryptAPIKeys(); err != nil {
@@ -511,7 +511,7 @@ func getMessageCompatibility(client *schemaregistry.Client, subject string) (map
 		log.CliLogger.Warnf("Failed to get subject level configuration: %v", err)
 		config, err = client.GetTopLevelConfig()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get top level configuration: %v", err)
+			return nil, fmt.Errorf("failed to get top level configuration: %w", err)
 		}
 	}
 	return map[string]any{"x-messageCompatibility": config.CompatibilityLevel}, nil
@@ -594,7 +594,7 @@ func createConsumer(broker string, clusterCreds *config.APIKeyPair, groupId stri
 		"enable.auto.commit": "false",
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Kafka consumer: %v", err)
+		return nil, fmt.Errorf("failed to create Kafka consumer: %w", err)
 	}
 	return consumer, nil
 }

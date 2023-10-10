@@ -33,10 +33,10 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 		if g.IsVersion(word) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
 			if err != nil {
-				return errors.Errorf(unableToParseVersionErrorMsg, "go")
+				return fmt.Errorf(unableToParseVersionErrorMsg, "go")
 			}
 			if installedVer.LessThan(ver) {
-				return errors.Errorf(insufficientVersionErrorMsg, "go", installedVer, ver)
+				return fmt.Errorf(insufficientVersionErrorMsg, "go", installedVer, ver)
 			}
 		}
 	}
@@ -49,7 +49,7 @@ func (g *GoPluginInstaller) Install() error {
 	installCmd := exec.NewCommand("go", "install", packageName)
 
 	if _, err := installCmd.Output(); err != nil {
-		return errors.Wrap(err, "failed to run `go install`")
+		return fmt.Errorf("failed to run `go install`: %w", err)
 	}
 
 	return nil

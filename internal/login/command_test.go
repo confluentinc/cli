@@ -552,12 +552,12 @@ func TestLoginFail(t *testing.T) {
 	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
-				return nil, errors.New("DO NOT RETURN THIS ERR")
+				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
 			}
 		},
 		GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
-				return nil, errors.New("DO NOT RETURN THIS ERR")
+				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
 			}
 		},
 		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -567,7 +567,7 @@ func TestLoginFail(t *testing.T) {
 		},
 		GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
-				return nil, errors.New("DO NOT RETURN THIS ERR")
+				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
 			}
 		},
 		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {

@@ -10,8 +10,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 /*
@@ -98,7 +96,7 @@ func (ch *ConfluentHomeManager) getRootDir() (string, error) {
 		return dir, nil
 	}
 
-	return "", errors.New("set environment variable CONFLUENT_HOME")
+	return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
 }
 
 func (ch *ConfluentHomeManager) GetFile(path ...string) (string, error) {
@@ -234,7 +232,7 @@ func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
 		return "", err
 	}
 	if len(matches) == 0 {
-		return "", errors.Errorf("could not find %s in CONFLUENT_HOME", pattern)
+		return "", fmt.Errorf("could not find %s in CONFLUENT_HOME", pattern)
 	}
 
 	versionFile := matches[0]
@@ -260,7 +258,7 @@ func (ch *ConfluentHomeManager) GetKafkaScript(format, mode string) (string, err
 	case "protobuf":
 		script = fmt.Sprintf("kafka-protobuf-console-%s", mode)
 	default:
-		return "", errors.Errorf("invalid format: %s", format)
+		return "", fmt.Errorf("invalid format: %s", format)
 	}
 
 	return ch.GetFile("bin", script)

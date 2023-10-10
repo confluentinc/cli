@@ -1,7 +1,7 @@
 package byok
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -64,7 +64,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		case key.Key.ByokV1AzureKey != nil:
 			keyString = key.Key.ByokV1AzureKey.KeyId
 		default:
-			return errors.New(byokUnknownKeyTypeErrorMsg)
+			return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 		}
 
 		updatedAt := ""

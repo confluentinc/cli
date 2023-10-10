@@ -15,7 +15,7 @@ func ValidateTopic(adminClient *ckafka.AdminClient, topic string) error {
 	timeout := 10 * time.Second
 	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
-		return fmt.Errorf("failed to obtain topics from client: %v", err)
+		return fmt.Errorf("failed to obtain topics from client: %w", err)
 	}
 
 	var foundTopic bool

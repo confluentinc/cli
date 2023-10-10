@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -74,7 +75,7 @@ func (c *command) clusterUpdate(cmd *cobra.Command, _ []string) error {
 		return c.updateTopLevelMode(cmd, mode)
 	}
 
-	return errors.New(errors.CompatibilityOrModeErrorMsg)
+	return fmt.Errorf(errors.CompatibilityOrModeErrorMsg)
 }
 
 func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {

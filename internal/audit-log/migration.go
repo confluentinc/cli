@@ -189,7 +189,7 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 	for clusterId, auditConfig := range clusterConfigs {
 		var spec mdsv1.AuditLogConfigSpec
 		if err := json.Unmarshal([]byte(auditConfig), &spec); err != nil {
-			return nil, fmt.Errorf(`bad input file: the audit log configuration for cluster "%s" uses invalid JSON: %v`, clusterId, err)
+			return nil, fmt.Errorf(`bad input file: the audit log configuration for cluster "%s" uses invalid JSON: %w`, clusterId, err)
 		}
 		clusterAuditLogConfigSpecs[clusterId] = &spec
 	}

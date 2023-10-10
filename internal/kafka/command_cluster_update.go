@@ -69,7 +69,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if name == "" {
-			return errors.New("`--name` flag value must not be empty")
+			return fmt.Errorf("`--name` flag value must not be empty")
 		}
 		update.Spec.SetDisplayName(name)
 	}
@@ -101,14 +101,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster) (int32, error) {
 	// Ensure the cluster is a Dedicated Cluster
 	if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
-		return 0, errors.New("failed to update Kafka cluster: cluster resize is only supported on dedicated clusters")
+		return 0, fmt.Errorf("failed to update Kafka cluster: cluster resize is only supported on dedicated clusters")
 	}
 	// Durability Checks
 	if currentCluster.Spec.GetAvailability() == highAvailability && cku <= 1 {
-		return 0, errors.New("`--cku` value must be greater than 1 for high durability")
+		return 0, fmt.Errorf("`--cku` value must be greater than 1 for high durability")
 	}
 	if cku == 0 {
-		return 0, errors.New(errors.CkuMoreThanZeroErrorMsg)
+		return 0, fmt.Errorf(errors.CkuMoreThanZeroErrorMsg)
 	}
 	// Cluster can't be resized while it's provisioning or being expanded already.
 	// Name _can_ be changed during these times, though.
@@ -141,7 +141,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2
 	}
 
 	if err := c.validateClusterLoad(*currentCluster.Id, isLatestMetric); err != nil {
-		return errors.Errorf("Looking at metrics in the last %s window:\n%v", window, err)
+		return fmt.Errorf("Looking at metrics in the last %s window:\n%v", window, err)
 	}
 
 	return nil
@@ -150,7 +150,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2
 func confirmShrink(promptMessage string) (bool, error) {
 	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that: %s\nDo you want to proceed with shrinking your kafka cluster?", promptMessage), IsYesOrNo: true})
 	if err := f.Prompt(form.NewPrompt()); err != nil {
-		return false, errors.New("cluster resize error: failed to read your confirmation")
+		return false, fmt.Errorf("cluster resize error: failed to read your confirmation")
 	}
 	if !f.Responses["proceed"].(bool) {
 		output.Println(false, "Not proceeding with kafka cluster shrink")

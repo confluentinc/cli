@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
@@ -54,7 +55,7 @@ func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClus
 		}
 	}
 
-	return nil, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorId)
+	return nil, fmt.Errorf(errors.UnknownConnectorIdErrorMsg, connectorId)
 }
 
 func (c *Client) GetConnectorExpansionByName(connectorName, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {
@@ -69,7 +70,7 @@ func (c *Client) GetConnectorExpansionByName(connectorName, environmentId, kafka
 		}
 	}
 
-	return nil, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorName)
+	return nil, fmt.Errorf(errors.UnknownConnectorIdErrorMsg, connectorName)
 }
 
 func (c *Client) PauseConnector(connectorName, environmentId, kafkaClusterId string) error {

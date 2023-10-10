@@ -57,7 +57,7 @@ func ConfirmDeletionYesNo(cmd *cobra.Command, promptMsg string) error {
 	prompt := form.NewPrompt()
 	f := form.New(form.Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: true})
 	if err := f.Prompt(prompt); err != nil {
-		return errors.New(errors.FailedToReadInputErrorMsg)
+		return fmt.Errorf(errors.FailedToReadInputErrorMsg)
 	}
 
 	if !f.Responses["confirm"].(bool) {
@@ -93,7 +93,7 @@ func DeleteWithoutMessage(args []string, callDeleteEndpoint func(string) error) 
 	var deletedIds []string
 	for _, id := range args {
 		if err := callDeleteEndpoint(id); err != nil {
-			errs = multierror.Append(errs, errors.Wrapf(err, "failed to delete %s", id))
+			errs = multierror.Append(errs, fmt.Errorf("failed to delete %s: %w", id, err))
 		} else {
 			deletedIds = append(deletedIds, id)
 		}

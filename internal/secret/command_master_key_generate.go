@@ -1,6 +1,8 @@
 package secret
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -47,9 +49,9 @@ func (c *command) generate(cmd *cobra.Command, _ []string) error {
 		switch err {
 		case pcmd.ErrUnexpectedStdinPipe:
 			// TODO: should we require this or just assume that pipe to stdin implies '--passphrase -' ?
-			return errors.New("specify `--passphrase -` if you intend to pipe your passphrase over stdin")
+			return fmt.Errorf("specify `--passphrase -` if you intend to pipe your passphrase over stdin")
 		case pcmd.ErrNoPipe:
-			return errors.New("pipe your passphrase over stdin")
+			return fmt.Errorf("pipe your passphrase over stdin")
 		}
 		return err
 	}
