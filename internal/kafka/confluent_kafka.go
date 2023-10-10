@@ -46,11 +46,12 @@ var (
 )
 
 type ConsumerProperties struct {
-	Delimiter  string
-	FullHeader bool
-	PrintKey   bool
-	Timestamp  bool
-	SchemaPath string
+	Delimiter   string
+	FullHeader  bool
+	PrintKey    bool
+	PrintOffset bool
+	Timestamp   bool
+	SchemaPath  string
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -241,6 +242,10 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 
 	if h.Properties.Timestamp {
 		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", message.Timestamp.UnixMilli(), jsonMessage)
+	}
+
+	if h.Properties.PrintOffset {
+		jsonMessage = fmt.Sprintf("[Partition:Offset]: [%d:%s]\t%s", message.TopicPartition.Partition, message.TopicPartition.Offset.String(), jsonMessage)
 	}
 
 	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
