@@ -148,7 +148,7 @@ func (e *CorruptedConfigError) UserFacingError() error {
 }
 
 func NewUpdateClientWrapError(err error, errorMsg string) CLITypedError {
-	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error()}
+	return &UpdateClientError{errorMsg: fmt.Sprintf("%s: %v", errorMsg, err)}
 }
 
 type UpdateClientError struct {

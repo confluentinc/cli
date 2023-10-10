@@ -265,7 +265,7 @@ func (c *command) prepareAndSaveLocalPorts(cmd *cobra.Command, brokers int32, is
 	}
 
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, "failed to save local ports to configuration file")
+		return fmt.Errorf("failed to save local ports to configuration file: %w", err)
 	}
 
 	return nil

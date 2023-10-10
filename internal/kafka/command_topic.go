@@ -105,7 +105,7 @@ func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluste
 		if err.Error() == ckafka.ErrTransport.String() {
 			err = fmt.Errorf("API key may not be provisioned yet")
 		}
-		return fmt.Errorf("failed to obtain topics from client: %v", err)
+		return fmt.Errorf("failed to obtain topics from client: %w", err)
 	}
 
 	foundTopic := false

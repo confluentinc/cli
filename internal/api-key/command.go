@@ -33,7 +33,7 @@ const (
 	apiKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
 	nonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
 	refuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use the `--force` flag."
-	unableToStoreApiKeyErrorMsg         = "unable to store API key locally"
+	unableToStoreApiKeyErrorMsg         = "unable to store API key locally: %w"
 )
 
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {

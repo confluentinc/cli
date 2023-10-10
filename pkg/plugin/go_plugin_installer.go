@@ -49,7 +49,7 @@ func (g *GoPluginInstaller) Install() error {
 	installCmd := exec.NewCommand("go", "install", packageName)
 
 	if _, err := installCmd.Output(); err != nil {
-		return errors.Wrap(err, "failed to run `go install`")
+		return fmt.Errorf("failed to run `go install`: %w", err)
 	}
 
 	return nil

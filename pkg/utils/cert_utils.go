@@ -102,7 +102,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		// read custom certs
 		caCerts, err := io.ReadAll(caCertReader)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to read certificate")
+			return nil, fmt.Errorf("failed to read certificate: %w", err)
 		}
 		log.CliLogger.Tracef("Specified CA certificate has been read")
 

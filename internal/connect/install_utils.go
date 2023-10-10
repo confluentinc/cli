@@ -142,7 +142,7 @@ func findInstallationDirectories() ([]platformInstallation, error) {
 	// current directory
 	currentDirectory, err := os.Getwd()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to determine current working directory")
+		return nil, fmt.Errorf("unable to determine current working directory: %w", err)
 	}
 	if hasArchiveInstallation(currentDirectory) {
 		installation := platformInstallation{
@@ -170,7 +170,7 @@ func findInstallationDirectories() ([]platformInstallation, error) {
 	// based on the client
 	cliPath, err := os.Executable()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to determine path to CLI")
+		return nil, fmt.Errorf("unable to determine path to CLI: %w", err)
 	}
 	cliDirectory := filepath.Dir(cliPath)
 	cliUse := "CLI Installation Directory"
@@ -316,7 +316,7 @@ func runningWorkerConfigLocations(searchProcessCmd exec.Command) ([]WorkerConfig
 
 	out, err := searchProcessCmd.Output()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run shell command to locate running Connect worker processes")
+		return nil, fmt.Errorf("failed to run shell command to locate running Connect worker processes: %w", err)
 	}
 
 	var result []WorkerConfig
@@ -349,7 +349,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation,
 	var workerConfigs []WorkerConfig
 
 	if standardWorkerConfigs, err := standardWorkerConfigLocations(installation); err != nil {
-		return nil, errors.Wrap(err, "could not infer possible worker configuration file locations from standard candidates")
+		return nil, fmt.Errorf("could not infer possible worker configuration file locations from standard candidates: %w", err)
 	} else {
 		for _, workerConfig := range standardWorkerConfigs {
 			if utils.DoesPathExist(workerConfig.Path) {
@@ -366,7 +366,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation,
 	searchProcessCmd := exec.NewCommand("/bin/bash", "-c", commandStr)
 
 	if runningWorkerConfigs, err := runningWorkerConfigLocations(searchProcessCmd); err != nil {
-		return nil, errors.Wrap(err, "could not infer possible worker configuration file locations from running processes")
+		return nil, fmt.Errorf("could not infer possible worker configuration file locations from running processes: %w", err)
 	} else {
 		for _, workerConfig := range runningWorkerConfigs {
 			if utils.DoesPathExist(workerConfig.Path) {

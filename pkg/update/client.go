@@ -102,7 +102,7 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 
 	// After fetching the latest version, we touch the file so that we don't make the request again for 24hrs.
 	if err := c.touchCheckFile(); err != nil {
-		return "", "", errors.Wrap(err, "unable to touch last check file")
+		return "", "", fmt.Errorf("unable to touch last check file: %w", err)
 	}
 
 	var major, minor string

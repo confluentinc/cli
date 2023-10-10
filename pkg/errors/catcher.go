@@ -100,7 +100,7 @@ func catchMDSErrors(err error) error {
 // are supposed to be caught by more specific catchers.
 func catchCcloudV1Errors(err error) error {
 	if err, ok := err.(*ccloudv1.Error); ok {
-		return Wrap(err, "Confluent Cloud backend error")
+		return fmt.Errorf("Confluent Cloud backend error: %w", err)
 	}
 	return err
 }
@@ -177,14 +177,15 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	}
 
 	if resBody.Message != "" {
-		return Wrap(err, strings.TrimRight(resBody.Message, "\n"))
+		message := strings.TrimRight(resBody.Message, "\n")
+		return fmt.Errorf("%s: %w", message, err)
 	}
 
 	if resBody.Error.Message != "" {
-		errorMessage := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
+		message := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
 			return c == rune('.') || c == rune('\n')
 		})
-		return Wrap(err, errorMessage)
+		return fmt.Errorf("%s: %w", message, err)
 	}
 
 	return err

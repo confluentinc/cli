@@ -57,7 +57,7 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.
 	parser := parse.Parser{ImportPaths: importPaths}
 	fileDescriptors, err := parser.ParseFiles(filepath.Base(schemaPath))
 	if err != nil {
-		return nil, errors.Wrap(err, errors.ProtoSchemaInvalidErrorMsg)
+		return nil, fmt.Errorf("%s: %w", errors.ProtoSchemaInvalidErrorMsg, err)
 	}
 	if len(fileDescriptors) == 0 {
 		return nil, fmt.Errorf(errors.ProtoSchemaInvalidErrorMsg)

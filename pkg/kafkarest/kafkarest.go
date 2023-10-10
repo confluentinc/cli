@@ -36,7 +36,7 @@ func NewError(url string, err error, httpResp *http.Response) error {
 			if strings.Contains(openAPIError.Message, "invalid_token") {
 				return errors.NewErrorWithSuggestions(errors.InvalidMDSTokenErrorMsg, errors.InvalidMDSTokenSuggestions)
 			}
-			return fmt.Errorf("REST request failed: %v (%v)", openAPIError.Message, openAPIError.Code)
+			return fmt.Errorf("REST request failed: %s", openAPIError.Message)
 		}
 		if httpResp != nil && httpResp.StatusCode >= 400 {
 			return kafkaRestHttpError(httpResp)
@@ -48,7 +48,7 @@ func NewError(url string, err error, httpResp *http.Response) error {
 			if strings.Contains(openAPIError.Message, "invalid_token") {
 				return errors.NewErrorWithSuggestions(errors.InvalidMDSTokenErrorMsg, errors.InvalidMDSTokenSuggestions)
 			}
-			return fmt.Errorf("REST request failed: %v (%v)", openAPIError.Message, openAPIError.Code)
+			return fmt.Errorf("REST request failed: %s", openAPIError.Message)
 		}
 		if httpResp != nil && httpResp.StatusCode >= 400 {
 			return kafkaRestHttpError(httpResp)
