@@ -14,11 +14,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 const (
 	unknownRoleErrorMsg    = `unknown role "%s"`
-	unknownRoleSuggestions = "The available roles are: %s."
+	unknownRoleSuggestions = "The available roles are %s."
 )
 
 func (c *roleCommand) newDescribeCommand() *cobra.Command {
@@ -75,8 +76,10 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 			return err
 		}
 
-		suggestionsMsg := fmt.Sprintf(unknownRoleSuggestions, strings.Join(roleNames, ", "))
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(unknownRoleErrorMsg, role), suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(unknownRoleErrorMsg, role),
+			fmt.Sprintf(unknownRoleSuggestions, utils.ArrayToCommaDelimitedString(roleNames, "and")),
+		)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
@@ -101,8 +104,10 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 			if err != nil {
 				return err
 			}
-			suggestionsMsg := fmt.Sprintf(unknownRoleSuggestions, strings.Join(availableRoleNames, ","))
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(unknownRoleErrorMsg, role), suggestionsMsg)
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(unknownRoleErrorMsg, role),
+				fmt.Sprintf(unknownRoleSuggestions, utils.ArrayToCommaDelimitedString(availableRoleNames, "and")),
+			)
 		}
 
 		return err

@@ -22,8 +22,8 @@ var (
 	keyStoreV2       = map[string]*apikeysv2.IamV2ApiKey{}
 	keyTime          = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	roleBindingStore = []mdsv2.IamV2RoleBinding{
-		buildRoleBinding("rb-00000", identityPoolResourceId, "OrganizationAdmin",
-			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderResourceId),
+		buildRoleBinding("rb-00000", identityPoolId, "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderId),
 		buildRoleBinding("rb-11aaa", "u-11aaa", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("rb-12345", "sa-12345", "OrganizationAdmin",
@@ -183,7 +183,7 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 			}
 			userId := r.URL.Query().Get("id")
 			if userId != "" {
-				if userId == deactivatedResourceId {
+				if userId == deactivatedUserResourceId {
 					users = []iamv2.IamV2User{}
 				}
 			}
@@ -295,7 +295,7 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != identityProviderResourceId && id != "op-67890" {
+		if id != identityProviderId && id != "op-67890" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -329,7 +329,7 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			identityProvider := buildIamProvider(identityProviderResourceId, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
+			identityProvider := buildIamProvider(identityProviderId, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
 			anotherIdentityProvider := buildIamProvider("op-abc", "another-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
 			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, anotherIdentityProvider}})
 			require.NoError(t, err)
@@ -364,7 +364,7 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != identityPoolResourceId && id != "pool-55555" {
+		if id != identityPoolId && id != "pool-55555" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -398,7 +398,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			identityPool := buildIamPool(identityPoolResourceId, "identity-pool", "pooling identities", "sub", `claims.iss="https://company.provider.com"`)
+			identityPool := buildIamPool(identityPoolId, "identity-pool", "pooling identities", "sub", `claims.iss="https://company.provider.com"`)
 			anotherIdentityPool := buildIamPool("pool-abc", "another-pool", "another description", "sub", "true")
 			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, anotherIdentityPool}})
 			require.NoError(t, err)
@@ -452,7 +452,7 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 		groupMapping := buildIamGroupMapping("pool-12345", "my-group-mapping", "new description", `"engineering" in claims.group || "marketing" in claims.group`)
 		switch r.Method {
 		case http.MethodGet:
-			anotherMapping := buildIamGroupMapping(groupMappingResourceId, "another-group-mapping", "another description", "true")
+			anotherMapping := buildIamGroupMapping(groupMappingId, "another-group-mapping", "another description", "true")
 			err := json.NewEncoder(w).Encode(ssov2.IamV2SsoGroupMappingList{Data: []ssov2.IamV2SsoGroupMapping{groupMapping, anotherMapping}})
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -469,7 +469,7 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != groupMappingResourceId && id != "pool-def" {
+		if id != groupMappingId && id != "pool-def" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -492,11 +492,11 @@ func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 	}
 }
 
-func buildIamUser(email, name, resourceId, authType string) iamv2.IamV2User {
+func buildIamUser(email, fullName, id, authType string) iamv2.IamV2User {
 	return iamv2.IamV2User{
 		Email:    iamv2.PtrString(email),
-		FullName: iamv2.PtrString(name),
-		Id:       iamv2.PtrString(resourceId),
+		FullName: iamv2.PtrString(fullName),
+		Id:       iamv2.PtrString(id),
 		AuthType: iamv2.PtrString(authType),
 	}
 }

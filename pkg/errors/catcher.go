@@ -192,14 +192,14 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	return err
 }
 
-func CatchResourceNotFoundError(err error, resourceId string) error {
+func CatchResourceNotFoundError(err error, id string) error {
 	if err == nil {
 		return nil
 	}
 
 	if _, ok := err.(*KafkaClusterNotFoundError); ok || isResourceNotFoundError(err) {
-		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, resourceId)
-		suggestionsMsg := fmt.Sprintf(ResourceNotFoundSuggestions, resourceId)
+		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, id)
+		suggestionsMsg := fmt.Sprintf(ResourceNotFoundSuggestions, id)
 		return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
 

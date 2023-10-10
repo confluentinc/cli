@@ -19,13 +19,14 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/types"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 const (
 	httpStatusCodeErrorMsg         = "no error but received HTTP status code %d"
 	httpStatusCodeSuggestions      = "Please file a support ticket with details."
 	invalidResourceTypeErrorMsg    = `invalid resource type "%s"`
-	invalidResourceTypeSuggestions = "The available resource types are: %s."
+	invalidResourceTypeSuggestions = "The available resource types are %s."
 	lookUpRoleSuggestions          = "To check for valid roles, use `confluent iam rbac role list`."
 	principalFormatErrorMsg        = "incorrect principal format specified"
 	principalFormatSuggestions     = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
@@ -276,8 +277,10 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 		for rt := range allResourceTypes {
 			uniqueResourceTypes = append(uniqueResourceTypes, rt)
 		}
-		suggestionsMsg := fmt.Sprintf(invalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType),
+			fmt.Sprintf(invalidResourceTypeSuggestions, utils.ArrayToCommaDelimitedString(uniqueResourceTypes, "and")),
+		)
 	}
 
 	return nil
@@ -323,7 +326,7 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName, resourceTyp
 	if !found {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType),
-			fmt.Sprintf(invalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", ")),
+			fmt.Sprintf(invalidResourceTypeSuggestions, utils.ArrayToCommaDelimitedString(allResourceTypes, "and")),
 		)
 	}
 
@@ -351,16 +354,16 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 
 	if !found {
 		uniqueResourceTypes := types.RemoveDuplicates(allResourceTypes)
-		suggestionsMsg := fmt.Sprintf(invalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType),
+			fmt.Sprintf(invalidResourceTypeSuggestions, utils.ArrayToCommaDelimitedString(uniqueResourceTypes, "and")),
+		)
 	}
 
 	return nil
 }
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, roleBinding *mdsv2.IamV2RoleBinding) error {
-	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
-
 	out := &roleBindingOut{
 		Id:        roleBinding.GetId(),
 		Principal: roleBinding.GetPrincipal(),
@@ -393,8 +396,10 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		}
 	}
 
+	userId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
+	principalType := presource.LookupType(userId)
+
 	var fields []string
-	principalType := presource.LookupType(userResourceId)
 	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool {
 		if resource != "" {
 			fields = resourcePatternListFields
@@ -405,7 +410,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = ccloudResourcePatternListFields
 		} else {
-			user, err := c.V2Client.GetIamUserById(userResourceId)
+			user, err := c.V2Client.GetIamUserById(userId)
 			if err != nil {
 				return err
 			}
@@ -532,8 +537,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 }
 
 func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
-	orgResourceId := c.Context.GetCurrentOrganization()
-	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
+	crnPattern := "crn://confluent.cloud/organization=" + c.Context.GetCurrentOrganization()
 
 	if cmd.Flags().Changed("current-environment") {
 		environmentId, err := c.Context.EnvironmentId()
