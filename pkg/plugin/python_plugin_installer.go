@@ -42,7 +42,10 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 		out, err = versionCmd.Output()
 	}
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "python"), programNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(programNotFoundErrorMsg, "python"),
+			programNotFoundSuggestions,
+		)
 	}
 
 	for _, word := range strings.Split(string(out), " ") {

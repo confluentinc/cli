@@ -26,7 +26,10 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "go"), programNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(programNotFoundErrorMsg, "go"),
+			programNotFoundSuggestions,
+		)
 	}
 
 	for _, word := range strings.Split(string(out), " ") {

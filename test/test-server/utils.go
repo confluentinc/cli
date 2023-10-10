@@ -13,6 +13,7 @@ import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	"golang.org/x/exp/slices"
 )
 
 type ErrorJson struct {
@@ -138,7 +139,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("DEACTIVATEDUSERKEY"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceId},
+			Owner:       &apikeysv2.ObjectReference{Id: deactivatedUserResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -154,8 +155,8 @@ func apiKeysFilterV2(url *url.URL) *apikeysv2.IamV2ApiKeyList {
 	resourceId := q.Get("spec.resource")
 
 	for _, key := range keyStoreV2 {
-		uidFilter := (uid == "") || (uid == key.Spec.Owner.Id)
-		clusterFilter := (resourceId == "") || containsResourceId(key, resourceId)
+		uidFilter := uid == "" || uid == key.Spec.Owner.GetId()
+		clusterFilter := resourceId == "" || containsResourceId(key, resourceId)
 		if uidFilter && clusterFilter {
 			apiKeys = append(apiKeys, *key)
 		}
@@ -169,12 +170,9 @@ func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
 		return key.Spec.Resource.Id == resourceId
 	}
 
-	for _, resource := range key.Spec.GetResources() {
-		if resource.Id == resourceId {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(key.Spec.GetResources(), func(o apikeysv2.ObjectReference) bool {
+		return o.GetId() == resourceId
+	})
 }
 
 func fillByokStoreV1() map[string]*byokv1.ByokV1Key {

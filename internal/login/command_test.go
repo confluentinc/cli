@@ -38,17 +38,17 @@ import (
 )
 
 const (
-	envUser        = "env-user"
-	envPassword    = "env-password"
-	testToken1     = "org-1-y0ur.jwt.T0kEn"
-	testToken2     = "org-2-y0ur.jwt.T0kEn"
-	promptUser     = "prompt-user@confluent.io"
-	promptPassword = " prompt-password "
-	netrcFile      = "netrc-file"
-	ccloudURL      = "https://confluent.cloud"
-	org1Id         = "o-001"
-	org2Id         = "o-002"
-	refreshToken   = "refreshToken"
+	envUser         = "env-user"
+	envPassword     = "env-password"
+	testToken1      = "org-1-y0ur.jwt.T0kEn"
+	testToken2      = "org-2-y0ur.jwt.T0kEn"
+	promptUser      = "prompt-user@confluent.io"
+	promptPassword  = " prompt-password "
+	netrcFile       = "netrc-file"
+	ccloudURL       = "https://confluent.cloud"
+	organizationId1 = "o-001"
+	organizationId2 = "o-002"
+	refreshToken    = "refreshToken"
 )
 
 var (
@@ -60,7 +60,7 @@ var (
 		UserFunc: func() (*ccloudv1.GetMeReply, error) {
 			return &ccloudv1.GetMeReply{
 				User:         &ccloudv1.User{Id: 23},
-				Organization: &ccloudv1.Organization{ResourceId: org1Id},
+				Organization: &ccloudv1.Organization{ResourceId: organizationId1},
 				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
@@ -125,10 +125,10 @@ var (
 		},
 	}
 	AuthTokenHandler = &climock.AuthTokenHandler{
-		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
-			if orgResourceId == "" || orgResourceId == org1Id {
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, credentials *pauth.Credentials, noBrowser bool, organizationId string) (string, string, error) {
+			if organizationId == "" || organizationId == organizationId1 {
 				return testToken1, refreshToken, nil
-			} else if orgResourceId == org2Id {
+			} else if organizationId == organizationId2 {
 				return testToken2, refreshToken, nil
 			} else {
 				return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
@@ -164,7 +164,7 @@ func TestCredentialsOverride(t *testing.T) {
 					Email:     envUser,
 					FirstName: "Cody",
 				},
-				Organization: &ccloudv1.Organization{ResourceId: org1Id},
+				Organization: &ccloudv1.Organization{ResourceId: organizationId1},
 				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
@@ -227,7 +227,7 @@ func TestOrgIdOverride(t *testing.T) {
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
-				Organization: &ccloudv1.Organization{ResourceId: org2Id},
+				Organization: &ccloudv1.Organization{ResourceId: organizationId2},
 				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
@@ -237,7 +237,7 @@ func TestOrgIdOverride(t *testing.T) {
 	loginOrganizationManager := &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromFlagFunc: LoginOrganizationManager.GetLoginOrganizationFromFlagFunc,
 		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
-			return func() string { return org2Id }
+			return func() string { return organizationId2 }
 		},
 	}
 	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
@@ -252,7 +252,7 @@ func TestOrgIdOverride(t *testing.T) {
 
 	req.Equal(testToken2, ctx.GetAuthToken())
 	req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
-	verifyLoggedInState(t, cfg, true, org2Id)
+	verifyLoggedInState(t, cfg, true, organizationId2)
 }
 
 func TestLoginSuccess(t *testing.T) {
@@ -263,9 +263,9 @@ func TestLoginSuccess(t *testing.T) {
 			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
 		},
 		UserFunc: func() (*ccloudv1.GetMeReply, error) {
-			org := org1Id
+			org := organizationId1
 			if org2 {
-				org = org2Id
+				org = organizationId2
 			}
 			return &ccloudv1.GetMeReply{
 				User: &ccloudv1.User{
@@ -295,11 +295,11 @@ func TestLoginSuccess(t *testing.T) {
 		},
 		{
 			isCloud: true,
-			orgId:   org1Id,
+			orgId:   organizationId1,
 		},
 		{
 			isCloud: true,
-			orgId:   org2Id,
+			orgId:   organizationId2,
 		},
 		{
 			setEnv: true,
@@ -312,7 +312,7 @@ func TestLoginSuccess(t *testing.T) {
 			_ = os.Setenv(pauth.ConfluentPlatformMDSURL, "http://localhost:8090")
 		}
 		if s.orgId != "" {
-			org2 = s.orgId == org2Id
+			org2 = s.orgId == organizationId2
 			s.args = append(s.args, "--organization-id", s.orgId)
 		}
 		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
@@ -320,7 +320,7 @@ func TestLoginSuccess(t *testing.T) {
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		if s.isCloud && s.orgId == "" {
-			s.orgId = org1Id // org1Id treated as default org
+			s.orgId = organizationId1 // org1Id treated as default org
 		}
 		verifyLoggedInState(t, cfg, s.isCloud, s.orgId)
 		if s.setEnv {
@@ -446,7 +446,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 			}
 			if test.isCloud {
 				if test.setEnvVar {
-					loginCredentialsManager.GetCloudCredentialsFromEnvVarFunc = func(orgResourceId string) func() (*pauth.Credentials, error) {
+					loginCredentialsManager.GetCloudCredentialsFromEnvVarFunc = func(_ string) func() (*pauth.Credentials, error) {
 						return func() (*pauth.Credentials, error) {
 							return envCreds, nil
 						}
@@ -763,7 +763,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
-				Organization: &ccloudv1.Organization{ResourceId: org1Id},
+				Organization: &ccloudv1.Organization{ResourceId: organizationId1},
 				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
 			}, nil
 		},
@@ -803,7 +803,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// Login to the CLI control plane
 		_, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
-		verifyLoggedInState(t, cfg, s.isCloud, org1Id)
+		verifyLoggedInState(t, cfg, s.isCloud, organizationId1)
 
 		// Set kafka related states for the logged in context
 		ctx := cfg.Context()
@@ -819,7 +819,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		// logging back in the same context
 		_, err = pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
-		verifyLoggedInState(t, cfg, s.isCloud, org1Id)
+		verifyLoggedInState(t, cfg, s.isCloud, organizationId1)
 
 		// verify that kafka cluster info persists between logging back in again
 		req.Equal(kafkaCluster.ID, ctx.KafkaClusterContext.GetActiveKafkaClusterId())
@@ -942,13 +942,13 @@ func newLogoutCmd(cfg *config.Config, netrcHandler netrc.NetrcHandler) (*cobra.C
 	return logoutCmd, cfg
 }
 
-func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, orgResourceId string) {
+func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, organizationId string) {
 	req := require.New(t)
 	ctx := cfg.Context()
 	req.NotNil(ctx)
-	if orgResourceId == org1Id || orgResourceId == "" {
+	if organizationId == organizationId1 || organizationId == "" {
 		req.Equal(testToken1, ctx.GetAuthToken())
-	} else if orgResourceId == org2Id {
+	} else if organizationId == organizationId2 {
 		req.Equal(testToken2, ctx.GetAuthToken())
 	}
 	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.Platform.Server)
@@ -963,7 +963,7 @@ func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, orgReso
 	if isCloud {
 		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an ccloudv1 User
 		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
-		req.Equal(orgResourceId, ctx.GetCurrentOrganization())
+		req.Equal(organizationId, ctx.GetCurrentOrganization())
 	} else {
 		req.Equal("http://localhost:8090", ctx.Platform.Server)
 	}

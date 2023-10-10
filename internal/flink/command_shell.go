@@ -80,8 +80,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return nil
 	}
 
-	resourceId := c.Context.GetOrganization().GetResourceId()
-
 	environmentId, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
@@ -150,18 +148,20 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
-	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), types.ApplicationOptions{
+	opts := types.ApplicationOptions{
 		Context:          c.Context,
 		UnsafeTrace:      unsafeTrace,
 		UserAgent:        c.Version.UserAgent,
 		EnvironmentName:  catalog,
 		EnvironmentId:    environmentId,
-		OrgResourceId:    resourceId,
+		OrganizationId:   c.Context.GetOrganization().GetResourceId(),
 		Database:         database,
 		ComputePoolId:    computePool,
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
-	}, reportUsage(cmd, c.Config.Config, unsafeTrace))
+	}
+
+	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config.Config, unsafeTrace))
 	return nil
 }
 

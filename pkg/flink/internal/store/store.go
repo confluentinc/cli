@@ -97,7 +97,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		createSqlV1beta1Statement(statement, statementName, computePoolId, properties),
 		principal,
 		s.appOptions.GetEnvironmentId(),
-		s.appOptions.GetOrgResourceId(),
+		s.appOptions.GetOrganizationId(),
 	)
 	if err != nil {
 		status := statementObj.GetStatus()
@@ -147,7 +147,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
-	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId(), statement.PageToken)
+	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId(), statement.PageToken)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
@@ -169,7 +169,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	if err := s.authenticatedGatewayClient().DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId()); err != nil {
+	if err := s.authenticatedGatewayClient().DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId()); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
@@ -178,7 +178,7 @@ func (s *Store) DeleteStatement(statementName string) bool {
 }
 
 func (s *Store) StopStatement(statementName string) bool {
-	statement, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+	statement, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId())
 
 	if err != nil {
 		log.CliLogger.Warnf("Failed to fetch statement to stop it: %v", err)
@@ -192,7 +192,7 @@ func (s *Store) StopStatement(statementName string) bool {
 	}
 	spec.SetStopped(true)
 
-	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId(), statement); err != nil {
+	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId(), statement); err != nil {
 		log.CliLogger.Warnf("Failed to stop the statement: %v", err)
 		return false
 	}
@@ -218,7 +218,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: 499}
 		default:
 			start := time.Now()
-			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId())
 			getRequestDuration = time.Since(start)
 
 			statusDetail := s.getStatusDetail(statementObj)
@@ -300,7 +300,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1State
 	}
 
 	// if the status detail field is empty, we check if there's an exception instead
-	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrgResourceId())
+	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrganizationId())
 	if err != nil {
 		return ""
 	}
@@ -368,7 +368,7 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 			output.Println(false, "Detached from statement.")
 			return &statement, nil
 		default:
-			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId())
+			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId())
 			status := statementObj.GetStatus()
 			statusDetail := status.GetDetail()
 			if err != nil {
