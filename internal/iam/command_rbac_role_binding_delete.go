@@ -73,7 +73,10 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		}
 
 		if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(httpStatusCodeErrorMsg, httpResp.StatusCode), httpStatusCodeSuggestions)
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(httpStatusCodeErrorMsg, httpResp.StatusCode),
+				httpStatusCodeSuggestions,
+			)
 		}
 
 		return displayCreateAndDeleteOutput(cmd, options)

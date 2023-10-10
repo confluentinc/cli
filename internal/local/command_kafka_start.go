@@ -362,17 +362,23 @@ func checkMachineArch() error {
 		return nil
 	}
 
-	cmd := exec.Command("uname", "-m") // outputs system architecture info
-	output, err := cmd.Output()
+	// output system architecture info
+	output, err := exec.Command("uname", "-m").Output()
 	if err != nil {
 		return err
 	}
+
 	systemArch := strings.TrimSpace(string(output))
 	if systemArch == "x86_64" {
 		systemArch = "amd64"
 	}
+
 	if systemArch != runtime.GOARCH {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch), "Download the CLI with the correct architecture to continue.")
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch),
+			"Download the CLI with the correct architecture to continue.",
+		)
 	}
+
 	return nil
 }

@@ -52,14 +52,17 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	clusterID := args[0]
-	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, environmentId)
+	id := args[0]
+	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, id),
+			errors.ChooseRightEnvironmentSuggestions,
+		)
 	}
 
 	update := cmkv2.CmkV2ClusterUpdate{
-		Id:   cmkv2.PtrString(clusterID),
+		Id:   cmkv2.PtrString(id),
 		Spec: &cmkv2.CmkV2ClusterSpecUpdate{Environment: &cmkv2.EnvScopedObjectReference{Id: environmentId}},
 	}
 
@@ -86,14 +89,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
 	}
 
-	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
+	updatedCluster, err := c.V2Client.UpdateKafkaCluster(id, update)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, "failed to update Kafka cluster", "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes.")
 	}
 
 	ctx := c.Context.Config.Context()
 	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterID)
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(id)
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
 }

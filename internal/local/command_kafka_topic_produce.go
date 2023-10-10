@@ -48,7 +48,10 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	}
 	producer, err := newOnPremProducer(cmd, c.getPlaintextBootstrapServers())
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.FailedToCreateProducerErrorMsg, err),
+			errors.OnPremConfigGuideSuggestions,
+		)
 	}
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")

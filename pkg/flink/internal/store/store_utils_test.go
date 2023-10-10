@@ -148,7 +148,7 @@ func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:    "orgId",
+		OrganizationId:   "orgId",
 		EnvironmentName:  "envName",
 		Database:         "database",
 		ServiceAccountId: "sa-123",
@@ -217,7 +217,7 @@ func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentName: "envName",
 		Database:        "database",
 	}

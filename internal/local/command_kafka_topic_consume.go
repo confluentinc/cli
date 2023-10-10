@@ -70,7 +70,10 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	}
 	consumer, err := newOnPremConsumer(cmd, c.getPlaintextBootstrapServers())
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.FailedToCreateConsumerErrorMsg, err),
+			errors.OnPremConfigGuideSuggestions,
+		)
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
