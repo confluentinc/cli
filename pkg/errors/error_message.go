@@ -156,6 +156,5 @@ const (
 	FailedToReadInputErrorMsg        = "failed to read input"
 
 	// Special error types
-	GenericOpenApiErrorMsg       = "metadata service backend error: %s: %s"
-	ParsedGenericOpenApiErrorMsg = "metadata service backend error: %s"
+	GenericOpenApiErrorMsg = "metadata service backend error: %s: %s"
 )

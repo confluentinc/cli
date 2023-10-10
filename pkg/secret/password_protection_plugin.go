@@ -125,7 +125,7 @@ func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*Cipher,
 func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath, localSecureConfigPath, remoteSecureConfigPath, encryptConfigKeys string) error {
 	// Check if config file path is valid.
 	if !utils.DoesPathExist(configFilePath) {
-		return errors.Errorf(errors.InvalidConfigFilePathErrorMsg, configFilePath)
+		return fmt.Errorf(errors.InvalidConfigFilePathErrorMsg, configFilePath)
 	}
 	var configs []string
 	// Load the configs.
@@ -148,12 +148,12 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath, local
 func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputFilePath, configs string) error {
 	// Check if config file path is valid
 	if !utils.DoesPathExist(configFilePath) {
-		return errors.Errorf(errors.InvalidConfigFilePathErrorMsg, configFilePath)
+		return fmt.Errorf(errors.InvalidConfigFilePathErrorMsg, configFilePath)
 	}
 
 	// Check if secure config file path is valid
 	if !utils.DoesPathExist(localSecureConfigPath) {
-		return errors.Errorf(`invalid secrets file path "%s"`, localSecureConfigPath)
+		return fmt.Errorf(`invalid secrets file path "%s"`, localSecureConfigPath)
 	}
 
 	var configKeys []string
@@ -196,13 +196,13 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath, local
 				plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 				if err != nil {
 					log.CliLogger.Debug(err)
-					return errors.Errorf(errors.DecryptConfigErrorMsg, key)
+					return fmt.Errorf(errors.DecryptConfigErrorMsg, key)
 				}
 				if _, _, err := configProps.Set(key, plainSecret); err != nil {
 					return err
 				}
 			} else {
-				return errors.Errorf(`missing config key "%s" in secret config file`, key)
+				return fmt.Errorf(`missing config key "%s" in secret config file`, key)
 			}
 		} else {
 			configProps.Delete(key)
@@ -449,7 +449,7 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath, local
 		}
 		// Check if config is removed from secrets files
 		if _, ok := secureConfigProps.Get(pathKey); !ok {
-			return errors.Errorf(errors.ConfigKeyNotEncryptedErrorMsg, key)
+			return fmt.Errorf(errors.ConfigKeyNotEncryptedErrorMsg, key)
 		}
 		secureConfigProps.Delete(pathKey)
 	}
@@ -461,7 +461,7 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath, local
 	case ".json":
 		err = c.removeJsonConfig(configFilePath, configs)
 	default:
-		err = errors.Errorf(`file type "%s" currently not supported`, fileType)
+		err = fmt.Errorf(`file type "%s" currently not supported`, fileType)
 	}
 	if err != nil {
 		return err
@@ -487,7 +487,7 @@ func (c *PasswordProtectionSuite) removeJsonConfig(configFilePath string, config
 				return err
 			}
 		} else {
-			return errors.Errorf(errors.ConfigKeyNotInJsonErrorMsg, key)
+			return fmt.Errorf(errors.ConfigKeyNotInJsonErrorMsg, key)
 		}
 	}
 	return WriteFile(configFilePath, []byte(jsonConfig))

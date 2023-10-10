@@ -49,10 +49,10 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 		if p.IsVersion(word) {
 			installedVer, err := version.NewVersion(strings.TrimSpace(word))
 			if err != nil {
-				return errors.Errorf(unableToParseVersionErrorMsg, "python")
+				return fmt.Errorf(unableToParseVersionErrorMsg, "python")
 			}
 			if installedVer.LessThan(ver) {
-				return errors.Errorf(insufficientVersionErrorMsg, "python", installedVer, ver)
+				return fmt.Errorf(insufficientVersionErrorMsg, "python", installedVer, ver)
 			}
 		}
 	}

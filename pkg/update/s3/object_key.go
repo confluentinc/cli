@@ -119,7 +119,7 @@ func (p *PrefixedKey) ParseVersion(key, name string) (bool, *version.Version, er
 
 	ver, err := version.NewSemver(split[1])
 	if err != nil {
-		return false, nil, errors.Errorf(errors.ParseVersionErrorMsg, name, split[1])
+		return false, nil, fmt.Errorf(errors.ParseVersionErrorMsg, name, split[1])
 	}
 	return true, ver, nil
 }

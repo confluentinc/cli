@@ -82,7 +82,7 @@ func (c *command) runServiceLogCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if !exists {
-		return errors.Errorf("no log found: to run %s, use `confluent local services %s start`", writeOfficialServiceName(service), service)
+		return fmt.Errorf("no log found: to run %s, use `confluent local services %s start`", writeOfficialServiceName(service), service)
 	}
 
 	log, err := c.cc.GetLogFile(service)
@@ -412,7 +412,7 @@ func (c *command) startProcess(service string) error {
 	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
+		return fmt.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
 	open := make(chan bool)
@@ -428,7 +428,7 @@ func (c *command) startProcess(service string) error {
 	case <-open:
 		break
 	case <-time.After(90 * time.Second):
-		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
+		return fmt.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
 	return nil
@@ -548,7 +548,7 @@ func (c *command) killProcess(service string) error {
 	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return errors.Errorf("%s failed to stop", writeServiceName(service))
+		return fmt.Errorf("%s failed to stop", writeServiceName(service))
 	}
 }
 

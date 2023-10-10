@@ -141,7 +141,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2
 	}
 
 	if err := c.validateClusterLoad(*currentCluster.Id, isLatestMetric); err != nil {
-		return errors.Errorf("Looking at metrics in the last %s window:\n%v", window, err)
+		return fmt.Errorf("Looking at metrics in the last %s window:\n%v", window, err)
 	}
 
 	return nil

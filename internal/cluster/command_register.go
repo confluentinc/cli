@@ -154,6 +154,6 @@ func (c *registerCommand) parseProtocol(cmd *cobra.Command) (mdsv1.Protocol, err
 	case "HTTPS":
 		return mdsv1.PROTOCOL_HTTPS, nil
 	default:
-		return "", errors.Errorf("protocol %s is currently not supported", protocol)
+		return "", fmt.Errorf("protocol %s is currently not supported", protocol)
 	}
 }

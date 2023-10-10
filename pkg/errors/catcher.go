@@ -75,7 +75,7 @@ func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
 	case mdsv1.GenericOpenAPIError:
-		return Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
+		return fmt.Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
 		if strings.Contains(err.Error(), "Forbidden Access") {
 			return NewErrorWithSuggestions("user is unauthorized to perform this action", "Check the user's privileges by running `confluent iam rbac role-binding list`.\nGive the user the appropriate permissions using `confluent iam rbac role-binding create`.")
@@ -88,7 +88,7 @@ func catchMDSErrors(err error) error {
 			if parseErr2 == nil {
 				return openAPIErrorType2.UserFacingError()
 			} else {
-				return Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
+				return fmt.Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
 			}
 		}
 	}

@@ -54,7 +54,7 @@ func SaveConfiguration(path string, configuration *properties.Properties, addSec
 	case ".json":
 		return writeJSONConfig(path, configuration, addSecureConfig)
 	default:
-		return errors.Errorf(errors.UnsupportedFileFormatErrorMsg, path)
+		return fmt.Errorf(errors.UnsupportedFileFormatErrorMsg, path)
 	}
 }
 
@@ -93,7 +93,7 @@ func addSecureConfigProviderProperty(property *properties.Properties) (*properti
 
 func LoadConfiguration(path string, configKeys []string, filter bool) (*properties.Properties, error) {
 	if !utils.DoesPathExist(path) {
-		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
+		return nil, fmt.Errorf(errors.InvalidFilePathErrorMsg, path)
 	}
 	fileType := filepath.Ext(path)
 	switch fileType {
@@ -102,7 +102,7 @@ func LoadConfiguration(path string, configKeys []string, filter bool) (*properti
 	case ".json":
 		return loadJSONConfig(path, configKeys)
 	default:
-		return nil, errors.Errorf(errors.UnsupportedFileFormatErrorMsg, path)
+		return nil, fmt.Errorf(errors.UnsupportedFileFormatErrorMsg, path)
 	}
 }
 
@@ -120,7 +120,7 @@ func filterProperties(configProps *properties.Properties, configKeys []string, f
 					return nil, err
 				}
 			} else {
-				return nil, errors.Errorf(errors.ConfigKeyNotPresentErrorMsg, key)
+				return nil, fmt.Errorf(errors.ConfigKeyNotPresentErrorMsg, key)
 			}
 		}
 		return matchProps, nil
@@ -249,7 +249,7 @@ func loadJSONConfig(path string, configKeys []string) (*properties.Properties, e
 				return nil, err
 			}
 		} else {
-			return nil, errors.Errorf(errors.ConfigKeyNotInJsonErrorMsg, key)
+			return nil, fmt.Errorf(errors.ConfigKeyNotInJsonErrorMsg, key)
 		}
 	}
 
@@ -300,7 +300,7 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 			}
 		} else {
 			if _, ok := configProps.Get(key); !ok {
-				return errors.Errorf(errors.ConfigKeyNotPresentErrorMsg, key)
+				return fmt.Errorf(errors.ConfigKeyNotPresentErrorMsg, key)
 			}
 			configProps.Delete(key)
 		}

@@ -292,7 +292,7 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 		if err == nil {
 			log.CliLogger.Tracef("Response from AWS: %s", string(body))
 		}
-		return nil, errors.Errorf("received unexpected response from S3: %s", resp.Status)
+		return nil, fmt.Errorf("received unexpected response from S3: %s", resp.Status)
 	}
 	return resp, nil
 }

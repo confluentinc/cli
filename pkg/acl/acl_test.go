@@ -56,7 +56,7 @@ func TestParseAclRequest(t *testing.T) {
 		{
 			args: []string{"--operation", "read", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
 			expectedAcl: AclRequestDataWithError{
-				Errors: multierror.Append(errors.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL")),
+				Errors: multierror.Append(fmt.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL")),
 			},
 		},
 	}
@@ -95,8 +95,8 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 		{
 			initialAcl: AclRequestDataWithError{Host: "*"},
 			expectedAcl: AclRequestDataWithError{Errors: multierror.Append(
-				errors.Errorf(errors.MustSetAllowOrDenyErrorMsg),
-				errors.Errorf(errors.MustSetResourceTypeErrorMsg, convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP, kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)),
+				fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg),
+				fmt.Errorf(errors.MustSetResourceTypeErrorMsg, convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP, kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)),
 			)},
 		},
 	}

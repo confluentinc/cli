@@ -257,7 +257,7 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMa
 		return nil, err
 	}
 	if netrcMachine == nil {
-		return nil, errors.Errorf("found no netrc machine using the filter: %+v", filterParams)
+		return nil, fmt.Errorf("found no netrc machine using the filter: %+v", filterParams)
 	}
 	return netrcMachine, err
 }

@@ -10,7 +10,6 @@ import (
 
 	"golang.org/x/crypto/pbkdf2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
@@ -189,7 +188,7 @@ func (c *EncryptEngineImpl) decrypt(crypt, key, iv []byte, algo string) ([]byte,
 		}
 		return decrypted, nil
 	} else {
-		return []byte{}, errors.Errorf(`invalid algorithm "%s"`, algo)
+		return []byte{}, fmt.Errorf(`invalid algorithm "%s"`, algo)
 	}
 }
 

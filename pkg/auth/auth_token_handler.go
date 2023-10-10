@@ -83,10 +83,10 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 	connectionName, err := a.getSsoConnectionName(client, email, orgResourceId)
 	if err != nil {
 		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
-		return "", "", errors.Errorf(`unable to obtain SSO info for user "%s"`, email)
+		return "", "", fmt.Errorf(`unable to obtain SSO info for user "%s"`, email)
 	}
 	if connectionName == "" {
-		return "", "", errors.Errorf(`tried to obtain SSO token for non SSO user "%s"`, email)
+		return "", "", fmt.Errorf(`tried to obtain SSO token for non SSO user "%s"`, email)
 	}
 
 	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, connectionName)

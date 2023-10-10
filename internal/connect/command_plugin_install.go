@@ -219,7 +219,7 @@ func getLocalManifest(archivePath string) (*cpstructs.Manifest, error) {
 		}
 	}
 
-	return nil, errors.Errorf(`failed to find manifest file inside local archive file "%s"`, archivePath)
+	return nil, fmt.Errorf(`failed to find manifest file inside local archive file "%s"`, archivePath)
 }
 
 func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
@@ -237,7 +237,7 @@ func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
 	}
 
 	if !utils.DoesPathExist(pluginDir) {
-		return "", errors.Errorf(invalidDirectoryErrorMsg, pluginDir)
+		return "", fmt.Errorf(invalidDirectoryErrorMsg, pluginDir)
 	}
 
 	return pluginDir, nil
@@ -256,7 +256,7 @@ func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
 		}
 
 		if !utils.DoesPathExist(workerConfig) {
-			errs = multierror.Append(errs, errors.Errorf(`worker config file "%s" does not exist`, workerConfig))
+			errs = multierror.Append(errs, fmt.Errorf(`worker config file "%s" does not exist`, workerConfig))
 		}
 	}
 
@@ -359,11 +359,11 @@ func (c *pluginCommand) installFromRemote(client *hub.Client, pluginManifest *cp
 	checksumErrorMsg := `%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for plugin "%s"`
 	calculatedMd5Checksum := fmt.Sprintf("%x", md5.Sum(archive))
 	if calculatedMd5Checksum != pluginManifest.Archive.Md5 {
-		return errors.Errorf(checksumErrorMsg, "MD5", calculatedMd5Checksum, pluginManifest.Archive.Md5, pluginManifest.Name)
+		return fmt.Errorf(checksumErrorMsg, "MD5", calculatedMd5Checksum, pluginManifest.Archive.Md5, pluginManifest.Name)
 	}
 	calculatedSha1Checksum := fmt.Sprintf("%x", sha1.Sum(archive))
 	if calculatedSha1Checksum != pluginManifest.Archive.Sha1 {
-		return errors.Errorf(checksumErrorMsg, "SHA1", calculatedSha1Checksum, pluginManifest.Archive.Sha1, pluginManifest.Name)
+		return fmt.Errorf(checksumErrorMsg, "SHA1", calculatedSha1Checksum, pluginManifest.Archive.Sha1, pluginManifest.Name)
 	}
 
 	zipReader, err := zip.NewReader(bytes.NewReader(archive), int64(len(archive)))

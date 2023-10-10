@@ -214,7 +214,7 @@ func (c *clusterCommand) validateGcpEncryptionKey(cloud, accountId string) error
 			continue
 		}
 		if !f.Responses["authorized"].(bool) {
-			return errors.Errorf("BYOK error: please authorize the key for the identity (%s)", externalID)
+			return fmt.Errorf("BYOK error: please authorize the key for the identity (%s)", externalID)
 		}
 		return nil
 	}

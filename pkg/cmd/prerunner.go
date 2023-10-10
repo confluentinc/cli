@@ -350,7 +350,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 		}
 		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
-			return nil, errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+			return nil, fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
 		if restEndpoint == "" {
 			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")

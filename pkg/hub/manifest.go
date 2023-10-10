@@ -8,7 +8,6 @@ import (
 	"net/http/httputil"
 
 	"github.com/confluentinc/cli/v3/pkg/cpstructs"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
@@ -61,9 +60,9 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*cpstructs.Mani
 		response := make(map[string]interface{})
 		_ = json.Unmarshal(body, &response)
 		if errorMessage, ok := response["message"]; ok {
-			return nil, errors.Errorf("failed to read manifest file from Confluent Hub: %s", errorMessage)
+			return nil, fmt.Errorf("failed to read manifest file from Confluent Hub: %s", errorMessage)
 		}
-		return nil, errors.Errorf("failed to read manifest file from Confluent Hub")
+		return nil, fmt.Errorf("failed to read manifest file from Confluent Hub")
 	}
 
 	pluginManifest := new(cpstructs.Manifest)

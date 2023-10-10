@@ -74,7 +74,7 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 
 		manifestPath := fmt.Sprintf("%s/%s/manifest.yml", dir, file.Name())
 		if !utils.DoesPathExist(manifestPath) {
-			return nil, errors.Errorf("manifest not found for plugin %s", pluginName)
+			return nil, fmt.Errorf("manifest not found for plugin %s", pluginName)
 		}
 
 		manifestFile, err := os.ReadFile(manifestPath)
@@ -91,7 +91,7 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 		return manifest, nil
 	}
 
-	return nil, errors.Errorf("plugin %s not found", pluginName)
+	return nil, fmt.Errorf("plugin %s not found", pluginName)
 }
 
 func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
@@ -117,7 +117,7 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 			InstallDir:    installDir,
 		}
 	default:
-		return errors.Errorf("installation of plugins using %s is not yet supported", language)
+		return fmt.Errorf("installation of plugins using %s is not yet supported", language)
 	}
 
 	if err := pluginInstaller.CheckVersion(ver); err != nil {

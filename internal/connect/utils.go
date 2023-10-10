@@ -3,6 +3,7 @@ package connect
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -36,7 +37,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	_, classExists := options["connector.class"]
 
 	if connectorType != "CUSTOM" && (!nameExists || !classExists) {
-		return nil, errors.Errorf(`required configs "name" and "connector.class" missing from connector config file "%s"`, configFile)
+		return nil, fmt.Errorf(`required configs "name" and "connector.class" missing from connector config file "%s"`, configFile)
 	}
 
 	return &options, nil
@@ -48,7 +49,7 @@ func parseConfigFile(filename string) (map[string]string, error) {
 		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
 	}
 	if len(jsonFile) == 0 {
-		return nil, errors.Errorf(`connector config file "%s" is empty`, filename)
+		return nil, fmt.Errorf(`connector config file "%s" is empty`, filename)
 	}
 
 	kvPairs := make(map[string]string)
@@ -64,18 +65,18 @@ func parseConfigFile(filename string) (map[string]string, error) {
 		} else {
 			// We support object-as-a-value only for "config" key.
 			if key != "config" {
-				return nil, errors.Errorf(`only string values are permitted for the configuration "%s"`, key)
+				return nil, fmt.Errorf(`only string values are permitted for the configuration "%s"`, key)
 			}
 
 			configMap, ok := val.(map[string]any)
 			if !ok {
-				return nil, errors.Errorf(`value for the configuration "config" is malformed`)
+				return nil, fmt.Errorf(`value for the configuration "config" is malformed`)
 			}
 
 			for configKey, configVal := range configMap {
 				value, isString := configVal.(string)
 				if !isString {
-					return nil, errors.Errorf(`only string values are permitted for the configuration "%s"`, configKey)
+					return nil, fmt.Errorf(`only string values are permitted for the configuration "%s"`, configKey)
 				}
 				kvPairs[configKey] = value
 			}

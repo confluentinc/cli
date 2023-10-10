@@ -29,7 +29,7 @@ func NewError(url string, err error, httpResp *http.Response) error {
 		if strings.Contains(e.Error(), SelfSignedCertError) || strings.Contains(e.Error(), UnauthorizedCertError) {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaRestConnectionErrorMsg, url, e.Err), errors.KafkaRestCertErrorSuggestions)
 		}
-		return errors.Errorf(errors.KafkaRestConnectionErrorMsg, url, e.Err)
+		return fmt.Errorf(errors.KafkaRestConnectionErrorMsg, url, e.Err)
 	case cckafkarestv3.GenericOpenAPIError:
 		openAPIError, parseErr := ParseOpenAPIErrorCloud(err)
 		if parseErr == nil {

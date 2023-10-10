@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -442,7 +441,7 @@ func top(pids []int) error {
 		}
 		top = exec.Command("top", "-p", strings.Join(args, ","))
 	default:
-		return errors.Errorf("`top` command not available on platform: %s", runtime.GOOS)
+		return fmt.Errorf("`top` command not available on platform: %s", runtime.GOOS)
 	}
 
 	top.Stdin = os.Stdin

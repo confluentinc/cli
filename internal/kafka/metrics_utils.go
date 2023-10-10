@@ -8,7 +8,6 @@ import (
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 const (
@@ -73,7 +72,7 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 	query := getMetricsApiRequest(ClusterLoadMetricName, "MAX", clusterId, isLatestMetric)
 	clusterLoadResponse, httpResp, err := client.MetricsDatasetQuery("cloud", query)
 	if err != nil && !ccloudv2.IsDataMatchesMoreThanOneSchemaError(err) || clusterLoadResponse == nil {
-		return errors.Errorf("could not retrieve cluster load metrics to validate request to shrink cluster, please try again in a few minutes: %w", err)
+		return fmt.Errorf("could not retrieve cluster load metrics to validate request to shrink cluster, please try again in a few minutes: %w", err)
 	}
 
 	if err := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, clusterLoadResponse, httpResp); err != nil {

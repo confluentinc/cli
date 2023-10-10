@@ -1,10 +1,11 @@
 package secret
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 const masterKeyNotSetWarning = "This command fails if a master key has not been set in the environment variable `CONFLUENT_SECURITY_MASTER_KEY`. Create a master key using `confluent secret master-key generate`."
@@ -53,9 +54,9 @@ func (c *command) getConfigs(configSource, inputType, prompt string, secure bool
 	if err != nil {
 		switch err {
 		case pcmd.ErrNoValueSpecified:
-			return "", errors.Errorf("enter %s", inputType)
+			return "", fmt.Errorf("enter %s", inputType)
 		case pcmd.ErrNoPipe:
-			return "", errors.Errorf("pipe %s over stdin", inputType)
+			return "", fmt.Errorf("pipe %s over stdin", inputType)
 		}
 		return "", err
 	}

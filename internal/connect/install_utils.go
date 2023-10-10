@@ -93,7 +93,7 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, fo
 	}
 	choice, err := strconv.Atoi(f.Responses["installation"].(string))
 	if err != nil || choice < 1 || choice > len(installations) {
-		return nil, errors.Errorf("your choice must be in the range %d to %d (inclusive)", 1, len(installations))
+		return nil, fmt.Errorf("your choice must be in the range %d to %d (inclusive)", 1, len(installations))
 	}
 	return &installations[choice-1], nil
 }
@@ -227,7 +227,7 @@ func choosePluginDir(installation *platformInstallation, prompt form.Prompt, for
 	case "PACKAGE":
 		defaultPluginDir = "/usr/share/confluent-hub-components"
 	default:
-		return "", errors.Errorf(unexpectedInstallationErrorMsg, installation.Location.Type)
+		return "", fmt.Errorf(unexpectedInstallationErrorMsg, installation.Location.Type)
 	}
 
 	if force {
@@ -262,7 +262,7 @@ func choosePluginDir(installation *platformInstallation, prompt form.Prompt, for
 		return "", err
 	}
 	if !utils.DoesPathExist(inputDir) {
-		return "", errors.Errorf(invalidDirectoryErrorMsg, inputDir)
+		return "", fmt.Errorf(invalidDirectoryErrorMsg, inputDir)
 	}
 
 	output.Println(false, "")
