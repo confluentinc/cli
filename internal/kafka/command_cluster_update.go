@@ -55,7 +55,10 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, environmentId)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID),
+			errors.ChooseRightEnvironmentSuggestions,
+		)
 	}
 
 	update := cmkv2.CmkV2ClusterUpdate{
