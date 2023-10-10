@@ -29,7 +29,7 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 
 	versionSegments := ver.Segments()
 	if len(versionSegments) == 0 {
-		return errors.New(errors.NoVersionFoundErrorMsg)
+		return fmt.Errorf(errors.NoVersionFoundErrorMsg)
 	}
 	majorVer := versionSegments[0]
 

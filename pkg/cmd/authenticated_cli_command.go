@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -217,7 +218,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					return nil, err
 				}
 				if schemaRegistryEndpoint == "" {
-					return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+					return nil, fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
 				}
 				configuration.BasePath = schemaRegistryEndpoint
 
@@ -233,7 +234,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
 
 				if err := c.schemaRegistryClient.Get(); err != nil {
-					return nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+					return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
 				}
 			}
 		} else {
@@ -242,7 +243,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				return nil, err
 			}
 			if schemaRegistryEndpoint == "" {
-				return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+				return nil, fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
 			}
 
 			caLocation, err := cmd.Flags().GetString("ca-location")
@@ -276,7 +277,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			}
 
 			if err := c.schemaRegistryClient.Get(); err != nil {
-				return nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+				return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
 			}
 		}
 	}

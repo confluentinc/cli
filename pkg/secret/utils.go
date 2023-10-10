@@ -2,6 +2,7 @@ package secret
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -225,7 +226,7 @@ func LoadJSONFile(path string) (string, error) {
 
 	jsonConfig := string(jsonByteArr)
 	if !gjson.Valid(jsonConfig) {
-		return "", errors.New(errors.InvalidJsonFileFormatErrorMsg)
+		return "", fmt.Errorf(errors.InvalidJsonFileFormatErrorMsg)
 	}
 
 	return jsonConfig, nil

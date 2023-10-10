@@ -1,6 +1,7 @@
 package serdes
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -36,7 +37,7 @@ func (p *ProtobufSerializationProvider) Serialize(str string) ([]byte, error) {
 
 	// Convert from JSON string to proto message type.
 	if err := jsonpb.UnmarshalString(str, p.message); err != nil {
-		return nil, errors.New(errors.ProtoDocumentInvalidErrorMsg)
+		return nil, fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
 	}
 
 	// Serialize proto message type to binary format.
@@ -59,13 +60,13 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.
 		return nil, errors.Wrap(err, errors.ProtoSchemaInvalidErrorMsg)
 	}
 	if len(fileDescriptors) == 0 {
-		return nil, errors.New(errors.ProtoSchemaInvalidErrorMsg)
+		return nil, fmt.Errorf(errors.ProtoSchemaInvalidErrorMsg)
 	}
 	fileDescriptor := fileDescriptors[0]
 
 	messageDescriptors := fileDescriptor.GetMessageTypes()
 	if len(messageDescriptors) == 0 {
-		return nil, errors.New(errors.ProtoSchemaInvalidErrorMsg)
+		return nil, fmt.Errorf(errors.ProtoSchemaInvalidErrorMsg)
 	}
 	// We're always using the outermost first message.
 	messageDescriptor := messageDescriptors[0]

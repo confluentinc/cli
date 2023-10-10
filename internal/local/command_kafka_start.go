@@ -137,7 +137,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if brokers < 1 || brokers > 4 {
-		return errors.New("--brokers must be an integer between 1 and 4, inclusive.")
+		return fmt.Errorf("--brokers must be an integer between 1 and 4, inclusive.")
 	}
 
 	if err := c.prepareAndSaveLocalPorts(cmd, brokers, c.Config.IsTest); err != nil {

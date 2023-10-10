@@ -105,7 +105,7 @@ func getPlatformInstallationFromFlag(cmd *cobra.Command) (*platformInstallation,
 	}
 
 	if !hasArchiveInstallation(specifiedDirectory) {
-		return nil, errors.New("the directory specified with `--confluent-platform` does not correspond to a valid archive installation")
+		return nil, fmt.Errorf("the directory specified with `--confluent-platform` does not correspond to a valid archive installation")
 	}
 
 	return &platformInstallation{
@@ -307,7 +307,7 @@ func standardWorkerConfigLocations(installation *platformInstallation) ([]Worker
 		}
 		return result, nil
 	default:
-		return nil, errors.New(fmt.Sprintf(unexpectedInstallationErrorMsg, installation.Location.Type))
+		return nil, fmt.Errorf(fmt.Sprintf(unexpectedInstallationErrorMsg, installation.Location.Type))
 	}
 }
 

@@ -101,7 +101,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("key-format") && !parseKey {
-		return errors.New("`--parse-key` must be set when `key-format` is set")
+		return fmt.Errorf("`--parse-key` must be set when `key-format` is set")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")
@@ -239,7 +239,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
 	dataSplit := strings.Split(data, delimiter)
 	if len(dataSplit) < 2 {
-		return "", "", errors.New(missingKeyOrValueErrorMsg)
+		return "", "", fmt.Errorf(missingKeyOrValueErrorMsg)
 	}
 
 	if !schemaBased {
@@ -258,7 +258,7 @@ func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, e
 		}
 	}
 
-	return "", "", errors.New(missingOrMalformedKeyErrorMsg)
+	return "", "", fmt.Errorf(missingOrMalformedKeyErrorMsg)
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {

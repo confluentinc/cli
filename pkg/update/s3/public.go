@@ -73,7 +73,7 @@ func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version
 	// The index of the largest available version. This may be a major version update.
 	majorIdx := len(versions) - 1
 	if majorIdx < 0 {
-		return nil, nil, errors.New(errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf(errors.GetBinaryVersionsErrorMsg)
 	}
 	major := versions[majorIdx]
 	if current.Segments()[0] == major.Segments()[0] {
@@ -90,7 +90,7 @@ func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version
 	}) - 1
 
 	if minorIdx < 0 {
-		return nil, nil, errors.New(errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf(errors.GetBinaryVersionsErrorMsg)
 	}
 	minor := versions[minorIdx]
 
@@ -107,7 +107,7 @@ func (r *PublicRepo) GetAvailableBinaryVersions(name string) (version.Collection
 		return nil, err
 	}
 	if len(availableVersions) == 0 {
-		return nil, errors.New(errors.NoVersionsErrorMsg)
+		return nil, fmt.Errorf(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }
@@ -197,7 +197,7 @@ func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Coll
 	}
 	availableVersions := r.getMatchedReleaseNotesVersionsFromListBucketResult(name, listBucketResult)
 	if len(availableVersions) == 0 {
-		return nil, errors.New(errors.NoVersionsErrorMsg)
+		return nil, fmt.Errorf(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }

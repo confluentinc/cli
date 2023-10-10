@@ -13,7 +13,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 )
@@ -153,7 +152,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 
 func catchOpenAPIError(err error) error {
 	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
-		return errors.New(string(openAPIError.Body()))
+		return fmt.Errorf(string(openAPIError.Body()))
 	}
 	return err
 }

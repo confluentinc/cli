@@ -127,10 +127,10 @@ func catchOpenAPIError(err error) error {
 		}{}
 
 		if err := json.NewDecoder(r).Decode(formattedErr); err == nil {
-			return New(formattedErr.Message)
+			return fmt.Errorf(formattedErr.Message)
 		}
 
-		return New(body)
+		return fmt.Errorf(body)
 	}
 
 	return err
@@ -168,7 +168,7 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 			return NewErrorWithSuggestions(detail, "Look up Confluent Cloud service quota limits with `confluent service-quota list`.")
 		}
 		if detail != "" {
-			err = New(strings.TrimSuffix(detail, "\n"))
+			err = fmt.Errorf(strings.TrimSuffix(detail, "\n"))
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
 				err = NewErrorWithSuggestions(err.Error(), resolution)
 			}

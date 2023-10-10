@@ -92,7 +92,7 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
 	states, ok := r.URL.Query()["state"]
 	if !(ok && states[0] == s.State.SSOProviderState) {
-		s.bgErr = errors.New("authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail")
+		s.bgErr = fmt.Errorf("authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail")
 	}
 
 	fmt.Fprintln(w, ssoCallbackHTML)
@@ -101,7 +101,7 @@ func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
 	if ok {
 		s.State.SSOProviderAuthenticationCode = codes[0]
 	} else {
-		s.bgErr = errors.New("authentication callback URL did not contain code parameter in query string; login will fail")
+		s.bgErr = fmt.Errorf("authentication callback URL did not contain code parameter in query string; login will fail")
 	}
 
 	s.wait <- true

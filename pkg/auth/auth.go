@@ -215,7 +215,7 @@ func GetDataplaneToken(authenticatedState *config.ContextState, server string) (
 		return "", err
 	}
 	if res.Error != "" {
-		return "", errors.New(res.Error)
+		return "", fmt.Errorf(res.Error)
 	}
 	return res.Token, nil
 }

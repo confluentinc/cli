@@ -158,7 +158,7 @@ func (j *JAASParser) ConvertPropertiesToJAAS(props *properties.Properties, op st
 		configKey = keys[ClassId] + KeySeparator + keys[ParentId]
 		jaas, ok := j.JaasOriginalConfigKeys.Get(configKey)
 		if !ok {
-			return nil, errors.New("failed to convert the properties to a JAAS configuration")
+			return nil, fmt.Errorf("failed to convert the properties to a JAAS configuration")
 		}
 		jaas, err := j.updateJAASConfig(op, keys[KeyId], value, jaas)
 		if err != nil {

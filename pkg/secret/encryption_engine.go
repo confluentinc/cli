@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
+	"fmt"
 
 	"golang.org/x/crypto/pbkdf2"
 
@@ -196,7 +197,7 @@ func (c *EncryptEngineImpl) pkcs5Trimming(encrypt []byte) ([]byte, error) {
 	padding := encrypt[len(encrypt)-1]
 	length := len(encrypt) - int(padding)
 	if length < 0 || length > len(encrypt) {
-		return nil, errors.New("failed to decrypt the cipher: data is corrupted")
+		return nil, fmt.Errorf("failed to decrypt the cipher: data is corrupted")
 	}
 	return encrypt[:len(encrypt)-int(padding)], nil
 }

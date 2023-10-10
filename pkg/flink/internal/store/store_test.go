@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -758,7 +757,7 @@ func (s *StoreTestSuite) TestProcessHttpErrors() {
 	assert.Nil(s.T(), err)
 
 	// given
-	err = errors.New("some error")
+	err = fmt.Errorf("some error")
 
 	// when
 	err = processHttpErrors(nil, err)
@@ -1223,7 +1222,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 			Statement:     &statement,
 		},
 	}
-	returnedError := errors.New("test error")
+	returnedError := fmt.Errorf("test error")
 
 	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrgResourceId).
 		Return(statementObj, returnedError)
@@ -1363,7 +1362,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 			Detail: &statusDetailMessage,
 		},
 	}
-	returnedErr := errors.New("test error")
+	returnedErr := fmt.Errorf("test error")
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedErr)
 	expectedError := &types.StatementError{
 		Message:        returnedErr.Error(),
@@ -1748,7 +1747,7 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, errors.New("error"))
+	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, fmt.Errorf("error"))
 
 	_, err := s.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatement(statementObj))
 

@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -82,7 +83,7 @@ func CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath strin
 
 func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*http.Client, error) {
 	if caCertReader == nil && isEmptyClientCert(clientCert) {
-		return nil, errors.New("no reader specified for reading custom certificates")
+		return nil, fmt.Errorf("no reader specified for reading custom certificates")
 	}
 	transport := DefaultTransport()
 
@@ -107,7 +108,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 
 		// Append custom certs to the system pool
 		if ok := caCertPool.AppendCertsFromPEM(caCerts); !ok {
-			return nil, errors.New("no certs appended, using system certs only")
+			return nil, fmt.Errorf("no certs appended, using system certs only")
 		}
 		log.CliLogger.Tracef("Successfully appended new certificate to the pool")
 		// Trust the updated cert pool in our client

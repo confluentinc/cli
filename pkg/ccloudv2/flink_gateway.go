@@ -2,7 +2,7 @@ package ccloudv2
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"net/http"
 
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
@@ -35,7 +35,7 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 			// Default net/http implementation allows 10 redirects - https://go.dev/src/net/http/client.go.
 			// Lowered the redirect limit to fail fast in case of redirect cycles
 			if len(via) >= 5 {
-				return errors.New("stopped after 5 redirects")
+				return fmt.Errorf("stopped after 5 redirects")
 			}
 			log.CliLogger.Debugf("Following redirect with authorization to %s", req.URL)
 			// Customize the redirect to add authorization header on 307 Redirect.

@@ -16,7 +16,7 @@ const clientNotInitializedErrorMsg = "Hub client not initialized"
 
 func (c *Client) GetRemoteManifest(owner, name, version string) (*cpstructs.Manifest, error) {
 	if c == nil {
-		return nil, errors.New(clientNotInitializedErrorMsg)
+		return nil, fmt.Errorf(clientNotInitializedErrorMsg)
 	}
 
 	manifestUrl := fmt.Sprintf("%s/api/plugins/%s/%s", c.URL, owner, name)
@@ -76,7 +76,7 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*cpstructs.Mani
 
 func (c *Client) GetRemoteArchive(pluginManifest *cpstructs.Manifest) ([]byte, error) {
 	if c == nil {
-		return nil, errors.New(clientNotInitializedErrorMsg)
+		return nil, fmt.Errorf(clientNotInitializedErrorMsg)
 	}
 
 	req, err := http.NewRequest(http.MethodGet, pluginManifest.Archive.Url, nil)
@@ -100,7 +100,7 @@ func (c *Client) GetRemoteArchive(pluginManifest *cpstructs.Manifest) ([]byte, e
 	defer r.Body.Close()
 
 	if r.StatusCode != http.StatusOK {
-		return nil, errors.New("failed to retrieve archive from Confuent Hub")
+		return nil, fmt.Errorf("failed to retrieve archive from Confuent Hub")
 	}
 
 	return io.ReadAll(r.Body)

@@ -2,6 +2,7 @@ package sso
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -35,11 +36,11 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		input := scanner.Text()
 		split := strings.SplitAfterN(input, "/", 2)
 		if len(split) < 2 {
-			return "", "", errors.New("pasted input had invalid format")
+			return "", "", fmt.Errorf("pasted input had invalid format")
 		}
 		auth0State := strings.Replace(split[0], "/", "", 1)
 		if !(auth0State == state.SSOProviderState) {
-			return "", "", errors.New("authentication code either did not contain a state parameter or the state parameter was invalid; login will fail")
+			return "", "", fmt.Errorf("authentication code either did not contain a state parameter or the state parameter was invalid; login will fail")
 		}
 
 		state.SSOProviderAuthenticationCode = split[1]

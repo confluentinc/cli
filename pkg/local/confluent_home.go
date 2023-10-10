@@ -98,7 +98,7 @@ func (ch *ConfluentHomeManager) getRootDir() (string, error) {
 		return dir, nil
 	}
 
-	return "", errors.New("set environment variable CONFLUENT_HOME")
+	return "", fmt.Errorf("set environment variable CONFLUENT_HOME")
 }
 
 func (ch *ConfluentHomeManager) GetFile(path ...string) (string, error) {

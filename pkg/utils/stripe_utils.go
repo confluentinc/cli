@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/stripe/stripe-go"
@@ -40,7 +40,7 @@ func NewStripeToken(cardNumber, expiration, cvc, name string, isTest bool) (*str
 	stripeToken, err := token.New(params)
 	if err != nil {
 		if stripeErr, ok := err.(*stripe.Error); ok {
-			return nil, errors.New(stripeErr.Msg)
+			return nil, fmt.Errorf(stripeErr.Msg)
 		}
 		return nil, err
 	}

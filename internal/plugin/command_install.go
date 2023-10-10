@@ -128,13 +128,13 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 
 func getLanguage(manifest *Manifest) (string, *version.Version, error) {
 	if manifest == nil || len(manifest.Dependencies) == 0 {
-		return "", nil, errors.New("no language found in plugin manifest")
+		return "", nil, fmt.Errorf("no language found in plugin manifest")
 	}
 
 	language := manifest.Dependencies[0]
 	language.Name = strings.ToLower(language.Name)
 	if language.Version == "" {
-		return "", nil, errors.New(errors.NoVersionFoundErrorMsg)
+		return "", nil, fmt.Errorf(errors.NoVersionFoundErrorMsg)
 	}
 
 	ver, err := version.NewVersion(language.Version)

@@ -120,7 +120,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	var encryptionKey string
 	if cmd.Flags().Changed("encryption-key") {
 		if cloud != "gcp" {
-			return errors.New("BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys.")
+			return fmt.Errorf("BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys.")
 		}
 
 		encryptionKey, err = cmd.Flags().GetString("encryption-key")
@@ -166,7 +166,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return errors.NewErrorWithSuggestions("the `--cku` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type`.")
 		}
 		if cku <= 0 {
-			return errors.New(errors.CkuMoreThanZeroErrorMsg)
+			return fmt.Errorf(errors.CkuMoreThanZeroErrorMsg)
 		}
 		setClusterConfigCku(&createCluster, int32(cku))
 	}
@@ -307,10 +307,10 @@ func catchClusterConfigurationNotValidError(err error, r *http.Response, cloud, 
 		)
 	}
 	if strings.Contains(err.Error(), "CKU must be greater") {
-		return errors.New("CKU must be greater than 1 for multi-zone dedicated clusters")
+		return fmt.Errorf("CKU must be greater than 1 for multi-zone dedicated clusters")
 	}
 	if strings.Contains(err.Error(), "Durability must be HIGH for an Enterprise cluster") {
-		return errors.New(`availability must be "multi-zone" for enterprise clusters`)
+		return fmt.Errorf(`availability must be "multi-zone" for enterprise clusters`)
 	}
 
 	return err

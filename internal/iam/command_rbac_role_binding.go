@@ -228,20 +228,20 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.M
 	})
 
 	if clusterName != "" && (scope.KafkaCluster != "" || nonKafkaScopesSet > 0) {
-		return nil, errors.New("cannot specify both cluster name and cluster scope")
+		return nil, fmt.Errorf("cannot specify both cluster name and cluster scope")
 	}
 
 	if clusterName == "" {
 		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-			return nil, errors.New(errors.SpecifyKafkaIdErrorMsg)
+			return nil, fmt.Errorf(errors.SpecifyKafkaIdErrorMsg)
 		}
 
 		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-			return nil, errors.New("must specify either cluster ID to indicate role binding scope or the cluster name")
+			return nil, fmt.Errorf("must specify either cluster ID to indicate role binding scope or the cluster name")
 		}
 
 		if nonKafkaScopesSet > 1 {
-			return nil, errors.New(errors.MoreThanOneNonKafkaErrorMsg)
+			return nil, fmt.Errorf(errors.MoreThanOneNonKafkaErrorMsg)
 		}
 
 		return &mdsv1.MdsScope{Clusters: *scope}, nil
@@ -430,7 +430,7 @@ func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOption
 	if options.resource != "" {
 		fieldsSelected = resourcePatternListFields
 		if len(options.resourcesRequest.ResourcePatterns) != 1 {
-			return errors.New("display error: number of resource pattern is not 1")
+			return fmt.Errorf("display error: number of resource pattern is not 1")
 		}
 		resourcePattern := options.resourcesRequest.ResourcePatterns[0]
 		out.ResourceType = resourcePattern.ResourceType
@@ -595,15 +595,15 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		if clusterScopedRolesV2.Contains(role) && !cmd.Flags().Changed("cloud-cluster") {
-			return "", errors.New(specifyCloudClusterErrorMsg)
+			return "", fmt.Errorf(specifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
-			return "", errors.New(specifyEnvironmentErrorMsg)
+			return "", fmt.Errorf(specifyEnvironmentErrorMsg)
 		}
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
-		return "", errors.New(specifyEnvironmentErrorMsg)
+		return "", fmt.Errorf(specifyEnvironmentErrorMsg)
 	}
 	return crnPattern, nil
 }

@@ -73,7 +73,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("plugin-directory") && cmd.Flags().Changed("worker-configurations") && cmd.Flags().Changed("confluent-platform") {
-		return errors.New("at most two of `--plugin-directory`, `--worker-configurations`, and `--confluent-platform` may be set")
+		return fmt.Errorf("at most two of `--plugin-directory`, `--worker-configurations`, and `--confluent-platform` may be set")
 	}
 
 	client, err := c.GetHubClient()
@@ -266,7 +266,7 @@ func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
 func existingPluginInstallation(pluginDir string, pluginManifest *cpstructs.Manifest) ([]string, error) {
 	// Bundled installations
 	if utils.DoesPathExist(filepath.Join(pluginDir, pluginManifest.Name)) {
-		return nil, errors.New("unable to install plugin because it is already bundled")
+		return nil, fmt.Errorf("unable to install plugin because it is already bundled")
 	}
 
 	// Other previous installations
@@ -302,7 +302,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 				return err
 			}
 			if !f.Responses["confirm"].(bool) {
-				return errors.New("previous versions must be uninstalled to continue")
+				return fmt.Errorf("previous versions must be uninstalled to continue")
 			}
 		}
 
@@ -431,7 +431,7 @@ func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prom
 				return err
 			}
 			if !f.Responses["confirm"].(bool) {
-				return errors.New("you must accept all license agreements to install this plugin")
+				return fmt.Errorf("you must accept all license agreements to install this plugin")
 			}
 		}
 	}

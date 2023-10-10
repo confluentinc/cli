@@ -4,10 +4,6 @@ import (
 	"fmt"
 )
 
-func New(msg string) error {
-	return fmt.Errorf(msg)
-}
-
 func Wrap(err error, msg string) error {
 	if err == nil {
 		return nil

@@ -76,7 +76,7 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(isCloud bool, ctxName string) 
 		}
 		return machine.Login, nil
 	} else {
-		err = errors.New(errors.NetrcCredentialsNotFoundErrorMsg)
+		err = fmt.Errorf(errors.NetrcCredentialsNotFoundErrorMsg)
 		return "", err
 	}
 }

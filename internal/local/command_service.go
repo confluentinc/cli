@@ -684,7 +684,7 @@ func (c *command) checkJavaVersion(service string) error {
 		}
 		java = strings.TrimSuffix(string(out), "\n")
 		if java == "java not found" {
-			return errors.New("could not find java executable, please install java or set JAVA_HOME")
+			return fmt.Errorf("could not find java executable, please install java or set JAVA_HOME")
 		}
 	}
 
@@ -701,7 +701,7 @@ func (c *command) checkJavaVersion(service string) error {
 		return err
 	}
 	if !isValid {
-		return errors.New("the Confluent CLI requires Java version 1.8 or 1.11.\n" +
+		return fmt.Errorf("the Confluent CLI requires Java version 1.8 or 1.11.\n" +
 			"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
 			"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use.")
 	}

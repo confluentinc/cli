@@ -1,9 +1,8 @@
 package netrc
 
 import (
+	"fmt"
 	"strings"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 type MachineContextInfo struct {
@@ -15,7 +14,7 @@ type MachineContextInfo struct {
 
 func ParseNetrcMachineName(machineName string) (*MachineContextInfo, error) {
 	if !strings.HasPrefix(machineName, localCredentialsPrefix) {
-		return nil, errors.New("Incorrect machine name format")
+		return nil, fmt.Errorf("Incorrect machine name format")
 	}
 
 	// example: machinename = confluent-cli:ccloud-username-password:login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud
@@ -50,7 +49,7 @@ func extractCredentialType(nameSubstring string) (string, string, error) {
 	} else if strings.HasPrefix(nameSubstring, ccloudUsernamePasswordString) {
 		credType = ccloudUsernamePasswordString
 	} else {
-		return "", "", errors.New("incorrect machine name format")
+		return "", "", fmt.Errorf("incorrect machine name format")
 	}
 	// +1 to remove the character ":"
 	rest := suffixFromIndex(nameSubstring, len(credType)+1)
@@ -60,7 +59,7 @@ func extractCredentialType(nameSubstring string) (string, string, error) {
 func parseContextName(nameSubstring string) (string, string, string, error) {
 	contextNamePrefix := "login-"
 	if !strings.HasPrefix(nameSubstring, contextNamePrefix) {
-		return "", "", "", errors.New("incorrect context name format")
+		return "", "", "", fmt.Errorf("incorrect context name format")
 	}
 
 	contextName := suffixFromIndex(nameSubstring, len(contextNamePrefix))

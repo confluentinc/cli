@@ -103,7 +103,7 @@ func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluste
 	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
 		if err.Error() == ckafka.ErrTransport.String() {
-			err = errors.New("API key may not be provisioned yet")
+			err = fmt.Errorf("API key may not be provisioned yet")
 		}
 		return fmt.Errorf("failed to obtain topics from client: %v", err)
 	}

@@ -47,7 +47,7 @@ func NewPasswordProtectionPlugin() *PasswordProtectionSuite {
 func (c *PasswordProtectionSuite) CreateMasterKey(passphrase, localSecureConfigPath string) (string, error) {
 	passphrase = strings.TrimSuffix(passphrase, "\n")
 	if strings.TrimSpace(passphrase) == "" {
-		return "", errors.New(errors.EmptyPassphraseErrorMsg)
+		return "", fmt.Errorf(errors.EmptyPassphraseErrorMsg)
 	}
 
 	secureConfigProps := properties.NewProperties()
@@ -183,7 +183,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath, local
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		log.CliLogger.Debug(err)
-		return errors.New(errors.UnwrapDataKeyErrorMsg)
+		return fmt.Errorf(errors.UnwrapDataKeyErrorMsg)
 	}
 
 	for key, value := range configProps.Map() {
@@ -217,7 +217,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath, local
 func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase, localSecureConfigPath string) error {
 	masterPassphrase = strings.TrimSuffix(masterPassphrase, "\n")
 	if strings.TrimSpace(masterPassphrase) == "" {
-		return errors.New(errors.EmptyPassphraseErrorMsg)
+		return fmt.Errorf(errors.EmptyPassphraseErrorMsg)
 	}
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
 	if err != nil {
@@ -240,7 +240,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase, localSecureCon
 
 	// Verify master key passphrase
 	if masterKey != userMasterKey {
-		return errors.New(errors.IncorrectPassphraseErrorMsg)
+		return fmt.Errorf(errors.IncorrectPassphraseErrorMsg)
 	}
 
 	secureConfigProps, err := utils.LoadPropertiesFile(localSecureConfigPath)
@@ -252,7 +252,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase, localSecureCon
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		log.CliLogger.Debug(err)
-		return errors.New(errors.UnwrapDataKeyErrorMsg)
+		return fmt.Errorf(errors.UnwrapDataKeyErrorMsg)
 	}
 
 	// Generate a new DEK
@@ -309,11 +309,11 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase, newPassphrase, 
 	oldPassphrase = strings.TrimSuffix(oldPassphrase, "\n")
 	newPassphrase = strings.TrimSuffix(newPassphrase, "\n")
 	if strings.TrimSpace(oldPassphrase) == "" || strings.TrimSpace(newPassphrase) == "" {
-		return "", errors.New(errors.EmptyPassphraseErrorMsg)
+		return "", fmt.Errorf(errors.EmptyPassphraseErrorMsg)
 	}
 
 	if oldPassphrase == newPassphrase {
-		return "", errors.New(errors.SamePassphraseErrorMsg)
+		return "", fmt.Errorf(errors.SamePassphraseErrorMsg)
 	}
 
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
@@ -337,14 +337,14 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase, newPassphrase, 
 
 	// Verify master key passphrase
 	if masterKey != userMasterKey {
-		return "", errors.New(errors.IncorrectPassphraseErrorMsg)
+		return "", fmt.Errorf(errors.IncorrectPassphraseErrorMsg)
 	}
 
 	// Unwrap DEK using the MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		log.CliLogger.Debug(err)
-		return "", errors.New(errors.UnwrapDataKeyErrorMsg)
+		return "", fmt.Errorf(errors.UnwrapDataKeyErrorMsg)
 	}
 
 	newMasterKey, salt, err := engine.GenerateMasterKey(newPassphrase, "")
@@ -397,7 +397,7 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath, localSec
 	}
 
 	if newConfigProps.Len() == 0 {
-		return errors.New("add failed: empty list of new configs")
+		return fmt.Errorf("add failed: empty list of new configs")
 	}
 
 	return c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
@@ -415,7 +415,7 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath, local
 	}
 
 	if newConfigProps.Len() == 0 {
-		return errors.New("update failed: empty list of update configs")
+		return fmt.Errorf("update failed: empty list of update configs")
 	}
 
 	configProps, err := LoadConfiguration(configFilePath, newConfigProps.Keys(), true)
@@ -622,7 +622,7 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		log.CliLogger.Debug(err)
-		return errors.New(errors.UnwrapDataKeyErrorMsg)
+		return fmt.Errorf(errors.UnwrapDataKeyErrorMsg)
 	}
 
 	configProps := properties.NewProperties()

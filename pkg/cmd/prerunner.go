@@ -353,7 +353,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			return nil, errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
 		if restEndpoint == "" {
-			return nil, errors.New("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
+			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
 		}
 
 		state, err := ctx.AuthenticatedState()
@@ -654,7 +654,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	prompt, _ := cmd.Flags().GetBool("prompt")
 
 	if (clientCertPath == "") != (clientKeyPath == "") {
-		return nil, errors.New(errors.NeedClientCertAndKeyPathsErrorMsg)
+		return nil, fmt.Errorf(errors.NeedClientCertAndKeyPathsErrorMsg)
 	}
 
 	values := &onPremKafkaRestFlagValues{

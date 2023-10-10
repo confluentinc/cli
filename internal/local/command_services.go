@@ -336,7 +336,7 @@ func (c *command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	}
 
 	if len(pids) == 0 {
-		return errors.New("no services running")
+		return fmt.Errorf("no services running")
 	}
 
 	return top(pids)

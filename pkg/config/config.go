@@ -569,7 +569,7 @@ func (c *Config) UseContext(name string) error {
 
 func (c *Config) SaveCredential(credential *Credential) error {
 	if credential.Name == "" {
-		return errors.New("credential must have a name")
+		return fmt.Errorf("credential must have a name")
 	}
 	c.Credentials[credential.Name] = credential
 	return c.Save()
@@ -577,7 +577,7 @@ func (c *Config) SaveCredential(credential *Credential) error {
 
 func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCredential) error {
 	if ctxName == "" {
-		return errors.New("saved credential must match a context")
+		return fmt.Errorf("saved credential must match a context")
 	}
 	c.SavedCredentials[ctxName] = loginCredential
 	return c.Save()
@@ -585,7 +585,7 @@ func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCrede
 
 func (c *Config) SavePlatform(platform *Platform) error {
 	if platform.Name == "" {
-		return errors.New("platform must have a name")
+		return fmt.Errorf("platform must have a name")
 	}
 	c.Platforms[platform.Name] = platform
 	return c.Save()

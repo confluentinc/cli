@@ -67,7 +67,7 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 	if err != nil {
 		return nil, err
 	}
-	return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
+	return nil, fmt.Errorf(errors.NoCredentialsFoundErrorMsg)
 }
 
 type LoginCredentialsManager interface {
@@ -332,7 +332,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 	return func() (*Credentials, error) {
 		url := GetEnvWithFallback(ConfluentPlatformMDSURL, DeprecatedConfluentPlatformMDSURL)
 		if url == "" {
-			return nil, errors.New(errors.NoUrlEnvVarErrorMsg)
+			return nil, fmt.Errorf(errors.NoUrlEnvVarErrorMsg)
 		}
 
 		envVars := environmentVariables{
@@ -344,7 +344,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 
 		creds, _ := h.getCredentialsFromEnvVarFunc(envVars, "")()
 		if creds == nil {
-			return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
+			return nil, fmt.Errorf(errors.NoCredentialsFoundErrorMsg)
 		}
 		creds.PrerunLoginURL = url
 		creds.PrerunLoginCaCertPath = GetEnvWithFallback(ConfluentPlatformCACertPath, DeprecatedConfluentPlatformCACertPath)
@@ -380,9 +380,9 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *config.Con
 				log.CliLogger.Debugf(`Found credentials for user "%s" from keychain (%s)`, username, stopNonInteractiveMsg)
 				return &Credentials{Username: username, Password: password}, nil
 			}
-			return nil, errors.New("no matching credentials found in keychain")
+			return nil, fmt.Errorf("no matching credentials found in keychain")
 		}
-		return nil, errors.New("keychain not available on platforms other than darwin")
+		return nil, fmt.Errorf("keychain not available on platforms other than darwin")
 	}
 }
 

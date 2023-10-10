@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -102,15 +103,15 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeC
 	})
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-		return nil, errors.New(errors.SpecifyKafkaIdErrorMsg)
+		return nil, fmt.Errorf(errors.SpecifyKafkaIdErrorMsg)
 	}
 
 	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-		return nil, errors.New("must specify at least one cluster ID")
+		return nil, fmt.Errorf("must specify at least one cluster ID")
 	}
 
 	if nonKafkaScopesSet > 1 {
-		return nil, errors.New(errors.MoreThanOneNonKafkaErrorMsg)
+		return nil, fmt.Errorf(errors.MoreThanOneNonKafkaErrorMsg)
 	}
 
 	return scope, nil
