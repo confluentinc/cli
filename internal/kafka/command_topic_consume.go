@@ -44,7 +44,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
-	cmd.Flags().Bool("print-offset", false, "Print offset of the message.")
+	cmd.Flags().Bool("print-offset", false, "Print partition number and offset of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")

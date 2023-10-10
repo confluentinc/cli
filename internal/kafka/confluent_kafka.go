@@ -240,12 +240,16 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
+	info := ""
 	if h.Properties.Timestamp {
-		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", message.Timestamp.UnixMilli(), jsonMessage)
+		info += fmt.Sprintf("Timestamp:%d", message.Timestamp.UnixMilli())
 	}
 
 	if h.Properties.PrintOffset {
-		jsonMessage = fmt.Sprintf("[Partition:Offset]: [%d:%s]\t%s", message.TopicPartition.Partition, message.TopicPartition.Offset.String(), jsonMessage)
+		info += fmt.Sprintf(" Partition:%d Offset:%s", message.TopicPartition.Partition, message.TopicPartition.Offset.String())
+	}
+	if len(info) > 0 {
+		jsonMessage = fmt.Sprintf("[%s]\t%s", info, jsonMessage)
 	}
 
 	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
