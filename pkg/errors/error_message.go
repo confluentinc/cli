@@ -63,7 +63,7 @@ const (
 	InvalidInputFormatErrorMsg = `"%s" is not of valid format for field "%s"`
 
 	// config package
-	UnableToReadConfigurationFileErrorMsg = `unable to read configuration file "%s"`
+	UnableToReadConfigurationFileErrorMsg = `unable to read configuration file "%s": %w`
 	NoNameContextErrorMsg                 = "one of the existing contexts has no name"
 	ContextDoesNotExistErrorMsg           = `context "%s" does not exist`
 	ContextAlreadyExistsErrorMsg          = `context "%s" already exists`

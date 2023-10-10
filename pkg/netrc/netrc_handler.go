@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	gonetrc "github.com/confluentinc/go-netrc/netrc"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 const (
@@ -21,7 +19,7 @@ const (
 	mdsUsernamePasswordString        = "mds-username-password"
 	ccloudUsernamePasswordString     = "ccloud-username-password"
 	netrcCredentialsNotFoundErrorMsg = `login credentials not found in netrc file "%s"`
-	writeToNetrcFileErrorMsg         = `unable to write to netrc file "%s"`
+	writeToNetrcFileErrorMsg         = `unable to write to netrc file "%s": %w`
 )
 
 type netrcCredentialType int
@@ -86,7 +84,7 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(isCloud bool, ctxName string) 
 func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename string) error {
 	netrcBytes, err := netrcFile.MarshalText()
 	if err != nil {
-		return errors.Wrapf(err, writeToNetrcFileErrorMsg, filename)
+		return fmt.Errorf(writeToNetrcFileErrorMsg, filename, err)
 	}
 	var stringBuf []string
 	lines := strings.Split(string(netrcBytes), "\n")
@@ -118,7 +116,7 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 	}
 	filemode := info.Mode()
 	if err := os.WriteFile(filename, buf, filemode); err != nil {
-		return errors.Wrapf(err, writeToNetrcFileErrorMsg, filename)
+		return fmt.Errorf(writeToNetrcFileErrorMsg, filename, err)
 	}
 	return nil
 }
@@ -127,7 +125,8 @@ func getNetrc(filename string) (*gonetrc.Netrc, error) {
 	n, err := gonetrc.ParseFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.Wrapf(err, netrcCredentialsNotFoundErrorMsg, filename)
+			message := fmt.Sprintf(netrcCredentialsNotFoundErrorMsg, filename)
+			return nil, fmt.Errorf("%s: %w", message, err)
 		} else {
 			return nil, err // failed to parse the netrc file due to other reasons
 		}

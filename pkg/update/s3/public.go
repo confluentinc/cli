@@ -67,7 +67,7 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version.Version) (*version.Version, *version.Version, error) {
 	versions, err := r.GetAvailableBinaryVersions(name)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf("%s: %w", errors.GetBinaryVersionsErrorMsg, err)
 	}
 
 	// The index of the largest available version. This may be a major version update.
@@ -177,7 +177,7 @@ func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBu
 func (r *PublicRepo) GetLatestReleaseNotesVersions(name, currentVersion string) (version.Collection, error) {
 	versions, err := r.GetAvailableReleaseNotesVersions(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get available release notes versions")
+		return nil, fmt.Errorf("unable to get available release notes versions: %w", err)
 	}
 
 	current, err := version.NewVersion(currentVersion)

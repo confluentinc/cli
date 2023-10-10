@@ -57,7 +57,7 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 			return "", "", fmt.Errorf("unable to open web browser for authorization: %w", err)
 		}
 
-		if err = server.awaitAuthorizationCode(30 * time.Second); err != nil {
+		if err := server.awaitAuthorizationCode(30 * time.Second); err != nil {
 			return "", "", err
 		}
 	}

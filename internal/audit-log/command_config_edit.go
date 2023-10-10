@@ -44,7 +44,7 @@ func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	putSpec := mdsv1.AuditLogConfigSpec{}
-	if err = json.Unmarshal(edited, &putSpec); err != nil {
+	if err := json.Unmarshal(edited, &putSpec); err != nil {
 		return err
 	}
 	enc := json.NewEncoder(c.OutOrStdout())

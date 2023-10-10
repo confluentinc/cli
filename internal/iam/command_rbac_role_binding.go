@@ -466,7 +466,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		return nil, err
 	}
 	if cmd.Flags().Changed("principal") {
-		if err = c.validatePrincipalFormat(principal); err != nil {
+		if err := c.validatePrincipalFormat(principal); err != nil {
 			return nil, err
 		}
 	}

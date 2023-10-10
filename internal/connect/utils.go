@@ -25,7 +25,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 
 	options, err := parseConfigFile(configFile)
 	if err != nil {
-		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, configFile)
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
 	}
 
 	connectorType := options["confluent.connector.type"]
@@ -46,7 +46,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 func parseConfigFile(filename string) (map[string]string, error) {
 	jsonFile, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 	if len(jsonFile) == 0 {
 		return nil, fmt.Errorf(`connector config file "%s" is empty`, filename)
@@ -56,7 +56,7 @@ func parseConfigFile(filename string) (map[string]string, error) {
 	var options map[string]any
 
 	if err := json.Unmarshal(jsonFile, &options); err != nil {
-		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
 	for key, val := range options {

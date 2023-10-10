@@ -121,7 +121,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	} else if isAWSKey(keyString) {
 		keyReq = c.createAwsKeyRequest(keyString)
 	} else {
-		return fmt.Errorf(fmt.Sprintf("invalid key format: %s", keyString))
+		return fmt.Errorf("invalid key format: %s", keyString)
 	}
 
 	key, httpResp, err := c.V2Client.CreateByokKey(*keyReq)

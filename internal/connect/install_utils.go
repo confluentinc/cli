@@ -291,7 +291,7 @@ func standardWorkerConfigLocations(installation *platformInstallation) ([]Worker
 		if utils.DoesPathExist(confluentCurrentFile) {
 			confluentCurrentContent, err := os.ReadFile(confluentCurrentFile)
 			if err != nil {
-				return nil, errors.Wrapf(err, `failed to read possible $CONFLUENT_CURRENT file "%s"`, confluentCurrentFile)
+				return nil, fmt.Errorf(`failed to read possible $CONFLUENT_CURRENT file "%s": %w`, confluentCurrentFile, err)
 			}
 			confluentCurrentLines := strings.SplitN(string(confluentCurrentContent), "\n", 3)
 			if len(confluentCurrentLines) == 1 {
@@ -307,7 +307,7 @@ func standardWorkerConfigLocations(installation *platformInstallation) ([]Worker
 		}
 		return result, nil
 	default:
-		return nil, fmt.Errorf(fmt.Sprintf(unexpectedInstallationErrorMsg, installation.Location.Type))
+		return nil, fmt.Errorf(unexpectedInstallationErrorMsg, installation.Location.Type)
 	}
 }
 
@@ -436,7 +436,7 @@ func updateWorkerConfig(pluginDir, workerConfigPath string, dryRun bool) error {
 
 	workerConfig, err := properties.LoadFile(workerConfigPath, properties.UTF8)
 	if err != nil {
-		return errors.Wrapf(err, `failed to parse worker configuration file "%s"`, workerConfigPath)
+		return fmt.Errorf(`failed to parse worker configuration file "%s": %w`, workerConfigPath, err)
 	}
 	pluginPath := workerConfig.GetString(pluginPathProperty, "")
 	pluginPathElements := regexp.MustCompile(" *, *").Split(pluginPath, -1)
@@ -447,8 +447,8 @@ func updateWorkerConfig(pluginDir, workerConfigPath string, dryRun bool) error {
 		}
 	}
 	newPluginPath := strings.Join(append(pluginPathElements, pluginDir), ", ")
-	if _, _, err = workerConfig.Set(pluginPathProperty, newPluginPath); err != nil {
-		return errors.Wrapf(err, `failed to update %s property to "%s" for worker configuration "%s"`, pluginPathProperty, newPluginPath, workerConfigPath)
+	if _, _, err := workerConfig.Set(pluginPathProperty, newPluginPath); err != nil {
+		return fmt.Errorf(`failed to update %s property to "%s" for worker configuration "%s": %w`, pluginPathProperty, newPluginPath, workerConfigPath, err)
 	}
 	fileInfo, err := os.Stat(workerConfigPath)
 	if err != nil {
@@ -459,12 +459,12 @@ func updateWorkerConfig(pluginDir, workerConfigPath string, dryRun bool) error {
 	}
 	workerConfigFile, err := os.OpenFile(workerConfigPath, os.O_TRUNC|os.O_RDWR, fileInfo.Mode())
 	if err != nil {
-		return errors.Wrapf(err, `failed to open worker configuration file "%s" before updating with new %s value "%s"`, workerConfigPath, pluginPathProperty, newPluginPath)
+		return fmt.Errorf(`failed to open worker configuration file "%s" before updating with new %s value "%s": %w`, workerConfigPath, pluginPathProperty, newPluginPath, err)
 	}
 	defer workerConfigFile.Close()
 	// NOTE: This currently changes the comment spacing and removes empty lines
-	if _, err = workerConfig.WriteFormattedComment(workerConfigFile, properties.UTF8); err != nil {
-		return errors.Wrapf(err, `failed to update worker configuration file "%s" with new %s value "%s"`, workerConfigPath, pluginPathProperty, newPluginPath)
+	if _, err := workerConfig.WriteFormattedComment(workerConfigFile, properties.UTF8); err != nil {
+		return fmt.Errorf(`failed to update worker configuration file "%s" with new %s value "%s": %w`, workerConfigPath, pluginPathProperty, newPluginPath, err)
 	}
 	return nil
 }

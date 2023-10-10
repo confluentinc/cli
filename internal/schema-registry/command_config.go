@@ -35,7 +35,7 @@ func (c *command) newConfigCommand(cfg *config.Config) *cobra.Command {
 
 func catchSubjectLevelConfigNotFoundError(err error, subject string) error {
 	if err != nil && strings.Contains(err.Error(), "Not Found") {
-		return fmt.Errorf(fmt.Sprintf(`subject "%s" does not have subject-level compatibility configured`, subject))
+		return fmt.Errorf(`subject "%s" does not have subject-level compatibility configured`, subject)
 	}
 
 	return err

@@ -193,20 +193,20 @@ func (c *pluginCommand) getManifest(client *hub.Client, id string) (*cpstructs.M
 func getLocalManifest(archivePath string) (*cpstructs.Manifest, error) {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open local archive file %s", archivePath)
+		return nil, fmt.Errorf("failed to open local archive file %s: %w", archivePath, err)
 	}
 	defer zipReader.Close()
 
 	for _, zipFile := range zipReader.File {
 		isManifest, err := filepath.Match("*/manifest.json", filepath.ToSlash(zipFile.Name))
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to examine file %s inside local archive file %s", zipFile.Name, archivePath)
+			return nil, fmt.Errorf("failed to examine file %s inside local archive file %s: %w", zipFile.Name, archivePath, err)
 		}
 
 		if isManifest {
 			manifestFile, err := zipFile.Open()
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to open manifest file %s inside local archive file %s", zipFile.Name, archivePath)
+				return nil, fmt.Errorf("failed to open manifest file %s inside local archive file %s: %w", zipFile.Name, archivePath, err)
 			}
 			defer manifestFile.Close()
 
@@ -343,7 +343,7 @@ func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstru
 func installFromLocal(pluginManifest *cpstructs.Manifest, archivePath, pluginDir string) error {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to open local archive file %s", archivePath)
+		return fmt.Errorf("failed to open local archive file %s: %w", archivePath, err)
 	}
 	defer zipReader.Close()
 
@@ -368,7 +368,7 @@ func (c *pluginCommand) installFromRemote(client *hub.Client, pluginManifest *cp
 
 	zipReader, err := zip.NewReader(bytes.NewReader(archive), int64(len(archive)))
 	if err != nil {
-		return errors.Wrapf(err, "failed to open remote archive file %s", archive)
+		return fmt.Errorf("failed to open remote archive file %s: %w", archive, err)
 	}
 
 	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
@@ -378,28 +378,28 @@ func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, plugi
 	relativeInstallationDir := filepath.Join(pluginDir, fmt.Sprintf("%s-%s", pluginManifest.Owner.Username, pluginManifest.Name))
 	installationDir, err := filepath.Abs(relativeInstallationDir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to resolve absolute path for directory %s", relativeInstallationDir)
+		return fmt.Errorf("failed to resolve absolute path for directory %s: %w", relativeInstallationDir, err)
 	}
 
 	for _, zipFile := range zipFiles {
 		versionPrefix := fmt.Sprintf("%s-%s-%s", pluginManifest.Owner.Username, pluginManifest.Name, pluginManifest.Version)
 		destFilePath := filepath.Join(installationDir, strings.TrimPrefix(zipFile.Name, versionPrefix))
 
-		createDirectoryErrorMsg := "failed to create directory %s on local storage"
+		createDirectoryErrorMsg := "failed to create directory %s on local storage: %w"
 		if zipFile.FileInfo().IsDir() {
 			if err := os.MkdirAll(destFilePath, 0755); err != nil {
-				return errors.Wrapf(err, createDirectoryErrorMsg, destFilePath)
+				return fmt.Errorf(createDirectoryErrorMsg, destFilePath, err)
 			}
 			continue
-		} else {
-			if err := os.MkdirAll(filepath.Dir(destFilePath), 0755); err != nil {
-				return errors.Wrapf(err, createDirectoryErrorMsg, filepath.Dir(destFilePath))
-			}
+		}
+
+		if err := os.MkdirAll(filepath.Dir(destFilePath), 0755); err != nil {
+			return fmt.Errorf(createDirectoryErrorMsg, filepath.Dir(destFilePath), err)
 		}
 
 		zipFileReader, err := zipFile.Open()
 		if err != nil {
-			return errors.Wrapf(err, "failed to read file %s from archive", zipFile.Name)
+			return fmt.Errorf("failed to read file %s from archive: %w", zipFile.Name, err)
 		}
 		defer zipFileReader.Close()
 
@@ -410,7 +410,7 @@ func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, plugi
 		defer destFile.Close()
 
 		if _, err := io.Copy(destFile, zipFileReader); err != nil {
-			return errors.Wrapf(err, "failed to copy file %s from archive to local file %s", zipFile.Name, destFilePath)
+			return fmt.Errorf("failed to copy file %s from archive to local file %s: %w", zipFile.Name, destFilePath, err)
 		}
 	}
 

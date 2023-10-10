@@ -330,7 +330,7 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 	}
 	log.CliLogger.Info("Overwriting topic configs")
 	if updateConfigs != nil {
-		if _, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs}); err != nil {
+		if _, err := kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs}); err != nil {
 			return fmt.Errorf("unable to update topic configs: %w", err)
 		}
 	}

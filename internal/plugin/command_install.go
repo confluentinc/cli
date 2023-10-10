@@ -40,7 +40,7 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 
 	installDir := filepath.Join(confluentDir, "plugins")
 	if err := os.MkdirAll(installDir, os.ModePerm); err != nil {
-		return errors.Wrapf(err, "failed to create plugin install directory %s", installDir)
+		return fmt.Errorf("failed to create plugin install directory %s: %w", installDir, err)
 	}
 
 	if _, err := clonePluginRepo(dir, cliPluginsUrl); err != nil {
