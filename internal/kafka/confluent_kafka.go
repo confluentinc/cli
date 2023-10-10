@@ -245,9 +245,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if h.Properties.PrintOffset {
-		partition := message.TopicPartition.Partition
-		offset := message.TopicPartition.Offset.String()
-		jsonMessage = fmt.Sprintf("Offset: [%d:%s]\t%s", partition, offset, jsonMessage)
+		jsonMessage = fmt.Sprintf("[Partition:Offset]: [%d:%s]\t%s", message.TopicPartition.Partition, message.TopicPartition.Offset.String(), jsonMessage)
 	}
 
 	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
