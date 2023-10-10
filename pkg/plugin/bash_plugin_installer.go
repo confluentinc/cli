@@ -28,7 +28,10 @@ func (b *BashPluginInstaller) CheckVersion(ver *version.Version) error {
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "bash"), programNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(programNotFoundErrorMsg, "bash"),
+			programNotFoundSuggestions,
+		)
 	}
 
 	for _, word := range strings.Split(string(out), " ") {

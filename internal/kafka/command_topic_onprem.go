@@ -27,7 +27,10 @@ func ValidateTopic(adminClient *ckafka.AdminClient, topic string) error {
 	}
 	if !foundTopic {
 		log.CliLogger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, "<cluster-id>", "<cluster-id>", "<cluster-id>"))
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic),
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, "<cluster-id>"),
+		)
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")

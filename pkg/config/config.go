@@ -488,7 +488,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, orgResourceId, envId string) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, organizationId, environmentId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
@@ -503,7 +503,7 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 		return fmt.Errorf(`platform "%s" not found`, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, orgResourceId, envId)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, organizationId, environmentId)
 	if err != nil {
 		return err
 	}

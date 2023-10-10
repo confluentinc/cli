@@ -443,7 +443,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			var confluentEnvVarCalled bool
 			var confluentNetrcCalled bool
 			r.LoginCredentialsManager = &climock.LoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudEnvVarCalled = true
 						return test.envVarReturn.creds, test.envVarReturn.err
@@ -548,8 +548,8 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 		},
 	}
 	r.AuthTokenHandler = &climock.AuthTokenHandler{
-		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, orgResourceId string) (string, string, error) {
-			require.Equal(t, "o-555", orgResourceId) // validate correct org id is used
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, organizationId string) (string, string, error) {
+			require.Equal(t, "o-555", organizationId)
 			return validAuthToken, "", nil
 		},
 	}

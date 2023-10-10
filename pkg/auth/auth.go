@@ -107,7 +107,7 @@ func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Cl
 	return ctx.CurrentEnvironment, user.GetOrganization(), nil
 }
 
-func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, orgResourceId string, save bool) error {
+func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, organizationId string, save bool) error {
 	platform := &config.Platform{
 		Name:       strings.TrimSuffix(strings.TrimPrefix(url, "https://"), "/"),
 		Server:     url,
@@ -165,9 +165,9 @@ func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentia
 
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
-		ctx.LastOrgId = orgResourceId
+		ctx.LastOrgId = organizationId
 	} else {
-		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, orgResourceId, ""); err != nil {
+		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, organizationId, ""); err != nil {
 			return err
 		}
 	}

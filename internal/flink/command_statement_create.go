@@ -31,7 +31,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" with service account "sa-123456" and using Kafka cluster "my-cluster" as the default database.`,
-				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-cluster.my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster`,
+				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster`,
 			},
 		),
 	}

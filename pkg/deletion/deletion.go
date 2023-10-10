@@ -84,8 +84,10 @@ func ConfirmDeletionWithString(cmd *cobra.Command, promptMsg, stringToType strin
 		return nil
 	}
 
-	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
-	return errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`input does not match "%s"`, stringToType),
+		"Use the `--force` flag to delete without a confirmation prompt.",
+	)
 }
 
 func DeleteWithoutMessage(args []string, callDeleteEndpoint func(string) error) ([]string, error) {

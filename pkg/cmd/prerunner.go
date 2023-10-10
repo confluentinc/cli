@@ -31,16 +31,6 @@ import (
 
 const autoLoginMsg = "Successful auto-login with non-interactive credentials."
 
-type wrongLoginCommandError struct {
-	errorString      string
-	suggestionString string
-}
-
-var wrongLoginCommandErrorWithSuggestion = wrongLoginCommandError{
-	"`%s` is not a Confluent Cloud command. Did you mean `%s`?",
-	"If you are a Confluent Cloud user, run `%s` instead.\n" +
-		"If you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`."}
-
 var wrongLoginCommandsMap = map[string]string{
 	"confluent cluster": "confluent kafka cluster",
 }
@@ -290,14 +280,14 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	return nil
 }
 
-func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId string) (*pauth.Credentials, error) {
+func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId string) (*pauth.Credentials, error) {
 	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 		URL:     url,
 	}
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
 		r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, filterParams.Name, url),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
@@ -308,7 +298,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId strin
 		return nil, err
 	}
 
-	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, url, credentials, false, orgResourceId)
+	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, url, credentials, false, organizationId)
 	if err != nil {
 		return nil, err
 	}
@@ -456,8 +446,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
 					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
 						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
-						return errors.NewErrorWithSuggestions(fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.errorString, cmd.CommandPath(), suggestCmdPath),
-							fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.suggestionString, suggestCmdPath, cmd.CommandPath()))
+						return errors.NewErrorWithSuggestions(
+							fmt.Sprintf("`%s` is not a Confluent Cloud command. Did you mean `%s`?", cmd.CommandPath(), suggestCmdPath),
+							fmt.Sprintf("If you are a Confluent Cloud user, run `%s` instead.\nIf you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`.", suggestCmdPath, cmd.CommandPath()),
+						)
 					}
 				}
 			}

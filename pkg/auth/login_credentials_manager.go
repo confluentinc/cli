@@ -71,21 +71,21 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 }
 
 type LoginCredentialsManager interface {
-	GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*Credentials, error)
+	GetCloudCredentialsFromEnvVar(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
-	GetSsoCredentialsFromConfig(cfg *config.Config, url string) func() (*Credentials, error)
-	GetCredentialsFromConfig(cfg *config.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
-	GetCredentialsFromKeychain(cfg *config.Config, isCloud bool, ctxName, url string) func() (*Credentials, error)
-	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
-	GetCloudCredentialsFromPrompt(orgResourceId string) func() (*Credentials, error)
+	GetSsoCredentialsFromConfig(*config.Config, string) func() (*Credentials, error)
+	GetCredentialsFromConfig(*config.Config, netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetCredentialsFromKeychain(*config.Config, bool, string, string) func() (*Credentials, error)
+	GetCredentialsFromNetrc(netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
-	GetPrerunCredentialsFromConfig(cfg *config.Config) func() (*Credentials, error)
+	GetPrerunCredentialsFromConfig(*config.Config) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Needed SSO login for non-prod accounts
-	SetCloudClient(client *ccloudv1.Client)
+	SetCloudClient(*ccloudv1.Client)
 }
 
 type LoginCredentialsManagerImpl struct {
@@ -102,20 +102,20 @@ func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Pro
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromEnvVar(organizationId string) func() (*Credentials, error) {
 	envVars := environmentVariables{
 		username:           ConfluentCloudEmail,
 		password:           ConfluentCloudPassword,
 		deprecatedUsername: DeprecatedConfluentCloudEmail,
 		deprecatedPassword: DeprecatedConfluentCloudPassword,
 	}
-	return h.getCredentialsFromEnvVarFunc(envVars, orgResourceId)
+	return h.getCredentialsFromEnvVarFunc(envVars, organizationId)
 }
 
-func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars environmentVariables, orgResourceId string) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars environmentVariables, organizationId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		email, password := h.getEnvVarCredentials(envVars.username, envVars.password)
-		if h.isSSOUser(email, orgResourceId) {
+		if h.isSSOUser(email, organizationId) {
 			log.CliLogger.Debugf("%s=%s belongs to an SSO user.", ConfluentCloudEmail, email)
 			return &Credentials{Username: email, IsSSO: true}, nil
 		}
@@ -262,11 +262,11 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMa
 	return netrcMachine, err
 }
 
-func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(orgResourceId string) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(organizationId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		output.Println(false, "Enter your Confluent Cloud credentials:")
 		email := h.promptForUser("Email")
-		if h.isSSOUser(email, orgResourceId) {
+		if h.isSSOUser(email, organizationId) {
 			log.CliLogger.Debug("Entered email belongs to an SSO user.")
 			return &Credentials{Username: email, IsSSO: true}, nil
 		}
@@ -302,7 +302,7 @@ func (h *LoginCredentialsManagerImpl) promptForPassword() string {
 	return f.Responses[passwordField].(string)
 }
 
-func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
+func (h *LoginCredentialsManagerImpl) isSSOUser(email, organizationId string) bool {
 	if h.client == nil {
 		return false
 	}
@@ -317,7 +317,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	req := &ccloudv1.GetLoginRealmRequest{
 		Email:         email,
 		ClientId:      auth0ClientId,
-		OrgResourceId: orgId,
+		OrgResourceId: organizationId,
 	}
 	res, err := h.client.User.LoginRealm(req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
