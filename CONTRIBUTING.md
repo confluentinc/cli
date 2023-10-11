@@ -191,7 +191,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 func (c *command) describe(_ *cobra.Command, args []string) error {
     filename := c.CLICommand.Config.Config.Filename
     if filename == "" {
-        return errors.New("config file not found")
+        return fmt.Errorf("config file not found")
     }
 	
     n, err := strconv.Atoi(args[0])

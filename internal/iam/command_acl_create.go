@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -62,7 +64,7 @@ func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.AclBinding.Entry.PermissionType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if aclConfiguration.AclBinding.Pattern.PatternType == "" {
@@ -70,7 +72,7 @@ func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	}
 
 	if aclConfiguration.AclBinding.Pattern.ResourceType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
 			convertToFlags(mdsv1.ACLRESOURCETYPE_TOPIC, mdsv1.ACLRESOURCETYPE_GROUP,
 				mdsv1.ACLRESOURCETYPE_CLUSTER, mdsv1.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}

@@ -52,8 +52,8 @@ func TestHandleError(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var err error
-			if err = HandleCommon(test.err); (err != nil) != test.wantErr {
+			err := HandleCommon(test.err)
+			if (err != nil) != test.wantErr {
 				t.Errorf("HandleCommon()\nerror: %v\nwantErr: %v", err, test.wantErr)
 			}
 			if err.Error() != test.want {

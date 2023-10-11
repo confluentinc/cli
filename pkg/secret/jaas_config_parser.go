@@ -44,7 +44,7 @@ func (j *JAASParser) updateJAASConfig(op, key, value, config string) (string, er
 		if pattern.MatchString(config) {
 			matched := pattern.FindString(config)
 			if matched == "" {
-				return "", errors.Errorf(errors.ConfigNotInJaasErrorMsg, config)
+				return "", fmt.Errorf(errors.ConfigNotInJaasErrorMsg, config)
 			}
 			config = pattern.ReplaceAllString(config, del)
 			if strings.HasSuffix(matched, ";") {
@@ -55,7 +55,7 @@ func (j *JAASParser) updateJAASConfig(op, key, value, config string) (string, er
 			pattern := regexp.MustCompile(keyValuePattern)
 			matched := pattern.FindString(config)
 			if matched == "" {
-				return "", errors.Errorf(errors.ConfigNotInJaasErrorMsg, key)
+				return "", fmt.Errorf(errors.ConfigNotInJaasErrorMsg, key)
 			}
 			config = pattern.ReplaceAllString(config, del)
 		}
@@ -74,7 +74,7 @@ func (j *JAASParser) updateJAASConfig(op, key, value, config string) (string, er
 			config = strings.TrimSuffix(config, ";") + add + ";"
 		}
 	default:
-		return "", errors.Errorf(`the operation "%s" is not supported`, op)
+		return "", fmt.Errorf(`the operation "%s" is not supported`, op)
 	}
 
 	return config, nil
@@ -104,7 +104,7 @@ func (j *JAASParser) parseConfig(specialChar rune) (string, int, error) {
 
 func validateConfig(config string) error {
 	if config == "}" || config == "{" || config == ";" || config == "=" || config == "};" || config == "" || config == " " {
-		return errors.Errorf(errors.InvalidJaasConfigErrorMsg, fmt.Sprintf(errors.ExpectedConfigNameErrorMsg, config))
+		return fmt.Errorf(errors.InvalidJaasConfigErrorMsg, fmt.Sprintf(errors.ExpectedConfigNameErrorMsg, config))
 	}
 
 	return nil
@@ -126,7 +126,7 @@ func (j *JAASParser) parseControlFlag() error {
 		j.ignoreBackslash()
 		return nil
 	default:
-		return errors.Errorf(errors.InvalidJaasConfigErrorMsg, errors.LoginModuleControlFlagErrorMsg)
+		return fmt.Errorf(errors.InvalidJaasConfigErrorMsg, errors.LoginModuleControlFlagErrorMsg)
 	}
 }
 
@@ -158,7 +158,7 @@ func (j *JAASParser) ConvertPropertiesToJAAS(props *properties.Properties, op st
 		configKey = keys[ClassId] + KeySeparator + keys[ParentId]
 		jaas, ok := j.JaasOriginalConfigKeys.Get(configKey)
 		if !ok {
-			return nil, errors.New("failed to convert the properties to a JAAS configuration")
+			return nil, fmt.Errorf("failed to convert the properties to a JAAS configuration")
 		}
 		jaas, err := j.updateJAASConfig(op, keys[KeyId], value, jaas)
 		if err != nil {
@@ -203,7 +203,7 @@ func (j *JAASParser) parseConfigurationEntry(prefixKey string) (int, int, *prope
 
 		// Parse =
 		if j.tokenizer.Peek() == scanner.EOF || j.tokenizer.Scan() != '=' || j.tokenizer.TokenText() == "" {
-			return 0, 0, nil, "", errors.Errorf(errors.InvalidJaasConfigErrorMsg, fmt.Sprintf(`value is not specified for the key "%s"`, key))
+			return 0, 0, nil, "", fmt.Errorf(errors.InvalidJaasConfigErrorMsg, fmt.Sprintf(`value is not specified for the key "%s"`, key))
 		}
 
 		// Parse Value
@@ -219,7 +219,7 @@ func (j *JAASParser) parseConfigurationEntry(prefixKey string) (int, int, *prope
 		j.ignoreBackslash()
 	}
 	if j.tokenizer.Scan() != ';' {
-		return 0, 0, nil, "", errors.Errorf(errors.InvalidJaasConfigErrorMsg, "configuration not terminated with a ';'")
+		return 0, 0, nil, "", fmt.Errorf(errors.InvalidJaasConfigErrorMsg, "configuration not terminated with a ';'")
 	}
 	endIndex := j.tokenizer.Pos().Offset
 

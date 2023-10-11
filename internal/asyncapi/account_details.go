@@ -13,7 +13,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 )
@@ -105,7 +104,7 @@ func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
 			return unmarshalledSchema, nil
 		}
 	}
-	return nil, fmt.Errorf("failed to unmarshal schema: %v", err)
+	return nil, fmt.Errorf("failed to unmarshal schema: %w", err)
 }
 
 func (d *accountDetails) getTopicDescription() error {
@@ -122,7 +121,7 @@ func (d *accountDetails) getTopicDescription() error {
 
 func (c *command) countAsyncApiUsage(details *accountDetails) error {
 	if err := details.srClient.AsyncapiPut(); err != nil {
-		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %v", err)
+		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %w", err)
 	}
 	return nil
 }
@@ -153,7 +152,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 
 func catchOpenAPIError(err error) error {
 	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
-		return errors.New(string(openAPIError.Body()))
+		return fmt.Errorf(string(openAPIError.Body()))
 	}
 	return err
 }

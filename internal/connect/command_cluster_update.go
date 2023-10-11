@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -68,7 +70,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		return errors.New("one of `--config` or `--config-file` must be specified")
+		return fmt.Errorf("one of `--config` or `--config-file` must be specified")
 	}
 
 	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)

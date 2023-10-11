@@ -39,10 +39,10 @@ func (b *BashPluginInstaller) CheckVersion(ver *version.Version) error {
 			parenthesisIdx := strings.Index(word, "(")
 			installedVer, err := version.NewVersion(word[:parenthesisIdx])
 			if err != nil {
-				return errors.Errorf(unableToParseVersionErrorMsg, "bash")
+				return fmt.Errorf(unableToParseVersionErrorMsg, "bash")
 			}
 			if installedVer.GreaterThan(ver) {
-				return errors.Errorf(insufficientVersionErrorMsg, "bash", installedVer, ver)
+				return fmt.Errorf(insufficientVersionErrorMsg, "bash", installedVer, ver)
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -8,7 +9,6 @@ import (
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -77,7 +77,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 
 	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(pluginFileName), "."))
 	if extension != "zip" && extension != "jar" {
-		return errors.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
+		return fmt.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
 	}
 
 	request := *connectcustompluginv1.NewConnectV1PresignedUrlRequest()

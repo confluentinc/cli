@@ -10,7 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 )
 
@@ -70,13 +69,13 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 
 func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
-		return errors.New("your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes")
+		return fmt.Errorf("your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes")
 	}
 	if isExpanding(currentCluster) {
-		return errors.New("your cluster is expanding; please wait for that operation to complete before updating again")
+		return fmt.Errorf("your cluster is expanding; please wait for that operation to complete before updating again")
 	}
 	if isShrinking(currentCluster) {
-		return errors.New("your cluster is shrinking; please wait for that operation to complete before updating again")
+		return fmt.Errorf("your cluster is shrinking; please wait for that operation to complete before updating again")
 	}
 	return nil
 }
