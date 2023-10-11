@@ -54,10 +54,35 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := c.Context.UseAPIKey(args[0], clusterId); err != nil {
+	if err := c.useAPIKey(args[0], clusterId); err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, args[0]))
 	}
 
 	output.Printf(c.Config.EnableColor, useAPIKeyMsg, args[0])
 	return nil
+}
+
+func (c *command) useAPIKey(apiKey, clusterId string) error {
+	kcc, err := c.Context.FindKafkaCluster(clusterId)
+	if err != nil {
+		return err
+	}
+	if _, ok := kcc.APIKeys[apiKey]; !ok {
+		// check if this is API key exists server-side
+		key, httpResp, err := c.V2Client.GetApiKey(apiKey)
+		if err != nil {
+			return errors.CatchCCloudV2Error(err, httpResp)
+		}
+		// check if the key is for the right cluster
+		if key.Spec.Resource.Id != clusterId {
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(`invalid API key "%s" for resource "%s"`, apiKey, clusterId),
+				fmt.Sprintf("To list API key that belongs to resource \"%[1]s\", use `confluent api-key list --resource %[1]s`.\nTo create new API key for resource \"%[1]s\", use `confluent api-key create --resource %[1]s`.", clusterId),
+			)
+		}
+		// the requested api-key exists, but the secret is not saved locally
+		return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterId}
+	}
+	kcc.APIKey = apiKey
+	return c.Config.Save()
 }
