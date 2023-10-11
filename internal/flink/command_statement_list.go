@@ -39,7 +39,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.Flags().String("status", "", "Filter the results by statement status")
+	cmd.Flags().String("status", "", "Filter the results by statement status.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "status", func(*cobra.Command, []string) []string {
 		return allowedStatuses
 	})
