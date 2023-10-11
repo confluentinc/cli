@@ -392,8 +392,8 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 			// check if the key is for the right cluster
 			if key.Spec.Resource.Id != cluster.ID {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(`invalid API key "%s" for resource "%s"`, flags.kafkaApiKey, cluster.ID),
-					fmt.Sprintf("To list API key that belongs to resource \"%[1]s\", use `confluent api-key list --resource %[1]s`.\nTo create new API key for resource \"%[1]s\", use `confluent api-key create --resource %[1]s`.", cluster.ID),
+					fmt.Sprintf(errors.InvalidApiKeyErrorMsg, flags.kafkaApiKey, cluster.ID),
+					fmt.Sprintf(errors.InvalidApiKeySuggestions, cluster.ID),
 				)
 			}
 			// the requested api-key exists, but the secret is not saved locally

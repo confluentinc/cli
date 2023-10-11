@@ -76,8 +76,8 @@ func (c *command) useAPIKey(apiKey, clusterId string) error {
 		// check if the key is for the right cluster
 		if key.Spec.Resource.Id != clusterId {
 			return errors.NewErrorWithSuggestions(
-				fmt.Sprintf(`invalid API key "%s" for resource "%s"`, apiKey, clusterId),
-				fmt.Sprintf("To list API key that belongs to resource \"%[1]s\", use `confluent api-key list --resource %[1]s`.\nTo create new API key for resource \"%[1]s\", use `confluent api-key create --resource %[1]s`.", clusterId),
+				fmt.Sprintf(errors.InvalidApiKeyErrorMsg, apiKey, clusterId),
+				fmt.Sprintf(errors.InvalidApiKeySuggestions, clusterId),
 			)
 		}
 		// the requested api-key exists, but the secret is not saved locally
