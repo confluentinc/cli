@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -65,10 +64,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 	status = strings.ToUpper(status)
 
 	if status != "" && !slices.Contains(allowedStatuses, status) {
-		return errors.NewErrorWithSuggestions(
-			"invalid value for flag --status",
-			fmt.Sprintf("Please select a value from the following: [%s]", strings.Join(allowedStatuses, ", ")),
-		)
+		log.CliLogger.Warnf("Unrecognized status '%s'. recognized statuses: [%s]", status, strings.Join(allowedStatuses, ", "))
 	}
 
 	statements, err := client.ListAllStatements(environmentId, c.Context.GetCurrentOrganization(), c.Context.GetCurrentFlinkComputePool())
