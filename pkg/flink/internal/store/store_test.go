@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -49,7 +48,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentName: "envName",
 		Database:        "database",
 	}
@@ -85,8 +84,8 @@ func TestWaitForPendingStatement3(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -115,8 +114,8 @@ func TestWaitForPendingTimesout(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -149,8 +148,8 @@ func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -181,8 +180,8 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -219,8 +218,8 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	waitTime := time.Millisecond * 1
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -253,8 +252,8 @@ func TestCancelPendingStatement(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -758,7 +757,7 @@ func (s *StoreTestSuite) TestProcessHttpErrors() {
 	assert.Nil(s.T(), err)
 
 	// given
-	err = errors.New("some error")
+	err = fmt.Errorf("some error")
 
 	// when
 	err = processHttpErrors(nil, err)
@@ -786,7 +785,7 @@ func (s *StoreTestSuite) TestStopStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -815,7 +814,7 @@ func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -839,7 +838,7 @@ func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -865,7 +864,7 @@ func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -888,7 +887,7 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -909,7 +908,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -931,7 +930,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -960,7 +959,7 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -989,7 +988,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -1019,7 +1018,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -1106,9 +1105,9 @@ func TestTimeout(t *testing.T) {
 func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-		ComputePoolId: "computePoolId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+		ComputePoolId:  "computePoolId",
 	}
 	serviceAccountId := "sa-123"
 	store := Store{
@@ -1134,7 +1133,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 		},
 	}
 
-	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrgResourceId).
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1158,9 +1157,9 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 		AuthRefreshToken: "v1.abc",
 	}
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-		ComputePoolId: "computePoolId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+		ComputePoolId:  "computePoolId",
 		Context: &dynamicconfig.DynamicContext{
 			Context: &config.Context{State: contextState, Config: &config.Config{}},
 		},
@@ -1187,7 +1186,7 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 		},
 	}
 
-	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, user, appOptions.EnvironmentId, appOptions.OrgResourceId).
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, user, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1199,9 +1198,9 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	serviceAccountId := "serviceAccountId"
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-		ComputePoolId: "computePoolId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+		ComputePoolId:  "computePoolId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{flinkconfig.ConfigKeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
@@ -1223,9 +1222,9 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 			Statement:     &statement,
 		},
 	}
-	returnedError := errors.New("test error")
+	returnedError := fmt.Errorf("test error")
 
-	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrgResourceId).
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, returnedError)
 
 	expectedError := &types.StatementError{
@@ -1241,9 +1240,9 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-		ComputePoolId: "computePoolId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+		ComputePoolId:  "computePoolId",
 	}
 	serviceAccountId := "sa-123"
 	statementName := "test-statement"
@@ -1270,7 +1269,7 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 		},
 	}
 
-	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrgResourceId).
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1283,8 +1282,8 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 func (s *StoreTestSuite) TestWaitPendingStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1345,8 +1344,8 @@ func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1363,7 +1362,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 			Detail: &statusDetailMessage,
 		},
 	}
-	returnedErr := errors.New("test error")
+	returnedErr := fmt.Errorf("test error")
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedErr)
 	expectedError := &types.StatementError{
 		Message:        returnedErr.Error(),
@@ -1381,8 +1380,8 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningStatementPhase() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1418,8 +1417,8 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStatementWithEmptyStatusDetail() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1462,8 +1461,8 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 func (s *StoreTestSuite) TestGetStatusDetail() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1498,8 +1497,8 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1529,8 +1528,8 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1554,8 +1553,8 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailable() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1653,8 +1652,8 @@ func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
 func TestWaitForTerminalStateDoesNotStartWhenAlreadyInTerminalState(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -1672,8 +1671,8 @@ func TestWaitForTerminalStateDoesNotStartWhenAlreadyInTerminalState(t *testing.T
 func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -1701,8 +1700,8 @@ func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -1733,8 +1732,8 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -1748,7 +1747,7 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, errors.New("error"))
+	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, fmt.Errorf("error"))
 
 	_, err := s.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatement(statementObj))
 

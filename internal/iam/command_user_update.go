@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -33,16 +35,16 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resourceId := args[0]
-	if resource.LookupType(resourceId) != resource.User {
-		return errors.Errorf(badResourceIdErrorMsg, "u")
+	id := args[0]
+	if resource.LookupType(id) != resource.User {
+		return fmt.Errorf(badResourceIdErrorMsg, "u")
 	}
 
 	update := iamv2.IamV2UserUpdate{FullName: iamv2.PtrString(fullName)}
-	if _, err := c.V2Client.UpdateIamUser(resourceId, update); err != nil {
-		return errors.Errorf(`failed to update %s "%s": %v`, resource.User, resourceId, err)
+	if _, err := c.V2Client.UpdateIamUser(id, update); err != nil {
+		return fmt.Errorf(`failed to update %s "%s": %w`, resource.User, id, err)
 	}
 
-	output.ErrPrintf(c.Config.EnableColor, errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)
+	output.ErrPrintf(c.Config.EnableColor, errors.UpdateSuccessMsg, "full name", "user", id, fullName)
 	return nil
 }

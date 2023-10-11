@@ -31,16 +31,19 @@ func (c *clusterCommand) newUseCommand(cfg *config.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
-	clusterID := args[0]
+	id := args[0]
 
-	if _, err := c.Context.FindKafkaCluster(clusterID); err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+	if _, err := c.Context.FindKafkaCluster(id); err != nil {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, id),
+			errors.ChooseRightEnvironmentSuggestions,
+		)
 	}
 
-	if err := c.Context.SetActiveKafkaCluster(clusterID); err != nil {
+	if err := c.Context.SetActiveKafkaCluster(id); err != nil {
 		return err
 	}
 
-	output.ErrPrintf(c.Config.EnableColor, "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n", clusterID, c.Context.GetCurrentEnvironment())
+	output.ErrPrintf(c.Config.EnableColor, "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n", id, c.Context.GetCurrentEnvironment())
 	return nil
 }

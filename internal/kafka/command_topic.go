@@ -103,9 +103,9 @@ func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluste
 	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
 		if err.Error() == ckafka.ErrTransport.String() {
-			err = errors.New("API key may not be provisioned yet")
+			err = fmt.Errorf("API key may not be provisioned yet")
 		}
-		return fmt.Errorf("failed to obtain topics from client: %v", err)
+		return fmt.Errorf("failed to obtain topics from client: %w", err)
 	}
 
 	foundTopic := false
@@ -117,7 +117,10 @@ func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluste
 	}
 	if !foundTopic {
 		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID, cluster.ID, cluster.ID))
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic),
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID),
+		)
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")
@@ -134,7 +137,7 @@ func (c *command) provisioningClusterCheck(lkc string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
-		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+		return fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 	}
 	return nil
 }

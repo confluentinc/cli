@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -90,7 +91,7 @@ func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else if cmd.Flags().Changed("context-name") {
-		return errors.New(`can only set context name if context type is "custom"`)
+		return fmt.Errorf(`can only set context name if context type is "custom"`)
 	}
 
 	subjectFormat, err := cmd.Flags().GetString("subject-format")

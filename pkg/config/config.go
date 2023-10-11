@@ -189,15 +189,15 @@ func (c *Config) Load() error {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
 			if err := c.Save(); err != nil {
-				return errors.Wrapf(err, "unable to save configuration file")
+				return fmt.Errorf("unable to save configuration file: %w", err)
 			}
 			return nil
 		}
-		return errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
+		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
 	if err := json.Unmarshal(input, c); err != nil {
-		return errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
+		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
 	for _, context := range c.Contexts {
@@ -264,17 +264,17 @@ func (c *Config) Save() error {
 
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
-		return errors.Wrapf(err, "unable to marshal config")
+		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
 	filename := c.GetFilename()
 
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return errors.Wrapf(err, "unable to create config directory: %s", filename)
+		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
 	}
 
 	if err := os.WriteFile(filename, cfg, 0600); err != nil {
-		return errors.Wrapf(err, "unable to write config to file: %s", filename)
+		return fmt.Errorf("unable to write config to file %s: %w", filename, err)
 	}
 
 	c.restoreOverwrittenContext(tempContext)
@@ -488,7 +488,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, orgResourceId, envId string) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, organizationId, environmentId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
@@ -503,7 +503,7 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 		return fmt.Errorf(`platform "%s" not found`, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, orgResourceId, envId)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, organizationId, environmentId)
 	if err != nil {
 		return err
 	}
@@ -569,7 +569,7 @@ func (c *Config) UseContext(name string) error {
 
 func (c *Config) SaveCredential(credential *Credential) error {
 	if credential.Name == "" {
-		return errors.New("credential must have a name")
+		return fmt.Errorf("credential must have a name")
 	}
 	c.Credentials[credential.Name] = credential
 	return c.Save()
@@ -577,7 +577,7 @@ func (c *Config) SaveCredential(credential *Credential) error {
 
 func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCredential) error {
 	if ctxName == "" {
-		return errors.New("saved credential must match a context")
+		return fmt.Errorf("saved credential must match a context")
 	}
 	c.SavedCredentials[ctxName] = loginCredential
 	return c.Save()
@@ -585,7 +585,7 @@ func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCrede
 
 func (c *Config) SavePlatform(platform *Platform) error {
 	if platform.Name == "" {
-		return errors.New("platform must have a name")
+		return fmt.Errorf("platform must have a name")
 	}
 	c.Platforms[platform.Name] = platform
 	return c.Save()

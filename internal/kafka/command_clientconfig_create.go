@@ -332,7 +332,7 @@ func fetchConfigFile(configId string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.Errorf("failed to get config file: error code %d", resp.StatusCode)
+		return "", fmt.Errorf("failed to get config file: error code %d", resp.StatusCode)
 	}
 
 	defer resp.Body.Close()

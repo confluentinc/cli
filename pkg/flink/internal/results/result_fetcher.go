@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
@@ -86,7 +87,7 @@ func (t *ResultFetcher) GetRefreshState() types.RefreshState {
 func (t *ResultFetcher) startRefresh(refreshInterval uint) {
 	if t.isRefreshStartAllowed() {
 		t.refreshState.setState(types.Running)
-		go func() {
+		go utils.WithPanicRecovery(func() {
 			for t.IsRefreshRunning() {
 				t.fetchNextPageAndUpdateState()
 				// break here to avoid rendering and messing with the view if pause was initiated
@@ -96,7 +97,7 @@ func (t *ResultFetcher) startRefresh(refreshInterval uint) {
 				t.refreshCallback()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
-		}()
+		})()
 	}
 }
 
@@ -186,7 +187,9 @@ func (t *ResultFetcher) Close() {
 	t.refreshState.setState(types.Paused)
 	statement := t.GetStatement()
 	if statement.Status == types.RUNNING {
-		go t.store.StopStatement(statement.StatementName)
+		go utils.WithPanicRecovery(func() {
+			t.store.StopStatement(statement.StatementName)
+		})()
 	}
 }
 

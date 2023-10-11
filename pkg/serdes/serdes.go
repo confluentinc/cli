@@ -1,6 +1,10 @@
 package serdes
 
-import "github.com/confluentinc/cli/v3/pkg/errors"
+import (
+	"fmt"
+
+	"github.com/confluentinc/cli/v3/pkg/errors"
+)
 
 const (
 	AvroSchemaName     string = "avro"
@@ -39,7 +43,7 @@ func FormatTranslation(backendValueFormat string) (string, error) {
 	case JsonSchemaBackendName:
 		cliValueFormat = JsonSchemaName
 	default:
-		return "", errors.New(errors.UnknownValueFormatErrorMsg)
+		return "", fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
 	return cliValueFormat, nil
 }
@@ -57,7 +61,7 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 	case StringSchemaName:
 		return new(StringSerializationProvider), nil
 	default:
-		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
+		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
 }
 
@@ -74,6 +78,6 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 	case StringSchemaName:
 		return new(StringDeserializationProvider), nil
 	default:
-		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
+		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
 }

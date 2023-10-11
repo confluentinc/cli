@@ -29,7 +29,7 @@ func NewErrorWithSuggestions(errorMsg, suggestionsMsg string) ErrorWithSuggestio
 
 func NewWrapErrorWithSuggestions(err error, errorMsg, suggestionsMsg string) ErrorWithSuggestions {
 	return &ErrorWithSuggestionsImpl{
-		errorMsg:       Wrap(err, errorMsg).Error(),
+		errorMsg:       fmt.Sprintf("%s: %v", errorMsg, err),
 		suggestionsMsg: suggestionsMsg,
 	}
 }

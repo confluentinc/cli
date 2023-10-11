@@ -6,7 +6,7 @@ Usage:
 Flags:
       --compute-pool string      Flink compute pool ID.
       --service-account string   Service account ID.
-      --database string          The database which will be used as the default database. When using Kafka, this is the cluster name.
+      --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
       --environment string       Environment ID.
       --context string           CLI context name.
       --fake-gateway             Test the SQL client with fake gateway data.

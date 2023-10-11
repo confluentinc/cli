@@ -840,10 +840,10 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 }
 
 func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
-	clusterID := "lkc-abcdefg"
+	id := "lkc-abcdefg"
 
 	kcc := &KafkaClusterConfig{
-		ID:        clusterID,
+		ID:        id,
 		Name:      "lit",
 		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
@@ -858,15 +858,15 @@ func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 		testInputs := SetupTestInputs(isCloud)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
-		reflect.DeepEqual(kcc, kafkaClusterContext.GetKafkaClusterConfig(clusterID))
+		reflect.DeepEqual(kcc, kafkaClusterContext.GetKafkaClusterConfig(id))
 	}
 }
 
 func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
-	clusterID := "lkc-abcdefg"
+	id := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
-		ID:        clusterID,
+		ID:        id,
 		Name:      "lit",
 		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
@@ -883,7 +883,7 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
 
 		kafkaClusterContext.DeleteApiKey(apiKey)
-		kcc := kafkaClusterContext.GetKafkaClusterConfig(clusterID)
+		kcc := kafkaClusterContext.GetKafkaClusterConfig(id)
 		if _, ok := kcc.APIKeys[apiKey]; ok {
 			t.Errorf("DeleteAPIKey did not delete the API key.")
 		}
@@ -894,10 +894,10 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 }
 
 func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
-	clusterID := "lkc-abcdefg"
+	id := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
-		ID:        clusterID,
+		ID:        id,
 		Name:      "lit",
 		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
@@ -912,11 +912,11 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 		testInputs := SetupTestInputs(isCloud)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
-		kafkaClusterContext.SetActiveKafkaCluster(clusterID)
-		require.Equal(t, clusterID, kafkaClusterContext.GetActiveKafkaClusterId())
+		kafkaClusterContext.SetActiveKafkaCluster(id)
+		require.Equal(t, id, kafkaClusterContext.GetActiveKafkaClusterId())
 
-		kafkaClusterContext.RemoveKafkaCluster(clusterID)
-		_, ok := kafkaClusterContext.KafkaClusterConfigs[clusterID]
+		kafkaClusterContext.RemoveKafkaCluster(id)
+		_, ok := kafkaClusterContext.KafkaClusterConfigs[id]
 		require.False(t, ok)
 		require.Empty(t, kafkaClusterContext.GetActiveKafkaClusterId())
 	}

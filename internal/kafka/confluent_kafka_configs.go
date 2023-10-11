@@ -304,7 +304,7 @@ func GetOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 			return ckafka.OffsetInvalid, err
 		}
 		if offset < 0 {
-			return ckafka.OffsetInvalid, errors.New("offset value must be a non-negative integer")
+			return ckafka.OffsetInvalid, fmt.Errorf("offset value must be a non-negative integer")
 		}
 		return ckafka.NewOffset(offset)
 	} else {

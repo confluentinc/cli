@@ -46,7 +46,7 @@ func newAclCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c *aclCommand) handleAclError(cmd *cobra.Command, err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("unable to %s ACLs: %v", cmd.Name(), err)
+		return fmt.Errorf("unable to %s ACLs: %w", cmd.Name(), err)
 	}
 	return err
 }

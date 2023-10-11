@@ -1,6 +1,8 @@
 package byok
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
@@ -83,7 +85,7 @@ func (c *command) convertByokKeyToDescribeStruct(key *byokv1.ByokV1Key) (*descri
 		keyString = key.Key.ByokV1AzureKey.KeyId
 		roles = append(roles, key.Key.ByokV1AzureKey.GetApplicationId())
 	default:
-		return nil, errors.New(byokUnknownKeyTypeErrorMsg)
+		return nil, fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 	}
 
 	updatedAt := ""

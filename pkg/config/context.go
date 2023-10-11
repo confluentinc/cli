@@ -33,7 +33,7 @@ type Context struct {
 	Config     *Config       `json:"-"`
 }
 
-func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, orgResourceId, envId string) (*Context, error) {
+func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, organizationId, environmentId string) (*Context, error) {
 	ctx := &Context{
 		Name:               name,
 		NetrcMachineName:   name,
@@ -41,11 +41,11 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		PlatformName:       platform.Name,
 		Credential:         credential,
 		CredentialName:     credential.Name,
-		CurrentEnvironment: envId,
+		CurrentEnvironment: environmentId,
 		Environments:       map[string]*EnvironmentContext{},
 		State:              state,
 		Config:             config,
-		LastOrgId:          orgResourceId,
+		LastOrgId:          organizationId,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
 	if err := ctx.validate(); err != nil {
@@ -119,8 +119,11 @@ func (c *Context) DeleteUserAuth() error {
 	c.State.AuthToken = ""
 	c.State.AuthRefreshToken = ""
 
-	err := c.Save()
-	return errors.Wrap(err, "unable to delete user auth")
+	if err := c.Save(); err != nil {
+		return fmt.Errorf("unable to delete user auth: %w", err)
+	}
+
+	return nil
 }
 
 func (c *Context) UpdateAuthTokens(token, refreshToken string) error {

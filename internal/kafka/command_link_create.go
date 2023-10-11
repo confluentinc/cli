@@ -8,7 +8,6 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
@@ -276,7 +275,7 @@ func (c *linkCommand) getConfigMapAndLinkMode(configMap map[string]string) (map[
 }
 
 func unrecognizedLinkModeErr(linkModeStr string) error {
-	return errors.Errorf(`unrecognized link.mode "%s". Use %s, %s, or %s.`, linkModeStr, DESTINATION, SOURCE, BIDIRECTIONAL)
+	return fmt.Errorf(`unrecognized link.mode "%s". Use %s, %s, or %s.`, linkModeStr, DESTINATION, SOURCE, BIDIRECTIONAL)
 }
 
 func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkModeMetadata *linkModeMetadata, configMap map[string]string) error {
@@ -337,7 +336,7 @@ func (c *linkCommand) addDestInitiatedLinkSecurityConfigToMap(cmd *cobra.Command
 		configMap[saslMechanismPropertyName] = plain
 		configMap[saslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
 	} else if sourceApiKey != "" || sourceApiSecret != "" {
-		return errors.New("--source-api-key and --source-api-secret must be supplied together")
+		return fmt.Errorf("--source-api-key and --source-api-secret must be supplied together")
 	}
 	return nil
 }
@@ -357,7 +356,7 @@ func (c *linkCommand) addSourceInitiatedLinkSecurityConfigToMap(cmd *cobra.Comma
 		configMap[localSaslMechanismPropertyName] = plain
 		configMap[localSaslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
 	} else if sourceApiKey != "" || sourceApiSecret != "" {
-		return errors.New("--source-api-key and --source-api-secret must be supplied together")
+		return fmt.Errorf("--source-api-key and --source-api-secret must be supplied together")
 	}
 	destinationApiKey, err := cmd.Flags().GetString(destinationApiKeyFlagName)
 	if err != nil {
@@ -373,7 +372,7 @@ func (c *linkCommand) addSourceInitiatedLinkSecurityConfigToMap(cmd *cobra.Comma
 		configMap[saslMechanismPropertyName] = plain
 		configMap[saslJaasConfigPropertyName] = getJaasValue(destinationApiKey, destinationApiSecret)
 	} else if destinationApiKey != "" || destinationApiSecret != "" {
-		return errors.New("--destination-api-key and --destination-api-secret must be supplied together")
+		return fmt.Errorf("--destination-api-key and --destination-api-secret must be supplied together")
 	}
 	return nil
 }

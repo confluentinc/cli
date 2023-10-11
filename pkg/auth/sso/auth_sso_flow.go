@@ -2,13 +2,13 @@ package sso
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/pkg/browser"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -35,11 +35,11 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		input := scanner.Text()
 		split := strings.SplitAfterN(input, "/", 2)
 		if len(split) < 2 {
-			return "", "", errors.New("pasted input had invalid format")
+			return "", "", fmt.Errorf("pasted input had invalid format")
 		}
 		auth0State := strings.Replace(split[0], "/", "", 1)
 		if !(auth0State == state.SSOProviderState) {
-			return "", "", errors.New("authentication code either did not contain a state parameter or the state parameter was invalid; login will fail")
+			return "", "", fmt.Errorf("authentication code either did not contain a state parameter or the state parameter was invalid; login will fail")
 		}
 
 		state.SSOProviderAuthenticationCode = split[1]
@@ -48,16 +48,16 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		// described at https://auth0.com/docs/flows/guides/auth-code-pkce/call-api-auth-code-pkce
 		server := newServer(state)
 		if err := server.startServer(); err != nil {
-			return "", "", errors.Wrap(err, "unable to start HTTP server")
+			return "", "", fmt.Errorf("unable to start HTTP server: %w", err)
 		}
 
 		// Get authorization code for making subsequent token request
 		url := state.getAuthorizationCodeUrl(connectionName, isOkta)
 		if err := browser.OpenURL(url); err != nil {
-			return "", "", errors.Wrap(err, "unable to open web browser for authorization")
+			return "", "", fmt.Errorf("unable to open web browser for authorization: %w", err)
 		}
 
-		if err = server.awaitAuthorizationCode(30 * time.Second); err != nil {
+		if err := server.awaitAuthorizationCode(30 * time.Second); err != nil {
 			return "", "", err
 		}
 	}

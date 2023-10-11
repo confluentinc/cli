@@ -137,7 +137,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if brokers < 1 || brokers > 4 {
-		return errors.New("--brokers must be an integer between 1 and 4, inclusive.")
+		return fmt.Errorf("--brokers must be an integer between 1 and 4, inclusive.")
 	}
 
 	if err := c.prepareAndSaveLocalPorts(cmd, brokers, c.Config.IsTest); err != nil {
@@ -265,7 +265,7 @@ func (c *command) prepareAndSaveLocalPorts(cmd *cobra.Command, brokers int32, is
 	}
 
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, "failed to save local ports to configuration file")
+		return fmt.Errorf("failed to save local ports to configuration file: %w", err)
 	}
 
 	return nil
@@ -362,17 +362,23 @@ func checkMachineArch() error {
 		return nil
 	}
 
-	cmd := exec.Command("uname", "-m") // outputs system architecture info
-	output, err := cmd.Output()
+	// output system architecture info
+	output, err := exec.Command("uname", "-m").Output()
 	if err != nil {
 		return err
 	}
+
 	systemArch := strings.TrimSpace(string(output))
 	if systemArch == "x86_64" {
 		systemArch = "amd64"
 	}
+
 	if systemArch != runtime.GOARCH {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch), "Download the CLI with the correct architecture to continue.")
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch),
+			"Download the CLI with the correct architecture to continue.",
+		)
 	}
+
 	return nil
 }

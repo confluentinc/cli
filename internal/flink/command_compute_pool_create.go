@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
@@ -92,26 +90,4 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		Status:     computePool.Status.GetPhase(),
 	})
 	return table.Print()
-}
-
-func (c *command) autocompleteRegions(cmd *cobra.Command, args []string) []string {
-	if err := c.PersistentPreRunE(cmd, args); err != nil {
-		return nil
-	}
-
-	cloud, err := cmd.Flags().GetString("cloud")
-	if err != nil {
-		return nil
-	}
-
-	regions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(regions))
-	for i, region := range regions {
-		suggestions[i] = region.GetRegionName()
-	}
-	return suggestions
 }

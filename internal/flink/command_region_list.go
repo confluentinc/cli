@@ -32,6 +32,7 @@ func (c *command) newRegionListCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

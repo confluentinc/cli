@@ -6,6 +6,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
+const parsedGenericOpenApiErrorMsg = "metadata service backend error: %s"
+
 type CLITypedError interface {
 	error
 	UserFacingError() error
@@ -118,9 +120,9 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 func NewCorruptedConfigError(format, contextName, configFile string) CLITypedError {
 	var errorWithStackTrace error
 	if contextName != "" {
-		errorWithStackTrace = Errorf(format, contextName)
+		errorWithStackTrace = fmt.Errorf(format, contextName)
 	} else {
-		errorWithStackTrace = Errorf(format)
+		errorWithStackTrace = fmt.Errorf(format)
 	}
 	// logging stack trace of the error use pkg/errors error type
 	log.CliLogger.Debugf("%+v", errorWithStackTrace)
@@ -148,7 +150,7 @@ func (e *CorruptedConfigError) UserFacingError() error {
 }
 
 func NewUpdateClientWrapError(err error, errorMsg string) CLITypedError {
-	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error()}
+	return &UpdateClientError{errorMsg: fmt.Sprintf("%s: %v", errorMsg, err)}
 }
 
 type UpdateClientError struct {
@@ -160,10 +162,10 @@ func (e *UpdateClientError) Error() string {
 }
 
 func (e *UpdateClientError) UserFacingError() error {
-	errMsg := fmt.Sprintf("update client failure: %s", e.errorMsg)
-	return NewErrorWithSuggestions(errMsg, "Please submit a support ticket.\n"+
-		"In the meantime, see link for other ways to download the latest CLI version:\n"+
-		"https://docs.confluent.io/current/cli/installing.html")
+	return NewErrorWithSuggestions(
+		fmt.Sprintf("update client failure: %s", e.errorMsg),
+		"Please submit a support ticket.\nIn the meantime, see link for other ways to download the latest CLI version:\nhttps://docs.confluent.io/current/cli/installing.html",
+	)
 }
 
 type MDSV2Alpha1ErrorType1 struct {
@@ -176,7 +178,7 @@ type MDSV2Alpha1ErrorType1 struct {
 func (e *MDSV2Alpha1ErrorType1) Error() string { return e.Message }
 
 func (e *MDSV2Alpha1ErrorType1) UserFacingError() error {
-	return Errorf(ParsedGenericOpenApiErrorMsg, e.Message)
+	return fmt.Errorf(parsedGenericOpenApiErrorMsg, e.Message)
 }
 
 type MDSV2Alpha1ErrorType2 struct {
@@ -198,11 +200,11 @@ type MDSV2Alpha1ErrorType2Array struct {
 func (e *MDSV2Alpha1ErrorType2Array) Error() string {
 	errorMessage := ""
 	for _, error := range e.Errors {
-		errorMessage = fmt.Sprintf("%s ", error.Error()) + errorMessage
+		errorMessage = fmt.Sprintf("%s %s", error.Error(), errorMessage)
 	}
 	return errorMessage
 }
 
 func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error {
-	return Errorf(ParsedGenericOpenApiErrorMsg, e.Error())
+	return fmt.Errorf(parsedGenericOpenApiErrorMsg, e.Error())
 }

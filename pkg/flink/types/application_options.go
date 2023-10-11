@@ -9,7 +9,7 @@ type ApplicationOptions struct {
 	UserAgent        string
 	EnvironmentId    string
 	EnvironmentName  string
-	OrgResourceId    string
+	OrganizationId   string
 	Database         string
 	ComputePoolId    string
 	ServiceAccountId string
@@ -45,9 +45,9 @@ func (a *ApplicationOptions) GetEnvironmentName() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetOrgResourceId() string {
+func (a *ApplicationOptions) GetOrganizationId() string {
 	if a != nil {
-		return a.OrgResourceId
+		return a.OrganizationId
 	}
 	return ""
 }

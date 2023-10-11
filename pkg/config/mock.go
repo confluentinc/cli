@@ -199,10 +199,10 @@ func createAPIKeyPair(apiKey, apiSecret string) *APIKeyPair {
 	}
 }
 
-func createKafkaCluster(clusterID, clusterName string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
+func createKafkaCluster(id, name string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
 	return &KafkaClusterConfig{
-		ID:         clusterID,
-		Name:       clusterName,
+		ID:         id,
+		Name:       name,
 		Bootstrap:  bootstrapServer,
 		APIKeys:    map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
 		APIKey:     apiKeyPair.Key,

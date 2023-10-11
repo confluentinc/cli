@@ -2,13 +2,13 @@ package local
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -61,7 +61,7 @@ func (c *command) stopAndRemoveConfluentLocal(dockerClient *client.Client) error
 
 	c.Config.LocalPorts = nil
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, "failed to remove local ports from config")
+		return fmt.Errorf("failed to remove local ports from config: %w", err)
 	}
 
 	return nil
