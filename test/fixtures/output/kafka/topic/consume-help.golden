@@ -18,6 +18,7 @@ Flags:
       --key-format string                   Format of message key as "string", "avro", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --value-format string                 Format message value as "string", "avro", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --print-key                           Print key of the message.
+      --print-offset                        Print partition number and offset of the message.
       --full-header                         Print complete content of message headers.
       --delimiter string                    The delimiter separating each key and value. (default "\t")
       --timestamp                           Print message timestamp in milliseconds.
