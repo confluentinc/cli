@@ -11,6 +11,7 @@ import (
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
@@ -134,11 +135,14 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if useSchemaRegistry {
-		srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+		clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 		if err != nil {
 			return err
 		}
-		createPipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: srCluster.GetId()}
+		if len(clusters) == 0 {
+			return errors.NewSRNotEnabledError()
+		}
+		createPipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: clusters[0].GetId()}
 	}
 
 	pipeline, err := c.V2Client.CreatePipeline(createPipeline)
