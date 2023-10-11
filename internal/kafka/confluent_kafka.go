@@ -235,7 +235,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 
-	jsonMessage, err := valueDeserializer.Deserialize(message.Value)
+	messageString, err := valueDeserializer.Deserialize(message.Value)
 	if err != nil {
 		return err
 	}
@@ -246,13 +246,16 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if h.Properties.PrintOffset {
-		info += fmt.Sprintf(" Partition:%d Offset:%s", message.TopicPartition.Partition, message.TopicPartition.Offset.String())
+		if len(info) > 0 {
+			info = fmt.Sprintf("%s ", info)
+		}
+		info += fmt.Sprintf("Partition:%d Offset:%s", message.TopicPartition.Partition, message.TopicPartition.Offset.String())
 	}
 	if len(info) > 0 {
-		jsonMessage = fmt.Sprintf("[%s]\t%s", info, jsonMessage)
+		messageString = fmt.Sprintf("%s\t%s", info, messageString)
 	}
 
-	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
+	if _, err := fmt.Fprintln(h.Out, messageString); err != nil {
 		return err
 	}
 
