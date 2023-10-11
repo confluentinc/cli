@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -89,7 +90,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" && mode != "" {
-		return errors.New(errors.CompatibilityOrModeErrorMsg)
+		return fmt.Errorf(errors.CompatibilityOrModeErrorMsg)
 	}
 
 	if compatibility != "" {
@@ -100,7 +101,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 		return c.updateMode(subject, mode, client)
 	}
 
-	return errors.New(errors.CompatibilityOrModeErrorMsg)
+	return fmt.Errorf(errors.CompatibilityOrModeErrorMsg)
 }
 
 func (c *command) updateCompatibility(cmd *cobra.Command, subject string, client *schemaregistry.Client) error {

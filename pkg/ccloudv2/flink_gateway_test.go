@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -8,14 +9,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/errors/flink"
 )
 
 func TestFlinkErrorCodeWhenErrors(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchError(errors.New("Some Error"), res)
+	err := flink.CatchError(fmt.Errorf("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
@@ -32,7 +32,7 @@ func TestFlinkErrorNil(t *testing.T) {
 }
 
 func TestFlinkErrorNilHttpRes(t *testing.T) {
-	err := flink.CatchError(errors.New("Some Error"), nil)
+	err := flink.CatchError(fmt.Errorf("Some Error"), nil)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
@@ -44,7 +44,7 @@ func TestFlinkErrorNilHttpRes(t *testing.T) {
 func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"message":"unauthorized"}`)), StatusCode: http.StatusUnauthorized}
 
-	err := flink.CatchError(errors.New("Some Error"), res)
+	err := flink.CatchError(fmt.Errorf("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
@@ -56,7 +56,7 @@ func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 func TestFlinkErrorCodeWhenNestedMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"error":{"message":"gateway error"}}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchError(errors.New("Some Error"), res)
+	err := flink.CatchError(fmt.Errorf("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
@@ -68,7 +68,7 @@ func TestFlinkErrorCodeWhenNestedMessage(t *testing.T) {
 func TestFlinkErrorOnlyStatusCode(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader("")), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchError(errors.New("Some Error"), res)
+	err := flink.CatchError(fmt.Errorf("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)

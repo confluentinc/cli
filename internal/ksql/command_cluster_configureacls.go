@@ -109,7 +109,7 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (stri
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.Errorf(errors.KsqldbNoServiceAccountErrorMsg, cluster.GetId())
+	return "", fmt.Errorf(errors.KsqldbNoServiceAccountErrorMsg, cluster.GetId())
 }
 
 func buildACLBindings(serviceAccountId string, cluster *ksqlv2.KsqldbcmV2Cluster, topics []string) []*ccstructs.ACLBinding {

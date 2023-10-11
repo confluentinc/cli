@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
@@ -64,7 +64,7 @@ func authenticated() error {
 }
 
 func unauthenticated() error {
-	return errors.New("401 unauthorized")
+	return fmt.Errorf("401 unauthorized")
 }
 
 func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {

@@ -66,7 +66,7 @@ func Encrypt(username, password string, salt, nonce []byte) (string, error) {
 	}
 
 	if len(nonce) != NonceLength {
-		return "", errors.New(errors.IncorrectNonceLengthErrorMsg)
+		return "", fmt.Errorf(errors.IncorrectNonceLengthErrorMsg)
 	}
 	encryptedPassword := aesgcm.Seal(nil, nonce, []byte(password), []byte(username))
 
@@ -93,11 +93,11 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 
 	cipherText, err := base64.RawStdEncoding.DecodeString(encrypted)
 	if err != nil {
-		return "", fmt.Errorf("failed to decode base64: %v", err)
+		return "", fmt.Errorf("failed to decode base64: %w", err)
 	}
 
 	if len(nonce) != NonceLength {
-		return "", errors.New(errors.IncorrectNonceLengthErrorMsg)
+		return "", fmt.Errorf(errors.IncorrectNonceLengthErrorMsg)
 	}
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {

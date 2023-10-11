@@ -64,7 +64,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err == nil && clusterId != "" {
 		if resourceType != resource.KafkaCluster {
-			return errors.Errorf(nonKafkaNotImplementedErrorMsg)
+			return fmt.Errorf(nonKafkaNotImplementedErrorMsg)
 		}
 		cluster, err = c.Context.FindKafkaCluster(clusterId)
 		if err != nil {
@@ -134,7 +134,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := c.keystore.StoreAPIKey(&config.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
-		return errors.Wrap(err, unableToStoreApiKeyErrorMsg)
+		return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 	}
 
 	output.ErrPrintf(c.Config.EnableColor, "Stored secret for API key \"%s\".\n", key)

@@ -314,7 +314,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.ValueFormat))
 	}
 	if len(value) < messageOffset {
-		return "", nil, errors.New("failed to find schema ID in topic data")
+		return "", nil, fmt.Errorf("failed to find schema ID in topic data")
 	}
 
 	// Retrieve schema from cluster only if schema is specified.

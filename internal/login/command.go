@@ -416,7 +416,7 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 		pattern = regexp.MustCompile(`^\w+://[^/ ]+:\d+(?:\/|$)`)
 	}
 	if !pattern.MatchString(url) {
-		return "", "", errors.New(errors.InvalidLoginURLErrorMsg)
+		return "", "", fmt.Errorf(errors.InvalidLoginURLErrorMsg)
 	}
 
 	return url, strings.Join(msg, " and "), nil

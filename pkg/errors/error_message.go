@@ -8,7 +8,7 @@ const (
 	ApiKeyNotFoundSuggestions         = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
 	BadServiceAccountIdErrorMsg       = `failed to parse service account id: ensure service account id begins with "sa-"`
 	ByokKeyNotFoundSuggestions        = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
-	DeleteResourceErrorMsg            = `failed to delete %s "%s": %v`
+	DeleteResourceErrorMsg            = `failed to delete %s "%s": %w`
 	EndOfFreeTrialErrorMsg            = `organization "%s" has been suspended because your free trial has ended`
 	EndOfFreeTrialSuggestions         = "To continue using Confluent Cloud, please enter a credit card with `confluent admin payment update` or claim a promo code with `confluent admin promo add`. To enter payment via the UI, please go to https://confluent.cloud/login."
 	EnsureCpSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -35,7 +35,7 @@ const (
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg    = "failed to create producer: %v"
 	FailedToCreateConsumerErrorMsg    = "failed to create consumer: %v"
-	FailedToCreateAdminClientErrorMsg = "failed to create confluent-kafka-go admin client: %v"
+	FailedToCreateAdminClientErrorMsg = "failed to create confluent-kafka-go admin client: %w"
 	FailedToProduceErrorMsg           = "failed to produce offset %d: %s\n"
 	UnknownValueFormatErrorMsg        = "unknown value schema format"
 	ExceedPartitionLimitSuggestions   = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
@@ -58,14 +58,12 @@ const (
 	CompatibilityOrModeErrorMsg = "must pass either `--compatibility` or `--mode` flag"
 
 	// auth package
-	WriteToNetrcFileErrorMsg         = `unable to write to netrc file "%s"`
-	NetrcCredentialsNotFoundErrorMsg = `login credentials not found in netrc file "%s"`
-	NoCredentialsFoundErrorMsg       = "no credentials found"
-	NoUrlEnvVarErrorMsg              = "no URL env var"
-	InvalidInputFormatErrorMsg       = `"%s" is not of valid format for field "%s"`
+	NoCredentialsFoundErrorMsg = "no credentials found"
+	NoUrlEnvVarErrorMsg        = "no URL env var"
+	InvalidInputFormatErrorMsg = `"%s" is not of valid format for field "%s"`
 
 	// config package
-	UnableToReadConfigurationFileErrorMsg = `unable to read configuration file "%s"`
+	UnableToReadConfigurationFileErrorMsg = `unable to read configuration file "%s": %w`
 	NoNameContextErrorMsg                 = "one of the existing contexts has no name"
 	ContextDoesNotExistErrorMsg           = `context "%s" does not exist`
 	ContextAlreadyExistsErrorMsg          = `context "%s" already exists`
@@ -158,6 +156,5 @@ const (
 	FailedToReadInputErrorMsg        = "failed to read input"
 
 	// Special error types
-	GenericOpenApiErrorMsg       = "metadata service backend error: %s: %s"
-	ParsedGenericOpenApiErrorMsg = "metadata service backend error: %s"
+	GenericOpenApiErrorMsg = "metadata service backend error: %s: %s"
 )

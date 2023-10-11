@@ -202,7 +202,7 @@ func fileToSpec(fileName string) (*Spec, error) {
 	}
 	spec := new(Spec)
 	if err := yaml.Unmarshal(asyncSpec, spec); err != nil {
-		return nil, fmt.Errorf("unable to unmarshal YAML file: %v", err)
+		return nil, fmt.Errorf("unable to unmarshal YAML file: %w", err)
 	}
 	return spec, nil
 }
@@ -214,7 +214,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	}
 	// If topic exists and overwrite flag is false, move to the next channel in spec
 	if topicExistedAlready && !overwrite {
-		return errors.New(parseErrorMessage)
+		return fmt.Errorf(parseErrorMessage)
 	}
 	// Register schema
 	schemaId, err := registerSchema(details, topicName, spec.Components)
@@ -240,7 +240,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	if (topicExistedAlready || newTopicCreated) && spec.Channels[topicName].Description != "" {
 		if err := addTopicDescription(details.srClient, fmt.Sprintf("%s:%s", details.kafkaClusterId, topicName),
 			spec.Channels[topicName].Description); err != nil {
-			return fmt.Errorf("unable to update topic description: %v", err)
+			return fmt.Errorf("unable to update topic description: %w", err)
 		}
 		output.Printf(c.Config.EnableColor, "Added description to topic \"%s\".\n", topicName)
 	}
@@ -330,9 +330,8 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 	}
 	log.CliLogger.Info("Overwriting topic configs")
 	if updateConfigs != nil {
-		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
-		if err != nil {
-			return fmt.Errorf("unable to update topic configs: %v", err)
+		if _, err := kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs}); err != nil {
+			return fmt.Errorf("unable to update topic configs: %w", err)
 		}
 	}
 	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Topic, topicName)
@@ -402,7 +401,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 
 		jsonSchema, err := yaml3.ToJSON(schema)
 		if err != nil {
-			return 0, fmt.Errorf("failed to encode schema as JSON: %v", err)
+			return 0, fmt.Errorf("failed to encode schema as JSON: %w", err)
 		}
 
 		req := srsdk.RegisterSchemaRequest{
@@ -412,7 +411,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		opts := &srsdk.RegisterOpts{Normalize: optional.NewBool(false)}
 		id, err := details.srClient.Register(subject, req, opts)
 		if err != nil {
-			return 0, fmt.Errorf("unable to register schema: %v", err)
+			return 0, fmt.Errorf("unable to register schema: %w", err)
 		}
 		output.Printf(false, "Registered schema \"%d\" under subject \"%s\".\n", id.Id, subject)
 		return id.Id, nil
@@ -426,7 +425,7 @@ func updateSubjectCompatibility(details *accountDetails, compatibility, subject 
 	req := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
 	config, err := details.srClient.UpdateSubjectLevelConfig(subject, req)
 	if err != nil {
-		return fmt.Errorf("failed to update subject level compatibility: %v", err)
+		return fmt.Errorf("failed to update subject level compatibility: %w", err)
 	}
 	output.Printf(false, "Subject level compatibility updated to \"%s\" for subject \"%s\".\n", config.Compatibility, subject)
 	return nil
@@ -513,7 +512,7 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 		return err
 	})
 	if err != nil {
-		return fmt.Errorf("unable to create tag definition: %v", err)
+		return fmt.Errorf("unable to create tag definition: %w", err)
 	}
 	log.CliLogger.Debugf("Tag Definitions created")
 	tagOpts := &srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
@@ -522,7 +521,7 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 		return err
 	})
 	if err != nil {
-		return fmt.Errorf("unable to add tag to resource: %v", err)
+		return fmt.Errorf("unable to add tag to resource: %w", err)
 	}
 	return nil
 }

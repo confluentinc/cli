@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
@@ -77,7 +75,7 @@ func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
 	case mdsv1.GenericOpenAPIError:
-		return Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
+		return fmt.Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
 		if strings.Contains(err.Error(), "Forbidden Access") {
 			return NewErrorWithSuggestions("user is unauthorized to perform this action", "Check the user's privileges by running `confluent iam rbac role-binding list`.\nGive the user the appropriate permissions using `confluent iam rbac role-binding create`.")
@@ -90,7 +88,7 @@ func catchMDSErrors(err error) error {
 			if parseErr2 == nil {
 				return openAPIErrorType2.UserFacingError()
 			} else {
-				return Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
+				return fmt.Errorf(GenericOpenApiErrorMsg, err.Error(), string(err2.Body()))
 			}
 		}
 	}
@@ -102,7 +100,7 @@ func catchMDSErrors(err error) error {
 // are supposed to be caught by more specific catchers.
 func catchCcloudV1Errors(err error) error {
 	if err, ok := err.(*ccloudv1.Error); ok {
-		return Wrap(err, "Confluent Cloud backend error")
+		return fmt.Errorf("Confluent Cloud backend error: %w", err)
 	}
 	return err
 }
@@ -129,10 +127,10 @@ func catchOpenAPIError(err error) error {
 		}{}
 
 		if err := json.NewDecoder(r).Decode(formattedErr); err == nil {
-			return New(formattedErr.Message)
+			return fmt.Errorf(formattedErr.Message)
 		}
 
-		return New(body)
+		return fmt.Errorf(body)
 	}
 
 	return err
@@ -170,7 +168,7 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 			return NewErrorWithSuggestions(detail, "Look up Confluent Cloud service quota limits with `confluent service-quota list`.")
 		}
 		if detail != "" {
-			err = errors.New(strings.TrimSuffix(detail, "\n"))
+			err = fmt.Errorf(strings.TrimSuffix(detail, "\n"))
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
 				err = NewErrorWithSuggestions(err.Error(), resolution)
 			}
@@ -179,14 +177,15 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	}
 
 	if resBody.Message != "" {
-		return Wrap(err, strings.TrimRight(resBody.Message, "\n"))
+		message := strings.TrimRight(resBody.Message, "\n")
+		return fmt.Errorf("%s: %w", message, err)
 	}
 
 	if resBody.Error.Message != "" {
-		errorMessage := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
+		message := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
 			return c == rune('.') || c == rune('\n')
 		})
-		return Wrap(err, errorMessage)
+		return fmt.Errorf("%s: %w", message, err)
 	}
 
 	return err

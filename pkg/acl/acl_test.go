@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	errMsgs "github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 func TestParseAclRequest(t *testing.T) {
@@ -49,7 +48,7 @@ func TestParseAclRequest(t *testing.T) {
 		{
 			args: []string{"--operation", "fake", "--principal", "User:Alice", "--cluster-scope", "--transactional-id", "123"},
 			expectedAcl: AclRequestDataWithError{
-				Errors: multierror.Append(errors.New("invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
+				Errors: multierror.Append(fmt.Errorf("invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
 					convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
 						kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID))),
 			},
@@ -57,7 +56,7 @@ func TestParseAclRequest(t *testing.T) {
 		{
 			args: []string{"--operation", "read", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
 			expectedAcl: AclRequestDataWithError{
-				Errors: multierror.Append(errors.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL")),
+				Errors: multierror.Append(fmt.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL")),
 			},
 		},
 	}
@@ -95,9 +94,10 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 		},
 		{
 			initialAcl: AclRequestDataWithError{Host: "*"},
-			expectedAcl: AclRequestDataWithError{Errors: multierror.Append(errors.Errorf(errMsgs.MustSetAllowOrDenyErrorMsg), errors.Errorf(errMsgs.MustSetResourceTypeErrorMsg,
-				convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-					kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))},
+			expectedAcl: AclRequestDataWithError{Errors: multierror.Append(
+				fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg),
+				fmt.Errorf(errors.MustSetResourceTypeErrorMsg, convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP, kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)),
+			)},
 		},
 	}
 	req := require.New(t)
