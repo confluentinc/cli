@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/antihax/optional"
@@ -46,11 +47,12 @@ var (
 )
 
 type ConsumerProperties struct {
-	Delimiter  string
-	FullHeader bool
-	PrintKey   bool
-	Timestamp  bool
-	SchemaPath string
+	Delimiter   string
+	FullHeader  bool
+	PrintKey    bool
+	PrintOffset bool
+	Timestamp   bool
+	SchemaPath  string
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -234,16 +236,11 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 
-	jsonMessage, err := valueDeserializer.Deserialize(message.Value)
+	messageString, err := getMessageString(message, valueDeserializer, h.Properties)
 	if err != nil {
 		return err
 	}
-
-	if h.Properties.Timestamp {
-		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", message.Timestamp.UnixMilli(), jsonMessage)
-	}
-
-	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
+	if _, err := fmt.Fprintln(h.Out, messageString); err != nil {
 		return err
 	}
 
@@ -258,6 +255,27 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	}
 
 	return nil
+}
+
+func getMessageString(message *ckafka.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties) (string, error) {
+	messageString, err := valueDeserializer.Deserialize(message.Value)
+	if err != nil {
+		return "", err
+	}
+
+	var info []string
+	if properties.Timestamp {
+		info = append(info, fmt.Sprintf("Timestamp:%d", message.Timestamp.UnixMilli()))
+	}
+	if properties.PrintOffset {
+		info = append(info, fmt.Sprintf("Partition:%d", message.TopicPartition.Partition))
+		info = append(info, fmt.Sprintf("Offset:%s", message.TopicPartition.Offset.String()))
+	}
+	if len(info) > 0 {
+		messageString = fmt.Sprintf("%s\t%s", strings.Join(info, " "), messageString)
+	}
+
+	return messageString, nil
 }
 
 func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
