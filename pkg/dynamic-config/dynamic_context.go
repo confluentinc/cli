@@ -147,18 +147,6 @@ func (d *DynamicContext) RemoveKafkaClusterConfig(clusterId string) error {
 	return d.Save()
 }
 
-func (d *DynamicContext) UseAPIKey(apiKey, clusterId string) error {
-	kcc, err := d.FindKafkaCluster(clusterId)
-	if err != nil {
-		return err
-	}
-	if _, ok := kcc.APIKeys[apiKey]; !ok {
-		return d.FetchAPIKeyError(apiKey, clusterId)
-	}
-	kcc.APIKey = apiKey
-	return d.Save()
-}
-
 func (d *DynamicContext) HasLogin() bool {
 	credType := d.GetCredentialType()
 	switch credType {

@@ -8,6 +8,7 @@ import (
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -42,7 +43,7 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 }
 
 func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
-	environment, err := cmd.Flags().GetString("environment")
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
@@ -67,28 +68,29 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environment)
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 	if err != nil {
 		return err
+	}
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
 	}
 
 	deliveryMethod := "Email"
 	resources := []string{
 		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/kafka=%s/topic=%s",
-			c.Context.GetCurrentOrganization(), environment, srCluster.GetId(), cluster, topic),
+			c.Context.GetCurrentOrganization(), environmentId, clusters[0].GetId(), cluster, topic),
 	}
 	for _, subject := range schemaRegistrySubjects {
 		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s",
-			c.Context.GetCurrentOrganization(), environment, srCluster.GetId(), subject))
+			c.Context.GetCurrentOrganization(), environmentId, clusters[0].GetId(), subject))
 	}
 
 	shareReq := cdxv1.CdxV1CreateProviderShareRequest{
-		ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{
-			CdxV1EmailConsumerRestriction: &cdxv1.CdxV1EmailConsumerRestriction{
-				Kind:  deliveryMethod,
-				Email: email,
-			},
-		},
+		ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{CdxV1EmailConsumerRestriction: &cdxv1.CdxV1EmailConsumerRestriction{
+			Kind:  deliveryMethod,
+			Email: email,
+		}},
 		DeliveryMethod: &deliveryMethod,
 		Resources:      &resources,
 	}
