@@ -268,7 +268,8 @@ func getMessageString(message *ckafka.Message, valueDeserializer serdes.Deserial
 		info = append(info, fmt.Sprintf("Timestamp:%d", message.Timestamp.UnixMilli()))
 	}
 	if properties.PrintOffset {
-		info = append(info, fmt.Sprintf("Partition:%d Offset:%s", message.TopicPartition.Partition, message.TopicPartition.Offset.String()))
+		info = append(info, fmt.Sprintf("Partition:%d", message.TopicPartition.Partition))
+		info = append(info, fmt.Sprintf("Offset:%s", message.TopicPartition.Offset.String()))
 	}
 	if len(info) > 0 {
 		messageString = fmt.Sprintf("%s\t%s", strings.Join(info, " "), messageString)
