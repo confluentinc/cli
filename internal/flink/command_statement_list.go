@@ -25,7 +25,13 @@ func (c *command) newStatementListCommand() *cobra.Command {
 }
 
 func (c *command) statementList(cmd *cobra.Command, args []string) error {
-	client, err := c.GetFlinkGatewayClient(false)
+	computePoolOnly := false
+
+	if c.Context.GetCurrentFlinkComputePool() != "" {
+		computePoolOnly = true
+	}
+
+	client, err := c.GetFlinkGatewayClient(computePoolOnly)
 	if err != nil {
 		return err
 	}
