@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/serdes"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+
+	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
 
 func TestGetMessageString(t *testing.T) {
