@@ -18,7 +18,7 @@ func TestGetMessageString(t *testing.T) {
 	}
 	valueDeserializer, err := serdes.GetDeserializationProvider("string")
 	require.NoError(t, err)
-	actual, err := getMessageString(message, valueDeserializer, true, true)
+	actual, err := getMessageString(message, valueDeserializer, ConsumerProperties{PrintOffset: true, Timestamp: true})
 	require.NoError(t, err)
 	expected := "Timestamp:868060800000 Partition:1 Offset:2	message"
 	require.Equal(t, expected, actual)

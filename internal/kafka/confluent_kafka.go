@@ -236,7 +236,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 
-	messageString, err := getMessageString(message, valueDeserializer, h.Properties.Timestamp, h.Properties.PrintOffset)
+	messageString, err := getMessageString(message, valueDeserializer, h.Properties)
 	if err != nil {
 		return err
 	}
@@ -257,17 +257,17 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	return nil
 }
 
-func getMessageString(message *ckafka.Message, valueDeserializer serdes.DeserializationProvider, timestamp bool, printOffset bool) (string, error) {
+func getMessageString(message *ckafka.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties) (string, error) {
 	messageString, err := valueDeserializer.Deserialize(message.Value)
 	if err != nil {
 		return "", err
 	}
 
 	var info []string
-	if timestamp {
+	if properties.Timestamp {
 		info = append(info, fmt.Sprintf("Timestamp:%d", message.Timestamp.UnixMilli()))
 	}
-	if printOffset {
+	if properties.PrintOffset {
 		info = append(info, fmt.Sprintf("Partition:%d Offset:%s", message.TopicPartition.Partition, message.TopicPartition.Offset.String()))
 	}
 	if len(info) > 0 {
