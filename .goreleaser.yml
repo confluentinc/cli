@@ -57,8 +57,10 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} amd64
-        - cmd: gon dist/gon_confluent_darwin_amd64.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-darwin-amd64-homebrew
     binary: confluent
@@ -77,8 +79,10 @@ builds:
       - amd64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} amd64_homebrew
-        - cmd: gon dist/gon_confluent_darwin_amd64_homebrew.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-darwin-arm64
     binary: confluent
@@ -97,8 +101,10 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} arm64
-        - cmd: gon dist/gon_confluent_darwin_arm64.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-darwin-arm64-homebrew
     binary: confluent
@@ -119,57 +125,11 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} arm64_homebrew
-        - cmd: gon dist/gon_confluent_darwin_arm64_homebrew.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
           output: true
-  - id: confluent-linux
-    builder: prebuilt
-    goos:
-      - linux
-    goarch:
-      - amd64
-      - arm64
-    goamd64:
-      - v1
-    prebuilt:
-      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
-  - id: confluent-linux-homebrew
-    builder: prebuilt
-    goos:
-      - linux
-    goarch:
-      - amd64
-      - arm64
-    goamd64:
-      - v1
-    prebuilt:
-      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-homebrew_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
-  - id: confluent-windows-amd64
-    binary: confluent
-    main: cmd/confluent/main.go
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe  
-    gcflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    asmflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    env:
-      - CGO_ENABLED=1
-      - CC=x86_64-w64-mingw32-gcc
-      - CXX=x86_64-w64-mingw32-g++
-      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
-    goos:
-      - windows
-    goarch:
-      - amd64
-    hooks:
-      pre:
-        - cmd: az login
-        - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
-        - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
-      post:
-        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
-        - cmd: rm CLIEVCodeSigningCertificate2.pfx
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
+          output: true
 
 archives:
   - id: archive
