@@ -78,11 +78,13 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 
 	list := output.NewList(cmd)
 
-	statementsWithMatchingStatus := lo.Filter(statements, func(stmt v1beta1.SqlV1beta1Statement, _ int) bool {
-		return status == "" || stmt.Status.GetPhase() == status
-	})
+	if status != "" {
+		statements = lo.Filter(statements, func(statement v1beta1.SqlV1beta1Statement, _ int) bool {
+			return statement.Status.GetPhase() == status
+		})
+	}
 
-	for _, statement := range statementsWithMatchingStatus {
+	for _, statement := range statements {
 		list.Add(&statementOut{
 			CreationDate: statement.Metadata.GetCreatedAt(),
 			Name:         statement.GetName(),
