@@ -5,7 +5,10 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -74,12 +77,12 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, statement := range statements {
-		// filter out statements with a non-matching status
-		if status != "" && statement.Status.GetPhase() != status {
-			continue
-		}
 
+	statementsWithMatchingStatus := lo.Filter(statements, func(stmt v1beta1.SqlV1beta1Statement, _ int) bool {
+		return status == "" || stmt.Status.GetPhase() == status
+	})
+
+	for _, statement := range statementsWithMatchingStatus {
 		list.Add(&statementOut{
 			CreationDate: statement.Metadata.GetCreatedAt(),
 			Name:         statement.GetName(),
