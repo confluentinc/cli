@@ -5,6 +5,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/autocomplete"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
@@ -49,6 +50,10 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	// Store used to process statements and store local properties
 	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
 	resultFetcher := results.NewResultFetcher(dataStore)
+	var lspClient autocomplete.LSPClientInterface
+	if appOptions.GetLSPEnabled() {
+		lspClient = autocomplete.NewLSPClientWS(dataStore)
+	}
 
 	stdinBefore := utils.GetStdin()
 	consoleParser := utils.GetConsoleParser()
@@ -59,10 +64,13 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
 		utils.RestoreStdin(stdinBefore)
+		if lspClient != nil {
+			lspClient.ShutdownAndExit()
+		}
 	})
 
 	// Instantiate Component Controllers
-	inputController := controller.NewInputController(historyStore)
+	inputController := controller.NewInputController(historyStore, lspClient)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
 	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
