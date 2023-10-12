@@ -124,7 +124,8 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 							Id:          "lkc-12345",
 							Environment: ksqlv2.PtrString("25"),
 						},
-						Environment: &ksqlv2.ObjectReference{Id: "25"},
+						CredentialIdentity: &ksqlv2.ObjectReference{Id: "u-123456"},
+						Environment:        &ksqlv2.ObjectReference{Id: "25"},
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 						HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
