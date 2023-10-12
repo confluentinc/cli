@@ -70,13 +70,12 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
-	ctx := c.Config.Context()
-	state, err := ctx.AuthenticatedState()
+	state, err := c.Context.AuthenticatedState()
 	if err != nil {
 		return err
 	}
 
-	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+	dataplaneToken, err := pauth.GetDataplaneToken(state, c.Context.Platform.Server)
 	if err != nil {
 		return err
 	}
