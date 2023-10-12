@@ -464,7 +464,7 @@ func TestDownloadChecksum(t *testing.T) {
 			if version == "2.5.1" {
 				return checksums, nil
 			} else {
-				return "", fmt.Errorf("No checksums for given version")
+				return "", fmt.Errorf("no checksums for given version")
 			}
 		},
 	}
@@ -627,7 +627,7 @@ func TestUpdateBinary(t *testing.T) {
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
 						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
-							return nil, fmt.Errorf("out of disk!")
+							return nil, fmt.Errorf("out of disk")
 						},
 					},
 				},

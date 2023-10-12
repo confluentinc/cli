@@ -221,7 +221,7 @@ func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 		want = strings.ReplaceAll(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+test.loginURL].EncryptedPassword)
 		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(want))
 	}
-	_ = os.Remove(netrc.NetrcIntegrationTestFile)
+	_ = os.Remove(netrc.IntegrationTestFile)
 }
 
 func (s *CLITestSuite) TestLogin_UpdateNetrcPassword() {
@@ -274,7 +274,7 @@ func (s *CLITestSuite) TestLogin_UpdateNetrcPassword() {
 
 		s.NotEqual(oldData.SavedCredentials, data.SavedCredentials)
 	}
-	_ = os.Remove(netrc.NetrcIntegrationTestFile)
+	_ = os.Remove(netrc.IntegrationTestFile)
 }
 
 func (s *CLITestSuite) TestLogin_MdsUrl() {

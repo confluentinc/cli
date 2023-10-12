@@ -45,10 +45,10 @@ func getResultsExample(numRows int) *types.MaterializedStatementResults {
 	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10)
 	for i := 0; i < numRows; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
-			Operation: types.INSERT,
+			Operation: types.Insert,
 			Fields: []types.StatementResultField{
 				types.AtomicStatementResultField{
-					Type:  types.INTEGER,
+					Type:  types.Integer,
 					Value: strconv.Itoa(i),
 				},
 			},

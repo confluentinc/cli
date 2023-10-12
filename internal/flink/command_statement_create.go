@@ -83,9 +83,9 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	properties := map[string]string{config.ConfigKeyCatalog: environment.GetDisplayName()}
+	properties := map[string]string{config.KeyCatalog: environment.GetDisplayName()}
 	if database != "" {
-		properties[config.ConfigKeyDatabase] = database
+		properties[config.KeyDatabase] = database
 	}
 
 	statement := flinkgatewayv1beta1.SqlV1beta1Statement{

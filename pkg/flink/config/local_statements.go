@@ -2,21 +2,21 @@ package config
 
 const (
 	// ops
-	ConfigOpSet               = "SET"
-	ConfigOpUse               = "USE"
-	ConfigOpReset             = "RESET"
-	ConfigOpExit              = "EXIT"
-	ConfigOpUseCatalog        = "CATALOG"
-	ConfigStatementTerminator = ";"
+	OpSet               = "SET"
+	OpUse               = "USE"
+	OpReset             = "RESET"
+	OpExit              = "EXIT"
+	OpUseCatalog        = "CATALOG"
+	StatementTerminator = ";"
 
 	// config namespaces
-	ConfigNamespaceClient = "client."
+	NamespaceClient = "client."
 
 	// keys
-	ConfigKeyCatalog        = "sql.current-catalog"
-	ConfigKeyDatabase       = "sql.current-database"
-	ConfigKeyLocalTimeZone  = "sql.local-time-zone"
-	ConfigKeyResultsTimeout = "client.results-timeout"
-	ConfigKeyServiceAccount = "client.service-account"
-	ConfigKeyStatementName  = "client.statement-name"
+	KeyCatalog        = "sql.current-catalog"
+	KeyDatabase       = "sql.current-database"
+	KeyLocalTimeZone  = "sql.local-time-zone"
+	KeyResultsTimeout = "client.results-timeout"
+	KeyServiceAccount = "client.service-account"
+	KeyStatementName  = "client.statement-name"
 )
