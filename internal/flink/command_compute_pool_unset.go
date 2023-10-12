@@ -13,7 +13,7 @@ func (c *command) newComputePoolUnsetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unset",
 		Short: "Unset the current Flink compute pool.",
-		Long:  "Unset the current Flink compute pool that was set with `confluent Flink compute-pool use`.",
+		Long:  "Unset the current Flink compute pool that was set with `confluent flink compute-pool use`.",
 		Args:  cobra.NoArgs,
 		RunE:  c.unset,
 	}
