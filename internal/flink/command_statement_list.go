@@ -24,7 +24,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) statementList(cmd *cobra.Command, args []string) error {
+func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err

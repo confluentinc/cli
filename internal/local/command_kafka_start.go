@@ -61,7 +61,7 @@ func (c *command) newKafkaStartCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 	if err := checkMachineArch(); err != nil {
 		return err
 	}

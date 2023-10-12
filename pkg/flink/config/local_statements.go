@@ -10,7 +10,6 @@ const (
 	ConfigStatementTerminator = ";"
 
 	// config namespaces
-	ConfigNamespaceSql    = "sql."
 	ConfigNamespaceClient = "client."
 
 	// keys

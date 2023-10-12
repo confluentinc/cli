@@ -229,7 +229,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *v
 	return true, ver
 }
 
-func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) ([]byte, error) {
+func (r *PublicRepo) DownloadVersion(name, version string) ([]byte, error) {
 	objectKey, _ := NewPrefixedKey(fmt.Sprintf(r.S3BinPrefixFmt, name), "_", true)
 	objectKey.goos = r.goos
 	objectKey.goarch = r.goarch

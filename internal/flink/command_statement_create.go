@@ -12,7 +12,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/flink"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/retry"
@@ -110,7 +109,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	principal := serviceAccount
 	if serviceAccount == "" {
-		output.ErrPrintln(c.Config.EnableColor, flink.ServiceAccountWarning)
+		output.ErrPrintln(c.Config.EnableColor, serviceAccountWarning)
 		principal = c.Context.GetUser().GetResourceId()
 	}
 

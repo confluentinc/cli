@@ -45,7 +45,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcH
 	return cmd
 }
 
-func (c *command) logout(cmd *cobra.Command, _ []string) error {
+func (c *command) logout(_ *cobra.Command, _ []string) error {
 	if c.Config.Config.Context() != nil {
 		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().GetNetrcMachineName())
 		if err == nil {

@@ -20,7 +20,7 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 	}
 }
 
-func (c *command) computePoolUse(cmd *cobra.Command, args []string) error {
+func (c *command) computePoolUse(_ *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

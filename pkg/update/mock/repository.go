@@ -223,7 +223,7 @@ func (m *Repository) GetAvailableReleaseNotesVersionsCalls() []struct {
 }
 
 // DownloadVersion mocks base method by wrapping the associated func.
-func (m *Repository) DownloadVersion(name, version, downloadDir string) ([]byte, error) {
+func (m *Repository) DownloadVersion(name, version string) ([]byte, error) {
 	m.lockDownloadVersion.Lock()
 	defer m.lockDownloadVersion.Unlock()
 

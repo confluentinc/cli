@@ -13,7 +13,7 @@ type Repository interface {
 	GetAvailableReleaseNotesVersions(name string) (version.Collection, error)
 	// Downloads the versioned package to download dir to downloadDir.
 	// Returns the full path to the downloaded package, the download size in bytes, or an error if one occurred.
-	DownloadVersion(name, version, downloadDir string) ([]byte, error)
+	DownloadVersion(name, version string) ([]byte, error)
 	DownloadReleaseNotes(name, version string) (string, error)
 	DownloadChecksums(name, version string) (string, error)
 }
