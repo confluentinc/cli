@@ -64,7 +64,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 	status = strings.ToUpper(status)
 
 	if status != "" && !slices.Contains(allowedStatuses, status) {
-		log.CliLogger.Warnf("Unrecognized status '%s'. recognized statuses: [%s]", status, strings.Join(allowedStatuses, ", "))
+		log.CliLogger.Warnf(`Invalid status "%s". Valid statuses are %s.`, status, utils.ArrayToCommaDelimitedString(allowedStatuses, "and"))
 	}
 
 	statements, err := client.ListAllStatements(environmentId, c.Context.GetCurrentOrganization(), c.Context.GetCurrentFlinkComputePool())
