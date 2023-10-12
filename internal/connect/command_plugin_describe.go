@@ -42,7 +42,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}

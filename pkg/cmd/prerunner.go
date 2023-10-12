@@ -86,7 +86,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil)
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context())
 			featureflags.PrintAnnouncements(r.Config, featureflags.Announcements, ctx, cmd)
 			featureflags.PrintAnnouncements(r.Config, featureflags.DeprecationNotices, ctx, cmd)
 		}
@@ -217,7 +217,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			}
 		}
 
-		if err := r.setV2Clients(command); err != nil {
+		if err := r.setV2Client(command); err != nil {
 			return err
 		}
 
@@ -309,9 +309,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId stri
 }
 
 func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
-	ctx := c.Config.Context()
-
-	ccloudClient, err := r.createCCloudClient(ctx, c.Version)
+	ccloudClient, err := r.createCCloudClient(c.Context, c.Version)
 	if err != nil {
 		return err
 	}
@@ -322,12 +320,10 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		return err
 	}
 
-	c.MDSv2Client = r.createMDSv2Client(ctx, c.Version, unsafeTrace)
+	c.MDSv2Client = r.createMDSv2Client(c.Context, c.Version, unsafeTrace)
 
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-		ctx := c.Config.Context()
-
-		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx)
+		restEndpoint, lkc, err := getKafkaRestEndpoint(c.V2Client, c.Context)
 		if err != nil {
 			return nil, err
 		}
@@ -346,11 +342,11 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
 		}
 
-		state, err := ctx.AuthenticatedState()
+		state, err := c.Context.AuthenticatedState()
 		if err != nil {
 			return nil, err
 		}
-		dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+		dataplaneToken, err := pauth.GetDataplaneToken(state, c.Context.GetPlatformServer())
 		if err != nil {
 			return nil, err
 		}
@@ -365,22 +361,19 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setV2Clients(c *AuthenticatedCLICommand) error {
+func (r *PreRun) setV2Client(c *AuthenticatedCLICommand) error {
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return err
 	}
 
-	v2Client := c.Config.GetCloudClientV2(unsafeTrace)
-	c.V2Client = v2Client
-	c.Context.V2Client = v2Client
-	c.Config.V2Client = v2Client
+	c.V2Client = c.Config.GetCloudClientV2(unsafeTrace)
 
 	return nil
 }
 
-func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
-	config, err := ctx.GetKafkaClusterForCommand()
+func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) (string, string, error) {
+	config, err := ctx.GetKafkaClusterForCommand(client)
 	if err != nil {
 		return "", "", err
 	}

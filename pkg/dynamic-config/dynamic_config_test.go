@@ -9,18 +9,14 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	pmock "github.com/confluentinc/cli/v3/pkg/mock"
 )
 
 func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
-	cfg := config.AuthenticatedCloudConfigMock()
-	dynamicConfigBase := New(cfg, pmock.NewV2ClientMock())
+	dynamicConfigBase := New(config.AuthenticatedCloudConfigMock())
 
-	cfg = config.AuthenticatedCloudConfigMock()
-	dynamicConfigFlag := New(cfg, pmock.NewV2ClientMock())
-	dynamicConfigFlag.Contexts["test-context"] = &config.Context{
-		Name: "test-context",
-	}
+	dynamicConfigFlag := New(config.AuthenticatedCloudConfigMock())
+	dynamicConfigFlag.Contexts["test-context"] = &config.Context{Name: "test-context"}
+
 	tests := []struct {
 		name           string
 		context        string

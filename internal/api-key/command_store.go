@@ -66,12 +66,12 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		if resourceType != resource.KafkaCluster {
 			return fmt.Errorf(nonKafkaNotImplementedErrorMsg)
 		}
-		cluster, err = c.Context.FindKafkaCluster(clusterId)
+		cluster, err = c.Context.FindKafkaCluster(c.V2Client, clusterId)
 		if err != nil {
 			return err
 		}
 	} else {
-		cluster, err = c.Context.GetKafkaClusterForCommand()
+		cluster, err = c.Context.GetKafkaClusterForCommand(c.V2Client)
 		if err != nil {
 			// Replace the error msg since it suggests flags which are unavailable with this command
 			return errors.NewErrorWithSuggestions(
@@ -124,7 +124,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// API key exists server-side... now check if API key exists locally already
-	if found, err := c.keystore.HasAPIKey(key, cluster.ID); err != nil {
+	if found, err := c.keystore.HasAPIKey(c.V2Client, key, cluster.ID); err != nil {
 		return err
 	} else if found && !force {
 		return errors.NewErrorWithSuggestions(
@@ -133,7 +133,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	if err := c.keystore.StoreAPIKey(&config.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
+	if err := c.keystore.StoreAPIKey(c.V2Client, &config.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 	}
 

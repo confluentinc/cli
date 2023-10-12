@@ -71,7 +71,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 func (c *command) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
