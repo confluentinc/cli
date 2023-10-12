@@ -32,6 +32,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	cmd.Flags().Bool("enable-lsp", false, "Enables the LSP")
 
 	return cmd
 }
@@ -67,13 +68,14 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
-	if useFakeGateway {
+	lspEnabled, _ := cmd.Flags().GetBool("enable-lsp")
 		client.StartApp(
 			mock.NewFakeFlinkGatewayClient(),
 			func() error { return nil },
 			types.ApplicationOptions{
-				Context:   c.Context,
-				UserAgent: c.Version.UserAgent,
+				Context:    c.Context,
+				UserAgent:  c.Version.UserAgent,
+				LSPEnabled: lspEnabled,
 			}, func() {})
 		return nil
 	}
@@ -158,8 +160,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
 	}
-
-	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
+		LSPEnabled:       lspEnabled,
 	return nil
 }
 

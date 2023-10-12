@@ -68,6 +68,62 @@ func (mr *MockStoreInterfaceMockRecorder) FetchStatementResults(arg0 any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchStatementResults", reflect.TypeOf((*MockStoreInterface)(nil).FetchStatementResults), arg0)
 }
 
+// GetAuthToken mocks base method.
+func (m *MockStoreInterface) GetAuthToken() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthToken")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetAuthToken indicates an expected call of GetAuthToken.
+func (mr *MockStoreInterfaceMockRecorder) GetAuthToken() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthToken", reflect.TypeOf((*MockStoreInterface)(nil).GetAuthToken))
+}
+
+// GetComputePool mocks base method.
+func (m *MockStoreInterface) GetComputePool() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetComputePool")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetComputePool indicates an expected call of GetComputePool.
+func (mr *MockStoreInterfaceMockRecorder) GetComputePool() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComputePool", reflect.TypeOf((*MockStoreInterface)(nil).GetComputePool))
+}
+
+// GetCurrentCatalog mocks base method.
+func (m *MockStoreInterface) GetCurrentCatalog() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrentCatalog")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetCurrentCatalog indicates an expected call of GetCurrentCatalog.
+func (mr *MockStoreInterfaceMockRecorder) GetCurrentCatalog() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentCatalog", reflect.TypeOf((*MockStoreInterface)(nil).GetCurrentCatalog))
+}
+
+// GetCurrentDatabase mocks base method.
+func (m *MockStoreInterface) GetCurrentDatabase() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrentDatabase")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetCurrentDatabase indicates an expected call of GetCurrentDatabase.
+func (mr *MockStoreInterfaceMockRecorder) GetCurrentDatabase() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentDatabase", reflect.TypeOf((*MockStoreInterface)(nil).GetCurrentDatabase))
+}
+
 // ProcessStatement mocks base method.
 func (m *MockStoreInterface) ProcessStatement(arg0 string) (*types.ProcessedStatement, *types.StatementError) {
 	m.ctrl.T.Helper()

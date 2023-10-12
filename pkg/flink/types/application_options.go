@@ -14,7 +14,15 @@ type ApplicationOptions struct {
 	ComputePoolId    string
 	ServiceAccountId string
 	Verbose          bool
+	LSPEnabled       bool
 	Context          *config.Context
+}
+
+func (a *ApplicationOptions) GetLSPEnabled() bool {
+	if a != nil {
+		return a.LSPEnabled
+	}
+	return false
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
