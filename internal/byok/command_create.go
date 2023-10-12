@@ -75,61 +75,58 @@ func (c *command) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) createAwsKeyRequest(keyArn string) *byokv1.ByokV1Key {
-	return &byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1AwsKey: &byokv1.ByokV1AwsKey{
+func (c *command) createAwsKeyRequest(keyArn string) byokv1.ByokV1Key {
+	return byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 		KeyArn: keyArn,
 		Kind:   "AwsKey",
 	}}}
 }
 
-func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (*byokv1.ByokV1Key, error) {
+func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (byokv1.ByokV1Key, error) {
 	keyVault, err := cmd.Flags().GetString("key-vault")
 	if err != nil {
-		return nil, err
+		return byokv1.ByokV1Key{}, err
 	}
+
 	tenant, err := cmd.Flags().GetString("tenant")
 	if err != nil {
-		return nil, err
+		return byokv1.ByokV1Key{}, err
 	}
 
-	keyReq := byokv1.ByokV1Key{
-		Key: &byokv1.ByokV1KeyKeyOneOf{
-			ByokV1AzureKey: &byokv1.ByokV1AzureKey{
-				KeyId:      keyString,
-				KeyVaultId: keyVault,
-				TenantId:   tenant,
-				Kind:       "AzureKey",
-			},
-		},
-	}
+	keyReq := byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1AzureKey: &byokv1.ByokV1AzureKey{
+		KeyId:      keyString,
+		KeyVaultId: keyVault,
+		TenantId:   tenant,
+		Kind:       "AzureKey",
+	}}}
 
-	return &keyReq, nil
+	return keyReq, nil
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	keyString := args[0]
-	var err error
-	var keyReq *byokv1.ByokV1Key
+	var keyReq byokv1.ByokV1Key
 
 	if cmd.Flags().Changed("key-vault") && cmd.Flags().Changed("tenant") {
 		keyString = removeKeyVersionFromAzureKeyId(keyString)
 
-		keyReq, err = c.createAzureKeyRequest(cmd, keyString)
+		request, err := c.createAzureKeyRequest(cmd, keyString)
 		if err != nil {
 			return err
 		}
+		keyReq = request
 	} else if isAWSKey(keyString) {
 		keyReq = c.createAwsKeyRequest(keyString)
 	} else {
 		return fmt.Errorf("invalid key format: %s", keyString)
 	}
 
-	key, httpResp, err := c.V2Client.CreateByokKey(*keyReq)
+	key, httpResp, err := c.V2Client.CreateByokKey(keyReq)
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	return c.outputByokKeyDescription(cmd, &key)
+	return c.outputByokKeyDescription(cmd, key)
 }
 
 func isAWSKey(key string) bool {
@@ -141,7 +138,7 @@ func isAWSKey(key string) bool {
 	return keyArn.Service == "kms" && strings.HasPrefix(keyArn.Resource, "key/")
 }
 
-func getPolicyCommand(key *byokv1.ByokV1Key) (string, error) {
+func getPolicyCommand(key byokv1.ByokV1Key) (string, error) {
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
 		return renderAWSEncryptionPolicy(key.Key.ByokV1AwsKey.GetRoles())
@@ -160,7 +157,7 @@ func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	return buf.String(), nil
 }
 
-func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
+func renderAzureEncryptionPolicy(key byokv1.ByokV1Key) (string, error) {
 	objectId := fmt.Sprintf(`$(az ad sp show --id "%s" --query id --out tsv 2>/dev/null || az ad sp create --id "%s" --query id --out tsv)`, key.Key.ByokV1AzureKey.GetApplicationId(), key.Key.ByokV1AzureKey.GetApplicationId())
 
 	regex := regexp.MustCompile(`^https://([^/.]+).vault.azure.net`)
@@ -172,22 +169,22 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	vaultName := matches[1]
 
 	az := []string{
-		"az role assignment create \\",
-		fmt.Sprintf("    --role \"%s\" \\", keyVaultCryptoServiceEncryptionUser),
-		fmt.Sprintf("    --scope \"$(az keyvault show --name \"%s\" --query id --output tsv)\" \\", vaultName),
-		fmt.Sprintf("    --assignee-object-id \"%s\" \\", objectId),
-		"    --assignee-principal-type ServicePrincipal && \\",
-		"az role assignment create \\",
-		fmt.Sprintf("    --role \"%s\" \\", keyVaultReader),
-		fmt.Sprintf("    --scope \"$(az keyvault show --name \"%s\" --query id --output tsv)\" \\", vaultName),
-		fmt.Sprintf("    --assignee-object-id \"%s\" \\", objectId),
+		`az role assignment create \`,
+		fmt.Sprintf(`    --role "%s" \`, keyVaultCryptoServiceEncryptionUser),
+		fmt.Sprintf(`    --scope "$(az keyvault show --name "%s" --query id --output tsv)" \`, vaultName),
+		fmt.Sprintf(`    --assignee-object-id "%s" \`, objectId),
+		`    --assignee-principal-type ServicePrincipal && \`,
+		`az role assignment create \`,
+		fmt.Sprintf(`    --role "%s" \`, keyVaultReader),
+		fmt.Sprintf(`    --scope "$(az keyvault show --name "%s" --query id --output tsv)" \`, vaultName),
+		fmt.Sprintf(`    --assignee-object-id "%s" \`, objectId),
 		"    --assignee-principal-type ServicePrincipal",
 	}
 
 	return strings.Join(az, "\n"), nil
 }
 
-func getPostCreateStepInstruction(key *byokv1.ByokV1Key) string {
+func getPostCreateStepInstruction(key byokv1.ByokV1Key) string {
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
 		return `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
