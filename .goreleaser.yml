@@ -156,7 +156,7 @@ builds:
     binary: confluent
     main: cmd/confluent/main.go
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe  
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -171,6 +171,33 @@ builds:
     goarch:
       - amd64
     hooks:
+      pre:
+        - cmd: az login
+        - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
+        - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
+      post:
+        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
+        - cmd: rm CLIEVCodeSigningCertificate2.pfx
+  - id: confluent-windows-amd64-chocolatey
+    binary: confluent
+    main: cmd/confluent/main.go
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true -buildmode=exe
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - windows
+    goarch:
+      - amd64
+    hooks:
+      # TODO: We might have to convert some of these to global before/after hooks since we'll now have multiple Windows binaries w/ different ldflags
       pre:
         - cmd: az login
         - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
@@ -212,6 +239,16 @@ archives:
       - confluent-darwin-arm64-homebrew
       - confluent-linux-homebrew
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_homebrew"
+    wrap_in_directory: "{{ .ProjectName }}"
+    files:
+      - LICENSE
+      - legal/**/*
+  - id: archive-chocolatey
+    # TODO: Check naming requirements for Chocolatey
+    format: zip
+    builds:
+      - confluent-windows-amd64-chocolatey
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_chocolatey"
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE
@@ -309,3 +346,26 @@ brews:
     description: CLI for Confluent Cloud and Confluent Platform
     skip_upload: "{{ .Env.DRY_RUN }}"
     test: system "#{bin}/confluent version"
+
+chocolateys:
+  # TODO: Check naming requirements for Chocolatey
+  - name: cli
+    ids:
+      - archive-chocolatey
+    owners: Confluent Inc.
+    title: Confluent CLI
+    authors: Confluent Inc.
+    project_url: https://docs.confluent.io/confluent-cli/current/overview.html
+    url_template: "https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/{{ .Version }}/{{ .ArtifactName }}"
+    copyright: 2023 Confluent Inc.
+    license_url: https://github.com/confluentinc/cli/blob/main/LICENSE
+    require_license_acceptance: false
+    project_source_url: https://github.com/confluentinc/cli
+    bug_tracker_url: https://github.com/confluentinc/cli/issues
+    summary: CLI for Confluent Cloud and Confluent Platform
+    description: CLI for Confluent Cloud and Confluent Platform
+    release_notes: https://docs.confluent.io/confluent-cli/current/release-notes.html
+    # TODO: Store this in vault(?)
+    api_key: '{{ .Env.CHOCOLATEY_API_KEY }}'
+    source_repo: "https://push.chocolatey.org/"
+    skip_publish: "{{ .Env.DRY_RUN }}"
