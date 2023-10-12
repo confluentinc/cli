@@ -33,14 +33,14 @@ func (c *clusterCommand) newUseCommand(cfg *config.Config) *cobra.Command {
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	if _, err := c.Context.FindKafkaCluster(id); err != nil {
+	if _, err := c.Context.FindKafkaCluster(c.V2Client, id); err != nil {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, id),
 			errors.ChooseRightEnvironmentSuggestions,
 		)
 	}
 
-	if err := c.Context.SetActiveKafkaCluster(id); err != nil {
+	if err := c.Context.SetActiveKafkaCluster(c.V2Client, id); err != nil {
 		return err
 	}
 

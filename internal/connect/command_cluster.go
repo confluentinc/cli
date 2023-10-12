@@ -78,7 +78,7 @@ func (c *clusterCommand) autocompleteConnectors() []string {
 }
 
 func (c *clusterCommand) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return nil, err
 	}

@@ -33,7 +33,7 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}

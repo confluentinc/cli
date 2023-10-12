@@ -39,11 +39,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
-	if err != nil {
-		return err
-	}
-
 	if name != "" && name != ctx.Name {
 		if _, ok := ctx.Config.Contexts[name]; ok {
 			return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
@@ -73,8 +68,13 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
+	if err != nil {
+		return err
+	}
+
 	if kafkaCluster != "" {
-		if err := ctx.SetActiveKafkaCluster(kafkaCluster); err != nil {
+		if err := ctx.SetActiveKafkaCluster(nil, kafkaCluster); err != nil {
 			return err
 		}
 	}
