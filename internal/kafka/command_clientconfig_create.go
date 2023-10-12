@@ -173,7 +173,7 @@ func (c *clientConfigCommand) create(configId string, srApiAvailable bool) func(
 
 func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get kafka cluster from context or flags, including key pair
-	kafkaCluster, err := c.Config.Context().GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return "", err
 	}
@@ -185,7 +185,7 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 	// Only validate that the key pair matches with the cluster if it's passed via the flag.
 	// This is because currently "api-key store" does not check if the secret is valid. Therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
-	flagKey, _, err := c.Config.Context().KeyAndSecretFlags(cmd)
+	flagKey, _, err := c.Context.KeyAndSecretFlags(cmd)
 	if err != nil {
 		return "", err
 	}

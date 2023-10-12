@@ -32,7 +32,7 @@ func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
