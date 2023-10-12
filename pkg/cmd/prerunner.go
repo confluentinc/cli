@@ -217,13 +217,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			}
 		}
 
-		if err := r.setV2Client(command); err != nil {
-			return err
-		}
-
 		if err := r.setCCloudClient(command); err != nil {
 			return err
 		}
+
+		command.V2Client = command.Config.GetCloudClientV2(unsafeTrace)
 
 		return nil
 	}
@@ -361,17 +359,6 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setV2Client(c *AuthenticatedCLICommand) error {
-	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-	if err != nil {
-		return err
-	}
-
-	c.V2Client = c.Config.GetCloudClientV2(unsafeTrace)
-
-	return nil
-}
-
 func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) (string, string, error) {
 	config, err := ctx.GetKafkaClusterForCommand(client)
 	if err != nil {
@@ -386,7 +373,7 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 	var authToken string
 	var userAgent string
 	if ctx != nil {
-		baseURL = ctx.Platform.Server
+		baseURL = ctx.GetPlatformServer()
 		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return nil, err

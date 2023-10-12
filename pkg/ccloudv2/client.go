@@ -39,14 +39,14 @@ type Client struct {
 	FlinkClient            *flinkv2.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
-	KsqlClient             *ksqlv2.APIClient
 	KafkaQuotasClient      *kafkaquotasv1.APIClient
+	KsqlClient             *ksqlv2.APIClient
 	MdsClient              *mdsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	SchemaRegistryClient   *srcmv2.APIClient
+	ServiceQuotaClient     *servicequotav1.APIClient
 	SsoClient              *ssov2.APIClient
 	StreamDesignerClient   *streamdesignerv1.APIClient
-	ServiceQuotaClient     *servicequotav1.APIClient
 }
 
 func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
@@ -69,13 +69,13 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		FlinkClient:            newFlinkClient(url, userAgent, unsafeTrace),
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
-		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
+		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
 		MdsClient:              newMdsClient(url, userAgent, unsafeTrace),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
 		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),
+		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
 		SsoClient:              newSsoClient(url, userAgent, unsafeTrace),
 		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),
-		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
 	}
 }
