@@ -604,10 +604,9 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
 							req.Equal(binName, name)
 							req.Equal("v123.456.789", version)
-							req.Contains(downloadDir, binName)
 							clock.Advance(23 * time.Second)
 							return []byte("new version"), nil
 						},
@@ -626,7 +625,7 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
 							return nil, fmt.Errorf("out of disk")
 						},
 					},
@@ -645,10 +644,9 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
-							req.Contains(downloadDir, binName)
 							clock.Advance(23 * time.Second)
 							return []byte("new version"), nil
 						},
