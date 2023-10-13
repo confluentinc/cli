@@ -10,26 +10,31 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 var allowedStatuses = []string{
-	"PENDING",
-	"RUNNING",
-	"COMPLETED",
-	"DELETING",
-	"FAILING",
-	"FAILED",
-	"STOPPED",
+	"pending",
+	"running",
+	"completed",
+	"deleting",
+	"failing",
+	"failed",
+	"stopped",
 }
 
 func (c *command) newStatementListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink SQL statements.",
-		RunE:  c.statementList,
+		Example: examples.BuildExampleString(examples.Example{
+			Text: "List running statements.",
+			Code: "confluent flink compute-pool list --status running",
+		}),
+		RunE: c.statementList,
 	}
 
 	pcmd.AddCloudFlag(cmd)
@@ -62,7 +67,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	status = strings.ToUpper(status)
+	status = strings.ToLower(status)
 
 	if status != "" && !slices.Contains(allowedStatuses, status) {
 		log.CliLogger.Warnf(`Invalid status "%s". Valid statuses are %s.`, status, utils.ArrayToCommaDelimitedString(allowedStatuses, "and"))
@@ -77,7 +82,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 
 	if status != "" {
 		statements = lo.Filter(statements, func(statement v1beta1.SqlV1beta1Statement, _ int) bool {
-			return statement.Status.GetPhase() == status
+			return strings.ToLower(statement.Status.GetPhase()) == status
 		})
 	}
 
