@@ -14,7 +14,7 @@ func New(config *config.Config) *DynamicConfig {
 	return &DynamicConfig{Config: config}
 }
 
-// Parse "--context" flag value into config struct
+// Parse `--context` flag value into config struct
 // Call ParseFlagsIntoContext which handles environment and cluster flags
 func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
 	if context, _ := cmd.Flags().GetString("context"); context != "" {

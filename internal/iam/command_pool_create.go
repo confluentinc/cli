@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
+func (c *poolCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create an identity pool.",
@@ -36,7 +36,7 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
+func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	description, err := cmd.Flags().GetString("description")

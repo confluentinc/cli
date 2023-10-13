@@ -5,13 +5,12 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c *clusterCommand) newDeleteCommand(cfg *config.Config) *cobra.Command {
+func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete one or more Kafka clusters.",
@@ -23,9 +22,7 @@ func (c *clusterCommand) newDeleteCommand(cfg *config.Config) *cobra.Command {
 
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	if cfg.IsCloudLogin() {
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	}
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }

@@ -74,7 +74,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if kafkaCluster != "" {
-		if err := ctx.SetActiveKafkaCluster(nil, kafkaCluster); err != nil {
+		if _, err := ctx.FindKafkaCluster(nil, kafkaCluster); err != nil {
+			return err
+		}
+
+		if err := ctx.SetActiveKafkaCluster(kafkaCluster); err != nil {
 			return err
 		}
 	}
