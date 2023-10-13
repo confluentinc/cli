@@ -22,7 +22,7 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *configCommand) describe(cmd *cobra.Command, _ []string) error {
+func (c *configCommand) describe(_ *cobra.Command, _ []string) error {
 	spec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return HandleMdsAuditLogApiError(err, response)

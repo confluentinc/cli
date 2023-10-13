@@ -28,7 +28,7 @@ func (c *configCommand) newEditCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
+func (c *configCommand) edit(_ *cobra.Command, _ []string) error {
 	gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return HandleMdsAuditLogApiError(err, response)

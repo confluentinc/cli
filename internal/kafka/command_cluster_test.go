@@ -25,8 +25,6 @@ import (
 )
 
 const (
-	clusterId     = "lkc-0000"
-	clusterName   = "testCluster"
 	cloudId       = "aws"
 	regionId      = "us-west-2"
 	environmentId = "abc"

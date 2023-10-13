@@ -11,8 +11,6 @@ type Repository interface {
 	GetLatestReleaseNotesVersions(name, currentVersion string) (version.Collection, error)
 	GetAvailableBinaryVersions(name string) (version.Collection, error)
 	GetAvailableReleaseNotesVersions(name string) (version.Collection, error)
-	// Downloads the versioned package to download dir to downloadDir.
-	// Returns the full path to the downloaded package, the download size in bytes, or an error if one occurred.
 	DownloadVersion(name, version string) ([]byte, error)
 	DownloadReleaseNotes(name, version string) (string, error)
 	DownloadChecksums(name, version string) (string, error)
