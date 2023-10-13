@@ -50,7 +50,7 @@ func (c *command) newConfigDeleteCommand(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func (c *command) configDelete(cmd *cobra.Command, args []string) error {
+func (c *command) configDelete(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err

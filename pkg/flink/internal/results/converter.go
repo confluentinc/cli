@@ -7,7 +7,7 @@ import (
 )
 
 var nullField = types.AtomicStatementResultField{
-	Type:  types.NULL,
+	Type:  types.Null,
 	Value: "NULL",
 }
 
@@ -16,21 +16,21 @@ type SDKToStatementResultFieldConverter func(any) types.StatementResultField
 func GetConverterForType(dataType flinkgatewayv1beta1.DataType) SDKToStatementResultFieldConverter {
 	fieldType := types.NewResultFieldType(dataType)
 	switch fieldType {
-	case types.ARRAY:
+	case types.Array:
 		elementType := dataType.GetElementType()
 		return toArrayStatementResultFieldConverter(elementType)
-	case types.MULTISET:
+	case types.Multiset:
 		keyType := dataType.GetElementType()
 		valueType := flinkgatewayv1beta1.DataType{
 			Nullable: false,
 			Type:     "INTEGER",
 		}
 		return toMapStatementResultFieldConverter(fieldType, keyType, valueType)
-	case types.MAP:
+	case types.Map:
 		keyType := dataType.GetKeyType()
 		valueType := dataType.GetValueType()
 		return toMapStatementResultFieldConverter(fieldType, keyType, valueType)
-	case types.ROW:
+	case types.Row:
 		elementTypes := dataType.GetFields()
 		return toRowStatementResultFieldConverter(elementTypes)
 	default:
@@ -63,7 +63,7 @@ func toArrayStatementResultFieldConverter(elementType flinkgatewayv1beta1.DataTy
 			values = append(values, toStatementResultFieldConverter(item))
 		}
 		return types.ArrayStatementResultField{
-			Type:        types.ARRAY,
+			Type:        types.Array,
 			ElementType: types.NewResultFieldType(elementType),
 			Values:      values,
 		}
@@ -118,7 +118,7 @@ func toRowStatementResultFieldConverter(elementTypes []flinkgatewayv1beta1.RowFi
 			values = append(values, convertedElement)
 		}
 		return types.RowStatementResultField{
-			Type:         types.ROW,
+			Type:         types.Row,
 			ElementTypes: elementResultFieldTypes,
 			Values:       values,
 		}

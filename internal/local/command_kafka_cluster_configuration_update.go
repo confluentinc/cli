@@ -37,7 +37,7 @@ func (c *command) newKafkaClusterConfigurationUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) configurationUpdate(cmd *cobra.Command, args []string) error {
+func (c *command) configurationUpdate(cmd *cobra.Command, _ []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)

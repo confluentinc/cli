@@ -26,7 +26,7 @@ func (c *command) newInstallCommand() *cobra.Command {
 	}
 }
 
-func (c *command) install(cmd *cobra.Command, args []string) error {
+func (c *command) install(_ *cobra.Command, args []string) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return err

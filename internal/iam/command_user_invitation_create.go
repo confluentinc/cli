@@ -20,7 +20,7 @@ func (c invitationCommand) newCreateCommand() *cobra.Command {
 	}
 }
 
-func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) error {
+func (c invitationCommand) createInvitation(_ *cobra.Command, args []string) error {
 	if !validateEmail(args[0]) {
 		return fmt.Errorf("invalid email structure")
 	}
