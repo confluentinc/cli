@@ -531,7 +531,7 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 	if ctx == nil {
 		return mdsv1.NewAPIClient(mdsConfig)
 	}
-	mdsConfig.BasePath = ctx.Platform.Server
+	mdsConfig.BasePath = ctx.GetPlatformServer()
 	mdsConfig.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
 		return mdsv1.NewAPIClient(mdsConfig)
@@ -714,7 +714,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
-			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -723,11 +723,11 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 			return "", "", err
 		}
 
-		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, organizationId)
+		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.GetPlatformServer(), credentials, false, organizationId)
 	} else {
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, false, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, false, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -737,7 +737,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 		}
 
 		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)
+		client, err := mdsClientManager.GetMDSClient(ctx.GetPlatformServer(), ctx.Platform.CaCertPath, unsafeTrace)
 		if err != nil {
 			return "", "", err
 		}
@@ -810,7 +810,7 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
-	mdsv2Config.BasePath = ctx.Platform.Server + "/api/metadata/security/v2alpha1"
+	mdsv2Config.BasePath = ctx.GetPlatformServer() + "/api/metadata/security/v2alpha1"
 	mdsv2Config.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)

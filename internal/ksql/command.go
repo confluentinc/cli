@@ -83,7 +83,7 @@ func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
 		return false, err
 	}
 
-	dataplaneToken, err := pauth.GetDataplaneToken(state, c.Context.Platform.Server)
+	dataplaneToken, err := pauth.GetDataplaneToken(state, c.Context.GetPlatformServer())
 	if err != nil {
 		return false, err
 	}
