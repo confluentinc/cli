@@ -83,7 +83,6 @@ type Config struct {
 	DisableUpdateCheck  bool `json:"disable_update_check"`
 	DisableUpdates      bool `json:"disable_updates,omitempty"`
 	EnableColor         bool `json:"enable_color"`
-	NoBrowser           bool `json:"no_browser"`
 
 	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
@@ -95,6 +94,7 @@ type Config struct {
 
 	// Deprecated
 	AnonymousId string `json:"anonymous_id,omitempty"`
+	NoBrowser   bool   `json:"no_browser,omitempty"`
 	Ver         string `json:"version,omitempty"`
 
 	// The following configurations are not persisted between runs
