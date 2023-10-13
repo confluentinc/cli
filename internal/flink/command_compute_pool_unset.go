@@ -36,6 +36,6 @@ func (c *command) unset(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UnsetResourceMsg, resource.FlinkComputePool, computePoolToUnset)
+	output.Printf(c.Config.EnableColor, errors.UnsetResourceMsg, resource.FlinkComputePool, computePoolToUnset)
 	return nil
 }
