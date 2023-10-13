@@ -63,10 +63,11 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) useAPIKey(apiKey, clusterId string) error {
-	kcc, err := c.Context.FindKafkaCluster(clusterId)
+	kcc, err := c.Context.FindKafkaCluster(c.V2Client, clusterId)
 	if err != nil {
 		return err
 	}
+
 	if _, ok := kcc.APIKeys[apiKey]; !ok {
 		// check if this is API key exists server-side
 		key, httpResp, err := c.V2Client.GetApiKey(apiKey)

@@ -76,7 +76,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 func (c *command) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}

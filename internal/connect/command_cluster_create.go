@@ -48,7 +48,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, _ []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
