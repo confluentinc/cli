@@ -8,6 +8,7 @@ Available Commands:
   delete      Delete one or more Flink compute pools.
   describe    Describe a Flink compute pool.
   list        List Flink compute pools.
+  unset       Unset the current Flink compute pool.
   update      Update a Flink compute pool.
   use         Use a Flink compute pool in subsequent commands.
 
