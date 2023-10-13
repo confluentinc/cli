@@ -950,7 +950,7 @@ func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, organiz
 	} else if organizationId == organizationId2 {
 		req.Equal(testToken2, ctx.GetAuthToken())
 	}
-	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.Platform.Server)
+	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.GetPlatformServer())
 	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
 	req.Contains(cfg.Platforms, ctx.Platform.Name)
 	req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
@@ -964,7 +964,7 @@ func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, organiz
 		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
 		req.Equal(organizationId, ctx.GetCurrentOrganization())
 	} else {
-		req.Equal("http://localhost:8090", ctx.Platform.Server)
+		req.Equal("http://localhost:8090", ctx.GetPlatformServer())
 	}
 }
 

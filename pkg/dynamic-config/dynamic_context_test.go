@@ -14,7 +14,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	pmock "github.com/confluentinc/cli/v3/pkg/mock"
 )
 
 var (
@@ -37,7 +36,7 @@ func TestFindKafkaCluster_Unexpired(t *testing.T) {
 		},
 	}
 
-	config, err := d.FindKafkaCluster("lkc-123456")
+	config, err := d.FindKafkaCluster(nil, "lkc-123456")
 	require.NoError(t, err)
 	require.True(t, config.LastUpdate.Equal(update))
 }
@@ -53,29 +52,30 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 			State:               &config.ContextState{AuthToken: "token"},
 			Config:              &config.Config{},
 		},
-		V2Client: &ccloudv2.Client{
-			CmkClient: &cmkv2.APIClient{
-				ClustersCmkV2Api: &cmkmock.ClustersCmkV2Api{
-					GetCmkV2ClusterFunc: func(_ context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
-						return cmkv2.ApiGetCmkV2ClusterRequest{}
-					},
-					GetCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
-						cluster := cmkv2.CmkV2Cluster{
-							Id: cmkv2.PtrString("lkc-123456"),
-							Spec: &cmkv2.CmkV2ClusterSpec{
-								DisplayName:            cmkv2.PtrString(""),
-								KafkaBootstrapEndpoint: cmkv2.PtrString(""),
-								HttpEndpoint:           cmkv2.PtrString(""),
-							},
-						}
-						return cluster, nil, nil
-					},
+	}
+
+	client := &ccloudv2.Client{
+		CmkClient: &cmkv2.APIClient{
+			ClustersCmkV2Api: &cmkmock.ClustersCmkV2Api{
+				GetCmkV2ClusterFunc: func(_ context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
+					return cmkv2.ApiGetCmkV2ClusterRequest{}
+				},
+				GetCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+					cluster := cmkv2.CmkV2Cluster{
+						Id: cmkv2.PtrString("lkc-123456"),
+						Spec: &cmkv2.CmkV2ClusterSpec{
+							DisplayName:            cmkv2.PtrString(""),
+							KafkaBootstrapEndpoint: cmkv2.PtrString(""),
+							HttpEndpoint:           cmkv2.PtrString(""),
+						},
+					}
+					return cluster, nil, nil
 				},
 			},
 		},
 	}
 
-	config, err := d.FindKafkaCluster("lkc-123456")
+	config, err := d.FindKafkaCluster(client, "lkc-123456")
 	require.NoError(t, err)
 	require.True(t, config.LastUpdate.After(update))
 }
@@ -146,12 +146,12 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 
 func getBaseContext() *DynamicContext {
 	cfg := config.AuthenticatedCloudConfigMock()
-	return NewDynamicContext(cfg.Context(), pmock.NewV2ClientMock())
+	return NewDynamicContext(cfg.Context())
 }
 
 func getClusterFlagContext() *DynamicContext {
 	cfg := config.AuthenticatedCloudConfigMock()
-	clusterFlagContext := NewDynamicContext(cfg.Context(), pmock.NewV2ClientMock())
+	clusterFlagContext := NewDynamicContext(cfg.Context())
 	// create cluster that will be used in "--cluster" flag value
 	clusterFlagContext.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &config.KafkaClusterConfig{
 		ID:   flagCluster,
@@ -162,7 +162,7 @@ func getClusterFlagContext() *DynamicContext {
 
 func getEnvFlagContext() *DynamicContext {
 	cfg := config.AuthenticatedCloudConfigMock()
-	envFlagContext := NewDynamicContext(cfg.Context(), pmock.NewV2ClientMock())
+	envFlagContext := NewDynamicContext(cfg.Context())
 	envFlagContext.Environments[flagEnvironment] = &config.EnvironmentContext{}
 	return envFlagContext
 }

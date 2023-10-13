@@ -373,7 +373,7 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 }
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %w`, err)
 	}

@@ -89,7 +89,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 		return args[0], nil
 	}
 
-	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
+	lkc := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 	if lkc == "" {
 		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
 	}

@@ -134,7 +134,7 @@ func (c *command) autocompletePipelines() []string {
 }
 
 func (c *command) getPipelines() ([]streamdesignerv1.SdV1Pipeline, error) {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return nil, err
 	}
