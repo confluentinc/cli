@@ -457,7 +457,7 @@ func handleSRCompatibility(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/asyncapi"
-func handleSRAsyncApi(t *testing.T) http.HandlerFunc {
+func handleSRAsyncApi(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:

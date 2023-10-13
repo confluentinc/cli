@@ -288,7 +288,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId stri
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
-		r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, filterParams.Name, url),
+		r.LoginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -343,7 +343,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			return nil, fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
 		if restEndpoint == "" {
-			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
+			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy")
 		}
 
 		state, err := ctx.AuthenticatedState()
@@ -516,7 +516,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
-		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(cmd, filterParams),
+		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(filterParams),
 	)
 	if err != nil {
 		return "", nil, err
@@ -734,7 +734,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
-			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(true, ctx.Name, ctx.Platform.Server),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -747,7 +747,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	} else {
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, false, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(false, ctx.Name, ctx.Platform.Server),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),

@@ -47,19 +47,6 @@ func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsCli
 	}
 }
 
-func NewPreRunnerMdsV2Mock(v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *config.Config) *Commander {
-	flagResolverMock := &pcmd.FlagResolverImpl{
-		Prompt: &pmock.Prompt{},
-		Out:    os.Stdout,
-	}
-	return &Commander{
-		FlagResolver: flagResolverMock,
-		V2Client:     v2Client,
-		MDSv2Client:  mdsClient,
-		Config:       cfg,
-	}
-}
-
 func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {

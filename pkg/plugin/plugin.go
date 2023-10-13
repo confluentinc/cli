@@ -47,7 +47,7 @@ func SearchPath(cfg *config.Config) map[string][]string {
 		}
 
 		for _, entry := range entries {
-			if name := PluginFromEntry(entry); name != "" {
+			if name := nameFromEntry(entry); name != "" {
 				path := filepath.Join(dir, entry.Name())
 				plugins[name] = append(plugins[name], path)
 			}
@@ -57,7 +57,7 @@ func SearchPath(cfg *config.Config) map[string][]string {
 	return plugins
 }
 
-func PluginFromEntry(entry os.DirEntry) string {
+func nameFromEntry(entry os.DirEntry) string {
 	if !isExecutable(entry) {
 		return ""
 	}

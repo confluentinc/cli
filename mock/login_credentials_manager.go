@@ -8,95 +8,92 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_ccloud_sdk_go_v1_public "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/v3/pkg/auth"
-	github_com_confluentinc_cli_internal_pkg_config "github.com/confluentinc/cli/v3/pkg/config"
-	github_com_confluentinc_cli_internal_pkg_netrc "github.com/confluentinc/cli/v3/pkg/netrc"
-	github_com_spf13_cobra "github.com/spf13/cobra"
+	github_com_confluentinc_cli_v3_pkg_auth "github.com/confluentinc/cli/v3/pkg/auth"
+	github_com_confluentinc_cli_v3_pkg_config "github.com/confluentinc/cli/v3/pkg/config"
+	github_com_confluentinc_cli_v3_pkg_netrc "github.com/confluentinc/cli/v3/pkg/netrc"
 )
 
 // LoginCredentialsManager is a mock of LoginCredentialsManager interface
 type LoginCredentialsManager struct {
 	lockGetCloudCredentialsFromEnvVar sync.Mutex
-	GetCloudCredentialsFromEnvVarFunc func(orgResourceId string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCloudCredentialsFromEnvVarFunc func(arg0 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetOnPremCredentialsFromEnvVar sync.Mutex
-	GetOnPremCredentialsFromEnvVarFunc func() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetOnPremCredentialsFromEnvVarFunc func() func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetSsoCredentialsFromConfig sync.Mutex
-	GetSsoCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config.Config, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetSsoCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromConfig sync.Mutex
-	GetCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config.Config, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromKeychain sync.Mutex
-	GetCredentialsFromKeychainFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config.Config, isCloud bool, ctxName, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCredentialsFromKeychainFunc func(arg0 bool, arg1, arg2 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromNetrc sync.Mutex
-	GetCredentialsFromNetrcFunc func(filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCredentialsFromNetrcFunc func(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetCloudCredentialsFromPrompt sync.Mutex
-	GetCloudCredentialsFromPromptFunc func(orgResourceId string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCloudCredentialsFromPromptFunc func(arg0 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetOnPremCredentialsFromPrompt sync.Mutex
-	GetOnPremCredentialsFromPromptFunc func() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetOnPremCredentialsFromPromptFunc func() func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetPrerunCredentialsFromConfig sync.Mutex
-	GetPrerunCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetPrerunCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetOnPremPrerunCredentialsFromEnvVar sync.Mutex
-	GetOnPremPrerunCredentialsFromEnvVarFunc func() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetOnPremPrerunCredentialsFromEnvVarFunc func() func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetOnPremPrerunCredentialsFromNetrc sync.Mutex
-	GetOnPremPrerunCredentialsFromNetrcFunc func(arg0 *github_com_spf13_cobra.Command, arg1 github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetOnPremPrerunCredentialsFromNetrcFunc func(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockSetCloudClient sync.Mutex
-	SetCloudClientFunc func(client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client)
+	SetCloudClientFunc func(arg0 *github_com_confluentinc_ccloud_sdk_go_v1_public.Client)
 
 	calls struct {
 		GetCloudCredentialsFromEnvVar []struct {
-			OrgResourceId string
+			Arg0 string
 		}
 		GetOnPremCredentialsFromEnvVar []struct {
 		}
 		GetSsoCredentialsFromConfig []struct {
-			Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
-			Url string
+			Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+			Arg1 string
 		}
 		GetCredentialsFromConfig []struct {
-			Cfg          *github_com_confluentinc_cli_internal_pkg_config.Config
-			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+			Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+			Arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 		}
 		GetCredentialsFromKeychain []struct {
-			Cfg     *github_com_confluentinc_cli_internal_pkg_config.Config
-			IsCloud bool
-			CtxName string
-			Url     string
+			Arg0 bool
+			Arg1 string
+			Arg2 string
 		}
 		GetCredentialsFromNetrc []struct {
-			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+			Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 		}
 		GetCloudCredentialsFromPrompt []struct {
-			OrgResourceId string
+			Arg0 string
 		}
 		GetOnPremCredentialsFromPrompt []struct {
 		}
 		GetPrerunCredentialsFromConfig []struct {
-			Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
+			Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
 		}
 		GetOnPremPrerunCredentialsFromEnvVar []struct {
 		}
 		GetOnPremPrerunCredentialsFromNetrc []struct {
-			Arg0 *github_com_spf13_cobra.Command
-			Arg1 github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+			Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 		}
 		SetCloudClient []struct {
-			Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
+			Arg0 *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 		}
 	}
 }
 
 // GetCloudCredentialsFromEnvVar mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetCloudCredentialsFromEnvVar(arg0 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetCloudCredentialsFromEnvVar.Lock()
 	defer m.lockGetCloudCredentialsFromEnvVar.Unlock()
 
@@ -105,14 +102,14 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromEnvVar(orgResourceId st
 	}
 
 	call := struct {
-		OrgResourceId string
+		Arg0 string
 	}{
-		OrgResourceId: orgResourceId,
+		Arg0: arg0,
 	}
 
 	m.calls.GetCloudCredentialsFromEnvVar = append(m.calls.GetCloudCredentialsFromEnvVar, call)
 
-	return m.GetCloudCredentialsFromEnvVarFunc(orgResourceId)
+	return m.GetCloudCredentialsFromEnvVarFunc(arg0)
 }
 
 // GetCloudCredentialsFromEnvVarCalled returns true if GetCloudCredentialsFromEnvVar was called at least once.
@@ -125,7 +122,7 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromEnvVarCalled() bool {
 
 // GetCloudCredentialsFromEnvVarCalls returns the calls made to GetCloudCredentialsFromEnvVar.
 func (m *LoginCredentialsManager) GetCloudCredentialsFromEnvVarCalls() []struct {
-	OrgResourceId string
+	Arg0 string
 } {
 	m.lockGetCloudCredentialsFromEnvVar.Lock()
 	defer m.lockGetCloudCredentialsFromEnvVar.Unlock()
@@ -134,7 +131,7 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromEnvVarCalls() []struct 
 }
 
 // GetOnPremCredentialsFromEnvVar mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetOnPremCredentialsFromEnvVar() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetOnPremCredentialsFromEnvVar() func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetOnPremCredentialsFromEnvVar.Lock()
 	defer m.lockGetOnPremCredentialsFromEnvVar.Unlock()
 
@@ -168,7 +165,7 @@ func (m *LoginCredentialsManager) GetOnPremCredentialsFromEnvVarCalls() []struct
 }
 
 // GetSsoCredentialsFromConfig mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetSsoCredentialsFromConfig(cfg *github_com_confluentinc_cli_internal_pkg_config.Config, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetSsoCredentialsFromConfig(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetSsoCredentialsFromConfig.Lock()
 	defer m.lockGetSsoCredentialsFromConfig.Unlock()
 
@@ -177,16 +174,16 @@ func (m *LoginCredentialsManager) GetSsoCredentialsFromConfig(cfg *github_com_co
 	}
 
 	call := struct {
-		Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
-		Url string
+		Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+		Arg1 string
 	}{
-		Cfg: cfg,
-		Url: url,
+		Arg0: arg0,
+		Arg1: arg1,
 	}
 
 	m.calls.GetSsoCredentialsFromConfig = append(m.calls.GetSsoCredentialsFromConfig, call)
 
-	return m.GetSsoCredentialsFromConfigFunc(cfg, url)
+	return m.GetSsoCredentialsFromConfigFunc(arg0, arg1)
 }
 
 // GetSsoCredentialsFromConfigCalled returns true if GetSsoCredentialsFromConfig was called at least once.
@@ -199,8 +196,8 @@ func (m *LoginCredentialsManager) GetSsoCredentialsFromConfigCalled() bool {
 
 // GetSsoCredentialsFromConfigCalls returns the calls made to GetSsoCredentialsFromConfig.
 func (m *LoginCredentialsManager) GetSsoCredentialsFromConfigCalls() []struct {
-	Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
-	Url string
+	Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+	Arg1 string
 } {
 	m.lockGetSsoCredentialsFromConfig.Lock()
 	defer m.lockGetSsoCredentialsFromConfig.Unlock()
@@ -209,7 +206,7 @@ func (m *LoginCredentialsManager) GetSsoCredentialsFromConfigCalls() []struct {
 }
 
 // GetCredentialsFromConfig mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCredentialsFromConfig(cfg *github_com_confluentinc_cli_internal_pkg_config.Config, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetCredentialsFromConfig(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetCredentialsFromConfig.Lock()
 	defer m.lockGetCredentialsFromConfig.Unlock()
 
@@ -218,16 +215,16 @@ func (m *LoginCredentialsManager) GetCredentialsFromConfig(cfg *github_com_confl
 	}
 
 	call := struct {
-		Cfg          *github_com_confluentinc_cli_internal_pkg_config.Config
-		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+		Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+		Arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 	}{
-		Cfg:          cfg,
-		FilterParams: filterParams,
+		Arg0: arg0,
+		Arg1: arg1,
 	}
 
 	m.calls.GetCredentialsFromConfig = append(m.calls.GetCredentialsFromConfig, call)
 
-	return m.GetCredentialsFromConfigFunc(cfg, filterParams)
+	return m.GetCredentialsFromConfigFunc(arg0, arg1)
 }
 
 // GetCredentialsFromConfigCalled returns true if GetCredentialsFromConfig was called at least once.
@@ -240,8 +237,8 @@ func (m *LoginCredentialsManager) GetCredentialsFromConfigCalled() bool {
 
 // GetCredentialsFromConfigCalls returns the calls made to GetCredentialsFromConfig.
 func (m *LoginCredentialsManager) GetCredentialsFromConfigCalls() []struct {
-	Cfg          *github_com_confluentinc_cli_internal_pkg_config.Config
-	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+	Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+	Arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetCredentialsFromConfig.Lock()
 	defer m.lockGetCredentialsFromConfig.Unlock()
@@ -250,7 +247,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromConfigCalls() []struct {
 }
 
 // GetCredentialsFromKeychain mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCredentialsFromKeychain(cfg *github_com_confluentinc_cli_internal_pkg_config.Config, isCloud bool, ctxName, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetCredentialsFromKeychain(arg0 bool, arg1, arg2 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetCredentialsFromKeychain.Lock()
 	defer m.lockGetCredentialsFromKeychain.Unlock()
 
@@ -259,20 +256,18 @@ func (m *LoginCredentialsManager) GetCredentialsFromKeychain(cfg *github_com_con
 	}
 
 	call := struct {
-		Cfg     *github_com_confluentinc_cli_internal_pkg_config.Config
-		IsCloud bool
-		CtxName string
-		Url     string
+		Arg0 bool
+		Arg1 string
+		Arg2 string
 	}{
-		Cfg:     cfg,
-		IsCloud: isCloud,
-		CtxName: ctxName,
-		Url:     url,
+		Arg0: arg0,
+		Arg1: arg1,
+		Arg2: arg2,
 	}
 
 	m.calls.GetCredentialsFromKeychain = append(m.calls.GetCredentialsFromKeychain, call)
 
-	return m.GetCredentialsFromKeychainFunc(cfg, isCloud, ctxName, url)
+	return m.GetCredentialsFromKeychainFunc(arg0, arg1, arg2)
 }
 
 // GetCredentialsFromKeychainCalled returns true if GetCredentialsFromKeychain was called at least once.
@@ -285,10 +280,9 @@ func (m *LoginCredentialsManager) GetCredentialsFromKeychainCalled() bool {
 
 // GetCredentialsFromKeychainCalls returns the calls made to GetCredentialsFromKeychain.
 func (m *LoginCredentialsManager) GetCredentialsFromKeychainCalls() []struct {
-	Cfg     *github_com_confluentinc_cli_internal_pkg_config.Config
-	IsCloud bool
-	CtxName string
-	Url     string
+	Arg0 bool
+	Arg1 string
+	Arg2 string
 } {
 	m.lockGetCredentialsFromKeychain.Lock()
 	defer m.lockGetCredentialsFromKeychain.Unlock()
@@ -297,7 +291,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromKeychainCalls() []struct {
 }
 
 // GetCredentialsFromNetrc mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCredentialsFromNetrc(filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetCredentialsFromNetrc(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetCredentialsFromNetrc.Lock()
 	defer m.lockGetCredentialsFromNetrc.Unlock()
 
@@ -306,14 +300,14 @@ func (m *LoginCredentialsManager) GetCredentialsFromNetrc(filterParams github_co
 	}
 
 	call := struct {
-		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+		Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 	}{
-		FilterParams: filterParams,
+		Arg0: arg0,
 	}
 
 	m.calls.GetCredentialsFromNetrc = append(m.calls.GetCredentialsFromNetrc, call)
 
-	return m.GetCredentialsFromNetrcFunc(filterParams)
+	return m.GetCredentialsFromNetrcFunc(arg0)
 }
 
 // GetCredentialsFromNetrcCalled returns true if GetCredentialsFromNetrc was called at least once.
@@ -326,7 +320,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromNetrcCalled() bool {
 
 // GetCredentialsFromNetrcCalls returns the calls made to GetCredentialsFromNetrc.
 func (m *LoginCredentialsManager) GetCredentialsFromNetrcCalls() []struct {
-	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+	Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetCredentialsFromNetrc.Lock()
 	defer m.lockGetCredentialsFromNetrc.Unlock()
@@ -335,7 +329,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromNetrcCalls() []struct {
 }
 
 // GetCloudCredentialsFromPrompt mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(orgResourceId string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(arg0 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetCloudCredentialsFromPrompt.Lock()
 	defer m.lockGetCloudCredentialsFromPrompt.Unlock()
 
@@ -344,14 +338,14 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(orgResourceId st
 	}
 
 	call := struct {
-		OrgResourceId string
+		Arg0 string
 	}{
-		OrgResourceId: orgResourceId,
+		Arg0: arg0,
 	}
 
 	m.calls.GetCloudCredentialsFromPrompt = append(m.calls.GetCloudCredentialsFromPrompt, call)
 
-	return m.GetCloudCredentialsFromPromptFunc(orgResourceId)
+	return m.GetCloudCredentialsFromPromptFunc(arg0)
 }
 
 // GetCloudCredentialsFromPromptCalled returns true if GetCloudCredentialsFromPrompt was called at least once.
@@ -364,7 +358,7 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromPromptCalled() bool {
 
 // GetCloudCredentialsFromPromptCalls returns the calls made to GetCloudCredentialsFromPrompt.
 func (m *LoginCredentialsManager) GetCloudCredentialsFromPromptCalls() []struct {
-	OrgResourceId string
+	Arg0 string
 } {
 	m.lockGetCloudCredentialsFromPrompt.Lock()
 	defer m.lockGetCloudCredentialsFromPrompt.Unlock()
@@ -373,7 +367,7 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromPromptCalls() []struct 
 }
 
 // GetOnPremCredentialsFromPrompt mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetOnPremCredentialsFromPrompt() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetOnPremCredentialsFromPrompt() func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetOnPremCredentialsFromPrompt.Lock()
 	defer m.lockGetOnPremCredentialsFromPrompt.Unlock()
 
@@ -407,7 +401,7 @@ func (m *LoginCredentialsManager) GetOnPremCredentialsFromPromptCalls() []struct
 }
 
 // GetPrerunCredentialsFromConfig mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfig(cfg *github_com_confluentinc_cli_internal_pkg_config.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfig(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetPrerunCredentialsFromConfig.Lock()
 	defer m.lockGetPrerunCredentialsFromConfig.Unlock()
 
@@ -416,14 +410,14 @@ func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfig(cfg *github_com
 	}
 
 	call := struct {
-		Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
+		Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
 	}{
-		Cfg: cfg,
+		Arg0: arg0,
 	}
 
 	m.calls.GetPrerunCredentialsFromConfig = append(m.calls.GetPrerunCredentialsFromConfig, call)
 
-	return m.GetPrerunCredentialsFromConfigFunc(cfg)
+	return m.GetPrerunCredentialsFromConfigFunc(arg0)
 }
 
 // GetPrerunCredentialsFromConfigCalled returns true if GetPrerunCredentialsFromConfig was called at least once.
@@ -436,7 +430,7 @@ func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfigCalled() bool {
 
 // GetPrerunCredentialsFromConfigCalls returns the calls made to GetPrerunCredentialsFromConfig.
 func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfigCalls() []struct {
-	Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
+	Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
 } {
 	m.lockGetPrerunCredentialsFromConfig.Lock()
 	defer m.lockGetPrerunCredentialsFromConfig.Unlock()
@@ -445,7 +439,7 @@ func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfigCalls() []struct
 }
 
 // GetOnPremPrerunCredentialsFromEnvVar mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromEnvVar() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromEnvVar() func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetOnPremPrerunCredentialsFromEnvVar.Lock()
 	defer m.lockGetOnPremPrerunCredentialsFromEnvVar.Unlock()
 
@@ -479,7 +473,7 @@ func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromEnvVarCalls() []
 }
 
 // GetOnPremPrerunCredentialsFromNetrc mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrc(arg0 *github_com_spf13_cobra.Command, arg1 github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrc(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetOnPremPrerunCredentialsFromNetrc.Lock()
 	defer m.lockGetOnPremPrerunCredentialsFromNetrc.Unlock()
 
@@ -488,16 +482,14 @@ func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrc(arg0 *gith
 	}
 
 	call := struct {
-		Arg0 *github_com_spf13_cobra.Command
-		Arg1 github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+		Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 	}{
 		Arg0: arg0,
-		Arg1: arg1,
 	}
 
 	m.calls.GetOnPremPrerunCredentialsFromNetrc = append(m.calls.GetOnPremPrerunCredentialsFromNetrc, call)
 
-	return m.GetOnPremPrerunCredentialsFromNetrcFunc(arg0, arg1)
+	return m.GetOnPremPrerunCredentialsFromNetrcFunc(arg0)
 }
 
 // GetOnPremPrerunCredentialsFromNetrcCalled returns true if GetOnPremPrerunCredentialsFromNetrc was called at least once.
@@ -510,8 +502,7 @@ func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrcCalled() bo
 
 // GetOnPremPrerunCredentialsFromNetrcCalls returns the calls made to GetOnPremPrerunCredentialsFromNetrc.
 func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrcCalls() []struct {
-	Arg0 *github_com_spf13_cobra.Command
-	Arg1 github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
+	Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetOnPremPrerunCredentialsFromNetrc.Lock()
 	defer m.lockGetOnPremPrerunCredentialsFromNetrc.Unlock()
@@ -520,7 +511,7 @@ func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrcCalls() []s
 }
 
 // SetCloudClient mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) SetCloudClient(client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client) {
+func (m *LoginCredentialsManager) SetCloudClient(arg0 *github_com_confluentinc_ccloud_sdk_go_v1_public.Client) {
 	m.lockSetCloudClient.Lock()
 	defer m.lockSetCloudClient.Unlock()
 
@@ -529,14 +520,14 @@ func (m *LoginCredentialsManager) SetCloudClient(client *github_com_confluentinc
 	}
 
 	call := struct {
-		Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
+		Arg0 *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 	}{
-		Client: client,
+		Arg0: arg0,
 	}
 
 	m.calls.SetCloudClient = append(m.calls.SetCloudClient, call)
 
-	m.SetCloudClientFunc(client)
+	m.SetCloudClientFunc(arg0)
 }
 
 // SetCloudClientCalled returns true if SetCloudClient was called at least once.
@@ -549,7 +540,7 @@ func (m *LoginCredentialsManager) SetCloudClientCalled() bool {
 
 // SetCloudClientCalls returns the calls made to SetCloudClient.
 func (m *LoginCredentialsManager) SetCloudClientCalls() []struct {
-	Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
+	Arg0 *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 } {
 	m.lockSetCloudClient.Lock()
 	defer m.lockSetCloudClient.Unlock()

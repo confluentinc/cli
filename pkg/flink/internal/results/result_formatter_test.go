@@ -79,7 +79,7 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 		})
 
 		val := "NULL"
-		if types.NewResultFieldType(atomicDataType) != types.NULL {
+		if types.NewResultFieldType(atomicDataType) != types.Null {
 			val, _ = atomicField.(string)
 		}
 
@@ -99,19 +99,19 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 
 func (s *ResultFormatterTestSuite) TestFormatArrayField() {
 	arrayField := types.ArrayStatementResultField{
-		Type:        types.ARRAY,
-		ElementType: types.VARCHAR,
+		Type:        types.Array,
+		ElementType: types.Varchar,
 		Values: []types.StatementResultField{
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "Test",
 			},
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "Hello",
 			},
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "World",
 			},
 		},
@@ -155,27 +155,27 @@ func (s *ResultFormatterTestSuite) TestFormatArrayField() {
 
 func (s *ResultFormatterTestSuite) TestFormatMapField() {
 	mapField := types.MapStatementResultField{
-		Type:      types.ARRAY,
-		KeyType:   types.VARCHAR,
-		ValueType: types.VARCHAR,
+		Type:      types.Array,
+		KeyType:   types.Varchar,
+		ValueType: types.Varchar,
 		Entries: []types.MapStatementResultFieldEntry{
 			{
 				Key: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Key1",
 				},
 				Value: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Value1",
 				},
 			},
 			{
 				Key: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Key2",
 				},
 				Value: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Value2",
 				},
 			},
@@ -220,19 +220,19 @@ func (s *ResultFormatterTestSuite) TestFormatMapField() {
 
 func (s *ResultFormatterTestSuite) TestFormatRowField() {
 	arrayField := types.RowStatementResultField{
-		Type:         types.ARRAY,
-		ElementTypes: []types.StatementResultFieldType{types.VARCHAR, types.VARCHAR, types.VARCHAR},
+		Type:         types.Array,
+		ElementTypes: []types.StatementResultFieldType{types.Varchar, types.Varchar, types.Varchar},
 		Values: []types.StatementResultField{
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "Test",
 			},
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "Hello",
 			},
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "World",
 			},
 		},
@@ -276,27 +276,27 @@ func (s *ResultFormatterTestSuite) TestFormatRowField() {
 
 func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 	mapField := types.MapStatementResultField{
-		Type:      types.ARRAY,
-		KeyType:   types.VARCHAR,
-		ValueType: types.VARCHAR,
+		Type:      types.Array,
+		KeyType:   types.Varchar,
+		ValueType: types.Varchar,
 		Entries: []types.MapStatementResultFieldEntry{
 			{
 				Key: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Key1",
 				},
 				Value: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Value1",
 				},
 			},
 			{
 				Key: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Key2",
 				},
 				Value: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Value2",
 				},
 			},
@@ -304,8 +304,8 @@ func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 	}
 
 	field := types.ArrayStatementResultField{
-		Type:        types.ARRAY,
-		ElementType: types.MAP,
+		Type:        types.Array,
+		ElementType: types.Map,
 		Values: []types.StatementResultField{
 			mapField,
 			mapField,

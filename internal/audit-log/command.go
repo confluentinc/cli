@@ -34,7 +34,7 @@ type errorMessage struct {
 	Message   string `json:"message" yaml:"message"`
 }
 
-func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Response) error {
+func HandleMdsAuditLogApiError(err error, response *http.Response) error {
 	if response != nil {
 		switch status := response.StatusCode; status {
 		case http.StatusNotFound:

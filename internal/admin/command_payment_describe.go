@@ -18,7 +18,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	}
 }
 
-func (c *command) describe(cmd *cobra.Command, _ []string) error {
+func (c *command) describe(_ *cobra.Command, _ []string) error {
 	user, err := c.Client.Auth.User()
 	if err != nil {
 		return err
