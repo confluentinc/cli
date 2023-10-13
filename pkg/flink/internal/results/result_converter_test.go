@@ -46,7 +46,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataType() {
 		Name: "Test Column",
 	})
 	require.NotNil(s.T(), resultField)
-	require.Equal(s.T(), types.NULL, resultField.GetType())
+	require.Equal(s.T(), types.Null, resultField.GetType())
 	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
 }
 
@@ -58,7 +58,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataType() {
 		Type: flinkgatewayv1beta1.DataType{},
 	})
 	require.NotNil(s.T(), resultField)
-	require.Equal(s.T(), types.NULL, resultField.GetType())
+	require.Equal(s.T(), types.Null, resultField.GetType())
 	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
 }
 
@@ -78,7 +78,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDiffer() {
 		Type: varcharType,
 	})
 	require.NotNil(s.T(), resultField)
-	require.Equal(s.T(), types.NULL, resultField.GetType())
+	require.Equal(s.T(), types.Null, resultField.GetType())
 	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
 }
 

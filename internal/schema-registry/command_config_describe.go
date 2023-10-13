@@ -58,7 +58,7 @@ func (c *command) newConfigDescribeCommand(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) configDescribe(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err

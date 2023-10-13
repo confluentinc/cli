@@ -1639,14 +1639,14 @@ func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs:alter"
-func handleKafkaBrokerConfigsAlter(t *testing.T) http.HandlerFunc {
+func handleKafkaBrokerConfigsAlter(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter"
-func handleKafkaBrokerIdConfigsAlter(t *testing.T) http.HandlerFunc {
+func handleKafkaBrokerIdConfigsAlter(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}

@@ -23,7 +23,7 @@ func (c *command) newKafkaTopicListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) kafkaTopicList(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicList(cmd *cobra.Command, _ []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)

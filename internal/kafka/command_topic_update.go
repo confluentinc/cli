@@ -19,10 +19,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
-const (
-	updateTopicConfigRestMsg    = "Updated the following configuration values for topic \"%s\"%s:\n"
-	readOnlyConfigNotUpdatedMsg = "(read-only configs were not updated)"
-)
+const updateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\"%s:\n"
 
 type topicConfigurationOut struct {
 	Name     string `human:"Name" serialized:"name"`

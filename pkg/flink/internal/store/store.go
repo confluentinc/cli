@@ -54,11 +54,11 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 
 func (s *Store) persistUserProperties() {
 	if s.appOptions.GetContext() != nil {
-		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.ConfigKeyCatalog)); err != nil {
+		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.KeyCatalog)); err != nil {
 			log.CliLogger.Errorf("error persisting current flink catalog: %v", err)
 		}
 
-		if err := s.appOptions.Context.SetCurrentFlinkDatabase(s.Properties.Get(config.ConfigKeyDatabase)); err != nil {
+		if err := s.appOptions.Context.SetCurrentFlinkDatabase(s.Properties.Get(config.KeyDatabase)); err != nil {
 			log.CliLogger.Errorf("error persisting current flink database: %v", err)
 		}
 
@@ -78,15 +78,15 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return result, sErr
 	}
 
-	statementName := s.Properties.GetOrDefault(config.ConfigKeyStatementName, uuid.New().String()[:18])
-	defer s.Properties.Delete(config.ConfigKeyStatementName)
+	statementName := s.Properties.GetOrDefault(config.KeyStatementName, uuid.New().String()[:18])
+	defer s.Properties.Delete(config.KeyStatementName)
 
 	// Process remote statements
 	computePoolId := s.appOptions.GetComputePoolId()
 	properties := s.Properties.GetNonLocalProperties()
 
 	var principal string
-	serviceAccount := s.Properties.Get(config.ConfigKeyServiceAccount)
+	serviceAccount := s.Properties.Get(config.KeyServiceAccount)
 	if serviceAccount != "" {
 		principal = serviceAccount
 	} else {
@@ -288,7 +288,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 	return nil, &types.StatementError{
 		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
-			timeout.Seconds(), config.ConfigKeyResultsTimeout),
+			timeout.Seconds(), config.KeyResultsTimeout),
 		FailureMessage: errorsMsg,
 	}
 }
@@ -341,8 +341,8 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 
 func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
 	properties := map[string]string{
-		config.ConfigKeyServiceAccount: appOptions.GetServiceAccountId(),
-		config.ConfigKeyLocalTimeZone:  getLocalTimezone(),
+		config.KeyServiceAccount: appOptions.GetServiceAccountId(),
+		config.KeyLocalTimeZone:  getLocalTimezone(),
 	}
 
 	return properties
@@ -352,10 +352,10 @@ func getInitialProperties(appOptions *types.ApplicationOptions) map[string]strin
 	properties := map[string]string{}
 
 	if appOptions.GetEnvironmentName() != "" {
-		properties[config.ConfigKeyCatalog] = appOptions.GetEnvironmentName()
+		properties[config.KeyCatalog] = appOptions.GetEnvironmentName()
 	}
 	if appOptions.GetDatabase() != "" {
-		properties[config.ConfigKeyDatabase] = appOptions.GetDatabase()
+		properties[config.KeyDatabase] = appOptions.GetDatabase()
 	}
 
 	return properties

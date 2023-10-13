@@ -36,7 +36,7 @@ type pluginWalkInfo struct {
 	name     string
 }
 
-func TestPluginFromEntry(t *testing.T) {
+func TestNameFromEntry(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		tests := []pluginWalkInfo{
 			{"confluent-plugin1.exe", fs.ModePerm, "confluent-plugin1"},
@@ -45,7 +45,7 @@ func TestPluginFromEntry(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			name := PluginFromEntry(&mock.FileInfo{
+			name := nameFromEntry(&mock.FileInfo{
 				NameVal: test.path,
 				ModeVal: test.fileMode,
 			})
@@ -62,7 +62,7 @@ func TestPluginFromEntry(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			name := PluginFromEntry(&mock.FileInfo{
+			name := nameFromEntry(&mock.FileInfo{
 				NameVal: test.path,
 				ModeVal: test.fileMode,
 			})

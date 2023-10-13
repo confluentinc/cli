@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/v3/internal/asyncapi"
 	auditlog "github.com/confluentinc/cli/v3/internal/audit-log"
 	"github.com/confluentinc/cli/v3/internal/billing"
-	byok "github.com/confluentinc/cli/v3/internal/byok"
+	"github.com/confluentinc/cli/v3/internal/byok"
 	cloudsignup "github.com/confluentinc/cli/v3/internal/cloud-signup"
 	"github.com/confluentinc/cli/v3/internal/cluster"
 	"github.com/confluentinc/cli/v3/internal/completion"

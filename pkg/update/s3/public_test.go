@@ -432,7 +432,7 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 				r.fs = test.fields.FileSystem
 			}
 
-			payload, err := r.DownloadVersion(test.args.name, test.args.version, test.args.downloadDir)
+			payload, err := r.DownloadVersion(test.args.name, test.args.version)
 			if (err != nil) != test.wantErr {
 				t.Errorf("PublicRepo.DownloadVersion() error = %v, wantErr %v", err, test.wantErr)
 				return

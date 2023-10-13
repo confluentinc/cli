@@ -9,7 +9,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -150,11 +149,11 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.Client, command.V2Client, command.Context)
+		return AutocompleteEnvironments(command.Client, command.V2Client)
 	})
 }
 
-func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) []string {
+func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Client) []string {
 	environments, err := v2Client.ListOrgEnvironments()
 	if err != nil {
 		return nil

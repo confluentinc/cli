@@ -15,10 +15,10 @@ import (
 func TestFlinkErrorCodeWhenErrors(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchError(fmt.Errorf("Some Error"), res)
+	err := flink.CatchError(fmt.Errorf("some error"), res)
 	require.Error(t, err)
 
-	flinkError, ok := err.(flink.FlinkError)
+	flinkError, ok := err.(flink.Error)
 	require.True(t, ok)
 	require.Equal(t, http.StatusMethodNotAllowed, flinkError.StatusCode())
 	require.Equal(t, err.Error(), flinkError.Error())
@@ -32,10 +32,10 @@ func TestFlinkErrorNil(t *testing.T) {
 }
 
 func TestFlinkErrorNilHttpRes(t *testing.T) {
-	err := flink.CatchError(fmt.Errorf("Some Error"), nil)
+	err := flink.CatchError(fmt.Errorf("some error"), nil)
 	require.Error(t, err)
 
-	flinkError, ok := err.(flink.FlinkError)
+	flinkError, ok := err.(flink.Error)
 	require.True(t, ok)
 	require.Equal(t, 0, flinkError.StatusCode())
 	require.Equal(t, err.Error(), flinkError.Error())
@@ -44,10 +44,10 @@ func TestFlinkErrorNilHttpRes(t *testing.T) {
 func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"message":"unauthorized"}`)), StatusCode: http.StatusUnauthorized}
 
-	err := flink.CatchError(fmt.Errorf("Some Error"), res)
+	err := flink.CatchError(fmt.Errorf("some error"), res)
 	require.Error(t, err)
 
-	flinkError, ok := err.(flink.FlinkError)
+	flinkError, ok := err.(flink.Error)
 	require.True(t, ok)
 	require.Equal(t, http.StatusUnauthorized, flinkError.StatusCode())
 	require.Equal(t, err.Error(), flinkError.Error())
@@ -56,10 +56,10 @@ func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 func TestFlinkErrorCodeWhenNestedMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"error":{"message":"gateway error"}}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchError(fmt.Errorf("Some Error"), res)
+	err := flink.CatchError(fmt.Errorf("some error"), res)
 	require.Error(t, err)
 
-	flinkError, ok := err.(flink.FlinkError)
+	flinkError, ok := err.(flink.Error)
 	require.True(t, ok)
 	require.Equal(t, http.StatusMethodNotAllowed, flinkError.StatusCode())
 	require.Equal(t, err.Error(), flinkError.Error())
@@ -68,10 +68,10 @@ func TestFlinkErrorCodeWhenNestedMessage(t *testing.T) {
 func TestFlinkErrorOnlyStatusCode(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader("")), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchError(fmt.Errorf("Some Error"), res)
+	err := flink.CatchError(fmt.Errorf("some error"), res)
 	require.Error(t, err)
 
-	flinkError, ok := err.(flink.FlinkError)
+	flinkError, ok := err.(flink.Error)
 	require.True(t, ok)
 	require.Equal(t, http.StatusMethodNotAllowed, flinkError.StatusCode())
 	require.Equal(t, err.Error(), flinkError.Error())
