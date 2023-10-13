@@ -86,7 +86,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil)
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context())
 			featureflags.PrintAnnouncements(r.Config, featureflags.Announcements, ctx, cmd)
 			featureflags.PrintAnnouncements(r.Config, featureflags.DeprecationNotices, ctx, cmd)
 		}
@@ -217,13 +217,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			}
 		}
 
-		if err := r.setV2Clients(command); err != nil {
-			return err
-		}
-
 		if err := r.setCCloudClient(command); err != nil {
 			return err
 		}
+
+		command.V2Client = command.Config.GetCloudClientV2(unsafeTrace)
 
 		return nil
 	}
@@ -309,9 +307,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId stri
 }
 
 func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
-	ctx := c.Config.Context()
-
-	ccloudClient, err := r.createCCloudClient(ctx, c.Version)
+	ccloudClient, err := r.createCCloudClient(c.Context, c.Version)
 	if err != nil {
 		return err
 	}
@@ -322,12 +318,10 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		return err
 	}
 
-	c.MDSv2Client = r.createMDSv2Client(ctx, c.Version, unsafeTrace)
+	c.MDSv2Client = r.createMDSv2Client(c.Context, c.Version, unsafeTrace)
 
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-		ctx := c.Config.Context()
-
-		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx)
+		restEndpoint, lkc, err := getKafkaRestEndpoint(c.V2Client, c.Context)
 		if err != nil {
 			return nil, err
 		}
@@ -346,11 +340,11 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
 		}
 
-		state, err := ctx.AuthenticatedState()
+		state, err := c.Context.AuthenticatedState()
 		if err != nil {
 			return nil, err
 		}
-		dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+		dataplaneToken, err := pauth.GetDataplaneToken(state, c.Context.GetPlatformServer())
 		if err != nil {
 			return nil, err
 		}
@@ -365,22 +359,8 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setV2Clients(c *AuthenticatedCLICommand) error {
-	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-	if err != nil {
-		return err
-	}
-
-	v2Client := c.Config.GetCloudClientV2(unsafeTrace)
-	c.V2Client = v2Client
-	c.Context.V2Client = v2Client
-	c.Config.V2Client = v2Client
-
-	return nil
-}
-
-func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
-	config, err := ctx.GetKafkaClusterForCommand()
+func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) (string, string, error) {
+	config, err := ctx.GetKafkaClusterForCommand(client)
 	if err != nil {
 		return "", "", err
 	}
@@ -393,7 +373,7 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 	var authToken string
 	var userAgent string
 	if ctx != nil {
-		baseURL = ctx.Platform.Server
+		baseURL = ctx.GetPlatformServer()
 		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return nil, err
@@ -551,7 +531,7 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 	if ctx == nil {
 		return mdsv1.NewAPIClient(mdsConfig)
 	}
-	mdsConfig.BasePath = ctx.Platform.Server
+	mdsConfig.BasePath = ctx.GetPlatformServer()
 	mdsConfig.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
 		return mdsv1.NewAPIClient(mdsConfig)
@@ -734,7 +714,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
-			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -743,11 +723,11 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 			return "", "", err
 		}
 
-		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, organizationId)
+		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.GetPlatformServer(), credentials, false, organizationId)
 	} else {
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, false, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, false, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -757,7 +737,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 		}
 
 		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)
+		client, err := mdsClientManager.GetMDSClient(ctx.GetPlatformServer(), ctx.Platform.CaCertPath, unsafeTrace)
 		if err != nil {
 			return "", "", err
 		}
@@ -830,7 +810,7 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
-	mdsv2Config.BasePath = ctx.Platform.Server + "/api/metadata/security/v2alpha1"
+	mdsv2Config.BasePath = ctx.GetPlatformServer() + "/api/metadata/security/v2alpha1"
 	mdsv2Config.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)

@@ -37,7 +37,7 @@ func (c *clusterCommand) newResumeCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
