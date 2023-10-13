@@ -9,7 +9,7 @@ import (
 const BckISearch = "bck-i-search: "
 
 type ReverseISearch interface {
-	ReverseISearch(history []string) string
+	ReverseISearch(history []string, initialText string) string
 }
 
 type reverseISearch struct{}
@@ -34,7 +34,7 @@ func reverseISearchLivePrefix(livePrefixState *LivePrefixState) func() (string, 
 	}
 }
 
-func (r reverseISearch) ReverseISearch(history []string) string {
+func (r reverseISearch) ReverseISearch(history []string, initialBufferText string) string {
 	writer := prompt.NewStdoutWriter()
 
 	livePrefixState := &LivePrefixState{
@@ -45,7 +45,7 @@ func (r reverseISearch) ReverseISearch(history []string) string {
 	reverseISearchEnabled := true
 	searchState := &SearchState{
 		CurrentIndex: len(history) - 1,
-		CurrentMatch: "",
+		CurrentMatch: initialBufferText,
 	}
 
 	exitFromSearch := func(buffer *prompt.Buffer) {
