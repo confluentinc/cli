@@ -1,4 +1,4 @@
-IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
+WARNING: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
 id: lksqlc-woooo
 name: kay cee queue elle
 topic_prefix: pksqlc-ghjkl
