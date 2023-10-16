@@ -1,7 +1,12 @@
-Unset the current Flink compute pool that was set with `confluent Flink compute-pool use`.
+Unset the current Flink compute pool that was set with by the use command
 
 Usage:
   confluent flink compute-pool unset [flags]
+
+Examples:
+Unset default compute pool:
+
+  $ confluent flink compute-pool unset
 
 Flags:
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")

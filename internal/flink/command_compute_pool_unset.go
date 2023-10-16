@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -13,9 +14,15 @@ func (c *command) newComputePoolUnsetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unset",
 		Short: "Unset the current Flink compute pool.",
-		Long:  "Unset the current Flink compute pool that was set with `confluent flink compute-pool use`.",
+		Long:  "Unset the current Flink compute pool that was set with by the use command",
 		Args:  cobra.NoArgs,
 		RunE:  c.unset,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Unset default compute pool:`,
+				Code: "confluent flink compute-pool unset",
+			},
+		),
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -36,6 +43,6 @@ func (c *command) unset(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UnsetResourceMsg, resource.FlinkComputePool, computePoolToUnset)
+	output.Printf(c.Config.EnableColor, errors.UnsetResourceMsg, resource.FlinkComputePool, computePoolToUnset)
 	return nil
 }
