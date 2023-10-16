@@ -72,7 +72,6 @@ var Whitelist = []string{
 	"disable_update_check",
 	"disable_updates",
 	"enable_color",
-	"no_browser",
 }
 
 // Config represents the CLI configuration.

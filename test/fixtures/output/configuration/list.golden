@@ -5,4 +5,3 @@
   disable_update_check  | false | false      
   disable_updates       | false | false      
   enable_color          | false | false      
-  no_browser            | false | false      
