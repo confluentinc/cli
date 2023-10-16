@@ -1,14 +1,13 @@
 package autocomplete
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
-	"fmt"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/sourcegraph/jsonrpc2"
+	websocket2 "github.com/sourcegraph/jsonrpc2/websocket"
 
 	"github.com/confluentinc/flink-sql-language-service/pkg/api"
 	prompt "github.com/confluentinc/go-prompt"
@@ -18,10 +17,9 @@ import (
 )
 
 type LSPClientWS struct {
-	conn         *websocket.Conn
-	documentURI  *lsp.DocumentURI
-	store        types.StoreInterface
-	responseChan chan *jsonrpc2.Response
+	conn        types.JSONRpcConn
+	documentURI *lsp.DocumentURI
+	store       types.StoreInterface
 }
 
 func (c *LSPClientWS) LSPCompleter(in prompt.Document) []prompt.Suggest {
@@ -57,58 +55,19 @@ func (c *LSPClientWS) LSPCompleter(in prompt.Document) []prompt.Suggest {
 func (c *LSPClientWS) initialize() (*lsp.InitializeResult, error) {
 	var resp lsp.InitializeResult
 
+	initializeParams := lsp.InitializeParams{}
+
 	if c.conn == nil {
 		return nil, errors.New("connection to LSP server not established/nil")
 	}
 
-	err := c.sendMessage("initialize", lsp.InitializeParams{}, &resp, nil)
+	err := c.conn.Call(context.Background(), "initialize", initializeParams, &resp)
+
 	if err != nil {
 		log.CliLogger.Debugf("Error initializing LSP: %v\n", err)
 	}
 
 	return &resp, err
-}
-
-func (c *LSPClientWS) sendMessage(method string, params interface{}, resp interface{}, meta interface{}) error {
-	requestBytes, err := buildRequest(method, params, meta).MarshalJSON()
-	if err != nil {
-		fmt.Printf("Error building request %v\n", err)
-		return err
-	}
-
-	err = c.conn.WriteMessage(websocket.TextMessage, requestBytes)
-	if err != nil {
-		fmt.Printf("Error initializing LSP: %v\n", err)
-		return err
-	}
-
-	response := <-c.responseChan
-	if response == nil {
-		return errors.New("error waiting for response")
-	}
-
-	err = json.Unmarshal(*response.Result, &resp)
-	if err != nil {
-		fmt.Printf("Error unmarshalling initialize response: %v\n", err)
-		return err
-	}
-
-	return nil
-}
-
-func buildRequest(method string, params interface{}, meta interface{}) *jsonrpc2.Request {
-	req := &jsonrpc2.Request{Method: method}
-	if params != nil {
-		if err := req.SetParams(params); err != nil {
-			return nil
-		}
-	}
-	if meta != nil {
-		if err := req.SetMeta(meta); err != nil {
-			return nil
-		}
-	}
-	return req
 }
 
 func (c *LSPClientWS) didOpen() error {
@@ -127,7 +86,7 @@ func (c *LSPClientWS) didOpen() error {
 		return errors.New("connection to LSP server not established/nil")
 	}
 
-	err := c.sendMessage("textDocument/didOpen", didOpenParams, &resp, nil)
+	err := c.conn.Call(context.Background(), "textDocument/didOpen", didOpenParams, &resp)
 
 	if err != nil {
 		log.CliLogger.Debugf("Error sending request: %v\n", err)
@@ -155,7 +114,7 @@ func (c *LSPClientWS) didChange(newText string) error {
 		},
 	}
 
-	err := c.sendMessage("textDocument/didChange", didchangeParams, &resp, nil)
+	err := c.conn.Call(context.Background(), "textDocument/didChange", didchangeParams, &resp)
 
 	if err != nil {
 		log.CliLogger.Debugf("Error sending request: %v\n", err)
@@ -184,7 +143,7 @@ func (c *LSPClientWS) completion(position lsp.Position) (lsp.CompletionList, err
 		ComputePoolId: c.store.GetComputePool(),
 	}
 
-	err := c.sendMessage("textDocument/completion", completionParams, &resp, cliCtx)
+	err := c.conn.Call(context.Background(), "textDocument/completion", completionParams, &resp, jsonrpc2.Meta(cliCtx))
 
 	if err != nil {
 		log.CliLogger.Debugf("Error sending request: %v\n", err)
@@ -199,64 +158,45 @@ func (c *LSPClientWS) ShutdownAndExit() {
 		return
 	}
 
-	err := c.sendMessage("shutdown", nil, nil, nil)
+	err := c.conn.Call(context.Background(), "shutdown", nil, nil)
 
 	if err != nil {
 		log.CliLogger.Debugf("Error shutting down lsp server: %v\n", err)
 		return
 	}
 
-	err = c.sendMessage("exit", nil, nil, nil)
+	err = c.conn.Call(context.Background(), "exit", nil, nil)
 
 	if err != nil {
 		log.CliLogger.Debugf("Error existing lsp server: %v\n", err)
 	}
 }
 
-func receiveHandler(connection *websocket.Conn, responseChan chan *jsonrpc2.Response) {
-	for {
-		response := &jsonrpc2.Response{}
-
-		_, msg, err := connection.ReadMessage()
-		if err != nil {
-			fmt.Printf("Error in receive: %v\n", err)
-			responseChan <- nil
-			continue
-		}
-
-		err = response.UnmarshalJSON(msg)
-		if err != nil {
-			fmt.Printf("Error during unmarshalling: %v\n", err)
-			responseChan <- nil
-			continue
-		}
-		responseChan <- response
-	}
-}
-
 func NewLSPClientWS(store types.StoreInterface) LSPClientInterface {
+	lspClient := &LSPClientWS{
+		store: store,
+	}
+
 	socketUrl := "ws://localhost:8000/lsp"
 	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, nil)
-	if err != nil {
-		fmt.Printf("Error connecting to Websocket Server: %v \n", err)
-	}
-	responseChan := make(chan *jsonrpc2.Response)
-	go receiveHandler(conn, responseChan)
 
-	lspClient := &LSPClientWS{
-		store:        store,
-		conn:         conn,
-		responseChan: responseChan,
-	}
+	if err == nil {
+		stream := websocket2.NewObjectStream(conn)
+		jsonRpcConn := jsonrpc2.NewConn(
+			context.Background(),
+			stream,
+			noopHandler{},
+			nil,
+		)
+		lspClient.conn = jsonRpcConn
 
-	lspInitParams, err := lspClient.initialize()
-	if err != nil {
-		fmt.Printf("Error initializing LSP: %v\n", err)
-	} else {
-		fmt.Printf("LSP init params: %v\n", lspInitParams)
-		err = lspClient.didOpen()
-		if err != nil {
-			fmt.Printf("LSP didn't open: %v\n", err)
+		lspInitParams, err := lspClient.initialize()
+		log.CliLogger.Trace("LSP init params: ", lspInitParams)
+
+		if err == nil {
+			err = lspClient.didOpen()
+			if err == nil {
+			}
 		}
 	}
 
