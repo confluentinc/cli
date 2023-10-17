@@ -15,7 +15,10 @@ import (
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
 
-func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+// If we set this const useFakeGateway to true, we start the client with a simulated gateway client that returns fake data. This is used for debugging.
+const useFakeGateway = false
+
+func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
@@ -29,9 +32,6 @@ func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) 
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	if cfg.IsTest {
-		cmd.Flags().Bool("fake-gateway", false, "Test the SQL client with fake gateway data.")
-	}
 
 	return cmd
 }
@@ -67,9 +67,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
-	// if the --fake-gateway flag is set, we start the client with a simulated gateway client that returns fake data
-	fakeMode, _ := cmd.Flags().GetBool("fake-gateway")
-	if fakeMode {
+	if useFakeGateway {
 		client.StartApp(
 			mock.NewFakeFlinkGatewayClient(),
 			func() error { return nil },
