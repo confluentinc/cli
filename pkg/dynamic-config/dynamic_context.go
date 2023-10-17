@@ -104,11 +104,6 @@ func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId str
 		}
 	}
 
-	// Don't attempt to fetch cluster details if the client isn't initialized/authenticated yet
-	if client == nil {
-		return nil, nil
-	}
-
 	// Resolve cluster details if not found locally.
 	environmentId, err := d.EnvironmentId()
 	if err != nil {
@@ -137,10 +132,7 @@ func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId str
 	return config, nil
 }
 
-func (d *DynamicContext) SetActiveKafkaCluster(client *ccloudv2.Client, clusterId string) error {
-	if _, err := d.FindKafkaCluster(client, clusterId); err != nil {
-		return err
-	}
+func (d *DynamicContext) SetActiveKafkaCluster(clusterId string) error {
 	d.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 	return d.Save()
 }
