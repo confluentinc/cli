@@ -24,12 +24,12 @@ func (c *Client) connectCustomPluginApiContext() context.Context {
 }
 
 func (c *Client) GetPresignedUrl(request connectcustompluginv1.ConnectV1PresignedUrlRequest) (connectcustompluginv1.ConnectV1PresignedUrl, error) {
-	resp, httpResp, err := c.CcpClient.PresignedUrlsConnectV1Api.PresignedUploadUrlConnectV1PresignedUrl(c.connectCustomPluginApiContext()).ConnectV1PresignedUrlRequest(request).Execute()
+	resp, httpResp, err := c.ConnectCustomPluginClient.PresignedUrlsConnectV1Api.PresignedUploadUrlConnectV1PresignedUrl(c.connectCustomPluginApiContext()).ConnectV1PresignedUrlRequest(request).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) CreateCustomPlugin(createCustomPluginRequest connectcustompluginv1.ConnectV1CustomConnectorPlugin) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
-	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.CreateConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext()).ConnectV1CustomConnectorPlugin(createCustomPluginRequest).Execute()
+	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginsConnectV1Api.CreateConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext()).ConnectV1CustomConnectorPlugin(createCustomPluginRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -54,22 +54,22 @@ func (c *Client) ListCustomPlugins() ([]connectcustompluginv1.ConnectV1CustomCon
 }
 
 func (c *Client) DescribeCustomPlugin(id string) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
-	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.GetConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext(), id).Execute()
+	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginsConnectV1Api.GetConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteCustomPlugin(id string) error {
-	httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.DeleteConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext(), id).Execute()
+	httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginsConnectV1Api.DeleteConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext(), id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) UpdateCustomPlugin(id string, updateCustomPluginRequest connectcustompluginv1.ConnectV1CustomConnectorPluginUpdate) (connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
-	resp, httpResp, err := c.CcpClient.CustomConnectorPluginsConnectV1Api.UpdateConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext(), id).ConnectV1CustomConnectorPluginUpdate(updateCustomPluginRequest).Execute()
+	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginsConnectV1Api.UpdateConnectV1CustomConnectorPlugin(c.connectCustomPluginApiContext(), id).ConnectV1CustomConnectorPluginUpdate(updateCustomPluginRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) executeListPlugins(pageToken string) (connectcustompluginv1.ConnectV1CustomConnectorPluginList, *http.Response, error) {
-	req := c.CcpClient.CustomConnectorPluginsConnectV1Api.ListConnectV1CustomConnectorPlugins(c.connectCustomPluginApiContext()).PageSize(ccloudV2ListPageSize)
+	req := c.ConnectCustomPluginClient.CustomConnectorPluginsConnectV1Api.ListConnectV1CustomConnectorPlugins(c.connectCustomPluginApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

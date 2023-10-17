@@ -19,8 +19,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
-const updateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\"%s:\n"
-
 type topicConfigurationOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
@@ -151,7 +149,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	// Write current state of relevant config settings
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintf(c.Config.EnableColor, updateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedString)
+		output.ErrPrintf(c.Config.EnableColor, "Updated the following configuration values for topic \"%s\"%s:\n", topicName, readOnlyConfigNotUpdatedString)
 	}
 
 	return list.Print()

@@ -28,7 +28,7 @@ func NewDynamicContext(context *config.Context) *DynamicContext {
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln(d.Config.EnableColor, "WARNING: The `--environment` flag is ignored when using API key credentials.")
+			output.ErrPrintln(d.Config.EnableColor, "[WARN] The `--environment` flag is ignored when using API key credentials.")
 		} else {
 			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
@@ -38,7 +38,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
 		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln(d.Config.EnableColor, "WARNING: The `--cluster` flag is ignored when using API key credentials.")
+			output.ErrPrintln(d.Config.EnableColor, "[WARN] The `--cluster` flag is ignored when using API key credentials.")
 		} else {
 			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
@@ -104,11 +104,6 @@ func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId str
 		}
 	}
 
-	// Don't attempt to fetch cluster details if the client isn't initialized/authenticated yet
-	if client == nil {
-		return nil, nil
-	}
-
 	// Resolve cluster details if not found locally.
 	environmentId, err := d.EnvironmentId()
 	if err != nil {
@@ -137,10 +132,7 @@ func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId str
 	return config, nil
 }
 
-func (d *DynamicContext) SetActiveKafkaCluster(client *ccloudv2.Client, clusterId string) error {
-	if _, err := d.FindKafkaCluster(client, clusterId); err != nil {
-		return err
-	}
+func (d *DynamicContext) SetActiveKafkaCluster(clusterId string) error {
 	d.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 	return d.Save()
 }

@@ -3,7 +3,6 @@
   "disable_plugins": false,
   "disable_update_check": false,
   "enable_color": false,
-  "no_browser": false,
   "platforms": {
     "http://127.0.0.1:1024": {
       "name": "http://127.0.0.1:1024",
