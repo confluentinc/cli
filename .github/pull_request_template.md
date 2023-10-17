@@ -17,8 +17,8 @@ Bug Fixes
 Checklist
 ---------
 1. [CRUCIAL] Is the change for features that are already live in prod?
-   * yes: ok
-   * no: DO NOT MERGE until the required features are live in prod  
+   - [ ] yes: ok
+   - [ ] no: DO NOT MERGE until the required features are live in prod  
 
 What
 ----
