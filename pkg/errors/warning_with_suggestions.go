@@ -16,9 +16,9 @@ func NewWarningWithSuggestions(warnMsg, reasonMsg, suggestionsMsg string) *Warni
 
 func (w *WarningWithSuggestions) DisplayWarningWithSuggestions() string {
 	if w.warnMsg != "" && w.reasonMsg != "" && w.suggestionsMsg != "" {
-		lines := "WARNING:" + w.warnMsg + "\n"
+		lines := "WARNING: " + w.warnMsg + "\n"
 		lines += "\n"
-		lines += "Reason:" + w.reasonMsg + "\n"
+		lines += "Reason: " + w.reasonMsg + "\n"
 		lines += ComposeSuggestionsMessage(w.suggestionsMsg) + "\n"
 		return lines
 	}
