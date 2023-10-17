@@ -1,4 +1,4 @@
-WARNING: Created client configuration file but Schema Registry is not fully configured.
+[WARN] Created client configuration file but Schema Registry is not fully configured.
 
 Reason: no Schema Registry API key or secret specified
 

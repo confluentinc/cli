@@ -1,4 +1,4 @@
-WARNING: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
+[WARN] Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
 {
   "id": "lksqlc-ksql5",
   "name": "account ksql",
