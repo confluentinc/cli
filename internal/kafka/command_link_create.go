@@ -8,6 +8,7 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
@@ -274,8 +275,11 @@ func (c *linkCommand) getConfigMapAndLinkMode(configMap map[string]string) (map[
 	}
 }
 
-func unrecognizedLinkModeErr(linkModeStr string) error {
-	return fmt.Errorf(`unrecognized link.mode "%s". Use %s, %s, or %s.`, linkModeStr, DESTINATION, SOURCE, BIDIRECTIONAL)
+func unrecognizedLinkModeErr(linkMode string) error {
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`unrecognized link mode "%s"`, linkMode),
+		fmt.Sprintf("Use %s.", utils.ArrayToCommaDelimitedString([]string{DESTINATION, SOURCE, BIDIRECTIONAL}, "or")),
+	)
 }
 
 func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkModeMetadata *linkModeMetadata, configMap map[string]string) error {

@@ -183,7 +183,7 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 
 	if resBody.Error.Message != "" {
 		message := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
-			return c == rune('.') || c == rune('\n')
+			return c == '.' || c == '\n'
 		})
 		return fmt.Errorf("%s: %w", message, err)
 	}

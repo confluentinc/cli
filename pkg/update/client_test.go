@@ -456,7 +456,7 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 	}
 }
 
-func TestVerifyChecksum(t *testing.T) {
+func TestDownloadChecksum(t *testing.T) {
 	checksums := test.LoadFixture(t, "../input/update/checksums.golden")
 
 	mockRepository := &updateMock.Repository{
@@ -464,60 +464,36 @@ func TestVerifyChecksum(t *testing.T) {
 			if version == "2.5.1" {
 				return checksums, nil
 			} else {
-				return "", fmt.Errorf("No checksums for given version")
+				return "", fmt.Errorf("no checksums for given version")
 			}
-		},
-	}
-
-	mockClient := &updateMock.Client{
-		VerifyChecksumFunc: func(newBin, cliName, version string) error {
-			if strings.Contains(checksums, newBin) {
-				return nil
-			}
-			return fmt.Errorf("checksum verification failed")
 		},
 	}
 
 	tests := []struct {
 		name            string
-		checksum        string
 		version         string
 		wantDownloadErr bool
-		wantVerifyErr   bool
 	}{
 		{
 			name:            "valid checksum for valid version verifies successfully",
-			checksum:        "cc066356f5a36c532b88651e31450dffa008f2626119c94e2ef808ddbe4da48a",
 			version:         "2.5.1",
 			wantDownloadErr: false,
-			wantVerifyErr:   false,
 		},
 		{
 			name:            "invalid checksum for valid version fails",
-			checksum:        "cc066356f5a008f2626119c94e2ef808ddbe4da48a",
 			version:         "2.5.1",
 			wantDownloadErr: false,
-			wantVerifyErr:   true,
 		},
 		{
 			name:            "checksum for invalid version fails",
-			checksum:        "cc066356f5a008f2626119c94e2ef808ddbe4da48a",
 			version:         "0.1234.0",
 			wantDownloadErr: true,
-			wantVerifyErr:   true,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := mockRepository.DownloadChecksums("confluent", test.version)
 			if test.wantDownloadErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-
-			err = mockClient.VerifyChecksum(test.checksum, "confluent", test.version)
-			if test.wantVerifyErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
@@ -616,7 +592,6 @@ func TestUpdateBinary(t *testing.T) {
 	type args struct {
 		name    string
 		version string
-		path    string
 	}
 	tests := []struct {
 		name    string
@@ -629,10 +604,9 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
 							req.Equal(binName, name)
 							req.Equal("v123.456.789", version)
-							req.Contains(downloadDir, binName)
 							clock.Advance(23 * time.Second)
 							return []byte("new version"), nil
 						},
@@ -644,7 +618,6 @@ func TestUpdateBinary(t *testing.T) {
 			args: args{
 				name:    binName,
 				version: "v123.456.789",
-				path:    installedBin,
 			},
 		},
 		{
@@ -652,8 +625,8 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
-							return nil, fmt.Errorf("out of disk!")
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
+							return nil, fmt.Errorf("out of disk")
 						},
 					},
 				},
@@ -663,7 +636,6 @@ func TestUpdateBinary(t *testing.T) {
 			args: args{
 				name:    binName,
 				version: "v1",
-				path:    installedBin,
 			},
 			wantErr: true,
 		},
@@ -672,10 +644,9 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
-							req.Contains(downloadDir, binName)
 							clock.Advance(23 * time.Second)
 							return []byte("new version"), nil
 						},
@@ -695,7 +666,6 @@ func TestUpdateBinary(t *testing.T) {
 			args: args{
 				name:    binName,
 				version: "v1",
-				path:    installedBin,
 			},
 			wantErr: false,
 		},
@@ -706,7 +676,7 @@ func TestUpdateBinary(t *testing.T) {
 		}
 		t.Run(test.name, func(t *testing.T) {
 			test.client.Out = os.Stdout
-			if err := test.client.UpdateBinary(test.args.name, test.args.version, test.args.path, true); (err != nil) != test.wantErr {
+			if err := test.client.UpdateBinary(test.args.name, test.args.version, true); (err != nil) != test.wantErr {
 				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, test.wantErr)
 			}
 		})

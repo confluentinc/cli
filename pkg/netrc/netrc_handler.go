@@ -11,9 +11,9 @@ import (
 	gonetrc "github.com/confluentinc/go-netrc/netrc"
 )
 
-const (
-	NetrcIntegrationTestFile = "netrc_test"
+const IntegrationTestFile = "netrc_test"
 
+const (
 	localCredentialsPrefix           = "confluent-cli"
 	localCredentialStringFormat      = localCredentialsPrefix + ":%s:%s"
 	mdsUsernamePasswordString        = "mds-username-password"
@@ -196,7 +196,7 @@ func (n *NetrcHandlerImpl) GetFileName() string {
 
 func GetNetrcFilePath(isIntegrationTest bool) string {
 	if isIntegrationTest {
-		return NetrcIntegrationTestFile
+		return IntegrationTestFile
 	}
 	homedir, _ := os.UserHomeDir()
 	if runtime.GOOS == "windows" {

@@ -14,11 +14,6 @@ func PrintSmartCompletionState(smartCompletion bool, maxCol int) {
 	PrintOptionState(msgPrefix, smartCompletion, maxCol)
 }
 
-func PrintOutputModeState(outputMode bool, maxCol int) {
-	msgPrefix := "Interactive output is now "
-	PrintOptionState(msgPrefix, outputMode, maxCol)
-}
-
 func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 	stateMsg := "disabled"
 	if isEnabled {

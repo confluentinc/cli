@@ -6,39 +6,39 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-// FlinkError extends the ErrorWithSuggestion with a status code.
-type FlinkError struct {
+// Error extends the ErrorWithSuggestion with a status code.
+type Error struct {
 	errorMsg       string
 	suggestionsMsg string
 	statusCode     int
 }
 
-func NewFlinkError(errorMsg string, suggestionsMsg string, statusCode int) FlinkError {
-	return FlinkError{
+func NewError(errorMsg string, suggestionsMsg string, statusCode int) Error {
+	return Error{
 		errorMsg:       errorMsg,
 		suggestionsMsg: suggestionsMsg,
 		statusCode:     statusCode,
 	}
 }
 
-func (f FlinkError) StatusCode() int {
-	return f.statusCode
+func (e Error) StatusCode() int {
+	return e.statusCode
 }
 
-func (f FlinkError) GetSuggestionsMsg() string {
-	return f.suggestionsMsg
+func (e Error) GetSuggestionsMsg() string {
+	return e.suggestionsMsg
 }
 
-func (f FlinkError) Error() string {
-	return f.errorMsg
+func (e Error) Error() string {
+	return e.errorMsg
 }
 
 type Coder interface {
 	StatusCode() int
 }
 
-var _ Coder = (*FlinkError)(nil)
-var _ errors.ErrorWithSuggestions = (*FlinkError)(nil)
+var _ Coder = (*Error)(nil)
+var _ errors.ErrorWithSuggestions = (*Error)(nil)
 
 // Extends error with status code, including suggestion if err type is ErrorWithSuggestion
 func CatchError(err error, r *http.Response) error {
@@ -54,7 +54,7 @@ func CatchError(err error, r *http.Response) error {
 	if r != nil {
 		statusCode = r.StatusCode
 	}
-	return FlinkError{
+	return Error{
 		statusCode:     statusCode,
 		errorMsg:       err.Error(),
 		suggestionsMsg: suggestionsMsg,

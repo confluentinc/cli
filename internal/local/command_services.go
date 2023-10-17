@@ -235,7 +235,7 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *command) runServicesStatusCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServicesStatusCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -278,7 +278,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *command) runServicesStopCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServicesStopCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err

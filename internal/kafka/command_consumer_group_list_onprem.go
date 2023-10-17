@@ -23,7 +23,7 @@ func (c *consumerCommand) newGroupListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) groupListOnPrem(cmd *cobra.Command, args []string) error {
+func (c *consumerCommand) groupListOnPrem(cmd *cobra.Command, _ []string) error {
 	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err

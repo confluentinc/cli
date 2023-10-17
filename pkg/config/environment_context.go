@@ -9,7 +9,3 @@ type EnvironmentContext struct {
 	CurrentIdentityPool       string `json:"current_identity_pool,omitempty"`
 	CurrentServiceAccount     string `json:"current_service_account,omitempty"`
 }
-
-func NewEnvironmentContext() *EnvironmentContext {
-	return &EnvironmentContext{}
-}

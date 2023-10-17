@@ -6,13 +6,8 @@ import (
 
 const (
 	netrcFilePath          = "test_files/netrc"
-	netrcInput             = "test_files/netrc-input"
-	inputFileMds           = "test_files/input-mds"
-	inputFileCcloudLogin   = "test_files/input-ccloud-login"
 	mdsContext             = "login-mds-user-http://test"
 	ccloudNetrcMachineName = "login-ccloud-login-user@confluent.io-http://test"
-	netrcUser              = "jamal@jj"
-	netrcPassword          = "12345"
 	specialCharsContext    = `login-chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io-http://the-special-one`
 
 	loginURL          = "http://test"

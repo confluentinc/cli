@@ -52,7 +52,7 @@ func (c *command) validRegionArgs(cmd *cobra.Command, args []string) []string {
 	return suggestions
 }
 
-func (c *command) regionUse(cmd *cobra.Command, args []string) error {
+func (c *command) regionUse(_ *cobra.Command, args []string) error {
 	split := strings.Split(args[0], ".")
 	if len(split) != 2 || split[0] == "" || split[1] == "" {
 		return errors.NewErrorWithSuggestions(

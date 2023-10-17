@@ -74,7 +74,7 @@ func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	combinedSpec, warnings, err := AuditLogConfigTranslation(clusterConfigs, bootstrapServers, authority)
+	combinedSpec, warnings, err := configTranslation(clusterConfigs, bootstrapServers, authority)
 	if err != nil {
 		return err
 	}
