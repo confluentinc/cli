@@ -29,7 +29,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describe(cmd *cobra.Command, _ []string) error {
 	organization, httpResp, err := c.V2Client.GetOrgOrganization(c.Context.GetCurrentOrganization())
 	if err != nil {
 		return errors.CatchCCloudV2ResourceNotFoundError(err, resource.Organization, httpResp)

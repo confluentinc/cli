@@ -55,7 +55,7 @@ func getTestProviderShare(id string) cdxv1.CdxV1ProviderShare {
 }
 
 // Handler for: "/cdx/v1/provider-shares/{id}:resend"
-func handleStreamSharingResendInvite(t *testing.T) http.HandlerFunc {
+func handleStreamSharingResendInvite(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}

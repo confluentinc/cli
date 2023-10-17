@@ -43,7 +43,7 @@ func (c *command) newSaveCommand() *cobra.Command {
 }
 
 func (c *command) save(cmd *cobra.Command, args []string) error {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}

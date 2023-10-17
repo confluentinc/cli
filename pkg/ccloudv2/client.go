@@ -28,25 +28,25 @@ import (
 type Client struct {
 	AuthToken string
 
-	ApiKeysClient          *apikeysv2.APIClient
-	BillingClient          *billingv1.APIClient
-	ByokClient             *byokv1.APIClient
-	CcpClient              *connectcustompluginv1.APIClient
-	CdxClient              *cdxv1.APIClient
-	CliClient              *cliv1.APIClient
-	CmkClient              *cmkv2.APIClient
-	ConnectClient          *connectv1.APIClient
-	FlinkClient            *flinkv2.APIClient
-	IamClient              *iamv2.APIClient
-	IdentityProviderClient *identityproviderv2.APIClient
-	KsqlClient             *ksqlv2.APIClient
-	KafkaQuotasClient      *kafkaquotasv1.APIClient
-	MdsClient              *mdsv2.APIClient
-	OrgClient              *orgv2.APIClient
-	SchemaRegistryClient   *srcmv2.APIClient
-	SsoClient              *ssov2.APIClient
-	StreamDesignerClient   *streamdesignerv1.APIClient
-	ServiceQuotaClient     *servicequotav1.APIClient
+	ApiKeysClient             *apikeysv2.APIClient
+	BillingClient             *billingv1.APIClient
+	ByokClient                *byokv1.APIClient
+	ConnectCustomPluginClient *connectcustompluginv1.APIClient
+	CdxClient                 *cdxv1.APIClient
+	CliClient                 *cliv1.APIClient
+	CmkClient                 *cmkv2.APIClient
+	ConnectClient             *connectv1.APIClient
+	FlinkClient               *flinkv2.APIClient
+	IamClient                 *iamv2.APIClient
+	IdentityProviderClient    *identityproviderv2.APIClient
+	KafkaQuotasClient         *kafkaquotasv1.APIClient
+	KsqlClient                *ksqlv2.APIClient
+	MdsClient                 *mdsv2.APIClient
+	OrgClient                 *orgv2.APIClient
+	SrcmClient                *srcmv2.APIClient
+	ServiceQuotaClient        *servicequotav1.APIClient
+	SsoClient                 *ssov2.APIClient
+	StreamDesignerClient      *streamdesignerv1.APIClient
 }
 
 func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
@@ -58,24 +58,24 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 	return &Client{
 		AuthToken: authToken,
 
-		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
-		BillingClient:          newBillingClient(url, userAgent, unsafeTrace),
-		ByokClient:             newByokV1Client(url, userAgent, unsafeTrace),
-		CcpClient:              newConnectCustomPluginClient(url, userAgent, unsafeTrace),
-		CdxClient:              newCdxClient(url, userAgent, unsafeTrace),
-		CliClient:              newCliClient(url, userAgent, unsafeTrace),
-		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),
-		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
-		FlinkClient:            newFlinkClient(url, userAgent, unsafeTrace),
-		IamClient:              newIamClient(url, userAgent, unsafeTrace),
-		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
-		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
-		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
-		MdsClient:              newMdsClient(url, userAgent, unsafeTrace),
-		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
-		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),
-		SsoClient:              newSsoClient(url, userAgent, unsafeTrace),
-		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),
-		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
+		ApiKeysClient:             newApiKeysClient(url, userAgent, unsafeTrace),
+		BillingClient:             newBillingClient(url, userAgent, unsafeTrace),
+		ByokClient:                newByokV1Client(url, userAgent, unsafeTrace),
+		ConnectCustomPluginClient: newConnectCustomPluginClient(url, userAgent, unsafeTrace),
+		CdxClient:                 newCdxClient(url, userAgent, unsafeTrace),
+		CliClient:                 newCliClient(url, userAgent, unsafeTrace),
+		CmkClient:                 newCmkClient(url, userAgent, unsafeTrace),
+		ConnectClient:             newConnectClient(url, userAgent, unsafeTrace),
+		FlinkClient:               newFlinkClient(url, userAgent, unsafeTrace),
+		IamClient:                 newIamClient(url, userAgent, unsafeTrace),
+		IdentityProviderClient:    newIdentityProviderClient(url, userAgent, unsafeTrace),
+		KafkaQuotasClient:         newKafkaQuotasClient(url, userAgent, unsafeTrace),
+		KsqlClient:                newKsqlClient(url, userAgent, unsafeTrace),
+		MdsClient:                 newMdsClient(url, userAgent, unsafeTrace),
+		OrgClient:                 newOrgClient(url, userAgent, unsafeTrace),
+		SrcmClient:                newSrcmClient(url, userAgent, unsafeTrace),
+		ServiceQuotaClient:        newServiceQuotaClient(url, userAgent, unsafeTrace),
+		SsoClient:                 newSsoClient(url, userAgent, unsafeTrace),
+		StreamDesignerClient:      newStreamDesignerClient(url, userAgent, unsafeTrace),
 	}
 }

@@ -25,7 +25,7 @@ type Client interface {
 	CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error)
 	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool
-	UpdateBinary(cliName, version, path string, noVerify bool) error
+	UpdateBinary(cliName, version string, noVerify bool) error
 }
 
 type client struct {
@@ -198,7 +198,7 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 }
 
 // UpdateBinary replaces the named binary at path with the desired version
-func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) error {
+func (c *client) UpdateBinary(cliName, version string, noVerify bool) error {
 	downloadDir, err := c.fs.MkdirTemp("", cliName)
 	if err != nil {
 		return fmt.Errorf("unable to get temporary directory for %s: %w", cliName, err)
@@ -212,7 +212,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	fmt.Fprintf(c.Out, "Downloading %s version %s...\n", cliName, version)
 	startTime := c.clock.Now()
 
-	payload, err := c.Repository.DownloadVersion(cliName, version, downloadDir)
+	payload, err := c.Repository.DownloadVersion(cliName, version)
 	if err != nil {
 		return fmt.Errorf("unable to download %s version %s to %s: %w", cliName, version, downloadDir, err)
 	}

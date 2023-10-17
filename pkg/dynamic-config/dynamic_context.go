@@ -16,23 +16,19 @@ import (
 
 type DynamicContext struct {
 	*config.Context
-	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *config.Context, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *config.Context) *DynamicContext {
 	if context == nil {
 		return nil
 	}
-	return &DynamicContext{
-		Context:  context,
-		V2Client: v2Client,
-	}
+	return &DynamicContext{Context: context}
 }
 
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln(d.Config.EnableColor, "WARNING: The `--environment` flag is ignored when using API key credentials.")
+			output.ErrPrintln(d.Config.EnableColor, "[WARN] The `--environment` flag is ignored when using API key credentials.")
 		} else {
 			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
@@ -42,7 +38,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
 		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln(d.Config.EnableColor, "WARNING: The `--cluster` flag is ignored when using API key credentials.")
+			output.ErrPrintln(d.Config.EnableColor, "[WARN] The `--cluster` flag is ignored when using API key credentials.")
 		} else {
 			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
@@ -75,7 +71,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	return nil
 }
 
-func (d *DynamicContext) GetKafkaClusterForCommand() (*config.KafkaClusterConfig, error) {
+func (d *DynamicContext) GetKafkaClusterForCommand(client *ccloudv2.Client) (*config.KafkaClusterConfig, error) {
 	if d.KafkaClusterContext == nil {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
@@ -85,14 +81,19 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*config.KafkaClusterConfig
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
 
-	cluster, err := d.FindKafkaCluster(clusterId)
 	if presource.LookupType(clusterId) != presource.KafkaCluster && clusterId != "anonymous-id" {
 		return nil, fmt.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
 	}
-	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
+
+	cluster, err := d.FindKafkaCluster(client, clusterId)
+	if err != nil {
+		return nil, errors.CatchKafkaNotFoundError(err, clusterId, nil)
+	}
+
+	return cluster, nil
 }
 
-func (d *DynamicContext) FindKafkaCluster(clusterId string) (*config.KafkaClusterConfig, error) {
+func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId string) (*config.KafkaClusterConfig, error) {
 	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil && config.Bootstrap != "" {
 		if clusterId == "anonymous-id" {
 			return config, nil
@@ -103,18 +104,13 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*config.KafkaCluste
 		}
 	}
 
-	// Don't attempt to fetch cluster details if the client isn't initialized/authenticated yet
-	if d.V2Client == nil {
-		return nil, nil
-	}
-
 	// Resolve cluster details if not found locally.
 	environmentId, err := d.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	cluster, httpResp, err := client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
@@ -129,15 +125,14 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*config.KafkaCluste
 	}
 
 	d.KafkaClusterContext.AddKafkaClusterConfig(config)
-	err = d.Save()
+	if err := d.Save(); err != nil {
+		return nil, err
+	}
 
-	return config, err
+	return config, nil
 }
 
 func (d *DynamicContext) SetActiveKafkaCluster(clusterId string) error {
-	if _, err := d.FindKafkaCluster(clusterId); err != nil {
-		return err
-	}
 	d.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 	return d.Save()
 }

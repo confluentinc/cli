@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c userCommand) newDescribeCommand() *cobra.Command {
+func (c *userCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a user.",
@@ -24,7 +24,7 @@ func (c userCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c userCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *userCommand) describe(cmd *cobra.Command, args []string) error {
 	if resource.LookupType(args[0]) != resource.User {
 		return fmt.Errorf(badResourceIdErrorMsg, resource.UserPrefix)
 	}

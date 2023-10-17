@@ -26,7 +26,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) update(cmd *cobra.Command, args []string) error {
+func (c *command) update(cmd *cobra.Command, _ []string) error {
 	organization := orgv2.OrgV2Organization{}
 	if cmd.Flags().Changed("jit-enabled") {
 		jitEnabled, err := cmd.Flags().GetBool("jit-enabled")

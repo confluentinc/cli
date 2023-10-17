@@ -150,11 +150,11 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	oldBin, err := os.Executable()
-	if err != nil {
+	if _, err := os.Executable(); err != nil {
 		return err
 	}
-	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin, noVerify); err != nil {
+
+	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, noVerify); err != nil {
 		return errors.NewUpdateClientWrapError(err, "error updating CLI binary")
 	}
 

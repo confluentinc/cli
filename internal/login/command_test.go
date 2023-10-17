@@ -108,13 +108,12 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
-		},
+		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
@@ -196,7 +195,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -430,7 +429,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -575,7 +574,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, &ccloudv1.InvalidLoginError{}
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -951,7 +950,7 @@ func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, organiz
 	} else if organizationId == organizationId2 {
 		req.Equal(testToken2, ctx.GetAuthToken())
 	}
-	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.Platform.Server)
+	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.GetPlatformServer())
 	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
 	req.Contains(cfg.Platforms, ctx.Platform.Name)
 	req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
@@ -965,7 +964,7 @@ func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, organiz
 		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
 		req.Equal(organizationId, ctx.GetCurrentOrganization())
 	} else {
-		req.Equal("http://localhost:8090", ctx.Platform.Server)
+		req.Equal("http://localhost:8090", ctx.GetPlatformServer())
 	}
 }
 
