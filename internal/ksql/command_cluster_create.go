@@ -86,7 +86,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 
 	if clusters, _ := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId); len(clusters) > 0 {
 		if _, ok := clusters[0].GetIdOk(); ok {
-			output.ErrPrintln(c.Config.EnableColor, "IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
+			output.ErrPrintln(c.Config.EnableColor, "WARNING: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
 		}
 	}
 

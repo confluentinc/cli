@@ -353,7 +353,7 @@ func replaceTemplates(configFile string, m map[string]string) string {
 }
 
 func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) string {
-	warning := errors.NewWarningWithSuggestions("created client configuration file but Schema Registry is not fully configured.", reason, suggestions+"\nAlternatively, you can configure Schema Registry manually in the client configuration file before using it.")
+	warning := errors.NewWarningWithSuggestions("Created client configuration file but Schema Registry is not fully configured.", reason, suggestions+"\nAlternatively, you can configure Schema Registry manually in the client configuration file before using it.")
 	output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
 
 	return commentSchemaRegistryLines(configFile)
