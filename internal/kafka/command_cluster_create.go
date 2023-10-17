@@ -117,7 +117,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	var encryptionKey string
 	if cmd.Flags().Changed("encryption-key") {
 		if cloud != "gcp" {
-			return fmt.Errorf("BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys.")
+			return errors.NewErrorWithSuggestions(
+				"BYOK via `--encryption-key` is only available for GCP",
+				"Use `confluent byok create` to register AWS and Azure keys.",
+			)
 		}
 
 		encryptionKey, err = cmd.Flags().GetString("encryption-key")

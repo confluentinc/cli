@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c userCommand) newListCommand() *cobra.Command {
+func (c *userCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List an organization's users.",
@@ -20,7 +20,7 @@ func (c userCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c userCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *userCommand) list(cmd *cobra.Command, _ []string) error {
 	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return err

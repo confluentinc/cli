@@ -169,7 +169,7 @@ func getFlagsImport(cmd *cobra.Command) (*flagsImport, error) {
 	return flags, nil
 }
 
-func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
+func (c *command) asyncapiImport(cmd *cobra.Command, _ []string) error {
 	// Get flags
 	flagsImp, err := getFlagsImport(cmd)
 	if err != nil {

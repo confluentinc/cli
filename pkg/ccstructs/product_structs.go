@@ -3,13 +3,11 @@ package ccstructs
 type Sku int32
 
 const (
-	Sku_UNKNOWN          Sku = 0
-	Sku_BASIC_LEGACY     Sku = 1
-	Sku_BASIC            Sku = 2
-	Sku_STANDARD         Sku = 3
-	Sku_DEDICATED        Sku = 4
-	Sku_DEDICATED_LEGACY Sku = 5
-	Sku_ENTERPRISE       Sku = 6
+	Sku_UNKNOWN    Sku = 0
+	Sku_BASIC      Sku = 2
+	Sku_STANDARD   Sku = 3
+	Sku_DEDICATED  Sku = 4
+	Sku_ENTERPRISE Sku = 6
 )
 
 var Sku_name = map[int32]string{

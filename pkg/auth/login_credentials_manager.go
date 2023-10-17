@@ -1,4 +1,4 @@
-//go:generate mocker --dst ../../../mock/login_credentials_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 login_credentials_manager.go LoginCredentialsManager --prefix ""
+//go:generate mocker --dst ../../mock/login_credentials_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 login_credentials_manager.go LoginCredentialsManager --prefix ""
 package auth
 
 import (
@@ -7,8 +7,6 @@ import (
 	"runtime"
 	"slices"
 	"strings"
-
-	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
@@ -75,14 +73,14 @@ type LoginCredentialsManager interface {
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
 	GetSsoCredentialsFromConfig(*config.Config, string) func() (*Credentials, error)
 	GetCredentialsFromConfig(*config.Config, netrc.NetrcMachineParams) func() (*Credentials, error)
-	GetCredentialsFromKeychain(*config.Config, bool, string, string) func() (*Credentials, error)
+	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
 	GetPrerunCredentialsFromConfig(*config.Config) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error)
-	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetOnPremPrerunCredentialsFromNetrc(netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Needed SSO login for non-prod accounts
 	SetCloudClient(*ccloudv1.Client)
@@ -356,7 +354,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 // Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
 // URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
 // URL and ca-cert-path (if exists) are returned in addition to username and password
-func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *cobra.Command, netrcMachineParams netrc.NetrcMachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(netrcMachineParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(netrcMachineParams)
 		if err != nil {
@@ -372,7 +370,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *config.Config, isCloud bool, ctxName, url string) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(isCloud bool, ctxName string, url string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		if runtime.GOOS == "darwin" {
 			username, password, err := keychain.Read(isCloud, ctxName, url)

@@ -62,7 +62,7 @@ func (c *command) checkDateFormat(date string) error {
 	return nil
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	startDate, err := cmd.Flags().GetString("start-date")
 	if err != nil {
 		return err

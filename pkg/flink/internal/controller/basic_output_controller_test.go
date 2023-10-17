@@ -73,10 +73,10 @@ func getStatementWithResultsExample() types.ProcessedStatement {
 	}
 	for i := 0; i < 10; i++ {
 		row := types.StatementResultRow{
-			Operation: types.INSERT,
+			Operation: types.Insert,
 			Fields: []types.StatementResultField{
 				types.AtomicStatementResultField{
-					Type:  types.INTEGER,
+					Type:  types.Integer,
 					Value: strconv.Itoa(i),
 				},
 			},

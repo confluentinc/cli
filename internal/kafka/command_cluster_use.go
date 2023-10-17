@@ -27,7 +27,7 @@ func (c *clusterCommand) newUseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) use(_ *cobra.Command, args []string) error {
 	id := args[0]
 
 	if _, err := c.Context.FindKafkaCluster(c.V2Client, id); err != nil {

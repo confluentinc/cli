@@ -23,7 +23,7 @@ func (c *serviceAccountCommand) newUnsetCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *serviceAccountCommand) unset(_ *cobra.Command, args []string) error {
+func (c *serviceAccountCommand) unset(_ *cobra.Command, _ []string) error {
 	serviceAccountToUnset := c.Context.GetCurrentServiceAccount()
 	if serviceAccountToUnset == "" {
 		return nil

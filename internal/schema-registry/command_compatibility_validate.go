@@ -66,7 +66,7 @@ func (c *command) newCompatibilityValidateCommand(cfg *config.Config) *cobra.Com
 	return cmd
 }
 
-func (c *command) compatibilityValidate(cmd *cobra.Command, args []string) error {
+func (c *command) compatibilityValidate(cmd *cobra.Command, _ []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err

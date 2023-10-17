@@ -8,7 +8,3 @@ type EnvironmentContext struct {
 	CurrentFlinkRegion        string `json:"current_flink_region,omitempty"`
 	CurrentServiceAccount     string `json:"current_service_account,omitempty"`
 }
-
-func NewEnvironmentContext() *EnvironmentContext {
-	return &EnvironmentContext{}
-}
