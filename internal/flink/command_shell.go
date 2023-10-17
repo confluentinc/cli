@@ -18,7 +18,7 @@ import (
 // If we set this const useFakeGateway to true, we start the client with a simulated gateway client that returns fake data. This is used for debugging.
 const useFakeGateway = false
 
-func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
