@@ -1775,3 +1775,106 @@ func (p SqlV1beta1StatementMatcher) Matches(x interface{}) bool {
 func (p SqlV1beta1StatementMatcher) String() string {
 	return fmt.Sprintf("%v", p.Expected)
 }
+
+func TestGetStatementResultsWithRetryOn409ShouldRetryOn409(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	statement := types.ProcessedStatement{
+		StatementName: "TEST_STATEMENT",
+		Status:        types.RUNNING,
+	}
+	returnedResults := flinkgatewayv1beta1.SqlV1beta1StatementResult{}
+	returnedErr := flink.NewError("test error", "", 409)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(returnedResults, returnedErr).Times(6)
+
+	statementResults, err := s.getStatementResultsWithRetryOn409(statement.StatementName, statement.PageToken, 5)
+
+	require.Equal(t, returnedResults, statementResults)
+	require.Equal(t, returnedErr, err)
+}
+
+func TestGetStatementResultsWithRetryOn409ShouldRetryUntilNo409Anymore(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	statement := types.ProcessedStatement{
+		StatementName: "TEST_STATEMENT",
+		Status:        types.RUNNING,
+	}
+	returnedResults := flinkgatewayv1beta1.SqlV1beta1StatementResult{}
+	var returnedErr error
+	returnedErr = flink.NewError("test error", "", 409)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(returnedResults, returnedErr)
+	// status code changes to 500, now the retry should stop
+	returnedErr = flink.NewError("test error", "", 500)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(returnedResults, returnedErr)
+
+	statementResults, err := s.getStatementResultsWithRetryOn409(statement.StatementName, statement.PageToken, 5)
+
+	require.Equal(t, returnedResults, statementResults)
+	require.Equal(t, returnedErr, err)
+}
+
+func TestGetStatementResultsWithRetryOn409ShouldNotRetryOnAnyOtherError(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	statement := types.ProcessedStatement{
+		StatementName: "TEST_STATEMENT",
+		Status:        types.RUNNING,
+	}
+	returnedResults := flinkgatewayv1beta1.SqlV1beta1StatementResult{}
+	returnedErr := flink.NewError("test error", "", 0)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(returnedResults, returnedErr)
+
+	statementResults, err := s.getStatementResultsWithRetryOn409(statement.StatementName, statement.PageToken, 5)
+
+	require.Equal(t, returnedResults, statementResults)
+	require.Equal(t, returnedErr, err)
+}
+
+func TestGetStatementResultsWithRetryOn409ShouldNotRetryOnSuccess(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	statement := types.ProcessedStatement{
+		StatementName: "TEST_STATEMENT",
+		Status:        types.RUNNING,
+	}
+	returnedResults := flinkgatewayv1beta1.SqlV1beta1StatementResult{}
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(returnedResults, nil)
+
+	statementResults, err := s.getStatementResultsWithRetryOn409(statement.StatementName, statement.PageToken, 5)
+
+	require.Equal(t, returnedResults, statementResults)
+	require.Nil(t, err)
+}
