@@ -169,7 +169,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	return &statement, nil
 }
 
-// TODO: remove this when backend fixes latency problem/the RUNNING state is set with the ResultsSchema
+// TODO: https://confluentinc.atlassian.net/browse/KFS-1211 remove this when backend fixes latency problem/the RUNNING state is set with the ResultsSchema
 // This is to work around a problem where the CLI fetches results to fast, leading to the backend returning a 409.
 // In this case we should retry a set amount of times to check if results can now be fetched.
 func (s *Store) getStatementResultsWithRetryOn409(statementName, pageToken string, maxRetries int) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error) {
@@ -244,7 +244,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 				return nil, types.NewStatementErrorFailureMsg(err, statusDetail)
 			}
 
-			// TODO: remove this when backend fixes latency problem/the RUNNING state is set with the ResultsSchema
+			// TODO: https://confluentinc.atlassian.net/browse/KFS-1211 remove this when backend fixes latency problem/the RUNNING state is set with the ResultsSchema
 			if statementObj.Status.ResultSchema != nil {
 				processedStatement := types.NewProcessedStatement(statementObj)
 				// if it's a SELECT statement we manually set the status to RUNNING, otherwise COMPLETED
