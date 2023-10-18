@@ -20,13 +20,15 @@ var serializationFormats = []string{"string", "avro", "integer", "jsonschema", "
 func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("api-key", "", "API key.")
 
-	RegisterFlagCompletionFunc(cmd, "api-key", func(cmd *cobra.Command, args []string) []string {
-		if err := c.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
+	if c.V2Client != nil {
+		RegisterFlagCompletionFunc(cmd, "api-key", func(cmd *cobra.Command, args []string) []string {
+			if err := c.PersistentPreRunE(cmd, args); err != nil {
+				return nil
+			}
 
-		return AutocompleteApiKeys(c.V2Client)
-	})
+			return AutocompleteApiKeys(c.V2Client)
+		})
+	}
 }
 
 func AddApiSecretFlag(cmd *cobra.Command) {
@@ -96,17 +98,20 @@ func AddCloudFlag(cmd *cobra.Command) {
 
 func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {
-		if err := c.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
 
-		environmentId, err := c.Context.EnvironmentId()
-		if err != nil {
-			return nil
-		}
-		return AutocompleteClusters(environmentId, c.V2Client)
-	})
+	if c.V2Client != nil {
+		RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {
+			if err := c.PersistentPreRunE(cmd, args); err != nil {
+				return nil
+			}
+
+			environmentId, err := c.Context.EnvironmentId()
+			if err != nil {
+				return nil
+			}
+			return AutocompleteClusters(environmentId, c.V2Client)
+		})
+	}
 }
 
 func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []string {
@@ -144,13 +149,16 @@ func AutocompleteContexts(cfg *config.Config) []string {
 
 func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	cmd.Flags().String("environment", "", "Environment ID.")
-	RegisterFlagCompletionFunc(cmd, "environment", func(cmd *cobra.Command, args []string) []string {
-		if err := command.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
 
-		return AutocompleteEnvironments(command.Client, command.V2Client)
-	})
+	if command.V2Client != nil {
+		RegisterFlagCompletionFunc(cmd, "environment", func(cmd *cobra.Command, args []string) []string {
+			if err := command.PersistentPreRunE(cmd, args); err != nil {
+				return nil
+			}
+
+			return AutocompleteEnvironments(command.Client, command.V2Client)
+		})
+	}
 }
 
 func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Client) []string {

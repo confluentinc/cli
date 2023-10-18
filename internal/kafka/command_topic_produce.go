@@ -33,7 +33,6 @@ func (c *command) newProduceCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.produce,
-		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	cmd.Flags().String("key-schema", "", "The ID or filepath of the message key schema.")

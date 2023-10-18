@@ -38,6 +38,7 @@ var wrongLoginCommandsMap = map[string]string{
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
 	Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error
+	AnonymousAuthenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
@@ -162,6 +163,30 @@ func LabelRequiredFlags(cmd *cobra.Command) {
 func IsFlagRequired(flag *pflag.Flag) bool {
 	annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
 	return len(annotations) == 1 && annotations[0] == "true"
+}
+
+// Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
+func (r *PreRun) AnonymousAuthenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
+			return err
+		}
+
+		if r.Config.Context().GetCredentialType() != config.APIKey {
+			return errors.NewErrorWithSuggestions("hmm, i need apikeys", "Hello.")
+		}
+
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
+		ctx := command.Config.Context()
+		if ctx == nil {
+			return errors.NewErrorWithSuggestions("hmm, context is not here...", "Hello.")
+		}
+		command.Context = ctx
+		return nil
+	}
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.

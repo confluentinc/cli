@@ -46,6 +46,12 @@ func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *Authen
 	return c
 }
 
+func NewAnonymousAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand { // ?
+	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd)}
+	cmd.PersistentPreRunE = chain(prerunner.AnonymousAuthenticated(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
+	return c
+}
+
 func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd)}
 	cmd.PersistentPreRunE = chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c.CLICommand))

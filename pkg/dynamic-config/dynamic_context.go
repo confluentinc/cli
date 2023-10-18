@@ -110,6 +110,9 @@ func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId str
 		return nil, err
 	}
 
+	if client == nil {
+		return nil, fmt.Errorf("no kafka cluster context found, and not logged in to cloud")
+	}
 	cluster, httpResp, err := client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
