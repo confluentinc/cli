@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -147,9 +148,9 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
-	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId(), statement.PageToken)
+	statementResultObj, err := s.getStatementResultsWithRetryOn409(statement.StatementName, statement.PageToken, 10)
 	if err != nil {
-		return nil, &types.StatementError{Message: err.Error()}
+		return nil, types.NewStatementError(err)
 	}
 
 	statementResults := statementResultObj.GetResults()
@@ -166,6 +167,23 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 	statement.PageToken = extractedToken
 	return &statement, nil
+}
+
+// TODO: remove this when backend fixes latency problem/the RUNNING state is set with the ResultsSchema
+// This is to work around a problem where the CLI fetches results to fast, leading to the backend returning a 409.
+// In this case we should retry a set amount of times to check if results can now be fetched.
+func (s *Store) getStatementResultsWithRetryOn409(statementName, pageToken string, maxRetries int) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error) {
+	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId(), pageToken)
+	if statusCode := types.StatusCode(err); statusCode == http.StatusConflict {
+		for i := 0; i < maxRetries; i++ {
+			statementResultObj, err = s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId(), pageToken)
+			if statusCode = types.StatusCode(err); statusCode != http.StatusConflict {
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+	return statementResultObj, err
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
@@ -226,7 +244,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 				return nil, types.NewStatementErrorFailureMsg(err, statusDetail)
 			}
 
-			// TODO: remove this if backend fixes latency problem/the RUNNING state is set with the ResultsSchema
+			// TODO: remove this when backend fixes latency problem/the RUNNING state is set with the ResultsSchema
 			if statementObj.Status.ResultSchema != nil {
 				processedStatement := types.NewProcessedStatement(statementObj)
 				// if it's a SELECT statement we manually set the status to RUNNING, otherwise COMPLETED
