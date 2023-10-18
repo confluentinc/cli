@@ -145,6 +145,14 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
+	cliVersion := c.Version.Version
+	// due to a breaking change in the flink gateway, users using versions v3.36.0-v3.38.0 of the CLI
+	// will not be able to submit SELECT statements anymore, so we should give them a warning
+	if cliVersion == "v3.36.0" || cliVersion == "v3.37.0" || cliVersion == "v3.38.0" {
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] You're using an outdated version (%s) of the CLI."+
+			" Please upgrade your CLI using `confluent update` or `brew upgrade confluentinc/tap/cli` to apply the latest changes.\n", cliVersion)
+	}
+
 	opts := types.ApplicationOptions{
 		Context:          c.Context,
 		UnsafeTrace:      unsafeTrace,
