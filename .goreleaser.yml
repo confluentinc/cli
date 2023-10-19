@@ -349,10 +349,10 @@ brews:
 
 chocolateys:
   # TODO: Check naming requirements for Chocolatey
-  - name: cli
+  - name: confluent
     ids:
       - archive-chocolatey
-    owners: Confluent Inc.
+    owners: confluentinc
     title: Confluent CLI
     authors: Confluent Inc.
     project_url: https://docs.confluent.io/confluent-cli/current/overview.html
