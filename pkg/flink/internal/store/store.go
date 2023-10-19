@@ -39,7 +39,15 @@ func (s *Store) GetCurrentDatabase() string {
 }
 
 func (s *Store) GetComputePool() string {
-	return s.appOptions.ComputePoolId
+	return s.appOptions.GetComputePoolId()
+}
+
+func (s *Store) GetOrganizationId() string {
+	return s.appOptions.GetOrganizationId()
+}
+
+func (s *Store) GetEnvironmentId() string {
+	return s.appOptions.GetEnvironmentId()
 }
 
 func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
