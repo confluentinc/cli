@@ -3,6 +3,9 @@ package autocomplete
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/sourcegraph/go-lsp"
@@ -177,8 +180,12 @@ func NewLSPClientWS(store types.StoreInterface) LSPClientInterface {
 		store: store,
 	}
 
+	requestHeaders := http.Header{}
+	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", store.GetAuthToken()))
+	requestHeaders.Add("Organization-ID", store.GetOrganizationId())
+	requestHeaders.Add("Environment-ID", store.GetEnvironmentId())
 	socketUrl := "ws://localhost:8000/lsp"
-	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, nil)
+	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, requestHeaders)
 
 	if err == nil {
 		stream := websocket2.NewObjectStream(conn)
@@ -191,12 +198,16 @@ func NewLSPClientWS(store types.StoreInterface) LSPClientInterface {
 		lspClient.conn = jsonRpcConn
 
 		lspInitParams, err := lspClient.initialize()
-		log.CliLogger.Trace("LSP init params: ", lspInitParams)
+		if err != nil {
+			log.CliLogger.Debugf("Error opening lsp connection: %v\n", err)
+			return nil
+		}
 
-		if err == nil {
-			err = lspClient.didOpen()
-			if err == nil {
-			}
+		log.CliLogger.Trace("LSP init params: ", lspInitParams)
+		err = lspClient.didOpen()
+		if err != nil {
+			log.CliLogger.Debugf("Error opening lsp connection: %v\n", err)
+			return nil
 		}
 	}
 

@@ -13,4 +13,6 @@ type StoreInterface interface {
 	GetCurrentCatalog() string
 	GetCurrentDatabase() string
 	GetComputePool() string
+	GetOrganizationId() string
+	GetEnvironmentId() string
 }
