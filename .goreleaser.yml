@@ -321,6 +321,7 @@ blobs:
     - archive
     - archive-alpine
     - archive-homebrew
+    - archive-chocolatey
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
