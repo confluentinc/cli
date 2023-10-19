@@ -17,7 +17,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 }
 
-func (c *command) update(cmd *cobra.Command, _ []string) error {
+func (c *command) update(_ *cobra.Command, _ []string) error {
 	output.Println(c.Config.EnableColor, "Edit credit card")
 
 	f := form.New(

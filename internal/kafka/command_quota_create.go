@@ -65,7 +65,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}

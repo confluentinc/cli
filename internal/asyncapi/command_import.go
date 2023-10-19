@@ -169,7 +169,7 @@ func getFlagsImport(cmd *cobra.Command) (*flagsImport, error) {
 	return flags, nil
 }
 
-func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
+func (c *command) asyncapiImport(cmd *cobra.Command, _ []string) error {
 	// Get flags
 	flagsImp, err := getFlagsImport(cmd)
 	if err != nil {
@@ -186,7 +186,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 	for topicName, topicDetails := range spec.Channels {
 		if err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite); err != nil {
 			if err.Error() == parseErrorMessage {
-				output.Printf(c.Config.EnableColor, "WARNING: topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
+				output.ErrPrintf(c.Config.EnableColor, "[WARN] Topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
 			} else {
 				log.CliLogger.Warn(err)
 			}

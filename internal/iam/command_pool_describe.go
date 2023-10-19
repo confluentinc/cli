@@ -6,7 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
-func (c *identityPoolCommand) newDescribeCommand() *cobra.Command {
+func (c *poolCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe an identity pool.",
@@ -24,7 +24,7 @@ func (c *identityPoolCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *poolCommand) describe(cmd *cobra.Command, args []string) error {
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err

@@ -54,8 +54,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	// API returns a list sorted by creation date already
-	list.Sort(false)
 	for _, key := range keys {
 		var keyString string
 		switch {
@@ -67,27 +65,28 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 		}
 
-		updatedAt := ""
-		if !key.Metadata.GetUpdatedAt().IsZero() {
-			updatedAt = key.Metadata.GetUpdatedAt().String()
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&humanOut{
+				Id:        key.GetId(),
+				Key:       keyString,
+				Provider:  key.GetProvider(),
+				State:     key.GetState(),
+				CreatedAt: key.Metadata.CreatedAt.String(),
+			})
+		} else {
+			list.Add(&serializedOut{
+				Id:        key.GetId(),
+				Key:       keyString,
+				Provider:  key.GetProvider(),
+				State:     key.GetState(),
+				CreatedAt: key.Metadata.CreatedAt.String(),
+			})
 		}
-
-		deletedAt := ""
-		if !key.Metadata.GetDeletedAt().IsZero() {
-			deletedAt = key.Metadata.GetDeletedAt().String()
-		}
-
-		list.Add(&describeStruct{
-			Id:        key.GetId(),
-			Key:       keyString,
-			Provider:  key.GetProvider(),
-			State:     key.GetState(),
-			CreatedAt: key.Metadata.CreatedAt.String(),
-			UpdatedAt: updatedAt,
-			DeletedAt: deletedAt,
-		})
 	}
 
+	// The API returns a list sorted by creation date already
+	list.Sort(false)
 	list.Filter([]string{"Id", "Key", "Provider", "State", "CreatedAt"})
+
 	return list.Print()
 }

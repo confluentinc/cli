@@ -22,7 +22,7 @@ func (c *command) newKafkaStopCommand() *cobra.Command {
 	}
 }
 
-func (c *command) kafkaStop(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaStop(_ *cobra.Command, _ []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err

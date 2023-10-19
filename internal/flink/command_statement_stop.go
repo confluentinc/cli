@@ -27,7 +27,7 @@ func (c *command) newStatementStopCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) statementStop(cmd *cobra.Command, args []string) error {
+func (c *command) statementStop(_ *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

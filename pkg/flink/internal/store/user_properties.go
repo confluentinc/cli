@@ -63,7 +63,7 @@ func (p *UserProperties) GetProperties() map[string]string {
 func (p *UserProperties) GetNonLocalProperties() map[string]string {
 	nonLocalProperties := map[string]string{}
 	for key, value := range p.properties {
-		if !strings.HasPrefix(key, config.ConfigNamespaceClient) {
+		if !strings.HasPrefix(key, config.NamespaceClient) {
 			nonLocalProperties[key] = value
 		}
 	}

@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/update"
 )
 
-var S3ReleaseNotesFile = "release-notes.rst"
+const releaseNotesFile = "release-notes.rst"
 
 type PublicRepo struct {
 	*PublicRepoParams
@@ -219,7 +219,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *v
 		return false, nil
 	}
 	split := strings.Split(key, "/")
-	if split[len(split)-1] != S3ReleaseNotesFile {
+	if split[len(split)-1] != releaseNotesFile {
 		return false, nil
 	}
 	ver, err := version.NewSemver(split[2])
@@ -229,7 +229,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *v
 	return true, ver
 }
 
-func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) ([]byte, error) {
+func (r *PublicRepo) DownloadVersion(name, version string) ([]byte, error) {
 	objectKey, _ := NewPrefixedKey(fmt.Sprintf(r.S3BinPrefixFmt, name), "_", true)
 	objectKey.goos = r.goos
 	objectKey.goarch = r.goarch
@@ -247,7 +247,7 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) ([]byte,
 }
 
 func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) {
-	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, fmt.Sprintf(r.S3ReleaseNotesPrefixFmt, name), version, S3ReleaseNotesFile)
+	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, fmt.Sprintf(r.S3ReleaseNotesPrefixFmt, name), version, releaseNotesFile)
 	resp, err := r.getHttpResponse(downloadURL)
 	if err != nil {
 		return "", err

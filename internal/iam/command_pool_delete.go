@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
+func (c *poolCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete one or more identity pools.",
@@ -33,7 +33,7 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *poolCommand) delete(cmd *cobra.Command, args []string) error {
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err

@@ -1,4 +1,4 @@
-//go:generate mocker --dst ../../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 login_organization_manager.go LoginOrganizationManager --prefix ""
+//go:generate mocker --dst ../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 login_organization_manager.go LoginOrganizationManager --prefix ""
 package auth
 
 import (

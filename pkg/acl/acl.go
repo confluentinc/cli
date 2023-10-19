@@ -24,7 +24,7 @@ import (
 
 var listFields = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
 
-var AclOperations = []mdsv1.AclOperation{
+var Operations = []mdsv1.AclOperation{
 	mdsv1.ACLOPERATION_ALL,
 	mdsv1.ACLOPERATION_ALTER,
 	mdsv1.ACLOPERATION_ALTER_CONFIGS,
@@ -48,7 +48,7 @@ type out struct {
 	PatternType  string `human:"Pattern Type" serialized:"pattern_type"`
 }
 
-type AclRequestDataWithError struct {
+type RequestDataWithError struct {
 	ResourceType cpkafkarestv3.AclResourceType
 	ResourceName string
 	PatternType  string
@@ -94,10 +94,10 @@ func PrintACLs(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
 	return list.Print()
 }
 
-func AclFlags() *pflag.FlagSet {
+func Flags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower(AclOperations)))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower(Operations)))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -110,8 +110,8 @@ func AclFlags() *pflag.FlagSet {
 	return flgSet
 }
 
-func ParseAclRequest(cmd *cobra.Command) *AclRequestDataWithError {
-	aclRequest := &AclRequestDataWithError{
+func ParseRequest(cmd *cobra.Command) *RequestDataWithError {
+	aclRequest := &RequestDataWithError{
 		Host:   "*",
 		Errors: nil,
 	}
@@ -119,7 +119,7 @@ func ParseAclRequest(cmd *cobra.Command) *AclRequestDataWithError {
 	return aclRequest
 }
 
-func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
+func populateAclRequest(conf *RequestDataWithError) func(*pflag.Flag) {
 	return func(flag *pflag.Flag) {
 		v := flag.Value.String()
 		switch n := flag.Name; n {
@@ -172,14 +172,14 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 	}
 }
 
-func setAclRequestPermission(conf *AclRequestDataWithError, permission string) {
+func setAclRequestPermission(conf *RequestDataWithError, permission string) {
 	if conf.Permission != "" {
 		conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL"))
 	}
 	conf.Permission = permission
 }
 
-func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
+func setAclRequestResourcePattern(conf *RequestDataWithError, n, v string) {
 	if conf.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("exactly one of %v must be set",
@@ -230,7 +230,7 @@ func ConvertToLower[T any](operations []T) string {
 	return strings.Join(ops, ", ")
 }
 
-func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithError) *AclRequestDataWithError {
+func ValidateCreateDeleteAclRequestData(aclConfiguration *RequestDataWithError) *RequestDataWithError {
 	// delete is deliberately less powerful in the cli than in the API to prevent accidental
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
@@ -250,7 +250,7 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 	return aclConfiguration
 }
 
-func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.CreateKafkaAclsOpts {
+func RequestToCreateRequest(acl *RequestDataWithError) *cpkafkarestv3.CreateKafkaAclsOpts {
 	return &cpkafkarestv3.CreateKafkaAclsOpts{
 		CreateAclRequestData: optional.NewInterface(cpkafkarestv3.CreateAclRequestData{
 			ResourceType: acl.ResourceType,
@@ -266,7 +266,7 @@ func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.C
 
 // Functions for converting AclRequestDataWithError into structs for create, delete, and list requests
 
-func AclRequestToListAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.GetKafkaAclsOpts {
+func RequestToListRequest(acl *RequestDataWithError) *cpkafkarestv3.GetKafkaAclsOpts {
 	opts := &cpkafkarestv3.GetKafkaAclsOpts{}
 	if acl.ResourceType != "" {
 		opts.ResourceType = optional.NewInterface(acl.ResourceType)
@@ -292,7 +292,7 @@ func AclRequestToListAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.Get
 	return opts
 }
 
-func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.DeleteKafkaAclsOpts {
+func RequestToDeleteRequest(acl *RequestDataWithError) *cpkafkarestv3.DeleteKafkaAclsOpts {
 	return &cpkafkarestv3.DeleteKafkaAclsOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
@@ -304,7 +304,7 @@ func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.D
 	}
 }
 
-func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.AclData {
+func CreateAclRequestDataToAclData(data *RequestDataWithError) cpkafkarestv3.AclData {
 	return cpkafkarestv3.AclData{
 		ResourceType: data.ResourceType,
 		ResourceName: data.ResourceName,

@@ -36,8 +36,8 @@ func (c *clusterCommand) newPauseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+func (c *clusterCommand) pause(_ *cobra.Command, args []string) error {
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}

@@ -3,23 +3,18 @@ package dynamicconfig
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
 type DynamicConfig struct {
 	*config.Config
-	V2Client *ccloudv2.Client
 }
 
-func New(config *config.Config, v2Client *ccloudv2.Client) *DynamicConfig {
-	return &DynamicConfig{
-		Config:   config,
-		V2Client: v2Client,
-	}
+func New(config *config.Config) *DynamicConfig {
+	return &DynamicConfig{Config: config}
 }
 
-// Parse "--context" flag value into config struct
+// Parse `--context` flag value into config struct
 // Call ParseFlagsIntoContext which handles environment and cluster flags
 func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
 	if context, _ := cmd.Flags().GetString("context"); context != "" {
@@ -38,7 +33,7 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewDynamicContext(ctx, d.V2Client), nil
+	return NewDynamicContext(ctx), nil
 }
 
 // Context returns the active context as a DynamicContext object.
@@ -47,5 +42,5 @@ func (d *DynamicConfig) Context() *DynamicContext {
 	if ctx == nil {
 		return nil
 	}
-	return NewDynamicContext(ctx, d.V2Client)
+	return NewDynamicContext(ctx)
 }

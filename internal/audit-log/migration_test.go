@@ -215,7 +215,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 		err := json.Unmarshal([]byte(c.wantSpecAsString), &want)
 		require.Nil(t, err)
 
-		got, gotWarnings, err := AuditLogConfigTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
+		got, gotWarnings, err := configTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
 
 		require.Nil(t, err)
 		require.Equal(t, want, got, "testCase: %d", i)
@@ -334,7 +334,7 @@ func TestAuditLogConfigTranslationMalformedProperties(t *testing.T) {
 		},
 	}
 	for _, c := range testCases {
-		_, _, err := AuditLogConfigTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
+		_, _, err := configTranslation(c.clusterConfigs, c.bootstrapServers, c.crnAuthority)
 		require.NotNil(t, err)
 		require.Contains(t, err.Error(), "cluster123")
 	}
@@ -347,6 +347,6 @@ func TestAuditLogConfigTranslationNilCase(t *testing.T) {
 	var bootstrapServers []string
 	var crnAuthority string
 
-	_, _, err := AuditLogConfigTranslation(clusterConfig, bootstrapServers, crnAuthority)
+	_, _, err := configTranslation(clusterConfig, bootstrapServers, crnAuthority)
 	require.Nil(t, err)
 }

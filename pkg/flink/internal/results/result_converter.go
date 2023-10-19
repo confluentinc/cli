@@ -15,7 +15,7 @@ func convertToInternalField(field any, details flinkgatewayv1beta1.ColumnDetails
 	}
 
 	return types.AtomicStatementResultField{
-		Type:  types.NULL,
+		Type:  types.Null,
 		Value: "NULL",
 	}
 }
