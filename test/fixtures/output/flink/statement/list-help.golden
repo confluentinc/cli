@@ -6,7 +6,7 @@ Usage:
 Examples:
 List running statements.
 
-  $ confluent flink compute-pool list --status running
+  $ confluent flink statement list --status running
 
 Flags:
       --cloud string          Specify the cloud provider as "aws", "azure", or "gcp".
