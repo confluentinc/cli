@@ -21,6 +21,26 @@ builds:
       - linux
     goarch:
       - amd64
+  - id: confluent-alpine-amd64-rpm
+    binary: confluent
+    main: cmd/confluent/main.go
+    flags:
+      - -tags=musl
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-linux-musl-gcc
+      - CXX=x86_64-linux-musl-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - linux
+    goarch:
+      - amd64
   - id: confluent-alpine-arm64
     binary: confluent
     main: cmd/confluent/main.go
@@ -28,6 +48,26 @@ builds:
       - -tags=musl
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-musl-gcc
+      - CXX=aarch64-linux-musl-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - linux
+    goarch:
+      - arm64
+  - id: confluent-alpine-arm64-rpm
+    binary: confluent
+    main: cmd/confluent/main.go
+    flags:
+      - -tags=musl
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -309,3 +349,36 @@ brews:
     description: CLI for Confluent Cloud and Confluent Platform
     skip_upload: "{{ .Env.DRY_RUN }}"
     test: system "#{bin}/confluent version"
+
+nfpms:
+  - id: confluent-linux-deb
+    package_name: confluent
+    builds:
+      - confluent-linux-homebrew # we can use the linux homebrew binary here
+    vendor: Confluent Inc.
+    homepage: https://docs.confluent.io/confluent-cli/current/overview.html
+    maintainer: Confluent Inc.
+    description: CLI for Confluent Cloud and Confluent Platform
+    license: Confluent Community License Agreement
+    formats:
+      - deb
+    deb:
+      signature:
+        # TODO
+        key_file: "{{ .Env.GPG_KEY_PATH }}"
+  - id: confluent-linux-rpm
+    package_name: confluent
+    builds:
+      - confluent-alpine-amd64-rpm
+      - confluent-alpine-arm64-rpm
+    vendor: Confluent Inc.
+    homepage: https://docs.confluent.io/confluent-cli/current/overview.html
+    maintainer: Confluent Inc.
+    description: CLI for Confluent Cloud and Confluent Platform
+    license: Confluent Community License Agreement
+    formats:
+      - rpm
+    rpm:
+      signature:
+        # TODO
+        key_file: "{{ .Env.GPG_KEY_PATH }}"
