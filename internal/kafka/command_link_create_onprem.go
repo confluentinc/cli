@@ -9,7 +9,6 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
@@ -96,7 +95,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 
 	linkMode := linkModeMetadata.mode
 	if linkMode != Source && linkMode != Bidirectional {
-		return errors.New("only source-initiated or bidirectional links can be created for Confluent Platform from the CLI")
+		return fmt.Errorf("only source-initiated or bidirectional links can be created for Confluent Platform from the CLI")
 	}
 
 	if err := c.addSecurityConfigToMap(cmd, linkModeMetadata, configMap); err != nil {
@@ -143,8 +142,8 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		msg = utils.AddDryRunPrefix(msg)
 	}
 
-	output.Println(msg)
-	output.Println(linkConfigsCommandOutput(configMap))
+	output.Println(c.Config.EnableColor, msg)
+	output.Println(c.Config.EnableColor, linkConfigsCommandOutput(configMap))
 
 	return nil
 }

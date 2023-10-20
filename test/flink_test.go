@@ -29,6 +29,19 @@ func (s *CLITestSuite) TestFlinkComputePoolDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestFlinkComputePoolUnset() {
+	tests := []CLITest{
+		{args: "flink compute-pool unset", login: "cloud", fixture: "flink/compute-pool/unset-before-use.golden"},
+		{args: "flink compute-pool use lfcp-123456", login: "cloud", fixture: "flink/compute-pool/use-before-unset.golden"},
+		{args: "flink compute-pool unset", login: "cloud", fixture: "flink/compute-pool/unset.golden"},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestFlinkComputePoolUse() {
 	tests := []CLITest{
 		{args: "flink compute-pool use lfcp-999999", login: "cloud", fixture: "flink/compute-pool/use-fail.golden", exitCode: 1},
@@ -65,6 +78,8 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement delete my-statement --force --cloud aws --region eu-west-1", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1", fixture: "flink/statement/list.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/list-yaml.golden"},
+		{args: "flink statement list --cloud aws --region eu-west-1 --status completed", fixture: "flink/statement/list-completed.golden"},
+		{args: "flink statement list --cloud aws --region eu-west-1 --status pending", fixture: "flink/statement/list-pending.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-yaml.golden"},
 		{args: "flink statement stop my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/stop.golden"},
@@ -84,6 +99,22 @@ func (s *CLITestSuite) TestFlinkStatementCreate() {
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait.golden"},
 		{args: `flink statement create --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlink_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete flink compute-pool create my-compute-pool --cloud ""`, fixture: "flink/compute-pool/create-cloud-autocomplete.golden"},
+		{args: `__complete flink compute-pool create my-compute-pool --cloud aws --region ""`, fixture: "flink/compute-pool/create-region-autocomplete.golden"},
+		{args: `__complete flink compute-pool delete ""`, fixture: "flink/compute-pool/delete-autocomplete.golden"},
+		{args: `__complete flink compute-pool list --region ""`, fixture: "flink/compute-pool/list-region-autocomplete.golden"},
+		{args: `__complete flink region use ""`, fixture: "flink/region/use-autocomplete.golden"},
+		{args: `__complete flink statement create my-statement --database ""`, fixture: "flink/statement/create-database-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

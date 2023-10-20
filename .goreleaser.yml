@@ -57,8 +57,10 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} amd64
-        - cmd: gon dist/gon_confluent_darwin_amd64.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-darwin-amd64-homebrew
     binary: confluent
@@ -77,8 +79,10 @@ builds:
       - amd64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} amd64_homebrew
-        - cmd: gon dist/gon_confluent_darwin_amd64_homebrew.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-darwin-arm64
     binary: confluent
@@ -97,8 +101,10 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} arm64
-        - cmd: gon dist/gon_confluent_darwin_arm64.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-darwin-arm64-homebrew
     binary: confluent
@@ -119,8 +125,10 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} arm64_homebrew
-        - cmd: gon dist/gon_confluent_darwin_arm64_homebrew.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-linux
     builder: prebuilt

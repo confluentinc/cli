@@ -17,7 +17,7 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
+	keystore     *keystore.ConfigKeyStore
 	flagResolver pcmd.FlagResolver
 }
 
@@ -27,7 +27,16 @@ const (
 	updateOperation = "updating"
 )
 
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
+const (
+	apiKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
+	apiKeyUseFailedErrorMsg             = "unable to set active API key"
+	apiKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
+	nonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
+	refuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use the `--force` flag."
+	unableToStoreApiKeyErrorMsg         = "unable to store API key locally: %w"
+)
+
+func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
 		Short:       "Manage API keys.",
@@ -36,7 +45,6 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 
 	c := &command{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-		keystore:                keystore,
 		flagResolver:            resolver,
 	}
 
@@ -194,7 +202,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	case presource.Cloud:
 		break
 	case presource.KafkaCluster:
-		cluster, err := c.Context.FindKafkaCluster(resource)
+		cluster, err := c.Context.FindKafkaCluster(c.V2Client, resource)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}

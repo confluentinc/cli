@@ -33,7 +33,7 @@ func (c *command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) configurationDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) configurationDescribe(cmd *cobra.Command, _ []string) error {
 	configName, err := cmd.Flags().GetString("config-name")
 	if err != nil {
 		return err

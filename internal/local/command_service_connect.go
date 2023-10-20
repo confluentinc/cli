@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -91,8 +90,8 @@ func (c *command) runConnectConnectorConfigCommand(cmd *cobra.Command, args []st
 			return err
 		}
 
-		output.Printf("Current configuration of %s:\n", connector)
-		output.Println(out)
+		output.Printf(c.Config.EnableColor, "Current configuration of %s:\n", connector)
+		output.Println(c.Config.EnableColor, out)
 		return nil
 	}
 
@@ -124,7 +123,7 @@ func (c *command) runConnectConnectorConfigCommand(cmd *cobra.Command, args []st
 		return err
 	}
 
-	output.Println(out)
+	output.Println(c.Config.EnableColor, out)
 	return nil
 }
 
@@ -155,7 +154,7 @@ func (c *command) runConnectConnectorStatusCommand(_ *cobra.Command, args []stri
 			return err
 		}
 
-		output.Println(out)
+		output.Println(c.Config.EnableColor, out)
 		return nil
 	}
 
@@ -165,7 +164,7 @@ func (c *command) runConnectConnectorStatusCommand(_ *cobra.Command, args []stri
 		return err
 	}
 
-	output.Println(out)
+	output.Println(c.Config.EnableColor, out)
 	return nil
 }
 
@@ -183,8 +182,8 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) runConnectConnectorListCommand(_ *cobra.Command, _ []string) {
-	output.Println("Bundled Connectors:")
-	output.Println(local.BuildTabbedList(connectors))
+	output.Println(c.Config.EnableColor, "Bundled Connectors:")
+	output.Println(c.Config.EnableColor, local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -231,7 +230,7 @@ func (c *command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []stri
 			return err
 		}
 		if configFile == "" {
-			return fmt.Errorf(errors.InvalidConnectorErrorMsg, connector)
+			return fmt.Errorf("invalid connector: %s", connector)
 		}
 	}
 
@@ -259,7 +258,7 @@ func (c *command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	output.Println(out)
+	output.Println(c.Config.EnableColor, out)
 	return nil
 }
 
@@ -297,9 +296,9 @@ func (c *command) runConnectConnectorUnloadCommand(_ *cobra.Command, args []stri
 	}
 
 	if out != "" {
-		output.Println(out)
+		output.Println(c.Config.EnableColor, out)
 	} else {
-		output.Println("Success.")
+		output.Println(c.Config.EnableColor, "Success.")
 	}
 	return nil
 }
@@ -345,8 +344,8 @@ func (c *command) runConnectPluginListCommand(_ *cobra.Command, _ []string) erro
 		return err
 	}
 
-	output.Println("Available Connect Plugins:")
-	output.Println(out)
+	output.Println(c.Config.EnableColor, "Available Connect Plugins:")
+	output.Println(c.Config.EnableColor, out)
 	return nil
 }
 

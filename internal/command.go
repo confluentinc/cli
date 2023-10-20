@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/v3/internal/asyncapi"
 	auditlog "github.com/confluentinc/cli/v3/internal/audit-log"
 	"github.com/confluentinc/cli/v3/internal/billing"
-	byok "github.com/confluentinc/cli/v3/internal/byok"
+	"github.com/confluentinc/cli/v3/internal/byok"
 	cloudsignup "github.com/confluentinc/cli/v3/internal/cloud-signup"
 	"github.com/confluentinc/cli/v3/internal/cluster"
 	"github.com/confluentinc/cli/v3/internal/completion"
@@ -105,13 +105,13 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	cmd.AddCommand(admin.New(prerunner, cfg.IsTest))
-	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
+	cmd.AddCommand(apikey.New(prerunner, flagResolver))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
-	cmd.AddCommand(cloudsignup.New())
+	cmd.AddCommand(cloudsignup.New(prerunner))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner, flagResolver))
@@ -138,7 +138,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(update.New(cfg, prerunner, updateClient))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
-	dc := dynamicconfig.New(cfg, nil)
+	dc := dynamicconfig.New(cfg)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), config.CliLaunchDarklyClient, true, false) {
@@ -160,7 +160,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 			}
 			u := ppanic.CollectPanic(cmd, args, cfg)
 			if err := reportUsage(cmd, cfg, u); err != nil {
-				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
+				output.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
 			}
 			cobra.CheckErr(r)
 		}
@@ -178,9 +178,9 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 	}
 
 	err := cmd.Execute()
-	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
-	u.Error = cliv1.PtrBool(err != nil)
+	output.ErrPrint(cfg.EnableColor, errors.DisplaySuggestionsMessage(err))
 
+	u.Error = cliv1.PtrBool(err != nil)
 	if err := reportUsage(cmd, cfg, u); err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func getCloudClient(cfg *config.Config, ccloudClientFactory pauth.CCloudClientFa
 }
 
 func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *config.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context())
 	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, config.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
@@ -270,7 +270,7 @@ func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *config.Config) {
 }
 
 func disableCommandAndFlagHelpText(cmd *cobra.Command, cfg *config.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context())
 	disableResp := featureflags.GetLDDisableMap(ctx)
 	disabledCmdsAndFlags, ok := disableResp["patterns"].([]any)
 	if ok && len(disabledCmdsAndFlags) > 0 {

@@ -67,31 +67,33 @@ var (
 
 // Whitelist is the configuration fields that are visible by the `config` subcommands.
 var Whitelist = []string{
+	"disable_feature_flags",
+	"disable_plugins",
 	"disable_update_check",
 	"disable_updates",
-	"disable_plugins",
-	"disable_feature_flags",
-	"no_browser",
+	"enable_color",
 }
 
 // Config represents the CLI configuration.
 type Config struct {
-	DisableUpdateCheck  bool                        `json:"disable_update_check"`
-	DisableUpdates      bool                        `json:"disable_updates,omitempty"`
-	DisablePlugins      bool                        `json:"disable_plugins"`
-	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
-	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
-	NoBrowser           bool                        `json:"no_browser"`
-	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
-	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
-	CurrentContext      string                      `json:"current_context"`
-	Contexts            map[string]*Context         `json:"contexts,omitempty"`
-	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
-	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
-	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
+	DisableFeatureFlags bool `json:"disable_feature_flags"`
+	DisablePlugins      bool `json:"disable_plugins"`
+	DisablePluginsOnce  bool `json:"disable_plugins_once,omitempty"`
+	DisableUpdateCheck  bool `json:"disable_update_check"`
+	DisableUpdates      bool `json:"disable_updates,omitempty"`
+	EnableColor         bool `json:"enable_color"`
+
+	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
+	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
+	CurrentContext   string                      `json:"current_context"`
+	Contexts         map[string]*Context         `json:"contexts,omitempty"`
+	ContextStates    map[string]*ContextState    `json:"context_states,omitempty"`
+	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+	LocalPorts       *LocalPorts                 `json:"local_ports,omitempty"`
 
 	// Deprecated
 	AnonymousId string `json:"anonymous_id,omitempty"`
+	NoBrowser   bool   `json:"no_browser,omitempty"`
 	Ver         string `json:"version,omitempty"`
 
 	// The following configurations are not persisted between runs
@@ -186,15 +188,15 @@ func (c *Config) Load() error {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
 			if err := c.Save(); err != nil {
-				return errors.Wrapf(err, "unable to save configuration file")
+				return fmt.Errorf("unable to save configuration file: %w", err)
 			}
 			return nil
 		}
-		return errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
+		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
 	if err := json.Unmarshal(input, c); err != nil {
-		return errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
+		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
 	for _, context := range c.Contexts {
@@ -212,7 +214,7 @@ func (c *Config) Load() error {
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Config = c
 		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
 		context.State = c.ContextStates[context.Name]
@@ -261,17 +263,17 @@ func (c *Config) Save() error {
 
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
-		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
+		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
 	filename := c.GetFilename()
 
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
+		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
 	}
 
 	if err := os.WriteFile(filename, cfg, 0600); err != nil {
-		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
+		return fmt.Errorf("unable to write config to file %s: %w", filename, err)
 	}
 
 	c.restoreOverwrittenContext(tempContext)
@@ -421,7 +423,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			log.CliLogger.Trace("current context does not exist")
-			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename)
+			return errors.NewCorruptedConfigError(`the current context "%s" does not exist`, c.CurrentContext, c.Filename)
 		}
 	}
 
@@ -446,7 +448,7 @@ func (c *Config) Validate() error {
 		}
 		if !c.IsTest && !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
-			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(`context state mismatch for context "%s"`, context.Name, c.Filename)
 		}
 	}
 
@@ -454,7 +456,7 @@ func (c *Config) Validate() error {
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
 			log.CliLogger.Trace("context state mapped to nonexistent context")
-			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.Filename)
+			return errors.NewCorruptedConfigError(`context state mapping error for context "%s"`, contextName, c.Filename)
 		}
 	}
 
@@ -485,22 +487,22 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, orgResourceId, envId string) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, organizationId, environmentId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
 
 	credential, ok := c.Credentials[credentialName]
 	if !ok {
-		return fmt.Errorf(errors.CredentialNotFoundErrorMsg, credentialName)
+		return fmt.Errorf(`credential "%s" not found`, credentialName)
 	}
 
 	platform, ok := c.Platforms[platformName]
 	if !ok {
-		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
+		return fmt.Errorf(`platform "%s" not found`, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, orgResourceId, envId)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, organizationId, environmentId)
 	if err != nil {
 		return err
 	}
@@ -566,7 +568,7 @@ func (c *Config) UseContext(name string) error {
 
 func (c *Config) SaveCredential(credential *Credential) error {
 	if credential.Name == "" {
-		return errors.New(errors.NoNameCredentialErrorMsg)
+		return fmt.Errorf("credential must have a name")
 	}
 	c.Credentials[credential.Name] = credential
 	return c.Save()
@@ -574,7 +576,7 @@ func (c *Config) SaveCredential(credential *Credential) error {
 
 func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCredential) error {
 	if ctxName == "" {
-		return errors.New(errors.SavedCredentialNoContextErrorMsg)
+		return fmt.Errorf("saved credential must match a context")
 	}
 	c.SavedCredentials[ctxName] = loginCredential
 	return c.Save()
@@ -582,7 +584,7 @@ func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCrede
 
 func (c *Config) SavePlatform(platform *Platform) error {
 	if platform.Name == "" {
-		return errors.New(errors.NoNamePlatformErrorMsg)
+		return fmt.Errorf("platform must have a name")
 	}
 	c.Platforms[platform.Name] = platform
 	return c.Save()

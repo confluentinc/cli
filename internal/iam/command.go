@@ -23,12 +23,12 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.Long = "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) permissions."
 	}
 
-	dc := dynamicconfig.New(cfg, nil)
+	dc := dynamicconfig.New(cfg)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.iam.group_mapping.enable", dc.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(newGroupMappingCommand(prerunner))
 	}
-	cmd.AddCommand(newACLCommand(prerunner))
+	cmd.AddCommand(newAclCommand(prerunner))
 	cmd.AddCommand(newPoolCommand(prerunner))
 	cmd.AddCommand(newProviderCommand(prerunner))
 	cmd.AddCommand(newRBACCommand(cfg, prerunner))

@@ -97,7 +97,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	yes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
-		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
+		return err
 	}
 
 	major, err := cmd.Flags().GetBool("major")
@@ -110,24 +110,24 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.ErrPrintln("Checking for updates...")
+	output.ErrPrintln(c.Config.EnableColor, "Checking for updates...")
 	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
+		return errors.NewUpdateClientWrapError(err, "error checking for updates")
 	}
 
 	if latestMajorVersion == "" && latestMinorVersion == "" {
-		output.Println("Already up to date.")
+		output.Println(c.Config.EnableColor, "Already up to date.")
 		return nil
 	}
 
 	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
-		output.Println("The only available update is a major version update. Use `confluent update --major` to accept the update.")
+		output.Println(c.Config.EnableColor, "The only available update is a major version update. Use `confluent update --major` to accept the update.")
 		return nil
 	}
 
 	if latestMajorVersion == "" && major {
-		output.Println("No major version updates are available.")
+		output.Println(c.Config.EnableColor, "No major version updates are available.")
 		return nil
 	}
 
@@ -150,12 +150,12 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	oldBin, err := os.Executable()
-	if err != nil {
+	if _, err := os.Executable(); err != nil {
 		return err
 	}
-	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin, noVerify); err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
+
+	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, noVerify); err != nil {
+		return errors.NewUpdateClientWrapError(err, "error updating CLI binary")
 	}
 
 	return nil
@@ -190,14 +190,14 @@ func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
 
 	var errMsg string
 	if err != nil {
-		errMsg = fmt.Sprintf(errors.ObtainingReleaseNotesErrorMsg, err)
+		errMsg = fmt.Sprintf("error obtaining release notes: %v", err)
 	} else {
 		isSameVersion, err := sameVersionCheck(latestBinaryVersion, latestReleaseNotesVersion)
 		if err != nil {
-			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionCheckErrorMsg, err)
+			errMsg = fmt.Sprintf("unable to perform release notes and binary version check: %v", err)
 		}
 		if !isSameVersion {
-			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionMismatchErrorMsg, latestBinaryVersion, latestReleaseNotesVersion)
+			errMsg = fmt.Sprintf("binary version (v%s) and latest release notes version (v%s) mismatch", latestBinaryVersion, latestReleaseNotesVersion)
 		}
 	}
 

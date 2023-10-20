@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -74,7 +75,7 @@ func (c *command) clusterUpdate(cmd *cobra.Command, _ []string) error {
 		return c.updateTopLevelMode(cmd, mode)
 	}
 
-	return errors.New(errors.CompatibilityOrModeErrorMsg)
+	return fmt.Errorf(errors.CompatibilityOrModeErrorMsg)
 }
 
 func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
@@ -93,7 +94,7 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf("Successfully updated top-level compatibility to \"%s\".\n", req.Compatibility)
+	output.Printf(c.Config.EnableColor, "Successfully updated top-level compatibility to \"%s\".\n", req.Compatibility)
 	return nil
 }
 
@@ -173,6 +174,6 @@ func (c *command) updateTopLevelMode(cmd *cobra.Command, mode string) error {
 		return err
 	}
 
-	output.Printf("Successfully updated top-level mode to \"%s\".\n", req.Mode)
+	output.Printf(c.Config.EnableColor, "Successfully updated top-level mode to \"%s\".\n", req.Mode)
 	return nil
 }

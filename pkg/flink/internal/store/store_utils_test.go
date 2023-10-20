@@ -84,7 +84,7 @@ func TestProcessSetStatement(t *testing.T) {
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	s := NewStore(client, nil, &types.ApplicationOptions{EnvironmentName: "env-123"}, tokenRefreshFunc).(*Store)
 	// This is just a string, so really doesn't matter
-	s.Properties.Set(config.ConfigKeyLocalTimeZone, "London/GMT")
+	s.Properties.Set(config.KeyLocalTimeZone, "London/GMT")
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")
@@ -120,7 +120,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should fail if user wants to set the catalog", func(t *testing.T) {
-		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.ConfigKeyCatalog, "catalog-name"))
+		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.KeyCatalog, "catalog-name"))
 		assert.Equal(t, &types.StatementError{
 			Message:    "cannot set a catalog or a database with SET command",
 			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
@@ -128,7 +128,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should fail if user wants to set the database", func(t *testing.T) {
-		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.ConfigKeyDatabase, "db-name"))
+		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.KeyDatabase, "db-name"))
 		assert.Equal(t, &types.StatementError{
 			Message:    "cannot set a catalog or a database with SET command",
 			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
@@ -136,7 +136,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should fail if user wants to set an empty statement name", func(t *testing.T) {
-		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.ConfigKeyStatementName, ""))
+		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.KeyStatementName, ""))
 		assert.Equal(t, &types.StatementError{
 			Message:    "cannot set an empty statement name",
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
@@ -148,17 +148,17 @@ func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:    "orgId",
+		OrganizationId:   "orgId",
 		EnvironmentName:  "envName",
 		Database:         "database",
 		ServiceAccountId: "sa-123",
 	}
 	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
-	s.Properties.Set(config.ConfigKeyLocalTimeZone, "London/GMT")
+	s.Properties.Set(config.KeyLocalTimeZone, "London/GMT")
 
 	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
-		{config.ConfigKeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
-		{config.ConfigKeyServiceAccount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
+		{config.KeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
+		{config.KeyServiceAccount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
 	})
 
 	t.Run("should return all keys and values including default and initial values before reseting", func(t *testing.T) {
@@ -177,7 +177,7 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should reset all keys and values from config to their default or delete them if no default", func(t *testing.T) {
-		s.Properties.Set(config.ConfigKeyCatalog, "job1")
+		s.Properties.Set(config.KeyCatalog, "job1")
 		s.Properties.Set("timeout", "30")
 		result, _ := s.processResetStatement("reset")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
@@ -203,13 +203,13 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should reset database if catalog is reset", func(t *testing.T) {
-		s.Properties.Set(config.ConfigKeyCatalog, "catalog")
-		s.Properties.Set(config.ConfigKeyDatabase, "db")
-		statement := fmt.Sprintf("reset '%s'", config.ConfigKeyCatalog)
+		s.Properties.Set(config.KeyCatalog, "catalog")
+		s.Properties.Set(config.KeyDatabase, "db")
+		statement := fmt.Sprintf("reset '%s'", config.KeyCatalog)
 		_, err := s.processResetStatement(statement)
 		assert.Nil(t, err)
-		assert.False(t, s.Properties.HasKey(config.ConfigKeyCatalog))
-		assert.False(t, s.Properties.HasKey(config.ConfigKeyDatabase))
+		assert.False(t, s.Properties.HasKey(config.KeyCatalog))
+		assert.False(t, s.Properties.HasKey(config.KeyDatabase))
 	})
 }
 
@@ -217,7 +217,7 @@ func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentName: "envName",
 		Database:        "database",
 	}
@@ -231,10 +231,10 @@ func TestProcessUseStatement(t *testing.T) {
 	t.Run("should update the database name in config", func(t *testing.T) {
 		result, err := s.processUseStatement("use db1")
 		require.Nil(t, err)
-		require.Equal(t, config.ConfigOpUse, result.Kind)
+		require.Equal(t, config.OpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "configuration updated successfully", result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyDatabase, "db1"}})
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.KeyDatabase, "db1"}})
 		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
@@ -246,10 +246,10 @@ func TestProcessUseStatement(t *testing.T) {
 	t.Run("should update the catalog name in config", func(t *testing.T) {
 		result, err := s.processUseStatement("use catalog metadata")
 		require.Nil(t, err)
-		require.Equal(t, config.ConfigOpUse, result.Kind)
+		require.Equal(t, config.OpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "configuration updated successfully", result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyCatalog, "metadata"}})
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.KeyCatalog, "metadata"}})
 		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
@@ -260,28 +260,28 @@ func TestProcessUseStatement(t *testing.T) {
 
 	t.Run("use database should fail if no catalog was set", func(t *testing.T) {
 		// delete the catalog
-		catalogName := s.Properties.Get(config.ConfigKeyCatalog)
-		s.Properties.Delete(config.ConfigKeyCatalog)
+		catalogName := s.Properties.Get(config.KeyCatalog)
+		s.Properties.Delete(config.KeyCatalog)
 
 		_, err := s.processUseStatement("use db1")
 		require.Error(t, err)
 
 		// restore previous props state
-		s.Properties.Set(config.ConfigKeyCatalog, catalogName)
+		s.Properties.Set(config.KeyCatalog, catalogName)
 	})
 
 	t.Run("use catalog should reset the current database", func(t *testing.T) {
 		// set a test DB
-		dbName := s.Properties.Get(config.ConfigKeyDatabase)
-		s.Properties.Set(config.ConfigKeyDatabase, "test-db")
+		dbName := s.Properties.Get(config.KeyDatabase)
+		s.Properties.Set(config.KeyDatabase, "test-db")
 
 		// use catalog should remove the DB property
 		_, err := s.processUseStatement("use catalog test")
 		require.Nil(t, err)
-		require.False(t, s.Properties.HasKey(config.ConfigKeyDatabase))
+		require.False(t, s.Properties.HasKey(config.KeyDatabase))
 
 		// restore previous props state
-		s.Properties.Set(config.ConfigKeyDatabase, dbName)
+		s.Properties.Set(config.KeyDatabase, dbName)
 	})
 }
 

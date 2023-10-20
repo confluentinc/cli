@@ -2,13 +2,13 @@ package local
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -22,7 +22,7 @@ func (c *command) newKafkaStopCommand() *cobra.Command {
 	}
 }
 
-func (c *command) kafkaStop(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaStop(_ *cobra.Command, _ []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -55,13 +55,13 @@ func (c *command) stopAndRemoveConfluentLocal(dockerClient *client.Client) error
 			}
 			log.CliLogger.Tracef("Confluent Local container removed")
 
-			output.Printf("Confluent Local has been stopped: removed container \"%s\".\n", getShortenedContainerId(container.ID))
+			output.Printf(c.Config.EnableColor, "Confluent Local has been stopped: removed container \"%s\".\n", getShortenedContainerId(container.ID))
 		}
 	}
 
 	c.Config.LocalPorts = nil
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, "failed to remove local ports from config")
+		return fmt.Errorf("failed to remove local ports from config: %w", err)
 	}
 
 	return nil

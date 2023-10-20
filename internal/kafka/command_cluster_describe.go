@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -83,12 +84,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
 		if resource.LookupType(args[0]) != resource.KafkaCluster {
-			return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
+			return "", fmt.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
 		}
 		return args[0], nil
 	}
 
-	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
+	lkc := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 	if lkc == "" {
 		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
 	}

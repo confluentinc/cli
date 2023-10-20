@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -53,22 +54,20 @@ func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) 
 
 func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*ccloudv2.FlinkGatewayClient, error) {
 	if c.flinkGatewayClient == nil {
-		ctx := c.Config.Context()
-
 		var url string
 		var err error
 
 		if computePoolOnly {
-			if computePoolId := ctx.GetCurrentFlinkComputePool(); computePoolId != "" {
-				url, err = c.getGatewayUrlForComputePool(computePoolId, ctx)
+			if computePoolId := c.Context.GetCurrentFlinkComputePool(); computePoolId != "" {
+				url, err = c.getGatewayUrlForComputePool(computePoolId, c.Context)
 				if err != nil {
 					return nil, err
 				}
 			} else {
 				return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 			}
-		} else if ctx.GetCurrentFlinkRegion() != "" && ctx.GetCurrentFlinkCloudProvider() != "" {
-			url, err = c.getGatewayUrlForRegion(ctx.GetCurrentFlinkCloudProvider(), ctx.GetCurrentFlinkRegion())
+		} else if c.Context.GetCurrentFlinkRegion() != "" && c.Context.GetCurrentFlinkCloudProvider() != "" {
+			url, err = c.getGatewayUrlForRegion(c.Context.GetCurrentFlinkCloudProvider(), c.Context.GetCurrentFlinkRegion())
 			if err != nil {
 				return nil, err
 			}
@@ -81,7 +80,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
-		dataplaneToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer())
+		dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
 		if err != nil {
 			return nil, err
 		}
@@ -151,14 +150,12 @@ func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 
 func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, error) {
 	if c.metricsClient == nil {
-		ctx := c.Config.Context()
-
 		url := "https://api.telemetry.confluent.cloud"
 		if c.Config.IsTest {
 			url = testserver.TestV2CloudUrl.String()
-		} else if strings.Contains(ctx.GetPlatformServer(), "devel") {
+		} else if strings.Contains(c.Context.GetPlatformServer(), "devel") {
 			url = "https://devel-sandbox-api.telemetry.aws.confluent.cloud"
-		} else if strings.Contains(ctx.GetPlatformServer(), "stag") {
+		} else if strings.Contains(c.Context.GetPlatformServer(), "stag") {
 			url = "https://stag-sandbox-api.telemetry.aws.confluent.cloud"
 		}
 
@@ -167,7 +164,7 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 			return nil, err
 		}
 
-		dataplaneToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer())
+		dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
 		if err != nil {
 			return nil, err
 		}
@@ -180,8 +177,6 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 
 func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*schemaregistry.Client, error) {
 	if c.schemaRegistryClient == nil {
-		ctx := c.Config.Context()
-
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return nil, err
@@ -193,8 +188,8 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
 
-			if ctx != nil && ctx.GetState() != nil {
-				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(ctx.GetCurrentEnvironment())
+			if c.Context.GetState() != nil {
+				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 				if err != nil {
 					return nil, err
 				}
@@ -204,7 +199,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
 				configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
 
-				dataplaneToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer())
+				dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
 				if err != nil {
 					return nil, err
 				}
@@ -217,7 +212,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					return nil, err
 				}
 				if schemaRegistryEndpoint == "" {
-					return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+					return nil, fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
 				}
 				configuration.BasePath = schemaRegistryEndpoint
 
@@ -233,7 +228,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
 
 				if err := c.schemaRegistryClient.Get(); err != nil {
-					return nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+					return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
 				}
 			}
 		} else {
@@ -242,7 +237,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				return nil, err
 			}
 			if schemaRegistryEndpoint == "" {
-				return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+				return nil, fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
 			}
 
 			caLocation, err := cmd.Flags().GetString("ca-location")
@@ -269,14 +264,14 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = client
 
-			if ctx != nil && ctx.GetState() != nil {
-				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, ctx.GetAuthToken())
+			if c.Context.GetState() != nil {
+				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, c.Context.GetAuthToken())
 			} else {
 				c.schemaRegistryClient = schemaregistry.NewClient(configuration)
 			}
 
 			if err := c.schemaRegistryClient.Get(); err != nil {
-				return nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+				return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
 			}
 		}
 	}

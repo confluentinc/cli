@@ -61,7 +61,7 @@ func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1Custom
 			Description:         plugin.GetDescription(),
 			ConnectorClass:      plugin.GetConnectorClass(),
 			ConnectorType:       plugin.GetConnectorType(),
-			SensitiveProperties: strings.Join(sensitiveProperties, ","),
+			SensitiveProperties: strings.Join(sensitiveProperties, ", "),
 		})
 	} else {
 		table.Add(&customPluginSerializedOut{

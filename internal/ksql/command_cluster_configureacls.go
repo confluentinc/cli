@@ -54,19 +54,19 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
 
 	if ksqlCluster.Spec.KafkaCluster.GetId() != kafkaCluster.ID {
-		output.ErrPrintf("The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\n", args[0], ksqlCluster.Spec.KafkaCluster.GetId(), kafkaCluster.ID)
-		output.ErrPrintf("To switch to the correct cluster, use `confluent kafka cluster use %s`.\n", ksqlCluster.Spec.KafkaCluster.GetId())
+		output.ErrPrintf(c.Config.EnableColor, "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\n", args[0], ksqlCluster.Spec.KafkaCluster.GetId(), kafkaCluster.ID)
+		output.ErrPrintf(c.Config.EnableColor, "To switch to the correct cluster, use `confluent kafka cluster use %s`.\n", ksqlCluster.Spec.KafkaCluster.GetId())
 	}
 
 	credentialIdentity := ksqlCluster.Spec.CredentialIdentity.GetId()
 	if resource.LookupType(credentialIdentity) != resource.ServiceAccount {
-		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, args[0])
+		return fmt.Errorf(errors.KsqldbNoServiceAccountErrorMsg, args[0])
 	}
 
 	serviceAccountId, err := c.getServiceAccount(&ksqlCluster)
@@ -109,7 +109,7 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (stri
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.GetId())
+	return "", fmt.Errorf(errors.KsqldbNoServiceAccountErrorMsg, cluster.GetId())
 }
 
 func buildACLBindings(serviceAccountId string, cluster *ksqlv2.KsqldbcmV2Cluster, topics []string) []*ccstructs.ACLBinding {

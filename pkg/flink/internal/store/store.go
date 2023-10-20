@@ -54,11 +54,11 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 
 func (s *Store) persistUserProperties() {
 	if s.appOptions.GetContext() != nil {
-		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.ConfigKeyCatalog)); err != nil {
+		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.KeyCatalog)); err != nil {
 			log.CliLogger.Errorf("error persisting current flink catalog: %v", err)
 		}
 
-		if err := s.appOptions.Context.SetCurrentFlinkDatabase(s.Properties.Get(config.ConfigKeyDatabase)); err != nil {
+		if err := s.appOptions.Context.SetCurrentFlinkDatabase(s.Properties.Get(config.KeyDatabase)); err != nil {
 			log.CliLogger.Errorf("error persisting current flink database: %v", err)
 		}
 
@@ -78,15 +78,15 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return result, sErr
 	}
 
-	statementName := s.Properties.GetOrDefault(config.ConfigKeyStatementName, uuid.New().String()[:18])
-	defer s.Properties.Delete(config.ConfigKeyStatementName)
+	statementName := s.Properties.GetOrDefault(config.KeyStatementName, uuid.New().String()[:18])
+	defer s.Properties.Delete(config.KeyStatementName)
 
 	// Process remote statements
 	computePoolId := s.appOptions.GetComputePoolId()
 	properties := s.Properties.GetNonLocalProperties()
 
 	var principal string
-	serviceAccount := s.Properties.Get(config.ConfigKeyServiceAccount)
+	serviceAccount := s.Properties.Get(config.KeyServiceAccount)
 	if serviceAccount != "" {
 		principal = serviceAccount
 	} else {
@@ -97,7 +97,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		createSqlV1beta1Statement(statement, statementName, computePoolId, properties),
 		principal,
 		s.appOptions.GetEnvironmentId(),
-		s.appOptions.GetOrgResourceId(),
+		s.appOptions.GetOrganizationId(),
 	)
 	if err != nil {
 		status := statementObj.GetStatus()
@@ -147,7 +147,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
-	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId(), statement.PageToken)
+	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId(), statement.PageToken)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
@@ -169,7 +169,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	if err := s.authenticatedGatewayClient().DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId()); err != nil {
+	if err := s.authenticatedGatewayClient().DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId()); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
@@ -178,7 +178,7 @@ func (s *Store) DeleteStatement(statementName string) bool {
 }
 
 func (s *Store) StopStatement(statementName string) bool {
-	statement, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+	statement, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId())
 
 	if err != nil {
 		log.CliLogger.Warnf("Failed to fetch statement to stop it: %v", err)
@@ -192,7 +192,7 @@ func (s *Store) StopStatement(statementName string) bool {
 	}
 	spec.SetStopped(true)
 
-	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId(), statement); err != nil {
+	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId(), statement); err != nil {
 		log.CliLogger.Warnf("Failed to stop the statement: %v", err)
 		return false
 	}
@@ -218,24 +218,12 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: 499}
 		default:
 			start := time.Now()
-			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId())
 			getRequestDuration = time.Since(start)
 
 			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
 				return nil, types.NewStatementErrorFailureMsg(err, statusDetail)
-			}
-
-			// TODO: remove this if backend fixes latency problem/the RUNNING state is set with the ResultsSchema
-			if statementObj.Status.ResultSchema != nil {
-				processedStatement := types.NewProcessedStatement(statementObj)
-				// if it's a SELECT statement we manually set the status to RUNNING, otherwise COMPLETED
-				processedStatement.Status = types.COMPLETED
-				if processedStatement.IsSelectStatement {
-					processedStatement.Status = types.RUNNING
-				}
-				processedStatement.StatusDetail = statusDetail
-				return processedStatement, nil
 			}
 
 			phase = types.PHASE(statementObj.Status.GetPhase())
@@ -271,7 +259,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 		if int(lastProgressUpdateTime.Seconds()) > capturedErrorsLimit {
 			lastProgressUpdateTime = time.Second * 0
-			output.Printf("Waiting for statement to be ready. Statement phase is %s. (Timeout %ds/%ds) \n", phase, int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
+			output.Printf(false, "Waiting for statement to be ready. Statement phase is %s. (Timeout %ds/%ds) \n", phase, int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
 		}
 		waitTime = calcWaitTime(retries)
 
@@ -288,7 +276,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 	return nil, &types.StatementError{
 		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
-			timeout.Seconds(), config.ConfigKeyResultsTimeout),
+			timeout.Seconds(), config.KeyResultsTimeout),
 		FailureMessage: errorsMsg,
 	}
 }
@@ -300,7 +288,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1State
 	}
 
 	// if the status detail field is empty, we check if there's an exception instead
-	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrgResourceId())
+	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrganizationId())
 	if err != nil {
 		return ""
 	}
@@ -341,8 +329,8 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 
 func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
 	properties := map[string]string{
-		config.ConfigKeyServiceAccount: appOptions.GetServiceAccountId(),
-		config.ConfigKeyLocalTimeZone:  getLocalTimezone(),
+		config.KeyServiceAccount: appOptions.GetServiceAccountId(),
+		config.KeyLocalTimeZone:  getLocalTimezone(),
 	}
 
 	return properties
@@ -352,10 +340,10 @@ func getInitialProperties(appOptions *types.ApplicationOptions) map[string]strin
 	properties := map[string]string{}
 
 	if appOptions.GetEnvironmentName() != "" {
-		properties[config.ConfigKeyCatalog] = appOptions.GetEnvironmentName()
+		properties[config.KeyCatalog] = appOptions.GetEnvironmentName()
 	}
 	if appOptions.GetDatabase() != "" {
-		properties[config.ConfigKeyDatabase] = appOptions.GetDatabase()
+		properties[config.KeyDatabase] = appOptions.GetDatabase()
 	}
 
 	return properties
@@ -365,10 +353,10 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 	for !statement.IsTerminalState() {
 		select {
 		case <-ctx.Done():
-			output.Println("Detached from statement.")
+			output.Println(false, "Detached from statement.")
 			return &statement, nil
 		default:
-			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId())
+			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId())
 			status := statementObj.GetStatus()
 			statusDetail := status.GetDetail()
 			if err != nil {
@@ -380,7 +368,7 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 			}
 
 			if statusDetail != "" {
-				output.Println(statusDetail)
+				output.Println(false, statusDetail)
 			}
 
 			statement.Status = types.PHASE(statementObj.Status.GetPhase())

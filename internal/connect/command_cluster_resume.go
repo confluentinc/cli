@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
@@ -35,7 +37,7 @@ func (c *clusterCommand) newResumeCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -58,14 +60,14 @@ func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 	for _, id := range args {
 		connector, ok := connectorsById[id]
 		if !ok {
-			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
+			return fmt.Errorf(errors.UnknownConnectorIdErrorMsg, id)
 		}
 
 		if err := c.V2Client.ResumeConnector(connector.Info.GetName(), environmentId, kafkaCluster.ID); err != nil {
 			return err
 		}
 
-		output.Printf("Resumed connector \"%s\".\n", id)
+		output.Printf(c.Config.EnableColor, "Resumed connector \"%s\".\n", id)
 	}
 
 	return nil

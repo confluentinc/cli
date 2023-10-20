@@ -68,6 +68,14 @@ func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(req
 	return client.StandardClient()
 }
 
+func ToLower(s string) string {
+	return strings.ReplaceAll(strings.ToLower(s), "_", "-")
+}
+
+func ToUpper(s string) string {
+	return strings.ReplaceAll(strings.ToUpper(s), "-", "_")
+}
+
 func getServerUrl(baseURL string) string {
 	u, err := url.Parse(baseURL)
 	if err != nil {

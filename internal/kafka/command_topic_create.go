@@ -114,8 +114,9 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 				}
 				clusterId := kafkaREST.GetClusterId()
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, clusterId),
-					fmt.Sprintf(errors.TopicExistsSuggestions, clusterId, clusterId))
+					fmt.Sprintf(`topic "%s" already exists for Kafka cluster "%s"`, topicName, clusterId),
+					fmt.Sprintf("To list topics for the cluster \"%[1]s\", use `confluent kafka topic list --cluster %[1]s`.", clusterId),
+				)
 			}
 
 			// Print partition limit error w/ suggestion
@@ -127,6 +128,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

@@ -42,7 +42,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 
 	reply, err := c.V2Client.ValidateConnectorPlugin(args[0], environmentId, kafkaCluster.ID, config)
 	if err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
+		return errors.NewWrapErrorWithSuggestions(err, "error defining plugin on given Kafka cluster", "To list available connector plugin types, use `confluent connect plugin list`.")
 	}
 
 	list := output.NewList(cmd)

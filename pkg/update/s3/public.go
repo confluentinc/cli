@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/update"
 )
 
-var S3ReleaseNotesFile = "release-notes.rst"
+const releaseNotesFile = "release-notes.rst"
 
 type PublicRepo struct {
 	*PublicRepoParams
@@ -67,13 +67,13 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version.Version) (*version.Version, *version.Version, error) {
 	versions, err := r.GetAvailableBinaryVersions(name)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf("%s: %w", errors.GetBinaryVersionsErrorMsg, err)
 	}
 
 	// The index of the largest available version. This may be a major version update.
 	majorIdx := len(versions) - 1
 	if majorIdx < 0 {
-		return nil, nil, errors.New(errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf(errors.GetBinaryVersionsErrorMsg)
 	}
 	major := versions[majorIdx]
 	if current.Segments()[0] == major.Segments()[0] {
@@ -90,7 +90,7 @@ func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version
 	}) - 1
 
 	if minorIdx < 0 {
-		return nil, nil, errors.New(errors.GetBinaryVersionsErrorMsg)
+		return nil, nil, fmt.Errorf(errors.GetBinaryVersionsErrorMsg)
 	}
 	minor := versions[minorIdx]
 
@@ -107,7 +107,7 @@ func (r *PublicRepo) GetAvailableBinaryVersions(name string) (version.Collection
 		return nil, err
 	}
 	if len(availableVersions) == 0 {
-		return nil, errors.New(errors.NoVersionsErrorMsg)
+		return nil, fmt.Errorf(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }
@@ -177,7 +177,7 @@ func (r *PublicRepo) getMatchedBinaryVersionsFromListBucketResult(result *ListBu
 func (r *PublicRepo) GetLatestReleaseNotesVersions(name, currentVersion string) (version.Collection, error) {
 	versions, err := r.GetAvailableReleaseNotesVersions(name)
 	if err != nil {
-		return nil, errors.Wrapf(err, errors.GetReleaseNotesVersionsErrorMsg)
+		return nil, fmt.Errorf("unable to get available release notes versions: %w", err)
 	}
 
 	current, err := version.NewVersion(currentVersion)
@@ -197,7 +197,7 @@ func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Coll
 	}
 	availableVersions := r.getMatchedReleaseNotesVersionsFromListBucketResult(name, listBucketResult)
 	if len(availableVersions) == 0 {
-		return nil, errors.New(errors.NoVersionsErrorMsg)
+		return nil, fmt.Errorf(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }
@@ -219,7 +219,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *v
 		return false, nil
 	}
 	split := strings.Split(key, "/")
-	if split[len(split)-1] != S3ReleaseNotesFile {
+	if split[len(split)-1] != releaseNotesFile {
 		return false, nil
 	}
 	ver, err := version.NewSemver(split[2])
@@ -229,7 +229,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *v
 	return true, ver
 }
 
-func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) ([]byte, error) {
+func (r *PublicRepo) DownloadVersion(name, version string) ([]byte, error) {
 	objectKey, _ := NewPrefixedKey(fmt.Sprintf(r.S3BinPrefixFmt, name), "_", true)
 	objectKey.goos = r.goos
 	objectKey.goarch = r.goarch
@@ -247,7 +247,7 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) ([]byte,
 }
 
 func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) {
-	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, fmt.Sprintf(r.S3ReleaseNotesPrefixFmt, name), version, S3ReleaseNotesFile)
+	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, fmt.Sprintf(r.S3ReleaseNotesPrefixFmt, name), version, releaseNotesFile)
 	resp, err := r.getHttpResponse(downloadURL)
 	if err != nil {
 		return "", err
@@ -292,7 +292,7 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 		if err == nil {
 			log.CliLogger.Tracef("Response from AWS: %s", string(body))
 		}
-		return nil, errors.Errorf(errors.UnexpectedS3ResponseErrorMsg, resp.Status)
+		return nil, fmt.Errorf("received unexpected response from S3: %s", resp.Status)
 	}
 	return resp, nil
 }

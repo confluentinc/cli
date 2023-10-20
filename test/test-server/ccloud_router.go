@@ -45,7 +45,7 @@ func NewCloudRouter(t *testing.T, isAuditLogEnabled bool) *CloudRouter {
 	return router
 }
 
-func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies map[string]string) {
+func (c *CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies map[string]string) {
 	jsonRolesMap := rolesListToJsonMap(rbacPublicRoles())
 	addRoles(base, routesAndReplies, jsonRolesMap)
 

@@ -106,7 +106,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -156,11 +156,14 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if updateSchemaRegistry {
-			srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 			if err != nil {
 				return err
 			}
-			pipeline.Spec.SetStreamGovernanceCluster(streamdesignerv1.ObjectReference{Id: srCluster.GetId()})
+			if len(clusters) == 0 {
+				return errors.NewSRNotEnabledError()
+			}
+			pipeline.Spec.SetStreamGovernanceCluster(streamdesignerv1.ObjectReference{Id: clusters[0].GetId()})
 		}
 	}
 

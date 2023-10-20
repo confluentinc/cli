@@ -83,9 +83,9 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 && (subject != "" || version != "") {
-		return errors.New(errors.BothSchemaAndSubjectErrorMsg)
+		return fmt.Errorf("cannot specify both schema ID and subject/version")
 	} else if len(args) == 0 && (subject == "" || version == "") {
-		return errors.New(errors.SchemaOrSubjectErrorMsg)
+		return fmt.Errorf("must specify either schema ID or subject/version")
 	}
 
 	client, err := c.GetSchemaRegistryClient(cmd)
@@ -116,7 +116,10 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 func describeById(id string, client *schemaregistry.Client) error {
 	schemaId, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, id), errors.SchemaIntegerSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`invalid schema ID "%s"`, id),
+			"Schema ID must be an integer.",
+		)
 	}
 
 	schemaString, err := client.GetSchema(int32(schemaId), nil)
@@ -184,7 +187,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 	if err != nil {
 		return err
 	}
-	output.Print(string(pretty.Pretty(b)))
+	output.Print(false, string(pretty.Pretty(b)))
 
 	return nil
 }
@@ -232,13 +235,13 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 }
 
 func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata *srsdk.Metadata, ruleset *srsdk.RuleSet) error {
-	output.Printf("Schema ID: %d\n", schemaID)
+	output.Printf(false, "Schema ID: %d\n", schemaID)
 
 	// The backend considers "AVRO" to be the default schema type.
 	if schemaType == "" {
 		schemaType = "AVRO"
 	}
-	output.Println("Type: " + schemaType)
+	output.Println(false, "Type: "+schemaType)
 
 	switch schemaType {
 	case "JSON", "AVRO":
@@ -249,32 +252,32 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 		schema = jsonBuffer.String()
 	}
 
-	output.Println("Schema:")
-	output.Println(schema)
+	output.Println(false, "Schema:")
+	output.Println(false, schema)
 
 	if len(refs) > 0 {
-		output.Println("References:")
+		output.Println(false, "References:")
 		for i := 0; i < len(refs); i++ {
-			output.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+			output.Printf(false, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
 		}
 	}
 
 	if metadata != nil {
-		output.Println("Metadata:")
+		output.Println(false, "Metadata:")
 		metadataJson, err := json.Marshal(*metadata)
 		if err != nil {
 			return err
 		}
-		output.Println(prettyJson(metadataJson))
+		output.Println(false, prettyJson(metadataJson))
 	}
 
 	if ruleset != nil {
-		output.Println("Ruleset:")
+		output.Println(false, "Ruleset:")
 		rulesetJson, err := json.Marshal(*ruleset)
 		if err != nil {
 			return err
 		}
-		output.Println(prettyJson(rulesetJson))
+		output.Println(false, prettyJson(rulesetJson))
 	}
 	return nil
 }

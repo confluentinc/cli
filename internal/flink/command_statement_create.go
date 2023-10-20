@@ -12,7 +12,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/flink"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/retry"
@@ -31,7 +30,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" with service account "sa-123456" and using Kafka cluster "my-cluster" as the default database.`,
-				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-cluster.my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster`,
+				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster`,
 			},
 		),
 	}
@@ -63,7 +62,10 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	computePool := c.Context.GetCurrentFlinkComputePool()
 	if computePool == "" {
-		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
+		return errors.NewErrorWithSuggestions(
+			"no compute pool selected",
+			"Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.",
+		)
 	}
 
 	name := uuid.New().String()
@@ -81,9 +83,9 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	properties := map[string]string{config.ConfigKeyCatalog: environment.GetDisplayName()}
+	properties := map[string]string{config.KeyCatalog: environment.GetDisplayName()}
 	if database != "" {
-		properties[config.ConfigKeyDatabase] = database
+		properties[config.KeyDatabase] = database
 	}
 
 	statement := flinkgatewayv1beta1.SqlV1beta1Statement{
@@ -107,7 +109,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	principal := serviceAccount
 	if serviceAccount == "" {
-		output.ErrPrintln(flink.ServiceAccountWarning)
+		output.ErrPrintln(c.Config.EnableColor, serviceAccountWarning)
 		principal = c.Context.GetUser().GetResourceId()
 	}
 

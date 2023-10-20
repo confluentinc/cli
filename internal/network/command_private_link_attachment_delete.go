@@ -46,7 +46,7 @@ func (c *command) privateLinkAttachmentDelete(cmd *cobra.Command, args []string)
 
 	deleteFunc := func(id string) error {
 		if err := c.V2Client.DeletePrivateLinkAttachment(environmentId, id); err != nil {
-			return errors.Errorf(errors.DeleteResourceErrorMsg, resource.PrivateLinkAttachment, id, err)
+			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.PrivateLinkAttachment, id, err)
 		}
 		return nil
 	}
@@ -54,9 +54,9 @@ func (c *command) privateLinkAttachmentDelete(cmd *cobra.Command, args []string)
 	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 	deleteMsg := "Requested to delete %s %s.\n"
 	if len(deletedIds) == 1 {
-		output.Printf(deleteMsg, resource.PrivateLinkAttachment, fmt.Sprintf(`"%s"`, deletedIds[0]))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.PrivateLinkAttachment, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		output.Printf(deleteMsg, resource.Plural(resource.PrivateLinkAttachment), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.PrivateLinkAttachment), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err

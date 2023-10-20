@@ -1,6 +1,9 @@
 package byok
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
@@ -9,17 +12,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
-
-type describeStruct struct {
-	Id        string   `human:"ID" serialized:"id"`
-	Key       string   `human:"Key" serialized:"key"`
-	Roles     []string `human:"Roles" serialized:"roles"`
-	Provider  string   `human:"Provider" serialized:"provider"`
-	State     string   `human:"State" serialized:"state"`
-	CreatedAt string   `human:"Created At" serialized:"created_at"`
-	UpdatedAt string   `human:"Updated At" serialized:"updated_at"`
-	DeletedAt string   `human:"Deleted At" serialized:"deleted_at"`
-}
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -41,35 +33,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchByokKeyNotFoundError(err, httpResp)
 	}
-
-	return c.outputByokKeyDescription(cmd, &key)
+	return c.outputByokKeyDescription(cmd, key)
 }
 
-func (c *command) outputByokKeyDescription(cmd *cobra.Command, key *byokv1.ByokV1Key) error {
-	postCreationStepInstructions, err := getPolicyCommand(key)
-	if err != nil {
-		return err
-	}
-
-	out, err := c.convertByokKeyToDescribeStruct(key)
-	if err != nil {
-		return err
-	}
-
-	table := output.NewTable(cmd)
-	table.Add(out)
-	table.Filter([]string{"Id", "Key", "Roles", "Provider", "State", "CreatedAt"})
-	table.Print()
-
-	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintf("\n%s\n\n", getPostCreateStepInstruction(key))
-		output.Println(postCreationStepInstructions)
-	}
-
-	return nil
-}
-
-func (c *command) convertByokKeyToDescribeStruct(key *byokv1.ByokV1Key) (*describeStruct, error) {
+func (c *command) outputByokKeyDescription(cmd *cobra.Command, key byokv1.ByokV1Key) error {
 	var keyString string
 	var roles []string
 
@@ -81,29 +48,42 @@ func (c *command) convertByokKeyToDescribeStruct(key *byokv1.ByokV1Key) (*descri
 		keyString = key.Key.ByokV1AzureKey.KeyId
 		roles = append(roles, key.Key.ByokV1AzureKey.GetApplicationId())
 	default:
-		return nil, errors.New(errors.ByokUnknownKeyTypeErrorMsg)
+		return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 	}
 
-	updatedAt := ""
-	if !key.Metadata.GetUpdatedAt().IsZero() {
-		updatedAt = key.Metadata.GetUpdatedAt().String()
+	table := output.NewTable(cmd)
+	if output.GetFormat(cmd) == output.Human {
+		table.Add(&humanOut{
+			Id:        key.GetId(),
+			Key:       keyString,
+			Roles:     strings.Join(roles, ", "),
+			Provider:  key.GetProvider(),
+			State:     key.GetState(),
+			CreatedAt: key.Metadata.CreatedAt.String(),
+		})
+	} else {
+		table.Add(&serializedOut{
+			Id:        key.GetId(),
+			Key:       keyString,
+			Roles:     roles,
+			Provider:  key.GetProvider(),
+			State:     key.GetState(),
+			CreatedAt: key.Metadata.CreatedAt.String(),
+		})
+	}
+	table.Print()
+
+	if output.GetFormat(cmd) == output.Human {
+		postCreationStepInstructions, err := getPolicyCommand(key)
+		if err != nil {
+			return err
+		}
+
+		output.ErrPrintln(c.Config.EnableColor, "")
+		output.ErrPrintln(c.Config.EnableColor, getPostCreateStepInstruction(key))
+		output.ErrPrintln(c.Config.EnableColor, "")
+		output.ErrPrintln(c.Config.EnableColor, postCreationStepInstructions)
 	}
 
-	deletedAt := ""
-	if !key.Metadata.GetDeletedAt().IsZero() {
-		deletedAt = key.Metadata.GetDeletedAt().String()
-	}
-
-	describeKey := &describeStruct{
-		Id:        key.GetId(),
-		Key:       keyString,
-		Roles:     roles,
-		Provider:  key.GetProvider(),
-		State:     key.GetState(),
-		CreatedAt: key.Metadata.CreatedAt.String(),
-		UpdatedAt: updatedAt,
-		DeletedAt: deletedAt,
-	}
-
-	return describeKey, nil
+	return nil
 }

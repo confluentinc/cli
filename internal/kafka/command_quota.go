@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -55,14 +56,27 @@ func quotaToPrintable(quota kafkaquotasv1.KafkaQuotasV1ClientQuota, format outpu
 		Cluster:     quota.Spec.Cluster.GetId(),
 		Environment: quota.Spec.Environment.GetId(),
 	}
+
 	if format == output.Human {
 		out.Ingress += " B/s"
 		out.Egress += " B/s"
+	} else {
+		// TODO: Serialize array instead of string in next major version
+		out.Principals = principalsToStringSerialized(quota.Spec.GetPrincipals())
 	}
+
 	return out
 }
 
 func principalsToString(principals []kafkaquotasv1.GlobalObjectReference) string {
+	ids := make([]string, len(principals))
+	for i, principal := range principals {
+		ids[i] = principal.GetId()
+	}
+	return strings.Join(ids, ", ")
+}
+
+func principalsToStringSerialized(principals []kafkaquotasv1.GlobalObjectReference) string {
 	principalStr := ""
 	for i, principal := range principals {
 		principalStr += principal.Id
@@ -104,7 +118,7 @@ func (c *quotaCommand) autocompleteQuotas() []string {
 }
 
 func (c *quotaCommand) getQuotas() ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return nil, err
 	}

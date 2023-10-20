@@ -48,6 +48,6 @@ func (c *command) exporterResume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(exporterActionMsg, "Resumed", args[0])
+	output.Printf(c.Config.EnableColor, exporterActionMsg, "Resumed", args[0])
 	return nil
 }

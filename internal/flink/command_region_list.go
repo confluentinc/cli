@@ -32,12 +32,13 @@ func (c *command) newRegionListCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) regionList(cmd *cobra.Command, args []string) error {
+func (c *command) regionList(cmd *cobra.Command, _ []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err

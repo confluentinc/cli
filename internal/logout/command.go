@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type Command struct {
+type command struct {
 	*pcmd.CLICommand
 	cfg          *config.Config
 	netrcHandler netrc.NetrcHandler
@@ -35,7 +35,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcH
 
 	cmd.Short = fmt.Sprintf("Log out of %s.", context)
 
-	c := &Command{
+	c := &command{
 		CLICommand:   pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		cfg:          cfg,
 		netrcHandler: netrcHandler,
@@ -45,7 +45,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcH
 	return cmd
 }
 
-func (c *Command) logout(cmd *cobra.Command, _ []string) error {
+func (c *command) logout(_ *cobra.Command, _ []string) error {
 	if c.Config.Config.Context() != nil {
 		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().GetNetrcMachineName())
 		if err == nil {
@@ -60,6 +60,6 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println("You are now logged out.")
+	output.Println(c.Config.EnableColor, "You are now logged out.")
 	return nil
 }

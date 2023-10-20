@@ -7,7 +7,6 @@ import (
 
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -88,7 +87,7 @@ func getURL(cmd *cobra.Command) (string, error) {
 		return url, nil
 	}
 
-	return "", errors.New(errors.MdsUrlNotFoundSuggestions)
+	return "", fmt.Errorf("pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable")
 }
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
@@ -118,10 +117,11 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
 	}
 
 	if meta.ID != "" {
-		output.Printf("Confluent Resource Name: %s\n\n", meta.ID)
+		output.Printf(false, "Confluent Resource Name: %s\n", meta.ID)
+		output.Println(false, "")
 	}
 
-	output.Println("Scope:")
+	output.Println(false, "Scope:")
 	list := output.NewList(cmd)
 	for _, name := range types {
 		list.Add(&scopeOut{

@@ -133,7 +133,7 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureAclsWhenUser() {
 	err := cmd.Execute()
 
 	req := require.New(suite.T())
-	req.EqualError(err, fmt.Sprintf(errors.KsqlDBNoServiceAccountErrorMsg, ksqlClusterID))
+	req.EqualError(err, fmt.Sprintf(errors.KsqldbNoServiceAccountErrorMsg, ksqlClusterID))
 }
 
 func (suite *KSQLTestSuite) TestDescribeKSQL() {

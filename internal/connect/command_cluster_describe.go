@@ -72,7 +72,7 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
-	output.Println("Connector Details")
+	output.Println(false, "Connector Details")
 	table := output.NewTable(cmd)
 	table.Add(&connectOut{
 		Name:   connector.Status.GetName(),
@@ -107,10 +107,10 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	if err := table.Print(); err != nil {
 		return err
 	}
-	output.Println()
-	output.Println()
+	output.Println(false, "")
+	output.Println(false, "")
 
-	output.Println("Task Level Details")
+	output.Println(false, "Task Level Details")
 	list := output.NewList(cmd)
 	for _, task := range connector.Status.GetTasks() {
 		list.Add(&taskDescribeOut{
@@ -121,10 +121,10 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	if err := list.Print(); err != nil {
 		return err
 	}
-	output.Println()
-	output.Println()
+	output.Println(false, "")
+	output.Println(false, "")
 
-	output.Println("Configuration Details")
+	output.Println(false, "Configuration Details")
 	list = output.NewList(cmd)
 	for name, value := range connector.Info.GetConfig() {
 		list.Add(&configDescribeOut{

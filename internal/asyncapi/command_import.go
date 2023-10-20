@@ -169,7 +169,7 @@ func getFlagsImport(cmd *cobra.Command) (*flagsImport, error) {
 	return flags, nil
 }
 
-func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
+func (c *command) asyncapiImport(cmd *cobra.Command, _ []string) error {
 	// Get flags
 	flagsImp, err := getFlagsImport(cmd)
 	if err != nil {
@@ -186,7 +186,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 	for topicName, topicDetails := range spec.Channels {
 		if err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite); err != nil {
 			if err.Error() == parseErrorMessage {
-				output.Printf("WARNING: topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
+				output.ErrPrintf(c.Config.EnableColor, "[WARN] Topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
 			} else {
 				log.CliLogger.Warn(err)
 			}
@@ -202,7 +202,7 @@ func fileToSpec(fileName string) (*Spec, error) {
 	}
 	spec := new(Spec)
 	if err := yaml.Unmarshal(asyncSpec, spec); err != nil {
-		return nil, fmt.Errorf("unable to unmarshal YAML file: %v", err)
+		return nil, fmt.Errorf("unable to unmarshal YAML file: %w", err)
 	}
 	return spec, nil
 }
@@ -214,7 +214,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	}
 	// If topic exists and overwrite flag is false, move to the next channel in spec
 	if topicExistedAlready && !overwrite {
-		return errors.New(parseErrorMessage)
+		return fmt.Errorf(parseErrorMessage)
 	}
 	// Register schema
 	schemaId, err := registerSchema(details, topicName, spec.Components)
@@ -240,9 +240,9 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	if (topicExistedAlready || newTopicCreated) && spec.Channels[topicName].Description != "" {
 		if err := addTopicDescription(details.srClient, fmt.Sprintf("%s:%s", details.kafkaClusterId, topicName),
 			spec.Channels[topicName].Description); err != nil {
-			return fmt.Errorf("unable to update topic description: %v", err)
+			return fmt.Errorf("unable to update topic description: %w", err)
 		}
-		output.Printf("Added description to topic \"%s\".\n", topicName)
+		output.Printf(c.Config.EnableColor, "Added description to topic \"%s\".\n", topicName)
 	}
 	return nil
 }
@@ -298,7 +298,7 @@ func (c *command) createTopic(topicName string, kafkaBinding kafkaBinding) (bool
 		}
 		return false, kafkarest.NewError(kafkaRest.CloudClient.GetUrl(), err, httpResp)
 	}
-	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return true, nil
 }
 
@@ -330,12 +330,11 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 	}
 	log.CliLogger.Info("Overwriting topic configs")
 	if updateConfigs != nil {
-		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
-		if err != nil {
-			return fmt.Errorf("unable to update topic configs: %v", err)
+		if _, err := kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs}); err != nil {
+			return fmt.Errorf("unable to update topic configs: %w", err)
 		}
 	}
-	output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Topic, topicName)
 	return nil
 }
 
@@ -402,7 +401,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 
 		jsonSchema, err := yaml3.ToJSON(schema)
 		if err != nil {
-			return 0, fmt.Errorf("failed to encode schema as JSON: %v", err)
+			return 0, fmt.Errorf("failed to encode schema as JSON: %w", err)
 		}
 
 		req := srsdk.RegisterSchemaRequest{
@@ -412,9 +411,9 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		opts := &srsdk.RegisterOpts{Normalize: optional.NewBool(false)}
 		id, err := details.srClient.Register(subject, req, opts)
 		if err != nil {
-			return 0, fmt.Errorf("unable to register schema: %v", err)
+			return 0, fmt.Errorf("unable to register schema: %w", err)
 		}
-		output.Printf("Registered schema \"%d\" under subject \"%s\".\n", id.Id, subject)
+		output.Printf(false, "Registered schema \"%d\" under subject \"%s\".\n", id.Id, subject)
 		return id.Id, nil
 	}
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
@@ -426,9 +425,9 @@ func updateSubjectCompatibility(details *accountDetails, compatibility, subject 
 	req := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
 	config, err := details.srClient.UpdateSubjectLevelConfig(subject, req)
 	if err != nil {
-		return fmt.Errorf("failed to update subject level compatibility: %v", err)
+		return fmt.Errorf("failed to update subject level compatibility: %w", err)
 	}
-	output.Printf("Subject level compatibility updated to \"%s\" for subject \"%s\".\n", config.Compatibility, subject)
+	output.Printf(false, "Subject level compatibility updated to \"%s\" for subject \"%s\".\n", config.Compatibility, subject)
 	return nil
 }
 
@@ -437,10 +436,12 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 	tagConfigs := []srsdk.Tag{}
 	tagDefConfigs := []srsdk.TagDef{}
 	tagNames := []string{}
+
 	if components.Messages != nil {
 		if components.Messages[strcase.ToCamel(topicName)+"Message"].Tags == nil {
 			return nil
 		}
+
 		for _, tag := range components.Messages[strcase.ToCamel(topicName)+"Message"].Tags {
 			tagDefConfigs = append(tagDefConfigs, srsdk.TagDef{
 				// tag of type cf_entity so that it can be attached at any topic or schema level
@@ -454,10 +455,17 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 			})
 			tagNames = append(tagNames, tag.Name)
 		}
+
 		if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 			return err
 		}
-		output.Printf("Tag(s) %s added to schema \"%d\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
+
+		tag := "Tag"
+		if len(tagNames) > 1 {
+			tag += "s"
+		}
+
+		output.Printf(false, "%s %s added to schema \"%d\".\n", tag, utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
 	}
 	return nil
 }
@@ -487,7 +495,13 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 		return err
 	}
-	output.Printf("Tag(s) %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
+
+	tag := "Tag"
+	if len(tagNames) > 1 {
+		tag += "s"
+	}
+
+	output.Printf(false, "%s %s added to Kafka topic \"%s\".\n", tag, utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
 	return nil
 }
 
@@ -498,7 +512,7 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 		return err
 	})
 	if err != nil {
-		return fmt.Errorf("unable to create tag definition: %v", err)
+		return fmt.Errorf("unable to create tag definition: %w", err)
 	}
 	log.CliLogger.Debugf("Tag Definitions created")
 	tagOpts := &srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
@@ -507,7 +521,7 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 		return err
 	})
 	if err != nil {
-		return fmt.Errorf("unable to add tag to resource: %v", err)
+		return fmt.Errorf("unable to add tag to resource: %w", err)
 	}
 	return nil
 }

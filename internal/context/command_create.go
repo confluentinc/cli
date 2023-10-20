@@ -1,12 +1,12 @@
 package context
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/version"
 )
@@ -82,7 +82,7 @@ func (c *command) parseStringFlag(cmd *cobra.Command, name, prompt string, secur
 
 	val = strings.TrimSpace(val)
 	if val == "" {
-		return "", errors.Errorf(errors.CannotBeEmptyErrorMsg, name)
+		return "", fmt.Errorf("%s cannot be empty", name)
 	}
 
 	return val, nil

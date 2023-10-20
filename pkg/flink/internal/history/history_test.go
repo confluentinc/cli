@@ -21,7 +21,7 @@ func TestLoadHistory(t *testing.T) {
 
 	require.NoError(t, err, "Error creating temp dir")
 
-	tmpFile := filepath.Join(tmpDir, HISTORY_FILE_NAME)
+	tmpFile := filepath.Join(tmpDir, filename)
 
 	// Write sample data
 	sampleData := `{"data":["statement1;","statement2"]}`
@@ -54,7 +54,7 @@ func TestHistorySave(t *testing.T) {
 
 	history := &History{
 		confluentPath: tmpDir,
-		historyPath:   filepath.Join(tmpDir, HISTORY_FILE_NAME),
+		historyPath:   filepath.Join(tmpDir, filename),
 		Data:          []string{"statement1", "statement2"},
 	}
 

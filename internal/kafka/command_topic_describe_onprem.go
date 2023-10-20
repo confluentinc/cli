@@ -49,6 +49,7 @@ func (c *command) newDescribeCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
+
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
@@ -69,20 +70,22 @@ func (c *command) describeOnPrem(cmd *cobra.Command, args []string) error {
 
 func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
 	// Get partitions
-	partitionsResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
+	partitions, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-	} else if partitionsResp.Data == nil {
+	} else if partitions.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
+
 	topic := &TopicData{
 		TopicName:      topicName,
-		PartitionCount: len(partitionsResp.Data),
-		Partitions:     make([]*PartitionData, len(partitionsResp.Data)),
+		PartitionCount: len(partitions.Data),
+		Partitions:     make([]*PartitionData, len(partitions.Data)),
 	}
-	for i, partitionResp := range partitionsResp.Data {
+
+	for i, partition := range partitions.Data {
 		// For each partition, get replicas
-		replicasResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partitionResp.PartitionId)
+		replicasResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partition.PartitionId)
 		if err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		} else if replicasResp.Data == nil {
@@ -90,7 +93,7 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 		}
 		topic.Partitions[i] = &PartitionData{
 			TopicName:              topicName,
-			PartitionId:            partitionResp.PartitionId,
+			PartitionId:            partition.PartitionId,
 			ReplicaBrokerIds:       make([]int32, len(replicasResp.Data)),
 			InSyncReplicaBrokerIds: make([]int32, 0, len(replicasResp.Data)),
 		}
@@ -109,15 +112,15 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 	}
 
 	// Get configs
-	configsResp, resp, err := restClient.ConfigsV3Api.ListKafkaTopicConfigs(restContext, clusterId, topicName)
+	configs, resp, err := restClient.ConfigsV3Api.ListKafkaTopicConfigs(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-	} else if configsResp.Data == nil {
+	} else if configs.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
 
 	topic.Configs = make(map[string]string)
-	for _, config := range configsResp.Data {
+	for _, config := range configs.Data {
 		if config.Value != nil {
 			topic.Configs[config.Name] = *config.Value
 		} else {
@@ -131,9 +134,9 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 	}
 
 	// Output partitions info
-	output.Printf("Topic: %s\n", topic.TopicName)
-	output.Printf("PartitionCount: %d\n", topic.PartitionCount)
-	output.Printf("ReplicationFactor: %d\n\n", topic.ReplicationFactor)
+	output.Printf(false, "Topic: %s\n", topic.TopicName)
+	output.Printf(false, "Partition Count: %d\n", topic.PartitionCount)
+	output.Printf(false, "Replication Factor: %d\n\n", topic.ReplicationFactor)
 
 	list := output.NewList(cmd)
 	for _, partition := range topic.Partitions {
@@ -142,11 +145,11 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 	if err := list.Print(); err != nil {
 		return err
 	}
-	output.Println()
+	output.Println(false, "")
 
 	// Output config info
-	output.Println("Configuration")
-	output.Println()
+	output.Println(false, "Configuration")
+	output.Println(false, "")
 	list = output.NewList(cmd)
 	for name, value := range topic.Configs {
 		list.Add(&broker.ConfigOut{

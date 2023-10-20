@@ -31,16 +31,6 @@ import (
 
 const autoLoginMsg = "Successful auto-login with non-interactive credentials."
 
-type wrongLoginCommandError struct {
-	errorString      string
-	suggestionString string
-}
-
-var wrongLoginCommandErrorWithSuggestion = wrongLoginCommandError{
-	"`%s` is not a Confluent Cloud command. Did you mean `%s`?",
-	"If you are a Confluent Cloud user, run `%s` instead.\n" +
-		"If you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`."}
-
 var wrongLoginCommandsMap = map[string]string{
 	"confluent cluster": "confluent kafka cluster",
 }
@@ -96,9 +86,9 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil)
-			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
-			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context())
+			featureflags.PrintAnnouncements(r.Config, featureflags.Announcements, ctx, cmd)
+			featureflags.PrintAnnouncements(r.Config, featureflags.DeprecationNotices, ctx, cmd)
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
@@ -227,13 +217,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			}
 		}
 
-		if err := r.setV2Clients(command); err != nil {
-			return err
-		}
-
 		if err := r.setCCloudClient(command); err != nil {
 			return err
 		}
+
+		command.V2Client = command.Config.GetCloudClientV2(unsafeTrace)
 
 		return nil
 	}
@@ -290,15 +278,15 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	return nil
 }
 
-func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId string) (*pauth.Credentials, error) {
+func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId string) (*pauth.Credentials, error) {
 	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 		URL:     url,
 	}
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
-		r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, filterParams.Name, url),
+		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
+		r.LoginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -308,7 +296,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId strin
 		return nil, err
 	}
 
-	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, url, credentials, false, orgResourceId)
+	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, url, credentials, false, organizationId)
 	if err != nil {
 		return nil, err
 	}
@@ -319,9 +307,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId strin
 }
 
 func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
-	ctx := c.Config.Context()
-
-	ccloudClient, err := r.createCCloudClient(ctx, c.Version)
+	ccloudClient, err := r.createCCloudClient(c.Context, c.Version)
 	if err != nil {
 		return err
 	}
@@ -332,12 +318,10 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		return err
 	}
 
-	c.MDSv2Client = r.createMDSv2Client(ctx, c.Version, unsafeTrace)
+	c.MDSv2Client = r.createMDSv2Client(c.Context, c.Version, unsafeTrace)
 
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-		ctx := c.Config.Context()
-
-		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx)
+		restEndpoint, lkc, err := getKafkaRestEndpoint(c.V2Client, c.Context)
 		if err != nil {
 			return nil, err
 		}
@@ -350,17 +334,17 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 		}
 		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
-			return nil, errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+			return nil, fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
 		if restEndpoint == "" {
-			return nil, errors.New("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
+			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy")
 		}
 
-		state, err := ctx.AuthenticatedState()
+		state, err := c.Context.AuthenticatedState()
 		if err != nil {
 			return nil, err
 		}
-		dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+		dataplaneToken, err := pauth.GetDataplaneToken(state, c.Context.GetPlatformServer())
 		if err != nil {
 			return nil, err
 		}
@@ -375,22 +359,8 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setV2Clients(c *AuthenticatedCLICommand) error {
-	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-	if err != nil {
-		return err
-	}
-
-	v2Client := c.Config.GetCloudClientV2(unsafeTrace)
-	c.V2Client = v2Client
-	c.Context.V2Client = v2Client
-	c.Config.V2Client = v2Client
-
-	return nil
-}
-
-func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
-	config, err := ctx.GetKafkaClusterForCommand()
+func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) (string, string, error) {
+	config, err := ctx.GetKafkaClusterForCommand(client)
 	if err != nil {
 		return "", "", err
 	}
@@ -403,7 +373,7 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 	var authToken string
 	var userAgent string
 	if ctx != nil {
-		baseURL = ctx.Platform.Server
+		baseURL = ctx.GetPlatformServer()
 		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return nil, err
@@ -456,8 +426,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
 					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
 						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
-						return errors.NewErrorWithSuggestions(fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.errorString, cmd.CommandPath(), suggestCmdPath),
-							fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.suggestionString, suggestCmdPath, cmd.CommandPath()))
+						return errors.NewErrorWithSuggestions(
+							fmt.Sprintf("`%s` is not a Confluent Cloud command. Did you mean `%s`?", cmd.CommandPath(), suggestCmdPath),
+							fmt.Sprintf("If you are a Confluent Cloud user, run `%s` instead.\nIf you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`.", suggestCmdPath, cmd.CommandPath()),
+						)
 					}
 				}
 			}
@@ -524,7 +496,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
-		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(cmd, filterParams),
+		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(filterParams),
 	)
 	if err != nil {
 		return "", nil, err
@@ -559,7 +531,7 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 	if ctx == nil {
 		return mdsv1.NewAPIClient(mdsConfig)
 	}
-	mdsConfig.BasePath = ctx.Platform.Server
+	mdsConfig.BasePath = ctx.GetPlatformServer()
 	mdsConfig.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
 		return mdsv1.NewAPIClient(mdsConfig)
@@ -615,7 +587,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.Context.GetAuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
-					output.Println("No session token found, please enter user credentials. To avoid being prompted, run `confluent login`.")
+					output.Println(r.Config.EnableColor, "No session token found, please enter user credentials. To avoid being prompted, run `confluent login`.")
 				}
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
@@ -654,7 +626,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	prompt, _ := cmd.Flags().GetBool("prompt")
 
 	if (clientCertPath == "") != (clientKeyPath == "") {
-		return nil, errors.New(errors.NeedClientCertAndKeyPathsErrorMsg)
+		return nil, fmt.Errorf(errors.NeedClientCertAndKeyPathsErrorMsg)
 	}
 
 	values := &onPremKafkaRestFlagValues{
@@ -742,7 +714,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
-			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(true, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -751,11 +723,11 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 			return "", "", err
 		}
 
-		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, organizationId)
+		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.GetPlatformServer(), credentials, false, organizationId)
 	} else {
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-			r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, false, ctx.Name, ctx.Platform.Server),
+			r.LoginCredentialsManager.GetCredentialsFromKeychain(false, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -765,7 +737,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 		}
 
 		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)
+		client, err := mdsClientManager.GetMDSClient(ctx.GetPlatformServer(), ctx.Platform.CaCertPath, unsafeTrace)
 		if err != nil {
 			return "", "", err
 		}
@@ -792,9 +764,9 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 		if !strings.HasPrefix(latestMajorVersion, "v") {
 			latestMajorVersion = "v" + latestMajorVersion
 		}
-		output.ErrPrintf("A major version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMajorVersion)
-		output.ErrPrintln("To view release notes and install the update, please run `confluent update --major`.")
-		output.ErrPrintln()
+		output.ErrPrintf(r.Config.EnableColor, "A major version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMajorVersion)
+		output.ErrPrintln(r.Config.EnableColor, "To view release notes and install the update, please run `confluent update --major`.")
+		output.ErrPrintln(r.Config.EnableColor, "")
 	}
 
 	if latestMinorVersion != "" {
@@ -802,9 +774,9 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 			latestMinorVersion = "v" + latestMinorVersion
 		}
 
-		output.ErrPrintf("A minor version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMinorVersion)
-		output.ErrPrintln("To view release notes and install the update, please run `confluent update`.")
-		output.ErrPrintln()
+		output.ErrPrintf(r.Config.EnableColor, "A minor version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMinorVersion)
+		output.ErrPrintln(r.Config.EnableColor, "To view release notes and install the update, please run `confluent update`.")
+		output.ErrPrintln(r.Config.EnableColor, "")
 	}
 }
 
@@ -820,14 +792,14 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
-		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln()
+		output.ErrPrintln(false, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln(false, "")
 		return
 	}
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") && !strings.HasPrefix(cmd.CommandPath(), "confluent local kafka") {
-		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 will no longer be supported.")
-		output.ErrPrintln()
+		output.ErrPrintln(false, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln(false, "As of Confluent Platform 8.0, Java 8 will no longer be supported.")
+		output.ErrPrintln(false, "")
 	}
 }
 
@@ -838,7 +810,7 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
-	mdsv2Config.BasePath = ctx.Platform.Server + "/api/metadata/security/v2alpha1"
+	mdsv2Config.BasePath = ctx.GetPlatformServer() + "/api/metadata/security/v2alpha1"
 	mdsv2Config.UserAgent = ver.UserAgent
 	if ctx.Platform.CaCertPath == "" {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)

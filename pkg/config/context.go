@@ -33,7 +33,7 @@ type Context struct {
 	Config     *Config       `json:"-"`
 }
 
-func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, orgResourceId, envId string) (*Context, error) {
+func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, organizationId, environmentId string) (*Context, error) {
 	ctx := &Context{
 		Name:               name,
 		NetrcMachineName:   name,
@@ -41,11 +41,11 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		PlatformName:       platform.Name,
 		Credential:         credential,
 		CredentialName:     credential.Name,
-		CurrentEnvironment: envId,
+		CurrentEnvironment: environmentId,
 		Environments:       map[string]*EnvironmentContext{},
 		State:              state,
 		Config:             config,
-		LastOrgId:          orgResourceId,
+		LastOrgId:          organizationId,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
 	if err := ctx.validate(); err != nil {
@@ -119,8 +119,11 @@ func (c *Context) DeleteUserAuth() error {
 	c.State.AuthToken = ""
 	c.State.AuthRefreshToken = ""
 
-	err := c.Save()
-	return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
+	if err := c.Save(); err != nil {
+		return fmt.Errorf("unable to delete user auth: %w", err)
+	}
+
+	return nil
 }
 
 func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
@@ -335,23 +338,6 @@ func (c *Context) SetCurrentFlinkDatabase(id string) error {
 	return nil
 }
 
-func (c *Context) GetCurrentIdentityPool() string {
-	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
-		return ctx.CurrentIdentityPool
-	}
-	return ""
-}
-
-func (c *Context) SetCurrentIdentityPool(id string) error {
-	ctx := c.GetCurrentEnvironmentContext()
-	if ctx == nil {
-		return fmt.Errorf("no environment found")
-	}
-
-	ctx.CurrentIdentityPool = id
-	return nil
-}
-
 func (c *Context) GetCurrentServiceAccount() string {
 	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
 		return ctx.CurrentServiceAccount
@@ -415,8 +401,8 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 		problems = append(problems, "API secret missing")
 	}
 
-	output.ErrPrintf("There are malformed API key pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n", cluster.ID, contextName)
-	output.ErrPrintf("The issues are the following: %s.\n", strings.Join(problems, ", "))
-	output.ErrPrintln("Deleting the malformed entries.")
-	output.ErrPrintf("You can re-add the API key pair with `confluent api-key store --resource %s`\n", cluster.ID)
+	output.ErrPrintf(false, "There are malformed API key pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n", cluster.ID, contextName)
+	output.ErrPrintf(false, "The issues are the following: %s.\n", strings.Join(problems, ", "))
+	output.ErrPrintln(false, "Deleting the malformed entries.")
+	output.ErrPrintf(false, "You can re-add the API key pair with `confluent api-key store --resource %s`\n", cluster.ID)
 }

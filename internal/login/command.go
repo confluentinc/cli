@@ -103,7 +103,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if warningMsg != "" {
-		output.ErrPrintf(errors.UsingLoginURLDefaults, warningMsg)
+		output.ErrPrintf(c.Config.EnableColor, "Assuming %s.\n", warningMsg)
 	}
 
 	if isCCloud {
@@ -114,19 +114,19 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
-	orgResourceId := c.getOrgResourceId(cmd)
+	organizationId := c.getOrganizationId(cmd)
 
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
 	}
 
-	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
+	credentials, err := c.getCCloudCredentials(cmd, url, organizationId)
 	if err != nil {
 		return err
 	}
 
-	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
+	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, organizationId)
 
 	endOfFreeTrialErr, isEndOfFreeTrialErr := err.(*errors.EndOfFreeTrialError)
 
@@ -154,7 +154,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	output.Printf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
+	output.Printf(c.Config.EnableColor, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
 	if currentEnvironment != "" {
 		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnvironment)
 	}
@@ -163,8 +163,8 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	// otherwise, print remaining free credit upon each login.
 	if isEndOfFreeTrialErr {
 		// only print error and do not return it, since end-of-free-trial users should still be able to log in.
-		output.ErrPrintf("Error: %s", endOfFreeTrialErr.Error())
-		output.ErrPrint(errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError()))
+		output.ErrPrintf(c.Config.EnableColor, "Error: %s", endOfFreeTrialErr.Error())
+		output.ErrPrint(c.Config.EnableColor, errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError()))
 	} else {
 		c.printRemainingFreeCredit(client, currentOrg)
 	}
@@ -196,14 +196,14 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
 	if remainingFreeCredit > 0 {
-		output.ErrPrintf("Free credits: $%.2f USD remaining\n", admin.ConvertToUSD(remainingFreeCredit))
-		output.ErrPrintln("You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.")
+		output.ErrPrintf(c.Config.EnableColor, "Free credits: $%.2f USD remaining\n", admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintln(c.Config.EnableColor, "You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.")
 	}
 }
 
 // Order of precedence: env vars > config file > netrc file > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
+func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organizationId string) (*pauth.Credentials, error) {
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
 	c.loginCredentialsManager.SetCloudClient(client)
 
@@ -212,7 +212,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		return nil, err
 	}
 	if prompt {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId))
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organizationId))
 	}
 
 	filterParams := netrc.NetrcMachineParams{
@@ -225,12 +225,12 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	}
 
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
 		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, url),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
-		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId),
+		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organizationId),
 	)
 }
 
@@ -330,7 +330,7 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, false, netrcFilterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(false, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
@@ -376,7 +376,7 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 
 func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pauth.Credentials) error {
 	if credentials.IsSSO {
-		output.ErrPrintln("The `--save` flag was ignored since SSO credentials are not stored locally.")
+		output.ErrPrintln(c.cfg.EnableColor, "The `--save` flag was ignored since SSO credentials are not stored locally.")
 		return nil
 	}
 
@@ -385,7 +385,7 @@ func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pau
 		return err
 	}
 
-	output.ErrPrintln("Wrote login credentials to keychain.")
+	output.ErrPrintln(c.cfg.EnableColor, "Wrote login credentials to keychain.")
 
 	return nil
 }
@@ -394,7 +394,7 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
 		if strings.Contains(url, ccloudv2.Hostnames[0]) {
 			if !strings.HasSuffix(strings.TrimSuffix(url, "/"), ccloudv2.Hostnames[0]) {
-				return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
+				return url, "", errors.NewErrorWithSuggestions("there is no need to pass the `--url` flag if you are logging in to Confluent Cloud", "Log in to Confluent Cloud with `confluent login`.")
 			}
 		}
 	}
@@ -416,13 +416,13 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 		pattern = regexp.MustCompile(`^\w+://[^/ ]+:\d+(?:\/|$)`)
 	}
 	if !pattern.MatchString(url) {
-		return "", "", errors.New(errors.InvalidLoginURLErrorMsg)
+		return "", "", fmt.Errorf(errors.InvalidLoginURLErrorMsg)
 	}
 
 	return url, strings.Join(msg, " and "), nil
 }
 
-func (c *command) getOrgResourceId(cmd *cobra.Command) string {
+func (c *command) getOrganizationId(cmd *cobra.Command) string {
 	return pauth.GetLoginOrganization(
 		c.loginOrganizationManager.GetLoginOrganizationFromFlag(cmd),
 		c.loginOrganizationManager.GetLoginOrganizationFromEnvironmentVariable(),

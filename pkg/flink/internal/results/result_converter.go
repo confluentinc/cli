@@ -1,7 +1,7 @@
 package results
 
 import (
-	"errors"
+	"fmt"
 
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
@@ -15,7 +15,7 @@ func convertToInternalField(field any, details flinkgatewayv1beta1.ColumnDetails
 	}
 
 	return types.AtomicStatementResultField{
-		Type:  types.NULL,
+		Type:  types.Null,
 		Value: "NULL",
 	}
 }
@@ -30,12 +30,12 @@ func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1beta1.Sq
 	for rowIdx, result := range results {
 		resultItem, ok := result.(map[string]any)
 		if !ok {
-			return nil, errors.New("given result item does not match op/row schema")
+			return nil, fmt.Errorf("given result item does not match op/row schema")
 		}
 
 		items, _ := resultItem["row"].([]any)
 		if len(items) != len(resultSchema.GetColumns()) {
-			return nil, errors.New("given result row does not match the provided schema")
+			return nil, fmt.Errorf("given result row does not match the provided schema")
 		}
 
 		convertedFields := make([]types.StatementResultField, len(items))

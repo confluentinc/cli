@@ -52,9 +52,11 @@ const (
 )
 
 const (
+	ConnectorPrefix             = "lcc"
 	EnvironmentPrefix           = "env"
 	IdentityPoolPrefix          = "pool"
 	IdentityProviderPrefix      = "op"
+	FlinkComputePoolPrefix      = "lfcp"
 	KafkaClusterPrefix          = "lkc"
 	KsqlClusterPrefix           = "lksqlc"
 	SchemaRegistryClusterPrefix = "lsrc"
@@ -63,9 +65,11 @@ const (
 )
 
 var prefixToResource = map[string]string{
+	ConnectorPrefix:             Connector,
 	EnvironmentPrefix:           Environment,
 	IdentityPoolPrefix:          IdentityPool,
 	IdentityProviderPrefix:      IdentityProvider,
+	FlinkComputePoolPrefix:      FlinkComputePool,
 	KafkaClusterPrefix:          KafkaCluster,
 	KsqlClusterPrefix:           KsqlCluster,
 	SchemaRegistryClusterPrefix: SchemaRegistryCluster,
@@ -84,12 +88,12 @@ var resourceToPrefix = map[string]string{
 	User:                  UserPrefix,
 }
 
-func LookupType(resourceId string) string {
-	if resourceId == Cloud {
+func LookupType(id string) string {
+	if id == Cloud {
 		return Cloud
 	}
 
-	if x := strings.SplitN(resourceId, "-", 2); len(x) == 2 {
+	if x := strings.SplitN(id, "-", 2); len(x) == 2 {
 		prefix := x[0]
 		if resource, ok := prefixToResource[prefix]; ok {
 			return resource
@@ -106,16 +110,16 @@ func ValidatePrefixes(resourceType string, args []string) error {
 	}
 
 	var malformed []string
-	for _, resourceId := range args {
-		if LookupType(resourceId) != resourceType {
-			malformed = append(malformed, resourceId)
+	for _, id := range args {
+		if LookupType(id) != resourceType {
+			malformed = append(malformed, id)
 		}
 	}
 
 	if len(malformed) == 1 {
-		return errors.Errorf(`failed parsing resource ID %s: missing prefix "%s-"`, malformed[0], prefix)
+		return fmt.Errorf(`failed parsing resource ID %s: missing prefix "%s-"`, malformed[0], prefix)
 	} else if len(malformed) > 1 {
-		return errors.Errorf(`failed parsing resource IDs %s: missing prefix "%s-"`, utils.ArrayToCommaDelimitedString(malformed, "and"), prefix)
+		return fmt.Errorf(`failed parsing resource IDs %s: missing prefix "%s-"`, utils.ArrayToCommaDelimitedString(malformed, "and"), prefix)
 	}
 
 	return nil

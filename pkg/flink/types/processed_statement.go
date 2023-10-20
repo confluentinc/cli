@@ -16,9 +16,7 @@ const (
 	PENDING   PHASE = "PENDING"   // Results are not available yet
 	RUNNING   PHASE = "RUNNING"   // More results are available (pagination)
 	COMPLETED PHASE = "COMPLETED" // All results were fetched
-	DELETING  PHASE = "DELETING"
 	FAILED    PHASE = "FAILED"
-	FAILING   PHASE = "FAILING"
 )
 
 // Custom Internal type that shall be used internally by the client
@@ -85,10 +83,10 @@ func (s ProcessedStatement) GetPageSize() int {
 
 func (s ProcessedStatement) PrintStatementDoneStatus() {
 	if s.Status != "" {
-		output.Printf("Statement phase is %s.\n", s.Status)
+		output.Printf(false, "Statement phase is %s.\n", s.Status)
 	}
 	if s.StatusDetail != "" {
-		output.Printf("%s.\n", s.StatusDetail)
+		output.Printf(false, "%s.\n", s.StatusDetail)
 	}
 }
 

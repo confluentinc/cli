@@ -27,7 +27,7 @@ func (c *command) newStatementStopCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) statementStop(cmd *cobra.Command, args []string) error {
+func (c *command) statementStop(_ *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -48,6 +48,6 @@ func (c *command) statementStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("Requested to stop %s \"%s\".\n", resource.FlinkStatement, args[0])
+	output.Printf(c.Config.EnableColor, "Requested to stop %s \"%s\".\n", resource.FlinkStatement, args[0])
 	return nil
 }

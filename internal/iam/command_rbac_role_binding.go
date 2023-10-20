@@ -3,6 +3,7 @@ package iam
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,6 +19,21 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/types"
+	"github.com/confluentinc/cli/v3/pkg/utils"
+)
+
+const (
+	httpStatusCodeErrorMsg         = "no error but received HTTP status code %d"
+	httpStatusCodeSuggestions      = "Please file a support ticket with details."
+	invalidResourceTypeErrorMsg    = `invalid resource type "%s"`
+	invalidResourceTypeSuggestions = "The available resource types are %s."
+	lookUpRoleSuggestions          = "To check for valid roles, use `confluent iam rbac role list`."
+	principalFormatErrorMsg        = "incorrect principal format specified"
+	principalFormatSuggestions     = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
+	resourceFormatErrorMsg         = "incorrect resource format specified"
+	resourceFormatSuggestions      = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
+	specifyCloudClusterErrorMsg    = "must specify `--cloud-cluster` to indicate role binding scope"
+	specifyEnvironmentErrorMsg     = "must specify `--environment` to indicate role binding scope"
 )
 
 var (
@@ -181,7 +197,7 @@ func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CL
 
 func (c *roleBindingCommand) validatePrincipalFormat(principal string) error {
 	if len(strings.Split(principal, ":")) == 1 {
-		return errors.NewErrorWithSuggestions(errors.PrincipalFormatErrorMsg, errors.PrincipalFormatSuggestions)
+		return errors.NewErrorWithSuggestions(principalFormatErrorMsg, principalFormatSuggestions)
 	}
 
 	return nil
@@ -213,20 +229,20 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.M
 	})
 
 	if clusterName != "" && (scope.KafkaCluster != "" || nonKafkaScopesSet > 0) {
-		return nil, errors.New(errors.BothClusterNameAndScopeErrorMsg)
+		return nil, fmt.Errorf("cannot specify both cluster name and cluster scope")
 	}
 
 	if clusterName == "" {
 		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
-			return nil, errors.New(errors.SpecifyKafkaIDErrorMsg)
+			return nil, fmt.Errorf(errors.SpecifyKafkaIdErrorMsg)
 		}
 
 		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-			return nil, errors.New(errors.SpecifyClusterErrorMsg)
+			return nil, fmt.Errorf("must specify either cluster ID to indicate role binding scope or the cluster name")
 		}
 
 		if nonKafkaScopesSet > 1 {
-			return nil, errors.New(errors.MoreThanOneNonKafkaErrorMsg)
+			return nil, fmt.Errorf(errors.MoreThanOneNonKafkaErrorMsg)
 		}
 
 		return &mdsv1.MdsScope{Clusters: *scope}, nil
@@ -261,24 +277,24 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 		for rt := range allResourceTypes {
 			uniqueResourceTypes = append(uniqueResourceTypes, rt)
 		}
-		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType),
+			fmt.Sprintf(invalidResourceTypeSuggestions, utils.ArrayToCommaDelimitedString(uniqueResourceTypes, "and")),
+		)
 	}
 
 	return nil
 }
 
 func parseAndValidateResourcePattern(resource string, prefix bool) (mdsv1.ResourcePattern, error) {
-	var result mdsv1.ResourcePattern
+	result := mdsv1.ResourcePattern{PatternType: "LITERAL"}
 	if prefix {
 		result.PatternType = "PREFIXED"
-	} else {
-		result.PatternType = "LITERAL"
 	}
 
 	parts := strings.SplitN(resource, ":", 2)
 	if len(parts) != 2 {
-		return result, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
+		return result, errors.NewErrorWithSuggestions(resourceFormatErrorMsg, resourceFormatSuggestions)
 	}
 	result.ResourceType = parts[0]
 	result.Name = parts[1]
@@ -287,14 +303,14 @@ func parseAndValidateResourcePattern(resource string, prefix bool) (mdsv1.Resour
 }
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName, resourceType string) error {
-	ctx := c.createContext()
-	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
-	if err != nil || resp.StatusCode == 204 {
-		if err == nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-		} else {
-			return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-		}
+	errorMsg := fmt.Sprintf(`failed to look up role "%s"`, roleName)
+
+	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), roleName)
+	if err != nil {
+		return errors.NewWrapErrorWithSuggestions(err, errorMsg, lookUpRoleSuggestions)
+	}
+	if resp.StatusCode == http.StatusNoContent {
+		return errors.NewErrorWithSuggestions(errorMsg, lookUpRoleSuggestions)
 	}
 
 	allResourceTypes := make([]string, len(role.AccessPolicy.AllowedOperations))
@@ -308,8 +324,10 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName, resourceTyp
 	}
 
 	if !found {
-		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType),
+			fmt.Sprintf(invalidResourceTypeSuggestions, utils.ArrayToCommaDelimitedString(allResourceTypes, "and")),
+		)
 	}
 
 	return nil
@@ -336,16 +354,16 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 
 	if !found {
 		uniqueResourceTypes := types.RemoveDuplicates(allResourceTypes)
-		suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(invalidResourceTypeErrorMsg, resourceType),
+			fmt.Sprintf(invalidResourceTypeSuggestions, utils.ArrayToCommaDelimitedString(uniqueResourceTypes, "and")),
+		)
 	}
 
 	return nil
 }
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, roleBinding *mdsv2.IamV2RoleBinding) error {
-	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
-
 	out := &roleBindingOut{
 		Id:        roleBinding.GetId(),
 		Principal: roleBinding.GetPrincipal(),
@@ -362,7 +380,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	if resource != "" {
 		parts := strings.SplitN(resource, ":", 2)
 		if len(parts) != 2 {
-			return errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
+			return errors.NewErrorWithSuggestions(resourceFormatErrorMsg, resourceFormatSuggestions)
 		}
 		resourceType := parts[0]
 		if resourceType == "Cluster" {
@@ -378,8 +396,10 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		}
 	}
 
+	userId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
+	principalType := presource.LookupType(userId)
+
 	var fields []string
-	principalType := presource.LookupType(userResourceId)
 	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool {
 		if resource != "" {
 			fields = resourcePatternListFields
@@ -390,7 +410,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = ccloudResourcePatternListFields
 		} else {
-			user, err := c.V2Client.GetIamUserById(userResourceId)
+			user, err := c.V2Client.GetIamUserById(userId)
 			if err != nil {
 				return err
 			}
@@ -415,7 +435,7 @@ func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOption
 	if options.resource != "" {
 		fieldsSelected = resourcePatternListFields
 		if len(options.resourcesRequest.ResourcePatterns) != 1 {
-			return errors.New("display error: number of resource pattern is not 1")
+			return fmt.Errorf("display error: number of resource pattern is not 1")
 		}
 		resourcePattern := options.resourcesRequest.ResourcePatterns[0]
 		out.ResourceType = resourcePattern.ResourceType
@@ -451,7 +471,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		return nil, err
 	}
 	if cmd.Flags().Changed("principal") {
-		if err = c.validatePrincipalFormat(principal); err != nil {
+		if err := c.validatePrincipalFormat(principal); err != nil {
 			return nil, err
 		}
 	}
@@ -482,7 +502,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 	if resource != "" {
 		parts := strings.SplitN(resource, ":", 2)
 		if len(parts) != 2 {
-			return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
+			return nil, errors.NewErrorWithSuggestions(resourceFormatErrorMsg, resourceFormatSuggestions)
 		}
 		resourceType := parts[0]
 		resourceName := parts[1]
@@ -517,8 +537,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 }
 
 func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
-	orgResourceId := c.Context.GetCurrentOrganization()
-	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
+	crnPattern := "crn://confluent.cloud/organization=" + c.Context.GetCurrentOrganization()
 
 	if cmd.Flags().Changed("current-environment") {
 		environmentId, err := c.Context.EnvironmentId()
@@ -580,15 +599,15 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		if clusterScopedRolesV2.Contains(role) && !cmd.Flags().Changed("cloud-cluster") {
-			return "", errors.New(errors.SpecifyCloudClusterErrorMsg)
+			return "", fmt.Errorf(specifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
-			return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
+			return "", fmt.Errorf(specifyEnvironmentErrorMsg)
 		}
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
-		return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
+		return "", fmt.Errorf(specifyEnvironmentErrorMsg)
 	}
 	return crnPattern, nil
 }

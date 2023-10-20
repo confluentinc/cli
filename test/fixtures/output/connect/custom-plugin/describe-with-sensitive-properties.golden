@@ -4,5 +4,5 @@
 | Description          | Source datagen plugin           |
 | Connector Class      | io.confluent.kafka.connect.test |
 | Connector Type       | source                          |
-| Sensitive Properties | aws.key,aws.secret              |
+| Sensitive Properties | aws.key, aws.secret             |
 +----------------------+---------------------------------+

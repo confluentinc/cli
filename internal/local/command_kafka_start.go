@@ -61,7 +61,7 @@ func (c *command) newKafkaStartCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 	if err := checkMachineArch(); err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	for _, container := range containers {
 		if container.Image == dockerImageName {
-			output.Println("Confluent Local is already running.")
+			output.Println(c.Config.EnableColor, "Confluent Local is already running.")
 			prompt := form.NewPrompt()
 			f := form.New(form.Field{
 				ID:        "confirm",
@@ -117,17 +117,19 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if response.Status == "Downloading" {
-			output.Printf("\rDownloading: %s", response.Progress)
+			output.Printf(c.Config.EnableColor, "\rDownloading: %s", response.Progress)
 		} else if response.Status == "Extracting" {
-			output.Printf("\rExtracting: %s", response.Progress)
+			output.Printf(c.Config.EnableColor, "\rExtracting: %s", response.Progress)
 		} else {
-			output.Printf("\n%s", response.Status)
+			output.Println(c.Config.EnableColor, "")
+			output.Printf(c.Config.EnableColor, response.Status)
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		return err
 	}
-	output.Println("\r")
+	output.Println(c.Config.EnableColor, "\r")
+
 	log.CliLogger.Tracef("Successfully pulled Confluent Local image")
 
 	brokers, err := cmd.Flags().GetInt32("brokers")
@@ -135,7 +137,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if brokers < 1 || brokers > 4 {
-		return errors.New("--brokers must be an integer between 1 and 4, inclusive.")
+		return fmt.Errorf("`--brokers` must be an integer between 1 and 4, inclusive")
 	}
 
 	if err := c.prepareAndSaveLocalPorts(cmd, brokers, c.Config.IsTest); err != nil {
@@ -154,11 +156,11 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	natPlaintextPorts := getNatPlaintextPorts(ports)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
-	_, err = dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, types.NetworkCreate{
+	options := types.NetworkCreate{
 		CheckDuplicate: true,
 		Driver:         "bridge",
-	})
-	if err != nil && !strings.Contains(err.Error(), "already exists") {
+	}
+	if _, err := dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, options); err != nil && !strings.Contains(err.Error(), "already exists") {
 		return err
 	}
 
@@ -175,25 +177,19 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 		hostConfig := &container.HostConfig{
 			NetworkMode: container.NetworkMode("confluent-local-network"),
-			PortBindings: nat.PortMap{
-				natPlaintextPorts[idx]: []nat.PortBinding{
-					{
-						HostIP:   localhost,
-						HostPort: ports.PlaintextPorts[idx],
-					},
-				},
-			},
+			PortBindings: nat.PortMap{natPlaintextPorts[idx]: []nat.PortBinding{{
+				HostIP:   localhost,
+				HostPort: ports.PlaintextPorts[idx],
+			}}},
 		}
 
 		// expose Kafka REST port for broker 1
 		if idx == 0 {
 			config.ExposedPorts[natKafkaRestPort] = struct{}{}
-			hostConfig.PortBindings[natKafkaRestPort] = []nat.PortBinding{
-				{
-					HostIP:   localhost,
-					HostPort: ports.KafkaRestPort,
-				},
-			}
+			hostConfig.PortBindings[natKafkaRestPort] = []nat.PortBinding{{
+				HostIP:   localhost,
+				HostPort: ports.KafkaRestPort,
+			}}
 		}
 
 		createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, fmt.Sprintf(confluentBrokerPrefix, brokerId))
@@ -213,13 +209,12 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		strings.Join(c.Config.LocalPorts.PlaintextPorts, ","),
 	}
 	table.Add(portsData)
-	err = table.Print()
-	if err != nil {
+	if err := table.Print(); err != nil {
 		return err
 	}
 
-	output.Printf("Started Confluent Local containers %s.\n", utils.ArrayToCommaDelimitedString(containerIds, ""))
-	output.Println("To continue your Confluent Local experience, run `confluent local kafka topic create <topic>` and `confluent local kafka topic produce <topic>`.")
+	output.Printf(c.Config.EnableColor, "Started Confluent Local containers %s.\n", utils.ArrayToCommaDelimitedString(containerIds, ""))
+	output.Println(c.Config.EnableColor, "To continue your Confluent Local experience, run `confluent local kafka topic create <topic>` and `confluent local kafka topic produce <topic>`.")
 	return nil
 }
 
@@ -270,7 +265,7 @@ func (c *command) prepareAndSaveLocalPorts(cmd *cobra.Command, brokers int32, is
 	}
 
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, "failed to save local ports to configuration file")
+		return fmt.Errorf("failed to save local ports to configuration file: %w", err)
 	}
 
 	return nil
@@ -367,17 +362,23 @@ func checkMachineArch() error {
 		return nil
 	}
 
-	cmd := exec.Command("uname", "-m") // outputs system architecture info
-	output, err := cmd.Output()
+	// output system architecture info
+	output, err := exec.Command("uname", "-m").Output()
 	if err != nil {
 		return err
 	}
+
 	systemArch := strings.TrimSpace(string(output))
 	if systemArch == "x86_64" {
 		systemArch = "amd64"
 	}
+
 	if systemArch != runtime.GOARCH {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch), "Download the CLI with the correct architecture to continue.")
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch),
+			"Download the CLI with the correct architecture to continue.",
+		)
 	}
+
 	return nil
 }

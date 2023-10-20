@@ -125,8 +125,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln(errors.APIKeyTime)
-		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
+		output.ErrPrintln(c.Config.EnableColor, "It may take a couple of minutes for the API key to be ready.")
+		output.ErrPrintln(c.Config.EnableColor, "Save the API key and secret. The secret is not retrievable later.")
 	}
 
 	table := output.NewTable(cmd)
@@ -139,8 +139,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if resourceType == resource.KafkaCluster {
-		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
-			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
+		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, clusterId); err != nil {
+			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 		}
 	}
 
@@ -150,12 +150,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 	if use {
 		if resourceType != resource.KafkaCluster {
-			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), "`--use` set but ineffective")
+			return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
 		}
-		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
-			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
+		if err := c.useAPIKey(userKey.Key, clusterId); err != nil {
+			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(useAPIKeyMsg, userKey.Key)
+		output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

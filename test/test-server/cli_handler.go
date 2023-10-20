@@ -16,7 +16,7 @@ func handleFeedbacks(t *testing.T) http.HandlerFunc {
 		req := new(cliv1.CliV1Feedback)
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
-		if len(*req.Content) > 20 {
+		if len(req.GetContent()) > 20 {
 			w.WriteHeader(http.StatusForbidden)
 			err = writeErrorJson(w, "feedback exceeds the maximum length")
 			require.NoError(t, err)

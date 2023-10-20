@@ -40,14 +40,14 @@ func handleConnectorConfig(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/pause"
-func handleConnectorPause(t *testing.T) http.HandlerFunc {
+func handleConnectorPause(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/resume"
-func handleConnectorResume(t *testing.T) http.HandlerFunc {
+func handleConnectorResume(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
@@ -97,8 +97,8 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&request)
 			require.NoError(t, err)
 			connector := &connectv1.ConnectV1Connector{
-				Name:   *request.Name,
-				Config: *request.Config,
+				Name:   request.GetName(),
+				Config: request.GetConfig(),
 			}
 			err = json.NewEncoder(w).Encode(connector)
 			require.NoError(t, err)

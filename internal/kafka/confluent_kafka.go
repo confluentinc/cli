@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/antihax/optional"
@@ -46,11 +47,12 @@ var (
 )
 
 type ConsumerProperties struct {
-	Delimiter  string
-	FullHeader bool
-	PrintKey   bool
-	Timestamp  bool
-	SchemaPath string
+	Delimiter   string
+	FullHeader  bool
+	PrintKey    bool
+	PrintOffset bool
+	Timestamp   bool
+	SchemaPath  string
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -175,7 +177,7 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 			}
 		case ckafka.RevokedPartitions:
 			if consumer.AssignmentLost() {
-				output.ErrPrintln("%% Current assignment lost.")
+				output.ErrPrintln(false, "%% Current assignment lost.")
 			}
 			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
 			if err := consumer.IncrementalUnassign(parts); err != nil {
@@ -234,16 +236,11 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 
-	jsonMessage, err := valueDeserializer.Deserialize(message.Value)
+	messageString, err := getMessageString(message, valueDeserializer, h.Properties)
 	if err != nil {
 		return err
 	}
-
-	if h.Properties.Timestamp {
-		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", message.Timestamp.UnixMilli(), jsonMessage)
-	}
-
-	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
+	if _, err := fmt.Fprintln(h.Out, messageString); err != nil {
 		return err
 	}
 
@@ -260,6 +257,27 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	return nil
 }
 
+func getMessageString(message *ckafka.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties) (string, error) {
+	messageString, err := valueDeserializer.Deserialize(message.Value)
+	if err != nil {
+		return "", err
+	}
+
+	var info []string
+	if properties.Timestamp {
+		info = append(info, fmt.Sprintf("Timestamp:%d", message.Timestamp.UnixMilli()))
+	}
+	if properties.PrintOffset {
+		info = append(info, fmt.Sprintf("Partition:%d", message.TopicPartition.Partition))
+		info = append(info, fmt.Sprintf("Offset:%s", message.TopicPartition.Offset.String()))
+	}
+	if len(info) > 0 {
+		messageString = fmt.Sprintf("%s\t%s", strings.Join(info, " "), messageString)
+	}
+
+	return messageString, nil
+}
+
 func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	run := true
 	signals := make(chan os.Signal, 1)
@@ -267,7 +285,7 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
-			output.ErrPrintln("Stopping Consumer.")
+			output.ErrPrintln(false, "Stopping Consumer.")
 			if _, err := consumer.Commit(); err != nil {
 				log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
 			}
@@ -314,7 +332,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.ValueFormat))
 	}
 	if len(value) < messageOffset {
-		return "", nil, errors.New("failed to find schema ID in topic data")
+		return "", nil, fmt.Errorf("failed to find schema ID in topic data")
 	}
 
 	// Retrieve schema from cluster only if schema is specified.

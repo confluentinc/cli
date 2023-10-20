@@ -89,7 +89,7 @@ func UpdateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return output.SerializedOutput(cmd, data)
 	}
 
-	output.Printf("Updated the following configuration values for topic \"%s\":\n", topicName)
+	output.Printf(false, "Updated the following configuration values for topic \"%s\":\n", topicName)
 
 	list := output.NewList(cmd)
 	for _, config := range data {

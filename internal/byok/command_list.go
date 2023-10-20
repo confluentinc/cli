@@ -1,12 +1,11 @@
 package byok
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	errorMsgs "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -55,8 +54,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	// API returns a list sorted by creation date already
-	list.Sort(false)
 	for _, key := range keys {
 		var keyString string
 		switch {
@@ -65,30 +62,31 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		case key.Key.ByokV1AzureKey != nil:
 			keyString = key.Key.ByokV1AzureKey.KeyId
 		default:
-			return errors.New(errorMsgs.ByokUnknownKeyTypeErrorMsg)
+			return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 		}
 
-		updatedAt := ""
-		if !key.Metadata.GetUpdatedAt().IsZero() {
-			updatedAt = key.Metadata.GetUpdatedAt().String()
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&humanOut{
+				Id:        key.GetId(),
+				Key:       keyString,
+				Provider:  key.GetProvider(),
+				State:     key.GetState(),
+				CreatedAt: key.Metadata.CreatedAt.String(),
+			})
+		} else {
+			list.Add(&serializedOut{
+				Id:        key.GetId(),
+				Key:       keyString,
+				Provider:  key.GetProvider(),
+				State:     key.GetState(),
+				CreatedAt: key.Metadata.CreatedAt.String(),
+			})
 		}
-
-		deletedAt := ""
-		if !key.Metadata.GetDeletedAt().IsZero() {
-			deletedAt = key.Metadata.GetDeletedAt().String()
-		}
-
-		list.Add(&describeStruct{
-			Id:        key.GetId(),
-			Key:       keyString,
-			Provider:  key.GetProvider(),
-			State:     key.GetState(),
-			CreatedAt: key.Metadata.CreatedAt.String(),
-			UpdatedAt: updatedAt,
-			DeletedAt: deletedAt,
-		})
 	}
 
+	// The API returns a list sorted by creation date already
+	list.Sort(false)
 	list.Filter([]string{"Id", "Key", "Provider", "State", "CreatedAt"})
+
 	return list.Print()
 }

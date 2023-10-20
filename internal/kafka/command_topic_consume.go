@@ -44,6 +44,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
+	cmd.Flags().Bool("print-offset", false, "Print partition number and offset of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
@@ -70,7 +71,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 func (c *command) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -91,6 +92,11 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	printOffset, err := cmd.Flags().GetBool("print-offset")
 	if err != nil {
 		return err
 	}
@@ -157,7 +163,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingConsumerMsg)
+	output.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
 
 	keyFormat, err := cmd.Flags().GetString("key-format")
 	if err != nil {
@@ -206,11 +212,12 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		Out:         cmd.OutOrStdout(),
 		Subject:     subject,
 		Properties: ConsumerProperties{
-			PrintKey:   printKey,
-			FullHeader: fullHeader,
-			Timestamp:  timestamp,
-			Delimiter:  delimiter,
-			SchemaPath: schemaPath,
+			PrintKey:    printKey,
+			PrintOffset: printOffset,
+			FullHeader:  fullHeader,
+			Timestamp:   timestamp,
+			Delimiter:   delimiter,
+			SchemaPath:  schemaPath,
 		},
 	}
 	return RunConsumer(consumer, groupHandler)

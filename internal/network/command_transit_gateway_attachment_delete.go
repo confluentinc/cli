@@ -46,7 +46,7 @@ func (c *command) transitGatewayAttachmentDelete(cmd *cobra.Command, args []stri
 
 	deleteFunc := func(id string) error {
 		if err := c.V2Client.DeleteTransitGatewayAttachment(environmentId, id); err != nil {
-			return errors.Errorf(errors.DeleteResourceErrorMsg, resource.TransitGatewayAttachment, id, err)
+			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.TransitGatewayAttachment, id, err)
 		}
 		return nil
 	}
@@ -54,9 +54,9 @@ func (c *command) transitGatewayAttachmentDelete(cmd *cobra.Command, args []stri
 	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 	deleteMsg := "Requested to delete %s %s.\n"
 	if len(deletedIds) == 1 {
-		output.Printf(deleteMsg, resource.TransitGatewayAttachment, fmt.Sprintf(`"%s"`, deletedIds[0]))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.TransitGatewayAttachment, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		output.Printf(deleteMsg, resource.Plural(resource.TransitGatewayAttachment), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.TransitGatewayAttachment), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err

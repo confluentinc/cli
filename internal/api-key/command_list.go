@@ -82,10 +82,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	if serviceAccount != "" {
 		if resource.LookupType(serviceAccount) != resource.ServiceAccount {
-			return errors.New(errors.BadServiceAccountIDErrorMsg)
+			return fmt.Errorf(errors.BadServiceAccountIdErrorMsg)
 		}
 		if _, ok := resourceIdToUserIdMap[serviceAccount]; !ok {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccount), errors.ServiceAccountNotFoundSuggestions)
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccount),
+				errors.ServiceAccountNotFoundSuggestions,
+			)
 		}
 	}
 
