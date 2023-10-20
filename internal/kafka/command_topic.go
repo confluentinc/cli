@@ -42,22 +42,19 @@ func newTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comman
 
 	if cfg.IsCloudLogin() {
 		if cfg.Context().GetOrganization() != nil {
-			fmt.Println("i'm actually logged in.")
 			c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 			cmd.AddCommand(c.newCreateCommand())
 			cmd.AddCommand(c.newDeleteCommand())
 			cmd.AddCommand(c.newDescribeCommand())
 			cmd.AddCommand(c.newUpdateCommand())
 		} else {
-			fmt.Println("i'm using context")
-			c.AuthenticatedCLICommand = pcmd.NewAnonymousAuthenticatedCLICommand(cmd, prerunner)
+			c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithAPIKeyCLICommand(cmd, prerunner)
 		}
 
 		cmd.AddCommand(c.newConsumeCommand())
 		cmd.AddCommand(c.newListCommand())
 		cmd.AddCommand(c.newProduceCommand())
 	} else {
-		fmt.Println("no it's not cloud.")
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 

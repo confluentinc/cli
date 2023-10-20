@@ -81,7 +81,7 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 
 	maxClusterLoad := maxApiDataValue(clusterLoadResponse.FlatQueryResponse.GetData())
 	if maxClusterLoad.Value >= 0.7 {
-		return fmt.Errorf("Cluster Load was %f percent at %s.\nRecommended cluster load should be less than 70 percent", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.In(time.Local))
+		return fmt.Errorf("cluster Load was %f percent at %s.\nRecommended cluster load should be less than 70 percent", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.In(time.Local))
 	}
 
 	return nil
