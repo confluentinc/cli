@@ -25,6 +25,8 @@ const EOF = "\u0004"
 
 const numPartitionsKey = "num.partitions"
 
+var adminClientTimeout = 10 * time.Second
+
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 	clientID string
@@ -39,15 +41,19 @@ func newTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comman
 	c := &command{clientID: cfg.Version.ClientID}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+		if cfg.Context().GetOrganization() != nil {
+			c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+			cmd.AddCommand(c.newCreateCommand())
+			cmd.AddCommand(c.newDeleteCommand())
+			cmd.AddCommand(c.newDescribeCommand())
+			cmd.AddCommand(c.newUpdateCommand())
+		} else {
+			c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithAPIKeyCLICommand(cmd, prerunner)
+		}
 
 		cmd.AddCommand(c.newConsumeCommand())
-		cmd.AddCommand(c.newCreateCommand())
-		cmd.AddCommand(c.newDeleteCommand())
-		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
 		cmd.AddCommand(c.newProduceCommand())
-		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
@@ -99,8 +105,7 @@ func (c *command) autocompleteTopics() []string {
 
 // validate that a topic exists before attempting to produce/consume messages
 func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluster *config.KafkaClusterConfig) error {
-	timeout := 10 * time.Second
-	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
+	metadata, err := client.GetMetadata(nil, true, int(adminClientTimeout.Milliseconds()))
 	if err != nil {
 		if err.Error() == ckafka.ErrTransport.String() {
 			err = fmt.Errorf("API key may not be provisioned yet")

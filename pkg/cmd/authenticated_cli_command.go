@@ -46,6 +46,12 @@ func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *Authen
 	return c
 }
 
+func NewAuthenticatedWithAPIKeyCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
+	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd)}
+	cmd.PersistentPreRunE = chain(prerunner.AuthenticatedWithAPIKey(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
+	return c
+}
+
 func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd)}
 	cmd.PersistentPreRunE = chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
@@ -188,7 +194,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
 
-			if c.Context.GetState() != nil {
+			if c.Context.GetState() != nil && c.V2Client != nil {
 				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 				if err != nil {
 					return nil, err

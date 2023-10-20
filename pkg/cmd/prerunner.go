@@ -39,6 +39,7 @@ var wrongLoginCommandsMap = map[string]string{
 type PreRunner interface {
 	Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error
 	Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
+	AuthenticatedWithAPIKey(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
@@ -162,6 +163,27 @@ func LabelRequiredFlags(cmd *cobra.Command) {
 func IsFlagRequired(flag *pflag.Flag) bool {
 	annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
 	return len(annotations) == 1 && annotations[0] == "true"
+}
+
+// Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
+func (r *PreRun) AuthenticatedWithAPIKey(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
+			return err
+		}
+
+		ctx := command.Config.Context()
+		if ctx == nil {
+			return errors.NewErrorWithSuggestions("no context found", "Create a context with `confluent context create --bootstrap <bootstrap-server> --api-key <api-key> --api-secret <api-secret>`.")
+		}
+
+		if r.Config.Context().GetCredentialType() != config.APIKey {
+			return errors.NewErrorWithSuggestions("you must authenticate the context with API key", "Create a context with `confluent context create --bootstrap <bootstrap-server> --api-key <api-key> --api-secret <api-secret>`.")
+		}
+
+		command.Context = ctx
+		return nil
+	}
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
