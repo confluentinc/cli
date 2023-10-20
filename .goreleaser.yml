@@ -367,6 +367,6 @@ chocolateys:
     description: CLI for Confluent Cloud and Confluent Platform
     release_notes: https://docs.confluent.io/confluent-cli/current/release-notes.html
     # TODO
-    api_key: '{{ .Env.CHOCOLATEY_API_KEY }}'
+    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: "https://push.chocolatey.org/"
-    skip_publish: "{{ .Env.DRY_RUN }}"
+    skip_publish: true
