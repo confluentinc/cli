@@ -28,6 +28,10 @@ type FlinkGatewayClient struct {
 }
 
 func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
+	client := &FlinkGatewayClient{
+		AuthToken: authToken,
+	}
+
 	cfg := flinkgatewayv1beta1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = NewRetryableHttpClientWithRedirect(unsafeTrace,
@@ -43,17 +47,16 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 			// header is copied only when the hostname is exactly the same or an exact subdomain of the hostname
 			// Ideally, we should check the status code returned in via[0].Response. However, via[0].Response is nil in underlying
 			// retryable http implementation
-			req.Header.Add("Authorization", "Bearer "+authToken)
+			// To ensure we have a fresh token, we need to use client.AuthToken and NOT the local authToken
+			req.Header.Add("Authorization", "Bearer "+client.AuthToken)
 
 			return nil
 		})
 	cfg.Servers = flinkgatewayv1beta1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
-	return &FlinkGatewayClient{
-		APIClient: flinkgatewayv1beta1.NewAPIClient(cfg),
-		AuthToken: authToken,
-	}
+	client.APIClient = flinkgatewayv1beta1.NewAPIClient(cfg)
+	return client
 }
 
 func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
