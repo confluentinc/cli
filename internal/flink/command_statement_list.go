@@ -32,7 +32,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 		Short: "List Flink SQL statements.",
 		Example: examples.BuildExampleString(examples.Example{
 			Text: "List running statements.",
-			Code: "confluent flink compute-pool list --status running",
+			Code: "confluent flink statement list --status running",
 		}),
 		RunE: c.statementList,
 	}
