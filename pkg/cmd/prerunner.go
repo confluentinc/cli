@@ -172,14 +172,15 @@ func (r *PreRun) AuthenticatedWithAPIKey(command *AuthenticatedCLICommand) func(
 			return err
 		}
 
-		if r.Config.Context().GetCredentialType() != config.APIKey {
-			return errors.NewErrorWithSuggestions("hmm, i need apikeys", "Hello.")
-		}
-
 		ctx := command.Config.Context()
 		if ctx == nil {
-			return errors.NewErrorWithSuggestions("hmm, context is not here...", "Hello.")
+			return errors.NewErrorWithSuggestions("no context found", "Create a context with `confluent context create --bootstrap <bootstrap-server> --api-key <api-key> --api-secret <api-secret>`.")
 		}
+
+		if r.Config.Context().GetCredentialType() != config.APIKey {
+			return errors.NewErrorWithSuggestions("you must authenticate the context with API key", "Create a context with `confluent context create --bootstrap <bootstrap-server> --api-key <api-key> --api-secret <api-secret>`.")
+		}
+
 		command.Context = ctx
 		return nil
 	}
