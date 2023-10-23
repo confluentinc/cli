@@ -15,24 +15,24 @@ import (
 func GetResultItemGeneratorForType(dataType flinkgatewayv1beta1.DataType) *rapid.Generator[any] {
 	fieldType := types.NewResultFieldType(dataType)
 	switch fieldType {
-	case types.ARRAY:
+	case types.Array:
 		elementType := dataType.GetElementType()
 		return ArrayResultItem(elementType)
-	case types.MULTISET:
+	case types.Multiset:
 		keyType := dataType.GetElementType()
 		valueType := flinkgatewayv1beta1.DataType{
 			Nullable: false,
 			Type:     "INTEGER",
 		}
 		return MapResultItem(keyType, valueType)
-	case types.MAP:
+	case types.Map:
 		keyType := dataType.GetKeyType()
 		valueType := dataType.GetValueType()
 		return MapResultItem(keyType, valueType)
-	case types.ROW:
+	case types.Row:
 		elementTypes := dataType.GetFields()
 		return RowResultItem(elementTypes)
-	case types.NULL:
+	case types.Null:
 		return rapid.SampledFrom([]any{nil})
 	default:
 		return AtomicResultItem(fieldType)
@@ -40,25 +40,25 @@ func GetResultItemGeneratorForType(dataType flinkgatewayv1beta1.DataType) *rapid
 }
 
 var atomicGenerators = map[types.StatementResultFieldType]*rapid.Generator[string]{
-	types.CHAR:                           rapid.SampledFrom([]string{"Jay", "Yannick", "Gustavo", "Jim", "A string", "Another string", "And another string", "lorem ipsum"}),
-	types.VARCHAR:                        rapid.SampledFrom([]string{"Jay", "Yannick", "Gustavo", "Jim", "A string", "Another string", "And another string", "lorem ipsum"}),
-	types.BOOLEAN:                        rapid.SampledFrom([]string{"TRUE", "FALSE"}),
-	types.BINARY:                         rapid.StringMatching("x'[a-fA-F0-9]+'"),
-	types.VARBINARY:                      rapid.StringMatching("x'[a-fA-F0-9]+'"),
-	types.DECIMAL:                        rapid.StringMatching("\\d{1,5}\\.\\d{1,3}"),
-	types.TINYINT:                        rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", int(rapid.Int8().Draw(t, "an int"))) }),
-	types.SMALLINT:                       rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", int(rapid.Int16().Draw(t, "an int"))) }),
-	types.INTEGER:                        rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", rapid.Int().Draw(t, "an int")) }),
-	types.BIGINT:                         rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", rapid.Int64().Draw(t, "an int")) }),
-	types.FLOAT:                          rapid.StringMatching("\\d{1,5}\\.\\d{7}E7"),
-	types.DOUBLE:                         rapid.StringMatching("\\d{1,5}\\.\\d{16}E7"),
-	types.DATE:                           Timestamp("2006-01-02"),
-	types.TIME_WITHOUT_TIME_ZONE:         Timestamp("15:04:05.000000"),
-	types.TIMESTAMP_WITHOUT_TIME_ZONE:    Timestamp("2006-01-02 15:04:05.000000"),
-	types.TIMESTAMP_WITH_TIME_ZONE:       Timestamp("2006-01-02 15:04:05.000000"),
-	types.TIMESTAMP_WITH_LOCAL_TIME_ZONE: Timestamp("2006-01-02 15:04:05.000000"),
-	types.INTERVAL_YEAR_MONTH:            rapid.Custom(func(t *rapid.T) string { return "+" + Timestamp("2006-01").Draw(t, "a timestamp") }),
-	types.INTERVAL_DAY_TIME: rapid.Custom(func(t *rapid.T) string {
+	types.Char:                       rapid.SampledFrom([]string{"Jay", "Yannick", "Gustavo", "Jim", "A string", "Another string", "And another string", "lorem ipsum"}),
+	types.Varchar:                    rapid.SampledFrom([]string{"Jay", "Yannick", "Gustavo", "Jim", "A string", "Another string", "And another string", "lorem ipsum"}),
+	types.Boolean:                    rapid.SampledFrom([]string{"TRUE", "FALSE"}),
+	types.Binary:                     rapid.StringMatching("x'[a-fA-F0-9]+'"),
+	types.Varbinary:                  rapid.StringMatching("x'[a-fA-F0-9]+'"),
+	types.Decimal:                    rapid.StringMatching("\\d{1,5}\\.\\d{1,3}"),
+	types.Tinyint:                    rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", int(rapid.Int8().Draw(t, "an int"))) }),
+	types.Smallint:                   rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", int(rapid.Int16().Draw(t, "an int"))) }),
+	types.Integer:                    rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", rapid.Int().Draw(t, "an int")) }),
+	types.Bigint:                     rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", rapid.Int64().Draw(t, "an int")) }),
+	types.Float:                      rapid.StringMatching("\\d{1,5}\\.\\d{7}E7"),
+	types.Double:                     rapid.StringMatching("\\d{1,5}\\.\\d{16}E7"),
+	types.Date:                       Timestamp("2006-01-02"),
+	types.TimeWithoutTimeZone:        Timestamp("15:04:05.000000"),
+	types.TimestampWithoutTimeZone:   Timestamp("2006-01-02 15:04:05.000000"),
+	types.TimestampWithTimeZone:      Timestamp("2006-01-02 15:04:05.000000"),
+	types.TimestampWithLocalTimeZone: Timestamp("2006-01-02 15:04:05.000000"),
+	types.IntervalYearMonth:          rapid.Custom(func(t *rapid.T) string { return "+" + Timestamp("2006-01").Draw(t, "a timestamp") }),
+	types.IntervalDayTime: rapid.Custom(func(t *rapid.T) string {
 		return "+" + rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", rapid.IntRange(0, 365).Draw(t, "a day")) }).Draw(t, "a day") + Timestamp("15:04:05.000000").Draw(t, "a timestamp")
 	}),
 }
@@ -135,33 +135,33 @@ func MockResultRow(columnDetails []flinkgatewayv1beta1.ColumnDetails) *rapid.Gen
 }
 
 var NonAtomicResultFieldTypes = []types.StatementResultFieldType{
-	types.ARRAY,
-	types.MULTISET,
-	types.MAP,
-	types.ROW,
+	types.Array,
+	types.Multiset,
+	types.Map,
+	types.Row,
 }
 
 var AtomicResultFieldTypes = []types.StatementResultFieldType{
-	types.CHAR,
-	types.VARCHAR,
-	types.BOOLEAN,
-	types.BINARY,
-	types.VARBINARY,
-	types.DECIMAL,
-	types.TINYINT,
-	types.SMALLINT,
-	types.INTEGER,
-	types.BIGINT,
-	types.FLOAT,
-	types.DOUBLE,
-	types.DATE,
-	types.TIME_WITHOUT_TIME_ZONE,
-	types.TIMESTAMP_WITHOUT_TIME_ZONE,
-	types.TIMESTAMP_WITH_TIME_ZONE,
-	types.TIMESTAMP_WITH_LOCAL_TIME_ZONE,
-	types.INTERVAL_YEAR_MONTH,
-	types.INTERVAL_DAY_TIME,
-	types.NULL,
+	types.Char,
+	types.Varchar,
+	types.Boolean,
+	types.Binary,
+	types.Varbinary,
+	types.Decimal,
+	types.Tinyint,
+	types.Smallint,
+	types.Integer,
+	types.Bigint,
+	types.Float,
+	types.Double,
+	types.Date,
+	types.TimeWithoutTimeZone,
+	types.TimestampWithoutTimeZone,
+	types.TimestampWithTimeZone,
+	types.TimestampWithLocalTimeZone,
+	types.IntervalYearMonth,
+	types.IntervalDayTime,
+	types.Null,
 }
 
 func getDataTypeGeneratorForType(fieldType types.StatementResultFieldType, maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.DataType] {
@@ -169,13 +169,13 @@ func getDataTypeGeneratorForType(fieldType types.StatementResultFieldType, maxNe
 		return AtomicDataType()
 	}
 	switch fieldType {
-	case types.ARRAY:
+	case types.Array:
 		return ArrayDataType(maxNestingDepth - 1)
-	case types.MULTISET:
+	case types.Multiset:
 		return MultisetDataType(maxNestingDepth - 1)
-	case types.MAP:
+	case types.Map:
 		return MapDataType(maxNestingDepth - 1)
-	case types.ROW:
+	case types.Row:
 		return RowDataType(maxNestingDepth - 1)
 	default:
 		return AtomicDataType()

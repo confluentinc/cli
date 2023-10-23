@@ -129,44 +129,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
 		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
-
-		// Cluster linking
-		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete link-1", input: "link-1\n", fixture: "kafka/link/delete-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete myLink_1", input: "myLink_1\n", fixture: "kafka/link/delete-link-no-prefix.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete link-1 link-2", input: "n\n", fixture: "kafka/link/delete-link-multiple-refuse.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete link-1 link-2", input: "y\n", fixture: "kafka/link/delete-link-multiple.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete link-1 link-2 link-dne", fixture: "kafka/link/delete-link-multiple-fail.golden", useKafka: "lkc-describe-topic", exitCode: 1},
-		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/link/describe-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration-list-plain.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/configuration-list-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration-list-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-4", fixture: "kafka/link/configuration-list-plain-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o json", fixture: "kafka/link/configuration-list-bidirectional-link-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o yaml", fixture: "kafka/link/configuration-list-bidirectional-link-yaml.golden", useKafka: "lkc-describe-topic"},
-
-		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/list-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic", fixture: "kafka/mirror/list-all-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/list-all-mirror-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/list-all-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic", fixture: "kafka/mirror/describe-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/describe-mirror-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/describe-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror failover topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/failover-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror pause topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/pause-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/promote-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/promote-mirror-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/promote-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror resume topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/resume-mirror.golden", useKafka: "lkc-describe-topic"},
 	}
 
 	if runtime.GOOS != "windows" {
@@ -306,6 +268,59 @@ func (s *CLITestSuite) TestKafkaBroker() {
 	for _, test := range tests {
 		test.login = "onprem"
 		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaLink() {
+	tests := []CLITest{
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration/list-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration/list.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o yaml", fixture: "kafka/link/configuration/list-bidirectional-link-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4", fixture: "kafka/link/configuration/list-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete link-1 link-2 link-dne", fixture: "kafka/link/delete-link-multiple-fail.golden", useKafka: "lkc-describe-topic", exitCode: 1},
+		{args: "kafka link delete link-1 link-2", input: "n\n", fixture: "kafka/link/delete-link-multiple-refuse.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete link-1 link-2", input: "y\n", fixture: "kafka/link/delete-link-multiple.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete link-1", input: "link-1\n", fixture: "kafka/link/delete-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete myLink_1", input: "myLink_1\n", fixture: "kafka/link/delete-link-no-prefix.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/link/describe-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaMirror() {
+	tests := []CLITest{
+		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/describe-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/describe-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic", fixture: "kafka/mirror/describe-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror failover topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/failover-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/list-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/list-all-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/list-all-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic", fixture: "kafka/mirror/list-all-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror pause topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/pause-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/promote-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/promote-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/promote-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror resume topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/resume-mirror.golden", useKafka: "lkc-describe-topic"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
 }

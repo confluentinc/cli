@@ -351,7 +351,7 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for :"/iam/v2/role-bindings/{id}"
-func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
+func handleIamRoleBinding(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodDelete:

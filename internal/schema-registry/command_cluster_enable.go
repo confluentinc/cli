@@ -100,16 +100,17 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 	var out *enableOut
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(clusterConfig)
 	if err != nil {
-		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+		existingClusters, getExistingErr := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 		if getExistingErr != nil {
-			// Propagate CreateSchemaRegistryCluster error.
+			return err
+		}
+		if len(existingClusters) == 0 {
 			return err
 		}
 
 		out = &enableOut{
-			Id:          existingCluster.GetId(),
-			EndpointUrl: existingCluster.Spec.GetHttpEndpoint(),
+			Id:          existingClusters[0].GetId(),
+			EndpointUrl: existingClusters[0].Spec.GetHttpEndpoint(),
 		}
 	} else {
 		out = &enableOut{

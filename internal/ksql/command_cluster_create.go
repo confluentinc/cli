@@ -32,7 +32,7 @@ func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -84,9 +84,10 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		output.ErrPrintln(c.Config.EnableColor, "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`.")
 	}
 
-	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
-	if _, ok := srCluster.GetIdOk(); ok {
-		output.ErrPrintln(c.Config.EnableColor, "IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
+	if clusters, _ := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId); len(clusters) > 0 {
+		if _, ok := clusters[0].GetIdOk(); ok {
+			output.ErrPrintln(c.Config.EnableColor, "[WARN] Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
+		}
 	}
 
 	table := output.NewTable(cmd)

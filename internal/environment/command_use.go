@@ -26,7 +26,7 @@ func (c *command) newUseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) use(cmd *cobra.Command, args []string) error {
+func (c *command) use(_ *cobra.Command, args []string) error {
 	id := args[0]
 
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {

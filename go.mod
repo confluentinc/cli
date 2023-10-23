@@ -4,11 +4,11 @@ go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.45.24
+	github.com/aws/aws-sdk-go v1.46.1
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
-	github.com/charmbracelet/lipgloss v0.9.0
+	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -24,7 +24,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.15.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.16.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
@@ -38,7 +38,7 @@ require (
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
 	github.com/confluentinc/go-prompt v0.2.19
 	github.com/confluentinc/go-ps1 v1.0.2
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.16
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.17
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20230117192233-7e6d894d74a9
 	github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20230117192233-7e6d894d74a9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
@@ -68,7 +68,7 @@ require (
 	github.com/jonboulle/clockwork v0.4.0
 	github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100
 	github.com/linkedin/goavro/v2 v2.12.0
-	github.com/mattn/go-isatty v0.0.19
+	github.com/mattn/go-isatty v0.0.20
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.0.2
 	github.com/ory/dockertest v3.3.5+incompatible
@@ -95,7 +95,7 @@ require (
 	golang.org/x/text v0.13.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.28.2
+	k8s.io/apimachinery v0.28.3
 	pgregory.net/rapid v1.1.0
 )
 
@@ -174,7 +174,7 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.16.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect

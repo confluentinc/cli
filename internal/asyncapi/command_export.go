@@ -258,7 +258,7 @@ func handlePanic() {
 	}
 }
 
-func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.Client, valueFormatFlag string) (any, error) {
+func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.Client, valueFormatFlag string) (any, error) {
 	defer handlePanic()
 	if err := consumer.Subscribe(topicName, nil); err != nil {
 		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %w`, topicName, err)
@@ -373,23 +373,35 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 }
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
-	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %w`, err)
 	}
 
-	if err := clusterConfig.DecryptAPIKeys(); err != nil {
+	if err := cluster.DecryptAPIKeys(); err != nil {
 		return err
 	}
 
 	var clusterCreds *config.APIKeyPair
 	if flags.kafkaApiKey != "" {
-		if _, ok := clusterConfig.APIKeys[flags.kafkaApiKey]; !ok {
-			return c.Context.FetchAPIKeyError(flags.kafkaApiKey, clusterConfig.ID)
+		if _, ok := cluster.APIKeys[flags.kafkaApiKey]; !ok {
+			key, httpResp, err := c.V2Client.GetApiKey(flags.kafkaApiKey)
+			if err != nil {
+				return errors.CatchCCloudV2Error(err, httpResp)
+			}
+			// check if the key is for the right cluster
+			if key.Spec.Resource.Id != cluster.ID {
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.InvalidApiKeyErrorMsg, flags.kafkaApiKey, cluster.ID),
+					fmt.Sprintf(errors.InvalidApiKeySuggestions, cluster.ID),
+				)
+			}
+			// the requested api-key exists, but the secret is not saved locally
+			return &errors.UnconfiguredAPISecretError{APIKey: flags.kafkaApiKey, ClusterID: cluster.ID}
 		}
-		clusterCreds = clusterConfig.APIKeys[flags.kafkaApiKey]
+		clusterCreds = cluster.APIKeys[flags.kafkaApiKey]
 	} else {
-		clusterCreds = clusterConfig.APIKeys[clusterConfig.APIKey]
+		clusterCreds = cluster.APIKeys[cluster.APIKey]
 	}
 	if clusterCreds == nil {
 		return errors.NewErrorWithSuggestions(
@@ -421,7 +433,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		return errors.NewSRNotEnabledError()
 	}
 
-	details.kafkaClusterId = clusterConfig.ID
+	details.kafkaClusterId = cluster.ID
 	details.schemaRegistryClusterId = clusters[0].GetId()
 	details.clusterCreds = clusterCreds
 	details.kafkaUrl = kafkaREST.CloudClient.GetUrl()

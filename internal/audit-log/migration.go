@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
-func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mdsv1.AuditLogConfigSpec, []string, error) {
+func configTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mdsv1.AuditLogConfigSpec, []string, error) {
 	var newSpec mdsv1.AuditLogConfigSpec
 	const defaultTopicName = "confluent-audit-log-events"
 	var warnings []string

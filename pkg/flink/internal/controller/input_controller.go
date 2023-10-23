@@ -43,10 +43,19 @@ func NewInputController(history *history.History) types.InputControllerInterface
 func (c *InputController) GetUserInput() string {
 	// if the initial buffer is not empty, we insert the text and reset the InitialBuffer
 	if c.InitialBuffer != "" {
+		c.clearBuffer()
 		c.prompt.Buffer().InsertText(c.InitialBuffer, false, true)
 		c.InitialBuffer = ""
 	}
 	return c.prompt.Input()
+}
+
+func (c *InputController) clearBuffer() {
+	// DeleteBeforeCursor() clears everything left of the cursor
+	c.prompt.Buffer().DeleteBeforeCursor(len(c.prompt.Buffer().Text()))
+	// Delete() ensures we also delete when the cursor is not at the rightmost position
+	// NOTE: we cannot exclusively use Delete() because it won't work if the cursor is at the rightmost position
+	c.prompt.Buffer().Delete(len(c.prompt.Buffer().Text()))
 }
 
 func (c *InputController) HasUserInitiatedExit(userInput string) bool {
@@ -61,7 +70,7 @@ func (c *InputController) HasUserEnabledReverseSearch() bool {
 }
 
 func (c *InputController) StartReverseSearch() {
-	searchResult := c.reverseISearch.ReverseISearch(c.History.Data)
+	searchResult := c.reverseISearch.ReverseISearch(c.History.Data, c.prompt.Buffer().Text())
 	c.reverseISearchEnabled = false
 	c.InitialBuffer = searchResult
 }

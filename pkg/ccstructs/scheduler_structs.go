@@ -170,10 +170,8 @@ const (
 	ACLOperations_DELETE           ACLOperations_ACLOperation = 5
 	ACLOperations_ALTER            ACLOperations_ACLOperation = 6
 	ACLOperations_DESCRIBE         ACLOperations_ACLOperation = 7
-	ACLOperations_CLUSTER_ACTION   ACLOperations_ACLOperation = 8
 	ACLOperations_DESCRIBE_CONFIGS ACLOperations_ACLOperation = 9
 	ACLOperations_ALTER_CONFIGS    ACLOperations_ACLOperation = 10
-	ACLOperations_IDEMPOTENT_WRITE ACLOperations_ACLOperation = 11
 )
 
 func (x ACLOperations_ACLOperation) String() string {

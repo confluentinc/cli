@@ -50,27 +50,27 @@ func (r *StatementResultRow) GetFields() []StatementResultField {
 }
 
 const (
-	INSERT        StatementResultOperation = 0
-	UPDATE_BEFORE StatementResultOperation = 1
-	UPDATE_AFTER  StatementResultOperation = 2
-	DELETE        StatementResultOperation = 3
+	Insert       StatementResultOperation = 0
+	UpdateBefore StatementResultOperation = 1
+	UpdateAfter  StatementResultOperation = 2
+	Delete       StatementResultOperation = 3
 )
 
 type StatementResultOperation float64
 
 func (s StatementResultOperation) IsInsertOperation() bool {
-	return s == INSERT || s == UPDATE_AFTER
+	return s == Insert || s == UpdateAfter
 }
 
 func (s StatementResultOperation) String() string {
 	switch s {
-	case INSERT:
+	case Insert:
 		return "+I"
-	case UPDATE_BEFORE:
+	case UpdateBefore:
 		return "-U"
-	case UPDATE_AFTER:
+	case UpdateAfter:
 		return "+U"
-	case DELETE:
+	case Delete:
 		return "-D"
 	}
 	return ""

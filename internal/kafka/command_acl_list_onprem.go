@@ -3,7 +3,7 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	aclutil "github.com/confluentinc/cli/v3/pkg/acl"
+	"github.com/confluentinc/cli/v3/pkg/acl"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -32,7 +32,7 @@ func (c *aclCommand) newListCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	cmd.Flags().AddFlagSet(aclutil.AclFlags())
+	cmd.Flags().AddFlagSet(acl.Flags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -40,9 +40,9 @@ func (c *aclCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *aclCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
-	acl := aclutil.ParseAclRequest(cmd)
-	if acl.Errors != nil {
-		return acl.Errors
+	data := acl.ParseRequest(cmd)
+	if data.Errors != nil {
+		return data.Errors
 	}
 
 	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
@@ -50,11 +50,11 @@ func (c *aclCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	opts := aclutil.AclRequestToListAclRequest(acl)
+	opts := acl.RequestToListRequest(data)
 	aclGetResp, httpResp, err := restClient.ACLV3Api.GetKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponseOnPrem(cmd, aclGetResp.Data)
+	return acl.PrintACLsFromKafkaRestResponseOnPrem(cmd, aclGetResp.Data)
 }

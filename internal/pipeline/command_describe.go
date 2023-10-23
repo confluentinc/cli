@@ -30,7 +30,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return err
 	}

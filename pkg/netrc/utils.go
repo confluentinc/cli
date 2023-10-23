@@ -14,7 +14,7 @@ type MachineContextInfo struct {
 
 func ParseNetrcMachineName(machineName string) (*MachineContextInfo, error) {
 	if !strings.HasPrefix(machineName, localCredentialsPrefix) {
-		return nil, fmt.Errorf("Incorrect machine name format")
+		return nil, fmt.Errorf("incorrect machine name format")
 	}
 
 	// example: machinename = confluent-cli:ccloud-username-password:login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud

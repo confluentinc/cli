@@ -139,7 +139,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if resourceType == resource.KafkaCluster {
-		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
+		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, clusterId); err != nil {
 			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 		}
 	}
@@ -152,7 +152,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if resourceType != resource.KafkaCluster {
 			return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
 		}
-		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
+		if err := c.useAPIKey(userKey.Key, clusterId); err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
 		}
 		output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)

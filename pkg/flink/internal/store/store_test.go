@@ -132,7 +132,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	}
 	expectedError := &types.StatementError{
 		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
-			timeout.Seconds(), flinkconfig.ConfigKeyResultsTimeout),
+			timeout.Seconds(), flinkconfig.KeyResultsTimeout),
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
@@ -234,7 +234,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		},
 	}
 
-	returnedError := flink.NewFlinkError("couldn't get statement", "", http.StatusInternalServerError)
+	returnedError := flink.NewError("couldn't get statement", "", http.StatusInternalServerError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
@@ -268,7 +268,7 @@ func TestCancelPendingStatement(t *testing.T) {
 		},
 	}
 
-	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: http.StatusInternalServerError}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
@@ -287,67 +287,67 @@ func TestCancelPendingStatement(t *testing.T) {
 }
 
 func (s *StoreTestSuite) TestIsSetStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("SET", flinkconfig.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("SET key", flinkconfig.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("SET key=value", flinkconfig.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", flinkconfig.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET   ", flinkconfig.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    set   ", flinkconfig.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", flinkconfig.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key=value", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET   ", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    set   ", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", flinkconfig.OpSet))
 
-	assert.False(s.T(), false, statementStartsWithOp("SETting", flinkconfig.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("USE", flinkconfig.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("SETTING", flinkconfig.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETting", flinkconfig.OpSet))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.OpSet))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.OpSet))
+	assert.False(s.T(), false, statementStartsWithOp("USE", flinkconfig.OpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETTING", flinkconfig.OpSet))
 }
 
 func (s *StoreTestSuite) TestIsUseStatement() {
-	assert.True(s.T(), statementStartsWithOp("USE", flinkconfig.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE catalog", flinkconfig.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", flinkconfig.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", flinkconfig.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE   ", flinkconfig.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("use   ", flinkconfig.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", flinkconfig.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("USE catalog", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("USE   ", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("use   ", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", flinkconfig.OpUse))
 
-	assert.False(s.T(), statementStartsWithOp("SET", flinkconfig.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("USES", flinkconfig.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("", flinkconfig.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("should be false", flinkconfig.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("SET", flinkconfig.OpUse))
+	assert.False(s.T(), statementStartsWithOp("USES", flinkconfig.OpUse))
+	assert.False(s.T(), statementStartsWithOp("", flinkconfig.OpUse))
+	assert.False(s.T(), statementStartsWithOp("should be false", flinkconfig.OpUse))
 }
 
 func (s *StoreTestSuite) TestIsResetStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("RESET", flinkconfig.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key", flinkconfig.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET   ", flinkconfig.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("reset   ", flinkconfig.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET   ", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("reset   ", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.OpReset))
 
-	assert.False(s.T(), false, statementStartsWithOp("RESETting", flinkconfig.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("USE", flinkconfig.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("RESETTING", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETting", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("USE", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETTING", flinkconfig.OpReset))
 }
 
 func (s *StoreTestSuite) TestIsExitStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("EXIT", flinkconfig.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", flinkconfig.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit   ;", flinkconfig.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exiT   ", flinkconfig.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("Exit   ", flinkconfig.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("eXit   ", flinkconfig.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit", flinkconfig.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit ", flinkconfig.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit   ;", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exiT   ", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("Exit   ", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("eXit   ", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit ", flinkconfig.OpExit))
 
-	assert.False(s.T(), false, statementStartsWithOp("exits", flinkconfig.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("exitt;", flinkconfig.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("exi", flinkconfig.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exits", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exitt;", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exi", flinkconfig.OpReset))
 }
 
 func (s *StoreTestSuite) TestParseSetStatement() {
@@ -521,11 +521,11 @@ func (s *StoreTestSuite) TestParseSetStatementError() {
 
 func (s *StoreTestSuite) TestParseUseStatement() {
 	key, value, _ := parseUseStatement("USE CATALOG c;")
-	assert.Equal(s.T(), flinkconfig.ConfigKeyCatalog, key)
+	assert.Equal(s.T(), flinkconfig.KeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
 	key, value, _ = parseUseStatement("use   catalog   \nc   ")
-	assert.Equal(s.T(), flinkconfig.ConfigKeyCatalog, key)
+	assert.Equal(s.T(), flinkconfig.KeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
 	key, value, _ = parseUseStatement("use   catalog     ")
@@ -537,7 +537,7 @@ func (s *StoreTestSuite) TestParseUseStatement() {
 	assert.Equal(s.T(), "", value)
 
 	key, value, _ = parseUseStatement("use     db   ")
-	assert.Equal(s.T(), flinkconfig.ConfigKeyDatabase, key)
+	assert.Equal(s.T(), flinkconfig.KeyDatabase, key)
 	assert.Equal(s.T(), "db", value)
 
 	key, value, _ = parseUseStatement("dAtaBaSe  db   ")
@@ -545,7 +545,7 @@ func (s *StoreTestSuite) TestParseUseStatement() {
 	assert.Equal(s.T(), "", value)
 
 	key, value, _ = parseUseStatement("use     \ndatabase_name   ")
-	assert.Equal(s.T(), flinkconfig.ConfigKeyDatabase, key)
+	assert.Equal(s.T(), flinkconfig.KeyDatabase, key)
 	assert.Equal(s.T(), "database_name", value)
 }
 
@@ -821,7 +821,7 @@ func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
-	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1beta1.SqlV1beta1Statement{}, flinkError)
 
 	wasStatementDeleted := store.StopStatement(statementName)
@@ -845,7 +845,7 @@ func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
-	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1beta1.SqlV1beta1Statement{}, flinkError)
 
 	wasStatementDeleted := store.StopStatement(statementName)
@@ -873,7 +873,7 @@ func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
 
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
 	statementObj.Spec.SetStopped(true)
-	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
 	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementObj).Return(flinkError)
 
 	wasStatementDeleted := store.StopStatement(statementName)
@@ -917,7 +917,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 
 	statementName := "TEST_STATEMENT"
 
-	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(flinkError)
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)
@@ -1076,7 +1076,7 @@ func TestTimeout(t *testing.T) {
 		{
 			name: "results-timeout property set",
 			properties: map[string]string{
-				flinkconfig.ConfigKeyResultsTimeout: "10000", // timeout in milliseconds
+				flinkconfig.KeyResultsTimeout: "10000", // timeout in milliseconds
 			},
 			expected: 10 * time.Second,
 		},
@@ -1088,7 +1088,7 @@ func TestTimeout(t *testing.T) {
 		{
 			name: "invalid results-timeout property",
 			properties: map[string]string{
-				flinkconfig.ConfigKeyResultsTimeout: "abc", // invalid duration
+				flinkconfig.KeyResultsTimeout: "abc", // invalid duration
 			},
 			expected: flinkconfig.DefaultTimeoutDuration,
 		},
@@ -1111,7 +1111,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	}
 	serviceAccountId := "sa-123"
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{flinkconfig.ConfigKeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
+		Properties:       NewUserProperties(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1203,7 +1203,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		ComputePoolId:  "computePoolId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{flinkconfig.ConfigKeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
+		Properties:       NewUserProperties(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1247,7 +1247,7 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 	serviceAccountId := "sa-123"
 	statementName := "test-statement"
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{flinkconfig.ConfigKeyServiceAccount: serviceAccountId}, map[string]string{flinkconfig.ConfigKeyStatementName: statementName}),
+		Properties:       NewUserProperties(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId}, map[string]string{flinkconfig.KeyStatementName: statementName}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1276,7 +1276,7 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
 	// statement name should be cleared after submission
-	require.False(s.T(), store.Properties.HasKey(flinkconfig.ConfigKeyStatementName))
+	require.False(s.T(), store.Properties.HasKey(flinkconfig.KeyStatementName))
 }
 
 func (s *StoreTestSuite) TestWaitPendingStatement() {

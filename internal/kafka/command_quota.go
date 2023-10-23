@@ -118,7 +118,7 @@ func (c *quotaCommand) autocompleteQuotas() []string {
 }
 
 func (c *quotaCommand) getQuotas() ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
 	if err != nil {
 		return nil, err
 	}

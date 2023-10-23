@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
+func (c *poolCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update an identity pool.",
@@ -38,7 +38,7 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
+func (c *poolCommand) update(cmd *cobra.Command, args []string) error {
 	flags := []string{
 		"description",
 		"filter",

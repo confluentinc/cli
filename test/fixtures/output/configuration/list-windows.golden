@@ -5,4 +5,3 @@
   disable_plugins_once  | false | false
   disable_update_check  | false | false
   disable_updates       | false | false
-  no_browser            | false | false
