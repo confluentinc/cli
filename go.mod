@@ -40,7 +40,7 @@ require (
 	github.com/confluentinc/flink-sql-language-service v0.11.0
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
-	github.com/confluentinc/go-prompt v0.2.19
+	github.com/confluentinc/go-prompt v0.2.20
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.17
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20230117192233-7e6d894d74a9
