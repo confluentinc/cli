@@ -175,6 +175,8 @@ github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450 h1:YJq9ZRhj0
 github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450/go.mod h1:GGVB1yDj9YYQTxoo5vTRGWuQKccGN00bvyit4O5jznI=
 github.com/confluentinc/go-prompt v0.2.19 h1:R579FzoZVUfvtyO6x1UhFngTNuqYqIl/rhByTIpNr2U=
 github.com/confluentinc/go-prompt v0.2.19/go.mod h1:4/tf63YzhSsiXnsKosCmv1H0ivpXVezZHaMpSVB+DXw=
+github.com/confluentinc/go-prompt v0.2.20 h1:l17z7IftZbf1uKuIUL7z4Ys9o9Bg79jtiJdb4whjCCU=
+github.com/confluentinc/go-prompt v0.2.20/go.mod h1:4/tf63YzhSsiXnsKosCmv1H0ivpXVezZHaMpSVB+DXw=
 github.com/confluentinc/go-ps1 v1.0.2 h1:+4cKOzWs3AWmxL2s96oHu0QutZESDRXECnhFzm2ic4o=
 github.com/confluentinc/go-ps1 v1.0.2/go.mod h1:qmgG9xQgFd4u7/CS6eA9nNP8eQqOtXuRHmZ4+w7Vprs=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.17 h1:OXDvG8h8h77w3jH8N26BZaHILWeKw67/177fZxXDQdw=
