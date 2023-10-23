@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 )
@@ -23,6 +24,7 @@ type Logger struct {
 	Level  Level
 	logger hclog.Logger
 	buffer []leveledMessage
+	mu     sync.RWMutex
 }
 
 type leveledMessage struct {
@@ -132,11 +134,17 @@ func (l *Logger) Errorf(format string, args ...any) {
 }
 
 func (l *Logger) append(level Level, message string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.buffer = append(l.buffer, leveledMessage{level, message})
 }
 
 func (l *Logger) Flush() {
-	for _, lm := range l.buffer {
+	l.mu.RLock()
+	buf := l.buffer
+	l.mu.RUnlock()
+
+	for _, lm := range buf {
 		if lm.level < l.Level {
 			continue
 		}
@@ -155,7 +163,9 @@ func (l *Logger) Flush() {
 		}
 	}
 
+	l.mu.Lock()
 	l.buffer = []leveledMessage{}
+	l.mu.Unlock()
 }
 
 // Log logs a "msg" and key-value pairs.
