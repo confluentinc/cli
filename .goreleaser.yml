@@ -232,8 +232,7 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
 
 nfpms:
-  - id: confluent-linux-deb
-    package_name: confluent
+  - package_name: confluent
     builds:
       - confluent-linux-disableupdates
     vendor: Confluent Inc.
