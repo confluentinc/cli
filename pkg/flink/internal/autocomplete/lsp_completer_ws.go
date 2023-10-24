@@ -26,33 +26,29 @@ type LSPClientWS struct {
 }
 
 func (c *LSPClientWS) LSPCompleter(in prompt.Document) []prompt.Suggest {
-	err := c.didChange(in.Text)
-
-	if err != nil {
-		log.CliLogger.Debugf("Error sending didChange lsp request: %v\n", err)
-		return []prompt.Suggest{}
+	textBeforeCursor := in.TextBeforeCursor()
+	if textBeforeCursor == "" {
+		return nil
 	}
 
-	textBeforeCursor := in.TextBeforeCursor()
+	err := c.didChange(in.Text)
+	if err != nil {
+		log.CliLogger.Debugf("Error sending didChange lsp request: %v\n", err)
+		return nil
+	}
 
 	position := lsp.Position{
 		Line:      0,
 		Character: len(textBeforeCursor),
 	}
 
-	completions := []lsp.CompletionItem{}
-	if textBeforeCursor != "" {
-		completionList, err := c.completion(position)
-
-		if err != nil {
-			log.CliLogger.Debugf("Error sending completion lsp request: %v\n", err)
-			return []prompt.Suggest{}
-		}
-
-		completions = completionList.Items
+	completionList, err := c.completion(position)
+	if err != nil {
+		log.CliLogger.Debugf("Error sending completion lsp request: %v\n", err)
+		return nil
 	}
 
-	return lspCompletionsToSuggests(completions)
+	return lspCompletionsToSuggests(completionList.Items)
 }
 
 func (c *LSPClientWS) initialize() (*lsp.InitializeResult, error) {
