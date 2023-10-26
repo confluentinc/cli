@@ -56,6 +56,7 @@ func (c *command) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
+
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
 
 	cmd.MarkFlagsMutuallyExclusive("config", "config-file")

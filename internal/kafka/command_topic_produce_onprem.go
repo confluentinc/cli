@@ -56,7 +56,6 @@ func (c *command) newProduceCommandOnPrem() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
-	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 
 	cmd.MarkFlagsMutuallyExclusive("config-file", "config")
 
