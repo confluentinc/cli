@@ -14,7 +14,7 @@ import (
 
 type GatewayClientInterface interface {
 	GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
-	ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error)
+	ListStatements(environmentId, orgId, computePoolId string) ([]flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error)
 	GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1beta1.SqlV1beta1StatementExceptionList, error)
@@ -30,25 +30,7 @@ type FlinkGatewayClient struct {
 func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
 	cfg := flinkgatewayv1beta1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClientWithRedirect(unsafeTrace,
-		func(req *http.Request, via []*http.Request) error {
-			// Default net/http implementation allows 10 redirects - https://go.dev/src/net/http/client.go.
-			// Lowered the redirect limit to fail fast in case of redirect cycles
-			if len(via) >= 5 {
-				return fmt.Errorf("stopped after 5 redirects")
-			}
-			if len(via) > 0 {
-				if authHeader := via[len(via)-1].Header.Get("Authorization"); authHeader != "" {
-					log.CliLogger.Debugf("Following redirect with authorization to %s", req.URL)
-					// Copy Authorization header from previous request as the location returned by
-					// Flink GW on a redirect won't be a subdomain or exact match of initial domain
-					// to be copied automatically.
-					req.Header.Add("Authorization", authHeader)
-				}
-			}
-
-			return nil
-		})
+	cfg.HTTPClient = NewRetryableHttpClientWithRedirect(unsafeTrace, checkRedirect)
 	cfg.Servers = flinkgatewayv1beta1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -56,6 +38,28 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 		APIClient: flinkgatewayv1beta1.NewAPIClient(cfg),
 		AuthToken: authToken,
 	}
+}
+
+func checkRedirect(req *http.Request, via []*http.Request) error {
+	// Default net/http implementation allows 10 redirects - https://go.dev/src/net/http/client.go.
+	// Lowered the redirect limit to fail fast in case of redirect cycles
+	const maxRedirects = 5
+
+	if len(via) >= maxRedirects {
+		return fmt.Errorf("stopped after %d redirects", maxRedirects)
+	}
+
+	if len(via) > 0 {
+		if authorization := via[len(via)-1].Header.Get("Authorization"); authorization != "" {
+			log.CliLogger.Debugf("Following redirect with authorization to %s", req.URL)
+			// Copy Authorization header from previous request as the location returned by
+			// Flink GW on a redirect won't be a subdomain or exact match of initial domain
+			// to be copied automatically.
+			req.Header.Add("Authorization", authorization)
+		}
+	}
+
+	return nil
 }
 
 func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
@@ -72,26 +76,12 @@ func (c *FlinkGatewayClient) GetStatement(environmentId, statementName, orgId st
 	return resp, flinkerror.CatchError(err, httpResp)
 }
 
-func (c *FlinkGatewayClient) ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error) {
-	req := c.StatementsSqlV1beta1Api.ListSqlv1beta1Statements(c.flinkGatewayApiContext(), orgId, environmentId).PageSize(ccloudV2ListPageSize)
-
-	if computePoolId != "" {
-		req = req.SpecComputePoolId(computePoolId)
-	}
-
-	if pageToken != "" {
-		req = req.PageToken(pageToken)
-	}
-	resp, httpResp, err := req.Execute()
-	return resp, flinkerror.CatchError(err, httpResp)
-}
-
-func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePoolId string) ([]flinkgatewayv1beta1.SqlV1beta1Statement, error) {
+func (c *FlinkGatewayClient) ListStatements(environmentId, orgId, computePoolId string) ([]flinkgatewayv1beta1.SqlV1beta1Statement, error) {
 	var allStatements []flinkgatewayv1beta1.SqlV1beta1Statement
 	pageToken := ""
 	done := false
 	for !done {
-		statementListResponse, err := c.ListStatements(environmentId, orgId, pageToken, computePoolId)
+		statementListResponse, err := c.executeListStatements(environmentId, orgId, pageToken, computePoolId)
 		if err != nil {
 			return nil, err
 		}
@@ -103,6 +93,20 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePool
 		}
 	}
 	return allStatements, nil
+}
+
+func (c *FlinkGatewayClient) executeListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error) {
+	req := c.StatementsSqlV1beta1Api.ListSqlv1beta1Statements(c.flinkGatewayApiContext(), orgId, environmentId).PageSize(ccloudV2ListPageSize)
+
+	if computePoolId != "" {
+		req = req.SpecComputePoolId(computePoolId)
+	}
+
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	resp, httpResp, err := req.Execute()
+	return resp, flinkerror.CatchError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
