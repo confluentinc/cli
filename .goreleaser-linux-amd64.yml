@@ -42,7 +42,7 @@ nfpms:
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     maintainer: Confluent Inc.
     description: CLI for Confluent Cloud and Confluent Platform
-    license: Confluent Community License Agreement
+    license: https://github.com/confluentinc/cli/blob/main/LICENSE
     formats:
       - deb
       - rpm
