@@ -30,7 +30,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-const parseErrorMessage string = "topic is already present and `--overwrite` is not set"
+const parseErrorMessage = "topic is already present and `--overwrite` is not set"
 
 type flagsImport struct {
 	file                    string
