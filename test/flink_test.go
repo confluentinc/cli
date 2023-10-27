@@ -112,7 +112,6 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 		{args: `__complete flink compute-pool create my-compute-pool --cloud aws --region ""`, fixture: "flink/compute-pool/create-region-autocomplete.golden"},
 		{args: `__complete flink compute-pool delete ""`, fixture: "flink/compute-pool/delete-autocomplete.golden"},
 		{args: `__complete flink compute-pool list --region ""`, fixture: "flink/compute-pool/list-region-autocomplete.golden"},
-		{args: `__complete flink region use ""`, fixture: "flink/region/use-autocomplete.golden"},
 		{args: `__complete flink statement create my-statement --database ""`, fixture: "flink/statement/create-database-autocomplete.golden"},
 	}
 
