@@ -316,14 +316,14 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to get topic partitions: %w", err)
 	}
-	if partitions.Data != nil {
-		numPartitions = int32(len(partitions.Data))
+	if partitions != nil {
+		numPartitions = int32(len(partitions))
 	}
 	customConfigMap := make(map[string]string)
 	topicConfigMap := make(map[string]any)
 
 	// Determine whether the given config value can be put into the AsyncAPI Kafka bindings or put into our custom struct for extra configs
-	for _, config := range configs.Data {
+	for _, config := range configs {
 		switch config.GetName() {
 		case "cleanup.policy":
 			topicConfigMap[config.GetName()] = strings.Split(config.GetValue(), ",")

@@ -62,7 +62,7 @@ func (c *partitionCommand) reassignmentList(cmd *cobra.Command, args []string) e
 	if err != nil {
 		return err
 	}
-	var reassignmentListResp kafkarestv3.ReassignmentDataList
+	var reassignments kafkarestv3.ReassignmentDataList
 	var resp *http.Response
 	if len(args) > 0 {
 		partitionId, err := partitionIdFromArg(args)
@@ -78,19 +78,19 @@ func (c *partitionCommand) reassignmentList(cmd *cobra.Command, args []string) e
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 		if reassignmentGetResp.Kind != "" {
-			reassignmentListResp.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
+			reassignments.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
 		}
 	} else if topic != "" {
-		reassignmentListResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsReassignmentGet(restContext, clusterId, topic)
+		reassignments, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsReassignmentGet(restContext, clusterId, topic)
 	} else {
-		reassignmentListResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsPartitionsReassignmentGet(restContext, clusterId)
+		reassignments, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsPartitionsReassignmentGet(restContext, clusterId)
 	}
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, reassignment := range reassignmentListResp.Data {
+	for _, reassignment := range reassignments.Data {
 		list.Add(&getReassignmentOut{
 			ClusterId:        reassignment.ClusterId,
 			TopicName:        reassignment.TopicName,

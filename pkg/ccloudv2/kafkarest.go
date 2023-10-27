@@ -50,9 +50,12 @@ func (c *KafkaRestClient) GetKafkaClusterConfig(name string) (kafkarestv3.Cluste
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaClusterConfigs() (kafkarestv3.ClusterConfigDataList, error) {
+func (c *KafkaRestClient) ListKafkaClusterConfigs() ([]kafkarestv3.ClusterConfigData, error) {
 	res, httpResp, err := c.ConfigsV3Api.ListKafkaClusterConfigs(c.context(), c.ClusterId).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
 func (c *KafkaRestClient) UpdateKafkaClusterConfigs(req kafkarestv3.AlterConfigBatchRequestData) error {
@@ -126,7 +129,7 @@ func (c *KafkaRestClient) CreateKafkaMirrorTopic(linkName string, data kafkarest
 	return kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaMirrorTopics(status *kafkarestv3.MirrorTopicStatus) (kafkarestv3.ListMirrorTopicsResponseDataList, error) {
+func (c *KafkaRestClient) ListKafkaMirrorTopics(status *kafkarestv3.MirrorTopicStatus) ([]kafkarestv3.ListMirrorTopicsResponseData, error) {
 	req := c.ClusterLinkingV3Api.ListKafkaMirrorTopics(c.context(), c.ClusterId)
 
 	if status != nil {
@@ -134,10 +137,14 @@ func (c *KafkaRestClient) ListKafkaMirrorTopics(status *kafkarestv3.MirrorTopicS
 	}
 
 	res, httpResp, err := req.Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+
+	return res.GetData(), nil
 }
 
-func (c *KafkaRestClient) ListKafkaMirrorTopicsUnderLink(linkName string, status *kafkarestv3.MirrorTopicStatus) (kafkarestv3.ListMirrorTopicsResponseDataList, error) {
+func (c *KafkaRestClient) ListKafkaMirrorTopicsUnderLink(linkName string, status *kafkarestv3.MirrorTopicStatus) ([]kafkarestv3.ListMirrorTopicsResponseData, error) {
 	req := c.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(c.context(), c.ClusterId, linkName)
 
 	if status != nil {
@@ -145,7 +152,11 @@ func (c *KafkaRestClient) ListKafkaMirrorTopicsUnderLink(linkName string, status
 	}
 
 	res, httpResp, err := req.Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+
+	return res.GetData(), nil
 }
 
 func (c *KafkaRestClient) ReadKafkaMirrorTopic(linkName, mirrorTopicName string) (kafkarestv3.ListMirrorTopicsResponseData, error) {
@@ -153,24 +164,36 @@ func (c *KafkaRestClient) ReadKafkaMirrorTopic(linkName, mirrorTopicName string)
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) UpdateKafkaMirrorTopicsFailover(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) (kafkarestv3.AlterMirrorStatusResponseDataList, error) {
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsFailover(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) ([]kafkarestv3.AlterMirrorStatusResponseData, error) {
 	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsFailover(c.context(), c.ClusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
-func (c *KafkaRestClient) UpdateKafkaMirrorTopicsPause(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) (kafkarestv3.AlterMirrorStatusResponseDataList, error) {
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsPause(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) ([]kafkarestv3.AlterMirrorStatusResponseData, error) {
 	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPause(c.context(), c.ClusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
-func (c *KafkaRestClient) UpdateKafkaMirrorTopicsPromote(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) (kafkarestv3.AlterMirrorStatusResponseDataList, error) {
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsPromote(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) ([]kafkarestv3.AlterMirrorStatusResponseData, error) {
 	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPromote(c.context(), c.ClusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
-func (c *KafkaRestClient) UpdateKafkaMirrorTopicsResume(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) (kafkarestv3.AlterMirrorStatusResponseDataList, error) {
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsResume(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) ([]kafkarestv3.AlterMirrorStatusResponseData, error) {
 	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsResume(c.context(), c.ClusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
 func (c *KafkaRestClient) DeleteKafkaLink(linkName string) error {
@@ -183,14 +206,20 @@ func (c *KafkaRestClient) GetKafkaLink(linkName string) (kafkarestv3.ListLinksRe
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaLinkConfigs(linkName string) (kafkarestv3.ListLinkConfigsResponseDataList, error) {
+func (c *KafkaRestClient) ListKafkaLinkConfigs(linkName string) ([]kafkarestv3.ListLinkConfigsResponseData, error) {
 	res, httpResp, err := c.ClusterLinkingV3Api.ListKafkaLinkConfigs(c.context(), c.ClusterId, linkName).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
-func (c *KafkaRestClient) ListKafkaLinks() (kafkarestv3.ListLinksResponseDataList, error) {
+func (c *KafkaRestClient) ListKafkaLinks() ([]kafkarestv3.ListLinksResponseData, error) {
 	res, httpResp, err := c.ClusterLinkingV3Api.ListKafkaLinks(c.context(), c.ClusterId).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
 func (c *KafkaRestClient) UpdateKafkaLinkConfigBatch(linkName string, data kafkarestv3.AlterConfigBatchRequestData) error {
@@ -198,16 +227,17 @@ func (c *KafkaRestClient) UpdateKafkaLinkConfigBatch(linkName string, data kafka
 	return kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaTopicConfigs(topicName string) (kafkarestv3.TopicConfigDataList, error) {
+func (c *KafkaRestClient) ListKafkaTopicConfigs(topicName string) ([]kafkarestv3.TopicConfigData, error) {
 	res, httpResp, err := c.ConfigsV3Api.ListKafkaTopicConfigs(c.context(), c.ClusterId, topicName).Execute()
 	if err != nil {
 		if restErr, err := kafkarest.ParseOpenAPIErrorCloud(err); err == nil {
 			if restErr.Code == UnknownTopicOrPartitionErrorCode {
-				return kafkarestv3.TopicConfigDataList{}, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+				return []kafkarestv3.TopicConfigData{}, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 			}
 		}
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
 	}
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	return res.GetData(), nil
 }
 
 func (c *KafkaRestClient) UpdateKafkaTopicConfigBatch(topicName string, data kafkarestv3.AlterConfigBatchRequestData) (*http.Response, error) {
@@ -224,19 +254,28 @@ func (c *KafkaRestClient) GetKafkaConsumerGroupLagSummary(consumerGroupId string
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaConsumerGroups() (kafkarestv3.ConsumerGroupDataList, error) {
+func (c *KafkaRestClient) ListKafkaConsumerGroups() ([]kafkarestv3.ConsumerGroupData, error) {
 	res, httpResp, err := c.ConsumerGroupV3Api.ListKafkaConsumerGroups(c.context(), c.ClusterId).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
-func (c *KafkaRestClient) ListKafkaConsumerLags(consumerGroupId string) (kafkarestv3.ConsumerLagDataList, error) {
+func (c *KafkaRestClient) ListKafkaConsumerLags(consumerGroupId string) ([]kafkarestv3.ConsumerLagData, error) {
 	res, httpResp, err := c.ConsumerGroupV3Api.ListKafkaConsumerLags(c.context(), c.ClusterId, consumerGroupId).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
-func (c *KafkaRestClient) ListKafkaConsumers(consumerGroupId string) (kafkarestv3.ConsumerDataList, error) {
+func (c *KafkaRestClient) ListKafkaConsumers(consumerGroupId string) ([]kafkarestv3.ConsumerData, error) {
 	res, httpResp, err := c.ConsumerGroupV3Api.ListKafkaConsumers(c.context(), c.ClusterId, consumerGroupId).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
 func (c *KafkaRestClient) GetKafkaConsumerLag(consumerGroupId, topicName string, partitionId int32) (kafkarestv3.ConsumerLagData, error) {
@@ -249,9 +288,12 @@ func (c *KafkaRestClient) GetKafkaPartition(topicName string, partitionId int32)
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaPartitions(topicName string) (kafkarestv3.PartitionDataList, error) {
+func (c *KafkaRestClient) ListKafkaPartitions(topicName string) ([]kafkarestv3.PartitionData, error) {
 	res, httpResp, err := c.PartitionV3Api.ListKafkaPartitions(c.context(), c.ClusterId, topicName).Execute()
-	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
 func (c *KafkaRestClient) CreateKafkaTopic(data kafkarestv3.CreateTopicRequestData) (kafkarestv3.TopicData, *http.Response, error) {

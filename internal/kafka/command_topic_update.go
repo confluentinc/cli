@@ -83,8 +83,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
-	data := toAlterConfigBatchRequestData(configMap)
-	data.ValidateOnly = &dryRun
+	data := kafkarestv3.AlterConfigBatchRequestData{
+		Data:         toAlterConfigBatchRequestData(configMap),
+		ValidateOnly: kafkarestv3.PtrBool(dryRun),
+	}
 
 	httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(topicName, data)
 	if err != nil {
@@ -116,27 +118,24 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
 		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
-		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
+		kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
 	}
 
 	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
 	if err != nil {
 		return err
 	}
-	if configsResp.Data == nil {
-		return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
-	}
 
-	for _, conf := range configsResp.Data {
-		if conf.IsReadOnly {
-			readOnlyConfigs.Add(conf.Name)
+	for _, config := range configsResp {
+		if config.IsReadOnly {
+			readOnlyConfigs.Add(config.Name)
 		}
-		configsValues[conf.Name] = conf.GetValue()
+		configsValues[config.Name] = config.GetValue()
 	}
 
 	var readOnlyConfigNotUpdatedString string
 	list := output.NewList(cmd)
-	for _, config := range kafkaRestConfigs.Data {
+	for _, config := range kafkaRestConfigs {
 		list.Add(&topicConfigurationOut{
 			Name:     config.Name,
 			Value:    configsValues[config.Name],

@@ -68,10 +68,10 @@ func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(arg0, arg1, ar
 }
 
 // GetExceptions mocks base method.
-func (m *MockGatewayClientInterface) GetExceptions(arg0, arg1, arg2 string) (v1beta1.SqlV1beta1StatementExceptionList, error) {
+func (m *MockGatewayClientInterface) GetExceptions(arg0, arg1, arg2 string) ([]v1beta1.SqlV1beta1StatementException, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetExceptions", arg0, arg1, arg2)
-	ret0, _ := ret[0].(v1beta1.SqlV1beta1StatementExceptionList)
+	ret0, _ := ret[0].([]v1beta1.SqlV1beta1StatementException)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
