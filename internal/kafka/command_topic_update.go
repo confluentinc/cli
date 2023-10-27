@@ -125,15 +125,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if configsResp == nil {
-		return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
-	}
 
-	for _, conf := range configsResp {
-		if conf.IsReadOnly {
-			readOnlyConfigs.Add(conf.Name)
+	for _, config := range configsResp {
+		if config.IsReadOnly {
+			readOnlyConfigs.Add(config.Name)
 		}
-		configsValues[conf.Name] = conf.GetValue()
+		configsValues[config.Name] = config.GetValue()
 	}
 
 	var readOnlyConfigNotUpdatedString string
