@@ -7,17 +7,18 @@ import (
 )
 
 const (
-	AvroSchemaName     string = "avro"
-	IntegerSchemaName  string = "integer"
-	JsonSchemaName     string = "jsonschema"
-	ProtobufSchemaName string = "protobuf"
-	StringSchemaName   string = "string"
+	AvroSchemaName     = "avro"
+	DoubleSchemaName   = "double"
+	IntegerSchemaName  = "integer"
+	JsonSchemaName     = "jsonschema"
+	ProtobufSchemaName = "protobuf"
+	StringSchemaName   = "string"
 )
 
 const (
-	AvroSchemaBackendName     string = "AVRO"
-	JsonSchemaBackendName     string = "JSON"
-	ProtobufSchemaBackendName string = "PROTOBUF"
+	AvroSchemaBackendName     = "AVRO"
+	JsonSchemaBackendName     = "JSON"
+	ProtobufSchemaBackendName = "PROTOBUF"
 )
 
 var SchemaBasedFormats = []string{"avro", "jsonschema", "protobuf"}
@@ -52,6 +53,8 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 	switch valueFormat {
 	case AvroSchemaName:
 		return new(AvroSerializationProvider), nil
+	case DoubleSchemaName:
+		return new(DoubleSerializationProvider), nil
 	case IntegerSchemaName:
 		return new(IntegerSerializationProvider), nil
 	case JsonSchemaName:
@@ -69,6 +72,8 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 	switch valueFormat {
 	case AvroSchemaName:
 		return new(AvroDeserializationProvider), nil
+	case DoubleSchemaName:
+		return new(DoubleDeserializationProvider), nil
 	case IntegerSchemaName:
 		return new(IntegerDeserializationProvider), nil
 	case JsonSchemaName:
