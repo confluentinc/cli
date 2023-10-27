@@ -32,7 +32,7 @@ func (a *AvroSerializationProvider) LoadSchema(schemaPath string, referencePathM
 }
 
 func (a *AvroSerializationProvider) GetSchemaName() string {
-	return AvroSchemaBackendName
+	return avroSchemaBackendName
 }
 
 func (a *AvroSerializationProvider) Serialize(str string) ([]byte, error) {
