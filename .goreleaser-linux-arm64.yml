@@ -18,7 +18,7 @@ builds:
       - linux
     goarch:
       - arm64
-  - id: confluent-linux-arm64-homebrew
+  - id: confluent-linux-arm64-disableupdates
     binary: confluent
     main: cmd/confluent/main.go
     flags:
@@ -33,6 +33,25 @@ builds:
       - linux
     goarch:
       - arm64
+
+nfpms:
+  - package_name: confluent
+    builds:
+      - confluent-linux-arm64-disableupdates
+    vendor: Confluent Inc.
+    homepage: https://docs.confluent.io/confluent-cli/current/overview.html
+    maintainer: Confluent Inc.
+    description: CLI for Confluent Cloud and Confluent Platform
+    license: Confluent Community License Agreement
+    formats:
+      - deb
+      - rpm
+    # deb:
+    #   signature: # TODO
+    #     key_file: "{{ .Env.GPG_KEY_PATH }}"
+    # rpm:
+    #   signature: # TODO
+    #     key_file: "{{ .Env.GPG_KEY_PATH }}"
 
 release:
   disable: true

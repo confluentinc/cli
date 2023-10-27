@@ -151,7 +151,7 @@ builds:
     goamd64:
       - v1
     prebuilt:
-      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-homebrew_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
+      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-disableupdates_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
   - id: confluent-windows-amd64
     binary: confluent
     main: cmd/confluent/main.go
@@ -230,25 +230,6 @@ archives:
       - confluent-alpine-amd64
       - confluent-alpine-arm64
     name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
-
-nfpms:
-  - package_name: confluent
-    builds:
-      - confluent-linux-disableupdates
-    vendor: Confluent Inc.
-    homepage: https://docs.confluent.io/confluent-cli/current/overview.html
-    maintainer: Confluent Inc.
-    description: CLI for Confluent Cloud and Confluent Platform
-    license: Confluent Community License Agreement
-    formats:
-      - deb
-      - rpm
-    # deb:
-    #   signature: # TODO
-    #     key_file: "{{ .Env.GPG_KEY_PATH }}"
-    # rpm:
-    #   signature: # TODO
-    #     key_file: "{{ .Env.GPG_KEY_PATH }}"
 
 dockers:
   - ids:
