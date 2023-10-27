@@ -442,8 +442,8 @@ func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 		return nil
 	}
 
-	suggestions := make([]string, len(links.Data))
-	for i, link := range links.Data {
+	suggestions := make([]string, len(links))
+	for i, link := range links {
 		suggestions[i] = link.GetLinkName()
 	}
 	return suggestions
@@ -460,8 +460,8 @@ func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
 		return nil
 	}
 
-	suggestions := make([]string, len(consumerGroups.GetData()))
-	for i, consumerGroup := range consumerGroups.GetData() {
+	suggestions := make([]string, len(consumerGroups))
+	for i, consumerGroup := range consumerGroups {
 		suggestions[i] = consumerGroup.GetConsumerGroupId()
 	}
 	return suggestions

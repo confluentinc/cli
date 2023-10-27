@@ -122,7 +122,6 @@ const (
 	InternalServerErrorMsg            = "internal server error"
 	UnknownErrorMsg                   = "unknown error"
 	InternalServerErrorSuggestions    = "Please check the status of your Kafka cluster or submit a support ticket."
-	EmptyResponseErrorMsg             = "empty server response"
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
 	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--ca-cert-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."

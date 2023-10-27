@@ -68,7 +68,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	var mirrors kafkarestv3.ListMirrorTopicsResponseDataList
+	var mirrors []kafkarestv3.ListMirrorTopicsResponseData
 	if link == "" {
 		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopics(mirrorTopicStatus)
 		if err != nil {
@@ -82,7 +82,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, mirror := range mirrors.GetData() {
+	for _, mirror := range mirrors {
 		var maxLag int64 = 0
 		for _, mirrorLag := range mirror.GetMirrorLags().Items {
 			if lag := mirrorLag.GetLag(); lag > maxLag {

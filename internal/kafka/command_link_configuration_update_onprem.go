@@ -68,10 +68,8 @@ func (c *linkCommand) configurationUpdateOnPrem(cmd *cobra.Command, args []strin
 		return err
 	}
 
-	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
-		AlterConfigBatchRequestData: optional.NewInterface(broker.ToAlterConfigBatchRequestDataOnPrem(configMap)),
-	}
-
+	data := kafkarestv3.AlterConfigBatchRequestData{Data: broker.ToAlterConfigBatchRequestDataOnPrem(configMap)}
+	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{AlterConfigBatchRequestData: optional.NewInterface(data)}
 	if httpResp, err := client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(ctx, clusterId, linkName, opts); err != nil {
 		return handleOpenApiError(httpResp, err, client)
 	}

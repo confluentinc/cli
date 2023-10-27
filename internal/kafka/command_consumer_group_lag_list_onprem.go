@@ -43,22 +43,21 @@ func (c *consumerCommand) groupLagListOnPrem(cmd *cobra.Command, args []string) 
 
 	list := output.NewList(cmd)
 	for _, consumerLag := range consumerLags.Data {
-		instanceId := ""
-		if consumerLag.InstanceId != nil {
-			instanceId = *consumerLag.InstanceId
-		}
-		list.Add(&lagOut{
+		out := &lagOut{
 			ClusterId:       consumerLag.ClusterId,
 			ConsumerGroupId: consumerLag.ConsumerGroupId,
 			Lag:             consumerLag.Lag,
 			LogEndOffset:    consumerLag.LogEndOffset,
 			CurrentOffset:   consumerLag.CurrentOffset,
 			ConsumerId:      consumerLag.ConsumerId,
-			InstanceId:      instanceId,
 			ClientId:        consumerLag.ClientId,
 			Topic:           consumerLag.TopicName,
 			PartitionId:     consumerLag.PartitionId,
-		})
+		}
+		if consumerLag.InstanceId != nil {
+			out.InstanceId = *consumerLag.InstanceId
+		}
+		list.Add(out)
 	}
 	return list.Print()
 }

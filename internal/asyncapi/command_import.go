@@ -314,7 +314,7 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 	if err != nil {
 		return err
 	}
-	for _, configDetails := range configs.Data {
+	for _, configDetails := range configs {
 		if !configDetails.GetIsReadOnly() {
 			modifiableConfigs = append(modifiableConfigs, configDetails.GetName())
 		}
