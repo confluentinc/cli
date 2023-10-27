@@ -23,7 +23,7 @@ func (c *command) newRegionUseCommand() *cobra.Command {
 		RunE:  c.regionUse,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Select the N. Virginia (us-east-1) region for use in subsequent Flink commands.",
+				Text: `Select region "N. Virginia (us-east-1)" for use in subsequent Flink commands.`,
 				Code: "confluent flink region use --cloud aws --region us-east-1",
 			},
 		),
