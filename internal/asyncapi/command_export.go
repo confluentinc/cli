@@ -60,8 +60,8 @@ type flags struct {
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
-const messageOffset int = 5
-const protobufErrorMessage string = "protobuf is not supported"
+const messageOffset = 5
+const protobufErrorMessage = "protobuf is not supported"
 
 func (c *command) newExportCommand() *cobra.Command {
 	cmd := &cobra.Command{
