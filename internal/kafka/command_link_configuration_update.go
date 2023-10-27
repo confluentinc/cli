@@ -69,7 +69,6 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 	}
 
 	data := kafkarestv3.AlterConfigBatchRequestData{Data: toAlterConfigBatchRequestData(configMap)}
-
 	if err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(linkName, data); err != nil {
 		return err
 	}
