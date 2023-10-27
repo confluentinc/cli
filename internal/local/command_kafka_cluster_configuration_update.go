@@ -53,7 +53,7 @@ func (c *command) configurationUpdate(cmd *cobra.Command, _ []string) error {
 	}
 	configs := broker.ToAlterConfigBatchRequestDataOnPrem(configMap)
 
-	opts := &kafkarestv3.UpdateKafkaClusterConfigsOpts{AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs})}
+	opts := &kafkarestv3.UpdateKafkaClusterConfigsOpts{AlterConfigBatchRequestData: optional.NewInterface(configs)}
 	if resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(context.Background(), clusterId, opts); err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
@@ -63,7 +63,7 @@ func (c *command) configurationUpdate(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, config := range configs {
+	for _, config := range configs.Data {
 		list.Add(&broker.ConfigOut{
 			Name:  config.Name,
 			Value: *config.Value,

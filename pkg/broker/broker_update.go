@@ -50,7 +50,7 @@ func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient
 	}
 
 	list := output.NewList(cmd)
-	for _, config := range configs {
+	for _, config := range configs.Data {
 		list.Add(&ConfigOut{
 			Name:  config.Name,
 			Value: *config.Value,

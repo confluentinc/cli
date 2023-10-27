@@ -118,7 +118,7 @@ func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext c
 	}
 }
 
-func ToAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) []kafkarestv3.AlterConfigBatchRequestDataData {
+func ToAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) kafkarestv3.AlterConfigBatchRequestData {
 	configs := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
 	for key, val := range configsMap {
@@ -129,5 +129,5 @@ func ToAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) []kafkare
 		}
 		i++
 	}
-	return configs
+	return kafkarestv3.AlterConfigBatchRequestData{Data: configs}
 }
