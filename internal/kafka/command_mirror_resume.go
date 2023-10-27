@@ -65,9 +65,9 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 	return printAlterMirrorResult(cmd, results)
 }
 
-func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
+func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirrorStatusResponseData) error {
 	list := output.NewList(cmd)
-	for _, result := range results.GetData() {
+	for _, result := range results {
 		errorMessage := result.GetErrorMessage()
 
 		var errorCode string

@@ -134,6 +134,6 @@ func (c *FakeFlinkGatewayClient) getFakeResultsRunningCounter() ([]any, string) 
 	return results, fmt.Sprintf("https://devel.cpdev.cloud/some/results?page_token=%s", "not-empty")
 }
 
-func (c *FakeFlinkGatewayClient) GetExceptions(_, _, _ string) (flinkgatewayv1beta1.SqlV1beta1StatementExceptionList, error) {
-	return flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{}, nil
+func (c *FakeFlinkGatewayClient) GetExceptions(_, _, _ string) ([]flinkgatewayv1beta1.SqlV1beta1StatementException, error) {
+	return []flinkgatewayv1beta1.SqlV1beta1StatementException{}, nil
 }

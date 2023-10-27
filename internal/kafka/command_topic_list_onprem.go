@@ -49,13 +49,13 @@ func (c *command) listOnPrem(cmd *cobra.Command, _ []string) error {
 }
 
 func ListTopics(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
-	topicList, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
+	topics, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, topic := range topicList.Data {
+	for _, topic := range topics.Data {
 		list.Add(&topicOut{Name: topic.TopicName})
 	}
 	return list.Print()

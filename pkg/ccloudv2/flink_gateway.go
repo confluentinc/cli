@@ -17,7 +17,7 @@ type GatewayClientInterface interface {
 	ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1beta1.SqlV1beta1StatementList, error)
 	CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, principal, environmentId, orgId string) (flinkgatewayv1beta1.SqlV1beta1Statement, error)
 	GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error)
-	GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1beta1.SqlV1beta1StatementExceptionList, error)
+	GetExceptions(environmentId, statementId, orgId string) ([]flinkgatewayv1beta1.SqlV1beta1StatementException, error)
 	DeleteStatement(environmentId, statementName, orgId string) error
 	UpdateStatement(environmentId, statementName, orgId string, statement flinkgatewayv1beta1.SqlV1beta1Statement) error
 }
@@ -127,7 +127,10 @@ func (c *FlinkGatewayClient) GetStatementResults(environmentId, statementName, o
 	return resp, flinkerror.CatchError(err, httpResp)
 }
 
-func (c *FlinkGatewayClient) GetExceptions(environmentId, statementName, orgId string) (flinkgatewayv1beta1.SqlV1beta1StatementExceptionList, error) {
+func (c *FlinkGatewayClient) GetExceptions(environmentId, statementName, orgId string) ([]flinkgatewayv1beta1.SqlV1beta1StatementException, error) {
 	resp, httpResp, err := c.StatementExceptionsSqlV1beta1Api.GetSqlv1beta1StatementExceptions(c.flinkGatewayApiContext(), orgId, environmentId, statementName).Execute()
-	return resp, flinkerror.CatchError(err, httpResp)
+	if err != nil {
+		return nil, flinkerror.CatchError(err, httpResp)
+	}
+	return resp.GetData(), nil
 }
