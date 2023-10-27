@@ -1,14 +1,14 @@
 [
   {
-    "id": "aws.eu-west-1",
+    "is_current": true,
     "name": "Europe (eu-west-1)",
     "cloud": "AWS",
-    "region_name": "eu-west-1"
+    "region": "eu-west-1"
   },
   {
-    "id": "gcp.europe-west3-a",
+    "is_current": false,
     "name": "Frankfurt (europe-west3-a)",
     "cloud": "GCP",
-    "region_name": "europe-west3-a"
+    "region": "europe-west3-a"
   }
 ]
