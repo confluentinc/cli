@@ -93,7 +93,7 @@ func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
 	if err != nil {
 		return iamv2.IamV2User{}, errors.CatchCCloudV2Error(err, httpResp)
 	}
-	for _, user := range resp.Data {
+	for _, user := range resp.GetData() {
 		if email == user.GetEmail() {
 			return user, nil
 		}

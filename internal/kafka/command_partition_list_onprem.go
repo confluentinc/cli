@@ -44,13 +44,13 @@ func (c *partitionCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	partitionListResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topic)
+	partitions, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topic)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, partition := range partitionListResp.Data {
+	for _, partition := range partitions.Data {
 		list.Add(&partitionOut{
 			ClusterId:   partition.ClusterId,
 			TopicName:   partition.TopicName,

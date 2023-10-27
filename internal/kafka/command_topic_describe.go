@@ -62,7 +62,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, config := range configsResp.Data {
+	for _, config := range configsResp {
 		list.Add(&topicConfigurationOut{
 			Name:     config.GetName(),
 			Value:    config.GetValue(),

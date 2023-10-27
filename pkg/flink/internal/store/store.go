@@ -288,12 +288,10 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1State
 	}
 
 	// if the status detail field is empty, we check if there's an exception instead
-	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrganizationId())
+	exceptions, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrganizationId())
 	if err != nil {
 		return ""
 	}
-
-	exceptions := exceptionsResponse.GetData()
 	if len(exceptions) < 1 {
 		return ""
 	}

@@ -41,18 +41,18 @@ func toCreateTopicConfigsOnPrem(topicConfigsMap map[string]string) []cpkafkarest
 	return topicConfigs
 }
 
-func toAlterConfigBatchRequestData(configsMap map[string]string) cckafkarestv3.AlterConfigBatchRequestData {
-	kafkaRestConfigs := make([]cckafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
+func toAlterConfigBatchRequestData(configsMap map[string]string) []cckafkarestv3.AlterConfigBatchRequestDataData {
+	configs := make([]cckafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
 	for key, val := range configsMap {
-		v := val
-		kafkaRestConfigs[i] = cckafkarestv3.AlterConfigBatchRequestDataData{
+		val := val
+		configs[i] = cckafkarestv3.AlterConfigBatchRequestDataData{
 			Name:  key,
-			Value: *cckafkarestv3.NewNullableString(&v),
+			Value: *cckafkarestv3.NewNullableString(&val),
 		}
 		i++
 	}
-	return cckafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
+	return configs
 }
 
 func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
