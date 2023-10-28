@@ -5,7 +5,7 @@ aws ecr get-login-password --region us-west-1 | docker login --username AWS --pa
 go mod vendor
 
 # Build linux/amd64
-docker build . --file ./docker/Dockerfile_linux_amd64 --tag cli-linux-amd64-builder-image
+docker build . --file ./docker/Dockerfile_linux_amd64 --tag cli-linux-amd64-builder-image --build-arg SECRET_KEY="$SECRET_KEY" --build-arg SECRET_PASSPHRASE="$SECRET_PASSPHRASE" # not finalized
 docker container create --name cli-linux-amd64-builder cli-linux-amd64-builder-image
 docker container cp cli-linux-amd64-builder:/cli/prebuilt/. ./prebuilt/
 docker container rm cli-linux-amd64-builder
@@ -13,9 +13,9 @@ docker container rm cli-linux-amd64-builder
 # Build linux/arm64
 architecture=$(uname -m)
 if [ "$architecture" == 'x86_64' ]; then
-  docker build . --file ./docker/Dockerfile_linux_arm64_from_amd64 --tag cli-linux-arm64-builder-image
+  docker build . --file ./docker/Dockerfile_linux_arm64_from_amd64 --tag cli-linux-arm64-builder-image --build-arg SECRET_KEY="$SECRET_KEY" --build-arg SECRET_PASSPHRASE="$SECRET_PASSPHRASE" # not finalized
 else
-  docker build . --file ./docker/Dockerfile_linux_arm64 --tag cli-linux-arm64-builder-image
+  docker build . --file ./docker/Dockerfile_linux_arm64 --tag cli-linux-arm64-builder-image --build-arg SECRET_KEY="$SECRET_KEY" --build-arg SECRET_PASSPHRASE="$SECRET_PASSPHRASE" # not finalized
 fi
 docker container create --name cli-linux-arm64-builder cli-linux-arm64-builder-image
 docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/

@@ -8,6 +8,20 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
+ARG SECRET_KEY
+
+RUN echo $SECRET_KEY > /secret.key
+
+ENV GPG_KEY_PATH="/secret.key"
+
+ARG SECRET_PASSPHRASE
+
+ENV NFPM_ID_PASSPHRASE=$SECRET_PASSPHRASE
+
 RUN cd /cli && make gorelease-linux-arm64
 
 RUN cd /cli && rename 's/checksums/checksums_linux_arm64/' prebuilt/*.txt
+
+RUN shred --force --remove $GPG_KEY_PATH
+
+ENV NFPM_ID_PASSPHRASE=""
