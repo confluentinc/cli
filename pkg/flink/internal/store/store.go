@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
@@ -78,7 +76,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return result, sErr
 	}
 
-	statementName := s.Properties.GetOrDefault(config.KeyStatementName, uuid.New().String()[:18])
+	statementName := s.Properties.GetOrDefault(config.KeyStatementName, types.GenerateStatementName())
 	defer s.Properties.Delete(config.KeyStatementName)
 
 	// Process remote statements

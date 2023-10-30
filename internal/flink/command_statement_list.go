@@ -73,12 +73,10 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 		log.CliLogger.Warnf(`Invalid status "%s". Valid statuses are %s.`, status, utils.ArrayToCommaDelimitedString(allowedStatuses, "and"))
 	}
 
-	statements, err := client.ListAllStatements(environmentId, c.Context.GetCurrentOrganization(), c.Context.GetCurrentFlinkComputePool())
+	statements, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), c.Context.GetCurrentFlinkComputePool())
 	if err != nil {
 		return err
 	}
-
-	list := output.NewList(cmd)
 
 	if status != "" {
 		statements = lo.Filter(statements, func(statement v1beta1.SqlV1beta1Statement, _ int) bool {
@@ -86,6 +84,7 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 		})
 	}
 
+	list := output.NewList(cmd)
 	for _, statement := range statements {
 		list.Add(&statementOut{
 			CreationDate: statement.Metadata.GetCreatedAt(),

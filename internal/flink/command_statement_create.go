@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
@@ -13,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/retry"
 )
@@ -68,7 +68,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	name := uuid.New().String()
+	name := types.GenerateStatementName()
 	if len(args) == 1 {
 		name = args[0]
 	}
