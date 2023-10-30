@@ -20,7 +20,7 @@ func newOrgClient(url, userAgent string, unsafeTrace bool) *orgv2.APIClient {
 }
 
 func (c *Client) orgApiContext() context.Context {
-	return context.WithValue(context.Background(), orgv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), orgv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateOrgEnvironment(environment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, error) {

@@ -19,7 +19,7 @@ func newStreamDesignerClient(url, userAgent string, unsafeTrace bool) *streamdes
 }
 
 func (c *Client) sdApiContext() context.Context {
-	return context.WithValue(context.Background(), streamdesignerv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), streamdesignerv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ListPipelines(envId, clusterId string) ([]streamdesignerv1.SdV1Pipeline, error) {

@@ -6,7 +6,6 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
@@ -137,7 +136,7 @@ func (c *Context) IsCloud(isTest bool) bool {
 		return true
 	}
 
-	for _, hostname := range ccloudv2.Hostnames {
+	for _, hostname := range []string{"confluent.cloud", "confluentgov-internal.com", "confluentgov.com", "cpdev.cloud"} {
 		if strings.Contains(c.PlatformName, hostname) {
 			return true
 		}

@@ -20,7 +20,7 @@ func newCdxClient(url, userAgent string, unsafeTrace bool) *cdxv1.APIClient {
 }
 
 func (c *Client) cdxApiContext() context.Context {
-	return context.WithValue(context.Background(), cdxv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), cdxv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ResendInvite(shareId string) error {

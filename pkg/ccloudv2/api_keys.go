@@ -21,7 +21,7 @@ func newApiKeysClient(url, userAgent string, unsafeTrace bool) *apikeysv2.APICli
 }
 
 func (c *Client) apiKeysApiContext() context.Context {
-	return context.WithValue(context.Background(), apikeysv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), apikeysv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateApiKey(iamV2ApiKey apikeysv2.IamV2ApiKey) (apikeysv2.IamV2ApiKey, *http.Response, error) {

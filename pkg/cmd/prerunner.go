@@ -221,7 +221,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
-		command.V2Client = command.Config.GetCloudClientV2(unsafeTrace)
+		command.V2Client = ccloudv2.NewClient(command.Config.Config, unsafeTrace)
 
 		return nil
 	}

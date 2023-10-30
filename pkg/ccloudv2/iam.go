@@ -21,7 +21,7 @@ func newIamClient(url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
 }
 
 func (c *Client) iamApiContext() context.Context {
-	return context.WithValue(context.Background(), iamv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), iamv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 // iam service-account api calls

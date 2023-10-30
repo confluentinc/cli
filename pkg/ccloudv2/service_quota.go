@@ -20,7 +20,7 @@ func newServiceQuotaClient(url, userAgent string, unsafeTrace bool) *servicequot
 }
 
 func (c *Client) serviceQuotasApiContext() context.Context {
-	return context.WithValue(context.Background(), servicequotav1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), servicequotav1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ListServiceQuotas(quotaScope, kafkaCluster, environment, network, quotaCode string) ([]servicequotav1.ServiceQuotaV1AppliedQuota, error) {

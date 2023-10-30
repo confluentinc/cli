@@ -22,7 +22,7 @@ func newCmkClient(url, userAgent string, unsafeTrace bool) *cmkv2.APIClient {
 }
 
 func (c *Client) cmkApiContext() context.Context {
-	return context.WithValue(context.Background(), cmkv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), cmkv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateKafkaCluster(cluster cmkv2.CmkV2Cluster) (cmkv2.CmkV2Cluster, *http.Response, error) {

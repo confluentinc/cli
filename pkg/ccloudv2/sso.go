@@ -20,7 +20,7 @@ func newSsoClient(url, userAgent string, unsafeTrace bool) *ssov2.APIClient {
 }
 
 func (c *Client) groupMappingApiContext() context.Context {
-	return context.WithValue(context.Background(), ssov2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), ssov2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateGroupMapping(groupMapping ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {

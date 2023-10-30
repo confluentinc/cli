@@ -20,7 +20,7 @@ func newConnectCustomPluginClient(url, userAgent string, unsafeTrace bool) *conn
 }
 
 func (c *Client) connectCustomPluginApiContext() context.Context {
-	return context.WithValue(context.Background(), connectcustompluginv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), connectcustompluginv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) GetPresignedUrl(request connectcustompluginv1.ConnectV1PresignedUrlRequest) (connectcustompluginv1.ConnectV1PresignedUrl, error) {

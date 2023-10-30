@@ -20,7 +20,7 @@ func newSrcmClient(url, userAgent string, unsafeTrace bool) *srcmv2.APIClient {
 }
 
 func (c *Client) SrcmApiContext() context.Context {
-	return context.WithValue(context.Background(), srcmv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), srcmv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) GetStreamGovernanceRegionById(regionId string) (srcmv2.SrcmV2Region, error) {

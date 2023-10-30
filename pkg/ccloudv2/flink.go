@@ -20,7 +20,7 @@ func newFlinkClient(url, userAgent string, unsafeTrace bool) *flinkv2.APIClient 
 }
 
 func (c *Client) flinkApiContext() context.Context {
-	return context.WithValue(context.Background(), flinkv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), flinkv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (flinkv2.FcpmV2ComputePool, error) {

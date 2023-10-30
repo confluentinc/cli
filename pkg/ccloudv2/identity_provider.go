@@ -20,11 +20,11 @@ func newIdentityProviderClient(url, userAgent string, unsafeTrace bool) *identit
 }
 
 func (c *Client) identityProviderApiContext() context.Context {
-	return context.WithValue(context.Background(), identityproviderv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), identityproviderv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) identityPoolApiContext() context.Context {
-	return context.WithValue(context.Background(), identityproviderv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), identityproviderv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateIdentityProvider(identityProvider identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, error) {

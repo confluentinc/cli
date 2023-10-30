@@ -20,7 +20,7 @@ func newKafkaQuotasClient(url, userAgent string, unsafeTrace bool) *kafkaquotasv
 }
 
 func (c *Client) quotaContext() context.Context {
-	return context.WithValue(context.Background(), kafkaquotasv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), kafkaquotasv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {

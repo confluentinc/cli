@@ -20,7 +20,7 @@ func newKsqlClient(url, userAgent string, unsafeTrace bool) *ksqlv2.APIClient {
 }
 
 func (c *Client) ksqlApiContext() context.Context {
-	return context.WithValue(context.Background(), ksqlv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), ksqlv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ListKsqlClusters(environmentId string) ([]ksqlv2.KsqldbcmV2Cluster, error) {
