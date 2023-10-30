@@ -46,9 +46,6 @@ nfpms:
     formats:
       - deb
       - rpm
-    # deb:
-    #   signature: # TODO
-    #     key_file: "{{ .Env.GPG_KEY_PATH }}"
     # rpm:
     #   signature: # TODO
     #     key_file: "{{ .Env.GPG_KEY_PATH }}"
