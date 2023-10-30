@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newSrcmClient(url, userAgent string, unsafeTrace bool) *srcmv2.APIClient {
+func newSrcmClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *srcmv2.APIClient {
 	cfg := srcmv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = srcmv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -20,7 +20,7 @@ func newSrcmClient(url, userAgent string, unsafeTrace bool) *srcmv2.APIClient {
 }
 
 func (c *Client) SrcmApiContext() context.Context {
-	return context.WithValue(context.Background(), srcmv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), srcmv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) GetStreamGovernanceRegionById(regionId string) (srcmv2.SrcmV2Region, error) {
