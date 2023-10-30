@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newMdsClient(url, userAgent string, unsafeTrace bool) *mdsv2.APIClient {
+func newMdsClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *mdsv2.APIClient {
 	cfg := mdsv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = mdsv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

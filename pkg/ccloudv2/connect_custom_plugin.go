@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newConnectCustomPluginClient(url, userAgent string, unsafeTrace bool) *connectcustompluginv1.APIClient {
+func newConnectCustomPluginClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *connectcustompluginv1.APIClient {
 	cfg := connectcustompluginv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = connectcustompluginv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

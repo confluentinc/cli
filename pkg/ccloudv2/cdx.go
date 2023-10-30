@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newCdxClient(url, userAgent string, unsafeTrace bool) *cdxv1.APIClient {
+func newCdxClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *cdxv1.APIClient {
 	cfg := cdxv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = cdxv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

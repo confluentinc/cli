@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
+	"github.com/confluentinc/cli/v3/pkg/config"
 	plog "github.com/confluentinc/cli/v3/pkg/log"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
@@ -43,13 +44,18 @@ func IsCCloudURL(url string, isTest bool) bool {
 	return false
 }
 
-func NewRetryableHttpClient(unsafeTrace bool) *http.Client {
+func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err
 		}
+
+		if cfg != nil && resp.StatusCode == http.StatusUnauthorized {
+			// TODO: Refresh
+		}
+
 		return resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500, err
 	}
 	return client.StandardClient()

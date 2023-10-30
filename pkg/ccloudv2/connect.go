@@ -3,16 +3,17 @@ package ccloudv2
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newConnectClient(url, userAgent string, unsafeTrace bool) *connectv1.APIClient {
+func newConnectClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *connectv1.APIClient {
 	cfg := connectv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = connectv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

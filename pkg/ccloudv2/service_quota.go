@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newServiceQuotaClient(url, userAgent string, unsafeTrace bool) *servicequotav1.APIClient {
+func newServiceQuotaClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *servicequotav1.APIClient {
 	cfg := servicequotav1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = servicequotav1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

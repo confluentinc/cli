@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newKafkaQuotasClient(url, userAgent string, unsafeTrace bool) *kafkaquotasv1.APIClient {
+func newKafkaQuotasClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *kafkaquotasv1.APIClient {
 	cfg := kafkaquotasv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = kafkaquotasv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

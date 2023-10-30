@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"net/http"
 
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 
@@ -9,10 +10,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func newFlinkClient(url, userAgent string, unsafeTrace bool) *flinkv2.APIClient {
+func newFlinkClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *flinkv2.APIClient {
 	cfg := flinkv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = flinkv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

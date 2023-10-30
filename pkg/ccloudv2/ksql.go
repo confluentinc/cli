@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newKsqlClient(url, userAgent string, unsafeTrace bool) *ksqlv2.APIClient {
+func newKsqlClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *ksqlv2.APIClient {
 	cfg := ksqlv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = ksqlv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

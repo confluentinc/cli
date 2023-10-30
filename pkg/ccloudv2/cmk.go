@@ -11,10 +11,10 @@ import (
 
 const StatusProvisioning = "PROVISIONING"
 
-func newCmkClient(url, userAgent string, unsafeTrace bool) *cmkv2.APIClient {
+func newCmkClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *cmkv2.APIClient {
 	cfg := cmkv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = cmkv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

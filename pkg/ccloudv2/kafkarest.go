@@ -26,7 +26,7 @@ type KafkaRestClient struct {
 func NewKafkaRestClient(url, clusterId, userAgent, authToken string, unsafeTrace bool) *KafkaRestClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(nil, unsafeTrace)
 	cfg.Servers = kafkarestv3.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

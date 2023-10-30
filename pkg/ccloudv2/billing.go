@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newBillingClient(url, userAgent string, unsafeTrace bool) *billingv1.APIClient {
+func newBillingClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *billingv1.APIClient {
 	cfg := billingv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = billingv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
