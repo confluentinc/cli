@@ -4,7 +4,15 @@ Usage:
   confluent api-key create [flags]
 
 Examples:
-Create an API key with full access to cluster "lkc-123456":
+Create a Cloud API key:
+
+  $ confluent api-key create --resource cloud
+
+Create a Flink API key for region "N. Virginia (us-east-1)":
+
+  $ confluent api-key create --resource flink --cloud aws --region us-east-1
+
+Create an API key with full access to Kafka cluster "lkc-123456":
 
   $ confluent api-key create --resource lkc-123456
 
@@ -20,13 +28,11 @@ Create an API key for KSQL cluster "lksqlc-123456":
 
   $ confluent api-key create --resource lksqlc-123456
 
-Create a Cloud API key:
-
-  $ confluent api-key create --resource cloud
-
 Flags:
       --resource string          REQUIRED: The ID of the resource the API key is for. Use "cloud" for a Cloud API key.
       --description string       Description of API key.
+      --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string            Cloud region for Flink (use "confluent flink region list" to see all).
       --use                      Use the created API key for the provided resource.
       --context string           CLI context name.
       --environment string       Environment ID.
