@@ -166,9 +166,6 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.countAsyncApiUsage(accountDetails); err != nil {
-		log.CliLogger.Debug(err)
-	}
 	output.Printf(c.Config.EnableColor, "AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
 }

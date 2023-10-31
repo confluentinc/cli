@@ -206,8 +206,3 @@ func (c *Client) GetByUniqueAttributes(typeName, qualifiedName string) (srsdk.At
 	res, _, err := c.DefaultApi.GetByUniqueAttributes(c.context, typeName, qualifiedName, nil)
 	return res, err
 }
-
-func (c *Client) AsyncapiPut() error {
-	_, err := c.DefaultApi.AsyncapiPut(c.context)
-	return err
-}
