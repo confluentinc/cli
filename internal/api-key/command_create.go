@@ -113,7 +113,10 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
 		Description: apikeysv2.PtrString(description),
 		Owner:       &apikeysv2.ObjectReference{Id: ownerId},
-		Resource:    &apikeysv2.ObjectReference{Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType])},
+		Resource: &apikeysv2.ObjectReference{
+			Id:   clusterId,
+			Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
+		},
 	}}
 
 	switch resourceType {
@@ -140,8 +143,6 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		}
 
 		key.Spec.Resource.Id = fmt.Sprintf("%s.%s.%s", environmentId, cloud, region)
-	default:
-		key.Spec.Resource.Id = clusterId
 	}
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
