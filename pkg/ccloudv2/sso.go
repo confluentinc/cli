@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newSsoClient(url, userAgent string, unsafeTrace bool) *ssov2.APIClient {
+func newSsoClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *ssov2.APIClient {
 	cfg := ssov2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = ssov2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -20,7 +20,7 @@ func newSsoClient(url, userAgent string, unsafeTrace bool) *ssov2.APIClient {
 }
 
 func (c *Client) groupMappingApiContext() context.Context {
-	return context.WithValue(context.Background(), ssov2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), ssov2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateGroupMapping(groupMapping ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {

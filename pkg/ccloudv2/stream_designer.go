@@ -2,16 +2,17 @@ package ccloudv2
 
 import (
 	"context"
+	"net/http"
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newStreamDesignerClient(url, userAgent string, unsafeTrace bool) *streamdesignerv1.APIClient {
+func newStreamDesignerClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *streamdesignerv1.APIClient {
 	cfg := streamdesignerv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = streamdesignerv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -19,7 +20,7 @@ func newStreamDesignerClient(url, userAgent string, unsafeTrace bool) *streamdes
 }
 
 func (c *Client) sdApiContext() context.Context {
-	return context.WithValue(context.Background(), streamdesignerv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), streamdesignerv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ListPipelines(envId, clusterId string) ([]streamdesignerv1.SdV1Pipeline, error) {

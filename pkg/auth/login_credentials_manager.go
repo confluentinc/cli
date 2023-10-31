@@ -202,7 +202,7 @@ func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *config.Co
 		}
 
 		credentials := &Credentials{
-			IsSSO:            ctx.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
+			IsSSO:            ctx.IsSso(),
 			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),

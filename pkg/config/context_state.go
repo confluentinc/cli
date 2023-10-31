@@ -3,6 +3,9 @@ package config
 import (
 	"regexp"
 	"runtime"
+	"time"
+
+	"github.com/go-jose/go-jose/v3/jwt"
 
 	"github.com/confluentinc/cli/v3/pkg/secret"
 )
@@ -46,4 +49,23 @@ func (c *ContextState) DecryptContextStateAuthRefreshToken(ctxName string) error
 	}
 
 	return nil
+}
+
+func (c *ContextState) IsExpired() bool {
+	token, err := jwt.ParseSigned(c.AuthToken)
+	if err != nil {
+		return false
+	}
+
+	var claims map[string]any
+	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		return false
+	}
+
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		return false
+	}
+
+	return float64(time.Now().Unix()) > exp
 }
