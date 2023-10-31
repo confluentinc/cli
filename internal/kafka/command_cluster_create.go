@@ -62,7 +62,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	pcmd.AddRegionFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddRegionFlagKafka(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
