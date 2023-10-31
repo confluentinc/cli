@@ -46,9 +46,9 @@ nfpms:
     formats:
       - deb
       - rpm
-    # rpm:
-    #   signature: # TODO
-    #     key_file: "{{ .Env.GPG_KEY_PATH }}"
+    rpm:
+      signature:
+        key_file: secret.gpg
 
 release:
   disable: true
