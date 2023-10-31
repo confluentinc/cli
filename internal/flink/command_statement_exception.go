@@ -21,7 +21,7 @@ func (c *command) newStatementExceptionCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	c.addRegionFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.AddCommand(c.newStatementExceptionListCommand())
 
 	return cmd

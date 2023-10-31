@@ -25,6 +25,7 @@ const (
 	ConsumerShare               = "consumer share"
 	Context                     = "context"
 	Environment                 = "environment"
+	Flink                       = "flink"
 	FlinkComputePool            = "Flink compute pool"
 	FlinkRegion                 = "Flink region"
 	FlinkStatement              = "Flink SQL statement"
@@ -83,8 +84,8 @@ var resourceToPrefix = map[string]string{
 }
 
 func LookupType(id string) string {
-	if id == Cloud {
-		return Cloud
+	if id == Cloud || id == Flink {
+		return id
 	}
 
 	if x := strings.SplitN(id, "-", 2); len(x) == 2 {
