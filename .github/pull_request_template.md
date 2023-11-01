@@ -16,9 +16,7 @@ Bug Fixes
 
 Checklist
 ---------
-1. [CRUCIAL] Is the change for features that are already live in prod?
-   - [ ] yes: ok
-   - [ ] no: DO NOT MERGE until the required features are live in prod  
+- [ ] Leave this box unchecked if features are not yet available in production
 
 What
 ----
@@ -38,10 +36,4 @@ Test & Review
 <!--
 Has it been tested? How?
 Copy and paste any instructions or steps that can save the reviewer time.
--->
-
-Open Questions / Follow-ups
----------------------------
-<!--
-Optional: Anything open to discussion for the reviewer, out of scope of this PR, or follow-ups.
 -->

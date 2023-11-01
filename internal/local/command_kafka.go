@@ -40,7 +40,7 @@ func checkIsDockerRunning(dockerClient *client.Client) error {
 	if _, err := dockerClient.Info(context.Background()); err != nil {
 		return errors.NewErrorWithSuggestions(
 			err.Error(),
-			"Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running.",
+			"Make sure Docker has been installed following the guide at https://docs.docker.com/engine/install/ and is running.",
 		)
 	}
 

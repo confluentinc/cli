@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -16,6 +17,12 @@ func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a ksqlDB cluster.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Create ksqlDB cluster "my-cluster" associated with user "u-123456".`,
+				Code: "confluent ksql cluster create my-cluster --credential-identity u-123456",
+			},
+		),
 	}
 
 	cmd.Flags().String("credential-identity", "", `User account ID or service account ID to be associated with this cluster. An API key associated with this identity will be created and used to authenticate the ksqlDB cluster with Kafka.`)
