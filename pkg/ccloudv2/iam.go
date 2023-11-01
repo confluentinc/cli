@@ -2,7 +2,6 @@ package ccloudv2
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -86,19 +85,6 @@ func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.I
 func (c *Client) GetIamUserById(id string) (iamv2.IamV2User, error) {
 	resp, httpResp, err := c.IamClient.UsersIamV2Api.GetIamV2User(c.iamApiContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
-	resp, httpResp, err := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).Execute()
-	if err != nil {
-		return iamv2.IamV2User{}, errors.CatchCCloudV2Error(err, httpResp)
-	}
-	for _, user := range resp.GetData() {
-		if email == user.GetEmail() {
-			return user, nil
-		}
-	}
-	return iamv2.IamV2User{}, fmt.Errorf(`user "%s" not found`, email)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {

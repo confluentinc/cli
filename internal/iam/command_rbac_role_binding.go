@@ -476,14 +476,24 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		}
 	}
 
-	if strings.HasPrefix(principal, "User:") {
-		principalValue := strings.TrimPrefix(principal, "User:")
-		if strings.Contains(principalValue, "@") {
-			user, err := c.V2Client.GetIamUserByEmail(principalValue)
-			if err != nil {
-				return nil, err
+	if strings.HasPrefix(principal, "User:") && strings.Contains(principal, "@") {
+		email := strings.TrimPrefix(principal, "User:")
+
+		users, err := c.V2Client.ListIamUsers()
+		if err != nil {
+			return nil, err
+		}
+
+		ok := false
+		for _, user := range users {
+			if user.GetEmail() == email {
+				principal = "User:" + user.GetId()
+				ok = true
+				break
 			}
-			principal = "User:" + user.GetId()
+		}
+		if !ok {
+			return nil, fmt.Errorf(`user with email "%s" not found`, email)
 		}
 	}
 
