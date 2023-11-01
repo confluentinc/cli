@@ -8,6 +8,14 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
+ARG NFPM_PASSPHRASE
+
+ENV NFPM_DEFAULT_PASSPHRASE=$NFPM_PASSPHRASE
+
 RUN cd /cli && make gorelease-linux-arm64
 
 RUN cd /cli && rename 's/checksums/checksums_linux_arm64/' prebuilt/*.txt
+
+RUN shred --force --remove /cli/secret.gpg
+
+ENV NFPM_DEFAULT_PASSPHRASE=""
