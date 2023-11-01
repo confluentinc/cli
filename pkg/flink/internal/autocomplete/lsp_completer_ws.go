@@ -31,6 +31,8 @@ type LSPClientWS struct {
 
 func (c *LSPClientWS) LSPCompleter(in prompt.Document) []prompt.Suggest {
 	textBeforeCursor := in.TextBeforeCursor()
+	startOfPreviousWord := in.FindStartOfPreviousWord()
+
 	if textBeforeCursor == "" {
 		return nil
 	}
@@ -53,8 +55,7 @@ func (c *LSPClientWS) LSPCompleter(in prompt.Document) []prompt.Suggest {
 			return nil
 		}
 
-		return lspCompletionsToSuggests(completionList.Items)
-	})
+	return lspCompletionsToSuggests(completionList.Items, in.GetWordBeforeCursor(), startOfPreviousWord)
 }
 
 func (c *LSPClientWS) initialize() (*lsp.InitializeResult, error) {

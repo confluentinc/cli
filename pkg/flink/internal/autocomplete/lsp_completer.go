@@ -61,7 +61,7 @@ func (c *LSPClient) LSPCompleter(in prompt.Document) []prompt.Suggest {
 		completions = completionList.Items
 	}
 
-	return lspCompletionsToSuggests(completions)
+	return lspCompletionsToSuggestsOld(completions)
 }
 
 func (c *LSPClient) initialize() (*lsp.InitializeResult, error) {
@@ -252,7 +252,7 @@ func waitForConditionWithTimeout(condition func() bool, timeout time.Duration) b
 	}
 }
 
-func lspCompletionsToSuggests(completions []lsp.CompletionItem) []prompt.Suggest {
+func lspCompletionsToSuggestsOld(completions []lsp.CompletionItem) []prompt.Suggest {
 	suggestions := []prompt.Suggest{}
 	for _, completion := range completions {
 		suggestions = append(suggestions, lspCompletionToSuggest(completion))
@@ -260,9 +260,48 @@ func lspCompletionsToSuggests(completions []lsp.CompletionItem) []prompt.Suggest
 	return suggestions
 }
 
+func lspCompletionsToSuggests(completions []lsp.CompletionItem, wordUntilCursor string, startOfPreviousWord int) []prompt.Suggest {
+
+	suggestions := []prompt.Suggest{}
+	for _, completion := range completions {
+		if completion.TextEdit != nil {
+			suggestions = append(suggestions, lspTextEditToSuggestion(completion, wordUntilCursor, startOfPreviousWord))
+		} else {
+			suggestions = append(suggestions, lspCompletionToSuggest(completion))
+		}
+	}
+	return suggestions
+}
+
 func lspCompletionToSuggest(completion lsp.CompletionItem) prompt.Suggest {
 	return prompt.Suggest{
-		Text:        completion.Label,
+		Text:        completion.InsertText,
 		Description: completion.Detail,
 	}
+}
+
+func lspTextEditToSuggestion(completion lsp.CompletionItem, wordUntilCursor string, startOfPreviousWord int) prompt.Suggest {
+	replaceRange := completion.TextEdit.Range
+	if replaceRange.Start.Line != 0 || replaceRange.End.Character != 0 {
+		log.CliLogger.Debug("we only support one statement at the time")
+	}
+
+	// We only have to insert text
+	if replaceRange.Start.Character == replaceRange.End.Character {
+		return prompt.Suggest{
+			Text:        wordUntilCursor + completion.TextEdit.NewText,
+			Description: completion.Detail,
+		}
+	} else {
+		// we have to replace the text relative to the cursor
+		start := replaceRange.Start.Character - startOfPreviousWord
+		end := replaceRange.End.Character - startOfPreviousWord
+
+		text := wordUntilCursor[:start] + completion.TextEdit.NewText + wordUntilCursor[end:]
+		return prompt.Suggest{
+			Text:        text,
+			Description: completion.Detail,
+		}
+	}
+
 }
