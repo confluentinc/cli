@@ -22,7 +22,7 @@ type ContextState struct {
 	Nonce            []byte `json:"nonce,omitempty"`
 }
 
-func (c *ContextState) DecryptContextStateAuthToken(ctxName string) error {
+func (c *ContextState) DecryptAuthToken(ctxName string) error {
 	reg := regexp.MustCompile(authTokenRegex)
 	if !reg.MatchString(c.AuthToken) && c.AuthToken != "" && (c.Salt != nil || runtime.GOOS == "windows") {
 		decryptedAuthToken, err := secret.Decrypt(ctxName, c.AuthToken, c.Salt, c.Nonce)
@@ -35,7 +35,7 @@ func (c *ContextState) DecryptContextStateAuthToken(ctxName string) error {
 	return nil
 }
 
-func (c *ContextState) DecryptContextStateAuthRefreshToken(ctxName string) error {
+func (c *ContextState) DecryptAuthRefreshToken(ctxName string) error {
 	reg := regexp.MustCompile(authRefreshTokenRegex)
 	if !reg.MatchString(c.AuthRefreshToken) && c.AuthRefreshToken != "" && (c.Salt != nil || runtime.GOOS == "windows") {
 		decryptedAuthRefreshToken, err := secret.Decrypt(ctxName, c.AuthRefreshToken, c.Salt, c.Nonce)

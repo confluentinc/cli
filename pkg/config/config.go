@@ -153,10 +153,10 @@ func (c *Config) DecryptContextStates() error {
 	if context := c.Context(); context != nil {
 		state := c.ContextStates[context.Name]
 		if state != nil {
-			if err := state.DecryptContextStateAuthToken(context.Name); err != nil {
+			if err := state.DecryptAuthToken(context.Name); err != nil {
 				return err
 			}
-			if err := state.DecryptContextStateAuthRefreshToken(context.Name); err != nil {
+			if err := state.DecryptAuthRefreshToken(context.Name); err != nil {
 				return err
 			}
 		}
