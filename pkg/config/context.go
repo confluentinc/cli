@@ -79,35 +79,11 @@ func (c *Context) Save() error {
 }
 
 func (c *Context) HasBasicMDSLogin() bool {
-	if c.Credential == nil {
-		return false
-	}
-
-	credType := c.GetCredentialType()
-	switch credType {
-	case Username:
-		return c.GetAuthToken() != ""
-	case APIKey:
-		return false
-	default:
-		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
-	}
+	return c.GetCredentialType() == Username && c.GetAuthToken() != ""
 }
 
 func (c *Context) hasBasicCloudLogin() bool {
-	if c.Credential == nil {
-		return false
-	}
-
-	credType := c.GetCredentialType()
-	switch credType {
-	case Username:
-		return c.GetAuthToken() != "" && c.GetCurrentEnvironment() != ""
-	case APIKey:
-		return false
-	default:
-		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
-	}
+	return c.GetCredentialType() == Username && c.GetAuthToken() != "" && c.GetCurrentEnvironment() != ""
 }
 
 func (c *Context) DeleteUserAuth() error {
