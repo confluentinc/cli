@@ -44,11 +44,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 		}
 
-		if err := ctx.Config.ContextStates[ctx.Name].DecryptContextStateAuthToken(ctx.Name); err != nil {
+		if err := ctx.Config.ContextStates[ctx.Name].DecryptAuthToken(ctx.Name); err != nil {
 			return err
 		}
 
-		if err := ctx.Config.ContextStates[ctx.Name].DecryptContextStateAuthRefreshToken(ctx.Name); err != nil {
+		if err := ctx.Config.ContextStates[ctx.Name].DecryptAuthRefreshToken(ctx.Name); err != nil {
 			return err
 		}
 

@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -46,8 +45,6 @@ const (
 
 // Manager is a global feature flag manager
 var Manager launchDarklyManager
-
-var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId", "cli.command", "cli.flags"}
 
 type launchDarklyManager struct {
 	cliClient             *sling.Sling
@@ -246,15 +243,15 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 	custom := ldvalue.ValueMapBuild()
 
 	if ld.version != nil && ld.version.Version != "" {
-		setCustomAttribute(custom, "cli.version", ldvalue.String(ld.version.Version))
+		custom.Set("cli.version", ldvalue.String(ld.version.Version))
 	}
 
 	if ld.Command != nil {
-		setCustomAttribute(custom, "cli.command", ldvalue.String(ld.Command.CommandPath()))
+		custom.Set("cli.command", ldvalue.String(ld.Command.CommandPath()))
 	}
 
 	if ld.flags != nil {
-		setCustomAttribute(custom, "cli.flags", ldvalue.CopyArbitraryValue(ld.flags))
+		custom.Set("cli.flags", ldvalue.CopyArbitraryValue(ld.flags))
 	}
 
 	if ctx == nil || ctx.Context == nil {
@@ -270,31 +267,24 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 	// Basic user info
 	if id := ctx.GetUser().GetResourceId(); id != "" {
 		userBuilder = lduser.NewUserBuilder(id)
-		setCustomAttribute(custom, "user.resource_id", ldvalue.String(id))
+		custom.Set("user.resource_id", ldvalue.String(id))
 	} else {
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 	}
 	// org info
 	if id := ctx.GetCurrentOrganization(); id != "" {
-		setCustomAttribute(custom, "org.resource_id", ldvalue.String(id))
+		custom.Set("org.resource_id", ldvalue.String(id))
 	}
 	// environment (account) info
 	if id := ctx.GetCurrentEnvironment(); id != "" {
-		setCustomAttribute(custom, "environment.id", ldvalue.String(id))
+		custom.Set("environment.id", ldvalue.String(id))
 	}
 	customValueMap := custom.Build()
 	if customValueMap.Count() > 0 {
 		userBuilder.CustomAll(customValueMap)
 	}
 	return userBuilder.Build()
-}
-
-func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
-	if !slices.Contains(attributes, key) {
-		panic(fmt.Sprintf(`attribute "%s" is not one of the supported FeatureFlags targeting values`, key))
-	}
-	custom.Set(key, value)
 }
 
 func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[string]any, user lduser.User, client config.LaunchDarklyClient) {
