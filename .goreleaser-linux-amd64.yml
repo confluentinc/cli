@@ -36,6 +36,7 @@ builds:
 
 nfpms:
   - package_name: confluent
+    file_name_template: "{{ .ConventionalFileName }}"
     builds:
       - confluent-linux-amd64-disableupdates
     vendor: Confluent Inc.
