@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/sourcegraph/jsonrpc2"
 	websocket2 "github.com/sourcegraph/jsonrpc2/websocket"
-	"net/http"
-	"time"
 
 	"github.com/confluentinc/flink-sql-language-service/pkg/api"
 	prompt "github.com/confluentinc/go-prompt"
@@ -20,42 +19,36 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
-const debounceTimeout = 200 * time.Millisecond
-
 type LSPClientWS struct {
 	conn        types.JSONRpcConn
 	documentURI *lsp.DocumentURI
 	store       types.StoreInterface
-	debouncer   utils.Debouncer[[]prompt.Suggest]
 }
 
 func (c *LSPClientWS) LSPCompleter(in prompt.Document) []prompt.Suggest {
 	textBeforeCursor := in.TextBeforeCursor()
-	startOfPreviousWord := in.FindStartOfPreviousWord()
-
 	if textBeforeCursor == "" {
 		return nil
 	}
 
-	return c.debouncer.Debounce(func() []prompt.Suggest {
-		err := c.didChange(in.Text)
-		if err != nil {
-			log.CliLogger.Debugf("Error sending didChange lsp request: %v\n", err)
-			return nil
-		}
+	err := c.didChange(in.Text)
+	if err != nil {
+		log.CliLogger.Debugf("Error sending didChange lsp request: %v\n", err)
+		return nil
+	}
 
-		position := lsp.Position{
-			Line:      0,
-			Character: len(textBeforeCursor),
-		}
+	position := lsp.Position{
+		Line:      0,
+		Character: len(textBeforeCursor),
+	}
 
-		completionList, err := c.completion(position)
-		if err != nil {
-			log.CliLogger.Debugf("Error sending completion lsp request: %v\n", err)
-			return nil
-		}
+	completionList, err := c.completion(position)
+	if err != nil {
+		log.CliLogger.Debugf("Error sending completion lsp request: %v\n", err)
+		return nil
+	}
 
-	return lspCompletionsToSuggests(completionList.Items, in.GetWordBeforeCursor(), startOfPreviousWord)
+	return lspCompletionsToSuggests(completionList.Items, in.GetWordBeforeCursor(), in.FindStartOfPreviousWord())
 }
 
 func (c *LSPClientWS) initialize() (*lsp.InitializeResult, error) {
@@ -180,8 +173,7 @@ func (c *LSPClientWS) ShutdownAndExit() {
 
 func NewLSPClientWS(store types.StoreInterface) LSPClientInterface {
 	lspClient := &LSPClientWS{
-		store:     store,
-		debouncer: utils.NewDebouncer[[]prompt.Suggest](nil, debounceTimeout),
+		store: store,
 	}
 
 	requestHeaders := http.Header{}
