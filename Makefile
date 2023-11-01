@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-GORELEASER_VERSION := v1.17.2
+GORELEASER_VERSION := v1.21.0
 
 # Compile natively based on the current system
 .PHONY: build 

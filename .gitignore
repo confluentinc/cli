@@ -20,3 +20,5 @@ vendor/*
 
 *.sw*
 **/*.DS_Store
+
+*.gpg
