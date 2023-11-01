@@ -11,11 +11,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/serdes"
 	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
-
-var serializationFormats = []string{"string", "avro", "integer", "jsonschema", "protobuf"}
 
 func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("api-key", "", "API key.")
@@ -410,13 +409,13 @@ func AddTypeFlag(cmd *cobra.Command) {
 }
 
 func AddKeyFormatFlag(cmd *cobra.Command) {
-	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serializationFormats, "or")))
-	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string { return serializationFormats })
+	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serdes.Formats, "or")))
+	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string { return serdes.Formats })
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
-	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serializationFormats, "or")))
-	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serializationFormats })
+	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serdes.Formats, "or")))
+	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serdes.Formats })
 }
 
 func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
@@ -442,8 +441,8 @@ func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 		return nil
 	}
 
-	suggestions := make([]string, len(links.Data))
-	for i, link := range links.Data {
+	suggestions := make([]string, len(links))
+	for i, link := range links {
 		suggestions[i] = link.GetLinkName()
 	}
 	return suggestions
@@ -460,8 +459,8 @@ func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
 		return nil
 	}
 
-	suggestions := make([]string, len(consumerGroups.GetData()))
-	for i, consumerGroup := range consumerGroups.GetData() {
+	suggestions := make([]string, len(consumerGroups))
+	for i, consumerGroup := range consumerGroups {
 		suggestions[i] = consumerGroup.GetConsumerGroupId()
 	}
 	return suggestions

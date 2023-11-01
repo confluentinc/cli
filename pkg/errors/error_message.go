@@ -122,7 +122,6 @@ const (
 	InternalServerErrorMsg            = "internal server error"
 	UnknownErrorMsg                   = "unknown error"
 	InternalServerErrorSuggestions    = "Please check the status of your Kafka cluster or submit a support ticket."
-	EmptyResponseErrorMsg             = "empty server response"
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
 	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--ca-cert-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."
@@ -153,6 +152,7 @@ const (
 	InvalidLoginURLErrorMsg      = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
 	InvalidLoginErrorMsg         = "incorrect email, password, or organization ID"
 	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
+		"To skip auto-login and force a username and password prompt, use the `--prompt` flag.\n" + // TODO: Remove in V4
 		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
 	FailedToReadInputErrorMsg        = "failed to read input"

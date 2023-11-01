@@ -4,8 +4,8 @@ go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.46.1
-	github.com/billgraziano/dpapi v0.4.0
+	github.com/aws/aws-sdk-go v1.46.6
+	github.com/billgraziano/dpapi v0.5.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/charmbracelet/lipgloss v0.9.1
@@ -45,16 +45,16 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.0.24
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.1
-	github.com/docker/docker v24.0.6+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/fatih/color v1.15.0
 	github.com/gdamore/tcell/v2 v2.6.0
-	github.com/go-git/go-git/v5 v5.9.0
+	github.com/go-git/go-git/v5 v5.10.0
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.3
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/go-multierror v1.1.1

@@ -46,23 +46,29 @@ func (c *MetricsClient) MetricsDatasetQuery(dataset string, query metricsv2.Quer
 }
 
 func UnmarshalFlatQueryResponseIfDataSchemaMatchError(err error, metricsResponse *metricsv2.QueryResponse, httpResp *http.Response) error {
-	if IsDataMatchesMoreThanOneSchemaError(err) {
-		body, err := io.ReadAll(httpResp.Body)
-		if err != nil {
-			return err
-		}
-		var resBody flatQueryResponse
-		if err := json.Unmarshal(body, &resBody); err != nil {
-			return err
-		}
+	if !IsDataMatchesMoreThanOneSchemaError(err) {
+		return nil
+	}
 
-		metricsResponse.FlatQueryResponse = metricsv2.NewFlatQueryResponse([]metricsv2.Point{})
+	body, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		return err
+	}
 
-		for _, dataPoint := range resBody.Data {
-			metricsResponse.FlatQueryResponse.Data = append(metricsResponse.FlatQueryResponse.Data,
-				metricsv2.Point{Value: dataPoint.Value, Timestamp: dataPoint.Timestamp})
+	var resBody flatQueryResponse
+	if err := json.Unmarshal(body, &resBody); err != nil {
+		return err
+	}
+
+	points := make([]metricsv2.Point, len(resBody.Data))
+	for i, dataPoint := range resBody.Data {
+		points[i] = metricsv2.Point{
+			Value:     dataPoint.Value,
+			Timestamp: dataPoint.Timestamp,
 		}
 	}
+
+	metricsResponse.FlatQueryResponse = metricsv2.NewFlatQueryResponse(points)
 	return nil
 }
 

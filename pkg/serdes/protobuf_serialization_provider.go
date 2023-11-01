@@ -27,7 +27,7 @@ func (p *ProtobufSerializationProvider) LoadSchema(schemaPath string, referenceP
 }
 
 func (p *ProtobufSerializationProvider) GetSchemaName() string {
-	return ProtobufSchemaBackendName
+	return protobufSchemaBackendName
 }
 
 func (p *ProtobufSerializationProvider) Serialize(str string) ([]byte, error) {
