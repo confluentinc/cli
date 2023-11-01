@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newKafkaQuotasClient(url, userAgent string, unsafeTrace bool) *kafkaquotasv1.APIClient {
+func newKafkaQuotasClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *kafkaquotasv1.APIClient {
 	cfg := kafkaquotasv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = kafkaquotasv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -20,7 +20,7 @@ func newKafkaQuotasClient(url, userAgent string, unsafeTrace bool) *kafkaquotasv
 }
 
 func (c *Client) quotaContext() context.Context {
-	return context.WithValue(context.Background(), kafkaquotasv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), kafkaquotasv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {

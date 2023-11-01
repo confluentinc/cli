@@ -11,7 +11,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/secret"
@@ -766,9 +765,4 @@ func (c *Config) isOrgSuspended() bool {
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
 	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
-}
-
-func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {
-	ctx := c.Context()
-	return ccloudv2.NewClient(ctx.GetPlatformServer(), c.IsTest, ctx.GetAuthToken(), c.Version.UserAgent, unsafeTrace)
 }
