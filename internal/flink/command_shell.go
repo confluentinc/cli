@@ -8,8 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	client "github.com/confluentinc/cli/v3/pkg/flink/app"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
@@ -69,16 +67,6 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
 	lspEnabled, _ := cmd.Flags().GetBool("enable-lsp")
-		client.StartApp(
-			mock.NewFakeFlinkGatewayClient(),
-			func() error { return nil },
-			types.ApplicationOptions{
-				Context:    c.Context,
-				UserAgent:  c.Version.UserAgent,
-				LSPEnabled: lspEnabled,
-			}, func() {})
-		return nil
-	}
 
 	environmentId, err := cmd.Flags().GetString("environment")
 	if err != nil {
@@ -159,8 +147,8 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		ComputePoolId:    computePool,
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
-	}
 		LSPEnabled:       lspEnabled,
+	}
 	return nil
 }
 
