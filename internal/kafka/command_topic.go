@@ -40,7 +40,7 @@ func newTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comman
 
 	c := &command{clientID: cfg.Version.ClientID}
 
-	if cfg.CheckIsCloudLoginOrOnPremLogin() != nil {
+	if cfg.CheckIsCloudLoginOrOnPremLogin() != nil && !cfg.IsTest {
 		c.AuthenticatedCLICommand = &pcmd.AuthenticatedCLICommand{CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 	} else if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
