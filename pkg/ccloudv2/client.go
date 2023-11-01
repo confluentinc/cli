@@ -21,21 +21,22 @@ import (
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
+	"github.com/confluentinc/cli/v3/pkg/config"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2
 type Client struct {
-	AuthToken string
+	cfg *config.Config
 
 	ApiKeysClient             *apikeysv2.APIClient
 	BillingClient             *billingv1.APIClient
 	ByokClient                *byokv1.APIClient
-	ConnectCustomPluginClient *connectcustompluginv1.APIClient
 	CdxClient                 *cdxv1.APIClient
 	CliClient                 *cliv1.APIClient
 	CmkClient                 *cmkv2.APIClient
 	ConnectClient             *connectv1.APIClient
+	ConnectCustomPluginClient *connectcustompluginv1.APIClient
 	FlinkClient               *flinkv2.APIClient
 	IamClient                 *iamv2.APIClient
 	IdentityProviderClient    *identityproviderv2.APIClient
@@ -43,39 +44,43 @@ type Client struct {
 	KsqlClient                *ksqlv2.APIClient
 	MdsClient                 *mdsv2.APIClient
 	OrgClient                 *orgv2.APIClient
-	SrcmClient                *srcmv2.APIClient
 	ServiceQuotaClient        *servicequotav1.APIClient
+	SrcmClient                *srcmv2.APIClient
 	SsoClient                 *ssov2.APIClient
 	StreamDesignerClient      *streamdesignerv1.APIClient
 }
 
-func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
-	url := getServerUrl(baseUrl)
-	if isTest {
+func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
+	httpClient := NewRetryableHttpClient(cfg, unsafeTrace)
+
+	url := getServerUrl(cfg.Context().GetPlatformServer())
+	if cfg.IsTest {
 		url = testserver.TestV2CloudUrl.String()
 	}
 
-	return &Client{
-		AuthToken: authToken,
+	userAgent := cfg.Version.UserAgent
 
-		ApiKeysClient:             newApiKeysClient(url, userAgent, unsafeTrace),
-		BillingClient:             newBillingClient(url, userAgent, unsafeTrace),
-		ByokClient:                newByokV1Client(url, userAgent, unsafeTrace),
-		ConnectCustomPluginClient: newConnectCustomPluginClient(url, userAgent, unsafeTrace),
-		CdxClient:                 newCdxClient(url, userAgent, unsafeTrace),
+	return &Client{
+		cfg: cfg,
+
+		ApiKeysClient:             newApiKeysClient(httpClient, url, userAgent, unsafeTrace),
+		BillingClient:             newBillingClient(httpClient, url, userAgent, unsafeTrace),
+		ByokClient:                newByokV1Client(httpClient, url, userAgent, unsafeTrace),
+		CdxClient:                 newCdxClient(httpClient, url, userAgent, unsafeTrace),
 		CliClient:                 newCliClient(url, userAgent, unsafeTrace),
-		CmkClient:                 newCmkClient(url, userAgent, unsafeTrace),
-		ConnectClient:             newConnectClient(url, userAgent, unsafeTrace),
-		FlinkClient:               newFlinkClient(url, userAgent, unsafeTrace),
-		IamClient:                 newIamClient(url, userAgent, unsafeTrace),
-		IdentityProviderClient:    newIdentityProviderClient(url, userAgent, unsafeTrace),
-		KafkaQuotasClient:         newKafkaQuotasClient(url, userAgent, unsafeTrace),
-		KsqlClient:                newKsqlClient(url, userAgent, unsafeTrace),
-		MdsClient:                 newMdsClient(url, userAgent, unsafeTrace),
-		OrgClient:                 newOrgClient(url, userAgent, unsafeTrace),
-		SrcmClient:                newSrcmClient(url, userAgent, unsafeTrace),
-		ServiceQuotaClient:        newServiceQuotaClient(url, userAgent, unsafeTrace),
-		SsoClient:                 newSsoClient(url, userAgent, unsafeTrace),
-		StreamDesignerClient:      newStreamDesignerClient(url, userAgent, unsafeTrace),
+		CmkClient:                 newCmkClient(httpClient, url, userAgent, unsafeTrace),
+		ConnectClient:             newConnectClient(httpClient, url, userAgent, unsafeTrace),
+		ConnectCustomPluginClient: newConnectCustomPluginClient(httpClient, url, userAgent, unsafeTrace),
+		FlinkClient:               newFlinkClient(httpClient, url, userAgent, unsafeTrace),
+		IamClient:                 newIamClient(httpClient, url, userAgent, unsafeTrace),
+		IdentityProviderClient:    newIdentityProviderClient(httpClient, url, userAgent, unsafeTrace),
+		KafkaQuotasClient:         newKafkaQuotasClient(httpClient, url, userAgent, unsafeTrace),
+		KsqlClient:                newKsqlClient(httpClient, url, userAgent, unsafeTrace),
+		MdsClient:                 newMdsClient(httpClient, url, userAgent, unsafeTrace),
+		OrgClient:                 newOrgClient(httpClient, url, userAgent, unsafeTrace),
+		ServiceQuotaClient:        newServiceQuotaClient(httpClient, url, userAgent, unsafeTrace),
+		SrcmClient:                newSrcmClient(httpClient, url, userAgent, unsafeTrace),
+		SsoClient:                 newSsoClient(httpClient, url, userAgent, unsafeTrace),
+		StreamDesignerClient:      newStreamDesignerClient(httpClient, url, userAgent, unsafeTrace),
 	}
 }

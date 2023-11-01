@@ -10,10 +10,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newApiKeysClient(url, userAgent string, unsafeTrace bool) *apikeysv2.APIClient {
+func newApiKeysClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *apikeysv2.APIClient {
 	cfg := apikeysv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = apikeysv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -21,7 +21,7 @@ func newApiKeysClient(url, userAgent string, unsafeTrace bool) *apikeysv2.APICli
 }
 
 func (c *Client) apiKeysApiContext() context.Context {
-	return context.WithValue(context.Background(), apikeysv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), apikeysv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateApiKey(iamV2ApiKey apikeysv2.IamV2ApiKey) (apikeysv2.IamV2ApiKey, *http.Response, error) {
