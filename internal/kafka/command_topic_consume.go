@@ -246,7 +246,6 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
-	// add print-offset
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err
