@@ -234,12 +234,12 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		Out:         cmd.OutOrStdout(),
 		Subject:     subject,
 		Properties: ConsumerProperties{
+			Delimiter:   delimiter,
+			FullHeader:  fullHeader,
 			PrintKey:    printKey,
 			PrintOffset: printOffset,
-			FullHeader:  fullHeader,
-			Timestamp:   timestamp,
-			Delimiter:   delimiter,
 			SchemaPath:  schemaPath,
+			Timestamp:   timestamp,
 		},
 	}
 	return RunConsumer(consumer, groupHandler)
@@ -248,6 +248,11 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	// add print-offset
 	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	printOffset, err := cmd.Flags().GetBool("print-offset")
 	if err != nil {
 		return err
 	}
@@ -353,11 +358,12 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		ValueFormat: valueFormat,
 		Out:         cmd.OutOrStdout(),
 		Properties: ConsumerProperties{
-			PrintKey:   printKey,
-			FullHeader: fullHeader,
-			Timestamp:  timestamp,
-			Delimiter:  delimiter,
-			SchemaPath: dir,
+			Delimiter:   delimiter,
+			FullHeader:  fullHeader,
+			PrintKey:    printKey,
+			PrintOffset: printOffset,
+			SchemaPath:  dir,
+			Timestamp:   timestamp,
 		},
 	}
 	return RunConsumer(consumer, groupHandler)
