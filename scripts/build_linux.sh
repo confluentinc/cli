@@ -1,5 +1,11 @@
 #!/bin/bash
 
+rm -rf deb/ rpm/
+mkdir -p deb rpm
+
+# aws s3 sync s3://confluent.cloud.internal/deb deb
+aws s3 sync s3://confluent.cloud.internal/rpm rpm
+
 aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
 
 go mod vendor
@@ -19,6 +25,7 @@ else
 fi
 docker container create --name cli-linux-arm64-builder cli-linux-arm64-builder-image
 docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/
+docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
 docker container rm cli-linux-arm64-builder
 
 rm -rf vendor
