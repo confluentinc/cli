@@ -179,7 +179,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClientByFlags(cmd *cobra.Comm
 	configuration := srsdk.NewConfiguration()
 	configuration.UserAgent = c.Config.Version.UserAgent
 	configuration.Debug = unsafeTrace
-	configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
+	configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
 	schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
 	if err != nil {
 		return err

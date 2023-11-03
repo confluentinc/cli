@@ -48,7 +48,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 
 	// cloud-only flags
-	cmd.Flags().String("kafka-bootstrap", "", "Bootstrap URL for Kafka cluster.")
+	cmd.Flags().String("kafka-bootstrap", "", "Bootstrap URL for Confluent Cloud Kafka cluster.")
 	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
@@ -81,7 +81,6 @@ func (c *command) newProduceCommand() *cobra.Command {
 
 func (c *command) produce(cmd *cobra.Command, args []string) error {
 	if c.Context == nil || c.Context.State == nil {
-		// cobra.CheckErr(cmd.MarkFlagRequired("kafka-bootstrap"))
 		if !cmd.Flags().Changed("kafka-bootstrap") {
 			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "kafka-bootstrap")
 		}
