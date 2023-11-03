@@ -222,7 +222,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration := srsdk.NewConfiguration()
 			configuration.UserAgent = c.Config.Version.UserAgent
 			configuration.Debug = unsafeTrace
-			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
+			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
 
 			if c.Context.GetState() != nil {
 				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
@@ -269,7 +269,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					return nil, err
 				}
 			} else {
-				client = ccloudv2.NewRetryableHttpClient(unsafeTrace)
+				client = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
 			}
 
 			configuration := srsdk.NewConfiguration()

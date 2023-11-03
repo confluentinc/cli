@@ -10,10 +10,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newIamClient(url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
+func newIamClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
 	cfg := iamv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = iamv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -21,7 +21,7 @@ func newIamClient(url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
 }
 
 func (c *Client) iamApiContext() context.Context {
-	return context.WithValue(context.Background(), iamv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), iamv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 // iam service-account api calls
