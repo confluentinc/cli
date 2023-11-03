@@ -12,10 +12,8 @@ ARG NFPM_PASSPHRASE
 
 ENV NFPM_DEFAULT_PASSPHRASE=$NFPM_PASSPHRASE
 
-RUN cd /cli && make gorelease-linux-amd64
+RUN --mount=type=secret,id=gpg_private_key cd /cli && make gorelease-linux-amd64
 
 RUN cd /cli && for file in prebuilt/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;
-
-RUN shred --force --remove /cli/secret.gpg
 
 ENV NFPM_DEFAULT_PASSPHRASE=""
