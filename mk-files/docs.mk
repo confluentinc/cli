@@ -50,8 +50,8 @@ publish-docs: docs
 # The .x branch has been updated to ignore [ci skip] for minor branches since it is a pure upstream branch of minor branches.
 # To ensure pint merge will work correctly, we will manually merge the -post branch into the .x branch using `-s ours`. Then, these
 # branches will be pushed at the same time. This ensure there are no errors with pint merge.
-.PHONY: release-docs
-release-docs:
+.PHONY: release-docs-main
+release-docs-main:
 	$(eval DIR=$(shell mktemp -d))
 	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
 
@@ -72,8 +72,18 @@ release-docs:
 		$(SED) -i "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 		$(SED) -i "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-		$(call dry-run,git push); \
-	fi && \
+		$(call dry-run,gh pr create --base master --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release"); \
+	fi
+
+	rm -rf $(DIR)
+
+.PHONY: release-docs-post
+release-docs-post:
+	$(eval DIR=$(shell mktemp -d))
+	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
+
+	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
+	cd $(DOCS_CONFLUENT_CLI) && \
 	git checkout $(STAGING_BRANCH) && \
 	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
 	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
