@@ -10,11 +10,8 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
-ARG NFPM_PASSPHRASE
-
-ENV NFPM_DEFAULT_PASSPHRASE=$NFPM_PASSPHRASE
-
-RUN --mount=type=secret,id=gpg_private_key cd /cli && make gorelease-linux-arm64
+RUN --mount=type=secret,id=gpg_private_key --mount=type=secret,id=gpg_passphrase \
+    export NFPM_DEFAULT_PASSPHRASE=$(cat /run/secrets/gpg_passphrase) && cd /cli && make gorelease-linux-arm64
 
 RUN cd /cli && rename 's/checksums/checksums_linux_arm64/' prebuilt/*.txt
 
@@ -24,11 +21,10 @@ RUN apt-get update && apt-get install -y createrepo # TODO: use update option (f
 
 RUN cd /cli/rpm && createrepo .
 
-RUN --mount=type=secret,id=gpg_private_key gpg --batch --import /run/secrets/gpg_private_key && \
+RUN --mount=type=secret,id=gpg_private_key --mount=type=secret,id=gpg_passphrase \
+    gpg --batch --import /run/secrets/gpg_private_key && \
     echo allow-preset-passphrase > ~/.gnupg/gpg-agent.conf && \
     gpg-connect-agent reloadagent /bye && \
     export KEY_GRIP=$(gpg --with-keygrip -K --with-colons | grep '^grp' | head -1 | cut -d: -f10) && \
-    /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $NFPM_DEFAULT_PASSPHRASE $KEY_GRIP && \
+    /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $(cat /run/secrets/gpg_passphrase) $KEY_GRIP && \
     gpg --yes --batch --detach-sign --armor --output /cli/rpm/repodata/repomd.xml.asc /cli/rpm/repodata/repomd.xml
-
-ENV NFPM_DEFAULT_PASSPHRASE=""
