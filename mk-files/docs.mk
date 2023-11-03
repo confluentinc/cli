@@ -67,12 +67,14 @@ release-docs-main:
 	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
 	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
 		git checkout master && \
+		git checkout -b update-settings-v$(CLEAN_VERSION) && \
 		$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 		$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
 		$(SED) -i "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 		$(SED) -i "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-		$(call dry-run,gh pr create --base master --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release"); \
+		$(call dry-run,git push origin update-settings-v$(CLEAN_VERSION)) && \
+		$(call dry-run,gh pr create --base master --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body ""); \
 	fi
 
 	rm -rf $(DIR)
