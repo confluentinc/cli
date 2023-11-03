@@ -72,7 +72,7 @@ release-docs:
 		$(SED) -i "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 		$(SED) -i "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-		$(call dry-run,git push); \
+		$(call dry-run,gh pr create --base master --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release"); \
 	fi && \
 	git checkout $(STAGING_BRANCH) && \
 	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
