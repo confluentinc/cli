@@ -51,7 +51,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 
 	// cloud-only flags
-	cmd.Flags().String("kafka-bootstrap", "", "Bootstrap URL for Kafka cluster.")
+	cmd.Flags().String("kafka-bootstrap", "", "Bootstrap URL for Confluent Cloud Kafka cluster.")
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
