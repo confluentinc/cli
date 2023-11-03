@@ -122,7 +122,7 @@ func GetMetaInfoFromSchemaId(id int32) []byte {
 	return append(metaInfo, schemaIdBuffer...)
 }
 
-func CreateTempDir() (string, error) {
+func createTempDir() (string, error) {
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	err := os.MkdirAll(dir, 0755)
 	return dir, err
