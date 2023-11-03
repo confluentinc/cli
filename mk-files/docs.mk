@@ -67,12 +67,14 @@ release-docs-main:
 	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
 	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
 		git checkout master && \
+		git checkout -b release-docs-main-v$(CLEAN_VERSION) && \
 		$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 		$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
 		$(SED) -i "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 		$(SED) -i "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-		$(call dry-run,gh pr create --base master --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release"); \
+		$(call dry-run,git push origin release-docs-main-v$(CLEAN_VERSION)) && \
+		$(call dry-run,gh pr create --base master --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body ""); \
 	fi
 
 	rm -rf $(DIR)
@@ -84,20 +86,23 @@ release-docs-staging:
 
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
-	git checkout $(STAGING_BRANCH) && \
-	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
-	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
-	$(SED) -i "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
-	$(SED) -i "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
-	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-	git checkout $(CURRENT_SHORT_MINOR_VERSION)-post && \
+	git fetch && \
+	git checkout -b release-docs-staging-v$(CURRENT_SHORT_MINOR_VERSION)-post origin/$(CURRENT_SHORT_MINOR_VERSION)-post && \
 	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
 	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
 	$(SED) -i "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 	$(SED) -i "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-	git checkout $(STAGING_BRANCH) && \
-	git merge -s ours -m "Merge branch '$(CURRENT_SHORT_MINOR_VERSION)-post' into $(STAGING_BRANCH)" $(CURRENT_SHORT_MINOR_VERSION)-post && \
-	$(call dry-run,git push origin "$(CURRENT_SHORT_MINOR_VERSION)-post:$(CURRENT_SHORT_MINOR_VERSION)-post" "$(STAGING_BRANCH):$(STAGING_BRANCH)")
+	$(call dry-run,git push origin release-docs-staging-v$(CURRENT_SHORT_MINOR_VERSION)-post) && \
+	$(call dry-run,gh pr create --base $(CURRENT_SHORT_MINOR_VERSION)-post --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body "") && \
+	git checkout -b release-docs-staging-v$(STAGING_BRANCH) origin/$(STAGING_BRANCH) && \
+	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
+	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
+	$(SED) -i "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
+	$(SED) -i "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
+	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
+	git merge -s ours -m "Merge branch 'release-docs-staging-v$(CURRENT_SHORT_MINOR_VERSION)-post' into release-docs-staging-v$(STAGING_BRANCH)" release-docs-staging-v$(CURRENT_SHORT_MINOR_VERSION)-post && \
+	$(call dry-run,git push origin release-docs-staging-v$(STAGING_BRANCH)) && \
+	$(call dry-run,gh pr create --base $(STAGING_BRANCH) --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body "")
 
 	rm -rf $(DIR)
