@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"reflect"
 	"strings"
 
@@ -24,12 +25,12 @@ type InputController struct {
 	prompt                prompt.IPrompt
 	shouldExit            bool
 	reverseISearch        reverseisearch.ReverseISearch
-	lspClient             autocomplete.LSPClientInterface
+	lspClient             lsp.LSPClientInterface
 }
 
 const defaultWindowSize = 100
 
-func NewInputController(history *history.History, lspClient autocomplete.LSPClientInterface) types.InputControllerInterface {
+func NewInputController(history *history.History, lspClient lsp.LSPClientInterface) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
