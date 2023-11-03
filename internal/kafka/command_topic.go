@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -157,8 +158,7 @@ func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
 	}
 
 	kafkaClusterCfg := &config.KafkaClusterConfig{
-		ID:        "anonymous-id",
-		Name:      "anonymous-cluster",
+		ID:        "anonymous-id", // TODO: remove in V4
 		Bootstrap: kafkaBootstrap,
 		APIKeys:   map[string]*config.APIKeyPair{},
 	}
@@ -265,4 +265,10 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 		go scan()
 	}
 	return scanErr
+}
+
+func createTempDir() (string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	err := os.MkdirAll(dir, 0755)
+	return dir, err
 }

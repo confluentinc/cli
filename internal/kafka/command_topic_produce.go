@@ -46,10 +46,8 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
 	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
-	pcmd.AddOutputFlag(cmd) // Deprecated
-	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
 
-	// cloud-only flag
+	// cloud-only flags
 	cmd.Flags().String("kafka-bootstrap", "", "Bootstrap URL for Kafka cluster.")
 	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
@@ -67,6 +65,9 @@ func (c *command) newProduceCommand() *cobra.Command {
 	pcmd.AddProtocolFlag(cmd)
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 
+	pcmd.AddOutputFlag(cmd) // Deprecated
+	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
+
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("key-references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
@@ -80,7 +81,11 @@ func (c *command) newProduceCommand() *cobra.Command {
 
 func (c *command) produce(cmd *cobra.Command, args []string) error {
 	if c.Context == nil || c.Context.State == nil {
-		cobra.CheckErr(cmd.MarkFlagRequired("kafka-bootstrap"))
+		// cobra.CheckErr(cmd.MarkFlagRequired("kafka-bootstrap"))
+		if !cmd.Flags().Changed("kafka-bootstrap") {
+			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "kafka-bootstrap")
+		}
+
 		if err := c.prepareAnonymousContext(cmd); err != nil {
 			return err
 		}
@@ -88,8 +93,14 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	} else if c.Context.Config.IsCloudLogin() {
 		return c.produceCloud(cmd, args)
 	} else {
-		cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
-		cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
+		if !cmd.Flags().Changed("bootstrap") {
+			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "bootstrap")
+		}
+
+		if !cmd.Flags().Changed("ca-location") {
+			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "ca-location")
+		}
+
 		return c.produceOnPrem(cmd, args)
 	}
 }
@@ -223,7 +234,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dir, err := sr.CreateTempDir()
+	dir, err := createTempDir()
 	if err != nil {
 		return err
 	}
@@ -439,7 +450,7 @@ func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, e
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
-	schemaDir, err := sr.CreateTempDir()
+	schemaDir, err := createTempDir()
 	if err != nil {
 		return nil, nil, err
 	}

@@ -241,11 +241,9 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				}
 
 				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, dataplaneToken)
-			} else {
+			} else if c.GetSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
 				// Used by `asyncapi export`, `asyncapi import`, `kafka client-config create`, `kafka topic consume`, and `kafka topic produce`
-				if c.GetSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
-					return nil, err
-				}
+				return nil, err
 			}
 		} else {
 			schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")

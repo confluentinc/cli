@@ -10,7 +10,6 @@ import (
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
-	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -77,7 +76,10 @@ func (c *command) newConsumeCommand() *cobra.Command {
 
 func (c *command) consume(cmd *cobra.Command, args []string) error {
 	if c.Context == nil || c.Context.State == nil {
-		cobra.CheckErr(cmd.MarkFlagRequired("kafka-bootstrap"))
+		if !cmd.Flags().Changed("kafka-bootstrap") {
+			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "kafka-bootstrap")
+		}
+
 		if err := c.prepareAnonymousContext(cmd); err != nil {
 			return err
 		}
@@ -85,7 +87,10 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	} else if c.Context.Config.IsCloudLogin() {
 		return c.consumeCloud(cmd, args)
 	} else {
-		cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
+		if !cmd.Flags().Changed("bootstrap") {
+			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "bootstrap")
+		}
+
 		return c.consumeOnPrem(cmd, args)
 	}
 }
@@ -210,7 +215,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	schemaPath, err := sr.CreateTempDir()
+	schemaPath, err := createTempDir()
 	if err != nil {
 		return err
 	}
@@ -343,7 +348,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	dir, err := sr.CreateTempDir()
+	dir, err := createTempDir()
 	if err != nil {
 		return err
 	}
