@@ -1,4 +1,4 @@
-package autocomplete
+package lsp
 
 import (
 	"context"

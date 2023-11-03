@@ -1,11 +1,11 @@
 package app
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"sync"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/autocomplete"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
@@ -50,9 +50,9 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	// Store used to process statements and store local properties
 	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
 	resultFetcher := results.NewResultFetcher(dataStore)
-	var lspClient autocomplete.LSPClientInterface
+	var lspClient lsp.LSPClientInterface
 	if appOptions.GetLSPEnabled() {
-		lspClient = autocomplete.NewLSPClientWS(dataStore)
+		lspClient = lsp.NewLSPClientWS(dataStore)
 	}
 
 	stdinBefore := utils.GetStdin()
