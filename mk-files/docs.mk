@@ -94,7 +94,7 @@ release-docs-staging:
 	$(SED) -i "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 	$(call dry-run,git push origin release-docs-staging-v$(CURRENT_SHORT_MINOR_VERSION)) && \
-	$(call dry-run,gh pr create --base $(CURRENT_SHORT_MINOR_VERSION)-post --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body "") && \
+	$(call dry-run,gh pr create --base $(CURRENT_SHORT_MINOR_VERSION)-post --title "[ci skip] update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body "") && \
 	git checkout -b release-docs-staging-v$(STAGING_BRANCH) origin/$(STAGING_BRANCH) && \
 	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
 	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
@@ -103,6 +103,6 @@ release-docs-staging:
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 	git merge -s ours -m "Merge branch 'release-docs-staging-v$(CURRENT_SHORT_MINOR_VERSION)' into release-docs-staging-v$(STAGING_BRANCH)" release-docs-staging-v$(CURRENT_SHORT_MINOR_VERSION) && \
 	$(call dry-run,git push origin release-docs-staging-v$(STAGING_BRANCH)) && \
-	$(call dry-run,gh pr create --base $(STAGING_BRANCH) --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body "")
+	$(call dry-run,gh pr create --base $(STAGING_BRANCH) --title "[ci skip] update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body "")
 
 	rm -rf $(DIR)
