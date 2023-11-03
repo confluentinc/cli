@@ -175,6 +175,38 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 	return c.metricsClient, nil
 }
 
+func (c *AuthenticatedCLICommand) GetSchemaRegistryClientByFlags(cmd *cobra.Command, unsafeTrace bool) error {
+	configuration := srsdk.NewConfiguration()
+	configuration.UserAgent = c.Config.Version.UserAgent
+	configuration.Debug = unsafeTrace
+	configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
+	schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return err
+	}
+	if schemaRegistryEndpoint == "" {
+		return fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
+	}
+	configuration.BasePath = schemaRegistryEndpoint
+
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return err
+	}
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return err
+	}
+
+	c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
+
+	if err := c.schemaRegistryClient.Get(); err != nil {
+		return fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
+	}
+
+	return nil
+}
+
 func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*schemaregistry.Client, error) {
 	if c.schemaRegistryClient == nil {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
@@ -182,7 +214,11 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			return nil, err
 		}
 
-		if c.Config.IsCloudLogin() {
+		if c.Config.CheckIsCloudLoginOrOnPremLogin() != nil {
+			if c.GetSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
+				return nil, err
+			}
+		} else if c.Config.IsCloudLogin() {
 			configuration := srsdk.NewConfiguration()
 			configuration.UserAgent = c.Config.Version.UserAgent
 			configuration.Debug = unsafeTrace
@@ -205,31 +241,9 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				}
 
 				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, dataplaneToken)
-			} else {
+			} else if c.GetSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
 				// Used by `asyncapi export`, `asyncapi import`, `kafka client-config create`, `kafka topic consume`, and `kafka topic produce`
-				schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
-				if err != nil {
-					return nil, err
-				}
-				if schemaRegistryEndpoint == "" {
-					return nil, fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
-				}
-				configuration.BasePath = schemaRegistryEndpoint
-
-				schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-				if err != nil {
-					return nil, err
-				}
-				schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-				if err != nil {
-					return nil, err
-				}
-
-				c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
-
-				if err := c.schemaRegistryClient.Get(); err != nil {
-					return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
-				}
+				return nil, err
 			}
 		} else {
 			schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
