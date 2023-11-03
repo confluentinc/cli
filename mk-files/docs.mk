@@ -74,7 +74,7 @@ release-docs-main:
 		$(SED) -i "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 		$(call dry-run,git push origin update-settings-v$(CLEAN_VERSION)) && \
-		$(call dry-run,gh pr create --base master --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release"); \
+		$(call dry-run,gh pr create --base master --title "update settings.sh and conf.py due to $(CLEAN_VERSION) release" --body ""); \
 	fi
 
 	rm -rf $(DIR)
