@@ -27,4 +27,5 @@ RUN --mount=type=secret,id=gpg_private_key --mount=type=secret,id=gpg_passphrase
     gpg-connect-agent reloadagent /bye && \
     export KEY_GRIP=$(gpg --with-keygrip -K --with-colons | grep '^grp' | head -1 | cut -d: -f10) && \
     /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $(cat /run/secrets/gpg_passphrase) $KEY_GRIP && \
-    gpg --yes --batch --detach-sign --armor --output /cli/rpm/repodata/repomd.xml.asc /cli/rpm/repodata/repomd.xml
+    gpg --yes --batch --detach-sign --armor --output /cli/rpm/repodata/repomd.xml.asc /cli/rpm/repodata/repomd.xml && \
+    gpg --yes --batch --armor --export --output /cli/rpm/archive.key
