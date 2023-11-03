@@ -77,7 +77,7 @@ release-docs-main:
 
 	rm -rf $(DIR)
 
-.PHONY: release-docs-post
+.PHONY: release-docs-staging
 release-docs-post:
 	$(eval DIR=$(shell mktemp -d))
 	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
