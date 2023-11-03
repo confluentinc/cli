@@ -67,6 +67,7 @@ release-docs-main:
 	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
 	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
 		git checkout master && \
+		git checkout -b update-settings-v$(CLEAN_VERSION) && \
 		$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 		$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
 		$(SED) -i "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
