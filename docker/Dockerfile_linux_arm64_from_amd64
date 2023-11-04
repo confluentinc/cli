@@ -11,15 +11,21 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
 RUN --mount=type=secret,id=gpg_private_key --mount=type=secret,id=gpg_passphrase \
-    export NFPM_DEFAULT_PASSPHRASE=$(cat /run/secrets/gpg_passphrase) && cd /cli && make gorelease-linux-arm64
+    export NFPM_DEFAULT_PASSPHRASE=$(cat /run/secrets/gpg_passphrase) && \
+    cd /cli && \
+    make gorelease-linux-arm64
 
-RUN cd /cli && rename 's/checksums/checksums_linux_arm64/' prebuilt/*.txt
+RUN cd /cli && \
+    rename 's/checksums/checksums_linux_arm64/' prebuilt/*.txt
 
 RUN mv /cli/prebuilt/*.rpm /cli/rpm/
 
-RUN apt-get update && apt-get install -y createrepo
+RUN apt-get update && \
+    apt-get install -y createrepo
 
-RUN mkdir metadata-temp && createrepo --update -o metadata-temp /cli/rpm && cp -r metadata-temp/* /cli/rpm
+RUN mkdir metadata-temp && \
+    createrepo --update -o metadata-temp /cli/rpm && \
+    cp -r metadata-temp/* /cli/rpm
 
 RUN --mount=type=secret,id=gpg_private_key --mount=type=secret,id=gpg_passphrase \
     gpg --batch --import /run/secrets/gpg_private_key && \
