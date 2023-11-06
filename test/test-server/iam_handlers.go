@@ -133,9 +133,12 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 		apiKey := req
 		apiKey.Id = apikeysv2.PtrString(fmt.Sprintf("MYKEY%d", keyIndex))
 		apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
-			Owner:       req.Spec.Owner,
-			Secret:      apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
-			Resource:    req.Spec.Resource,
+			Owner:  req.Spec.Owner,
+			Secret: apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
+			Resource: &apikeysv2.ObjectReference{
+				Id:   req.Spec.Resource.GetId(),
+				Kind: apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
+			},
 			Description: req.Spec.Description,
 		}
 		apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
@@ -144,6 +147,30 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 		err = json.NewEncoder(w).Encode(apiKey)
 		require.NoError(t, err)
 	}
+}
+
+func getKind(id string) string {
+	if id == "cloud" {
+		return "Cloud"
+	}
+
+	x := strings.SplitN(id, "-", 2)
+	if len(x) != 2 {
+		return ""
+	}
+
+	prefixToKind := map[string]string{
+		"lkc":    "Cluster",
+		"lksqlc": "ksqlDB",
+		"lsrc":   "SchemaRegistry",
+	}
+
+	kind, ok := prefixToKind[x[0]]
+	if !ok {
+		return ""
+	}
+
+	return kind
 }
 
 // Handler for: "/iam/v2/users/{id}"
