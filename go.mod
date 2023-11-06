@@ -78,7 +78,7 @@ require (
 	github.com/rivo/tview v0.0.0-20230511053024-822bd067b165
 	github.com/samber/lo v1.38.1
 	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	github.com/stripe/stripe-go v70.15.0+incompatible
