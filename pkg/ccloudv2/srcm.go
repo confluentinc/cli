@@ -19,17 +19,17 @@ func newSrcmClient(httpClient *http.Client, url, userAgent string, unsafeTrace b
 	return srcmv2.NewAPIClient(cfg)
 }
 
-func (c *Client) SrcmApiContext() context.Context {
+func (c *Client) srcmApiContext() context.Context {
 	return context.WithValue(context.Background(), srcmv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) GetStreamGovernanceRegionById(regionId string) (srcmv2.SrcmV2Region, error) {
-	region, httpResp, err := c.SrcmClient.RegionsSrcmV2Api.GetSrcmV2Region(c.SrcmApiContext(), regionId).Execute()
+	region, httpResp, err := c.SrcmClient.RegionsSrcmV2Api.GetSrcmV2Region(c.srcmApiContext(), regionId).Execute()
 	return region, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) CreateSchemaRegistryCluster(srCluster srcmv2.SrcmV2Cluster) (srcmv2.SrcmV2Cluster, error) {
-	createdCluster, httpResp, err := c.SrcmClient.ClustersSrcmV2Api.CreateSrcmV2Cluster(c.SrcmApiContext()).SrcmV2Cluster(srCluster).Execute()
+	createdCluster, httpResp, err := c.SrcmClient.ClustersSrcmV2Api.CreateSrcmV2Cluster(c.srcmApiContext()).SrcmV2Cluster(srCluster).Execute()
 	return createdCluster, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -54,7 +54,7 @@ func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcmv2.
 }
 
 func (c *Client) executeListSchemaRegistryRegions(cloud, packageType, pageToken string) (srcmv2.SrcmV2RegionList, *http.Response, error) {
-	req := c.SrcmClient.RegionsSrcmV2Api.ListSrcmV2Regions(c.SrcmApiContext())
+	req := c.SrcmClient.RegionsSrcmV2Api.ListSrcmV2Regions(c.srcmApiContext())
 	if cloud != "" {
 		req = req.SpecCloud(cloud)
 	}
@@ -68,17 +68,17 @@ func (c *Client) executeListSchemaRegistryRegions(cloud, packageType, pageToken 
 }
 
 func (c *Client) GetSchemaRegistryClusterById(clusterId, environment string) (srcmv2.SrcmV2Cluster, error) {
-	cluster, httpResp, err := c.SrcmClient.ClustersSrcmV2Api.GetSrcmV2Cluster(c.SrcmApiContext(), clusterId).Environment(environment).Execute()
+	cluster, httpResp, err := c.SrcmClient.ClustersSrcmV2Api.GetSrcmV2Cluster(c.srcmApiContext(), clusterId).Environment(environment).Execute()
 	return cluster, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteSchemaRegistryCluster(clusterId, environment string) error {
-	httpResp, err := c.SrcmClient.ClustersSrcmV2Api.DeleteSrcmV2Cluster(c.SrcmApiContext(), clusterId).Environment(environment).Execute()
+	httpResp, err := c.SrcmClient.ClustersSrcmV2Api.DeleteSrcmV2Cluster(c.srcmApiContext(), clusterId).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) UpgradeSchemaRegistryCluster(srcmV2ClusterUpdate srcmv2.SrcmV2ClusterUpdate, clusterId string) (srcmv2.SrcmV2Cluster, error) {
-	cluster, httpResp, err := c.SrcmClient.ClustersSrcmV2Api.UpdateSrcmV2Cluster(c.SrcmApiContext(), clusterId).SrcmV2ClusterUpdate(srcmV2ClusterUpdate).Execute()
+	cluster, httpResp, err := c.SrcmClient.ClustersSrcmV2Api.UpdateSrcmV2Cluster(c.srcmApiContext(), clusterId).SrcmV2ClusterUpdate(srcmV2ClusterUpdate).Execute()
 	return cluster, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -104,7 +104,7 @@ func (c *Client) GetSchemaRegistryClustersByEnvironment(environment string) ([]s
 }
 
 func (c *Client) executeListSchemaRegistryClusters(environment, pageToken string) (srcmv2.SrcmV2ClusterList, *http.Response, error) {
-	req := c.SrcmClient.ClustersSrcmV2Api.ListSrcmV2Clusters(c.SrcmApiContext()).Environment(environment)
+	req := c.SrcmClient.ClustersSrcmV2Api.ListSrcmV2Clusters(c.srcmApiContext()).Environment(environment)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

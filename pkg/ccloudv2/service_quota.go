@@ -19,7 +19,7 @@ func newServiceQuotaClient(httpClient *http.Client, url, userAgent string, unsaf
 	return servicequotav1.NewAPIClient(cfg)
 }
 
-func (c *Client) serviceQuotasApiContext() context.Context {
+func (c *Client) serviceQuotaApiContext() context.Context {
 	return context.WithValue(context.Background(), servicequotav1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
@@ -44,7 +44,7 @@ func (c *Client) ListServiceQuotas(quotaScope, kafkaCluster, environment, networ
 }
 
 func (c *Client) executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, environment, network, quotaCode string) (servicequotav1.ServiceQuotaV1AppliedQuotaList, *http.Response, error) {
-	req := c.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotas(c.serviceQuotasApiContext()).Scope(quotaScope).KafkaCluster(kafkaCluster).Environment(environment).Network(network).Id(quotaCode)
+	req := c.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotas(c.serviceQuotaApiContext()).Scope(quotaScope).KafkaCluster(kafkaCluster).Environment(environment).Network(network).Id(quotaCode)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

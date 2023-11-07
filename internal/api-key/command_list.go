@@ -131,15 +131,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
-		for _, res := range resources {
+		for _, resource := range resources {
 			list.Add(&out{
 				IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
 				Key:          apiKey.GetId(),
 				Description:  apiKey.Spec.GetDescription(),
 				OwnerId:      ownerId,
 				OwnerEmail:   email,
-				ResourceType: resourceKindToType[res.GetKind()],
-				ResourceId:   getApiKeyResourceId(res.GetId()),
+				ResourceType: resourceKindToType[resource.GetKind()],
+				ResourceId:   getApiKeyResourceId(resource.GetId()),
 				Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}

@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"fmt"
-	_nethttp "net/http"
+	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -55,7 +55,7 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) []cckafkarestv3
 	return configs
 }
 
-func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
+func handleOpenApiError(httpResp *http.Response, err error, client *cpkafkarestv3.APIClient) error {
 	if err == nil {
 		return nil
 	}
