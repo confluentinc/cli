@@ -52,6 +52,10 @@ func (c *ContextState) DecryptContextStateAuthRefreshToken(ctxName string) error
 }
 
 func (c *ContextState) IsExpired() bool {
+	if c == nil {
+		return false
+	}
+
 	token, err := jwt.ParseSigned(c.AuthToken)
 	if err != nil {
 		return false
