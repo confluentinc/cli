@@ -25,6 +25,7 @@ RUN apt-get update && \
 
 RUN mkdir /metadata-temp && \
     createrepo --update -o /metadata-temp /cli/rpm && \
+    rm -r /cli/rpm/repodata && \
     cp -r /metadata-temp/. /cli/rpm
 
 RUN --mount=type=secret,id=gpg_private_key --mount=type=secret,id=gpg_passphrase \
