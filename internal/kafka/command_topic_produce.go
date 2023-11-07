@@ -36,6 +36,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 		RunE:              c.produce,
 	}
 
+	cmd.Flags().String("bootstrap", "", "Bootstrap URL for Confluent Cloud Kafka cluster.")
 	cmd.Flags().String("key-schema", "", "The ID or filepath of the message key schema.")
 	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
 	pcmd.AddKeyFormatFlag(cmd)
@@ -48,7 +49,6 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 
 	// cloud-only flags
-	cmd.Flags().String("kafka-bootstrap", "", "Bootstrap URL for Confluent Cloud Kafka cluster.")
 	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
@@ -81,8 +81,8 @@ func (c *command) newProduceCommand() *cobra.Command {
 
 func (c *command) produce(cmd *cobra.Command, args []string) error {
 	if c.Context == nil || c.Context.State == nil {
-		if !cmd.Flags().Changed("kafka-bootstrap") {
-			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "kafka-bootstrap")
+		if !cmd.Flags().Changed("bootstrap") {
+			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "bootstrap")
 		}
 
 		if err := c.prepareAnonymousContext(cmd); err != nil {

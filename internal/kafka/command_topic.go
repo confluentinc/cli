@@ -41,9 +41,7 @@ func newTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comman
 
 	c := &command{clientID: cfg.Version.ClientID}
 
-	if cfg.CheckIsCloudLoginOrOnPremLogin() != nil && !cfg.IsTest {
-		c.AuthenticatedCLICommand = &pcmd.AuthenticatedCLICommand{CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner)}
-	} else if cfg.IsCloudLogin() {
+	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
 		cmd.AddCommand(c.newCreateCommand())
@@ -147,7 +145,7 @@ func (c *command) provisioningClusterCheck(lkc string) error {
 }
 
 func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
-	kafkaBootstrap, err := cmd.Flags().GetString("kafka-bootstrap")
+	kafkaBootstrap, err := cmd.Flags().GetString("bootstrap")
 	if err != nil {
 		return err
 	}

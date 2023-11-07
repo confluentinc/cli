@@ -35,6 +35,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().String("bootstrap", "", `Comma-separated list of broker hosts, each formatted as "host" or "host:port". For Confluent Cloud, it's Kafka cluster endpoint.`)
 	cmd.Flags().String("group", "confluent_cli_consumer_<randomly-generated-id>", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
@@ -51,7 +52,6 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 
 	// cloud-only flags
-	cmd.Flags().String("kafka-bootstrap", "", "Bootstrap URL for Confluent Cloud Kafka cluster.")
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
@@ -76,8 +76,8 @@ func (c *command) newConsumeCommand() *cobra.Command {
 
 func (c *command) consume(cmd *cobra.Command, args []string) error {
 	if c.Context == nil || c.Context.State == nil {
-		if !cmd.Flags().Changed("kafka-bootstrap") {
-			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "kafka-bootstrap")
+		if !cmd.Flags().Changed("bootstrap") {
+			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "bootstrap")
 		}
 
 		if err := c.prepareAnonymousContext(cmd); err != nil {
