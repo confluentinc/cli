@@ -17,6 +17,7 @@ import (
 	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
@@ -34,6 +35,12 @@ func (c *command) newProduceCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.produce,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Produce to a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.`,
+				Code: "confluent kafka topic produce my_topic --api-key <api-key> --api-secret <api-secret> --bootstrap <Kafka-cluster-endpoint> --value-format avro --schema test.avsc --schema-registry-endpoint <schema-registry-endpoint> --schema-registry-api-key <schema-registry-api-key> --schema-registry-api-secret <schema-registry-api-secret>",
+			},
+		),
 	}
 
 	cmd.Flags().String("bootstrap", "", "Bootstrap URL for Confluent Cloud Kafka cluster.")

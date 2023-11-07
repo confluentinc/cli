@@ -32,6 +32,10 @@ func (c *command) newConsumeCommand() *cobra.Command {
 				Text: `Consume items from topic "my-topic" and press "Ctrl-C" to exit.`,
 				Code: "confluent kafka topic consume my-topic --from-beginning",
 			},
+			examples.Example{
+				Text: `Consume from a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.`,
+				Code: "confluent kafka topic consume my_topic --api-key <api-key> --api-secret <api-secret> --bootstrap <Kafka-cluster-endpoint> --value-format avro --schema-registry-endpoint <schema-registry-endpoint> --schema-registry-api-key <schema-registry-api-key> --schema-registry-api-secret <schema-registry-api-secret>",
+			},
 		),
 	}
 
