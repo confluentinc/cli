@@ -7,8 +7,7 @@ Aliases:
   network-link, nl
 
 Available Commands:
-  service    Manage network link services.
-  endpoint   Manage network link endpoints.
+  service     Manage network link services.
 
 Global Flags:
   -h, --help            Show help for this command.

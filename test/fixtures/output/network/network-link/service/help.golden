@@ -4,11 +4,7 @@ Usage:
   confluent network network-link service [command]
 
 Available Commands:
-  create      Create a network link service.
-  delete      Delete one or more network link services.
   describe    Describe a network link service.
-  list        List network link services.
-  update      Update an existing network link service.
 
 Global Flags:
   -h, --help            Show help for this command.

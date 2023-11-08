@@ -9,9 +9,9 @@ Available Commands:
   describe                   Describe a network.
   ip-address                 List Confluent Cloud egress public IP addresses.
   list                       List networks.
+  network-link               Manage network links.
   peering                    Manage peerings.
   private-link               Manage private links.
-  network-link               Manage network links.
   transit-gateway-attachment Manage transit gateway attachments.
   update                     Update an existing network.
 
