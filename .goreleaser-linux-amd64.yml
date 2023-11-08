@@ -49,7 +49,7 @@ nfpms:
       - rpm
     rpm:
       signature:
-        key_file: /run/secrets/gpg_private_key
+        key_file: /run/secrets/gpg_secret_key
 
 release:
   disable: true

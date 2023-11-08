@@ -22,7 +22,7 @@ vault kv get -field gpg_passphrase v1/ci/kv/cli/release-test > passphrase
 go mod vendor
 
 # Build linux/amd64
-docker build . --file ./docker/Dockerfile_linux_amd64 --tag cli-linux-amd64-builder-image --secret id=gpg_private_key,src=secret.gpg --secret id=gpg_passphrase,src=passphrase
+docker build . --file ./docker/Dockerfile_linux_amd64 --tag cli-linux-amd64-builder-image --secret id=gpg_secret_key,src=secret.gpg --secret id=gpg_passphrase,src=passphrase
 docker container create --name cli-linux-amd64-builder cli-linux-amd64-builder-image
 docker container cp cli-linux-amd64-builder:/cli/prebuilt/. ./prebuilt/
 docker container rm cli-linux-amd64-builder
@@ -30,9 +30,9 @@ docker container rm cli-linux-amd64-builder
 # Build linux/arm64
 architecture=$(uname -m)
 if [ "$architecture" == 'x86_64' ]; then
-  docker build . --file ./docker/Dockerfile_linux_arm64_from_amd64 --tag cli-linux-arm64-builder-image --secret id=gpg_private_key,src=secret.gpg --secret id=gpg_passphrase,src=passphrase
+  docker build . --file ./docker/Dockerfile_linux_arm64_from_amd64 --tag cli-linux-arm64-builder-image --secret id=gpg_secret_key,src=secret.gpg --secret id=gpg_passphrase,src=passphrase
 else
-  docker build . --file ./docker/Dockerfile_linux_arm64 --tag cli-linux-arm64-builder-image --secret id=gpg_private_key,src=secret.gpg --secret id=gpg_passphrase,src=passphrase
+  docker build . --file ./docker/Dockerfile_linux_arm64 --tag cli-linux-arm64-builder-image --secret id=gpg_secret_key,src=secret.gpg --secret id=gpg_passphrase,src=passphrase
 fi
 docker container create --name cli-linux-arm64-builder cli-linux-arm64-builder-image
 docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/
