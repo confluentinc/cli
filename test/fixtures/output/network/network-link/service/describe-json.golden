@@ -1,0 +1,10 @@
+{
+  "id": "nls-123456",
+  "name": "test-nls",
+  "network": "n-abcde1",
+  "environment": "env-00000",
+  "description": "test nls",
+  "accepted_environments": ["env-11111", "env-22222"],
+  "accepted_networks": ["n-abcde2", "n-abcde3"],
+  "phase": "READY"
+}

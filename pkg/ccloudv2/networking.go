@@ -221,3 +221,38 @@ func (c *Client) CreatePrivateLinkAccess(access networkingv1.NetworkingV1Private
 	resp, httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.CreateNetworkingV1PrivateLinkAccess(c.networkingApiContext()).NetworkingV1PrivateLinkAccess(access).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) ListNetworkLinkServices(environment string) ([]networkingv1.NetworkingV1NetworkLinkService, error) {
+	var list []networkingv1.NetworkingV1NetworkLinkService
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, err := c.executeListNetworkLinkServices(environment, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListNetworkLinkServices(environment, pageToken string) (networkingv1.NetworkingV1NetworkLinkServiceList, error) {
+	req := c.NetworkingClient.NetworkLinkServicesNetworkingV1Api.ListNetworkingV1NetworkLinkServices(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetNetworkLinkService(environment, id string) (networkingv1.NetworkingV1NetworkLinkService, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworkLinkServicesNetworkingV1Api.GetNetworkingV1NetworkLinkService(c.networkingApiContext(), id).Environment(environment).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
