@@ -2,6 +2,7 @@
 
 function cleanup {
   shred --force --remove --zero --iterations=10 secret.gpg passphrase CLIEVCodeSigningCertificate2.pfx
+  rm -rf vendor
 }
 trap cleanup EXIT
 
@@ -37,5 +38,3 @@ docker container create --name cli-linux-arm64-builder cli-linux-arm64-builder-i
 docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/
 docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
 docker container rm cli-linux-arm64-builder
-
-rm -rf vendor
