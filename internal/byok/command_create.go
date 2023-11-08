@@ -18,7 +18,14 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-const failedToRenderKeyPolicyErrorMsg = "BYOK error: failed to render key policy"
+const (
+	failedToRenderKeyPolicyErrorMsg = "BYOK error: failed to render key policy"
+
+	keyVaultCryptoServiceEncryptionUser = "e147488a-f6f5-4113-8e2d-b22465e65bf6"
+	keyVaultReader                      = "21090545-7ca7-4776-b22c-e363652d74d2"
+
+	defaultGcpRoleName = "custom_kms_role"
+)
 
 var encryptionKeyPolicyAws = template.Must(template.New("encryptionKeyPolicyAws").Parse(`{
 	"Sid" : "Allow Confluent accounts to use the key",
@@ -42,16 +49,57 @@ var encryptionKeyPolicyAws = template.Must(template.New("encryptionKeyPolicyAws"
 	"Resource" : "*"
 }`))
 
-const (
-	keyVaultCryptoServiceEncryptionUser = "e147488a-f6f5-4113-8e2d-b22465e65bf6"
-	keyVaultReader                      = "21090545-7ca7-4776-b22c-e363652d74d2"
-)
+type gcpPolicyMetadata struct {
+	project  string
+	location string
+	keyRing  string
+	key      string
+	group    string
+}
+
+func (g gcpPolicyMetadata) renderPolicy() string {
+	return fmt.Sprintf(`
+gcloud iam roles create %[1]s \
+	--project=%[2]s \
+	--description="Grant necessary permissions for Confluent to access KMS key" \
+	--permissions=cloudkms.cryptoKeyVersions.useToDecrypt,cloudkms.cryptoKeyVersions.useToEncrypt,cloudkms.cryptoKeys.get  && \
+gcloud kms keys add-iam-policy-binding %[3]s \
+	--project=%[2]s \
+	--keyring='%[4]s' \
+	--location='%[5]s' \
+	--member='group:%[6]s' \
+	--role='projects/%[2]s/roles/%[1]s'`, g.getCustomRoleName(), g.project, g.key, g.keyRing, g.location, g.group)
+}
+
+func newGcpPolicyMetadata(project, location, keyRing, key, group string) gcpPolicyMetadata {
+	return gcpPolicyMetadata{
+		project:  project,
+		location: location,
+		keyRing:  keyRing,
+		key:      key,
+		group:    group,
+	}
+}
+
+func (g gcpPolicyMetadata) getCustomRoleName() string {
+	r, err := regexp.Compile(`^[a-zA-Z0-9_.]{3,64}$`)
+	if err != nil {
+		return defaultGcpRoleName
+	}
+
+	customRoleName := strings.Replace(fmt.Sprintf("%s_%s_custom_kms_role", g.keyRing, g.key), "-", "_", -1)
+	if ok := r.Match([]byte(customRoleName)); !ok {
+		return defaultGcpRoleName
+	}
+
+	return customRoleName
+}
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <key>",
 		Short: "Register a self-managed encryption key.",
-		Long:  "Bring your own key to Confluent Cloud for data at rest encryption (AWS and Azure only).",
+		Long:  "Bring your own key to Confluent Cloud for data at rest encryption ",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -62,6 +110,10 @@ func (c *command) newCreateCommand() *cobra.Command {
 			examples.Example{
 				Text: "Register a new self-managed encryption key for Azure:",
 				Code: `confluent byok create "https://vault-name.vault.azure.net/keys/key-name" --tenant "00000000-0000-0000-0000-000000000000" --key-vault "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup-name/providers/Microsoft.KeyVault/vaults/vault-name"`,
+			},
+			examples.Example{
+				Text: "Register a new self-managed encryption key for GCP:",
+				Code: `confluent byok create "projects/project/locations/region/keyRings/keyring/cryptoKeys/key"`,
 			},
 		),
 	}
@@ -103,11 +155,19 @@ func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (b
 	return keyReq, nil
 }
 
+func (c *command) createGcpKeyRequest(keyId string) byokv1.ByokV1Key {
+	return byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1GcpKey: &byokv1.ByokV1GcpKey{
+		KeyId: keyId,
+		Kind:  "GcpKey",
+	}}}
+}
+
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	keyString := args[0]
 	var keyReq byokv1.ByokV1Key
 
-	if cmd.Flags().Changed("key-vault") && cmd.Flags().Changed("tenant") {
+	switch {
+	case cmd.Flags().Changed("key-vault") && cmd.Flags().Changed("tenant"):
 		keyString = removeKeyVersionFromAzureKeyId(keyString)
 
 		request, err := c.createAzureKeyRequest(cmd, keyString)
@@ -115,9 +175,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		keyReq = request
-	} else if isAWSKey(keyString) {
+	case isAWSKey(keyString):
 		keyReq = c.createAwsKeyRequest(keyString)
-	} else {
+	case isGCPKey(keyString):
+		keyReq = c.createGcpKeyRequest(keyString)
+	default:
 		return fmt.Errorf("invalid key format: %s", keyString)
 	}
 
@@ -138,12 +200,18 @@ func isAWSKey(key string) bool {
 	return keyArn.Service == "kms" && strings.HasPrefix(keyArn.Resource, "key/")
 }
 
+func isGCPKey(key string) bool {
+	return strings.HasPrefix(key, "projects/")
+}
+
 func getPolicyCommand(key byokv1.ByokV1Key) (string, error) {
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
 		return renderAWSEncryptionPolicy(key.Key.ByokV1AwsKey.GetRoles())
 	case key.Key.ByokV1AzureKey != nil:
 		return renderAzureEncryptionPolicy(key)
+	case key.Key.ByokV1GcpKey != nil:
+		return renderGCPEncryptionPolicy(key), nil
 	default:
 		return "", nil
 	}
@@ -184,12 +252,24 @@ func renderAzureEncryptionPolicy(key byokv1.ByokV1Key) (string, error) {
 	return strings.Join(az, "\n"), nil
 }
 
+func renderGCPEncryptionPolicy(key byokv1.ByokV1Key) string {
+	// No need to do a sanity check for this key as it is handled by the BYOK API validation
+	// assumed to be a valid key ID
+	splitKeyId := strings.Split(key.Key.ByokV1GcpKey.KeyId, "/")
+	project, location, keyRing, keyName, group := splitKeyId[1], splitKeyId[3], splitKeyId[5], splitKeyId[7], key.Key.ByokV1GcpKey.GetSecurityGroup()
+
+	encryptionPolicyMetadata := newGcpPolicyMetadata(project, location, keyRing, keyName, group)
+	return encryptionPolicyMetadata.renderPolicy()
+}
+
 func getPostCreateStepInstruction(key byokv1.ByokV1Key) string {
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
 		return `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
 	case key.Key.ByokV1AzureKey != nil:
 		return "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
+	case key.Key.ByokV1GcpKey != nil:
+		return "To ensure the key has correct permissions assigned, please run the below gcloud-cli command"
 	default:
 		return ""
 	}

@@ -47,6 +47,9 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key byokv1.ByokV1
 	case key.Key.ByokV1AzureKey != nil:
 		keyString = key.Key.ByokV1AzureKey.KeyId
 		roles = append(roles, key.Key.ByokV1AzureKey.GetApplicationId())
+	case key.Key.ByokV1GcpKey != nil:
+		roles = append(roles, key.Key.ByokV1GcpKey.GetSecurityGroup())
+
 	default:
 		return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 	}
