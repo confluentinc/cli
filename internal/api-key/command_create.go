@@ -105,7 +105,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		ownerId = userId
 	}
 
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
+	resourceType, resourceId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -114,14 +114,14 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		Description: apikeysv2.PtrString(description),
 		Owner:       &apikeysv2.ObjectReference{Id: ownerId},
 		Resource: &apikeysv2.ObjectReference{
-			Id:   clusterId,
+			Id:   resourceId,
 			Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
 		},
 	}}
 
 	switch resourceType {
 	case resource.Cloud:
-		key.Spec.Resource.Id = "cloud"
+		key.Spec.Resource.Id = resource.Cloud
 	case resource.Flink:
 		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
@@ -147,7 +147,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
 	if err != nil {
-		return c.catchServiceAccountNotValidError(err, httpResp, clusterId, serviceAccount)
+		return c.catchServiceAccountNotValidError(err, httpResp, resourceId, serviceAccount)
 	}
 
 	userKey := &config.APIKeyPair{
@@ -170,7 +170,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if resourceType == resource.KafkaCluster {
-		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, clusterId); err != nil {
+		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, resourceId); err != nil {
 			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 		}
 	}
@@ -183,7 +183,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if resourceType != resource.KafkaCluster {
 			return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
 		}
-		if err := c.useAPIKey(userKey.Key, clusterId); err != nil {
+		if err := c.useAPIKey(userKey.Key, resourceId); err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
 		}
 		output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
