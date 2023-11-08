@@ -72,6 +72,7 @@ var ccloudV2Routes = []route{
 	{"/networking/v1/private-link-attachment-connections/{id}", handleNetworkingPrivateLinkAttachmentConnection},
 	{"/networking/v1/transit-gateway-attachments", handleNetworkingTransitGatewayAttachments},
 	{"/networking/v1/transit-gateway-attachments/{id}", handleNetworkingTransitGatewayAttachment},
+	{"/networking/v1/network-link-services/{id}", handleNetworkingNetworkLinkService},
 	{"/org/v2/environments", handleOrgEnvironments},
 	{"/org/v2/environments/{id}", handleOrgEnvironment},
 	{"/org/v2/organizations", handleOrgOrganizations},

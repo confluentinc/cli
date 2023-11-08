@@ -188,6 +188,17 @@ func handleNetworkingIpAddresses(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/network-link-service/{id}"
+func handleNetworkingNetworkLinkService(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingNetworkLinkServiceGet(t, id)(w, r)
+		}
+	}
+}
+
 func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -1221,6 +1232,39 @@ func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.Ha
 			}
 		}
 	}
+}
+
+func handleNetworkingNetworkLinkServiceGet(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "nls-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The network-link-service nls-invalid was not found.")
+			require.NoError(t, err)
+		case "nls-123456":
+			nls := getNetworkLinkService("nls-123456", "test-nls", "READY")
+			err := json.NewEncoder(w).Encode(nls)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func getNetworkLinkService(id, name, phase string) networkingv1.NetworkingV1NetworkLinkService {
+	service := networkingv1.NetworkingV1NetworkLinkService{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingv1.NetworkingV1NetworkLinkServiceSpec{
+			DisplayName: networkingv1.PtrString(name),
+			Description: networkingv1.PtrString("test nls"),
+			Accept: &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
+				Networks:     &[]string{"n-abcde2", "n-abcde3"},
+				Environments: &[]string{"env-11111", "env-22222"},
+			},
+			Environment: &networkingv1.GlobalObjectReference{Id: "env-00000"},
+			Network:     &networkingv1.EnvScopedObjectReference{Id: "n-abcde1"},
+		},
+		Status: &networkingv1.NetworkingV1NetworkLinkServiceStatus{Phase: phase},
+	}
+	return service
 }
 
 func handleNetworkingIpAddressList(t *testing.T) http.HandlerFunc {

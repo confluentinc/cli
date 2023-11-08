@@ -85,6 +85,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newPeeringCommand())
 	cmd.AddCommand(c.newPrivateLinkCommand())
 	cmd.AddCommand(c.newTransitGatewayAttachmentCommand())
+	cmd.AddCommand(c.newNetworkLinkCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
