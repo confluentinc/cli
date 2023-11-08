@@ -1250,7 +1250,7 @@ func handleNetworkingNetworkLinkServiceGet(t *testing.T, id string) http.Handler
 }
 
 func getNetworkLinkService(id, name, phase string) networkingv1.NetworkingV1NetworkLinkService {
-	service := networkingv1.NetworkingV1NetworkLinkService{
+	return networkingv1.NetworkingV1NetworkLinkService{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingv1.NetworkingV1NetworkLinkServiceSpec{
 			DisplayName: networkingv1.PtrString(name),
@@ -1264,7 +1264,6 @@ func getNetworkLinkService(id, name, phase string) networkingv1.NetworkingV1Netw
 		},
 		Status: &networkingv1.NetworkingV1NetworkLinkServiceStatus{Phase: phase},
 	}
-	return service
 }
 
 func handleNetworkingIpAddressList(t *testing.T) http.HandlerFunc {

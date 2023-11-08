@@ -15,7 +15,7 @@ import (
 type networkLinkServiceHumanOut struct {
 	Id                   string `human:"ID"`
 	Name                 string `human:"Name"`
-	NetworkId            string `human:"Network ID"`
+	Network              string `human:"Network"`
 	Environment          string `human:"Environment"`
 	Description          string `human:"Description,omitempty"`
 	AcceptedEnvironments string `human:"Accepted Environments,omitempty"`
@@ -26,8 +26,8 @@ type networkLinkServiceHumanOut struct {
 type networkLinkServiceSerializedOut struct {
 	Id                   string   `serialized:"id"`
 	Name                 string   `serialized:"name"`
-	NetworkId            string   `serialized:"network_id"`
-	Environment          string   `serialized:"environment_id"`
+	Network              string   `serialized:"network"`
+	Environment          string   `serialized:"environment"`
 	Description          string   `serialized:"description,omitempty"`
 	AcceptedEnvironments []string `serialized:"accepted_environments,omitempty"`
 	AcceptedNetworks     []string `serialized:"accepted_networks,omitempty"`
@@ -97,7 +97,7 @@ func printNetworkLinkServiceTable(cmd *cobra.Command, service networkingv1.Netwo
 		table.Add(&networkLinkServiceHumanOut{
 			Id:                   service.GetId(),
 			Name:                 service.Spec.GetDisplayName(),
-			NetworkId:            service.Spec.Network.GetId(),
+			Network:              service.Spec.Network.GetId(),
 			Environment:          service.Spec.Environment.GetId(),
 			Description:          service.Spec.GetDescription(),
 			AcceptedEnvironments: strings.Join(service.Spec.Accept.GetEnvironments(), ", "),
@@ -108,7 +108,7 @@ func printNetworkLinkServiceTable(cmd *cobra.Command, service networkingv1.Netwo
 		table.Add(&networkLinkServiceSerializedOut{
 			Id:                   service.GetId(),
 			Name:                 service.Spec.GetDisplayName(),
-			NetworkId:            service.Spec.Network.GetId(),
+			Network:              service.Spec.Network.GetId(),
 			Environment:          service.Spec.Environment.GetId(),
 			Description:          service.Spec.GetDescription(),
 			AcceptedEnvironments: service.Spec.Accept.GetEnvironments(),

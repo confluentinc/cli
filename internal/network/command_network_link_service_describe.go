@@ -14,7 +14,6 @@ func (c *command) newNetworkLinkServiceDescribeCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validNetworkLinkServiceArgs),
 		RunE:              c.networkLinkServiceDescribe,
-
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe network link service "nls-123456".`,
