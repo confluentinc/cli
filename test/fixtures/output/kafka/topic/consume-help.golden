@@ -10,6 +10,10 @@ Consume items from topic "my-topic" and press "Ctrl-C" to exit.
 
   $ confluent kafka topic consume my-topic --from-beginning
 
+Consume from a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.
+
+  $ confluent kafka topic consume my_topic --api-key <api-key> --api-secret <api-secret> --bootstrap <Kafka-cluster-endpoint> --value-format avro --schema-registry-endpoint <schema-registry-endpoint> --schema-registry-api-key <schema-registry-api-key> --schema-registry-api-secret <schema-registry-api-secret>
+
 Flags:
       --bootstrap string                    Comma-separated list of broker hosts, each formatted as "host" or "host:port". For Confluent Cloud, it's Kafka cluster endpoint.
       --group string                        Consumer group ID. (default "confluent_cli_consumer_<randomly-generated-id>")
