@@ -20,3 +20,9 @@ vendor/*
 
 *.sw*
 **/*.DS_Store
+
+# RPM/DEB
+/rpm/
+/deb/
+*.gpg
+passphrase
