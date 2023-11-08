@@ -1,5 +1,10 @@
 #!/bin/bash
 
+function cleanup {
+  shred --force --remove --zero --iterations=10 secret.gpg passphrase CLIEVCodeSigningCertificate2.pfx
+}
+trap cleanup EXIT
+
 rm -rf deb/ rpm/
 mkdir -p deb rpm
 
@@ -7,6 +12,11 @@ mkdir -p deb rpm
 aws s3 sync s3://confluent.cloud.internal/rpm rpm
 
 aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
+
+export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud
+vault login -method=oidc -path=okta
+vault kv get -field gpg_secret_key v1/ci/kv/cli/release-test > secret.gpg
+vault kv get -field gpg_passphrase v1/ci/kv/cli/release-test > passphrase
 
 go mod vendor
 
