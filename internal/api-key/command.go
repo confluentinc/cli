@@ -199,7 +199,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	var apiKey string
 
 	switch resourceType {
-	case presource.Cloud:
+	case presource.Cloud, presource.Flink:
 		break
 	case presource.KafkaCluster:
 		cluster, err := c.Context.FindKafkaCluster(c.V2Client, resource)
