@@ -793,12 +793,14 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 func warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
 		output.ErrPrintln(false, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln(false, "The local commands have been verified to work with Docker Desktop version as late as 4.25.0.")
 		output.ErrPrintln(false, "")
 		return
 	}
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") && !strings.HasPrefix(cmd.CommandPath(), "confluent local kafka") {
 		output.ErrPrintln(false, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
 		output.ErrPrintln(false, "As of Confluent Platform 8.0, Java 8 will no longer be supported.")
+		output.ErrPrintln(false, "The local commands have been verified to work with Docker Desktop version as late as 4.25.0.")
 		output.ErrPrintln(false, "")
 	}
 }
