@@ -121,7 +121,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !c.Config.IsCloudLogin() {
-		dir, err := CreateTempDir()
+		dir, err := createTempDir()
 		if err != nil {
 			return err
 		}

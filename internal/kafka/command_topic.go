@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -14,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -41,25 +44,24 @@ func newTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comman
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-		cmd.AddCommand(c.newConsumeCommand())
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(c.newProduceCommand())
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
-		cmd.AddCommand(c.newConsumeCommandOnPrem())
 		cmd.AddCommand(c.newCreateCommandOnPrem())
 		cmd.AddCommand(c.newDeleteCommandOnPrem())
 		cmd.AddCommand(c.newDescribeCommandOnPrem())
 		cmd.AddCommand(c.newListCommandOnPrem())
-		cmd.AddCommand(c.newProduceCommandOnPrem())
 		cmd.AddCommand(c.newUpdateCommandOnPrem())
 	}
+
+	cmd.AddCommand(c.newConsumeCommand())
+	cmd.AddCommand(c.newProduceCommand())
 
 	return cmd
 }
@@ -139,6 +141,38 @@ func (c *command) provisioningClusterCheck(lkc string) error {
 	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
 		return fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 	}
+	return nil
+}
+
+func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
+	bootstrap, err := cmd.Flags().GetString("bootstrap")
+	if err != nil {
+		return err
+	}
+
+	platform := &config.Platform{
+		Server: bootstrap,
+		Name:   strings.TrimPrefix(bootstrap, "https://"),
+	}
+
+	kafkaClusterCfg := &config.KafkaClusterConfig{
+		ID:        "anonymous-id", // TODO: CLI-2887
+		Bootstrap: bootstrap,
+		APIKeys:   map[string]*config.APIKeyPair{},
+	}
+	kafkaClusters := map[string]*config.KafkaClusterConfig{kafkaClusterCfg.ID: kafkaClusterCfg}
+
+	ctx := &config.Context{Platform: platform}
+	kafkaClusterContext := &config.KafkaClusterContext{
+		EnvContext:          false,
+		ActiveKafkaCluster:  kafkaClusterCfg.ID,
+		KafkaClusterConfigs: kafkaClusters,
+		Context:             ctx,
+	}
+	ctx.KafkaClusterContext = kafkaClusterContext
+
+	c.Context = &dynamicconfig.DynamicContext{Context: ctx}
+
 	return nil
 }
 
@@ -228,4 +262,10 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 		go scan()
 	}
 	return scanErr
+}
+
+func createTempDir() (string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	err := os.MkdirAll(dir, 0755)
+	return dir, err
 }
