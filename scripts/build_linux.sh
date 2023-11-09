@@ -6,11 +6,19 @@ function cleanup {
 }
 trap cleanup EXIT
 
+function dry-run {
+  if [ "$DRY_RUN" = "true" ]; then
+    echo "[DRY_RUN] $1"
+  else
+    $1
+  fi
+}
+
 rm -rf deb/ rpm/
 mkdir -p deb rpm
 
 # aws s3 sync s3://confluent.cloud.internal/deb deb
-aws s3 sync s3://confluent.cloud.internal/rpm rpm
+aws s3 sync s3://confluent.cloud.internal/rpm rpm --exclude '*index.html' --exclude '' --exclude '*/'
 
 aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
 
@@ -38,3 +46,6 @@ docker container create --name cli-linux-arm64-builder cli-linux-arm64-builder-i
 docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/
 docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
 docker container rm cli-linux-arm64-builder
+
+dry-run "aws s3 sync rpm s3://confluent.cloud.internal/rpm"
+dry-run "s3-repo-utils -v website index --fake-index --prefix "rpm" confluent.cloud.internal"
