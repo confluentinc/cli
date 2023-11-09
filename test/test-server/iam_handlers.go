@@ -122,28 +122,40 @@ func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 
 func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := new(apikeysv2.IamV2ApiKey)
+		req := &apikeysv2.IamV2ApiKey{}
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
+
 		if req.Spec.Owner.Id == "sa-123456" {
 			err = writeServiceAccountInvalidError(w)
 			require.NoError(t, err)
 			return
 		}
+
 		apiKey := req
-		apiKey.Id = apikeysv2.PtrString(fmt.Sprintf("MYKEY%d", keyIndex))
-		apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
-			Owner:  req.Spec.Owner,
-			Secret: apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
-			Resource: &apikeysv2.ObjectReference{
-				Id:   req.Spec.Resource.GetId(),
-				Kind: apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
-			},
-			Description: req.Spec.Description,
+
+		switch req.Spec.Resource.GetKind() {
+		case "Region":
+			apiKey = &apikeysv2.IamV2ApiKey{
+				Id:   apikeysv2.PtrString("FLINKREGIONAPIKEY"),
+				Spec: &apikeysv2.IamV2ApiKeySpec{Secret: apikeysv2.PtrString("FLINKREGIONAPISECRET")},
+			}
+		default:
+			apiKey.Id = apikeysv2.PtrString(fmt.Sprintf("MYKEY%d", keyIndex))
+			apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
+				Owner:  req.Spec.Owner,
+				Secret: apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
+				Resource: &apikeysv2.ObjectReference{
+					Id:   req.Spec.Resource.GetId(),
+					Kind: apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
+				},
+				Description: req.Spec.Description,
+			}
+			apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
+			keyIndex++
+			keyStoreV2[*apiKey.Id] = apiKey
 		}
-		apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
-		keyIndex++
-		keyStoreV2[*apiKey.Id] = apiKey
+
 		err = json.NewEncoder(w).Encode(apiKey)
 		require.NoError(t, err)
 	}

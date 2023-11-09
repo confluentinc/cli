@@ -21,14 +21,6 @@ type createOut struct {
 	ApiSecret string `human:"API Secret" serialized:"api_secret"`
 }
 
-var resourceTypeToKind = map[string]string{
-	resource.Flink:                 "Flink",
-	resource.KafkaCluster:          "Cluster",
-	resource.KsqlCluster:           "ksqlDB",
-	resource.SchemaRegistryCluster: "SchemaRegistry",
-	resource.Cloud:                 "Cloud",
-}
-
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -113,10 +105,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
 		Description: apikeysv2.PtrString(description),
 		Owner:       &apikeysv2.ObjectReference{Id: ownerId},
-		Resource: &apikeysv2.ObjectReference{
-			Id:   resourceId,
-			Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
-		},
+		Resource:    &apikeysv2.ObjectReference{Id: resourceId},
 	}}
 
 	switch resourceType {
