@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function cleanup {
-  shred --force --remove --zero --iterations=10 secret.gpg passphrase CLIEVCodeSigningCertificate2.pfx
+  shred --force --remove --zero --iterations=10 secret.gpg passphrase
   rm -rf vendor
 }
 trap cleanup EXIT
