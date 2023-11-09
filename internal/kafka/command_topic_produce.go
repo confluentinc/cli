@@ -38,7 +38,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Produce to a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.`,
-				Code: "confluent kafka topic produce my_topic --api-key my-key --api-secret my-secret --bootstrap SASL_SSL://pkc-123:9092 --value-format avro --schema test.avsc --schema-registry-endpoint https://psrc-456 --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret",
+				Code: "confluent kafka topic produce my_topic --api-key my-key --api-secret my-secret --bootstrap SASL_SSL://pkc-abc12:9092 --value-format avro --schema test.avsc --schema-registry-endpoint https://psrc-ab123 --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret",
 			},
 		),
 	}

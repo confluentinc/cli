@@ -34,7 +34,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Consume from a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.`,
-				Code: "confluent kafka topic consume my_topic --api-key my-key --api-secret my-secret --bootstrap SASL_SSL://pkc-123:9092 --value-format avro --schema-registry-endpoint https://psrc-456 --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret",
+				Code: "confluent kafka topic consume my_topic --api-key my-key --api-secret my-secret --bootstrap SASL_SSL://pkc-abc12:9092 --value-format avro --schema-registry-endpoint https://psrc-ab123 --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret",
 			},
 		),
 	}
