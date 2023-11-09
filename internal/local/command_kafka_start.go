@@ -29,6 +29,7 @@ import (
 )
 
 const (
+	dockerWorkingVersionMsg   = "The local commands have been verified to work with Docker Desktop version as late as 4.25.0. Verify that you are not using an unverified version of Docker (versions greater than v4.25.0)."
 	confluentBrokerPrefix     = "confluent-local-broker-%d"
 	controllerVoterPrefix     = "%d@confluent-local-broker-%d:%s"
 	bootstrapServerPrefix     = "confluent-local-broker-%d:%s"
@@ -78,6 +79,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 
 	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
 	if err != nil {
+		output.ErrPrintln(false, dockerWorkingVersionMsg)
 		return err
 	}
 
@@ -105,6 +107,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 
 	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, types.ImagePullOptions{})
 	if err != nil {
+		output.ErrPrintln(false, dockerWorkingVersionMsg)
 		return err
 	}
 	defer out.Close()
@@ -161,6 +164,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		Driver:         "bridge",
 	}
 	if _, err := dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, options); err != nil && !strings.Contains(err.Error(), "already exists") {
+		output.ErrPrintln(false, dockerWorkingVersionMsg)
 		return err
 	}
 
@@ -194,10 +198,12 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 
 		createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, fmt.Sprintf(confluentBrokerPrefix, brokerId))
 		if err != nil {
+			output.ErrPrintln(false, dockerWorkingVersionMsg)
 			return err
 		}
 		log.CliLogger.Trace(fmt.Sprintf("Successfully created a Confluent Local container for broker %d", brokerId))
 		if err := dockerClient.ContainerStart(context.Background(), createResp.ID, types.ContainerStartOptions{}); err != nil {
+			output.ErrPrintln(false, dockerWorkingVersionMsg)
 			return err
 		}
 		containerIds = append(containerIds, getShortenedContainerId(createResp.ID))
