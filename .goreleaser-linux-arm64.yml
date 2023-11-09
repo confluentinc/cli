@@ -47,6 +47,9 @@ nfpms:
     formats:
       - deb
       - rpm
+    deb:
+      signature:
+        key_file: /run/secrets/gpg_secret_key
     rpm:
       signature:
         key_file: /run/secrets/gpg_secret_key
