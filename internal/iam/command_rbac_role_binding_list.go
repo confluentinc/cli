@@ -93,7 +93,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
+		cmd.Flags().String("environment", "", "Environment ID for the scope of role binding listings.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for scope of role binding listings.")
@@ -109,7 +109,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-	cmd.Flags().Bool("inclusive", false, "List all role bindings in the specified scope and its nested scopes. If not specified, only list role bindings in the specified scope. If no scope is specified, only organization scoped role bindings are listed.")
+	cmd.Flags().Bool("inclusive", false, "List all role bindings for the specified scope and subscopes. If unspecified, list the role bindings for the specified scope. If no scope is specified, only organization-scoped role bindings are listed.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
