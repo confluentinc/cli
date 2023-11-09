@@ -145,19 +145,19 @@ func (c *command) provisioningClusterCheck(lkc string) error {
 }
 
 func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
-	kafkaBootstrap, err := cmd.Flags().GetString("bootstrap")
+	bootstrap, err := cmd.Flags().GetString("bootstrap")
 	if err != nil {
 		return err
 	}
 
 	platform := &config.Platform{
-		Server: kafkaBootstrap,
-		Name:   strings.TrimPrefix(kafkaBootstrap, "https://"),
+		Server: bootstrap,
+		Name:   strings.TrimPrefix(bootstrap, "https://"),
 	}
 
 	kafkaClusterCfg := &config.KafkaClusterConfig{
-		ID:        "anonymous-id", // TODO: remove in V4
-		Bootstrap: kafkaBootstrap,
+		ID:        "anonymous-id", // TODO: CLI-2887
+		Bootstrap: bootstrap,
 		APIKeys:   map[string]*config.APIKeyPair{},
 	}
 	kafkaClusters := map[string]*config.KafkaClusterConfig{kafkaClusterCfg.ID: kafkaClusterCfg}
@@ -171,8 +171,7 @@ func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
 	}
 	ctx.KafkaClusterContext = kafkaClusterContext
 
-	dynamicContext := &dynamicconfig.DynamicContext{Context: ctx}
-	c.Context = dynamicContext
+	c.Context = &dynamicconfig.DynamicContext{Context: ctx}
 
 	return nil
 }

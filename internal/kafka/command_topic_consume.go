@@ -56,11 +56,11 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 
 	// cloud-only flags
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -81,7 +81,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 func (c *command) consume(cmd *cobra.Command, args []string) error {
 	if c.Context == nil || c.Context.State == nil {
 		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "bootstrap")
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
 		}
 
 		if err := c.prepareAnonymousContext(cmd); err != nil {
@@ -92,7 +92,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		return c.consumeCloud(cmd, args)
 	} else {
 		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "bootstrap")
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
 		}
 
 		return c.consumeOnPrem(cmd, args)

@@ -57,10 +57,10 @@ func (c *command) newProduceCommand() *cobra.Command {
 
 	// cloud-only flags
 	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
-	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -89,7 +89,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 func (c *command) produce(cmd *cobra.Command, args []string) error {
 	if c.Context == nil || c.Context.State == nil {
 		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "bootstrap")
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
 		}
 
 		if err := c.prepareAnonymousContext(cmd); err != nil {
@@ -100,11 +100,11 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		return c.produceCloud(cmd, args)
 	} else {
 		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "bootstrap")
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
 		}
 
 		if !cmd.Flags().Changed("ca-location") {
-			return fmt.Errorf(errors.RequiredFLagNotSetErrorMsg, "ca-location")
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "ca-location")
 		}
 
 		return c.produceOnPrem(cmd, args)

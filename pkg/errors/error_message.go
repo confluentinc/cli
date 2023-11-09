@@ -23,7 +23,7 @@ const (
 	UnknownConnectorIdErrorMsg        = `unknown connector ID "%s"`
 	InvalidApiKeyErrorMsg             = `invalid API key "%s" for resource "%s"`
 	InvalidApiKeySuggestions          = "To list API keys that belong to resource \"%[1]s\", use `confluent api-key list --resource %[1]s`.\nTo create new API key for resource \"%[1]s\", use `confluent api-key create --resource %[1]s`."
-	RequiredFLagNotSetErrorMsg        = `required flag(s) "%s" not set`
+	RequiredFlagNotSetErrorMsg        = `required flag(s) "%s" not set`
 
 	// kafka cluster commands
 	CkuMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
