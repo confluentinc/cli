@@ -545,6 +545,21 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnection_Autocomplete()
 	}
 }
 
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceDescribe() {
+	tests := []CLITest{
+		{args: "network nl service describe nls-123456", fixture: "network/network-link/service/describe.golden"},
+		{args: "network network-link service describe nls-123456", fixture: "network/network-link/service/describe.golden"},
+		{args: "network network-link service describe nls-123456 --output json", fixture: "network/network-link/service/describe-json.golden"},
+		{args: "network network-link service describe", fixture: "network/network-link/service/describe-missing-id.golden", exitCode: 1},
+		{args: "network network-link service describe nls-invalid", fixture: "network/network-link/service/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkIpAddressList() {
 	tests := []CLITest{
 		{args: "network ip-address list", fixture: "network/ip-address/list.golden"},
