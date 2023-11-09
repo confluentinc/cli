@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	dockerWorkingVersionMsg   = "The local commands have been verified to work with Docker Desktop version as late as 4.25.0. Verify that you are not using an unverified version of Docker (versions greater than v4.25.0)."
+	dockerWorkingVersionMsg   = "The local commands have been verified to work with Docker Desktop version as late as 4.25.0. Verify that you are not using an unverified version of Docker."
 	confluentBrokerPrefix     = "confluent-local-broker-%d"
 	controllerVoterPrefix     = "%d@confluent-local-broker-%d:%s"
 	bootstrapServerPrefix     = "confluent-local-broker-%d:%s"
