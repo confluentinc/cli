@@ -1,4 +1,4 @@
-Unset the current Flink compute pool that was set with by the use command.
+Unset the current Flink compute pool that was set with the `use` command.
 
 Usage:
   confluent flink compute-pool unset [flags]
