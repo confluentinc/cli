@@ -12,7 +12,7 @@ import (
 const (
 	dockerImageName             = "confluentinc/confluent-local:latest"
 	localhostPrefix             = "http://localhost:%s"
-	localhost                   = "localhost"
+	localhost                   = "0.0.0.0"
 	kafkaRestNotReadySuggestion = "Kafka REST connection is not ready. Re-running the command may solve the issue."
 )
 
