@@ -8,6 +8,10 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
-RUN cd /cli && make gorelease-linux-amd64
+RUN --mount=type=secret,id=gpg_secret_key --mount=type=secret,id=gpg_passphrase \
+    export NFPM_DEFAULT_PASSPHRASE=$(cat /run/secrets/gpg_passphrase) && \
+    cd /cli && \
+    make gorelease-linux-amd64
 
-RUN cd /cli && for file in prebuilt/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;
+RUN cd /cli && \
+    for file in prebuilt/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;
