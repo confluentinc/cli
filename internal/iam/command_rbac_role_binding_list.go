@@ -109,7 +109,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-	cmd.Flags().Bool("inclusive", false, "List all role bindings in a specific scope and its nested scopes.")
+	cmd.Flags().Bool("inclusive", false, "List all role bindings in the specified scope and its nested scopes. If not specified, only list role bindings in the specified scope.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
