@@ -282,8 +282,8 @@ func lspCompletionToSuggest(completion lsp.CompletionItem) prompt.Suggest {
 
 func lspTextEditToSuggestion(completion lsp.CompletionItem, wordUntilCursor string, startOfPreviousWord int) prompt.Suggest {
 	replaceRange := completion.TextEdit.Range
-	if replaceRange.Start.Line != 0 || replaceRange.End.Character != 0 {
-		log.CliLogger.Debug("we only support one statement at the time")
+	if replaceRange.Start.Line != 0 {
+		log.CliLogger.Debug("we only support replaces with start line 0 for now")
 	}
 
 	// We only have to insert text
