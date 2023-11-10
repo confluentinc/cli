@@ -103,13 +103,13 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the SR cluster scope.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID, which specifies the ksqlDB cluster scope.")
-		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID for scope of role bindings.")
+		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID, which specifies the Connect cluster scope.")
 		cmd.Flags().String("cluster-name", "", "Cluster name, which specifies the cluster scope.")
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
 
 	cmd.Flags().String("resource", "", "Resource type for . If specified with `--role` and no principals, list all principals and role bindings  the `--role` for the specified resource.")
-	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scope and subscopes. Otherwise, list the role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.")
+	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scopes and subscopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
