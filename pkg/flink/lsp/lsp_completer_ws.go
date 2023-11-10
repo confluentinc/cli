@@ -33,7 +33,13 @@ func (c *LSPClientWS) LSPCompleter(in prompt.Document) []prompt.Suggest {
 
 	err := c.didChange(in.Text)
 	if err != nil {
-		log.CliLogger.Debugf("Error sending didChange lsp request: %v\n", err)
+		log.CliLogger.Debugf("Error sending didChange lsp notification: %v\n", err)
+		return nil
+	}
+
+	err = c.didChangeConfiguration()
+	if err != nil {
+		log.CliLogger.Debugf("Error sending didChangeConfiguration lsp notification: %v\n", err)
 		return nil
 	}
 
@@ -96,8 +102,6 @@ func (c *LSPClientWS) didOpen() error {
 }
 
 func (c *LSPClientWS) didChange(newText string) error {
-	var resp interface{}
-
 	if c.conn == nil || c.documentURI == nil {
 		return errors.New("connection to LSP server not established/nil")
 	}
@@ -113,7 +117,32 @@ func (c *LSPClientWS) didChange(newText string) error {
 		},
 	}
 
-	err := c.conn.Call(context.Background(), "textDocument/didChange", didchangeParams, &resp)
+	err := c.conn.Notify(context.Background(), "textDocument/didChange", didchangeParams)
+
+	if err != nil {
+		log.CliLogger.Debugf("Error sending request: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+func (c *LSPClientWS) didChangeConfiguration() error {
+	if c.conn == nil {
+		return errors.New("connection to LSP server not established/nil")
+	}
+
+	settings := api.CliContext{
+		AuthToken:     c.store.GetAuthToken(),
+		Catalog:       c.store.GetCurrentCatalog(),
+		Database:      c.store.GetCurrentDatabase(),
+		ComputePoolId: c.store.GetComputePool(),
+	}
+
+	didChangeConfigParams := lsp.DidChangeConfigurationParams{
+		Settings: settings,
+	}
+
+	err := c.conn.Notify(context.Background(), "workspace/didChangeConfiguration", didChangeConfigParams)
 
 	if err != nil {
 		log.CliLogger.Debugf("Error sending request: %v\n", err)
@@ -135,14 +164,8 @@ func (c *LSPClientWS) completion(position lsp.Position) (lsp.CompletionList, err
 		},
 		Position: position,
 	}}
-	cliCtx := api.CliContext{
-		AuthToken:     c.store.GetAuthToken(),
-		Catalog:       c.store.GetCurrentCatalog(),
-		Database:      c.store.GetCurrentDatabase(),
-		ComputePoolId: c.store.GetComputePool(),
-	}
 
-	err := c.conn.Call(context.Background(), "textDocument/completion", completionParams, &resp, jsonrpc2.Meta(cliCtx))
+	err := c.conn.Call(context.Background(), "textDocument/completion", completionParams, &resp)
 
 	if err != nil {
 		log.CliLogger.Debugf("Error sending request: %v\n", err)
