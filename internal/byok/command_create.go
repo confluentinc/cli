@@ -62,13 +62,13 @@ func (g gcpPolicyMetadata) renderPolicy() string {
 gcloud iam roles create %[1]s \
 	--project=%[2]s \
 	--description="Grant necessary permissions for Confluent to access KMS key" \
-	--permissions=cloudkms.cryptoKeyVersions.useToDecrypt,cloudkms.cryptoKeyVersions.useToEncrypt,cloudkms.cryptoKeys.get  && \
+	--permissions=cloudkms.cryptoKeyVersions.useToDecrypt,cloudkms.cryptoKeyVersions.useToEncrypt,cloudkms.cryptoKeys.get && \
 gcloud kms keys add-iam-policy-binding %[3]s \
 	--project=%[2]s \
-	--keyring='%[4]s' \
-	--location='%[5]s' \
-	--member='group:%[6]s' \
-	--role='projects/%[2]s/roles/%[1]s'`, g.getCustomRoleName(), g.project, g.key, g.keyRing, g.location, g.group)
+	--keyring="%[4]s" \
+	--location="%[5]s" \
+	--member="group:%[6]s" \
+	--role="projects/%[2]s/roles/%[1]s"`, g.getCustomRoleName(), g.project, g.key, g.keyRing, g.location, g.group)
 }
 
 func newGcpPolicyMetadata(project, location, keyRing, key, group string) gcpPolicyMetadata {
@@ -253,7 +253,8 @@ func renderGCPEncryptionPolicy(key byokv1.ByokV1Key) string {
 	// No need to do a sanity check for this key as it is handled by the BYOK API validation
 	// assumed to be a valid key ID
 	splitKeyId := strings.Split(key.Key.ByokV1GcpKey.KeyId, "/")
-	project, location, keyRing, keyName, group := splitKeyId[1], splitKeyId[3], splitKeyId[5], splitKeyId[7], key.Key.ByokV1GcpKey.GetSecurityGroup()
+	project, location, keyRing, keyName := splitKeyId[1], splitKeyId[3], splitKeyId[5], splitKeyId[7]
+	group := key.Key.ByokV1GcpKey.GetSecurityGroup()
 
 	encryptionPolicyMetadata := newGcpPolicyMetadata(project, location, keyRing, keyName, group)
 	return encryptionPolicyMetadata.renderPolicy()
@@ -266,7 +267,7 @@ func getPostCreateStepInstruction(key byokv1.ByokV1Key) string {
 	case key.Key.ByokV1AzureKey != nil:
 		return "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
 	case key.Key.ByokV1GcpKey != nil:
-		return "To ensure the key has the correct role assignments, please run the following gcloud-cli command:"
+		return "To ensure the key has the correct role assignments, please run the following `gcloud`-cli command:"
 	default:
 		return ""
 	}
