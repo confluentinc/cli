@@ -1,0 +1,8 @@
+{
+  "id": "cck-004",
+  "key": "projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3",
+  "roles": [""],
+  "provider": "GCP",
+  "state": "AVAILABLE",
+  "created_at": "2023-01-01 13:00:30 +0000 UTC"
+}

@@ -1,11 +1,9 @@
 package kafka
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"strings"
-	"text/template"
 
 	"github.com/spf13/cobra"
 
@@ -15,7 +13,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
@@ -28,16 +25,6 @@ const (
 	skuDedicated  = "dedicated"
 )
 
-var permitBYOKGCP = template.Must(template.New("byok_gcp_permissions").Parse(`Create a role with these permissions, add the identity as a member of your key, and grant your role to the member:
-
-Permissions:
-  - cloudkms.cryptoKeyVersions.useToDecrypt
-  - cloudkms.cryptoKeyVersions.useToEncrypt
-  - cloudkms.cryptoKeys.get
-
-Identity:
-  {{.ExternalIdentity}}`))
-
 func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
@@ -49,7 +36,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in GCP:",
-				Code: `confluent kafka cluster create sales092020 --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --encryption-key "projects/PROJECT_NAME/locations/LOCATION/keyRings/KEY_RING/cryptoKeys/KEY_NAME"`,
+				Code: `confluent kafka cluster create sales092020 --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --byok cck-a123z"`,
 			},
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
@@ -66,7 +53,6 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
-	cmd.Flags().String("encryption-key", "", "Resource ID of the Cloud Key Management Service key (GCP only).")
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -114,25 +100,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var encryptionKey string
-	if cmd.Flags().Changed("encryption-key") {
-		if cloud != "gcp" {
-			return errors.NewErrorWithSuggestions(
-				"BYOK via `--encryption-key` is only available for GCP",
-				"Use `confluent byok create` to register AWS and Azure keys.",
-			)
-		}
-
-		encryptionKey, err = cmd.Flags().GetString("encryption-key")
-		if err != nil {
-			return err
-		}
-
-		if err := c.validateGcpEncryptionKey(cloud, environmentId); err != nil {
-			return err
-		}
-	}
-
 	byok, err := cmd.Flags().GetString("byok")
 	if err != nil {
 		return err
@@ -153,7 +120,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Cloud:        cmkv2.PtrString(cloud),
 		Region:       cmkv2.PtrString(region),
 		Availability: cmkv2.PtrString(availability),
-		Config:       setCmkClusterConfig(clusterType, 1, encryptionKey),
+		Config:       setCmkClusterConfig(clusterType, 1),
 		Byok:         keyGlobalObjectReference,
 	}}
 
@@ -183,43 +150,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
 }
 
-func (c *clusterCommand) validateGcpEncryptionKey(cloud, accountId string) error {
-	// The call is idempotent so repeated create commands return the same ID for the same account.
-	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(cloud, accountId)
-	if err != nil {
-		return err
-	}
-	buf := new(bytes.Buffer)
-	err = permitBYOKGCP.Execute(buf, struct {
-		ExternalIdentity string
-	}{
-		ExternalIdentity: externalID,
-	})
-	if err != nil {
-		return err
-	}
-	buf.WriteString("\n\n")
-	output.Println(c.Config.EnableColor, buf.String())
-
-	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
-	f := form.New(
-		form.Field{
-			ID:        "authorized",
-			Prompt:    promptMsg,
-			IsYesOrNo: true,
-		})
-	for {
-		if err := f.Prompt(form.NewPrompt()); err != nil {
-			output.ErrPrintln(c.Config.EnableColor, "BYOK error: failed to read your confirmation")
-			continue
-		}
-		if !f.Responses["authorized"].(bool) {
-			return fmt.Errorf("BYOK error: please authorize the key for the identity (%s)", externalID)
-		}
-		return nil
-	}
-}
-
 func stringToAvailability(s string) (string, error) {
 	if modelAvailability, ok := availabilitiesToModel[s]; ok {
 		return modelAvailability, nil
@@ -244,7 +174,7 @@ func stringToSku(skuType string) (ccstructs.Sku, error) {
 	return sku, nil
 }
 
-func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
+func setCmkClusterConfig(typeString string, cku int32) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 	switch typeString {
 	case skuBasic:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
@@ -257,13 +187,8 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *
 	case skuEnterprise:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}}
 	case skuDedicated:
-		var encryptionPtr *string
-		if encryptionKeyID != "" {
-			encryptionPtr = &encryptionKeyID
-		}
-
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku, EncryptionKey: encryptionPtr},
+			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
 		}
 	default:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
