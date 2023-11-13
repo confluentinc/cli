@@ -175,7 +175,7 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 	return c.metricsClient, nil
 }
 
-func (c *AuthenticatedCLICommand) GetSchemaRegistryClientByFlags(cmd *cobra.Command, unsafeTrace bool) error {
+func (c *AuthenticatedCLICommand) getSchemaRegistryClientByFlags(cmd *cobra.Command, unsafeTrace bool) error {
 	configuration := srsdk.NewConfiguration()
 	configuration.UserAgent = c.Config.Version.UserAgent
 	configuration.Debug = unsafeTrace
@@ -186,6 +186,9 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClientByFlags(cmd *cobra.Comm
 	}
 	if schemaRegistryEndpoint == "" {
 		return fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
+	}
+	if !strings.HasPrefix(schemaRegistryEndpoint, "http://") && !strings.HasPrefix(schemaRegistryEndpoint, "https://") {
+		schemaRegistryEndpoint = fmt.Sprintf("https://%s", schemaRegistryEndpoint)
 	}
 	configuration.BasePath = schemaRegistryEndpoint
 
@@ -214,8 +217,8 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			return nil, err
 		}
 
-		if c.Config.CheckIsCloudLoginOrOnPremLogin() != nil {
-			if c.GetSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
+		if err := c.Config.CheckIsCloudLoginOrOnPremLogin(); err != nil {
+			if c.getSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
 				return nil, err
 			}
 		} else if c.Config.IsCloudLogin() {
@@ -241,7 +244,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				}
 
 				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, dataplaneToken)
-			} else if c.GetSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
+			} else if c.getSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
 				// Used by `asyncapi export`, `asyncapi import`, `kafka client-config create`, `kafka topic consume`, and `kafka topic produce`
 				return nil, err
 			}
@@ -252,6 +255,9 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			}
 			if schemaRegistryEndpoint == "" {
 				return nil, fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
+			}
+			if !strings.HasPrefix(schemaRegistryEndpoint, "http://") && !strings.HasPrefix(schemaRegistryEndpoint, "https://") {
+				schemaRegistryEndpoint = fmt.Sprintf("https://%s", schemaRegistryEndpoint)
 			}
 
 			caLocation, err := cmd.Flags().GetString("ca-location")
