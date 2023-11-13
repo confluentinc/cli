@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -158,4 +159,12 @@ func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2Invitation
 		req = req.PageToken(pageToken)
 	}
 	return req.Execute()
+}
+
+// iam ip group api calls
+
+func (c *Client) CreateIamIPGroup(ipGroup iamv2.IamV2IpGroup) (iamv2.IamV2IpGroup, error) {
+	resp, httpResp, err := c.IamClient.IPGroupsIamV2Api.CreateIamV2IpGroup(c.iamApiContext()).IamV2IpGroup(ipGroup).Execute()
+	fmt.Println("resp: ", resp, "\nhttp: ", httpResp, "\nerr: ", err)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
