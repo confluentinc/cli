@@ -42,6 +42,7 @@ func (c *command) newNetworkLinkServiceCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newNetworkLinkServiceDescribeCommand())
+	cmd.AddCommand(c.newNetworkLinkServiceListCommand())
 
 	return cmd
 }
