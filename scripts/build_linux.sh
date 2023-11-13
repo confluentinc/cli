@@ -48,4 +48,4 @@ docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
 docker container rm cli-linux-arm64-builder
 
 dry-run "aws s3 sync rpm s3://confluent-cli-internal/confluent-cli/rpm"
-dry-run "s3-repo-utils -v website index --fake-index --prefix 'confluent-cli/rpm' confluent-cli-internal"
+dry-run "s3-repo-utils -v website index --fake-index --prefix 'confluent-cli/rpm' confluent-cli-internal" #TODO: this command is apparently flaky; might have to run it a few times
