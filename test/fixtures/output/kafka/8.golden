@@ -5,6 +5,7 @@
   provider: gcp
   region: us-central1
   availability: single-zone
+  network: n-abcde1
   status: PROVISIONING
 - is_current: false
   id: lkc-456
@@ -13,4 +14,5 @@
   provider: gcp
   region: us-central1
   availability: multi-zone
+  network: n-abcde1
   status: PROVISIONING
