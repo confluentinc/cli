@@ -90,14 +90,14 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().String("principal", "", "Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.")
 	cmd.Flags().Bool("current-user", false, "List role bindings assigned to the current user.")
-	cmd.Flags().String("role", "", "Predefined role assigned to `--principal`. If `--principal` is unspecified, list all principals assigned the role.")
+	cmd.Flags().String("role", "", `Predefined role assigned to "--principal". If "--principal" is unspecified, list all principals assigned the role.`)
 
 	if c.cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID, which specifies the environment scope.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for the environment scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID, which specifies the cloud cluster scope.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
-		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the SR cluster scope.")
+		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name, which specifies the ksqlDB cluster scope.")
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
