@@ -199,6 +199,16 @@ func handleNetworkingNetworkLinkService(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/network-link-services"
+func handleNetworkingNetworkLinkServices(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingNetworkLinkServiceList(t)(w, r)
+		}
+	}
+}
+
 func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -1242,27 +1252,74 @@ func handleNetworkingNetworkLinkServiceGet(t *testing.T, id string) http.Handler
 			err := writeErrorJson(w, "The network-link-service nls-invalid was not found.")
 			require.NoError(t, err)
 		case "nls-123456":
-			nls := getNetworkLinkService("nls-123456", "test-nls", "READY")
+			nls := getNetworkLinkService("nls-123456", "test-nls")
 			err := json.NewEncoder(w).Encode(nls)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getNetworkLinkService(id, name, phase string) networkingv1.NetworkingV1NetworkLinkService {
-	return networkingv1.NetworkingV1NetworkLinkService{
+func getNetworkLinkService(id, name string) networkingv1.NetworkingV1NetworkLinkService {
+	service := networkingv1.NetworkingV1NetworkLinkService{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingv1.NetworkingV1NetworkLinkServiceSpec{
 			DisplayName: networkingv1.PtrString(name),
 			Description: networkingv1.PtrString("test nls"),
-			Accept: &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
-				Networks:     &[]string{"n-abcde2", "n-abcde3"},
-				Environments: &[]string{"env-11111", "env-22222"},
-			},
 			Environment: &networkingv1.GlobalObjectReference{Id: "env-00000"},
 			Network:     &networkingv1.EnvScopedObjectReference{Id: "n-abcde1"},
 		},
-		Status: &networkingv1.NetworkingV1NetworkLinkServiceStatus{Phase: phase},
+		Status: &networkingv1.NetworkingV1NetworkLinkServiceStatus{Phase: "READY"},
+	}
+
+	switch id {
+	case "nls-11111":
+		service.Spec.Accept = &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
+			Networks:     &[]string{"n-abcde2"},
+			Environments: &[]string{"env-11111"},
+		}
+	case "nls-22222":
+		service.Spec.Accept = &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
+			Networks:     &[]string{"n-abcde2", "n-abcde3"},
+			Environments: &[]string{"env-11111", "env-22222"},
+		}
+	case "nls-33333":
+		service.Spec.Accept = &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
+			Networks:     &[]string{"n-abcde2", "n-abcde3", "n-abcde4"},
+			Environments: &[]string{"env-11111", "env-22222", "env-33333"},
+		}
+	}
+
+	return service
+}
+
+func handleNetworkingNetworkLinkServiceList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		service1 := getNetworkLinkService("nls-11111", "test-nls1")
+		service2 := getNetworkLinkService("nls-22222", "test-nls2")
+		service3 := getNetworkLinkService("nls-33333", "test-nls3")
+
+		pageToken := r.URL.Query().Get("page_token")
+		var networkLinkServiceList networkingv1.NetworkingV1NetworkLinkServiceList
+		switch pageToken {
+		case "test-nls3":
+			networkLinkServiceList = networkingv1.NetworkingV1NetworkLinkServiceList{
+				Data:     []networkingv1.NetworkingV1NetworkLinkService{service3},
+				Metadata: networkingv1.ListMeta{},
+			}
+		case "test-nls2":
+			networkLinkServiceList = networkingv1.NetworkingV1NetworkLinkServiceList{
+				Data:     []networkingv1.NetworkingV1NetworkLinkService{service2},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-services?environment=env-00000&page_size=1&page_token=test-nls3"))},
+			}
+		default:
+			networkLinkServiceList = networkingv1.NetworkingV1NetworkLinkServiceList{
+				Data:     []networkingv1.NetworkingV1NetworkLinkService{service1},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-services?environment=env-00000&page_size=1&page_token=test-nls2"))},
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(networkLinkServiceList)
+		require.NoError(t, err)
 	}
 }
 

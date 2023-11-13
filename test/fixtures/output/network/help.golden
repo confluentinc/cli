@@ -12,7 +12,6 @@ Available Commands:
   network-link               Manage network links.
   peering                    Manage peerings.
   private-link               Manage private links.
-  network-link               Manage network links.
   transit-gateway-attachment Manage transit gateway attachments.
   update                     Update an existing network.
 

@@ -560,6 +560,19 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
+	tests := []CLITest{
+		{args: "network nl service list", fixture: "network/network-link/service/list.golden"},
+		{args: "network network-link service list", fixture: "network/network-link/service/list.golden"},
+		{args: "network network-link service list --output json", fixture: "network/network-link/service/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkIpAddressList() {
 	tests := []CLITest{
 		{args: "network ip-address list", fixture: "network/ip-address/list.golden"},
