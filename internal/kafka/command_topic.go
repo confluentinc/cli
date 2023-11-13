@@ -156,7 +156,7 @@ func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
 	}
 
 	kafkaClusterCfg := &config.KafkaClusterConfig{
-		ID:        "anonymous-id", // TODO: CLI-2887
+		ID:        "anonymous-id",
 		Bootstrap: bootstrap,
 		APIKeys:   map[string]*config.APIKeyPair{},
 	}

@@ -23,10 +23,10 @@ Flags:
       --config-file string                  The path to the configuration file for the producer client, in JSON or Avro format.
       --schema-registry-endpoint string     Endpoint for Schema Registry cluster.
       --key-references string               The path to the message key schema references file.
-      --schema-registry-api-key string      Schema registry API key.
-      --schema-registry-api-secret string   Schema registry API secret.
       --api-key string                      API key.
       --api-secret string                   API secret.
+      --schema-registry-api-key string      Schema registry API key.
+      --schema-registry-api-secret string   Schema registry API secret.
       --cluster string                      Kafka cluster ID.
       --context string                      CLI context name.
       --environment string                  Environment ID.
