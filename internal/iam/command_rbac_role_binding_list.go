@@ -67,7 +67,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic",
+				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic:my-topic",
 			},
 			examples.Example{
 				Text: "List the role bindings for a specific principal:",
@@ -108,7 +108,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
 
-	cmd.Flags().String("resource", "", "Resource type for . If specified with `--role` and no principals, list all principals and role bindings  the `--role` for the specified resource.")
+	cmd.Flags().String("resource", "", "Resource ID using`<Prefix>:<ID>` format (for example, `User:u-123456`). If specified with `--role` and no principals, list all principals and role bindings  the `--role` for the specified resource.")
 	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scopes and subscopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.")
 	pcmd.AddOutputFlag(cmd)
 
