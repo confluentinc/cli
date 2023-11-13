@@ -1265,6 +1265,10 @@ func getNetworkLinkService(id, name string) networkingv1.NetworkingV1NetworkLink
 		Spec: &networkingv1.NetworkingV1NetworkLinkServiceSpec{
 			DisplayName: networkingv1.PtrString(name),
 			Description: networkingv1.PtrString("test nls"),
+			Accept: &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
+				Networks:     &[]string{"n-abcde2", "n-abcde3"},
+				Environments: &[]string{"env-11111", "env-22222"},
+			},
 			Environment: &networkingv1.GlobalObjectReference{Id: "env-00000"},
 			Network:     &networkingv1.EnvScopedObjectReference{Id: "n-abcde1"},
 		},
@@ -1276,11 +1280,6 @@ func getNetworkLinkService(id, name string) networkingv1.NetworkingV1NetworkLink
 		service.Spec.Accept = &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
 			Networks:     &[]string{"n-abcde2"},
 			Environments: &[]string{"env-11111"},
-		}
-	case "nls-22222":
-		service.Spec.Accept = &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
-			Networks:     &[]string{"n-abcde2", "n-abcde3"},
-			Environments: &[]string{"env-11111", "env-22222"},
 		}
 	case "nls-33333":
 		service.Spec.Accept = &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
