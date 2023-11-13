@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -16,6 +17,7 @@ import (
 	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
@@ -33,36 +35,47 @@ func (c *command) newProduceCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.produce,
-		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Produce to a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.`,
+				Code: "confluent kafka topic produce my_topic --api-key my-key --api-secret my-secret --bootstrap SASL_SSL://pkc-abc12:9092 --value-format avro --schema test.avsc --schema-registry-endpoint https://psrc-ab123 --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret",
+			},
+		),
 	}
 
+	cmd.Flags().String("bootstrap", "", "Bootstrap URL for Confluent Cloud Kafka cluster.")
 	cmd.Flags().String("key-schema", "", "The ID or filepath of the message key schema.")
 	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
 	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
-	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
 	cmd.Flags().String("references", "", "The path to the message value schema references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
 	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
-	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
+
+	// cloud-only flags
+	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-
-	// Deprecated
-	pcmd.AddOutputFlag(cmd)
-	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
-
-	// Deprecated
-	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
+	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.") // Deprecated
 	cobra.CheckErr(cmd.Flags().MarkHidden("schema-id"))
 
+	// on-prem only flags
+	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
+	pcmd.AddProtocolFlag(cmd)
+	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
+
+	pcmd.AddOutputFlag(cmd) // Deprecated
+	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
+
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("key-references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
@@ -74,6 +87,31 @@ func (c *command) newProduceCommand() *cobra.Command {
 }
 
 func (c *command) produce(cmd *cobra.Command, args []string) error {
+	if c.Context == nil || c.Context.State == nil {
+		if !cmd.Flags().Changed("bootstrap") {
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
+		}
+
+		if err := c.prepareAnonymousContext(cmd); err != nil {
+			return err
+		}
+		return c.produceCloud(cmd, args)
+	} else if c.Context.Config.IsCloudLogin() {
+		return c.produceCloud(cmd, args)
+	} else {
+		if !cmd.Flags().Changed("bootstrap") {
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
+		}
+
+		if !cmd.Flags().Changed("ca-location") {
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "ca-location")
+		}
+
+		return c.produceOnPrem(cmd, args)
+	}
+}
+
+func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
 	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
@@ -131,6 +169,162 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	}
 
 	return ProduceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+}
+
+func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
+	producer, err := newOnPremProducer(cmd, c.clientID, configFile, config)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.FailedToCreateProducerErrorMsg, err),
+			errors.OnPremConfigGuideSuggestions,
+		)
+	}
+	defer producer.Close()
+	log.CliLogger.Tracef("Create producer succeeded")
+
+	if err := c.refreshOAuthBearerToken(cmd, producer); err != nil {
+		return err
+	}
+
+	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
+	}
+	defer adminClient.Close()
+
+	topic := args[0]
+	if err := ValidateTopic(adminClient, topic); err != nil {
+		return err
+	}
+
+	keyFormat, keySubject, keySerializer, err := prepareSerializer(cmd, topic, "key")
+	if err != nil {
+		return err
+	}
+
+	valueFormat, valueSubject, valueSerializer, err := prepareSerializer(cmd, topic, "value")
+	if err != nil {
+		return err
+	}
+
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return err
+	}
+
+	if cmd.Flags().Changed("key-format") && !parseKey {
+		return fmt.Errorf("`--parse-key` must be set when `key-format` is set")
+	}
+
+	keySchema, err := cmd.Flags().GetString("key-schema")
+	if err != nil {
+		return err
+	}
+
+	schema, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return err
+	}
+
+	refs, err := sr.ReadSchemaReferences(cmd, false)
+	if err != nil {
+		return err
+	}
+
+	dir, err := createTempDir()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	keySchemaConfigs := &sr.RegisterSchemaConfigs{
+		Subject:    keySubject,
+		SchemaDir:  dir,
+		SchemaType: keySerializer.GetSchemaName(),
+		Format:     keyFormat,
+		SchemaPath: keySchema,
+		Refs:       refs,
+	}
+	keyMetaInfo, keyReferencePathMap, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
+	if err != nil {
+		return err
+	}
+	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
+		return err
+	}
+
+	valueSchemaConfigs := &sr.RegisterSchemaConfigs{
+		Subject:    valueSubject,
+		SchemaDir:  dir,
+		SchemaType: valueSerializer.GetSchemaName(),
+		Format:     valueFormat,
+		SchemaPath: schema,
+		Refs:       refs,
+	}
+	valueMetaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
+	if err != nil {
+		return err
+	}
+	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
+		return err
+	}
+
+	return ProduceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+}
+
+func prepareSerializer(cmd *cobra.Command, topic, mode string) (string, string, serdes.SerializationProvider, error) {
+	valueFormat, err := cmd.Flags().GetString(fmt.Sprintf("%s-format", mode))
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	serializer, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	return valueFormat, topicNameStrategy(topic, mode), serializer, nil
+}
+
+func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+	// For plain string encoding, meta info is empty.
+	// Registering schema when specified, and fill metaInfo array.
+	metaInfo := []byte{}
+	referencePathMap := map[string]string{}
+	if slices.Contains(serdes.SchemaBasedFormats, schemaCfg.Format) && schemaCfg.SchemaPath != "" {
+		if c.Context.State == nil { // require log-in to use oauthbearer token
+			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
+		}
+
+		srClient, err := c.GetSchemaRegistryClient(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient)
+		if err != nil {
+			return nil, nil, err
+		}
+		metaInfo = sr.GetMetaInfoFromSchemaId(id)
+
+		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return metaInfo, referencePathMap, nil
 }
 
 func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
@@ -262,7 +456,7 @@ func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, e
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
-	schemaDir, err := sr.CreateTempDir()
+	schemaDir, err := createTempDir()
 	if err != nil {
 		return nil, nil, err
 	}
