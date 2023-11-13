@@ -79,7 +79,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 }
 
 func (c *command) consume(cmd *cobra.Command, args []string) error {
-	if c.Context == nil || c.Context.State == nil {
+	if c.Context.GetState() == nil {
 		if !cmd.Flags().Changed("bootstrap") {
 			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
 		}
