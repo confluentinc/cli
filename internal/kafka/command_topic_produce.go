@@ -37,13 +37,13 @@ func (c *command) newProduceCommand() *cobra.Command {
 		RunE:              c.produce,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Produce to a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.`,
+				Text: `Produce to topic "my_topic" in Confluent Cloud with a Confluent Cloud API key.`,
 				Code: "confluent kafka topic produce my_topic --api-key my-key --api-secret my-secret --bootstrap SASL_SSL://pkc-abc12:9092 --value-format avro --schema test.avsc --schema-registry-endpoint https://psrc-ab123 --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret",
 			},
 		),
 	}
 
-	cmd.Flags().String("bootstrap", "", "Bootstrap URL for Confluent Cloud Kafka cluster.")
+	cmd.Flags().String("bootstrap", "", `Kafka cluster endpoint (Confluent Cloud); or comma-separated list of broker hosts (Confluent Platform), each formatted as "host" or "host:port".`)
 	cmd.Flags().String("key-schema", "", "The ID or filepath of the message key schema.")
 	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
 	pcmd.AddKeyFormatFlag(cmd)

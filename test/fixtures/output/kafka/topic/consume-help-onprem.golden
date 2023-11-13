@@ -15,7 +15,7 @@ Consume from a cloud Kafka topic named "my_topic" without logging in to Confluen
   $ confluent kafka topic consume my_topic --api-key my-key --api-secret my-secret --bootstrap SASL_SSL://pkc-abc12:9092 --value-format avro --schema-registry-endpoint https://psrc-ab123 --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret
 
 Flags:
-      --bootstrap string                    Comma-separated list of broker hosts, each formatted as "host" or "host:port". For Confluent Cloud, it's Kafka cluster endpoint.
+      --bootstrap string                    Kafka cluster endpoint (Confluent Cloud); or comma-separated list of broker hosts (Confluent Platform), each formatted as "host" or "host:port".
       --group string                        Consumer group ID. (default "confluent_cli_consumer_<randomly-generated-id>")
   -b, --from-beginning                      Consume from beginning of the topic.
       --offset int                          The offset from the beginning to consume from.

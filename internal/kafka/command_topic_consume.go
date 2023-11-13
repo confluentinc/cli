@@ -39,7 +39,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("bootstrap", "", `Comma-separated list of broker hosts, each formatted as "host" or "host:port". For Confluent Cloud, it's Kafka cluster endpoint.`)
+	cmd.Flags().String("bootstrap", "", `Kafka cluster endpoint (Confluent Cloud); or comma-separated list of broker hosts (Confluent Platform), each formatted as "host" or "host:port".`)
 	cmd.Flags().String("group", "confluent_cli_consumer_<randomly-generated-id>", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
