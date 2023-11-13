@@ -101,7 +101,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name, which specifies the ksqlDB cluster scope.")
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
-		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the SR cluster scope.")
+		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID, which specifies the ksqlDB cluster scope.")
 		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID, which specifies the Connect cluster scope.")
 		cmd.Flags().String("cluster-name", "", "Cluster name, which specifies the cluster scope.")
