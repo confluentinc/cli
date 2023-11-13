@@ -47,7 +47,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding list --principal User:u-123456",
 			},
 			examples.Example{
-				Text: `List the role bindings for principals assigned the "CloudClusterAdmin" role:`,
+				Text: `List the role bindings for principals with role "CloudClusterAdmin":`,
 				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-environment --cloud-cluster lkc-123456",
 			},
 			examples.Example{
