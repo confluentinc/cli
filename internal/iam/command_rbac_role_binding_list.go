@@ -108,7 +108,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
 
-	cmd.Flags().String("resource", "", "Resource type and identifier using \"<Prefix>:<ID>\" format (for example, \"User:u-123456\"). If specified with "--role" and no principals, list all principals and role bindings.")
+	cmd.Flags().String("resource", "", "Resource type and identifier using \"<Prefix>:<ID>\" format (for example, \"User:u-123456\"). If specified with \"--role\" and no principals, list all principals and role bindings.")
 	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scopes and subscopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.")
 	pcmd.AddOutputFlag(cmd)
 

@@ -1,4 +1,4 @@
-List the role bindings for a particular principal and/or role, and a particular scope.
+List role bindings assigned to a principal or role based on scopes.
 
 Usage:
   confluent iam rbac role-binding list [flags]
@@ -6,36 +6,36 @@ Usage:
 Examples:
 Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:
 
-  $ confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic
+  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperRead --resource Topic:my-topic
 
 List the role bindings for a specific principal:
 
-  $ confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --principal User:my-user
+  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --principal User:my-user
 
 List the role bindings for a specific principal, filtered to a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --principal User:my-user --role DeveloperRead
+  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --principal User:my-user --role DeveloperRead
 
 List the principals bound to a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperWrite
+  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperWrite
 
 List the principals bound to a specific resource with a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperWrite --resource Topic:my-topic
+  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperWrite --resource Topic:my-topic
 
 Flags:
-      --principal string                 Principal whose role bindings should be listed.
-      --current-user                     Show role bindings belonging to the current user.
-      --role string                      List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.
-      --kafka-cluster string             Kafka cluster ID for scope of role binding listings.
-      --schema-registry-cluster string   Schema Registry cluster ID for scope of role binding listings.
-      --ksql-cluster string              ksqlDB cluster ID for scope of role binding listings.
-      --connect-cluster string           Kafka Connect cluster ID for scope of role binding listings.
-      --cluster-name string              Cluster name to uniquely identify the cluster for role binding listings.
+      --principal string                 Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.
+      --current-user                     List role bindings assigned to the current user.
+      --role string                      Predefined role assigned to "--principal". If "--principal" is unspecified, list all principals assigned the role.
+      --kafka-cluster string             Kafka cluster ID, which specifies the Kafka cluster scope.
+      --schema-registry-cluster string   Schema Registry cluster ID, which specifies the Schema Registry cluster scope.
+      --ksql-cluster string              ksqlDB cluster ID, which specifies the ksqlDB cluster scope.
+      --connect-cluster string           Kafka Connect cluster ID, which specifies the Connect cluster scope.
+      --cluster-name string              Cluster name, which specifies the cluster scope.
       --context string                   CLI context name.
-      --resource string                  If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.
-      --inclusive                        List all role bindings in a specific scope and its nested scopes.
+      --resource string                  Resource type and identifier using "<Prefix>:<ID>" format (for example, "User:u-123456"). If specified with "--role" and no principals, list all principals and role bindings.
+      --inclusive                        List role bindings for specified scopes and subscopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
