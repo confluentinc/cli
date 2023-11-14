@@ -204,3 +204,8 @@ func (c *Client) executeListIPGroups(pageToken string) (iamv2.IamV2IpGroupList, 
 	}
 	return req.Execute()
 }
+
+func (c *Client) UpdateIamIpGroup(group iamv2.IamV2IpGroup, id string) (iamv2.IamV2IpGroup, error) {
+	resp, httpResp, err := c.IamClient.IPGroupsIamV2Api.UpdateIamV2IpGroup(c.iamApiContext(), id).IamV2IpGroup(group).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
