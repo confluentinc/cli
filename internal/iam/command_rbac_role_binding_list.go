@@ -67,23 +67,23 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster lkc-123456 --role DeveloperRead --resource Topic:my-topic",
+				Code: "confluent iam rbac role-binding list --kafka-cluster LRx92c9yQ+ws786HYosuBn --role DeveloperRead --resource Topic:my-topic",
 			},
 			examples.Example{
 				Text: "List the role bindings for a specific principal:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --principal User:my-user",
+				Code: "confluent iam rbac role-binding list --kafka-cluster LRx92c9yQ+ws786HYosuBn --principal User:my-user",
 			},
 			examples.Example{
 				Text: "List the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --principal User:my-user --role DeveloperRead",
+				Code: "confluent iam rbac role-binding list --kafka-cluster LRx92c9yQ+ws786HYosuBn --principal User:my-user --role DeveloperRead",
 			},
 			examples.Example{
 				Text: "List the principals bound to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperWrite",
+				Code: "confluent iam rbac role-binding list --kafka-cluster lLRx92c9yQ+ws786HYosuBn --role DeveloperWrite",
 			},
 			examples.Example{
 				Text: "List the principals bound to a specific resource with a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperWrite --resource Topic:my-topic",
+				Code: "confluent iam rbac role-binding list --kafka-cluster LRx92c9yQ+ws786HYosuBn --role DeveloperWrite --resource Topic:my-topic",
 			},
 		)
 	}
