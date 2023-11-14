@@ -32,6 +32,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newPoolCommand(prerunner))
 	cmd.AddCommand(newProviderCommand(prerunner))
 	cmd.AddCommand(newRBACCommand(cfg, prerunner))
+	cmd.AddCommand(newIPGroupCommand(prerunner))
 	cmd.AddCommand(newServiceAccountCommand(prerunner))
 	cmd.AddCommand(newUserCommand(prerunner))
 
