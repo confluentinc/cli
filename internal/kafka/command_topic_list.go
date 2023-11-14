@@ -9,8 +9,16 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type topicOut struct {
+type topicNameOut struct {
 	Name string `human:"Name" serialized:"name"`
+}
+
+type topicOut struct {
+	Name              string `human:"Name" serialized:"name"`
+	Kind              string `human:"Kind" serialized:"kind"`
+	IsInternal        bool   `human:"Is Internal" serialized:"is_internal"`
+	ReplicationFactor int32  `human:"Replication Factor" serialized:"replication_factor"`
+	PartitionsCount   int32  `human:"Partitions Count" serialized:"partitions_count"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -22,6 +30,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
+	cmd.Flags().Bool("detailed", false, "List detailed topic information.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -36,9 +45,24 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	detailed, err := cmd.Flags().GetBool("detailed")
+	if err != nil {
+		return err
+	}
+
 	list := output.NewList(cmd)
 	for _, topic := range topics {
-		list.Add(&topicOut{Name: topic.GetTopicName()})
+		if detailed {
+			list.Add(&topicOut{
+				Name:              topic.GetTopicName(),
+				IsInternal:        topic.GetIsInternal(),
+				Kind:              topic.GetKind(),
+				ReplicationFactor: topic.GetReplicationFactor(),
+				PartitionsCount:   topic.GetPartitionsCount(),
+			})
+		} else {
+			list.Add(&topicNameOut{Name: topic.GetTopicName()})
+		}
 	}
 	return list.Print()
 }
