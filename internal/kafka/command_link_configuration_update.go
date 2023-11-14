@@ -3,6 +3,8 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -66,8 +68,7 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	data := toAlterConfigBatchRequestData(configMap)
-
+	data := kafkarestv3.AlterConfigBatchRequestData{Data: toAlterConfigBatchRequestData(configMap)}
 	if err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(linkName, data); err != nil {
 		return err
 	}

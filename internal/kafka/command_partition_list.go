@@ -51,7 +51,7 @@ func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, partition := range partitions.GetData() {
+	for _, partition := range partitions {
 		list.Add(&partitionOut{
 			ClusterId:   partition.GetClusterId(),
 			TopicName:   partition.GetTopicName(),

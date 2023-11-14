@@ -56,11 +56,10 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 		return nil
 	}
 
-	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), "", "")
+	statements, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), c.Context.GetCurrentFlinkComputePool())
 	if err != nil {
 		return nil
 	}
-	statements := listStatementsResponse.GetData()
 
 	suggestions := make([]string, len(statements))
 	for i, statement := range statements {

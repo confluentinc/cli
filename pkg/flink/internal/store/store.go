@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
@@ -78,7 +76,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return result, sErr
 	}
 
-	statementName := s.Properties.GetOrDefault(config.KeyStatementName, uuid.New().String()[:18])
+	statementName := s.Properties.GetOrDefault(config.KeyStatementName, types.GenerateStatementName())
 	defer s.Properties.Delete(config.KeyStatementName)
 
 	// Process remote statements
@@ -288,12 +286,10 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1State
 	}
 
 	// if the status detail field is empty, we check if there's an exception instead
-	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrganizationId())
+	exceptions, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrganizationId())
 	if err != nil {
 		return ""
 	}
-
-	exceptions := exceptionsResponse.GetData()
 	if len(exceptions) < 1 {
 		return ""
 	}

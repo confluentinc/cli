@@ -175,6 +175,41 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 	return c.metricsClient, nil
 }
 
+func (c *AuthenticatedCLICommand) getSchemaRegistryClientByFlags(cmd *cobra.Command, unsafeTrace bool) error {
+	configuration := srsdk.NewConfiguration()
+	configuration.UserAgent = c.Config.Version.UserAgent
+	configuration.Debug = unsafeTrace
+	configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
+	schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return err
+	}
+	if schemaRegistryEndpoint == "" {
+		return fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
+	}
+	if !strings.HasPrefix(schemaRegistryEndpoint, "http://") && !strings.HasPrefix(schemaRegistryEndpoint, "https://") {
+		schemaRegistryEndpoint = fmt.Sprintf("https://%s", schemaRegistryEndpoint)
+	}
+	configuration.BasePath = schemaRegistryEndpoint
+
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return err
+	}
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return err
+	}
+
+	c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
+
+	if err := c.schemaRegistryClient.Get(); err != nil {
+		return fmt.Errorf(errors.SRClientNotValidatedErrorMsg, err)
+	}
+
+	return nil
+}
+
 func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*schemaregistry.Client, error) {
 	if c.schemaRegistryClient == nil {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
@@ -182,13 +217,18 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			return nil, err
 		}
 
-		if c.Config.IsCloudLogin() {
+		if err := c.Config.CheckIsCloudLoginOrOnPremLogin(); err != nil {
+			if c.getSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
+				return nil, err
+			}
+		} else if c.Config.IsCloudLogin() {
 			configuration := srsdk.NewConfiguration()
 			configuration.UserAgent = c.Config.Version.UserAgent
 			configuration.Debug = unsafeTrace
-			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
+			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
 
-			if c.Context.GetState() != nil {
+			// Both parts of this conditional are needed since `c.Context` is a dynamic context
+			if c.Context != nil && c.Context.GetState() != nil {
 				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 				if err != nil {
 					return nil, err
@@ -205,31 +245,9 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				}
 
 				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, dataplaneToken)
-			} else {
+			} else if c.getSchemaRegistryClientByFlags(cmd, unsafeTrace) != nil {
 				// Used by `asyncapi export`, `asyncapi import`, `kafka client-config create`, `kafka topic consume`, and `kafka topic produce`
-				schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
-				if err != nil {
-					return nil, err
-				}
-				if schemaRegistryEndpoint == "" {
-					return nil, fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
-				}
-				configuration.BasePath = schemaRegistryEndpoint
-
-				schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-				if err != nil {
-					return nil, err
-				}
-				schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-				if err != nil {
-					return nil, err
-				}
-
-				c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
-
-				if err := c.schemaRegistryClient.Get(); err != nil {
-					return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
-				}
+				return nil, err
 			}
 		} else {
 			schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
@@ -238,6 +256,9 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			}
 			if schemaRegistryEndpoint == "" {
 				return nil, fmt.Errorf(errors.SREndpointNotSpecifiedErrorMsg)
+			}
+			if !strings.HasPrefix(schemaRegistryEndpoint, "http://") && !strings.HasPrefix(schemaRegistryEndpoint, "https://") {
+				schemaRegistryEndpoint = fmt.Sprintf("https://%s", schemaRegistryEndpoint)
 			}
 
 			caLocation, err := cmd.Flags().GetString("ca-location")
@@ -255,7 +276,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					return nil, err
 				}
 			} else {
-				client = ccloudv2.NewRetryableHttpClient(unsafeTrace)
+				client = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
 			}
 
 			configuration := srsdk.NewConfiguration()
@@ -264,14 +285,15 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = client
 
-			if c.Context.GetState() != nil {
+			// Both parts of this conditional are needed since `c.Context` is a dynamic context
+			if c.Context != nil && c.Context.GetState() != nil {
 				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, c.Context.GetAuthToken())
 			} else {
 				c.schemaRegistryClient = schemaregistry.NewClient(configuration)
 			}
 
 			if err := c.schemaRegistryClient.Get(); err != nil {
-				return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
+				return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg, err)
 			}
 		}
 	}

@@ -59,16 +59,15 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 
 func (s *CLITestSuite) TestFlinkRegion() {
 	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use.golden"},
 		{args: "flink region list", fixture: "flink/region/list.golden"},
-		{args: "flink region use aws.eu-west-1", fixture: "flink/region/use.golden"},
-		{args: "flink region use aws", fixture: "flink/region/use-missing-region.golden", exitCode: 1},
-		{args: "flink region use eu-west-2", fixture: "flink/region/use-missing-cloud.golden", exitCode: 1},
 		{args: "flink region list -o json", fixture: "flink/region/list-json.golden"},
 		{args: "flink region list --cloud aws", fixture: "flink/region/list-cloud.golden"},
 	}
 
 	for _, test := range tests {
 		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }
@@ -125,7 +124,6 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 		{args: `__complete flink compute-pool create my-compute-pool --cloud aws --region ""`, fixture: "flink/compute-pool/create-region-autocomplete.golden"},
 		{args: `__complete flink compute-pool delete ""`, fixture: "flink/compute-pool/delete-autocomplete.golden"},
 		{args: `__complete flink compute-pool list --region ""`, fixture: "flink/compute-pool/list-region-autocomplete.golden"},
-		{args: `__complete flink region use ""`, fixture: "flink/region/use-autocomplete.golden"},
 		{args: `__complete flink statement create my-statement --database ""`, fixture: "flink/statement/create-database-autocomplete.golden"},
 	}
 

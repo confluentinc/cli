@@ -7,11 +7,11 @@ import (
 
 type IntegerDeserializationProvider struct{}
 
-func (s *IntegerDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (IntegerDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
-func (s *IntegerDeserializationProvider) Deserialize(data []byte) (string, error) {
+func (IntegerDeserializationProvider) Deserialize(data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", nil
 	}

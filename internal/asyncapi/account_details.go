@@ -119,13 +119,6 @@ func (d *accountDetails) getTopicDescription() error {
 	return nil
 }
 
-func (c *command) countAsyncApiUsage(details *accountDetails) error {
-	if err := details.srClient.AsyncapiPut(); err != nil {
-		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %w", err)
-	}
-	return nil
-}
-
 func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
 	entityProducer.WithContentType(d.channelDetails.contentType)

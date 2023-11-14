@@ -3,6 +3,11 @@ Create a ksqlDB cluster.
 Usage:
   confluent ksql cluster create <name> [flags]
 
+Examples:
+Create ksqlDB cluster "my-cluster" associated with user "u-123456".
+
+  $ confluent ksql cluster create my-cluster --credential-identity u-123456
+
 Flags:
       --credential-identity string   REQUIRED: User account ID or service account ID to be associated with this cluster. An API key associated with this identity will be created and used to authenticate the ksqlDB cluster with Kafka.
       --csu int32                    Number of CSUs to use in the cluster. (default 4)
