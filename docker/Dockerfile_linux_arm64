@@ -7,7 +7,8 @@ RUN apt-get update && \
 
 RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
     aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=main confluent-cli && \
-    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb
+    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb && \
+    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/deb/pool/main/c/confluent/*.deb
 
 RUN export GO_VERSION=$(cat /cli/.go-version) && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz" && \
