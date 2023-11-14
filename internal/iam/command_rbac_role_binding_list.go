@@ -67,7 +67,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperRead --resource Topic:my-topic",
+				Code: "confluent iam rbac role-binding list --kafka-cluster lkc-123456 --role DeveloperRead --resource Topic:my-topic",
 			},
 			examples.Example{
 				Text: "List the role bindings for a specific principal:",
