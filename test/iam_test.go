@@ -328,7 +328,7 @@ func (s *CLITestSuite) TestIam_Autocomplete() {
 
 func (s *CLITestSuite) TestIamIPGroup() {
 	tests := []CLITest{
-		{args: `iam ip-group create --group_name "demo-ip-group" --cidr_blocks "168.150.200.0/24,147.150.200.0/24"`},
+		{args: `iam ip-group create --group_name "demo-ip-group" --cidr_blocks "168.150.200.0/24,147.150.200.0/24"`, fixture: "iam/ip-group/create.golden"},
 		{args: `iam group-mapping create group_mapping --description new-group-description --filter '"engineering" in claims.group || "marketing" in claims.group'`, fixture: "iam/group-mapping/create.golden"},
 	}
 

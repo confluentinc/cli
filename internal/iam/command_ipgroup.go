@@ -27,6 +27,9 @@ func newIPGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &ipGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
 	return cmd
 }
 
