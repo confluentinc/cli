@@ -76,7 +76,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Hand
 	}
 	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
-		if c.Context.State == nil { // require log-in to use oauthbearer token
+		if c.Context.GetState() == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.Context.GetAuthToken())
