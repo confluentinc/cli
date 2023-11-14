@@ -2,7 +2,12 @@ FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/conflue
 
 COPY . /cli/
 
-RUN mv /cli/prebuilt/*.rpm /cli/rpm/
+RUN apt-get update && \
+    apt-get install -y aptly createrepo
+
+RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
+    aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=main confluent-cli && \
+    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb
 
 RUN export GO_VERSION=$(cat /cli/.go-version) && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
@@ -18,10 +23,8 @@ RUN --mount=type=secret,id=gpg_secret_key --mount=type=secret,id=gpg_passphrase 
 RUN cd /cli && \
     rename 's/checksums/checksums_linux_arm64/' prebuilt/*.txt
 
-RUN mv /cli/prebuilt/*.rpm /cli/rpm/
-
-RUN apt-get update && \
-    apt-get install -y createrepo
+RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
+    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb
 
 RUN mkdir /metadata-temp && \
     createrepo --update -o /metadata-temp /cli/rpm && \
@@ -35,4 +38,7 @@ RUN --mount=type=secret,id=gpg_secret_key --mount=type=secret,id=gpg_passphrase 
     export KEY_GRIP=$(gpg --with-keygrip -K --with-colons | grep '^grp' | head -1 | cut -d: -f10) && \
     /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $(cat /run/secrets/gpg_passphrase) $KEY_GRIP && \
     gpg --yes --batch --detach-sign --armor --output /cli/rpm/repodata/repomd.xml.asc /cli/rpm/repodata/repomd.xml && \
-    gpg --yes --batch --armor --export --output /cli/rpm/archive.key
+    gpg --yes --batch --armor --export --output /cli/rpm/archive.key && \
+    aptly -config=/cli/.aptly.conf snapshot create confluent-cli-snapshot from repo confluent-cli && \
+    aptly -config=/cli/.aptly.conf publish snapshot -distribution=stable -component=main confluent-cli-snapshot "filesystem:deploy:" && \
+    cp -r /deb/. /cli/deb

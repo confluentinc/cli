@@ -17,7 +17,7 @@ function dry-run {
 rm -rf deb/ rpm/
 mkdir -p deb rpm
 
-# aws s3 sync s3://confluent-cli-internal/confluent-cli/deb deb
+aws s3 sync s3://confluent-cli-internal/confluent-cli/deb deb --exclude '*index.html' --exclude '' --exclude '*/'
 aws s3 sync s3://confluent-cli-internal/confluent-cli/rpm rpm --exclude '*index.html' --exclude '' --exclude '*/'
 
 aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
@@ -44,6 +44,7 @@ else
 fi
 docker container create --name cli-linux-arm64-builder cli-linux-arm64-builder-image
 docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/
+docker container cp cli-linux-arm64-builder:/cli/deb/. ./deb/
 docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
 docker container rm cli-linux-arm64-builder
 
