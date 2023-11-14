@@ -41,4 +41,5 @@ RUN --mount=type=secret,id=gpg_secret_key --mount=type=secret,id=gpg_passphrase 
     gpg --yes --batch --armor --export --output /cli/rpm/archive.key && \
     aptly -config=/cli/.aptly.conf snapshot create confluent-cli-snapshot from repo confluent-cli && \
     aptly -config=/cli/.aptly.conf publish snapshot -distribution=stable -component=main confluent-cli-snapshot "filesystem:deploy:" && \
-    cp -r /deb/. /cli/deb
+    cp -r /deb/. /cli/deb && \
+    gpg --yes --batch --armor --export --output /cli/deb/archive.key
