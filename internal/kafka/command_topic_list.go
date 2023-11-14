@@ -15,10 +15,8 @@ type topicNameOut struct {
 
 type topicOut struct {
 	Name              string `human:"Name" serialized:"name"`
-	ClusterId         string `human:"Cluster ID" serialized:"cluster_id"`
 	Kind              string `human:"Kind" serialized:"kind"`
 	IsInternal        bool   `human:"Is Internal" serialized:"is_internal"`
-	ResourceName      string `human:"Resource Name" serialized:"resouce_name"`
 	ReplicationFactor int32  `human:"Replication Factor" serialized:"replication_factor"`
 	PartitionsCount   int32  `human:"Partitions Count" serialized:"partitions_count"`
 }
@@ -57,10 +55,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if detailed {
 			list.Add(&topicOut{
 				Name:              topic.GetTopicName(),
-				ClusterId:         topic.GetClusterId(),
 				IsInternal:        topic.GetIsInternal(),
 				Kind:              topic.GetKind(),
-				ResourceName:      topic.Metadata.GetResourceName(),
 				ReplicationFactor: topic.GetReplicationFactor(),
 				PartitionsCount:   topic.GetPartitionsCount(),
 			})
