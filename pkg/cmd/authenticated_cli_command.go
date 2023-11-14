@@ -188,7 +188,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
 
-			if c.Context.GetState() != nil {
+			if c.Context != nil && c.Context.GetState() != nil {
 				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 				if err != nil {
 					return nil, err
@@ -228,7 +228,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
 
 				if err := c.schemaRegistryClient.Get(); err != nil {
-					return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
+					return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg, err)
 				}
 			}
 		} else {
@@ -264,14 +264,14 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = client
 
-			if c.Context.GetState() != nil {
+			if c.Context != nil && c.Context.GetState() != nil {
 				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, c.Context.GetAuthToken())
 			} else {
 				c.schemaRegistryClient = schemaregistry.NewClient(configuration)
 			}
 
 			if err := c.schemaRegistryClient.Get(); err != nil {
-				return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg)
+				return nil, fmt.Errorf(errors.SRClientNotValidatedErrorMsg, err)
 			}
 		}
 	}

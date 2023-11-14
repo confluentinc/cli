@@ -142,7 +142,7 @@ const (
 	OnPremConfigGuideSuggestions   = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
-	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client with token"
+	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client: %w"
 	CorruptedTokenErrorMsg         = "corrupted auth token"
 	CorruptedTokenSuggestions      = "Please log in again.\n" +
 		AvoidTimeoutSuggestions
