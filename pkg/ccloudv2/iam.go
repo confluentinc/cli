@@ -159,3 +159,48 @@ func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2Invitation
 	}
 	return req.Execute()
 }
+
+// iam ip group api calls
+
+func (c *Client) CreateIamIPGroup(ipGroup iamv2.IamV2IpGroup) (iamv2.IamV2IpGroup, error) {
+	resp, httpResp, err := c.IamClient.IPGroupsIamV2Api.CreateIamV2IpGroup(c.iamApiContext()).IamV2IpGroup(ipGroup).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) DeleteIamIPGroup(id string) error {
+	httpResp, err := c.IamClient.IPGroupsIamV2Api.DeleteIamV2IpGroup(c.iamApiContext(), id).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetIamIpGroup(id string) (iamv2.IamV2IpGroup, error) {
+	resp, httpResp, err := c.IamClient.IPGroupsIamV2Api.GetIamV2IpGroup(c.iamApiContext(), id).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListIamIpGroups() ([]iamv2.IamV2IpGroup, error) {
+	var list []iamv2.IamV2IpGroup
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListIPGroups(pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListIPGroups(pageToken string) (iamv2.IamV2IpGroupList, *http.Response, error) {
+	req := c.IamClient.IPGroupsIamV2Api.ListIamV2IpGroups(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
+}
