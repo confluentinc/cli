@@ -227,6 +227,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(nil, unsafeTrace)
 
+			// Both parts of this conditional are needed since `c.Context` is a dynamic context
 			if c.Context != nil && c.Context.GetState() != nil {
 				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 				if err != nil {
@@ -284,6 +285,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = client
 
+			// Both parts of this conditional are needed since `c.Context` is a dynamic context
 			if c.Context != nil && c.Context.GetState() != nil {
 				c.schemaRegistryClient = schemaregistry.NewClientWithToken(configuration, c.Context.GetAuthToken())
 			} else {
