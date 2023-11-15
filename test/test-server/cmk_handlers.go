@@ -191,6 +191,7 @@ func handleCmkKafkaClusterDescribeDedicatedProvisioning(t *testing.T) http.Handl
 		cluster.Status.Phase = "PROVISIONING"
 		cluster.Spec.KafkaBootstrapEndpoint = cmkv2.PtrString("")
 		cluster.Spec.HttpEndpoint = cmkv2.PtrString("")
+		cluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
 		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}
