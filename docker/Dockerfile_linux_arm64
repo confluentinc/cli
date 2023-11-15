@@ -44,4 +44,4 @@ RUN --mount=type=secret,id=gpg_secret_key --mount=type=secret,id=gpg_passphrase 
     aptly -config=/cli/.aptly.conf publish snapshot -distribution=stable -component=main confluent-cli-snapshot "filesystem:deploy:" && \
     cp -r /deb/. /cli/deb && \
     gpg --yes --batch --armor --export --output /cli/deb/archive.key && \
-    gpg --batch --yes --delete-secret-keys $(gpg --with-keygrip -K --with-colons | grep '^fpr' | head -1 | cut -d: -f10)
+    gpg --yes --batch --delete-secret-keys $(gpg --with-keygrip -K --with-colons | grep '^fpr' | head -1 | cut -d: -f10)
