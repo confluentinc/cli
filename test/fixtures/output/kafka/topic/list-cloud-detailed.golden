@@ -1,4 +1,0 @@
-   Name  |    Kind    | Is Internal | Replication Factor | Partitions Count  
----------+------------+-------------+--------------------+-------------------
-  topic1 | KafkaTopic | false       |                  3 |                6  
-  topic2 | KafkaTopic | true        |                  4 |                6  
