@@ -2,6 +2,7 @@ package iam
 
 import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
 	"slices"
 
@@ -13,24 +14,21 @@ import (
 func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: "Update an IP Group.",
+		Short: "Update an IP group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the Group Name of IP Group "ipg-12345"":`,
-				Code: `confluent iam ip-group update ipg-12345 --group-name "New Group Name"`,
+				Text: `Update the name and add a CIDR block to IP Group "ipg-12345"":`,
+				Code: `confluent iam ip-group update ipg-12345 --name "New Group Name" --add-cidr-blocks "123.234.0.0/16"`,
 			},
 		),
 	}
 
-	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("group-name", "", "Name of the IP Group.")
-	cmd.Flags().StringSlice("add-cidr-blocks", []string{}, "List of CIDR blocks to add to existing CIDR blocks on the IP Group.")
-	cmd.Flags().StringSlice("remove-cidr-blocks", []string{}, "List of CIDR blocks to remove from existing CIDR blocks on the IP Group.")
+	cmd.Flags().String("name", "", "Name of the IP group.")
+	cmd.Flags().StringSlice("add-cidr-blocks", []string{}, "Comma-separated list of IP groups to add.")
+	cmd.Flags().StringSlice("remove-cidr-blocks", []string{}, "Comma-separated list of IP groups to remove.")
 
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -38,7 +36,7 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 
 func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	flags := []string{
-		"group-name",
+		"name",
 		"add-cidr-blocks",
 		"remove-cidr-blocks",
 	}
@@ -46,7 +44,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	groupName, err := cmd.Flags().GetString("group-name")
+	groupName, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}
@@ -104,7 +102,10 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printIPGroup(cmd, group)
+	if output.GetFormat(cmd) == output.Human {
+		return printHumanIPGroup(cmd, group)
+	}
+	return printSerializedIPGroup(cmd, group)
 }
 
 func removeElementFromArray(array []string, itemToRemove string) []string {

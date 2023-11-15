@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -9,13 +10,11 @@ import (
 func (c *ipGroupCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe an IP Group.",
+		Short: "Describe an IP group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 	}
 
-	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -28,5 +27,8 @@ func (c *ipGroupCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printIPGroup(cmd, group)
+	if output.GetFormat(cmd) == output.Human {
+		return printHumanIPGroup(cmd, group)
+	}
+	return printSerializedIPGroup(cmd, group)
 }

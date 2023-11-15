@@ -12,17 +12,23 @@ type ipGroupCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type ipGroupOut struct {
+type ipGroupHumanOut struct {
 	ID         string `human:"ID" serialized:"id"`
-	GroupName  string `human:"Name" serialized:"group_name"`
-	CidrBlocks string `human:"CIDR Blocks" serialized:"cidr_blocks"`
+	Name       string `human:"Name" serialized:"name"`
+	CidrBlocks string `human:"CIDR blocks" serialized:"cidr_blocks"`
+}
+
+type ipGroupSerializedOut struct {
+	ID         string   `human:"ID" serialized:"id"`
+	Name       string   `human:"Name" serialized:"name"`
+	CidrBlocks []string `human:"CIDR blocks" serialized:"cidr_blocks"`
 }
 
 func newIPGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ip-group",
-		Short: "Manage IP Groups",
-		Long:  "Manage IP Groups and their permissions",
+		Short: "Manage IP groups",
+		Long:  "Manage IP groups and their permissions",
 	}
 
 	c := &ipGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
@@ -35,12 +41,21 @@ func newIPGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func printIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
+func printHumanIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 	table := output.NewTable(cmd)
-	table.Add(&ipGroupOut{
+	table.Add(&ipGroupHumanOut{
 		ID:         ipGroup.GetId(),
-		GroupName:  ipGroup.GetGroupName(),
+		Name:       ipGroup.GetGroupName(),
 		CidrBlocks: strings.Join(ipGroup.GetCidrBlocks(), ", "),
 	})
 	return table.Print()
+}
+
+func printSerializedIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
+	out := &ipGroupSerializedOut{
+		ID:         ipGroup.GetId(),
+		Name:       ipGroup.GetGroupName(),
+		CidrBlocks: ipGroup.GetCidrBlocks(),
+	}
+	return output.SerializedOutput(cmd, out)
 }

@@ -12,19 +12,17 @@ import (
 func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
-		Short: "Delete an IP Group.",
+		Short: "Delete an IP group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete IP Group "ipg-12345":`,
+				Text: `Delete IP group "ipg-12345":`,
 				Code: "confluent iam pool delete ipg-12345",
 			},
 		),
 	}
 
-	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
 	return cmd
 }
@@ -36,6 +34,6 @@ func (c *ipGroupCommand) delete(cmd *cobra.Command, args []string) error {
 		return resource.ResourcesNotFoundError(cmd, resource.IPGroup, args[0])
 	}
 
-	fmt.Printf("Successfully deleted IP Group: %s\n", args[0])
+	fmt.Printf("Successfully deleted IP group: %s\n", args[0])
 	return err
 }

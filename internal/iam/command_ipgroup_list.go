@@ -16,8 +16,6 @@ func (c *ipGroupCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -30,13 +28,27 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if output.GetFormat(cmd) == output.Human {
+		list := output.NewList(cmd)
+		for _, group := range ipGroups {
+			list.Add(&ipGroupHumanOut{
+				ID:         group.GetId(),
+				Name:       group.GetGroupName(),
+				CidrBlocks: strings.Join(group.GetCidrBlocks(), ", "),
+			})
+		}
+		return list.Print()
+	}
+
+	// TODO: not working as expected, produces an empty list {}
 	list := output.NewList(cmd)
 	for _, group := range ipGroups {
-		list.Add(&ipGroupOut{
+		list.Add(&ipGroupSerializedOut{
 			ID:         group.GetId(),
-			GroupName:  group.GetGroupName(),
-			CidrBlocks: strings.Join(group.GetCidrBlocks(), ", "),
+			Name:       group.GetGroupName(),
+			CidrBlocks: group.GetCidrBlocks(),
 		})
 	}
-	return list.Print()
+	return output.SerializedOutput(cmd, list)
+
 }
