@@ -5,6 +5,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 type ipGroupCommand struct {
@@ -12,9 +13,9 @@ type ipGroupCommand struct {
 }
 
 type ipGroupOut struct {
-	ID         string   `human:"ID" serialized:"id"`
-	GroupName  string   `human:"Group Name" serialized:"group_name"`
-	CidrBlocks []string `human:"CIDR Blocks" serialized:"cidr_blocks"`
+	ID         string `human:"ID" serialized:"id"`
+	GroupName  string `human:"Name" serialized:"group_name"`
+	CidrBlocks string `human:"CIDR Blocks" serialized:"cidr_blocks"`
 }
 
 func newIPGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -39,7 +40,7 @@ func printIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 	table.Add(&ipGroupOut{
 		ID:         ipGroup.GetId(),
 		GroupName:  ipGroup.GetGroupName(),
-		CidrBlocks: ipGroup.GetCidrBlocks(),
+		CidrBlocks: strings.Join(ipGroup.GetCidrBlocks(), ", "),
 	})
 	return table.Print()
 }

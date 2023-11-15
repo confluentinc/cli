@@ -19,16 +19,15 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the Group Name of IP Group "ipg-12345"":`,
-				Code: `confluent iam ip-group update ipg-12345 --group_name "New Group Name"`,
+				Code: `confluent iam ip-group update ipg-12345 --group-name "New Group Name"`,
 			},
 		),
 	}
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("group_name", "", "Name of the IP Group.")
-	cmd.Flags().StringSlice("cidr_blocks", []string{}, "List of CIDR blocks to replace existing CIDR blocks on the IP Group.")
-	cmd.Flags().StringSlice("add_cidr_blocks", []string{}, "List of CIDR blocks to add to existing CIDR blocks on the IP Group.")
-	cmd.Flags().StringSlice("remove_cidr_blocks", []string{}, "List of CIDR blocks to remove from existing CIDR blocks on the IP Group.")
+	cmd.Flags().String("group-name", "", "Name of the IP Group.")
+	cmd.Flags().StringSlice("add-cidr-blocks", []string{}, "List of CIDR blocks to add to existing CIDR blocks on the IP Group.")
+	cmd.Flags().StringSlice("remove-cidr-blocks", []string{}, "List of CIDR blocks to remove from existing CIDR blocks on the IP Group.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
@@ -39,31 +38,25 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 
 func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	flags := []string{
-		"group_name",
-		"cidr_blocks",
-		"add_cidr_blocks",
-		"remove_cidr_blocks",
+		"group-name",
+		"add-cidr-blocks",
+		"remove-cidr-blocks",
 	}
 	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
 		return err
 	}
 
-	groupName, err := cmd.Flags().GetString("group_name")
+	groupName, err := cmd.Flags().GetString("group-name")
 	if err != nil {
 		return err
 	}
 
-	cidrBlocks, err := cmd.Flags().GetStringSlice("cidr_blocks")
+	addCidrBlocks, err := cmd.Flags().GetStringSlice("add-cidr-blocks")
 	if err != nil {
 		return err
 	}
 
-	addCidrBlocks, err := cmd.Flags().GetStringSlice("add_cidr_blocks")
-	if err != nil {
-		return err
-	}
-
-	removeCidrBlocks, err := cmd.Flags().GetStringSlice("remove_cidr_blocks")
+	removeCidrBlocks, err := cmd.Flags().GetStringSlice("remove-cidr-blocks")
 	if err != nil {
 		return err
 	}
@@ -84,15 +77,6 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		updateIpGroup.GroupName = &groupName
 	}
 
-	if len(cidrBlocks) > 0 {
-		// using the add/remove cidr blocks in combination with replacing every cidr block is not allowed
-		if len(addCidrBlocks) > 0 || len(removeCidrBlocks) > 0 {
-			return errors.NewErrorWithSuggestions("Conflicting flags used.",
-				"Can not use flag cidr_blocks in conjunction "+
-					"with either add_cidr_blocks or remove_cidr_blocks.")
-		}
-		newCidrBlocks = cidrBlocks
-	}
 	// for each cidr block being added that isn't in the existing slice, append it to the new slice
 	if len(addCidrBlocks) > 0 {
 		for _, cidrBlock := range addCidrBlocks {

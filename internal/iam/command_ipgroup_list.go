@@ -2,6 +2,7 @@ package iam
 
 import (
 	"github.com/spf13/cobra"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -34,7 +35,7 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		list.Add(&ipGroupOut{
 			ID:         group.GetId(),
 			GroupName:  group.GetGroupName(),
-			CidrBlocks: group.GetCidrBlocks(),
+			CidrBlocks: strings.Join(group.GetCidrBlocks(), ", "),
 		})
 	}
 	return list.Print()

@@ -11,7 +11,7 @@ import (
 
 func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id-1>",
+		Use:   "delete <id>",
 		Short: "Delete an IP Group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
