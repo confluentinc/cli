@@ -446,6 +446,54 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/iam/v2/ip-groups"
+func handleIamIpGroups(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			err := json.NewEncoder(w).Encode(iamv2.IamV2IpGroupList{Data: []iamv2.IamV2IpGroup{ipGroup}})
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req iamv2.IamV2IpGroup
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			ipGroup := &iamv2.IamV2IpGroup{
+				Id:         iamv2.PtrString(ipGroupId),
+				GroupName:  req.GroupName,
+				CidrBlocks: req.CidrBlocks,
+			}
+			err = json.NewEncoder(w).Encode(ipGroup)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/ip-groups/{id}"
+func handleIamIpGroup(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPatch:
+			var req iamv2.IamV2IpGroup
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := &iamv2.IamV2IpGroup{
+				Id:         req.Id,
+				GroupName:  req.GroupName,
+				CidrBlocks: req.CidrBlocks,
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodGet:
+			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			err := json.NewEncoder(w).Encode(ipGroup)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
 // Handler for "iam/v2/invitations"
 func handleIamInvitations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -565,6 +613,14 @@ func buildIamProvider(id, name, description, issuer, jwksUri string) identitypro
 		Description: iamv2.PtrString(description),
 		Issuer:      iamv2.PtrString(issuer),
 		JwksUri:     iamv2.PtrString(jwksUri),
+	}
+}
+
+func buildIamIpGroup(id string, name string, cidrBlocks []string) iamv2.IamV2IpGroup {
+	return iamv2.IamV2IpGroup{
+		Id:         iamv2.PtrString(id),
+		GroupName:  iamv2.PtrString(name),
+		CidrBlocks: &cidrBlocks,
 	}
 }
 
