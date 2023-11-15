@@ -41,12 +41,14 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	newSgConfig := environment.GetStreamGovernanceConfig()
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
 		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
 		Id:        environment.GetId(),
 		Name:      environment.GetDisplayName(),
+		SGPackage: newSgConfig.GetPackage(),
 	})
 	if err := table.Print(); err != nil {
 		return err
