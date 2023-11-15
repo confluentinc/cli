@@ -108,7 +108,9 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 				},
 				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
-			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone}}
+			clusterDedicated := getCmkDedicatedDescribeCluster("lkc-789", "ghi", 1)
+			clusterDedicated.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
+			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone, *clusterDedicated}}
 			err := json.NewEncoder(w).Encode(clusterList)
 			require.NoError(t, err)
 		}
@@ -191,6 +193,7 @@ func handleCmkKafkaClusterDescribeDedicatedProvisioning(t *testing.T) http.Handl
 		cluster.Status.Phase = "PROVISIONING"
 		cluster.Spec.KafkaBootstrapEndpoint = cmkv2.PtrString("")
 		cluster.Spec.HttpEndpoint = cmkv2.PtrString("")
+		cluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
 		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}
