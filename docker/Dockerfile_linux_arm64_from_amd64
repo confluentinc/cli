@@ -1,5 +1,7 @@
 FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:latest
 
+SHELL ["/bin/bash", "-c"]
+
 COPY . /cli/
 
 RUN apt-get update && \
@@ -8,7 +10,7 @@ RUN apt-get update && \
 RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
     aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=main confluent-cli && \
     aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb && \
-    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/deb/pool/main/c/confluent/*.deb
+    if [[ -d /cli/deb/pool/main/c/confluent ]] && [[ $(ls /cli/deb/pool/main/c/confluent/*.deb 2>/dev/null) ]]; then aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/deb/pool/main/c/confluent/*.deb; fi
 
 RUN export GO_VERSION=$(cat /cli/.go-version) && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
@@ -29,7 +31,7 @@ RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
 
 RUN mkdir /metadata-temp && \
     createrepo --update -o /metadata-temp /cli/rpm && \
-    rm -r /cli/rpm/repodata && \
+    rm -rf /cli/rpm/repodata && \
     cp -r /metadata-temp/. /cli/rpm
 
 RUN --mount=type=secret,id=gpg_secret_key --mount=type=secret,id=gpg_passphrase \

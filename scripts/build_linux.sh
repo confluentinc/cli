@@ -6,6 +6,8 @@ function cleanup {
 }
 trap cleanup EXIT
 
+trap "exit 1" ERR
+
 function dry-run {
   if [ "$DRY_RUN" = "true" ]; then
     echo "[DRY_RUN] $1"
