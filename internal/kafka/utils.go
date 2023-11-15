@@ -4,12 +4,15 @@ import (
 	"fmt"
 	_nethttp "net/http"
 
+	"golang.org/x/exp/slices"
+
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 )
 
@@ -170,4 +173,15 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 
 func topicNameStrategy(topic, mode string) string {
 	return fmt.Sprintf("%s-%s", topic, mode)
+}
+
+func getCmkClusterNetwork(cluster *cmkv2.CmkV2Cluster, ctx *config.Context, client *ccloudv2.Client) string {
+	if isDedicated(cluster) && cluster.Spec.Network.GetId() != "" {
+		network, _ := client.GetNetwork(ctx.GetCurrentEnvironment(), cluster.Spec.Network.GetId())
+
+		if public := slices.Contains(network.Spec.GetConnectionTypes().Items, "PUBLIC"); !public {
+			return cluster.Spec.Network.GetId()
+		}
+	}
+	return ""
 }

@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Network", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
@@ -32,7 +32,7 @@ type describeStruct struct {
 	ServiceProvider    string `human:"Provider" serialized:"provider"`
 	Region             string `human:"Region" serialized:"region"`
 	Availability       string `human:"Availability" serialized:"availability"`
-	Network            string `human:"Network,omitempty" serialized:"network"`
+	Network            string `human:"Network,omitempty" serialized:"network,omitempty"`
 	Status             string `human:"Status" serialized:"status"`
 	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
@@ -99,7 +99,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	out := convertClusterToDescribeStruct(cluster, c.Context.Context)
+	out := convertClusterToDescribeStruct(cluster, c.Context.Context, c.V2Client)
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
@@ -116,7 +116,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	return table.Print()
 }
 
-func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Context) *describeStruct {
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Context, client *ccloudv2.Client) *describeStruct {
 	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgressMbps(cluster)
 
@@ -133,7 +133,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		ServiceProvider:    strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
-		Network:            cluster.Spec.Network.GetId(),
+		Network:            getCmkClusterNetwork(cluster, ctx, client),
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),

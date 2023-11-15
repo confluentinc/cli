@@ -94,7 +94,6 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 					Region:       cmkv2.PtrString("us-central1"),
 					Config:       &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
 					Availability: cmkv2.PtrString("SINGLE_ZONE"),
-					Network:      &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"},
 				},
 				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
@@ -106,7 +105,6 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 					Region:       cmkv2.PtrString("us-central1"),
 					Config:       &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
 					Availability: cmkv2.PtrString("MULTI_ZONE"),
-					Network:      &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"},
 				},
 				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
@@ -193,6 +191,7 @@ func handleCmkKafkaClusterDescribeDedicatedProvisioning(t *testing.T) http.Handl
 		cluster.Status.Phase = "PROVISIONING"
 		cluster.Spec.KafkaBootstrapEndpoint = cmkv2.PtrString("")
 		cluster.Spec.HttpEndpoint = cmkv2.PtrString("")
+		cluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
 		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}

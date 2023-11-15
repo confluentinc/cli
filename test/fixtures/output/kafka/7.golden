@@ -7,7 +7,6 @@
     "provider": "gcp",
     "region": "us-central1",
     "availability": "single-zone",
-    "network": "n-abcde1",
     "status": "PROVISIONING"
   },
   {
@@ -18,7 +17,6 @@
     "provider": "gcp",
     "region": "us-central1",
     "availability": "multi-zone",
-    "network": "n-abcde1",
     "status": "PROVISIONING"
   }
 ]
