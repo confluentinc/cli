@@ -173,6 +173,7 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 					"topic_name": "topic1",
 					"is_internal": false,
 					"replication_factor": 3,
+					"partitions_count": 6,
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
 					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/configs"},
 					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions/-/reassignments"}
@@ -184,6 +185,7 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 					"topic_name": "topic2",
 					"is_internal": true,
 					"replication_factor": 4,
+					"partitions_count": 6,
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
 					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/configs"},
 					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions/-/reassignments"}
