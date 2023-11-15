@@ -103,6 +103,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl delete --cluster lkc-acls --allow --principal User:sa-12345 --operations write,alter --topic test-topic --force", fixture: "kafka/acl/delete-cloud.golden"},
 
 		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "cloud", fixture: "kafka/topic/list-cloud.golden"},
+		{args: "kafka topic list --cluster lkc-kafka-api-topics --detailed", login: "cloud", fixture: "kafka/topic/list-cloud-detailed.golden"},
 		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/topic/list-cloud.golden"},
 
 		{args: "kafka topic create", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create.golden", exitCode: 1},
@@ -379,6 +380,7 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 	tests := []CLITest{
 		// Test correct usage
 		{args: fmt.Sprintf("kafka topic list --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/list.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s --no-authentication --detailed", kafkaRestURL), fixture: "kafka/topic/list-detailed.golden"},
 		// Test with basic auth input
 		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), input: "Miles\nTod\n", fixture: "kafka/topic/list-with-auth.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), login: "onprem", fixture: "kafka/topic/list-with-auth-from-login.golden"},
