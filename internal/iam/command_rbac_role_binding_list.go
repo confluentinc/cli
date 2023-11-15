@@ -31,7 +31,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List role bindings.",
-		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
+		Long:  "List role bindings assigned to a principal or role based on scopes.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
@@ -59,7 +59,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding list --principal User:u-123456 --inclusive",
 			},
 			examples.Example{
-				Text: "List the role bindings for the current user at the environment scope and its nested scopes:",
+				Text: "List the role bindings for the current user with the environment scope and subscopes:",
 				Code: "confluent iam rbac role-binding list --current-user --environment env-123456 --inclusive",
 			},
 		)
@@ -67,49 +67,49 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic",
+				Code: "confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperRead --resource Topic:my-topic",
 			},
 			examples.Example{
 				Text: "List the role bindings for a specific principal:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --principal User:my-user",
+				Code: "confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --principal User:my-user",
 			},
 			examples.Example{
 				Text: "List the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --principal User:my-user --role DeveloperRead",
+				Code: "confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --principal User:my-user --role DeveloperRead",
 			},
 			examples.Example{
 				Text: "List the principals bound to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperWrite",
+				Code: "confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperWrite",
 			},
 			examples.Example{
 				Text: "List the principals bound to a specific resource with a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperWrite --resource Topic:my-topic",
+				Code: "confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperWrite --resource Topic:my-topic",
 			},
 		)
 	}
 
-	cmd.Flags().String("principal", "", "Principal whose role bindings should be listed.")
-	cmd.Flags().Bool("current-user", false, "Show role bindings belonging to the current user.")
-	cmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
+	cmd.Flags().String("principal", "", "Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.")
+	cmd.Flags().Bool("current-user", false, "List role bindings assigned to the current user.")
+	cmd.Flags().String("role", "", `Predefined role assigned to "--principal". If "--principal" is unspecified, list all principals assigned the role.`)
 
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
-		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
-		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
-		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for scope of role binding listings.")
-		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding listings.")
-		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding listings.")
+		cmd.Flags().String("environment", "", "Environment ID, which specifies the environment scope.")
+		cmd.Flags().Bool("current-environment", false, "Use current environment ID for the environment scope.")
+		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID, which specifies the cloud cluster scope.")
+		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
+		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
+		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name, which specifies the ksqlDB cluster scope.")
 	} else {
-		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for scope of role binding listings.")
-		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for scope of role binding listings.")
-		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for scope of role binding listings.")
-		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID for scope of role binding listings.")
-		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
+		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
+		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID, which specifies the ksqlDB cluster scope.")
+		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID, which specifies the Connect cluster scope.")
+		cmd.Flags().String("cluster-name", "", "Cluster name, which specifies the cluster scope.")
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
 
-	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-	cmd.Flags().Bool("inclusive", false, "List all role bindings in a specific scope and its nested scopes.")
+	cmd.Flags().String("resource", "", `Resource type and identifier using "<Prefix>:<ID>" format (for example, "User:u-123456"). If specified with "--role" and no principals, list all principals and role bindings.`)
+	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scopes and subscopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
