@@ -34,7 +34,6 @@ func (c *command) newListCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().Bool("detailed", false, "List detailed topic information.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
@@ -56,24 +55,15 @@ func ListTopics(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restConte
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	detailed, err := cmd.Flags().GetBool("detailed")
-	if err != nil {
-		return err
-	}
-
 	list := output.NewList(cmd)
 	for _, topic := range topics.Data {
-		if detailed {
-			list.Add(&topicOut{
-				Name:              topic.TopicName,
-				IsInternal:        topic.IsInternal,
-				Kind:              topic.Kind,
-				ReplicationFactor: topic.ReplicationFactor,
-				PartitionsCount:   topic.PartitionsCount,
-			})
-		} else {
-			list.Add(&topicNameOut{Name: topic.TopicName})
-		}
+		list.Add(&topicOut{
+			Name:              topic.TopicName,
+			IsInternal:        topic.IsInternal,
+			Kind:              topic.Kind,
+			ReplicationFactor: topic.ReplicationFactor,
+			PartitionsCount:   topic.PartitionsCount,
+		})
 	}
 
 	return list.Print()

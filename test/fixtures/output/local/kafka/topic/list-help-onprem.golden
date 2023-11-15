@@ -4,7 +4,6 @@ Usage:
   confluent local kafka topic list [flags]
 
 Flags:
-      --detailed        List detailed topic information.
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
