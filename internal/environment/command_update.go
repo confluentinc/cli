@@ -23,7 +23,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cmd.MarkFlagsOneRequired("name", "stream-governance-package")
 
 	return cmd
 }
@@ -38,8 +38,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment := orgv2.OrgV2Environment{
-		DisplayName: orgv2.PtrString(name),
+	environment := orgv2.OrgV2Environment{}
+	if name != "" {
+		environment.SetDisplayName(name)
 	}
 	if sgPackage != "" {
 		sgConfig := orgv2.NewOrgV2StreamGovernanceConfig()
