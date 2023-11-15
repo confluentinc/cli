@@ -40,7 +40,6 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return list.Print()
 	}
 
-	// TODO: not working as expected, produces an empty list {}
 	list := output.NewList(cmd)
 	for _, group := range ipGroups {
 		list.Add(&ipGroupSerializedOut{
@@ -49,6 +48,6 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 			CidrBlocks: group.GetCidrBlocks(),
 		})
 	}
-	return output.SerializedOutput(cmd, list)
+	return list.Print()
 
 }

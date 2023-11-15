@@ -38,6 +38,7 @@ func newIPGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
+
 	return cmd
 }
 
@@ -52,10 +53,11 @@ func printHumanIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 }
 
 func printSerializedIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
-	out := &ipGroupSerializedOut{
+	table := output.NewTable(cmd)
+	table.Add(&ipGroupSerializedOut{
 		ID:         ipGroup.GetId(),
 		Name:       ipGroup.GetGroupName(),
 		CidrBlocks: ipGroup.GetCidrBlocks(),
-	}
-	return output.SerializedOutput(cmd, out)
+	})
+	return table.Print()
 }

@@ -10,13 +10,13 @@ import (
 
 func (c *ipGroupCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <ip-group-name>",
+		Use:   "create <name>",
 		Short: "Create an IP group.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an IP group named "demo-ip-group" with CIDR blocks '["168.150.200.0/24", "147.150.200.0/24"]'':`,
+				Text: `Create an IP group named "demo-ip-group" with CIDR blocks "168.150.200.0/24" and "147.150.200.0/24":`,
 				Code: `confluent iam ip-group create "demo-ip-group" --cidr-blocks "168.150.200.0/24,147.150.200.0/24"`,
 			},
 		),
@@ -31,7 +31,6 @@ func (c *ipGroupCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *ipGroupCommand) create(cmd *cobra.Command, args []string) error {
-
 	cidrBlocks, err := cmd.Flags().GetStringSlice("cidr-blocks")
 	if err != nil {
 		return err
@@ -43,6 +42,9 @@ func (c *ipGroupCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	group, err := c.V2Client.CreateIamIPGroup(createIPGroup)
+	if err != nil {
+		return err
+	}
 
 	if output.GetFormat(cmd) == output.Human {
 		return printHumanIPGroup(cmd, group)
