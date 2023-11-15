@@ -6,23 +6,23 @@ Usage:
 Examples:
 Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:
 
-  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperRead --resource Topic:my-topic
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperRead --resource Topic:my-topic
 
 List the role bindings for a specific principal:
 
-  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --principal User:my-user
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --principal User:my-user
 
 List the role bindings for a specific principal, filtered to a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --principal User:my-user --role DeveloperRead
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --principal User:my-user --role DeveloperRead
 
 List the principals bound to a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperWrite
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperWrite
 
 List the principals bound to a specific resource with a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster lkc-o3hw2k --role DeveloperWrite --resource Topic:my-topic
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperWrite --resource Topic:my-topic
 
 Flags:
       --principal string                 Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.
