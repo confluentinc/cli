@@ -325,3 +325,18 @@ func (s *CLITestSuite) TestIam_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestIamIPGroup() {
+	tests := []CLITest{
+		{args: `iam ip-group create "demo-ip-group" --cidr-blocks "168.150.200.0/24,147.150.200.0/24"`, fixture: "iam/ip-group/create.golden"},
+		{args: `iam ip-group list`, fixture: "iam/ip-group/list.golden"},
+		{args: `iam ip-group describe ipg-wjnde`, fixture: "iam/ip-group/describe.golden"},
+		{args: `iam ip-group delete ipg-wjnde`, fixture: "iam/ip-group/delete.golden"},
+		{args: `iam ip-group update ipg-wjnde --group-name "new-demo-group" --add-cidr-blocks "1.2.3.4/12" --remove-cidr-blocks "168.150.200.0/24"`, fixture: "iam/ip-group/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
