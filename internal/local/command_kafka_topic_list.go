@@ -18,6 +18,7 @@ func (c *command) newKafkaTopicListCommand() *cobra.Command {
 		RunE:  c.kafkaTopicList,
 	}
 
+	cmd.Flags().Bool("detailed", false, "List detailed topic information.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
