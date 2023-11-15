@@ -10,7 +10,11 @@ import (
 )
 
 type topicOut struct {
-	Name string `human:"Name" serialized:"name"`
+	Name              string `human:"Name" serialized:"name"`
+	Kind              string `human:"Kind" serialized:"kind"`
+	IsInternal        bool   `human:"Is Internal" serialized:"is_internal"`
+	ReplicationFactor int32  `human:"Replication Factor" serialized:"replication_factor"`
+	PartitionsCount   int32  `human:"Partitions Count" serialized:"partitions_count"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -38,7 +42,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, topic := range topics {
-		list.Add(&topicOut{Name: topic.GetTopicName()})
+		list.Add(&topicOut{
+			Name:              topic.GetTopicName(),
+			IsInternal:        topic.GetIsInternal(),
+			Kind:              topic.GetKind(),
+			ReplicationFactor: topic.GetReplicationFactor(),
+			PartitionsCount:   topic.GetPartitionsCount(),
+		})
 	}
 	return list.Print()
 }
