@@ -171,10 +171,3 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 func topicNameStrategy(topic, mode string) string {
 	return fmt.Sprintf("%s-%s", topic, mode)
 }
-
-func getCmkClusterNetwork(cluster *cmkv2.CmkV2Cluster) string {
-	if isDedicated(cluster) && cluster.Spec.Network != nil {
-		return cluster.Spec.Network.GetId()
-	}
-	return ""
-}

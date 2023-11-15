@@ -133,7 +133,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		ServiceProvider:    strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
-		Network:            getCmkClusterNetwork(cluster),
+		Network:            cluster.Spec.Network.GetId(),
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),
