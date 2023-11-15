@@ -99,7 +99,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	out := convertClusterToDescribeStruct(cluster, c.Context.Context, c.V2Client)
+	out := convertClusterToDescribeStruct(cluster, c.Context.Context)
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
@@ -116,7 +116,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	return table.Print()
 }
 
-func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Context, client *ccloudv2.Client) *describeStruct {
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Context) *describeStruct {
 	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgressMbps(cluster)
 
@@ -133,7 +133,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		ServiceProvider:    strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
-		Network:            getCmkClusterNetwork(cluster, ctx, client),
+		Network:            getCmkClusterNetwork(cluster),
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),
