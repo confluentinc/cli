@@ -12,7 +12,7 @@ import (
 type topicOut struct {
 	Name              string `human:"Name" serialized:"name"`
 	Kind              string `human:"Kind" serialized:"kind"`
-	IsInternal        bool   `human:"Is Internal" serialized:"is_internal"`
+	IsInternal        bool   `human:"Internal" serialized:"is_internal"`
 	ReplicationFactor int32  `human:"Replication Factor" serialized:"replication_factor"`
 	PartitionsCount   int32  `human:"Partitions Count" serialized:"partitions_count"`
 }
