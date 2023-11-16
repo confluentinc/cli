@@ -61,3 +61,19 @@ func printSerializedIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) erro
 	})
 	return table.Print()
 }
+
+func (c *ipGroupCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *ipGroupCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return pcmd.AutocompleteIpGroups(c.V2Client)
+}

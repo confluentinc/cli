@@ -9,10 +9,11 @@ import (
 
 func (c *ipGroupCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <id>",
-		Short: "Describe an IP group.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		Use:               "describe <id>",
+		Short:             "Describe an IP group.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
+		RunE:              c.describe,
 	}
 
 	pcmd.AddOutputFlag(cmd)

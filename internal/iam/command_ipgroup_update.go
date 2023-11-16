@@ -13,10 +13,11 @@ import (
 
 func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update an IP group.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		Use:               "update <id>",
+		Short:             "Update an IP group.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the name and add a CIDR block to IP group "ipg-12345"":`,

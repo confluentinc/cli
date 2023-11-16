@@ -73,3 +73,15 @@ func printSerializedIpFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) e
 	})
 	return table.Print()
 }
+
+func (c *ipFilterCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return pcmd.AutocompleteIpFilters(c.V2Client)
+}

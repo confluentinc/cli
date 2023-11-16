@@ -11,10 +11,11 @@ import (
 
 func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete an IP group.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.delete,
+		Use:               "delete <id>",
+		Short:             "Delete an IP group.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
+		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete IP group "ipg-12345":`,

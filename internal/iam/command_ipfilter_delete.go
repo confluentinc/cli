@@ -11,10 +11,11 @@ import (
 
 func (c *ipFilterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete an IP filter.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.delete,
+		Use:               "delete <id>",
+		Short:             "Delete an IP filter.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete IP filter "ipf-12345":`,
