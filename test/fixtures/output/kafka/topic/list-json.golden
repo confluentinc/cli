@@ -11,6 +11,6 @@
     "kind": "KafkaTopic",
     "is_internal": true,
     "replication_factor": 4,
-    "partitions_count": 6
+    "partitions_count": 12
   }
 ]
