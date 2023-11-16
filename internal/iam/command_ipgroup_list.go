@@ -11,7 +11,7 @@ import (
 func (c *ipGroupCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List IP Groups.",
+		Short: "List IP groups.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

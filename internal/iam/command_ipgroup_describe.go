@@ -28,7 +28,7 @@ func (c *ipGroupCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printHumanIPGroup(cmd, group)
+		return printHumanIpGroup(cmd, group)
 	}
-	return printSerializedIPGroup(cmd, group)
+	return printSerializedIpGroup(cmd, group)
 }

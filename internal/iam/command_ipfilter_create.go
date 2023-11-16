@@ -43,9 +43,10 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Convert the IP group IDs into IP group objects
 	var IpGroupIdObjects []iamv2.GlobalObjectReference
 	for _, ipGroupId := range ipGroups {
-		// the empty string fields will get filled in automatically by the cc-policy-service
+		// The empty string fields will get filled in automatically by the cc-policy-service
 		IpGroupIdObjects = append(IpGroupIdObjects, *iamv2.NewGlobalObjectReference(ipGroupId, "", ""))
 	}
 
@@ -55,13 +56,13 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		IpGroups:      &IpGroupIdObjects,
 	}
 
-	filter, err := c.V2Client.CreateIamIPFilter(createIPFilter)
+	filter, err := c.V2Client.CreateIamIpFilter(createIPFilter)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printHumanIPFilter(cmd, filter)
+		return printHumanIpFilter(cmd, filter)
 	}
-	return printSerializedIPFilter(cmd, filter)
+	return printSerializedIpFilter(cmd, filter)
 }

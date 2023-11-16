@@ -26,7 +26,7 @@ type ipFilterSerializedOut struct {
 	IpGroups      []string `human:"IP groups" serialized:"ip_groups"`
 }
 
-func newIPFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ip-filter",
 		Short: "Manage IP filters",
@@ -36,11 +36,15 @@ func newIPFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &ipFilterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
 }
 
-func printHumanIPFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error {
+func printHumanIpFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error {
 	var ipGroupIds []string
 	for _, group := range ipFilter.GetIpGroups() {
 		ipGroupIds = append(ipGroupIds, group.GetId())
@@ -55,7 +59,7 @@ func printHumanIPFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error 
 	return table.Print()
 }
 
-func printSerializedIPFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error {
+func printSerializedIpFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error {
 	var ipGroupIds []string
 	for _, group := range ipFilter.GetIpGroups() {
 		ipGroupIds = append(ipGroupIds, group.GetId())

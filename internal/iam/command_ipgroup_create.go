@@ -41,13 +41,13 @@ func (c *ipGroupCommand) create(cmd *cobra.Command, args []string) error {
 		CidrBlocks: &cidrBlocks,
 	}
 
-	group, err := c.V2Client.CreateIamIPGroup(createIPGroup)
+	group, err := c.V2Client.CreateIamIpGroup(createIPGroup)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printHumanIPGroup(cmd, group)
+		return printHumanIpGroup(cmd, group)
 	}
-	return printSerializedIPGroup(cmd, group)
+	return printSerializedIpGroup(cmd, group)
 }

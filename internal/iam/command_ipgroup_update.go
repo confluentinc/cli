@@ -19,15 +19,15 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name and add a CIDR block to IP Group "ipg-12345"":`,
+				Text: `Update the name and add a CIDR block to IP group "ipg-12345"":`,
 				Code: `confluent iam ip-group update ipg-12345 --name "New Group Name" --add-cidr-blocks "123.234.0.0/16"`,
 			},
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the IP group.")
-	cmd.Flags().StringSlice("add-cidr-blocks", []string{}, "Comma-separated list of IP groups to add.")
-	cmd.Flags().StringSlice("remove-cidr-blocks", []string{}, "Comma-separated list of IP groups to remove.")
+	cmd.Flags().String("name", "", "Updated name of the IP group.")
+	cmd.Flags().StringSlice("add-cidr-blocks", []string{}, "Comma-separated list of CIDR blocks to add.")
+	cmd.Flags().StringSlice("remove-cidr-blocks", []string{}, "Comma-separated list of CIDR blocks to remove.")
 
 	pcmd.AddOutputFlag(cmd)
 
@@ -61,9 +61,9 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 
 	currentIpGroupId := args[0]
 
-	// get the current IP group we are going to be updating
+	// Get the current IP group we are going to be updating
 	currentIpGroup, err := c.V2Client.GetIamIpGroup(currentIpGroupId)
-	// initialize our new cidr blocks with the existing values
+	// Initialize our new cidr blocks with the existing values
 	newCidrBlocks := currentIpGroup.GetCidrBlocks()
 
 	if err != nil {
@@ -75,7 +75,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		updateIpGroup.GroupName = &groupName
 	}
 
-	// for each cidr block being added that isn't in the existing slice, append it to the new slice
+	// For each cidr block being added that isn't in the existing slice, append it to the new slice
 	if len(addCidrBlocks) > 0 {
 		for _, cidrBlock := range addCidrBlocks {
 			if !slices.Contains(newCidrBlocks, cidrBlock) {
@@ -84,13 +84,13 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 	/*
-	 * for each cidr block being removed that is in the existing slice, remove it from the slice.
-	 * this is accomplished by recreating the array with every element except for the one being removed
+	 * For each cidr block being removed that is in the existing slice, remove it from the slice.
+	 * This is accomplished by recreating the array with every element except for the one being removed
 	 */
 	if len(removeCidrBlocks) > 0 {
 		for _, cidrBlock := range removeCidrBlocks {
 			if slices.Contains(newCidrBlocks, cidrBlock) {
-				newCidrBlocks = removeElementFromArray(newCidrBlocks, cidrBlock)
+				newCidrBlocks = removeIPGroupFromArray(newCidrBlocks, cidrBlock)
 			}
 		}
 	}
@@ -103,12 +103,12 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printHumanIPGroup(cmd, group)
+		return printHumanIpGroup(cmd, group)
 	}
-	return printSerializedIPGroup(cmd, group)
+	return printSerializedIpGroup(cmd, group)
 }
 
-func removeElementFromArray(array []string, itemToRemove string) []string {
+func removeIPGroupFromArray(array []string, itemToRemove string) []string {
 	for i, element := range array {
 		if element == itemToRemove {
 			array[i] = array[len(array)-1]

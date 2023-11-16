@@ -24,7 +24,7 @@ type ipGroupSerializedOut struct {
 	CidrBlocks []string `human:"CIDR blocks" serialized:"cidr_blocks"`
 }
 
-func newIPGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newIpGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ip-group",
 		Short: "Manage IP groups",
@@ -42,7 +42,7 @@ func newIPGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func printHumanIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
+func printHumanIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 	table := output.NewTable(cmd)
 	table.Add(&ipGroupHumanOut{
 		ID:         ipGroup.GetId(),
@@ -52,7 +52,7 @@ func printHumanIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 	return table.Print()
 }
 
-func printSerializedIPGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
+func printSerializedIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 	table := output.NewTable(cmd)
 	table.Add(&ipGroupSerializedOut{
 		ID:         ipGroup.GetId(),

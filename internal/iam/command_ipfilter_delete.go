@@ -29,11 +29,11 @@ func (c *ipFilterCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *ipFilterCommand) delete(cmd *cobra.Command, args []string) error {
-	err := c.V2Client.DeleteIamIPFilter(args[0])
+	err := c.V2Client.DeleteIamIpFilter(args[0])
 	if err != nil {
 		return resource.ResourcesNotFoundError(cmd, resource.IPFilter, args[0])
 	}
 
-	output.Printf(false, "Successfully deleted IP filter: %s\n", args[0])
+	output.Printf(c.Config.EnableColor, "Deleted IP filter \"%s\"\n", args[0])
 	return nil
 }
