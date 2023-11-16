@@ -43,14 +43,13 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	newStreamGovernanceConfig := environment.GetStreamGovernanceConfig()
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
 		IsCurrent:               environment.GetId() == c.Context.GetCurrentEnvironment(),
 		Id:                      environment.GetId(),
 		Name:                    environment.GetDisplayName(),
-		StreamGovernancePackage: newStreamGovernanceConfig.GetPackage(),
+		StreamGovernancePackage: environment.StreamGovernanceConfig.GetPackage(),
 	})
 	if err := table.Print(); err != nil {
 		return err
