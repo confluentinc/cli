@@ -9,16 +9,16 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
+func (c *ipFilterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
-		Short: "Delete an IP group.",
+		Short: "Delete an IP filter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete IP group "ipg-12345":`,
-				Code: "confluent iam ip-group delete ipg-12345",
+				Text: `Delete IP filter "ipf-12345":`,
+				Code: "confluent iam ip-filter delete ipf-12345",
 			},
 		),
 	}
@@ -28,12 +28,12 @@ func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *ipGroupCommand) delete(cmd *cobra.Command, args []string) error {
-	err := c.V2Client.DeleteIamIPGroup(args[0])
+func (c *ipFilterCommand) delete(cmd *cobra.Command, args []string) error {
+	err := c.V2Client.DeleteIamIPFilter(args[0])
 	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.IPGroup, args[0])
+		return resource.ResourcesNotFoundError(cmd, resource.IPFilter, args[0])
 	}
 
-	output.Printf(false, "Successfully deleted IP group: %s\n", args[0])
+	output.Printf(false, "Successfully deleted IP filter: %s\n", args[0])
 	return nil
 }

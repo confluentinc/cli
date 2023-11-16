@@ -160,6 +160,18 @@ func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2Invitation
 	return req.Execute()
 }
 
+// iam ip filter api calls
+
+func (c *Client) CreateIamIPFilter(ipFilter iamv2.IamV2IpFilter) (iamv2.IamV2IpFilter, error) {
+	resp, httpResp, err := c.IamClient.IPFiltersIamV2Api.CreateIamV2IpFilter(c.iamApiContext()).IamV2IpFilter(ipFilter).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) DeleteIamIPFilter(id string) error {
+	httpResp, err := c.IamClient.IPFiltersIamV2Api.DeleteIamV2IpFilter(c.iamApiContext(), id).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
 // iam ip group api calls
 
 func (c *Client) CreateIamIPGroup(ipGroup iamv2.IamV2IpGroup) (iamv2.IamV2IpGroup, error) {
