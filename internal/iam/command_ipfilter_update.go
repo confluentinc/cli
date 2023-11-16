@@ -105,7 +105,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	if len(removeIpGroups) > 0 {
 		for _, ipGroupId := range removeIpGroups {
 			if slices.Contains(newIpGroupIds, ipGroupId) {
-				newIpGroupIds = removeIPFilterFromArray(newIpGroupIds, ipGroupId)
+				newIpGroupIds = removeIpFilterFromArray(newIpGroupIds, ipGroupId)
 			}
 		}
 	}
@@ -130,7 +130,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	return printSerializedIpFilter(cmd, filter)
 }
 
-func removeIPFilterFromArray(array []string, itemToRemove string) []string {
+func removeIpFilterFromArray(array []string, itemToRemove string) []string {
 	for i, element := range array {
 		if element == itemToRemove {
 			array[i] = array[len(array)-1]

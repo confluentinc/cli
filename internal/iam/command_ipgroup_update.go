@@ -90,7 +90,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	if len(removeCidrBlocks) > 0 {
 		for _, cidrBlock := range removeCidrBlocks {
 			if slices.Contains(newCidrBlocks, cidrBlock) {
-				newCidrBlocks = removeIPGroupFromArray(newCidrBlocks, cidrBlock)
+				newCidrBlocks = removeIpGroupFromArray(newCidrBlocks, cidrBlock)
 			}
 		}
 	}
@@ -108,7 +108,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	return printSerializedIpGroup(cmd, group)
 }
 
-func removeIPGroupFromArray(array []string, itemToRemove string) []string {
+func removeIpGroupFromArray(array []string, itemToRemove string) []string {
 	for i, element := range array {
 		if element == itemToRemove {
 			array[i] = array[len(array)-1]
