@@ -162,23 +162,26 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			topic1 := cckafkarestv3.TopicData{
-				TopicName:         "topic1",
-				Kind:              "KafkaTopic",
-				ClusterId:         "cluster-1",
-				IsInternal:        false,
-				ReplicationFactor: 3,
-				PartitionsCount:   6,
+			topicList := cckafkarestv3.TopicDataList{
+				Data: []cckafkarestv3.TopicData{
+					{
+						TopicName:         "topic1",
+						Kind:              "KafkaTopic",
+						ClusterId:         "cluster-1",
+						IsInternal:        false,
+						ReplicationFactor: 3,
+						PartitionsCount:   6,
+					},
+					{
+						TopicName:         "topic2",
+						Kind:              "KafkaTopic",
+						ClusterId:         "cluster-1",
+						IsInternal:        true,
+						ReplicationFactor: 4,
+						PartitionsCount:   12,
+					},
+				},
 			}
-			topic2 := cckafkarestv3.TopicData{
-				TopicName:         "topic2",
-				Kind:              "KafkaTopic",
-				ClusterId:         "cluster-1",
-				IsInternal:        true,
-				ReplicationFactor: 4,
-				PartitionsCount:   12,
-			}
-			topicList := cckafkarestv3.TopicDataList{Data: []cckafkarestv3.TopicData{topic1, topic2}}
 			err := json.NewEncoder(w).Encode(topicList)
 			require.NoError(t, err)
 		case http.MethodPost:

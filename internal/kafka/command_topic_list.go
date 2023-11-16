@@ -14,7 +14,7 @@ type topicOut struct {
 	Kind              string `human:"Kind" serialized:"kind"`
 	IsInternal        bool   `human:"Internal" serialized:"is_internal"`
 	ReplicationFactor int32  `human:"Replication Factor" serialized:"replication_factor"`
-	PartitionsCount   int32  `human:"Partitions Count" serialized:"partitions_count"`
+	PartitionCount    int32  `human:"Partition Count" serialized:"partition_count"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -47,7 +47,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			IsInternal:        topic.GetIsInternal(),
 			Kind:              topic.GetKind(),
 			ReplicationFactor: topic.GetReplicationFactor(),
-			PartitionsCount:   topic.GetPartitionsCount(),
+			PartitionCount:    topic.GetPartitionsCount(),
 		})
 	}
 	return list.Print()

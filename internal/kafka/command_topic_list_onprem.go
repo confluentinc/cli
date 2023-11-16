@@ -62,7 +62,7 @@ func ListTopics(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restConte
 			IsInternal:        topic.IsInternal,
 			Kind:              topic.Kind,
 			ReplicationFactor: topic.ReplicationFactor,
-			PartitionsCount:   topic.PartitionsCount,
+			PartitionCount:    topic.PartitionsCount,
 		})
 	}
 
