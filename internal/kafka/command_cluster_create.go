@@ -68,6 +68,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
 	cmd.Flags().String("encryption-key", "", "Resource ID of the Cloud Key Management Service key (GCP only).")
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddNetworkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -169,6 +170,17 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errors.CkuMoreThanZeroErrorMsg)
 		}
 		setClusterConfigCku(&createCluster, int32(cku))
+	}
+
+	if cmd.Flags().Changed("network") {
+		networkId, err := cmd.Flags().GetString("network")
+		if err != nil {
+			return err
+		}
+		if clusterType != skuDedicated {
+			return errors.NewErrorWithSuggestions("the `--network` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type`.")
+		}
+		setClusterNetwork(&createCluster, cmkv2.NewEnvScopedObjectReference(networkId, "", ""))
 	}
 
 	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
@@ -274,6 +286,10 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *
 
 func setClusterConfigCku(cluster *cmkv2.CmkV2Cluster, cku int32) {
 	cluster.Spec.Config.CmkV2Dedicated.Cku = cku
+}
+
+func setClusterNetwork(cluster *cmkv2.CmkV2Cluster, network *cmkv2.EnvScopedObjectReference) {
+	cluster.Spec.Network = network
 }
 
 func getKafkaProvisionEstimate(sku ccstructs.Sku) string {

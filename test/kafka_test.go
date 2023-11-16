@@ -637,3 +637,13 @@ func (s *CLITestSuite) TestKafka_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestKafkaClusterCreate_Network() {
+	test := CLITest{
+		login:   "cloud",
+		args:    "kafka cluster create cck-network-test --cloud aws --region us-east-1 --type dedicated --cku 1 --network n-abcde1",
+		fixture: "kafka/cluster/cck-network.golden",
+	}
+
+	s.runIntegrationTest(test)
+}
