@@ -19,8 +19,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
-	cmd.Flags().String("stream-governance-package", "",
-		`Stream Governance package. "essentials" or "advanced"`)
+	c.addStreamGovernancePackageFlag(cmd, "")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

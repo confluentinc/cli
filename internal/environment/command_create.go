@@ -1,6 +1,8 @@
 package environment
 
 import (
+	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 	"github.com/spf13/cobra"
 	"strings"
 
@@ -17,8 +19,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
-	cmd.Flags().String("stream-governance-package", "essentials",
-		`Stream Governance package. "essentials" or "advanced"`)
+	c.addStreamGovernancePackageFlag(cmd, "essentials")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -59,4 +60,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	_ = c.Config.Save()
 
 	return nil
+}
+
+func (c *command) addStreamGovernancePackageFlag(cmd *cobra.Command, defaultValue string) {
+	cmd.Flags().String("stream-governance-package", defaultValue,
+		fmt.Sprintf("Stream Governance package. %s",
+			utils.ArrayToCommaDelimitedString([]string{"essentials", "advanced"}, "or")))
 }
