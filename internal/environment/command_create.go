@@ -1,10 +1,12 @@
 package environment
 
 import (
+	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 	"github.com/spf13/cobra"
+	"strings"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
-
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -17,6 +19,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
+	c.addStreamGovernancePackageFlag(cmd, "essentials")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -24,17 +27,30 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
-	environment, err := c.V2Client.CreateOrgEnvironment(environment)
+	streamGovernancePackage, err := cmd.Flags().GetString("stream-governance-package")
 	if err != nil {
 		return err
 	}
 
+	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
+	if streamGovernancePackage != "" {
+		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
+			Package: orgv2.PtrString(strings.ToUpper(streamGovernancePackage)),
+		})
+	}
+
+	environment, err = c.V2Client.CreateOrgEnvironment(environment)
+	if err != nil {
+		return err
+	}
+	newStreamGovernanceConfig := environment.GetStreamGovernanceConfig()
+
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
-		Id:        environment.GetId(),
-		Name:      environment.GetDisplayName(),
+		IsCurrent:               environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:                      environment.GetId(),
+		Name:                    environment.GetDisplayName(),
+		StreamGovernancePackage: newStreamGovernanceConfig.GetPackage(),
 	})
 	if err := table.Print(); err != nil {
 		return err
@@ -44,4 +60,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	_ = c.Config.Save()
 
 	return nil
+}
+
+func (c *command) addStreamGovernancePackageFlag(cmd *cobra.Command, defaultValue string) {
+	cmd.Flags().String("stream-governance-package", defaultValue,
+		fmt.Sprintf("Stream Governance package. %s", utils.ArrayToCommaDelimitedString(
+			[]string{"essentials", "advanced"}, "or")))
 }
