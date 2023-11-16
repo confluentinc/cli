@@ -22,7 +22,6 @@ func (c *ipFilterCommand) newListCommand() *cobra.Command {
 }
 
 func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
-
 	ipFilters, err := c.V2Client.ListIamIpFilters()
 	if err != nil {
 		return err
