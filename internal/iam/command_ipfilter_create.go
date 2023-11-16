@@ -3,9 +3,11 @@ package iam
 import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
@@ -58,6 +60,16 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 
 	filter, err := c.V2Client.CreateIamIpFilter(createIPFilter)
 	if err != nil {
+		/*
+		 * Unique error message for creating an IP Filter that would lock out the user.
+		 * Splits the error message into its two components of the error and the suggestion.
+		 */
+		if strings.Contains(err.Error(), "lock out") {
+			errorMessageIndex := strings.Index(err.Error(), "Please")
+			return errors.NewErrorWithSuggestions(err.Error()[:errorMessageIndex-1],
+				"Please double check the IP filter you are creating."+
+					" Otherwise, try again from an IP address permitted within this IP filter's range")
+		}
 		return err
 	}
 

@@ -1,14 +1,13 @@
 package iam
 
 import (
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/spf13/cobra"
 	"strings"
-
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *ipFilterCommand) newDeleteCommand() *cobra.Command {
@@ -34,16 +33,17 @@ func (c *ipFilterCommand) newDeleteCommand() *cobra.Command {
 func (c *ipFilterCommand) delete(cmd *cobra.Command, args []string) error {
 	err := c.V2Client.DeleteIamIpFilter(args[0])
 
-	/*
-	 * Unique error message for deleting an IP Filter that would lock out the user.
-	 * Splits the error message into its two components of the error and the suggestion.
-	 */
-	if strings.Contains(err.Error(), "lock out") {
-		errorMessageIndex := strings.Index(err.Error(), "Please")
-		return errors.NewErrorWithSuggestions(err.Error()[:errorMessageIndex-1],
-			err.Error()[errorMessageIndex:])
-	}
 	if err != nil {
+		/*
+		 * Unique error message for deleting an IP Filter that would lock out the user.
+		 * Splits the error message into its two components of the error and the suggestion.
+		 */
+		if strings.Contains(err.Error(), "lock out") {
+			errorMessageIndex := strings.Index(err.Error(), "Please")
+			return errors.NewErrorWithSuggestions(err.Error()[:errorMessageIndex-1],
+				"Please double check the IP filter you are deleting."+
+					" Otherwise, try again from an IP address permitted within another IP filter")
+		}
 		return resource.ResourcesNotFoundError(cmd, resource.IPFilter, args[0])
 	}
 
