@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/auth"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -165,6 +166,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func() {
 	return func() {
 		u := ppanic.CollectPanic(cmd, nil, cfg)
-		u.Report(cfg.GetCloudClientV2(unsafeTrace))
+		u.Report(ccloudv2.NewClient(cfg, unsafeTrace))
 	}
 }

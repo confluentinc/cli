@@ -143,15 +143,7 @@ func (d *DynamicContext) RemoveKafkaClusterConfig(clusterId string) error {
 }
 
 func (d *DynamicContext) HasLogin() bool {
-	credType := d.GetCredentialType()
-	switch credType {
-	case config.Username:
-		return d.GetAuthToken() != ""
-	case config.APIKey:
-		return false
-	default:
-		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, d.Name))
-	}
+	return d.GetCredentialType() == config.Username && d.GetAuthToken() != ""
 }
 
 func (d *DynamicContext) EnvironmentId() (string, error) {

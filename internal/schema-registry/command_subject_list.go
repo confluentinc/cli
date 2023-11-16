@@ -23,7 +23,7 @@ func (c *command) newSubjectListCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.subjectList,
 	}
 
-	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
+	cmd.Flags().Bool("deleted", false, "Include deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {

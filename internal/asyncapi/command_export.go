@@ -60,8 +60,8 @@ type flags struct {
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
-const messageOffset int = 5
-const protobufErrorMessage string = "protobuf is not supported"
+const messageOffset = 5
+const protobufErrorMessage = "protobuf is not supported"
 
 func (c *command) newExportCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -165,9 +165,6 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	yaml, err := reflector.Schema.MarshalYAML()
 	if err != nil {
 		return err
-	}
-	if err := c.countAsyncApiUsage(accountDetails); err != nil {
-		log.CliLogger.Debug(err)
 	}
 	output.Printf(c.Config.EnableColor, "AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
@@ -316,14 +313,14 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to get topic partitions: %w", err)
 	}
-	if partitions.Data != nil {
-		numPartitions = int32(len(partitions.Data))
+	if partitions != nil {
+		numPartitions = int32(len(partitions))
 	}
 	customConfigMap := make(map[string]string)
 	topicConfigMap := make(map[string]any)
 
 	// Determine whether the given config value can be put into the AsyncAPI Kafka bindings or put into our custom struct for extra configs
-	for _, config := range configs.Data {
+	for _, config := range configs {
 		switch config.GetName() {
 		case "cleanup.policy":
 			topicConfigMap[config.GetName()] = strings.Split(config.GetValue(), ",")

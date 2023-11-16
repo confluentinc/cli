@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newByokV1Client(url, userAgent string, unsafeTrace bool) *byokv1.APIClient {
+func newByokV1Client(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *byokv1.APIClient {
 	cfg := byokv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = byokv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -20,7 +20,7 @@ func newByokV1Client(url, userAgent string, unsafeTrace bool) *byokv1.APIClient 
 }
 
 func (c *Client) byokApiContext() context.Context {
-	return context.WithValue(context.Background(), byokv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), byokv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateByokKey(key byokv1.ByokV1Key) (byokv1.ByokV1Key, *http.Response, error) {

@@ -1,5 +1,7 @@
 STAGING_BRANCH_REGEX="s/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/"
+STAGING_BRANCH_REGEX_DASH="s/\([0-9]*\)\.\([0-9]*\)\.[0-9]*/\1-\2-x/"
 STAGING_BRANCH=$(shell echo $(CLEAN_VERSION) | sed $(STAGING_BRANCH_REGEX))
+STAGING_BRANCH_DASH=$(shell echo $(CLEAN_VERSION) | sed $(STAGING_BRANCH_REGEX_DASH))
 
 ifeq ($(shell uname),Darwin)
 SED ?= gsed
@@ -10,6 +12,7 @@ endif
 NEXT_MINOR_VERSION = $(word 1,$(split_version)).$(shell expr $(word 2,$(split_version)) + 1).0
 SHORT_NEXT_MINOR_VERSION = $(word 1,$(split_version)).$(shell expr $(word 2,$(split_version)) + 1)
 CURRENT_SHORT_MINOR_VERSION = $(word 1,$(split_version)).$(word 2,$(split_version))
+CURRENT_SHORT_MINOR_VERSION_DASH = $(word 1,$(split_version))-$(word 2,$(split_version))
 NEXT_PATCH_VERSION = $(word 1,$(split_version)).$(word 2,$(split_version)).$(shell expr $(word 3,$(split_version)) + 1)
 
 .PHONY: docs
@@ -67,27 +70,42 @@ release-docs:
 	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
 	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
 		git checkout master && \
+		git checkout -b release-docs-$(CLEAN_VERSION) && \
 		$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 		$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
 		$(SED) -i "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 		$(SED) -i "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-		$(call dry-run,git push); \
-	fi && \
-	git checkout $(STAGING_BRANCH) && \
-	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
-	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
-	$(SED) -i "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
-	$(SED) -i "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
-	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-	git checkout $(CURRENT_SHORT_MINOR_VERSION)-post && \
+		$(call dry-run,git push origin release-docs-$(CLEAN_VERSION)) && \
+		$(call dry-run,gh pr create --base master --title "Release docs for v$(CLEAN_VERSION)" --body ""); \
+	fi
+
+	rm -rf $(DIR)
+
+.PHONY: release-docs-staging
+release-docs-staging:
+	$(eval DIR=$(shell mktemp -d))
+	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
+
+	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
+	cd $(DOCS_CONFLUENT_CLI) && \
+	git fetch && \
+	git checkout -b release-docs-staging-$(CURRENT_SHORT_MINOR_VERSION_DASH) origin/$(CURRENT_SHORT_MINOR_VERSION)-post && \
 	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
 	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
 	$(SED) -i "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 	$(SED) -i "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-	git checkout $(STAGING_BRANCH) && \
-	git merge -s ours -m "Merge branch '$(CURRENT_SHORT_MINOR_VERSION)-post' into $(STAGING_BRANCH)" $(CURRENT_SHORT_MINOR_VERSION)-post && \
-	$(call dry-run,git push origin "$(CURRENT_SHORT_MINOR_VERSION)-post:$(CURRENT_SHORT_MINOR_VERSION)-post" "$(STAGING_BRANCH):$(STAGING_BRANCH)")
+	$(call dry-run,git push origin release-docs-staging-$(CURRENT_SHORT_MINOR_VERSION_DASH)) && \
+	$(call dry-run,gh pr create --base $(CURRENT_SHORT_MINOR_VERSION)-post --title "[ci skip] Release docs to staging for v$(CLEAN_VERSION) release" --body "") && \
+	git checkout -b release-docs-staging-$(STAGING_BRANCH_DASH) origin/$(STAGING_BRANCH) && \
+	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
+	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
+	$(SED) -i "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
+	$(SED) -i "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
+	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
+	git merge -s ours -m "Merge branch 'release-docs-staging-$(CURRENT_SHORT_MINOR_VERSION_DASH)' into release-docs-staging-$(STAGING_BRANCH_DASH)" release-docs-staging-$(CURRENT_SHORT_MINOR_VERSION_DASH) && \
+	$(call dry-run,git push origin release-docs-staging-$(STAGING_BRANCH_DASH)) && \
+	$(call dry-run,gh pr create --base $(STAGING_BRANCH) --title "[ci skip] Release docs to staging for v$(CLEAN_VERSION) release" --body "")
 
 	rm -rf $(DIR)
