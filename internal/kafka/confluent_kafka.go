@@ -127,6 +127,7 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
 	if err != nil {
+		log.CliLogger.Warn("Failed to get Confluent Kafka producer configuration map.")
 		return nil, err
 	}
 
@@ -136,6 +137,7 @@ func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, 
 func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
+		log.CliLogger.Warn("Failed to get Confluent Kafka consumer configuration map.")
 		return nil, err
 	}
 
@@ -145,6 +147,7 @@ func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, confi
 func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
 	if err != nil {
+		log.CliLogger.Warn("Failed to get Confluent Kafka producer configuration map.")
 		return nil, err
 	}
 
@@ -154,6 +157,7 @@ func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configSt
 func newOnPremConsumer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getOnPremConsumerConfigMap(cmd, clientID)
 	if err != nil {
+		log.CliLogger.Warn("Failed to get Confluent Kafka consumer configuration map.")
 		return nil, err
 	}
 
