@@ -27,7 +27,7 @@ func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Updated name of the IP filter.")
-	cmd.Flags().String("resource-group", "management", "Updated resource group.")
+	pcmd.AddResourceGroupFlag(cmd)
 	cmd.Flags().StringSlice("add-ip-groups", []string{}, "Comma-separated list of IP groups to add.")
 	cmd.Flags().StringSlice("remove-ip-groups", []string{}, "Comma-separated list of IP groups to remove.")
 

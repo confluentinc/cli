@@ -328,7 +328,14 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []str
 	return suggestions
 }
 
-// TODO: verify the autocomplete is doing what we expect
+func AddResourceGroupFlag(cmd *cobra.Command) {
+	arr := []string{"management"}
+	cmd.Flags().String("resource-group", "management", "Name of resource group. Currently, only \"management\" is supported.")
+	RegisterFlagCompletionFunc(cmd, "resource-group", func(_ *cobra.Command, _ []string) []string {
+		return arr
+	})
+}
+
 func AutocompleteIpFilters(client *ccloudv2.Client) []string {
 	ipFilters, err := client.ListIamIpFilters()
 	if err != nil {
@@ -337,7 +344,11 @@ func AutocompleteIpFilters(client *ccloudv2.Client) []string {
 
 	suggestions := make([]string, len(ipFilters))
 	for i, ipFilter := range ipFilters {
-		description := fmt.Sprintf("%s: %s", ipFilter.GetFilterName(), ipFilter.GetIpGroups())
+		var ipGroupIds []string
+		for _, ipGroup := range ipFilter.GetIpGroups() {
+			ipGroupIds = append(ipGroupIds, ipGroup.GetId())
+		}
+		description := fmt.Sprintf("%s: %s, %s", ipFilter.GetFilterName(), ipFilter.GetResourceGroup(), ipGroupIds)
 		suggestions[i] = fmt.Sprintf("%s\t%s", ipFilter.GetId(), description)
 	}
 	return suggestions

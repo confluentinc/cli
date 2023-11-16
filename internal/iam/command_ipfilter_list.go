@@ -27,8 +27,8 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	list := output.NewList(cmd)
 	if output.GetFormat(cmd) == output.Human {
-		list := output.NewList(cmd)
 		for _, filter := range ipFilters {
 			ipGroupIds := convertIpGroupObjectsToIpGroupIds(filter)
 			list.Add(&ipFilterHumanOut{
@@ -39,17 +39,16 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 		return list.Print()
-	}
-
-	list := output.NewList(cmd)
-	for _, filter := range ipFilters {
-		ipGroupIds := convertIpGroupObjectsToIpGroupIds(filter)
-		list.Add(&ipFilterSerializedOut{
-			ID:            filter.GetId(),
-			Name:          filter.GetFilterName(),
-			ResourceGroup: filter.GetResourceGroup(),
-			IpGroups:      ipGroupIds,
-		})
+	} else {
+		for _, filter := range ipFilters {
+			ipGroupIds := convertIpGroupObjectsToIpGroupIds(filter)
+			list.Add(&ipFilterSerializedOut{
+				ID:            filter.GetId(),
+				Name:          filter.GetFilterName(),
+				ResourceGroup: filter.GetResourceGroup(),
+				IpGroups:      ipGroupIds,
+			})
+		}
 	}
 	return list.Print()
 }

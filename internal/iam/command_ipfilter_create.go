@@ -22,7 +22,7 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("resource-group", "management", "Name of resource group. Currently, only \"management\" is supported.")
+	pcmd.AddResourceGroupFlag(cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "Comma-separated list of IP group IDs")
 	pcmd.AddOutputFlag(cmd)
 

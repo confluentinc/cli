@@ -1,8 +1,10 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -31,6 +33,12 @@ func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 
 func (c *ipGroupCommand) delete(cmd *cobra.Command, args []string) error {
 	err := c.V2Client.DeleteIamIpGroup(args[0])
+
+	// Unique error message for deleting an IP group that has an IP filter bound to it
+	if strings.Contains(err.Error(), "related IP filters") {
+		return errors.NewErrorWithSuggestions(err.Error(),
+			"List IP filters with `confluent iam ip-filter list`")
+	}
 	if err != nil {
 		return resource.ResourcesNotFoundError(cmd, resource.IPGroup, args[0])
 	}
