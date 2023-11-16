@@ -103,9 +103,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/docker/cli v20.10.17+incompatible // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-)
-
-require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
