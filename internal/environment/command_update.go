@@ -56,10 +56,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
-		Id:        environment.GetId(),
-		Name:      environment.GetDisplayName(),
-		SGPackage: newSgConfig.GetPackage(),
+		IsCurrent:               environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:                      environment.GetId(),
+		Name:                    environment.GetDisplayName(),
+		StreamGovernancePackage: newSgConfig.GetPackage(),
 	})
 	return table.Print()
 }

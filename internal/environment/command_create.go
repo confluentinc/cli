@@ -47,10 +47,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
-		Id:        environment.GetId(),
-		Name:      environment.GetDisplayName(),
-		SGPackage: newStreamGovernanceConfig.GetPackage(),
+		IsCurrent:               environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:                      environment.GetId(),
+		Name:                    environment.GetDisplayName(),
+		StreamGovernancePackage: newStreamGovernanceConfig.GetPackage(),
 	})
 	if err := table.Print(); err != nil {
 		return err
