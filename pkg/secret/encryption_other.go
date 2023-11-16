@@ -16,6 +16,7 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 const (
@@ -99,6 +100,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	if len(nonce) != NonceLength {
 		return "", fmt.Errorf(errors.IncorrectNonceLengthErrorMsg)
 	}
+	log.CliLogger.Debugf("Decrypting secret: %s", cipherText)
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
 		return "", fmt.Errorf("CLI does not have write permission for `/etc/machine-id`, or `~/.confluent/config.json` is corrupted: %w", err)
