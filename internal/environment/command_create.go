@@ -64,6 +64,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) addStreamGovernancePackageFlag(cmd *cobra.Command, defaultValue string) {
 	cmd.Flags().String("stream-governance-package", defaultValue,
-		fmt.Sprintf("Stream Governance package. %s",
-			utils.ArrayToCommaDelimitedString([]string{"essentials", "advanced"}, "or")))
+		fmt.Sprintf("Stream Governance package. %s", utils.ArrayToCommaDelimitedString(
+			[]string{"essentials", "advanced"}, "or")))
 }
