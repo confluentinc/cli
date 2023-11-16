@@ -11,7 +11,6 @@ import (
 
 type topicOut struct {
 	Name              string `human:"Name" serialized:"name"`
-	Kind              string `human:"Kind" serialized:"kind"`
 	IsInternal        bool   `human:"Internal" serialized:"is_internal"`
 	ReplicationFactor int32  `human:"Replication Factor" serialized:"replication_factor"`
 	PartitionCount    int32  `human:"Partition Count" serialized:"partition_count"`
@@ -45,7 +44,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		list.Add(&topicOut{
 			Name:              topic.GetTopicName(),
 			IsInternal:        topic.GetIsInternal(),
-			Kind:              topic.GetKind(),
 			ReplicationFactor: topic.GetReplicationFactor(),
 			PartitionCount:    topic.GetPartitionsCount(),
 		})

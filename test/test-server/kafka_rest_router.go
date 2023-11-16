@@ -166,7 +166,6 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 				Data: []cckafkarestv3.TopicData{
 					{
 						TopicName:         "topic1",
-						Kind:              "KafkaTopic",
 						ClusterId:         "cluster-1",
 						IsInternal:        false,
 						ReplicationFactor: 3,
@@ -174,7 +173,6 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 					},
 					{
 						TopicName:         "topic2",
-						Kind:              "KafkaTopic",
 						ClusterId:         "cluster-1",
 						IsInternal:        true,
 						ReplicationFactor: 4,

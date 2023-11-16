@@ -60,7 +60,6 @@ func ListTopics(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restConte
 		list.Add(&topicOut{
 			Name:              topic.TopicName,
 			IsInternal:        topic.IsInternal,
-			Kind:              topic.Kind,
 			ReplicationFactor: topic.ReplicationFactor,
 			PartitionCount:    topic.PartitionsCount,
 		})

@@ -1,10 +1,8 @@
 - name: topic1
-  kind: KafkaTopic
   is_internal: false
   replication_factor: 3
   partition_count: 6
 - name: topic2
-  kind: KafkaTopic
   is_internal: true
   replication_factor: 4
   partition_count: 12
