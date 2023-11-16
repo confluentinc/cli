@@ -1,3 +1,3 @@
-  Name  
---------
-  test  
+  Name |    Kind    | Internal | Replication Factor | Partitions Count  
+-------+------------+----------+--------------------+-------------------
+  test | KafkaTopic | false    |                  1 |                1  
