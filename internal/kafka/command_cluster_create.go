@@ -173,14 +173,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("network") {
-		networkId, err := cmd.Flags().GetString("network")
+		network, err := cmd.Flags().GetString("network")
 		if err != nil {
 			return err
 		}
 		if clusterType != skuDedicated {
 			return errors.NewErrorWithSuggestions("the `--network` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type`.")
 		}
-		setClusterNetwork(&createCluster, cmkv2.NewEnvScopedObjectReference(networkId, "", ""))
+		createCluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: network}
 	}
 
 	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
@@ -286,10 +286,6 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *
 
 func setClusterConfigCku(cluster *cmkv2.CmkV2Cluster, cku int32) {
 	cluster.Spec.Config.CmkV2Dedicated.Cku = cku
-}
-
-func setClusterNetwork(cluster *cmkv2.CmkV2Cluster, network *cmkv2.EnvScopedObjectReference) {
-	cluster.Spec.Network = network
 }
 
 func getKafkaProvisionEstimate(sku ccstructs.Sku) string {
