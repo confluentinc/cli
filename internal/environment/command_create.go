@@ -2,9 +2,9 @@ package environment
 
 import (
 	"github.com/spf13/cobra"
+	"strings"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
-
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -17,6 +17,8 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
+	cmd.Flags().String("stream-governance-package", "essentials",
+		`Stream Governance package. "essentials" or "advanced"`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -24,17 +26,30 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
-	environment, err := c.V2Client.CreateOrgEnvironment(environment)
+	streamGovernancePackage, err := cmd.Flags().GetString("stream-governance-package")
 	if err != nil {
 		return err
 	}
+
+	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
+	if streamGovernancePackage != "" {
+		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
+			Package: orgv2.PtrString(strings.ToUpper(streamGovernancePackage)),
+		})
+	}
+
+	environment, err = c.V2Client.CreateOrgEnvironment(environment)
+	if err != nil {
+		return err
+	}
+	newStreamGovernanceConfig := environment.GetStreamGovernanceConfig()
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
 		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
 		Id:        environment.GetId(),
 		Name:      environment.GetDisplayName(),
+		SGPackage: newStreamGovernanceConfig.GetPackage(),
 	})
 	if err := table.Print(); err != nil {
 		return err
