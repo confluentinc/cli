@@ -38,7 +38,7 @@ const (
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg    = "failed to create producer: %v"
 	FailedToCreateConsumerErrorMsg    = "failed to create consumer: %v"
-	FailedToGetConfigurationErrorMsg  = "failed to get configuration map: %v"
+	FailedToGetConfigurationErrorMsg  = "failed to get configuration map: %w"
 	FailedToCreateAdminClientErrorMsg = "failed to create confluent-kafka-go admin client: %w"
 	FailedToProduceErrorMsg           = "failed to produce offset %d: %s\n"
 	UnknownValueFormatErrorMsg        = "unknown value schema format"
