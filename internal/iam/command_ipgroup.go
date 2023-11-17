@@ -1,11 +1,14 @@
 package iam
 
 import (
+	"strings"
+
+	"github.com/spf13/cobra"
+
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/spf13/cobra"
-	"strings"
 )
 
 type ipGroupCommand struct {
@@ -27,8 +30,8 @@ type ipGroupSerializedOut struct {
 func newIpGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ip-group",
-		Short: "Manage IP groups",
-		Long:  "Manage IP groups and their permissions",
+		Short: "Manage IP groups.",
+		Long:  "Manage IP groups and their permissions.",
 	}
 
 	c := &ipGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
@@ -42,23 +45,21 @@ func newIpGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func printHumanIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
+func printIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 	table := output.NewTable(cmd)
-	table.Add(&ipGroupHumanOut{
-		ID:         ipGroup.GetId(),
-		Name:       ipGroup.GetGroupName(),
-		CidrBlocks: strings.Join(ipGroup.GetCidrBlocks(), ", "),
-	})
-	return table.Print()
-}
-
-func printSerializedIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
-	table := output.NewTable(cmd)
-	table.Add(&ipGroupSerializedOut{
-		ID:         ipGroup.GetId(),
-		Name:       ipGroup.GetGroupName(),
-		CidrBlocks: ipGroup.GetCidrBlocks(),
-	})
+	if output.GetFormat(cmd) == output.Human {
+		table.Add(&ipGroupHumanOut{
+			ID:         ipGroup.GetId(),
+			Name:       ipGroup.GetGroupName(),
+			CidrBlocks: strings.Join(ipGroup.GetCidrBlocks(), ", "),
+		})
+	} else {
+		table.Add(&ipGroupSerializedOut{
+			ID:         ipGroup.GetId(),
+			Name:       ipGroup.GetGroupName(),
+			CidrBlocks: ipGroup.GetCidrBlocks(),
+		})
+	}
 	return table.Print()
 }
 

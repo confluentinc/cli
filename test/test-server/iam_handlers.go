@@ -669,10 +669,10 @@ func buildIamProvider(id, name, description, issuer, jwksUri string) identitypro
 
 func buildIamIpFilter(id string, name string, resourceGroup string, ipGroupIds []string) iamv2.IamV2IpFilter {
 	// Convert the IP group IDs into IP group objects
-	var IpGroupIdObjects []iamv2.GlobalObjectReference
-	for _, ipGroupId := range ipGroupIds {
+	IpGroupIdObjects := make([]iamv2.GlobalObjectReference, len(ipGroupIds))
+	for i, ipGroupId := range ipGroupIds {
 		// The empty string fields will get filled in automatically by the cc-policy-service
-		IpGroupIdObjects = append(IpGroupIdObjects, *iamv2.NewGlobalObjectReference(ipGroupId, "", ""))
+		IpGroupIdObjects[i] = iamv2.GlobalObjectReference{Id: ipGroupId}
 	}
 
 	return iamv2.IamV2IpFilter{

@@ -1,13 +1,15 @@
 package iam
 
 import (
+	"strings"
+
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
-	"github.com/spf13/cobra"
-	"strings"
 )
 
 func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
@@ -25,6 +27,7 @@ func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 		),
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
 
 	return cmd
@@ -34,14 +37,16 @@ func (c *ipGroupCommand) delete(cmd *cobra.Command, args []string) error {
 	err := c.V2Client.DeleteIamIpGroup(args[0])
 
 	if err != nil {
-		// Unique error message for deleting an IP group that has an IP filter bound to it
+		/*
+		 * Unique error message for deleting an IP group that has an IP filter bound to it.
+		 */
 		if strings.Contains(err.Error(), "related IP filters") {
-			return errors.NewErrorWithSuggestions(err.Error(),
+			return errors.NewErrorWithSuggestions("Cannot delete an IP group that has related IP filters",
 				"List IP filters with `confluent iam ip-filter list`")
 		}
 		return resource.ResourcesNotFoundError(cmd, resource.IPGroup, args[0])
 	}
 
-	output.Printf(c.Config.EnableColor, "Deleted IP group \"%s\"\n", args[0])
+	output.Printf(c.Config.EnableColor, "Deleted IP group \"%s\".\n", args[0])
 	return nil
 }

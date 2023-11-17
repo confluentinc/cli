@@ -1,11 +1,14 @@
 package iam
 
 import (
+	"strings"
+
+	"github.com/spf13/cobra"
+
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/spf13/cobra"
-	"strings"
 )
 
 func (c *ipFilterCommand) newListCommand() *cobra.Command {
@@ -15,7 +18,7 @@ func (c *ipFilterCommand) newListCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
-
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -41,12 +44,11 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 		return list.Print()
 	} else {
 		for _, filter := range ipFilters {
-			ipGroupIds := convertIpGroupObjectsToIpGroupIds(filter)
 			list.Add(&ipFilterSerializedOut{
 				ID:            filter.GetId(),
 				Name:          filter.GetFilterName(),
 				ResourceGroup: filter.GetResourceGroup(),
-				IpGroups:      ipGroupIds,
+				IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
 			})
 		}
 	}
@@ -54,9 +56,10 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func convertIpGroupObjectsToIpGroupIds(filter iamv2.IamV2IpFilter) []string {
-	var ipGroupIds []string
-	for _, group := range filter.GetIpGroups() {
-		ipGroupIds = append(ipGroupIds, group.GetId())
+	ipGroups := filter.GetIpGroups()
+	ipGroupIds := make([]string, len(ipGroups))
+	for i, group := range ipGroups {
+		ipGroupIds[i] = group.GetId()
 	}
 	return ipGroupIds
 }
