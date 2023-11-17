@@ -505,3 +505,31 @@ func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
 	}
 	return suggestions
 }
+
+func AddNetworkFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("network", "", "Network ID.")
+	RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteNetworks(environmentId, c.V2Client)
+	})
+}
+
+func AutocompleteNetworks(environmentId string, client *ccloudv2.Client) []string {
+	networks, err := client.ListNetworks(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(networks))
+	for i, network := range networks {
+		suggestions[i] = fmt.Sprintf("%s\t%s", network.GetId(), network.Spec.GetDisplayName())
+	}
+	return suggestions
+}
