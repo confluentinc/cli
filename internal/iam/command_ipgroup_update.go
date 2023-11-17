@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/types"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -77,46 +78,44 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		updateIpGroup.GroupName = &groupName
 	}
 
-	// Create a map of the current CIDR block values
-	currentCidrBlocksMap := make(map[string]bool)
+	// Create a set of the current CIDR block values
+	currentCidrBlocksSet := make(types.Set[string])
 	for _, cidrBlock := range currentIpGroup.GetCidrBlocks() {
-		currentCidrBlocksMap[cidrBlock] = true
+		currentCidrBlocksSet.Add(cidrBlock)
 	}
 
-	// Create a map of the CIDR block values to add
-	addCidrBlocksMap := make(map[string]bool)
-	// Add each CIDR block to add to the map
+	// Create a set of the CIDR block values to add
+	addCidrBlocksSet := make(types.Set[string])
+	// Add each CIDR block to add to the set
 	for _, cidrBlock := range addCidrBlocks {
-		addCidrBlocksMap[cidrBlock] = true
+		addCidrBlocksSet.Add(cidrBlock)
 	}
 
-	// Create a map of the CIDR block values to remove
-	removeCidrBlocksMap := make(map[string]bool)
+	// Create a set of the CIDR block values to remove
+	removeCidrBlocksSet := make(types.Set[string])
 	for _, cidrBlock := range removeCidrBlocks {
-		if addCidrBlocksMap[cidrBlock] {
-			delete(addCidrBlocksMap, cidrBlock)
+		if addCidrBlocksSet.Contains(cidrBlock) {
+			delete(addCidrBlocksSet, cidrBlock)
 			log.CliLogger.Warnf("Attempting to add and remove %s.", cidrBlock)
 		}
-		if !currentCidrBlocksMap[cidrBlock] {
+		if !currentCidrBlocksSet.Contains(cidrBlock) {
 			log.CliLogger.Warnf("Attempting to remove CIDR block %s which does not exist on this IP group.", cidrBlock)
 		}
-		removeCidrBlocksMap[cidrBlock] = true
+		removeCidrBlocksSet.Add(cidrBlock)
 	}
 
-	// Combine the map of the current CIDR blocks and the CIDR blocks to add
-	for cidrBlock := range currentCidrBlocksMap {
+	// Combine the set of the current CIDR blocks and the CIDR blocks to add
+	for cidrBlock := range currentCidrBlocksSet {
 		// Ensure the IP group ID isn't being removed
-		if !removeCidrBlocksMap[cidrBlock] {
-			addCidrBlocksMap[cidrBlock] = true
+		if !removeCidrBlocksSet.Contains(cidrBlock) {
+			addCidrBlocksSet.Add(cidrBlock)
 		}
 	}
 
 	// Convert the map of CIDR blocks being added into an array to make the update request
-	newCidrBlocks := make([]string, 0, len(addCidrBlocksMap))
-	for cidrBlock, value := range addCidrBlocksMap {
-		if value {
-			newCidrBlocks = append(newCidrBlocks, cidrBlock)
-		}
+	newCidrBlocks := make([]string, 0, len(addCidrBlocksSet))
+	for cidrBlock := range addCidrBlocksSet {
+		newCidrBlocks = append(newCidrBlocks, cidrBlock)
 	}
 
 	updateIpGroup.CidrBlocks = &newCidrBlocks

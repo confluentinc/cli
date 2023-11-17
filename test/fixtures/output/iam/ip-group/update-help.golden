@@ -1,0 +1,21 @@
+Update an IP group.
+
+Usage:
+  confluent iam ip-group update <id> [flags]
+
+Examples:
+Update the name and add a CIDR block to IP group ipg-12345:
+
+  $ confluent iam ip-group update ipg-12345 --name "New Group Name" --add-cidr-blocks 123.234.0.0/16
+
+Flags:
+      --name string                  Updated name of the IP group.
+      --add-cidr-blocks strings      A comma-separated list of CIDR blocks to add.
+      --remove-cidr-blocks strings   A comma-separated list of CIDR blocks to remove.
+      --context string               CLI context name.
+  -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

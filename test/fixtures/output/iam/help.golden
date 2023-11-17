@@ -5,6 +5,8 @@ Usage:
 
 Available Commands:
   group-mapping   Manage SSO group mappings.
+  ip-filter       Manage IP filters.
+  ip-group        Manage IP groups.
   pool            Manage identity pools.
   provider        Manage identity providers.
   rbac            Manage RBAC permissions.

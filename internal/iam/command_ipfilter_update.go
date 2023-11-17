@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/types"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -96,49 +97,47 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		updateIpFilter.ResourceGroup = &resourceGroup
 	}
 
-	// Create a map of the current IP group IDs
-	currentIpGroupIdsMap := make(map[string]bool)
+	// Create a set of the current IP group IDs
+	currentIpGroupIdsSet := make(types.Set[string])
 	for _, ipGroupId := range currentIpGroupIds {
-		currentIpGroupIdsMap[ipGroupId] = true
+		currentIpGroupIdsSet.Add(ipGroupId)
 	}
 
-	// Create a map of the new IP group ID values to add
-	addIpGroupIdsMap := make(map[string]bool)
-	// Add each new IP Group ID to the map
+	// Create a set of the new IP group ID values to add
+	addIpGroupIdsSet := make(types.Set[string])
+	// Add each new IP Group ID to the set
 	for _, ipGroupId := range addIpGroups {
-		if currentIpGroupIdsMap[ipGroupId] {
+		if currentIpGroupIdsSet.Contains(ipGroupId) {
 			log.CliLogger.Warnf("Attempting to add IP group %s which already exists on this IP filter.", ipGroupId)
 		}
-		addIpGroupIdsMap[ipGroupId] = true
+		addIpGroupIdsSet.Add(ipGroupId)
 	}
 
-	// Create a map of the new IP group ID values to remove
-	removeIpGroupIdsMap := make(map[string]bool)
+	// Create a set of the new IP group ID values to remove
+	removeIpGroupIdsSet := make(types.Set[string])
 	for _, ipGroupId := range removeIpGroups {
-		if addIpGroupIdsMap[ipGroupId] {
-			delete(addIpGroupIdsMap, ipGroupId)
+		if addIpGroupIdsSet[ipGroupId] {
+			delete(addIpGroupIdsSet, ipGroupId)
 			log.CliLogger.Warnf("Attempting to add and remove %s.", ipGroupId)
 		}
-		if !currentIpGroupIdsMap[ipGroupId] {
+		if !currentIpGroupIdsSet.Contains(ipGroupId) {
 			log.CliLogger.Warnf("Attempting to remove IP group %s which does not exist on this IP filter.", ipGroupId)
 		}
-		removeIpGroupIdsMap[ipGroupId] = true
+		removeIpGroupIdsSet[ipGroupId] = true
 	}
 
 	// Combine the map of the current IP group IDs and the IP group IDs to add
-	for ipGroupId := range currentIpGroupIdsMap {
+	for ipGroupId := range currentIpGroupIdsSet {
 		// Ensure the IP group ID isn't being removed
-		if !removeIpGroupIdsMap[ipGroupId] {
-			addIpGroupIdsMap[ipGroupId] = true
+		if !removeIpGroupIdsSet.Contains(ipGroupId) {
+			addIpGroupIdsSet.Add(ipGroupId)
 		}
 	}
 
 	// Convert the map of IP group IDs being added into an array to make the update request
-	newIpGroupIds := make([]string, 0, len(addIpGroupIdsMap))
-	for ipGroupId, value := range addIpGroupIdsMap {
-		if value {
-			newIpGroupIds = append(newIpGroupIds, ipGroupId)
-		}
+	newIpGroupIds := make([]string, 0, len(addIpGroupIdsSet))
+	for ipGroupId := range addIpGroupIdsSet {
+		newIpGroupIds = append(newIpGroupIds, ipGroupId)
 	}
 
 	// Convert the IP group IDs into IP group objects

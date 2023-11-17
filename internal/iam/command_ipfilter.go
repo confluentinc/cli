@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -31,9 +32,10 @@ type ipFilterSerializedOut struct {
 
 func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "ip-filter",
-		Short: "Manage IP filters.",
-		Long:  "Manage IP filters and their permissions.",
+		Use:         "ip-filter",
+		Short:       "Manage IP filters.",
+		Long:        "Manage IP filters and their permissions.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	c := &ipFilterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
@@ -53,6 +55,7 @@ func printIpFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error {
 	for i, group := range ipGroups {
 		ipGroupIds[i] = group.GetId()
 	}
+	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
 
 	if output.GetFormat(cmd) == output.Human {

@@ -2,6 +2,6 @@
 | ID             | ipf-34dq3                      |
 | Name           | new-ip-filter-demo             |
 | Resource group | management                     |
-| IP groups      | ipg-1337a, ipg-ayd3n,          |
-|                | ipg-abcde                      |
+| IP groups      | ipg-1337a, ipg-abcde,          |
+|                | ipg-ayd3n                      |
 +----------------+--------------------------------+
