@@ -45,6 +45,9 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			if req.Spec.GetDisplayName() == "cck-byok-test" {
 				cluster.Spec.Byok = req.Spec.Byok
 			}
+			if req.Spec.GetDisplayName() == "cck-network-test" {
+				cluster.Spec.Network = req.Spec.Network
+			}
 			cluster.Status.Cku = cmkv2.PtrInt32(1)
 		} else if req.Spec.Config.CmkV2Enterprise != nil {
 			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
