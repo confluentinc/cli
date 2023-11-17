@@ -108,7 +108,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	// Add each new IP Group ID to the set
 	for _, ipGroupId := range addIpGroups {
 		if currentIpGroupIdsSet.Contains(ipGroupId) {
-			log.CliLogger.Warnf("Attempting to add IP group %s which already exists on this IP filter.", ipGroupId)
+			log.CliLogger.AddDuplicateresource(ipGroupId)
 		}
 		addIpGroupIdsSet.Add(ipGroupId)
 	}
@@ -118,10 +118,10 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	for _, ipGroupId := range removeIpGroups {
 		if addIpGroupIdsSet[ipGroupId] {
 			delete(addIpGroupIdsSet, ipGroupId)
-			log.CliLogger.Warnf("Attempting to add and remove %s.", ipGroupId)
+			log.CliLogger.AddAndDeleteResource(ipGroupId)
 		}
 		if !currentIpGroupIdsSet.Contains(ipGroupId) {
-			log.CliLogger.Warnf("Attempting to remove IP group %s which does not exist on this IP filter.", ipGroupId)
+			log.CliLogger.DeleteNonExistentResource(ipGroupId)
 		}
 		removeIpGroupIdsSet[ipGroupId] = true
 	}
