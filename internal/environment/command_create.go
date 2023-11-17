@@ -2,13 +2,13 @@ package environment
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 	"github.com/spf13/cobra"
 	"strings"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newCreateCommand() *cobra.Command {
