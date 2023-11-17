@@ -49,10 +49,10 @@ nfpms:
       - rpm
     deb:
       signature:
-        key_file: /run/secrets/gpg_secret_key
+        key_file: /run/secrets/deb_gpg_secret_key
     rpm:
       signature:
-        key_file: /run/secrets/gpg_secret_key
+        key_file: /run/secrets/rpm_gpg_secret_key
 
 release:
   disable: true

@@ -25,4 +25,4 @@ vendor/*
 /rpm/
 /deb/
 *.gpg
-passphrase
+*passphrase
