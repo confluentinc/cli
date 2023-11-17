@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"github.com/confluentinc/cli/v3/pkg/types"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
