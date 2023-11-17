@@ -50,7 +50,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 
 	currentIpGroupId := args[0]
 
-	// Get the current IP group we are going to be updating
+	// Get the current IP group we are going to update
 	currentIpGroup, err := c.V2Client.GetIamIpGroup(currentIpGroupId)
 	if err != nil {
 		return err

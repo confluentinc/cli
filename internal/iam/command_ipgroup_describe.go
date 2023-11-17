@@ -11,7 +11,7 @@ func (c *ipGroupCommand) newDescribeCommand() *cobra.Command {
 		Use:               "describe <id>",
 		Short:             "Describe an IP group.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
 	}
 

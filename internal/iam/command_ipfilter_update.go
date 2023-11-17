@@ -72,8 +72,11 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 
 	currentIPFilterId := args[0]
 
-	// Get the current IP filter we are going to be updating
+	// Get the current IP filter we are going to update
 	currentIpFilter, err := c.V2Client.GetIamIpFilter(currentIPFilterId)
+	if err != nil {
+		return err
+	}
 
 	// Initialize our new IP groups list with the existing ids
 	ipGroups := currentIpFilter.GetIpGroups()
@@ -82,11 +85,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		currentIpGroupIds[i] = group.GetId()
 	}
 
-	if err != nil {
-		return err
-	}
-
-	// initialize our update IP filter object with the current IP filter values
+	// Initialize our update IP filter object with the current IP filter values
 	updateIpFilter := currentIpFilter
 
 	if filterName != "" {
@@ -128,7 +127,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		if newIpGroupIdsMap[ipGroupId] == ADD {
 			log.CliLogger.Warn("Attempting to add a CIDR block that already exists on this IP group.")
 		}
-		// If the new CIDR blocks map doesn't have a "current" CIDR block, then we want to ADD it
+		// If the new IP group ID map doesn't have a "current" IP group ID, then we want to ADD it
 		if newIpGroupIdsMap[ipGroupId] == NONE {
 			newIpGroupIdsMap[ipGroupId] = ADD
 		}

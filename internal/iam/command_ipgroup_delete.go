@@ -17,7 +17,7 @@ func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 		Use:               "delete <id>",
 		Short:             "Delete an IP group.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -37,9 +37,7 @@ func (c *ipGroupCommand) delete(cmd *cobra.Command, args []string) error {
 	err := c.V2Client.DeleteIamIpGroup(args[0])
 
 	if err != nil {
-		/*
-		 * Unique error message for deleting an IP group that has an IP filter bound to it.
-		 */
+		// Unique error message for deleting an IP group that has an IP filter bound to it.
 		if strings.Contains(err.Error(), "related IP filters") {
 			return errors.NewErrorWithSuggestions("Cannot delete an IP group that has related IP filters",
 				"List IP filters with `confluent iam ip-filter list`")

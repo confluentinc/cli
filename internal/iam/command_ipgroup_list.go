@@ -28,8 +28,8 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	list := output.NewList(cmd)
 	if output.GetFormat(cmd) == output.Human {
-		list := output.NewList(cmd)
 		for _, group := range ipGroups {
 			list.Add(&ipGroupHumanOut{
 				ID:         group.GetId(),
@@ -38,15 +38,14 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 		return list.Print()
-	}
-
-	list := output.NewList(cmd)
-	for _, group := range ipGroups {
-		list.Add(&ipGroupSerializedOut{
-			ID:         group.GetId(),
-			Name:       group.GetGroupName(),
-			CidrBlocks: group.GetCidrBlocks(),
-		})
+	} else {
+		for _, group := range ipGroups {
+			list.Add(&ipGroupSerializedOut{
+				ID:         group.GetId(),
+				Name:       group.GetGroupName(),
+				CidrBlocks: group.GetCidrBlocks(),
+			})
+		}
 	}
 	return list.Print()
 }

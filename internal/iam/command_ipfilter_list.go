@@ -33,12 +33,11 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	if output.GetFormat(cmd) == output.Human {
 		for _, filter := range ipFilters {
-			ipGroupIds := convertIpGroupObjectsToIpGroupIds(filter)
 			list.Add(&ipFilterHumanOut{
 				ID:            filter.GetId(),
 				Name:          filter.GetFilterName(),
 				ResourceGroup: filter.GetResourceGroup(),
-				IpGroups:      strings.Join(ipGroupIds, ", "),
+				IpGroups:      strings.Join(convertIpGroupObjectsToIpGroupIds(filter), ", "),
 			})
 		}
 		return list.Print()
