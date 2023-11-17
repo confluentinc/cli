@@ -78,46 +78,43 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create a map of the current CIDR block values
-	currentCidrBlocksMap := make(map[string]Operation)
+	currentCidrBlocksMap := make(map[string]bool)
 	for _, cidrBlock := range currentIpGroup.GetCidrBlocks() {
-		currentCidrBlocksMap[cidrBlock] = ADD
+		currentCidrBlocksMap[cidrBlock] = true
 	}
 
-	// Create a map of the new CIDR block values
-	newCidrBlocksMap := make(map[string]Operation)
-	// Add each new CIDR block to the map
+	// Create a map of the CIDR block values to add
+	addCidrBlocksMap := make(map[string]bool)
+	// Add each CIDR block to add to the map
 	for _, cidrBlock := range addCidrBlocks {
-		newCidrBlocksMap[cidrBlock] = ADD
+		addCidrBlocksMap[cidrBlock] = true
 	}
 
-	// For each cidr block being removed that is in the new map, set its key to REMOVE
+	// Create a map of the CIDR block values to remove
+	removeCidrBlocksMap := make(map[string]bool)
 	for _, cidrBlock := range removeCidrBlocks {
-		if newCidrBlocksMap[cidrBlock] == ADD {
-			log.CliLogger.Warnf("Attempting to add and remove %s", cidrBlock)
+		if addCidrBlocksMap[cidrBlock] {
+			delete(addCidrBlocksMap, cidrBlock)
+			log.CliLogger.Warnf("Attempting to add and remove %s.", cidrBlock)
 		}
-		newCidrBlocksMap[cidrBlock] = REMOVE
-	}
-
-	// Combine the existing and new CIDR block maps
-	for cidrBlock, value := range currentCidrBlocksMap {
-		// If the new map has a REMOVE value while the original map doesn't have this key, which would evaluate as NONE, log an error
-		if (newCidrBlocksMap[cidrBlock] == REMOVE) && (value == NONE) {
+		if !currentCidrBlocksMap[cidrBlock] {
 			log.CliLogger.Warnf("Attempting to remove CIDR block %s which does not exist on this IP group.", cidrBlock)
 		}
-		// If the new map already has an original map value, warn that it can't add it twice
-		if newCidrBlocksMap[cidrBlock] == ADD {
-			log.CliLogger.Warnf("Attempting to add CIDR block %s which already exists on this IP group.", cidrBlock)
-		}
-		// If the new CIDR blocks map doesn't have a "current" CIDR block, then we want to ADD it
-		if newCidrBlocksMap[cidrBlock] == NONE {
-			newCidrBlocksMap[cidrBlock] = ADD
+		removeCidrBlocksMap[cidrBlock] = true
+	}
+
+	// Combine the map of the current CIDR blocks and the CIDR blocks to add
+	for cidrBlock := range currentCidrBlocksMap {
+		// Ensure the IP group ID isn't being removed
+		if !removeCidrBlocksMap[cidrBlock] {
+			addCidrBlocksMap[cidrBlock] = true
 		}
 	}
 
-	// Convert the new map of CIDR blocks into an array to make the update request
-	newCidrBlocks := make([]string, 0, len(newCidrBlocksMap))
-	for cidrBlock, value := range newCidrBlocksMap {
-		if value == ADD {
+	// Convert the map of CIDR blocks being added into an array to make the update request
+	newCidrBlocks := make([]string, 0, len(addCidrBlocksMap))
+	for cidrBlock, value := range addCidrBlocksMap {
+		if value {
 			newCidrBlocks = append(newCidrBlocks, cidrBlock)
 		}
 	}

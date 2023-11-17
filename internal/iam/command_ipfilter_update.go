@@ -97,46 +97,46 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create a map of the current IP group IDs
-	currentIpGroupIdsMap := make(map[string]Operation)
+	currentIpGroupIdsMap := make(map[string]bool)
 	for _, ipGroupId := range currentIpGroupIds {
-		currentIpGroupIdsMap[ipGroupId] = ADD
+		currentIpGroupIdsMap[ipGroupId] = true
 	}
 
-	// Create a map of the new IP group ID values
-	newIpGroupIdsMap := make(map[string]Operation)
+	// Create a map of the new IP group ID values to add
+	addIpGroupIdsMap := make(map[string]bool)
 	// Add each new IP Group ID to the map
 	for _, ipGroupId := range addIpGroups {
-		newIpGroupIdsMap[ipGroupId] = ADD
+		if currentIpGroupIdsMap[ipGroupId] {
+			log.CliLogger.Warnf("Attempting to add IP group %s which already exists on this IP filter.", ipGroupId)
+		}
+		addIpGroupIdsMap[ipGroupId] = true
 	}
 
-	// For each IP group ID being removed that is in the new map, set its key to REMOVE
+	// Create a map of the new IP group ID values to remove
+	removeIpGroupIdsMap := make(map[string]bool)
 	for _, ipGroupId := range removeIpGroups {
-		if newIpGroupIdsMap[ipGroupId] == ADD {
+		if addIpGroupIdsMap[ipGroupId] {
+			delete(addIpGroupIdsMap, ipGroupId)
 			log.CliLogger.Warnf("Attempting to add and remove %s.", ipGroupId)
 		}
-		newIpGroupIdsMap[ipGroupId] = REMOVE
+		if !currentIpGroupIdsMap[ipGroupId] {
+			log.CliLogger.Warnf("Attempting to remove IP group %s which does not exist on this IP filter.", ipGroupId)
+		}
+		removeIpGroupIdsMap[ipGroupId] = true
 	}
 
-	// Combine the existing and new IP group ID maps
-	for ipGroupId, value := range currentIpGroupIdsMap {
-		// If the new map has a REMOVE value while the original map doesn't have this key, which would evaluate as NONE, log an error
-		if (newIpGroupIdsMap[ipGroupId] == REMOVE) && (value == NONE) {
-			log.CliLogger.Warn("Attempting to remove IP group %s which does not exist on this IP filter.", ipGroupId)
-		}
-		// If the new map already has an original map value, warn that it can't add it twice
-		if newIpGroupIdsMap[ipGroupId] == ADD {
-			log.CliLogger.Warn("Attempting to add %s which already exists on this IP filter.", ipGroupId)
-		}
-		// If the new IP group ID map doesn't have a "current" IP group ID, then we want to ADD it
-		if newIpGroupIdsMap[ipGroupId] == NONE {
-			newIpGroupIdsMap[ipGroupId] = ADD
+	// Combine the map of the current IP group IDs and the IP group IDs to add
+	for ipGroupId := range currentIpGroupIdsMap {
+		// Ensure the IP group ID isn't being removed
+		if !removeIpGroupIdsMap[ipGroupId] {
+			addIpGroupIdsMap[ipGroupId] = true
 		}
 	}
 
-	// Convert the new map of IP group IDs into an array to make the update request
-	newIpGroupIds := make([]string, 0, len(newIpGroupIdsMap))
-	for ipGroupId, value := range newIpGroupIdsMap {
-		if value == ADD {
+	// Convert the map of IP group IDs being added into an array to make the update request
+	newIpGroupIds := make([]string, 0, len(addIpGroupIdsMap))
+	for ipGroupId, value := range addIpGroupIdsMap {
+		if value {
 			newIpGroupIds = append(newIpGroupIds, ipGroupId)
 		}
 	}

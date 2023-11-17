@@ -15,14 +15,6 @@ type ipFilterCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type Operation int
-
-const (
-	NONE   Operation = 0
-	ADD    Operation = 1
-	REMOVE Operation = 2
-)
-
 type ipFilterHumanOut struct {
 	ID            string `human:"ID" serialized:"id"`
 	Name          string `human:"Name" serialized:"name"`
