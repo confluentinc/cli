@@ -195,6 +195,8 @@ func handleNetworkingNetworkLinkService(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingNetworkLinkServiceGet(t, id)(w, r)
+		case http.MethodDelete:
+			handleNetworkingNetworkLinkServiceDelete(t, id)(w, r)
 		}
 	}
 }
@@ -1319,6 +1321,18 @@ func handleNetworkingNetworkLinkServiceList(t *testing.T) http.HandlerFunc {
 
 		err := json.NewEncoder(w).Encode(networkLinkServiceList)
 		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingNetworkLinkServiceDelete(_ *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "nls-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "nls-111111", "nls-222222":
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}
 }
 
