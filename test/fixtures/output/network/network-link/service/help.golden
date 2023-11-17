@@ -4,6 +4,7 @@ Usage:
   confluent network network-link service [command]
 
 Available Commands:
+  delete      Delete a network link service.
   describe    Describe a network link service.
   list        List network link services.
 

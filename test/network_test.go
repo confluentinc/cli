@@ -573,6 +573,34 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceLDelete() {
+	tests := []CLITest{
+		{args: "network network-link service delete nls-111111 --force", fixture: "network/network-link/service/delete.golden"},
+		{args: "network network-link service delete nls-111111", input: "y\n", fixture: "network/network-link/service/delete-prompt.golden"},
+		{args: "network network-link service delete nls-111111 nls-222222", input: "n\n", fixture: "network/network-link/service/delete-multiple-refuse.golden"},
+		{args: "network network-link service delete nls-111111 nls-222222", input: "y\n", fixture: "network/network-link/service//delete-multiple-success.golden"},
+		{args: "network network-link service delete nls-111111 nls-invalid", fixture: "network/network-link/service/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network network-link service delete nls-invalid --force", fixture: "network/network-link/service/delete-nls-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkService_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network network-link service describe ""`, login: "cloud", fixture: "network/network-link/service/describe-autocomplete.golden"},
+		{args: `__complete network network-link service delete ""`, login: "cloud", fixture: "network/network-link/service/delete-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkIpAddressList() {
 	tests := []CLITest{
 		{args: "network ip-address list", fixture: "network/ip-address/list.golden"},
