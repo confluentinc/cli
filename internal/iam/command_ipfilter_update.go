@@ -112,7 +112,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	// For each IP group ID being removed that is in the new map, set its key to REMOVE
 	for _, ipGroupId := range removeIpGroups {
 		if newIpGroupIdsMap[ipGroupId] == ADD {
-			log.CliLogger.Warn("Attempting to add and remove the same IP group.")
+			log.CliLogger.Warnf("Attempting to add and remove %s.", ipGroupId)
 		}
 		newIpGroupIdsMap[ipGroupId] = REMOVE
 	}
@@ -121,11 +121,11 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	for ipGroupId, value := range currentIpGroupIdsMap {
 		// If the new map has a REMOVE value while the original map doesn't have this key, which would evaluate as NONE, log an error
 		if (newIpGroupIdsMap[ipGroupId] == REMOVE) && (value == NONE) {
-			log.CliLogger.Warn("Attempting to remove a CIDR block that does not exist on this IP group.")
+			log.CliLogger.Warn("Attempting to remove IP group %s which does not exist on this IP filter.", ipGroupId)
 		}
 		// If the new map already has an original map value, warn that it can't add it twice
 		if newIpGroupIdsMap[ipGroupId] == ADD {
-			log.CliLogger.Warn("Attempting to add a CIDR block that already exists on this IP group.")
+			log.CliLogger.Warn("Attempting to add %s which already exists on this IP filter.", ipGroupId)
 		}
 		// If the new IP group ID map doesn't have a "current" IP group ID, then we want to ADD it
 		if newIpGroupIdsMap[ipGroupId] == NONE {

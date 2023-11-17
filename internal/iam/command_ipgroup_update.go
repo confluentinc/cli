@@ -93,7 +93,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	// For each cidr block being removed that is in the new map, set its key to REMOVE
 	for _, cidrBlock := range removeCidrBlocks {
 		if newCidrBlocksMap[cidrBlock] == ADD {
-			log.CliLogger.Warn("Attempting to add and remove the same CIDR block.")
+			log.CliLogger.Warnf("Attempting to add and remove %s", cidrBlock)
 		}
 		newCidrBlocksMap[cidrBlock] = REMOVE
 	}
@@ -102,11 +102,11 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	for cidrBlock, value := range currentCidrBlocksMap {
 		// If the new map has a REMOVE value while the original map doesn't have this key, which would evaluate as NONE, log an error
 		if (newCidrBlocksMap[cidrBlock] == REMOVE) && (value == NONE) {
-			log.CliLogger.Warn("Attempting to remove a CIDR block that does not exist on this IP group.")
+			log.CliLogger.Warnf("Attempting to remove CIDR block %s which does not exist on this IP group.", cidrBlock)
 		}
 		// If the new map already has an original map value, warn that it can't add it twice
 		if newCidrBlocksMap[cidrBlock] == ADD {
-			log.CliLogger.Warn("Attempting to add a CIDR block that already exists on this IP group.")
+			log.CliLogger.Warnf("Attempting to add CIDR block %s which already exists on this IP group.", cidrBlock)
 		}
 		// If the new CIDR blocks map doesn't have a "current" CIDR block, then we want to ADD it
 		if newCidrBlocksMap[cidrBlock] == NONE {
