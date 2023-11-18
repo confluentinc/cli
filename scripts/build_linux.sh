@@ -19,8 +19,8 @@ function dry-run {
 rm -rf deb/ rpm/
 mkdir -p deb rpm
 
-aws s3 sync s3://confluent-cli-internal/confluent-cli/deb deb --exclude '*index.html' --exclude '' --exclude '*/'
-aws s3 sync s3://confluent-cli-internal/confluent-cli/rpm rpm --exclude '*index.html' --exclude '' --exclude '*/'
+aws s3 sync s3://confluent-cli-release/confluent-cli/deb deb --exclude '*index.html' --exclude '' --exclude '*/'
+aws s3 sync s3://confluent-cli-release/confluent-cli/rpm rpm --exclude '*index.html' --exclude '' --exclude '*/'
 
 aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
 
@@ -55,7 +55,7 @@ docker container cp cli-linux-arm64-builder:/cli/deb/. ./deb/
 docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
 docker container rm cli-linux-arm64-builder
 
-#TODO: move deb/rpm package uploading to .goreleaser.yml, create new make target to upload the repo metadata & run s3-repo-utils, and remove this block
-dry-run "aws s3 sync deb s3://confluent-cli-internal/confluent-cli/deb"
-dry-run "aws s3 sync rpm s3://confluent-cli-internal/confluent-cli/rpm"
-dry-run "s3-repo-utils -v website index --fake-index --prefix confluent-cli confluent-cli-internal"
+#TODO: create new make target to move from staging to prod and run s3-repo-utils
+dry-run "aws s3 sync deb s3://confluent-cli-release/confluent-cli-staging/$VERSION/deb"
+dry-run "aws s3 sync rpm s3://confluent-cli-release/confluent-cli-staging/$VERSION/rpm"
+#dry-run "s3-repo-utils -v website index --fake-index --prefix confluent-cli/ confluent-cli-release"

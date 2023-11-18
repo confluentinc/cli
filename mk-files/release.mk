@@ -81,7 +81,7 @@ gorelease:
 	$(aws-authenticate) && \
 	rm -rf prebuilt/ && \
 	mkdir prebuilt/ && \
-	scripts/build_linux.sh && \
+	DRY_RUN=$(DRY_RUN) VERSION=$(VERSION_NO_V) scripts/build_linux.sh && \
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
 	GORELEASER_KEY=$(GORELEASER_KEY) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
