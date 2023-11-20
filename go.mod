@@ -100,6 +100,15 @@ require (
 )
 
 require (
+	github.com/bradleyjkemp/cupaloy/v2 v2.8.0 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/docker/cli v20.10.17+incompatible // indirect
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/ory/dockertest/v3 v3.10.0 // indirect
+	github.com/stripe/stripe-go/v76 v76.5.0 // indirect
+)
+
+require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
@@ -153,7 +162,7 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/runc v1.1.4 // indirect
+	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
