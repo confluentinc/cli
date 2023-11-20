@@ -34,15 +34,13 @@ func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *ipGroupCommand) delete(cmd *cobra.Command, args []string) error {
-	err := c.V2Client.DeleteIamIpGroup(args[0])
-
-	if err != nil {
+	if err := c.V2Client.DeleteIamIpGroup(args[0]); err != nil {
 		// Unique error message for deleting an IP group that has an IP filter bound to it.
 		if strings.Contains(err.Error(), "related IP filters") {
 			return errors.NewErrorWithSuggestions("Cannot delete an IP group that has related IP filters",
 				"List IP filters with `confluent iam ip-filter list`")
 		}
-		return resource.ResourcesNotFoundError(cmd, resource.IPGroup, args[0])
+		return resource.ResourcesNotFoundError(cmd, resource.IpGroup, args[0])
 	}
 
 	output.Printf(c.Config.EnableColor, "Deleted IP group \"%s\".\n", args[0])

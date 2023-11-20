@@ -20,6 +20,7 @@ func (c *ipGroupCommand) newDescribeCommand() *cobra.Command {
 
 	return cmd
 }
+
 func (c *ipGroupCommand) describe(cmd *cobra.Command, args []string) error {
 	group, err := c.V2Client.GetIamIpGroup(args[0])
 	if err != nil {

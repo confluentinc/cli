@@ -7,6 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -38,4 +39,16 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newUserCommand(prerunner))
 
 	return cmd
+}
+
+func AddAndDeleteResource(resource string, l *log.Logger) {
+	l.Warnf("%s is marked for addition and deletion", resource)
+}
+
+func DeleteNonExistentResource(resource string, l *log.Logger) {
+	l.Warnf("%s is marked for deletion but does not exist", resource)
+}
+
+func AddDuplicateResource(resource string, l *log.Logger) {
+	l.Warnf("%s is marked for addition but already exists", resource)
 }

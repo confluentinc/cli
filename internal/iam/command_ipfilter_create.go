@@ -20,7 +20,7 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an IP filter named "demo-ip-filter" with resource group "management" and IP groups ipg-12345 and ipg-67890:`,
+				Text: `Create an IP filter named "demo-ip-filter" with resource group "management" and IP groups "ipg-12345" and "ipg-67890":`,
 				Code: `confluent iam ip-filter create "demo-ip-filter" --resource-group management --ip-groups ipg-12345,ipg-67890`,
 			},
 		),
@@ -49,16 +49,16 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// Convert the IP group IDs into IP group objects
-	IpGroupIdObjects := make([]iamv2.GlobalObjectReference, len(ipGroups))
+	ipGroupIdObjects := make([]iamv2.GlobalObjectReference, len(ipGroups))
 	for i, ipGroupId := range ipGroups {
 		// The empty string fields will get filled in automatically by the cc-policy-service
-		IpGroupIdObjects[i] = iamv2.GlobalObjectReference{Id: ipGroupId}
+		ipGroupIdObjects[i] = iamv2.GlobalObjectReference{Id: ipGroupId}
 	}
 
 	createIpFilter := iamv2.IamV2IpFilter{
 		FilterName:    &args[0],
 		ResourceGroup: &resourceGroup,
-		IpGroups:      &IpGroupIdObjects,
+		IpGroups:      &ipGroupIdObjects,
 	}
 
 	filter, err := c.V2Client.CreateIamIpFilter(createIpFilter)
@@ -75,9 +75,10 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		 */
 		if strings.Contains(err.Error(), "lock out") {
 			errorMessageIndex := strings.Index(err.Error(), "Please")
-			return errors.NewErrorWithSuggestions(err.Error()[:errorMessageIndex-1],
-				"Please double check the IP filter you are creating."+
-					" Otherwise, try again from an IP address permitted within this IP filter.")
+			return errors.NewErrorWithSuggestions(
+				err.Error()[:errorMessageIndex-1],
+				"Please double check the IP filter you are creating. Otherwise, try again from an IP address permitted within this IP filter.",
+			)
 		}
 		return err
 	}

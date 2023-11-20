@@ -71,20 +71,16 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	currentIPFilterId := args[0]
+	currentIpFilterId := args[0]
 
 	// Get the current IP filter we are going to update
-	currentIpFilter, err := c.V2Client.GetIamIpFilter(currentIPFilterId)
+	currentIpFilter, err := c.V2Client.GetIamIpFilter(currentIpFilterId)
 	if err != nil {
 		return err
 	}
 
 	// Initialize our new IP groups list with the existing ids
-	ipGroups := currentIpFilter.GetIpGroups()
-	currentIpGroupIds := make([]string, len(ipGroups))
-	for i, group := range ipGroups {
-		currentIpGroupIds[i] = group.GetId()
-	}
+	currentIpGroupIds := convertIpGroupsToIds(currentIpFilter.GetIpGroups())
 
 	// Initialize our update IP filter object with the current IP filter values
 	updateIpFilter := currentIpFilter
@@ -108,7 +104,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	// Add each new IP Group ID to the set
 	for _, ipGroupId := range addIpGroups {
 		if currentIpGroupIdsSet.Contains(ipGroupId) {
-			log.CliLogger.AddDuplicateresource(ipGroupId)
+			AddDuplicateResource(ipGroupId, log.CliLogger)
 		}
 		addIpGroupIdsSet.Add(ipGroupId)
 	}
@@ -118,10 +114,10 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	for _, ipGroupId := range removeIpGroups {
 		if addIpGroupIdsSet[ipGroupId] {
 			delete(addIpGroupIdsSet, ipGroupId)
-			log.CliLogger.AddAndDeleteResource(ipGroupId)
+			AddAndDeleteResource(ipGroupId, log.CliLogger)
 		}
 		if !currentIpGroupIdsSet.Contains(ipGroupId) {
-			log.CliLogger.DeleteNonExistentResource(ipGroupId)
+			DeleteNonExistentResource(ipGroupId, log.CliLogger)
 		}
 		removeIpGroupIdsSet[ipGroupId] = true
 	}
@@ -148,7 +144,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 
 	updateIpFilter.IpGroups = &IpGroupIdObjects
 
-	filter, err := c.V2Client.UpdateIamIpFilter(updateIpFilter, currentIPFilterId)
+	filter, err := c.V2Client.UpdateIamIpFilter(updateIpFilter, currentIpFilterId)
 	if err != nil {
 		/*
 		 * Unique error message for deleting an IP Filter that would lock out the user.

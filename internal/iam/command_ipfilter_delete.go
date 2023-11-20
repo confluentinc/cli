@@ -34,9 +34,7 @@ func (c *ipFilterCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *ipFilterCommand) delete(cmd *cobra.Command, args []string) error {
-	err := c.V2Client.DeleteIamIpFilter(args[0])
-
-	if err != nil {
+	if err := c.V2Client.DeleteIamIpFilter(args[0]); err != nil {
 		/*
 		 * Unique error message for deleting an IP Filter that would lock out the user.
 		 * Splits the error message into its two components of the error and the suggestion.
@@ -53,7 +51,7 @@ func (c *ipFilterCommand) delete(cmd *cobra.Command, args []string) error {
 				"Please double check the IP filter you are deleting. "+
 					"Otherwise, try again from an IP address permitted within another IP filter.")
 		}
-		return resource.ResourcesNotFoundError(cmd, resource.IPFilter, args[0])
+		return resource.ResourcesNotFoundError(cmd, resource.IpFilter, args[0])
 	}
 
 	output.Printf(c.Config.EnableColor, "Deleted IP filter \"%s\".\n", args[0])

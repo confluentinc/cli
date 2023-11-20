@@ -17,10 +17,10 @@ type ipFilterCommand struct {
 }
 
 type ipFilterHumanOut struct {
-	ID            string `human:"ID" serialized:"id"`
-	Name          string `human:"Name" serialized:"name"`
-	ResourceGroup string `human:"Resource group" serialized:"resource_group"`
-	IpGroups      string `human:"IP groups" serialized:"ip_groups"`
+	ID            string `human:"ID"`
+	Name          string `human:"Name"`
+	ResourceGroup string `human:"Resource group"`
+	IpGroups      string `human:"IP groups"`
 }
 
 type ipFilterSerializedOut struct {
@@ -50,11 +50,7 @@ func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func printIpFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error {
-	ipGroups := ipFilter.GetIpGroups()
-	ipGroupIds := make([]string, len(ipGroups))
-	for i, group := range ipGroups {
-		ipGroupIds[i] = group.GetId()
-	}
+	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
 
@@ -86,4 +82,12 @@ func (c *ipFilterCommand) validArgs(cmd *cobra.Command, args []string) []string 
 	}
 
 	return pcmd.AutocompleteIpFilters(c.V2Client)
+}
+
+func convertIpGroupsToIds(ipGroups []iamv2.GlobalObjectReference) []string {
+	ipGroupIds := make([]string, len(ipGroups))
+	for i, group := range ipGroups {
+		ipGroupIds[i] = group.GetId()
+	}
+	return ipGroupIds
 }

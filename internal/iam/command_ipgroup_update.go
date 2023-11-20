@@ -89,7 +89,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	// Add each CIDR block to add to the set
 	for _, cidrBlock := range addCidrBlocks {
 		if currentCidrBlocksSet.Contains(cidrBlock) {
-			log.CliLogger.AddDuplicateresource(cidrBlock)
+			AddDuplicateResource(cidrBlock, log.CliLogger)
 		}
 		addCidrBlocksSet.Add(cidrBlock)
 	}
@@ -99,10 +99,10 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	for _, cidrBlock := range removeCidrBlocks {
 		if addCidrBlocksSet.Contains(cidrBlock) {
 			delete(addCidrBlocksSet, cidrBlock)
-			log.CliLogger.AddAndDeleteResource(cidrBlock)
+			AddAndDeleteResource(cidrBlock, log.CliLogger)
 		}
 		if !currentCidrBlocksSet.Contains(cidrBlock) {
-			log.CliLogger.DeleteNonExistentResource(cidrBlock)
+			DeleteNonExistentResource(cidrBlock, log.CliLogger)
 		}
 		removeCidrBlocksSet.Add(cidrBlock)
 	}

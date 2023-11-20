@@ -22,6 +22,7 @@ func (c *ipGroupCommand) newListCommand() *cobra.Command {
 
 	return cmd
 }
+
 func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 	ipGroups, err := c.V2Client.ListIamIpGroups()
 	if err != nil {
@@ -37,7 +38,6 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 				CidrBlocks: strings.Join(group.GetCidrBlocks(), ", "),
 			})
 		}
-		return list.Print()
 	} else {
 		for _, group := range ipGroups {
 			list.Add(&ipGroupSerializedOut{

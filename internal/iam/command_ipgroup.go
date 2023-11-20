@@ -17,9 +17,9 @@ type ipGroupCommand struct {
 }
 
 type ipGroupHumanOut struct {
-	ID         string `human:"ID" serialized:"id"`
-	Name       string `human:"Name" serialized:"name"`
-	CidrBlocks string `human:"CIDR blocks" serialized:"cidr_blocks"`
+	ID         string `human:"ID"`
+	Name       string `human:"Name"`
+	CidrBlocks string `human:"CIDR blocks"`
 }
 
 type ipGroupSerializedOut struct {

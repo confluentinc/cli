@@ -172,15 +172,3 @@ func (l *Logger) Log(args ...any) {
 func mapToHclogLevel(level Level) hclog.Level {
 	return hclog.Level(int(hclog.Error) - int(level))
 }
-
-func (l *Logger) AddAndDeleteResource(resource string) {
-	l.Warnf("%s is marked for addition and deletion", resource)
-}
-
-func (l *Logger) DeleteNonExistentResource(resource string) {
-	l.Warnf("%s is marked for deletion but does not exist", resource)
-}
-
-func (l *Logger) AddDuplicateresource(resource string) {
-	l.Warnf("%s is marked for addition but already exists", resource)
-}
