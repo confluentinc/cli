@@ -15,7 +15,7 @@ import (
 type networkLinkServiceHumanOut struct {
 	Id                   string `human:"ID"`
 	Name                 string `human:"Name"`
-	Network              string `human:"Network"`
+	NetworkId            string `human:"Network ID"`
 	Environment          string `human:"Environment"`
 	Description          string `human:"Description,omitempty"`
 	AcceptedEnvironments string `human:"Accepted Environments,omitempty"`
@@ -26,7 +26,7 @@ type networkLinkServiceHumanOut struct {
 type networkLinkServiceSerializedOut struct {
 	Id                   string   `serialized:"id"`
 	Name                 string   `serialized:"name"`
-	Network              string   `serialized:"network"`
+	NetworkId            string   `serialized:"network_id"`
 	Environment          string   `serialized:"environment"`
 	Description          string   `serialized:"description,omitempty"`
 	AcceptedEnvironments []string `serialized:"accepted_environments,omitempty"`
@@ -41,6 +41,7 @@ func (c *command) newNetworkLinkServiceCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
+	cmd.AddCommand(c.newNetworkLinkServiceCreateCommand())
 	cmd.AddCommand(c.newNetworkLinkServiceDeleteCommand())
 	cmd.AddCommand(c.newNetworkLinkServiceDescribeCommand())
 	cmd.AddCommand(c.newNetworkLinkServiceListCommand())
@@ -99,7 +100,7 @@ func printNetworkLinkServiceTable(cmd *cobra.Command, service networkingv1.Netwo
 		table.Add(&networkLinkServiceHumanOut{
 			Id:                   service.GetId(),
 			Name:                 service.Spec.GetDisplayName(),
-			Network:              service.Spec.Network.GetId(),
+			NetworkId:            service.Spec.Network.GetId(),
 			Environment:          service.Spec.Environment.GetId(),
 			Description:          service.Spec.GetDescription(),
 			AcceptedEnvironments: strings.Join(service.Spec.Accept.GetEnvironments(), ", "),
@@ -110,7 +111,7 @@ func printNetworkLinkServiceTable(cmd *cobra.Command, service networkingv1.Netwo
 		table.Add(&networkLinkServiceSerializedOut{
 			Id:                   service.GetId(),
 			Name:                 service.Spec.GetDisplayName(),
-			Network:              service.Spec.Network.GetId(),
+			NetworkId:            service.Spec.Network.GetId(),
 			Environment:          service.Spec.Environment.GetId(),
 			Description:          service.Spec.GetDescription(),
 			AcceptedEnvironments: service.Spec.Accept.GetEnvironments(),

@@ -14,7 +14,7 @@ import (
 type listNetworkLinkServiceHumanOut struct {
 	Id                   string `human:"ID"`
 	Name                 string `human:"Name"`
-	Network              string `human:"Network"`
+	NetworkId            string `human:"Network ID"`
 	Description          string `human:"Description,omitempty"`
 	AcceptedEnvironments string `human:"Accepted Environments,omitempty"`
 	AcceptedNetworks     string `human:"Accepted Networks,omitempty"`
@@ -24,7 +24,7 @@ type listNetworkLinkServiceHumanOut struct {
 type listNetworkLinkServiceSerializedOut struct {
 	Id                   string   `serialized:"id"`
 	Name                 string   `serialized:"name"`
-	Network              string   `serialized:"network"`
+	NetworkId            string   `serialized:"network_id"`
 	Description          string   `serialized:"description,omitempty"`
 	AcceptedEnvironments []string `serialized:"accepted_environments,omitempty"`
 	AcceptedNetworks     []string `serialized:"accepted_networks,omitempty"`
@@ -65,7 +65,7 @@ func (c *command) networkLinkServiceList(cmd *cobra.Command, _ []string) error {
 			list.Add(&listNetworkLinkServiceHumanOut{
 				Id:                   service.GetId(),
 				Name:                 service.Spec.GetDisplayName(),
-				Network:              service.Spec.Network.GetId(),
+				NetworkId:            service.Spec.Network.GetId(),
 				Description:          service.Spec.GetDescription(),
 				AcceptedEnvironments: strings.Join(service.Spec.Accept.GetEnvironments(), ", "),
 				AcceptedNetworks:     strings.Join(service.Spec.Accept.GetNetworks(), ", "),
@@ -75,7 +75,7 @@ func (c *command) networkLinkServiceList(cmd *cobra.Command, _ []string) error {
 			list.Add(&listNetworkLinkServiceSerializedOut{
 				Id:                   service.GetId(),
 				Name:                 service.Spec.GetDisplayName(),
-				Network:              service.Spec.Network.GetId(),
+				NetworkId:            service.Spec.Network.GetId(),
 				Description:          service.Spec.GetDescription(),
 				AcceptedEnvironments: service.Spec.Accept.GetEnvironments(),
 				AcceptedNetworks:     service.Spec.Accept.GetNetworks(),
