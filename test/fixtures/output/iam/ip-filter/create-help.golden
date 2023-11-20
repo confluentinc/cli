@@ -1,0 +1,20 @@
+Create an IP filter.
+
+Usage:
+  confluent iam ip-filter create <name> [flags]
+
+Examples:
+Create an IP filter named "demo-ip-filter" with resource group "management" and IP groups "ipg-12345" and "ipg-67890":
+
+  $ confluent iam ip-filter create "demo-ip-filter" --resource-group management --ip-groups ipg-12345,ipg-67890
+
+Flags:
+      --resource-group string   REQUIRED: Name of resource group. Currently, only "management" is supported. (default "management")
+      --ip-groups strings       REQUIRED: A comma-separated list of IP group IDs.
+      --context string          CLI context name.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
