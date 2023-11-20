@@ -1,0 +1,19 @@
+Create an IP group.
+
+Usage:
+  confluent iam ip-group create <name> [flags]
+
+Examples:
+Create an IP group named "demo-ip-group" with CIDR blocks 168.150.200.0/24 and 147.150.200.0/24:
+
+  $ confluent iam ip-group create demo-ip-group --cidr-blocks 168.150.200.0/24,147.150.200.0/24
+
+Flags:
+      --cidr-blocks strings   REQUIRED: A comma-separated list of CIDR blocks in IP group.
+      --context string        CLI context name.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
