@@ -80,7 +80,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
-		dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+		dataplaneToken, err := auth.GetDataplaneToken(c.Context.Context)
 		if err != nil {
 			return nil, err
 		}
@@ -164,7 +164,7 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 			return nil, err
 		}
 
-		dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+		dataplaneToken, err := auth.GetDataplaneToken(c.Context.Context)
 		if err != nil {
 			return nil, err
 		}
@@ -239,7 +239,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
 				configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
 
-				dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+				dataplaneToken, err := auth.GetDataplaneToken(c.Context.Context)
 				if err != nil {
 					return nil, err
 				}

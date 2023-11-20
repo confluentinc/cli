@@ -55,7 +55,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 		jwtCtx := &config.Context{State: &config.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
-			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+			dataplaneToken, err := auth.GetDataplaneToken(c.Context.Context)
 			if err != nil {
 				return err
 			}

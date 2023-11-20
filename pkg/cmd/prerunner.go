@@ -340,14 +340,11 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy")
 		}
 
-		state, err := c.Context.AuthenticatedState()
+		dataplaneToken, err := pauth.GetDataplaneToken(c.Context.Context)
 		if err != nil {
 			return nil, err
 		}
-		dataplaneToken, err := pauth.GetDataplaneToken(state, c.Context.GetPlatformServer())
-		if err != nil {
-			return nil, err
-		}
+
 		kafkaRest := &KafkaREST{
 			Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
 			CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, lkc, r.Version.UserAgent, dataplaneToken, unsafeTrace),
@@ -369,26 +366,13 @@ func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *dynamicconfig.DynamicCon
 }
 
 func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloudv1.Client, error) {
-	var baseURL string
-	var authToken string
-	var userAgent string
-	if ctx != nil {
-		baseURL = ctx.GetPlatformServer()
-		state, err := ctx.AuthenticatedState()
-		if err != nil {
-			return nil, err
-		}
-		authToken = state.AuthToken
-		userAgent = ver.UserAgent
-	}
-
 	params := &ccloudv1.Params{
-		BaseURL:   baseURL,
+		BaseURL:   ctx.GetPlatformServer(),
 		Logger:    log.CliLogger,
-		UserAgent: userAgent,
+		UserAgent: ver.UserAgent,
 	}
 
-	return ccloudv1.NewClientWithJWT(context.Background(), authToken, params), nil
+	return ccloudv1.NewClientWithJWT(context.Background(), ctx.GetAuthToken(), params), nil
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
