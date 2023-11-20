@@ -23,6 +23,7 @@ const (
 	UnknownConnectorIdErrorMsg        = `unknown connector ID "%s"`
 	InvalidApiKeyErrorMsg             = `invalid API key "%s" for resource "%s"`
 	InvalidApiKeySuggestions          = "To list API keys that belong to resource \"%[1]s\", use `confluent api-key list --resource %[1]s`.\nTo create new API key for resource \"%[1]s\", use `confluent api-key create --resource %[1]s`."
+	RequiredFlagNotSetErrorMsg        = "required flag `--%s` not set"
 
 	// kafka cluster commands
 	CkuMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
@@ -37,6 +38,7 @@ const (
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg    = "failed to create producer: %v"
 	FailedToCreateConsumerErrorMsg    = "failed to create consumer: %v"
+	FailedToGetConfigurationErrorMsg  = "failed to get configuration map: %w"
 	FailedToCreateAdminClientErrorMsg = "failed to create confluent-kafka-go admin client: %w"
 	FailedToProduceErrorMsg           = "failed to produce offset %d: %s\n"
 	UnknownValueFormatErrorMsg        = "unknown value schema format"
@@ -142,7 +144,7 @@ const (
 	OnPremConfigGuideSuggestions   = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
-	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client with token"
+	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client: %w"
 	CorruptedTokenErrorMsg         = "corrupted auth token"
 	CorruptedTokenSuggestions      = "Please log in again.\n" +
 		AvoidTimeoutSuggestions
