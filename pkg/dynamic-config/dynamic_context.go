@@ -154,16 +154,6 @@ func (d *DynamicContext) EnvironmentId() (string, error) {
 	return "", errors.NewErrorWithSuggestions("no environment found", "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
 }
 
-// AuthenticatedState returns the context's state if authenticated, and an error otherwise.
-// A view of the state is returned, rather than a pointer to the actual state. Changing the state
-// should be done by accessing the state field directly.
-func (d *DynamicContext) AuthenticatedState() (*config.ContextState, error) {
-	if !d.HasLogin() {
-		return nil, new(errors.NotLoggedInError)
-	}
-	return d.State, nil
-}
-
 func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
 	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
 		return "", "", nil
