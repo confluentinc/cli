@@ -21,7 +21,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.9.0
-	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.1-0.20231113190804-aa2e64689d80
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.16.0
