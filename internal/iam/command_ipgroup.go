@@ -49,19 +49,19 @@ func newIpGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func printIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 	table := output.NewTable(cmd)
-	cidrBlocksSlice := ipGroup.GetCidrBlocks()
-	slices.Sort(cidrBlocksSlice)
+	cidrBlocks := ipGroup.GetCidrBlocks()
+	slices.Sort(cidrBlocks)
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(&ipGroupHumanOut{
 			ID:         ipGroup.GetId(),
 			Name:       ipGroup.GetGroupName(),
-			CidrBlocks: strings.Join(cidrBlocksSlice, ", "),
+			CidrBlocks: strings.Join(cidrBlocks, ", "),
 		})
 	} else {
 		table.Add(&ipGroupSerializedOut{
 			ID:         ipGroup.GetId(),
 			Name:       ipGroup.GetGroupName(),
-			CidrBlocks: cidrBlocksSlice,
+			CidrBlocks: cidrBlocks,
 		})
 	}
 	return table.Print()

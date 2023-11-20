@@ -14,6 +14,7 @@ func (c *ipFilterCommand) newDescribeCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
 	}
+
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

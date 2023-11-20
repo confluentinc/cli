@@ -33,7 +33,6 @@ func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddResourceGroupFlag(cmd)
 	cmd.Flags().StringSlice("add-ip-groups", []string{}, "A comma-separated list of IP groups to add.")
 	cmd.Flags().StringSlice("remove-ip-groups", []string{}, "A comma-separated list of IP groups to remove.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

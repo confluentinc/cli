@@ -17,14 +17,13 @@ func (c *ipGroupCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an IP group named "demo-ip-group" with CIDR blocks 168.150.200.0/24 and 147.150.200.0/24:`,
+				Text: `Create an IP group named "demo-ip-group" with CIDR blocks "168.150.200.0/24" and "147.150.200.0/24":`,
 				Code: `confluent iam ip-group create demo-ip-group --cidr-blocks 168.150.200.0/24,147.150.200.0/24`,
 			},
 		),
 	}
 
 	cmd.Flags().StringSlice("cidr-blocks", []string{}, "A comma-separated list of CIDR blocks in IP group.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

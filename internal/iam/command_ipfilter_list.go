@@ -18,6 +18,7 @@ func (c *ipFilterCommand) newListCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
+
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

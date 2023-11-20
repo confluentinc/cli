@@ -32,7 +32,6 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Updated name of the IP group.")
 	cmd.Flags().StringSlice("add-cidr-blocks", []string{}, "A comma-separated list of CIDR blocks to add.")
 	cmd.Flags().StringSlice("remove-cidr-blocks", []string{}, "A comma-separated list of CIDR blocks to remove.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
