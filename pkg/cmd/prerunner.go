@@ -307,11 +307,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId stri
 }
 
 func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
-	ccloudClient, err := r.createCCloudClient(c.Context, c.Version)
-	if err != nil {
-		return err
-	}
-	c.Client = ccloudClient
+	c.Client = r.createCCloudClient(c.Context, c.Version)
 
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -365,14 +361,14 @@ func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *dynamicconfig.DynamicCon
 	return config.RestEndpoint, config.ID, err
 }
 
-func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloudv1.Client, error) {
+func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) *ccloudv1.Client {
 	params := &ccloudv1.Params{
 		BaseURL:   ctx.GetPlatformServer(),
 		Logger:    log.CliLogger,
 		UserAgent: ver.UserAgent,
 	}
 
-	return ccloudv1.NewClientWithJWT(context.Background(), ctx.GetAuthToken(), params), nil
+	return ccloudv1.NewClientWithJWT(context.Background(), ctx.GetAuthToken(), params)
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
