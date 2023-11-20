@@ -1,0 +1,23 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  confluent network network-link service create <name> [flags]
+
+Examples:
+Create a network link service.
+
+  $ confluent network network-link service create test_nls --network n-123456 --description 'test description' --accept-environments env-00000
+
+Flags:
+      --network string                Network ID.
+      --accept-networks strings       A comma-separated list of accept policy networks.
+      --accept-environments strings   A comma-separated list of accept policy environments.
+      --description string            Network link service description.
+      --context string                CLI context name.
+      --environment string            Environment ID.
+  -o, --output string                 Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

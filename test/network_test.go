@@ -589,10 +589,26 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceLDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkLinkServiceCreate() {
+	tests := []CLITest{
+		{args: "network network-link service create", fixture: "network/network-link/service/create-missing-args.golden", exitCode: 1},
+		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accept-environments env-11111,env-22222", fixture: "network/network-link/service/create-accept-environments.golden"},
+		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accept-networks n-111111,n-222222", fixture: "network/network-link/service/create-accept-networks.golden"},
+		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accept-networks n-111111,n-222222 --accept-environments env-11111,env-22222", fixture: "network/network-link/service/create.golden"},
+		{args: "network network-link service create nls-duplicate --network n-123455", fixture: "network/network-link/service/create-duplicate.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkNetworkLinkService_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network network-link service describe ""`, login: "cloud", fixture: "network/network-link/service/describe-autocomplete.golden"},
 		{args: `__complete network network-link service delete ""`, login: "cloud", fixture: "network/network-link/service/delete-autocomplete.golden"},
+		{args: `__complete network network-link service create nls-test --network ""`, login: "cloud", fixture: "network/network-link/service/create-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
