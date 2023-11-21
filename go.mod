@@ -6,6 +6,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.48.0
 	github.com/billgraziano/dpapi v0.5.0
+	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
@@ -70,6 +71,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.0.2
+	github.com/ory/dockertest/v3 v3.10.0
 	github.com/panta/machineid v1.0.2
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -79,6 +81,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
+	github.com/stripe/stripe-go/v76 v76.5.0
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/pretty v1.2.1
@@ -106,7 +109,6 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
-	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/bufbuild/protocompile v0.6.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
@@ -153,7 +155,6 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
-	github.com/ory/dockertest/v3 v3.10.0
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
@@ -163,7 +164,6 @@ require (
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/skeema/knownhosts v1.2.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
-	github.com/stripe/stripe-go/v76 v76.5.0
 	github.com/swaggest/jsonschema-go v0.3.45 // indirect
 	github.com/swaggest/refl v1.1.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
