@@ -188,7 +188,8 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 		configuration.Debug = unsafeTrace
 		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config.Config, unsafeTrace)
 
-		if schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint"); schemaRegistryEndpoint != "" {
+		schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
+		if schemaRegistryEndpoint != "" {
 			u, err := url.Parse(schemaRegistryEndpoint)
 			if err != nil {
 				return nil, err
@@ -212,30 +213,6 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				}
 				configuration.HTTPClient = caClient
 			}
-
-			schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-			if err != nil {
-				return nil, err
-			}
-
-			schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-			if err != nil {
-				return nil, err
-			}
-
-			if schemaRegistryApiKey != "" && schemaRegistryApiSecret != "" {
-				apiKey := &srsdk.BasicAuth{
-					UserName: schemaRegistryApiKey,
-					Password: schemaRegistryApiSecret,
-				}
-				c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, apiKey)
-			} else {
-				c.schemaRegistryClient = schemaregistry.NewClient(configuration, c.Config.Config)
-			}
-
-			if err := c.schemaRegistryClient.Get(); err != nil {
-				return nil, fmt.Errorf("failed to validate Schema Registry client: %w", err)
-			}
 		} else if c.Config.IsCloudLogin() {
 			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 			if err != nil {
@@ -246,13 +223,28 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			}
 			configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
 			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
-
-			c.schemaRegistryClient = schemaregistry.NewClient(configuration, c.Config.Config)
 		} else {
 			return nil, errors.NewErrorWithSuggestions(
 				"Schema Registry endpoint not found",
 				"Log in to Confluent Cloud with `confluent login`.\nSupply a Schema Registry endpoint with `--schema-registry-endpoint`.",
 			)
+		}
+
+		schemaRegistryApiKey, _ := cmd.Flags().GetString("schema-registry-api-key")
+		schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
+
+		if schemaRegistryApiKey != "" && schemaRegistryApiSecret != "" {
+			apiKey := &srsdk.BasicAuth{
+				UserName: schemaRegistryApiKey,
+				Password: schemaRegistryApiSecret,
+			}
+			c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, apiKey)
+		} else {
+			c.schemaRegistryClient = schemaregistry.NewClient(configuration, c.Config.Config)
+		}
+
+		if err := c.schemaRegistryClient.Get(); err != nil {
+			return nil, fmt.Errorf("failed to validate Schema Registry client: %w", err)
 		}
 	}
 
