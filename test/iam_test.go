@@ -325,3 +325,39 @@ func (s *CLITestSuite) TestIam_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestIamIpGroup() {
+	tests := []CLITest{
+		{args: `iam ip-group create "demo-ip-group" --cidr-blocks "168.150.200.0/24,147.150.200.0/24"`, fixture: "iam/ip-group/create.golden"},
+		{args: `iam ip-group list`, fixture: "iam/ip-group/list.golden"},
+		{args: `iam ip-group describe ipg-wjnde`, fixture: "iam/ip-group/describe.golden"},
+		{args: `iam ip-group delete ipg-wjnde`, fixture: "iam/ip-group/delete.golden"},
+		{args: `iam ip-group update ipg-wjnde --name "new-demo-group" --add-cidr-blocks "1.2.3.4/12" --remove-cidr-blocks "168.150.200.0/24"`, fixture: "iam/ip-group/update.golden"},
+		{args: `iam ip-group update ipg-wjnde --name "new-demo-group" --add-cidr-blocks "1.2.3.4/12,147.150.200.0/24" --remove-cidr-blocks "168.150.200.0/24"`, fixture: "iam/ip-group/update-resource-duplicate.golden"},
+		{args: `iam ip-group update ipg-wjnde --name "new-demo-group" --add-cidr-blocks "1.2.3.4/12" --remove-cidr-blocks "1.2.3.4/12"`, fixture: "iam/ip-group/update-resource-add-and-remove.golden"},
+		{args: `iam ip-group update ipg-wjnde --name "new-demo-group" --add-cidr-blocks "1.2.3.4/12" --remove-cidr-blocks "1.1.1.1/1"`, fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIamIpFilter() {
+	tests := []CLITest{
+		{args: `iam ip-filter create "demo-ip-filter" --resource-group "management" --ip-groups "ipg-3g5jw,ipg-wjnde"`, fixture: "iam/ip-filter/create.golden"},
+		{args: `iam ip-filter list`, fixture: "iam/ip-filter/list.golden"},
+		{args: `iam ip-filter describe ipf-34dq3`, fixture: "iam/ip-filter/describe.golden"},
+		{args: `iam ip-filter delete ipf-34dq3`, fixture: "iam/ip-filter/delete.golden"},
+		{args: `iam ip-filter update ipf-34dq3 --name "new-ip-filter-demo" --add-ip-groups "ipg-1337a,ipg-ayd3n" --remove-ip-groups "ipg-12345"`, fixture: "iam/ip-filter/update.golden"},
+		{args: `iam ip-filter update ipf-34dq3 --add-ip-groups "ipg-abcde" --remove-ip-groups "ipg-12345"`, fixture: "iam/ip-filter/update-resource-duplicate.golden"},
+		{args: `iam ip-filter update ipf-34dq3 --add-ip-groups "ipg-azbye" --remove-ip-groups "ipg-azbye"`, fixture: "iam/ip-filter/update-resource-add-and-remove.golden"},
+		{args: `iam ip-filter update ipf-34dq3 --add-ip-groups "ipg-hjkil" --remove-ip-groups "ipg-fedbc"`, fixture: "iam/ip-filter/update-resource-remove-not-exist.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
