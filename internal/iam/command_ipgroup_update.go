@@ -23,7 +23,7 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name and add a CIDR block to IP group ipg-12345:`,
+				Text: `Update the name and add a CIDR block to IP group "ipg-12345":`,
 				Code: `confluent iam ip-group update ipg-12345 --name "New Group Name" --add-cidr-blocks 123.234.0.0/16`,
 			},
 		),
@@ -88,7 +88,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	// Add each CIDR block to add to the set
 	for _, cidrBlock := range addCidrBlocks {
 		if currentCidrBlocksSet.Contains(cidrBlock) {
-			AddDuplicateResource(cidrBlock, log.CliLogger)
+			AddDuplicateResourceWarning(cidrBlock, log.CliLogger)
 		}
 		addCidrBlocksSet.Add(cidrBlock)
 	}
@@ -98,10 +98,10 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	for _, cidrBlock := range removeCidrBlocks {
 		if addCidrBlocksSet.Contains(cidrBlock) {
 			delete(addCidrBlocksSet, cidrBlock)
-			AddAndDeleteResource(cidrBlock, log.CliLogger)
+			AddAndDeleteResourceWarning(cidrBlock, log.CliLogger)
 		}
 		if !currentCidrBlocksSet.Contains(cidrBlock) {
-			DeleteNonExistentResource(cidrBlock, log.CliLogger)
+			DeleteNonExistentResourceWarning(cidrBlock, log.CliLogger)
 		}
 		removeCidrBlocksSet.Add(cidrBlock)
 	}
@@ -136,9 +136,10 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		 */
 		if strings.Contains(err.Error(), "lock out") {
 			errorMessageIndex := strings.Index(err.Error(), "Please")
-			return errors.NewErrorWithSuggestions(err.Error()[:errorMessageIndex-1],
-				"Please double check the IP group you are updating."+
-					" Otherwise, try again from an IP address permitted within this updated IP group or another IP group.")
+			return errors.NewErrorWithSuggestions(
+				err.Error()[:errorMessageIndex-1],
+				"Please double check the IP group you are updating. Otherwise, try again from an IP address permitted within this updated IP group or another IP group.",
+			)
 		}
 		return err
 	}

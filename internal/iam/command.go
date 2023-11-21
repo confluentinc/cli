@@ -41,14 +41,14 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func AddAndDeleteResource(resource string, l *log.Logger) {
+func AddAndDeleteResourceWarning(resource string, l *log.Logger) {
 	l.Warnf("%s is marked for addition and deletion", resource)
 }
 
-func DeleteNonExistentResource(resource string, l *log.Logger) {
+func DeleteNonExistentResourceWarning(resource string, l *log.Logger) {
 	l.Warnf("%s is marked for deletion but does not exist", resource)
 }
 
-func AddDuplicateResource(resource string, l *log.Logger) {
+func AddDuplicateResourceWarning(resource string, l *log.Logger) {
 	l.Warnf("%s is marked for addition but already exists", resource)
 }

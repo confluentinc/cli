@@ -23,7 +23,7 @@ func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name and add an IP group to IP filter ipf-abcde:`,
+				Text: `Update the name and add an IP group to IP filter "ipf-abcde":`,
 				Code: `confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345`,
 			},
 		),
@@ -103,7 +103,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	// Add each new IP Group ID to the set
 	for _, ipGroupId := range addIpGroups {
 		if currentIpGroupIdsSet.Contains(ipGroupId) {
-			AddDuplicateResource(ipGroupId, log.CliLogger)
+			AddDuplicateResourceWarning(ipGroupId, log.CliLogger)
 		}
 		addIpGroupIdsSet.Add(ipGroupId)
 	}
@@ -113,10 +113,10 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	for _, ipGroupId := range removeIpGroups {
 		if addIpGroupIdsSet[ipGroupId] {
 			delete(addIpGroupIdsSet, ipGroupId)
-			AddAndDeleteResource(ipGroupId, log.CliLogger)
+			AddAndDeleteResourceWarning(ipGroupId, log.CliLogger)
 		}
 		if !currentIpGroupIdsSet.Contains(ipGroupId) {
-			DeleteNonExistentResource(ipGroupId, log.CliLogger)
+			DeleteNonExistentResourceWarning(ipGroupId, log.CliLogger)
 		}
 		removeIpGroupIdsSet[ipGroupId] = true
 	}
@@ -157,9 +157,10 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		 */
 		if strings.Contains(err.Error(), "lock out") {
 			errorMessageIndex := strings.Index(err.Error(), "Please")
-			return errors.NewErrorWithSuggestions(err.Error()[:errorMessageIndex-1],
-				"Please double check the IP filter you are updating."+
-					" Otherwise, try again from an IP address permitted within this updated IP filter or another IP filter.")
+			return errors.NewErrorWithSuggestions(
+				err.Error()[:errorMessageIndex-1],
+				"Please double check the IP filter you are updating. Otherwise, try again from an IP address permitted within this updated IP filter or another IP filter.",
+			)
 		}
 		return err
 	}

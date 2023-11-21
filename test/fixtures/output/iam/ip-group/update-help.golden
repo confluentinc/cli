@@ -4,7 +4,7 @@ Usage:
   confluent iam ip-group update <id> [flags]
 
 Examples:
-Update the name and add a CIDR block to IP group ipg-12345:
+Update the name and add a CIDR block to IP group "ipg-12345":
 
   $ confluent iam ip-group update ipg-12345 --name "New Group Name" --add-cidr-blocks 123.234.0.0/16
 

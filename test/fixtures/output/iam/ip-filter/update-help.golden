@@ -4,7 +4,7 @@ Usage:
   confluent iam ip-filter update <id> [flags]
 
 Examples:
-Update the name and add an IP group to IP filter ipf-abcde:
+Update the name and add an IP group to IP filter "ipf-abcde":
 
   $ confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345
 

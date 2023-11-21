@@ -47,9 +47,10 @@ func (c *ipFilterCommand) delete(cmd *cobra.Command, args []string) error {
 		 */
 		if strings.Contains(err.Error(), "lock out") {
 			errorMessageIndex := strings.Index(err.Error(), "Please")
-			return errors.NewErrorWithSuggestions(err.Error()[:errorMessageIndex-1],
-				"Please double check the IP filter you are deleting. "+
-					"Otherwise, try again from an IP address permitted within another IP filter.")
+			return errors.NewErrorWithSuggestions(
+				err.Error()[:errorMessageIndex-1],
+				"Please double check the IP filter you are deleting. Otherwise, try again from an IP address permitted within another IP filter.",
+			)
 		}
 		return resource.ResourcesNotFoundError(cmd, resource.IpFilter, args[0])
 	}
