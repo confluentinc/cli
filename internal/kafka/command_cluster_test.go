@@ -43,7 +43,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 		DisplayName:  cmkv2.PtrString("gcp-byok-test"),
 		Cloud:        cmkv2.PtrString("gcp"),
 		Region:       cmkv2.PtrString("us-central1"),
-		Config:       setCmkClusterConfig("dedicated", 1, "xyz"),
+		Config:       setCmkClusterConfig("dedicated", 1),
 		Availability: cmkv2.PtrString(lowAvailability),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),
