@@ -11,7 +11,7 @@ import (
 
 type Client struct {
 	*srsdk.APIClient
-	apiKey *srsdk.BasicAuth
+	apiKey srsdk.BasicAuth
 	cfg    *config.Config
 }
 
@@ -22,7 +22,7 @@ func NewClient(configuration *srsdk.Configuration, cfg *config.Config) *Client {
 	}
 }
 
-func NewClientWithApiKey(configuration *srsdk.Configuration, apiKey *srsdk.BasicAuth) *Client {
+func NewClientWithApiKey(configuration *srsdk.Configuration, apiKey srsdk.BasicAuth) *Client {
 	return &Client{
 		APIClient: srsdk.NewAPIClient(configuration),
 		apiKey:    apiKey,
@@ -32,7 +32,7 @@ func NewClientWithApiKey(configuration *srsdk.Configuration, apiKey *srsdk.Basic
 func (c *Client) context() context.Context {
 	ctx := context.Background()
 
-	if c.apiKey != nil {
+	if c.apiKey.UserName != "" && c.apiKey.Password != "" {
 		return context.WithValue(ctx, srsdk.ContextBasicAuth, c.apiKey)
 	}
 

@@ -234,7 +234,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 		schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
 
 		if schemaRegistryApiKey != "" && schemaRegistryApiSecret != "" {
-			apiKey := &srsdk.BasicAuth{
+			apiKey := srsdk.BasicAuth{
 				UserName: schemaRegistryApiKey,
 				Password: schemaRegistryApiSecret,
 			}
