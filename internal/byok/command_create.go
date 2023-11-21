@@ -71,16 +71,6 @@ gcloud kms keys add-iam-policy-binding %[3]s \
 	--role="projects/%[2]s/roles/%[1]s"`, g.getCustomRoleName(), g.project, g.key, g.keyRing, g.location, g.group)
 }
 
-func newGcpPolicyMetadata(project, location, keyRing, key, group string) gcpPolicyMetadata {
-	return gcpPolicyMetadata{
-		project:  project,
-		location: location,
-		keyRing:  keyRing,
-		key:      key,
-		group:    group,
-	}
-}
-
 func (g gcpPolicyMetadata) getCustomRoleName() string {
 	r := regexp.MustCompile(`^[a-zA-Z0-9_.]{3,64}$`)
 
@@ -256,7 +246,14 @@ func renderGCPEncryptionPolicy(key byokv1.ByokV1Key) string {
 	project, location, keyRing, keyName := splitKeyId[1], splitKeyId[3], splitKeyId[5], splitKeyId[7]
 	group := key.Key.ByokV1GcpKey.GetSecurityGroup()
 
-	encryptionPolicyMetadata := newGcpPolicyMetadata(project, location, keyRing, keyName, group)
+	encryptionPolicyMetadata := gcpPolicyMetadata{
+		project:  project,
+		location: location,
+		keyRing:  keyRing,
+		key:      keyName,
+		group:    group,
+	}
+
 	return encryptionPolicyMetadata.renderPolicy()
 }
 
@@ -265,9 +262,9 @@ func getPostCreateStepInstruction(key byokv1.ByokV1Key) string {
 	case key.Key.ByokV1AwsKey != nil:
 		return `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
 	case key.Key.ByokV1AzureKey != nil:
-		return "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
+		return "To ensure the key vault has the correct role assignments, please run the following Azure cli command (certified for azure-cli v2.45):"
 	case key.Key.ByokV1GcpKey != nil:
-		return "To ensure the key has the correct role assignments, please run the following `gcloud`-cli command:"
+		return "To ensure the key has the correct role assignments, please run the following Google Cloud cli command:"
 	default:
 		return ""
 	}
