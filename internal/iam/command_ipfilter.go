@@ -24,10 +24,10 @@ type ipFilterHumanOut struct {
 }
 
 type ipFilterSerializedOut struct {
-	ID            string   `human:"ID" serialized:"id"`
-	Name          string   `human:"Name" serialized:"name"`
-	ResourceGroup string   `human:"Resource group" serialized:"resource_group"`
-	IpGroups      []string `human:"IP groups" serialized:"ip_groups"`
+	ID            string   `serialized:"id"`
+	Name          string   `serialized:"name"`
+	ResourceGroup string   `serialized:"resource_group"`
+	IpGroups      []string `serialized:"ip_groups"`
 }
 
 func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {

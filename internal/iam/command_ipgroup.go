@@ -23,9 +23,9 @@ type ipGroupHumanOut struct {
 }
 
 type ipGroupSerializedOut struct {
-	ID         string   `human:"ID" serialized:"id"`
-	Name       string   `human:"Name" serialized:"name"`
-	CidrBlocks []string `human:"CIDR blocks" serialized:"cidr_blocks"`
+	ID         string   `serialized:"id"`
+	Name       string   `serialized:"name"`
+	CidrBlocks []string `serialized:"cidr_blocks"`
 }
 
 func newIpGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -48,9 +48,10 @@ func newIpGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func printIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
-	table := output.NewTable(cmd)
 	cidrBlocks := ipGroup.GetCidrBlocks()
 	slices.Sort(cidrBlocks)
+
+	table := output.NewTable(cmd)
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(&ipGroupHumanOut{
 			ID:         ipGroup.GetId(),

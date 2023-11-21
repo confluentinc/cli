@@ -10,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
@@ -72,7 +71,11 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initialize the IP group object that we will pass into the update command
-	updateIpGroup := iamv2.IamV2IpGroup{Id: &args[0], GroupName: currentIpGroup.GroupName}
+	updateIpGroup := iamv2.IamV2IpGroup{
+		Id:        &args[0],
+		GroupName: currentIpGroup.GroupName,
+	}
+
 	if groupName != "" {
 		updateIpGroup.GroupName = &groupName
 	}
@@ -88,7 +91,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	// Add each CIDR block to add to the set
 	for _, cidrBlock := range addCidrBlocks {
 		if currentCidrBlocksSet.Contains(cidrBlock) {
-			AddDuplicateResourceWarning(cidrBlock, log.CliLogger)
+			WarnAddDuplicateResource(cidrBlock, c.Config.EnableColor)
 		}
 		addCidrBlocksSet.Add(cidrBlock)
 	}
@@ -98,10 +101,10 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	for _, cidrBlock := range removeCidrBlocks {
 		if addCidrBlocksSet.Contains(cidrBlock) {
 			delete(addCidrBlocksSet, cidrBlock)
-			AddAndDeleteResourceWarning(cidrBlock, log.CliLogger)
+			WarnAddAndDeleteResource(cidrBlock, c.Config.EnableColor)
 		}
 		if !currentCidrBlocksSet.Contains(cidrBlock) {
-			DeleteNonExistentResourceWarning(cidrBlock, log.CliLogger)
+			WarnDeleteNonExistentResource(cidrBlock, c.Config.EnableColor)
 		}
 		removeCidrBlocksSet.Add(cidrBlock)
 	}

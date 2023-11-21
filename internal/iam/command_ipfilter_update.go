@@ -10,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
@@ -103,7 +102,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	// Add each new IP Group ID to the set
 	for _, ipGroupId := range addIpGroups {
 		if currentIpGroupIdsSet.Contains(ipGroupId) {
-			AddDuplicateResourceWarning(ipGroupId, log.CliLogger)
+			WarnAddDuplicateResource(ipGroupId, c.Config.EnableColor)
 		}
 		addIpGroupIdsSet.Add(ipGroupId)
 	}
@@ -113,10 +112,10 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	for _, ipGroupId := range removeIpGroups {
 		if addIpGroupIdsSet[ipGroupId] {
 			delete(addIpGroupIdsSet, ipGroupId)
-			AddAndDeleteResourceWarning(ipGroupId, log.CliLogger)
+			WarnAddAndDeleteResource(ipGroupId, c.Config.EnableColor)
 		}
 		if !currentIpGroupIdsSet.Contains(ipGroupId) {
-			DeleteNonExistentResourceWarning(ipGroupId, log.CliLogger)
+			WarnDeleteNonExistentResource(ipGroupId, c.Config.EnableColor)
 		}
 		removeIpGroupIdsSet[ipGroupId] = true
 	}

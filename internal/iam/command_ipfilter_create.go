@@ -21,7 +21,7 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an IP filter named "demo-ip-filter" with resource group "management" and IP groups "ipg-12345" and "ipg-67890":`,
-				Code: `confluent iam ip-filter create "demo-ip-filter" --resource-group management --ip-groups ipg-12345,ipg-67890`,
+				Code: "confluent iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-12345,ipg-67890",
 			},
 		),
 	}
