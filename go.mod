@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.47.9
+	github.com/aws/aws-sdk-go v1.48.0
 	github.com/billgraziano/dpapi v0.5.0
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/charmbracelet/lipgloss v0.9.1
@@ -27,7 +27,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/org v0.7.0
+	github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
@@ -122,7 +122,7 @@ require (
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.0
+	github.com/go-jose/go-jose/v3 v3.0.1
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

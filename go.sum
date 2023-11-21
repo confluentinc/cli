@@ -71,6 +71,8 @@ github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPd
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/aws/aws-sdk-go v1.47.9 h1:rarTsos0mA16q+huicGx0e560aYRtOucV5z2Mw23JRY=
 github.com/aws/aws-sdk-go v1.47.9/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.48.0 h1:1SeJ8agckRDQvnSCt1dGZYAwUaoD2Ixj6IaXB4LCv8Q=
+github.com/aws/aws-sdk-go v1.48.0/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1/go.mod h1:uYgXzlJ7ZpABp8OJ+exZzJJhRNQ2ASbcXHWsFqH8hp8=
 github.com/billgraziano/dpapi v0.5.0 h1:pcxA17vyjbDqYuxCFZbgL9tYIk2xgbRZjRaIbATwh+8=
@@ -149,6 +151,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0 h1:TWwZHdfo2XNKrnGOuxXx4
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0/go.mod h1:odGsHChrn2l+jaOvx4Gib5//U4a3Id79wstQVkNh8v0=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.7.0 h1:+yjQZhFXd06wcW+oxhg2OGrYkN8QvYrOlOGrnw4PLUc=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.7.0/go.mod h1:40AGTF6TnYiBLR25utDlAdBKEYB3gt0wldxokJLz5r0=
+github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.0 h1:Wr/ydXUs+gfKZdvcFx7naRSknarnBTe4a21t1zi70qQ=
+github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.0/go.mod h1:SK4KpKKPJu55An0L2fWITUuVWxa1NZX8TpYO5x6tuqE=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
 github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.0 h1:Axck11PErBK7rNUJKf8lM3/dBVXzum4oxzl6P++IW4U=
@@ -258,6 +262,8 @@ github.com/go-gl/glfw/v3.3/glfw v0.0.0-20191125211704-12ad95a8df72/go.mod h1:tQ2
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/go-jose/go-jose/v3 v3.0.0 h1:s6rrhirfEP/CGIoc6p+PZAeogN2SxKav6Wp7+dyMWVo=
 github.com/go-jose/go-jose/v3 v3.0.0/go.mod h1:RNkWWRld676jZEYoV3+XK8L2ZnNSvIsxFMht0mSX+u8=
+github.com/go-jose/go-jose/v3 v3.0.1 h1:pWmKFVtt+Jl0vBZTIpz/eAKwsm6LkIxDVVbFHKkchhA=
+github.com/go-jose/go-jose/v3 v3.0.1/go.mod h1:RNkWWRld676jZEYoV3+XK8L2ZnNSvIsxFMht0mSX+u8=
 github.com/go-logr/logr v0.1.0/go.mod h1:ixOQHD9gLJUVQQ2ZOR7zLEifBX6tGkNJF4QyIY7sIas=
 github.com/go-logr/logr v1.2.0/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-logr/logr v1.2.4 h1:g01GSCwiDw2xSZfjJ2/T9M+S6pFdcNtFYsp+Y43HYDQ=
