@@ -7,6 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -32,8 +33,22 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newPoolCommand(prerunner))
 	cmd.AddCommand(newProviderCommand(prerunner))
 	cmd.AddCommand(newRBACCommand(cfg, prerunner))
+	cmd.AddCommand(newIpFilterCommand(prerunner))
+	cmd.AddCommand(newIpGroupCommand(prerunner))
 	cmd.AddCommand(newServiceAccountCommand(prerunner))
 	cmd.AddCommand(newUserCommand(prerunner))
 
 	return cmd
+}
+
+func AddAndDeleteResourceWarning(resource string, l *log.Logger) {
+	l.Warnf("%s is marked for addition and deletion", resource)
+}
+
+func DeleteNonExistentResourceWarning(resource string, l *log.Logger) {
+	l.Warnf("%s is marked for deletion but does not exist", resource)
+}
+
+func AddDuplicateResourceWarning(resource string, l *log.Logger) {
+	l.Warnf("%s is marked for addition but already exists", resource)
 }
