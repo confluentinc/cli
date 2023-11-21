@@ -13,14 +13,12 @@ import (
 
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
 )
 
 type clientConfig struct {
@@ -245,19 +243,14 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 			configFile = commentAndWarnAboutSchemaRegistry("no Schema Registry API key specified", "Pass the `--schema-registry-api-key` flag to specify the Schema Registry API key.", configFile)
 		} else {
 			// only secret empty
-			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf("no Schema Registry API secret for key \"%s\" specified", apiKeyPair.Key), "Pass the `--schema-registry-api-secret` flag to specify the Schema Registry API secret.", configFile)
+			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(`no Schema Registry API secret for key "%s" specified`, apiKeyPair.Key), "Pass the `--schema-registry-api-secret` flag to specify the Schema Registry API secret.", configFile)
 		}
 
 		return configFile, nil
 	}
 
-	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
-	if err != nil {
-		return "", err
-	}
-
 	// validate that the key pair matches with the cluster
-	if err := c.validateSchemaRegistryCredentials(cluster, apiKeyPair, unsafeTrace); err != nil {
+	if err := c.validateSchemaRegistryCredentials(cmd); err != nil {
 		return "", err
 	}
 
@@ -309,13 +302,11 @@ func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.Kafk
 	return nil
 }
 
-func (c *clientConfigCommand) validateSchemaRegistryCredentials(cluster *srcmv2.SrcmV2Cluster, apiKeyPair *config.APIKeyPair, unsafeTrace bool) error {
-	srConfig := srsdk.NewConfiguration()
-	srConfig.BasePath = cluster.Spec.GetHttpEndpoint()
-	srConfig.UserAgent = c.Version.UserAgent
-	srConfig.Debug = unsafeTrace
-
-	client := schemaregistry.NewClientWithApiKey(srConfig, apiKeyPair.Key, apiKeyPair.Secret)
+func (c *clientConfigCommand) validateSchemaRegistryCredentials(cmd *cobra.Command) error {
+	client, err := c.GetSchemaRegistryClient(cmd)
+	if err != nil {
+		return err
+	}
 
 	if err := client.Get(); err != nil {
 		return errors.NewErrorWithSuggestions("failed to validate Schema Registry API credential", "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and `--schema-registry-api-secret`.")
