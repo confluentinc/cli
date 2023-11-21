@@ -8,6 +8,9 @@ import (
 	"time"
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
+
+	"github.com/confluentinc/cli/v3/pkg/auth"
+	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
 type flatQueryResponse struct {
@@ -21,28 +24,29 @@ type responseDataPoint struct {
 
 type MetricsClient struct {
 	*metricsv2.APIClient
-	authToken string
+	cfg *config.Config
 }
 
-func NewMetricsClient(url, userAgent string, unsafeTrace bool, authToken string) *MetricsClient {
-	cfg := metricsv2.NewConfiguration()
-	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(nil, unsafeTrace)
-	cfg.Servers = metricsv2.ServerConfigurations{{URL: url}}
-	cfg.UserAgent = userAgent
-
+func NewMetricsClient(configuration *metricsv2.Configuration, cfg *config.Config) *MetricsClient {
 	return &MetricsClient{
-		APIClient: metricsv2.NewAPIClient(cfg),
-		authToken: authToken,
+		APIClient: metricsv2.NewAPIClient(configuration),
+		cfg:       cfg,
 	}
 }
 
-func (c *MetricsClient) metricsApiContext() context.Context {
-	return context.WithValue(context.Background(), metricsv2.ContextAccessToken, c.authToken)
+func (c *MetricsClient) context() context.Context {
+	ctx := context.Background()
+
+	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
+	if err != nil {
+		return ctx
+	}
+
+	return context.WithValue(ctx, metricsv2.ContextAccessToken, dataplaneToken)
 }
 
 func (c *MetricsClient) MetricsDatasetQuery(dataset string, query metricsv2.QueryRequest) (*metricsv2.QueryResponse, *http.Response, error) {
-	return c.Version2Api.V2MetricsDatasetQueryPost(c.metricsApiContext(), dataset).QueryRequest(query).Execute()
+	return c.Version2Api.V2MetricsDatasetQueryPost(c.context(), dataset).QueryRequest(query).Execute()
 }
 
 func UnmarshalFlatQueryResponseIfDataSchemaMatchError(err error, metricsResponse *metricsv2.QueryResponse, httpResp *http.Response) error {
