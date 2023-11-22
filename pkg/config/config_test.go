@@ -1082,24 +1082,24 @@ func TestParseFlagsIntoConfig(t *testing.T) {
 	tests := []struct {
 		name           string
 		context        string
-		dynamicConfig  *Config
+		config         *Config
 		errMsg         string
 		suggestionsMsg string
 	}{
 		{
-			name:          "read context from config",
-			dynamicConfig: configBase,
+			name:   "read context from config",
+			config: configBase,
 		},
 		{
-			name:          "read context from flag",
-			context:       "test-context",
-			dynamicConfig: configFlag,
+			name:    "read context from flag",
+			context: "test-context",
+			config:  configFlag,
 		},
 		{
-			name:          "bad-context specified with flag",
-			context:       "bad-context",
-			dynamicConfig: configFlag,
-			errMsg:        fmt.Sprintf(errors.ContextDoesNotExistErrorMsg, "bad-context"),
+			name:    "bad-context specified with flag",
+			context: "bad-context",
+			config:  configFlag,
+			errMsg:  fmt.Sprintf(errors.ContextDoesNotExistErrorMsg, "bad-context"),
 		},
 	}
 	for _, test := range tests {
@@ -1107,8 +1107,8 @@ func TestParseFlagsIntoConfig(t *testing.T) {
 		cmd.Flags().String("context", "", "Context name.")
 		err := cmd.ParseFlags([]string{"--context", test.context})
 		require.NoError(t, err)
-		initialCurrentContext := test.dynamicConfig.CurrentContext
-		err = test.dynamicConfig.ParseFlagsIntoConfig(cmd)
+		initialCurrentContext := test.config.CurrentContext
+		err = test.config.ParseFlagsIntoConfig(cmd)
 		if test.errMsg != "" {
 			require.Error(t, err)
 			require.Equal(t, test.errMsg, err.Error())
@@ -1117,7 +1117,7 @@ func TestParseFlagsIntoConfig(t *testing.T) {
 			}
 		} else {
 			require.NoError(t, err)
-			ctx := test.dynamicConfig.Context()
+			ctx := test.config.Context()
 			if test.context != "" {
 				require.Equal(t, test.context, ctx.Name)
 			} else {

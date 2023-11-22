@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -64,7 +64,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) useAPIKey(apiKey, clusterId string) error {
-	kcc, err := dynamicconfig.FindKafkaCluster(c.V2Client, c.Context, clusterId)
+	kcc, err := kafka.FindCluster(c.V2Client, c.Context, clusterId)
 	if err != nil {
 		return err
 	}

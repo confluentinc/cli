@@ -1,4 +1,4 @@
-package dynamicconfig
+package kafka
 
 import (
 	"fmt"
@@ -8,10 +8,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	presource "github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func GetKafkaClusterForCommand(client *ccloudv2.Client, ctx *config.Context) (*config.KafkaClusterConfig, error) {
+func GetClusterForCommand(client *ccloudv2.Client, ctx *config.Context) (*config.KafkaClusterConfig, error) {
 	if ctx.KafkaClusterContext == nil {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
@@ -21,11 +21,11 @@ func GetKafkaClusterForCommand(client *ccloudv2.Client, ctx *config.Context) (*c
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
 
-	if presource.LookupType(clusterId) != presource.KafkaCluster && clusterId != "anonymous-id" {
+	if resource.LookupType(clusterId) != resource.KafkaCluster && clusterId != "anonymous-id" {
 		return nil, fmt.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
 	}
 
-	cluster, err := FindKafkaCluster(client, ctx, clusterId)
+	cluster, err := FindCluster(client, ctx, clusterId)
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 	}
@@ -33,7 +33,7 @@ func GetKafkaClusterForCommand(client *ccloudv2.Client, ctx *config.Context) (*c
 	return cluster, nil
 }
 
-func FindKafkaCluster(client *ccloudv2.Client, ctx *config.Context, clusterId string) (*config.KafkaClusterConfig, error) {
+func FindCluster(client *ccloudv2.Client, ctx *config.Context, clusterId string) (*config.KafkaClusterConfig, error) {
 	if config := ctx.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil && config.Bootstrap != "" {
 		if clusterId == "anonymous-id" {
 			return config, nil

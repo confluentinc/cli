@@ -10,8 +10,8 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/keystore"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -203,7 +203,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	case presource.Cloud:
 		break
 	case presource.KafkaCluster:
-		cluster, err := dynamicconfig.FindKafkaCluster(c.V2Client, c.Context, resource)
+		cluster, err := kafka.FindCluster(c.V2Client, c.Context, resource)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}

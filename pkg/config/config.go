@@ -103,12 +103,9 @@ type Config struct {
 	Version  *pversion.Version `json:"-"`
 	Filename string            `json:"-"`
 
-	overwrittenCurrentContext            string
-	overwrittenCurrentEnvironment        string
-	overwrittenCurrentFlinkCloudProvider string
-	overwrittenCurrentFlinkComputePool   string
-	overwrittenCurrentFlinkRegion        string
-	overwrittenCurrentKafkaCluster       string
+	overwrittenCurrentContext      string
+	overwrittenCurrentEnvironment  string
+	overwrittenCurrentKafkaCluster string
 }
 
 func (c *Config) SetOverwrittenCurrentContext(context string) {
@@ -123,24 +120,6 @@ func (c *Config) SetOverwrittenCurrentContext(context string) {
 func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
 	if c.overwrittenCurrentEnvironment == "" {
 		c.overwrittenCurrentEnvironment = environmentId
-	}
-}
-
-func (c *Config) SetOverwrittenCurrentFlinkComputePool(computePoolId string) {
-	if c.overwrittenCurrentFlinkComputePool == "" {
-		c.overwrittenCurrentFlinkComputePool = computePoolId
-	}
-}
-
-func (c *Config) SetOverwrittenCurrentFlinkRegion(region string) {
-	if c.overwrittenCurrentFlinkRegion == "" {
-		c.overwrittenCurrentFlinkRegion = region
-	}
-}
-
-func (c *Config) SetOverwrittenCurrentFlinkCloudProvider(cloudProvider string) {
-	if c.overwrittenCurrentFlinkCloudProvider == "" {
-		c.overwrittenCurrentFlinkCloudProvider = cloudProvider
 	}
 }
 

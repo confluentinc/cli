@@ -11,9 +11,9 @@ import (
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
@@ -103,7 +103,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	cluster, err := dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}

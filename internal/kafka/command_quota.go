@@ -9,7 +9,7 @@ import (
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -119,7 +119,7 @@ func (c *quotaCommand) autocompleteQuotas() []string {
 }
 
 func (c *quotaCommand) getQuotas() ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {
-	cluster, err := dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return nil, err
 	}

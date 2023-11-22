@@ -16,9 +16,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -172,7 +172,7 @@ func (c *clientConfigCommand) create(configId string, srApiAvailable bool) func(
 
 func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get kafka cluster from context or flags, including key pair
-	kafkaCluster, err := dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return "", err
 	}

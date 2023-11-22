@@ -36,8 +36,7 @@ func (c *Client) context() context.Context {
 		return context.WithValue(ctx, srsdk.ContextBasicAuth, c.apiKey)
 	}
 
-	// Both parts of this conditional are needed since `c.cfg.Context()` is a dynamic context
-	if c.cfg.Context() != nil && c.cfg.Context().GetState() != nil {
+	if c.cfg.Context().GetState() != nil {
 		dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
 		if err != nil {
 			return ctx

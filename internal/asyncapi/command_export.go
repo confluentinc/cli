@@ -19,9 +19,9 @@ import (
 	"github.com/confluentinc/cli/v3/internal/kafka"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	pkafka "github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
@@ -371,7 +371,7 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 }
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
-	cluster, err := dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
+	cluster, err := pkafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %w`, err)
 	}

@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -75,7 +75,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if kafkaCluster != "" {
-		if _, err := dynamicconfig.FindKafkaCluster(nil, ctx, kafkaCluster); err != nil {
+		if _, err := kafka.FindCluster(nil, ctx, kafkaCluster); err != nil {
 			return err
 		}
 

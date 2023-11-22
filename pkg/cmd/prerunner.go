@@ -17,10 +17,10 @@ import (
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -352,7 +352,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 }
 
 func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *config.Context) (string, string, error) {
-	config, err := dynamicconfig.GetKafkaClusterForCommand(client, ctx)
+	config, err := kafka.GetClusterForCommand(client, ctx)
 	if err != nil {
 		return "", "", err
 	}

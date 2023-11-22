@@ -463,21 +463,18 @@ func (c *Context) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	}
 
 	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
-		c.Config.SetOverwrittenCurrentFlinkComputePool(c.GetCurrentFlinkComputePool())
 		if err := c.SetCurrentFlinkComputePool(computePool); err != nil {
 			return err
 		}
 	}
 
 	if region, _ := cmd.Flags().GetString("region"); region != "" {
-		c.Config.SetOverwrittenCurrentFlinkRegion(c.GetCurrentFlinkRegion())
 		if err := c.SetCurrentFlinkRegion(region); err != nil {
 			return err
 		}
 	}
 
 	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
-		c.Config.SetOverwrittenCurrentFlinkCloudProvider(c.GetCurrentFlinkCloudProvider())
 		if err := c.SetCurrentFlinkCloudProvider(cloud); err != nil {
 			return err
 		}
