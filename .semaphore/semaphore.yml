@@ -19,21 +19,12 @@ blocks:
       jobs:
         - name: linux/amd64
           commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
-
             # Set up Go
             - goenv install --skip-existing
             - export "PATH=$(go env GOPATH)/bin:$PATH"
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
-
-            # Set up Git
-            - export "GOPRIVATE=github.com/confluentinc"
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Run tests
             - make generate-packaging-patch
@@ -49,7 +40,6 @@ blocks:
         always:
           commands:
             - test-results publish . -N "linux/amd64"
-
   - name: darwin/amd64
     dependencies: []
     task:
@@ -59,25 +49,18 @@ blocks:
       jobs:
         - name: darwin/amd64
           commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
-
             # Set up Go
-            - checkout
             - goenv install --skip-existing
             - eval "$(goenv init -)"
             - export "PATH=$GOROOT/bin:$PATH"
             - export "PATH=$GOPATH/bin:$PATH"
 
-            # Set up Git
-            - export "GOPRIVATE=github.com/confluentinc"
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
-
             # Run tests
             - make test
-
+      epilogue:
+        always:
+          commands:
+            - test-results publish . -N "darwin/amd64"
   - name: windows/amd64
     dependencies: []
     task:
@@ -87,20 +70,8 @@ blocks:
       jobs:
         - name: windows/amd64
           commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
-            - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
-
             # Set up Go
             # TODO: https://confluentinc.atlassian.net/browse/DP-9532
-
-            # Set up Git
-            - checkout
-            - $Env:GOPRIVATE = "github.com/confluentinc"
-            # TODO: https://confluentinc.atlassian.net/browse/DP-8234
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Try to restore cached dependencies
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
@@ -112,7 +83,10 @@ blocks:
 
             # Cache Go dependencies
             - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
-
+      epilogue:
+        always:
+          commands:
+            - test-results publish . -N "windows/amd64"
 after_pipeline:
   task:
     jobs:
