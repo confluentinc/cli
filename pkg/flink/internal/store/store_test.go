@@ -23,7 +23,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors/flink"
 	flinkconfig "github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
@@ -1160,9 +1159,7 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 		OrganizationId: "orgId",
 		EnvironmentId:  "envId",
 		ComputePoolId:  "computePoolId",
-		Context: &dynamicconfig.DynamicContext{
-			Context: &config.Context{State: contextState, Config: &config.Config{}},
-		},
+		Context:        &config.Context{State: contextState, Config: &config.Config{}},
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
