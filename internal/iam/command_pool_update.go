@@ -28,17 +28,18 @@ func (c *poolCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
+	cmd.MarkFlagsOneRequired("name", "description", "identity-claim", "filter")
 
 	return cmd
 }
 
 func (c *poolCommand) update(cmd *cobra.Command, args []string) error {
-	description, err := cmd.Flags().GetString("description")
+	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
 	}
@@ -48,17 +49,17 @@ func (c *poolCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	filter, err := cmd.Flags().GetString("filter")
-	if err != nil {
-		return err
-	}
-
-	provider, err := cmd.Flags().GetString("provider")
+	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
 	}
 
 	identityClaim, err := cmd.Flags().GetString("identity-claim")
+	if err != nil {
+		return err
+	}
+
+	filter, err := cmd.Flags().GetString("filter")
 	if err != nil {
 		return err
 	}

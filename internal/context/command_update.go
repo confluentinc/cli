@@ -21,7 +21,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("kafka-cluster", "", "Set the active Kafka cluster for the context.")
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("kafka-cluster", "name")
+	cmd.MarkFlagsOneRequired("name", "kafka-cluster")
 
 	return cmd
 }
