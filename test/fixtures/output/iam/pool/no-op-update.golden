@@ -1,5 +1,4 @@
-Update an identity pool.
-
+Error: at least one of the flags in the group [name description identity-claim filter] is required
 Usage:
   confluent iam pool update <id> [flags]
 
@@ -10,9 +9,9 @@ Update the description of identity pool "pool-123456":
 
 Flags:
       --provider string         REQUIRED: ID of this pool's identity provider.
-      --identity-claim string   Claim specifying the external identity using this identity pool.
       --name string             Name of the identity pool.
       --description string      Description of the identity pool.
+      --identity-claim string   Claim specifying the external identity using this identity pool.
       --filter string           A supported Common Expression Language (CEL) filter expression for group mappings. (default "true")
       --context string          CLI context name.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
@@ -21,3 +20,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
