@@ -24,7 +24,7 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 		}),
 	}
 
-	cmd.Flags().String("name", "", "Update display name.")
+	cmd.Flags().String("name", "", "Update name.")
 	cmd.Flags().String("description", "", "Update description.")
 	cmd.Flags().String("ingress", "", "Update ingress limit for quota.")
 	cmd.Flags().String("egress", "", "Update egress limit for quota.")

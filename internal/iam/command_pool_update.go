@@ -33,7 +33,6 @@ func (c *poolCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
-	cmd.MarkFlagsOneRequired("provider", "name", "description", "identity-claim")
 
 	return cmd
 }
