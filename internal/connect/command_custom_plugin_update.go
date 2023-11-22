@@ -25,14 +25,12 @@ func (c *customPluginCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
+	cmd.MarkFlagsOneRequired("name", "description", "documentation-link", "sensitive-properties")
+
 	return cmd
 }
 
 func (c *customPluginCommand) update(cmd *cobra.Command, args []string) error {
-	if err := errors.CheckNoUpdate(cmd.Flags(), "name", "description", "documentation-link", "sensitive-properties"); err != nil {
-		return err
-	}
-
 	id := args[0]
 	updateCustomPluginRequest := connectcustompluginv1.NewConnectV1CustomConnectorPluginUpdate()
 

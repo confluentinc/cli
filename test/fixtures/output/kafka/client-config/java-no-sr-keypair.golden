@@ -1,6 +1,5 @@
 [WARN] Created client configuration file but Schema Registry is not fully configured.
 
-Reason: no Schema Registry API key or secret specified
 
 Suggestions:
     Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret.

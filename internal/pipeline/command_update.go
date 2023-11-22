@@ -53,29 +53,17 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to activate this pipeline.")
 	cmd.Flags().Bool("update-schema-registry", false, "Update the pipeline with the latest Schema Registry cluster.")
-	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+	cmd.MarkFlagsOneRequired("name", "description", "ksql-cluster", "sql-file", "secret", "activation-privilege", "update-schema-registry")
 
 	return cmd
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"activation-privilege",
-		"description",
-		"ksql-cluster",
-		"name",
-		"secret",
-		"sql-file",
-		"update-schema-registry",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
-
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
