@@ -2,9 +2,11 @@ package kafka
 
 import (
 	"bufio"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,13 +15,16 @@ import (
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 const (
@@ -235,7 +240,11 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	refs, err := sr.ReadSchemaReferences(cmd, false)
+	references, err := cmd.Flags().GetString("references")
+	if err != nil {
+		return err
+	}
+	refs, err := schemaregistry.ReadSchemaReferences(references)
 	if err != nil {
 		return err
 	}
@@ -248,7 +257,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		_ = os.RemoveAll(dir)
 	}()
 
-	keySchemaConfigs := &sr.RegisterSchemaConfigs{
+	keySchemaConfigs := &schemaregistry.RegisterSchemaConfigs{
 		Subject:    keySubject,
 		SchemaDir:  dir,
 		SchemaType: keySerializer.GetSchemaName(),
@@ -264,7 +273,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	valueSchemaConfigs := &sr.RegisterSchemaConfigs{
+	valueSchemaConfigs := &schemaregistry.RegisterSchemaConfigs{
 		Subject:    valueSubject,
 		SchemaDir:  dir,
 		SchemaType: valueSerializer.GetSchemaName(),
@@ -297,7 +306,7 @@ func prepareSerializer(cmd *cobra.Command, topic, mode string) (string, string, 
 	return valueFormat, topicNameStrategy(topic, mode), serializer, nil
 }
 
-func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *schemaregistry.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
@@ -307,18 +316,27 @@ func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.Registe
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 
-		srClient, err := c.GetSchemaRegistryClient(cmd)
+		client, err := c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient)
+		id, err := schemaregistry.RegisterSchemaWithAuth(schemaCfg, client)
 		if err != nil {
 			return nil, nil, err
 		}
-		metaInfo = sr.GetMetaInfoFromSchemaId(id)
 
-		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient)
+		if output.GetFormat(cmd).IsSerialized() {
+			if err := output.SerializedOutput(cmd, &schemaregistry.RegisterSchemaResponse{Id: id}); err != nil {
+				return nil, nil, err
+			}
+		} else {
+			output.Printf(c.Config.EnableColor, "Successfully registered schema with ID \"%d\".\n", id)
+		}
+
+		metaInfo = getMetaInfoFromSchemaId(id)
+
+		referencePathMap, err = schemaregistry.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, client)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -327,7 +345,7 @@ func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.Registe
 	return metaInfo, referencePathMap, nil
 }
 
-func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *schemaregistry.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// Registering schema and fill metaInfo array.
 	var metaInfo []byte // Meta info contains a magic byte and schema ID (4 bytes).
 	referencePathMap := map[string]string{}
@@ -338,13 +356,22 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchem
 			return nil, nil, err
 		}
 
-		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient)
+		id, err := schemaregistry.RegisterSchemaWithAuth(schemaCfg, srClient)
 		if err != nil {
 			return nil, nil, err
 		}
-		metaInfo = sr.GetMetaInfoFromSchemaId(id)
 
-		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient)
+		if output.GetFormat(cmd).IsSerialized() {
+			if err := output.SerializedOutput(cmd, &schemaregistry.RegisterSchemaResponse{Id: id}); err != nil {
+				return nil, nil, err
+			}
+		} else {
+			output.Printf(c.Config.EnableColor, "Successfully registered schema with ID \"%d\".\n", id)
+		}
+
+		metaInfo = getMetaInfoFromSchemaId(id)
+
+		referencePathMap, err = schemaregistry.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -493,12 +520,13 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	metaInfo := []byte{}
 
 	if schemaId.IsSet() {
-		srClient, err := c.GetSchemaRegistryClient(cmd)
+		client, err := c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		schemaString, err := sr.RequestSchemaWithId(schemaId.Value(), subject, srClient)
+		opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(subject)}
+		schemaString, err := client.GetSchema(schemaId.Value(), opts)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -508,12 +536,12 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		schema, referencePathMap, err = sr.SetSchemaPathRef(schemaString, schemaDir, subject, schemaId.Value(), srClient)
+		schema, referencePathMap, err = setSchemaPathRef(schemaString, schemaDir, subject, schemaId.Value(), client)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId.Value())
+		metaInfo = getMetaInfoFromSchemaId(schemaId.Value())
 	} else {
 		format, err = cmd.Flags().GetString(fmt.Sprintf("%s-format", mode))
 		if err != nil {
@@ -528,18 +556,28 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 
 	if schema != "" && !schemaId.IsSet() {
 		// read schema info from local file and register schema
-		schemaCfg := &sr.RegisterSchemaConfigs{
+		schemaCfg := &schemaregistry.RegisterSchemaConfigs{
 			SchemaDir:  schemaDir,
 			SchemaPath: schema,
 			Subject:    subject,
 			Format:     format,
 			SchemaType: serializationProvider.GetSchemaName(),
 		}
-		refs, err := sr.ReadSchemaReferences(cmd, mode == "key")
+
+		flag := "references"
+		if mode == "key" {
+			flag = "key-references"
+		}
+		references, err := cmd.Flags().GetString(flag)
+		if err != nil {
+			return nil, nil, err
+		}
+		refs, err := schemaregistry.ReadSchemaReferences(references)
 		if err != nil {
 			return nil, nil, err
 		}
 		schemaCfg.Refs = refs
+
 		metaInfo, referencePathMap, err = c.registerSchema(cmd, schemaCfg)
 		if err != nil {
 			return nil, nil, err
@@ -551,4 +589,47 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	return serializationProvider, metaInfo, nil
+}
+
+func getMetaInfoFromSchemaId(id int32) []byte {
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(id))
+	return append(metaInfo, schemaIdBuffer...)
+}
+
+func setSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, schemaId int32, client *schemaregistry.Client) (string, map[string]string, error) {
+	// Create temporary file to store schema retrieved (also for cache). Retry if get error retrieving schema or writing temp schema file
+	tempStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.txt", subject, schemaId))
+	tempRefStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.ref", subject, schemaId))
+	var references []srsdk.SchemaReference
+
+	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
+		// TODO: add handler for writing schema failure
+		if err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644); err != nil {
+			return "", nil, err
+		}
+
+		refBytes, err := json.Marshal(schemaString.References)
+		if err != nil {
+			return "", nil, err
+		}
+		if err := os.WriteFile(tempRefStorePath, refBytes, 0644); err != nil {
+			return "", nil, err
+		}
+		references = schemaString.References
+	} else {
+		refBlob, err := os.ReadFile(tempRefStorePath)
+		if err != nil {
+			return "", nil, err
+		}
+		if err := json.Unmarshal(refBlob, &references); err != nil {
+			return "", nil, err
+		}
+	}
+	referencePathMap, err := schemaregistry.StoreSchemaReferences(dir, references, client)
+	if err != nil {
+		return "", nil, err
+	}
+	return tempStorePath, referencePathMap, nil
 }
