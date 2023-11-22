@@ -6,7 +6,6 @@ import (
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
@@ -39,16 +38,6 @@ func (c *poolCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *poolCommand) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"description",
-		"filter",
-		"identity-claim",
-		"name",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
-
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
