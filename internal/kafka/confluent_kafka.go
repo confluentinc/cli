@@ -19,12 +19,11 @@ import (
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -372,7 +371,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient)
+	referencePathMap, err := schemaregistry.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient)
 	if err != nil {
 		return "", nil, err
 	}

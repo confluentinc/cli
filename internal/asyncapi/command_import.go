@@ -26,7 +26,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/retry"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
