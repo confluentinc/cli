@@ -20,10 +20,10 @@ func (c *roleCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	pcmd.AddOutputFlag(cmd)
 	if c.cfg.IsOnPremLogin() {
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
