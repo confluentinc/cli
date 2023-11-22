@@ -37,7 +37,7 @@ var (
 	apiCredentialName = fmt.Sprintf("api-key-%s", apiKeyString)
 	kafkaClusterID    = "anonymous-id"
 	contextName       = "my-context"
-	environmentId     = "acc-123"
+	environmentId     = "env-123456"
 	cloudPlatforms    = []string{
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
@@ -133,10 +133,10 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		PlatformName:       platform.Name,
 		Credential:         loginCredential,
 		CredentialName:     loginCredential.Name,
-		CurrentEnvironment: "acc-123",
+		CurrentEnvironment: "env-123456",
 		Environments: map[string]*EnvironmentContext{
-			"acc-123":  {},
-			"env-flag": {},
+			"env-123456": {},
+			"env-flag":   {},
 		},
 		State: regularOrgContextState,
 	}

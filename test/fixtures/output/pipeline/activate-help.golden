@@ -9,9 +9,9 @@ Request to activate Stream Designer pipeline "pipe-12345".
   $ confluent pipeline activate pipe-12345
 
 Flags:
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string       Kafka cluster ID.
       --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
