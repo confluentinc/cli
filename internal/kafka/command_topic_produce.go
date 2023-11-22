@@ -16,6 +16,7 @@ import (
 
 	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
@@ -114,7 +115,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	cluster, err := dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
@@ -60,8 +61,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 		ctx.Name = name
 
-		ctx.Config.Contexts[ctx.Name] = ctx.Context
-		ctx.Config.ContextStates[ctx.Name] = ctx.Context.State
+		ctx.Config.Contexts[ctx.Name] = ctx
+		ctx.Config.ContextStates[ctx.Name] = ctx.State
 
 		if err := ctx.Config.Save(); err != nil {
 			return err
@@ -74,11 +75,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if kafkaCluster != "" {
-		if _, err := ctx.FindKafkaCluster(nil, kafkaCluster); err != nil {
+		if _, err := dynamicconfig.FindKafkaCluster(nil, ctx, kafkaCluster); err != nil {
 			return err
 		}
 
-		if err := ctx.SetActiveKafkaCluster(kafkaCluster); err != nil {
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster)
+		if err := ctx.Save(); err != nil {
 			return err
 		}
 	}

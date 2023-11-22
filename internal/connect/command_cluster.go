@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
@@ -78,7 +79,7 @@ func (c *clusterCommand) autocompleteConnectors() []string {
 }
 
 func (c *clusterCommand) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	kafkaCluster, err := dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return nil, err
 	}

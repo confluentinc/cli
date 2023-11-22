@@ -26,17 +26,18 @@ var (
 func TestFindKafkaCluster_Unexpired(t *testing.T) {
 	update := time.Now()
 
-	d := &DynamicContext{
-		Context: &config.Context{
-			KafkaClusterContext: &config.KafkaClusterContext{
-				KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{
-					"lkc-123456": {LastUpdate: update, Bootstrap: "pkc-abc12.us-west-2.aws.confluent.cloud:1234"},
+	ctx := &config.Context{
+		KafkaClusterContext: &config.KafkaClusterContext{
+			KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{
+				"lkc-123456": {
+					LastUpdate: update,
+					Bootstrap:  "pkc-abc12.us-west-2.aws.confluent.cloud:1234",
 				},
 			},
 		},
 	}
 
-	config, err := d.FindKafkaCluster(nil, "lkc-123456")
+	config, err := FindKafkaCluster(nil, ctx, "lkc-123456")
 	require.NoError(t, err)
 	require.True(t, config.LastUpdate.Equal(update))
 }
@@ -44,14 +45,12 @@ func TestFindKafkaCluster_Unexpired(t *testing.T) {
 func TestFindKafkaCluster_Expired(t *testing.T) {
 	update := time.Now().Add(-7 * 24 * time.Hour)
 
-	d := &DynamicContext{
-		Context: &config.Context{
-			CurrentEnvironment:  "env-123456",
-			KafkaClusterContext: &config.KafkaClusterContext{KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{"lkc-123456": {LastUpdate: update}}},
-			Credential:          &config.Credential{CredentialType: config.Username},
-			State:               &config.ContextState{AuthToken: "token"},
-			Config:              &config.Config{},
-		},
+	ctx := &config.Context{
+		CurrentEnvironment:  "env-123456",
+		KafkaClusterContext: &config.KafkaClusterContext{KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{"lkc-123456": {LastUpdate: update}}},
+		Credential:          &config.Credential{CredentialType: config.Username},
+		State:               &config.ContextState{AuthToken: "token"},
+		Config:              &config.Config{},
 	}
 
 	client := &ccloudv2.Client{
@@ -75,7 +74,7 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 		},
 	}
 
-	config, err := d.FindKafkaCluster(client, "lkc-123456")
+	config, err := FindKafkaCluster(client, ctx, "lkc-123456")
 	require.NoError(t, err)
 	require.True(t, config.LastUpdate.After(update))
 }
@@ -83,7 +82,7 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 	tests := []struct {
 		name           string
-		ctx            *DynamicContext
+		ctx            *config.Context
 		cluster        string
 		environment    string
 		suggestionsMsg string
@@ -144,39 +143,37 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 	}
 }
 
-func getBaseContext() *DynamicContext {
-	cfg := config.AuthenticatedCloudConfigMock()
-	return NewDynamicContext(cfg.Context())
+func getBaseContext() *config.Context {
+	return config.AuthenticatedCloudConfigMock().Context()
 }
 
-func getClusterFlagContext() *DynamicContext {
-	cfg := config.AuthenticatedCloudConfigMock()
-	clusterFlagContext := NewDynamicContext(cfg.Context())
+func getClusterFlagContext() *config.Context {
+	ctx := getBaseContext()
 	// create cluster that will be used in "--cluster" flag value
-	clusterFlagContext.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &config.KafkaClusterConfig{
+	ctx.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &config.KafkaClusterConfig{
 		ID:   flagCluster,
 		Name: "miles",
 	}
-	return clusterFlagContext
+	return ctx
 }
 
-func getEnvFlagContext() *DynamicContext {
-	cfg := config.AuthenticatedCloudConfigMock()
-	envFlagContext := NewDynamicContext(cfg.Context())
-	envFlagContext.Environments[flagEnvironment] = &config.EnvironmentContext{}
-	return envFlagContext
+func getEnvFlagContext() *config.Context {
+	ctx := getBaseContext()
+	ctx.Environments[flagEnvironment] = &config.EnvironmentContext{}
+	return ctx
 }
 
-func getEnvAndClusterFlagContext() *DynamicContext {
-	envAndClusterFlagContext := getEnvFlagContext()
+func getEnvAndClusterFlagContext() *config.Context {
+	ctx := getEnvFlagContext()
 
-	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &config.KafkaEnvContext{
-		ActiveKafkaCluster:  "",
-		KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{},
+	ctx.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &config.KafkaEnvContext{
+		KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{
+			flagClusterInEnv: {
+				ID:   flagClusterInEnv,
+				Name: "miles2",
+			},
+		},
 	}
-	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment].KafkaClusterConfigs[flagClusterInEnv] = &config.KafkaClusterConfig{
-		ID:   flagClusterInEnv,
-		Name: "miles2",
-	}
-	return envAndClusterFlagContext
+
+	return ctx
 }

@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -66,12 +67,12 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		if resourceType != resource.KafkaCluster {
 			return fmt.Errorf(nonKafkaNotImplementedErrorMsg)
 		}
-		cluster, err = c.Context.FindKafkaCluster(c.V2Client, clusterId)
+		cluster, err = dynamicconfig.FindKafkaCluster(c.V2Client, c.Context, clusterId)
 		if err != nil {
 			return err
 		}
 	} else {
-		cluster, err = c.Context.GetKafkaClusterForCommand(c.V2Client)
+		cluster, err = dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
 		if err != nil {
 			// Replace the error msg since it suggests flags which are unavailable with this command
 			return errors.NewErrorWithSuggestions(

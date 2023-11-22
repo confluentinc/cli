@@ -5,78 +5,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-type DynamicContext struct {
-	*config.Context
-}
-
-func NewDynamicContext(context *config.Context) *DynamicContext {
-	if context == nil {
-		return nil
-	}
-	return &DynamicContext{Context: context}
-}
-
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
-	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
-		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln(d.Config.EnableColor, "[WARN] The `--environment` flag is ignored when using API key credentials.")
-		} else {
-			ctx := d.Config.Context()
-			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
-			ctx.SetCurrentEnvironment(environment)
-		}
-	}
-
-	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
-		if d.GetCredentialType() == config.APIKey {
-			output.ErrPrintln(d.Config.EnableColor, "[WARN] The `--cluster` flag is ignored when using API key credentials.")
-		} else {
-			ctx := d.Config.Context()
-			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-			ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
-		}
-	}
-
-	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
-		ctx := d.Config.Context()
-		d.Config.SetOverwrittenFlinkComputePool(ctx.GetCurrentFlinkComputePool())
-		if err := ctx.SetCurrentFlinkComputePool(computePool); err != nil {
-			return err
-		}
-	}
-
-	if region, _ := cmd.Flags().GetString("region"); region != "" {
-		ctx := d.Config.Context()
-		if err := ctx.SetCurrentFlinkRegion(region); err != nil {
-			return err
-		}
-	}
-
-	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
-		ctx := d.Config.Context()
-		if err := ctx.SetCurrentFlinkCloudProvider(cloud); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (d *DynamicContext) GetKafkaClusterForCommand(client *ccloudv2.Client) (*config.KafkaClusterConfig, error) {
-	if d.KafkaClusterContext == nil {
+func GetKafkaClusterForCommand(client *ccloudv2.Client, ctx *config.Context) (*config.KafkaClusterConfig, error) {
+	if ctx.KafkaClusterContext == nil {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
 
-	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
+	clusterId := ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	if clusterId == "" {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
@@ -85,7 +25,7 @@ func (d *DynamicContext) GetKafkaClusterForCommand(client *ccloudv2.Client) (*co
 		return nil, fmt.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
 	}
 
-	cluster, err := d.FindKafkaCluster(client, clusterId)
+	cluster, err := FindKafkaCluster(client, ctx, clusterId)
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 	}
@@ -93,8 +33,8 @@ func (d *DynamicContext) GetKafkaClusterForCommand(client *ccloudv2.Client) (*co
 	return cluster, nil
 }
 
-func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId string) (*config.KafkaClusterConfig, error) {
-	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil && config.Bootstrap != "" {
+func FindKafkaCluster(client *ccloudv2.Client, ctx *config.Context, clusterId string) (*config.KafkaClusterConfig, error) {
+	if config := ctx.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil && config.Bootstrap != "" {
 		if clusterId == "anonymous-id" {
 			return config, nil
 		}
@@ -105,7 +45,7 @@ func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId str
 	}
 
 	// Resolve cluster details if not found locally.
-	environmentId, err := d.EnvironmentId()
+	environmentId, err := ctx.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
@@ -124,56 +64,10 @@ func (d *DynamicContext) FindKafkaCluster(client *ccloudv2.Client, clusterId str
 		LastUpdate:   time.Now(),
 	}
 
-	d.KafkaClusterContext.AddKafkaClusterConfig(config)
-	if err := d.Save(); err != nil {
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(config)
+	if err := ctx.Save(); err != nil {
 		return nil, err
 	}
 
 	return config, nil
-}
-
-func (d *DynamicContext) SetActiveKafkaCluster(clusterId string) error {
-	d.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
-	return d.Save()
-}
-
-func (d *DynamicContext) RemoveKafkaClusterConfig(clusterId string) error {
-	d.KafkaClusterContext.RemoveKafkaCluster(clusterId)
-	return d.Save()
-}
-
-func (d *DynamicContext) HasLogin() bool {
-	return d.GetCredentialType() == config.Username && d.GetAuthToken() != ""
-}
-
-func (d *DynamicContext) EnvironmentId() (string, error) {
-	if id := d.GetCurrentEnvironment(); id != "" {
-		return id, nil
-	}
-
-	return "", errors.NewErrorWithSuggestions("no environment found", "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-}
-
-func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
-	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
-		return "", "", nil
-	}
-	apiKey, err := cmd.Flags().GetString("api-key")
-	if err != nil {
-		return "", "", err
-	}
-
-	apiSecret, err := cmd.Flags().GetString("api-secret")
-	if err != nil {
-		return "", "", err
-	}
-
-	if apiKey == "" && apiSecret != "" {
-		return "", "", errors.NewErrorWithSuggestions(
-			"no API key specified",
-			"Use the `--api-key` flag to specify an API key.",
-		)
-	}
-
-	return apiKey, apiSecret, nil
 }

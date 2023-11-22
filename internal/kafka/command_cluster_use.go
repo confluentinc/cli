@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -30,18 +31,15 @@ func (c *clusterCommand) newUseCommand() *cobra.Command {
 func (c *clusterCommand) use(_ *cobra.Command, args []string) error {
 	id := args[0]
 
-	if _, err := c.Context.FindKafkaCluster(c.V2Client, id); err != nil {
+	if _, err := dynamicconfig.FindKafkaCluster(c.V2Client, c.Context, id); err != nil {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, id),
 			errors.ChooseRightEnvironmentSuggestions,
 		)
 	}
 
-	if _, err := c.Context.FindKafkaCluster(c.V2Client, id); err != nil {
-		return err
-	}
-
-	if err := c.Context.SetActiveKafkaCluster(id); err != nil {
+	c.Context.KafkaClusterContext.SetActiveKafkaCluster(id)
+	if err := c.Config.Save(); err != nil {
 		return err
 	}
 

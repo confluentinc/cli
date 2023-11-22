@@ -10,6 +10,7 @@ import (
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -134,7 +135,7 @@ func (c *command) autocompletePipelines() []string {
 }
 
 func (c *command) getPipelines() ([]streamdesignerv1.SdV1Pipeline, error) {
-	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	cluster, err := dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -42,7 +43,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	kafkaCluster, err := dynamicconfig.GetKafkaClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}

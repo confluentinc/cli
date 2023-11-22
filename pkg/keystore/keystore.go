@@ -7,11 +7,11 @@ import (
 )
 
 type ConfigKeyStore struct {
-	Config *dynamicconfig.DynamicConfig
+	Config *config.Config
 }
 
 func (c *ConfigKeyStore) HasAPIKey(client *ccloudv2.Client, key, clusterId string) (bool, error) {
-	kcc, err := c.Config.Context().FindKafkaCluster(client, clusterId)
+	kcc, err := dynamicconfig.FindKafkaCluster(client, c.Config.Context(), clusterId)
 	if err != nil {
 		return false, err
 	}
@@ -22,7 +22,7 @@ func (c *ConfigKeyStore) HasAPIKey(client *ccloudv2.Client, key, clusterId strin
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
 func (c *ConfigKeyStore) StoreAPIKey(client *ccloudv2.Client, key *config.APIKeyPair, clusterId string) error {
-	kcc, err := c.Config.Context().FindKafkaCluster(client, clusterId)
+	kcc, err := dynamicconfig.FindKafkaCluster(client, c.Config.Context(), clusterId)
 	if err != nil {
 		return err
 	}

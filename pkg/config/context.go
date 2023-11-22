@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/v3/pkg/auth/sso"
@@ -76,6 +78,10 @@ func (c *Context) validate() error {
 
 func (c *Context) Save() error {
 	return c.Config.Save()
+}
+
+func (c *Context) HasLogin() bool {
+	return c.GetCredentialType() == Username && c.GetAuthToken() != ""
 }
 
 func (c *Context) HasBasicMDSLogin() bool {
@@ -188,6 +194,14 @@ func (c *Context) GetSuspensionStatus() *ccloudv1.SuspensionStatus {
 	return c.GetOrganization().GetSuspensionStatus()
 }
 
+func (c *Context) EnvironmentId() (string, error) {
+	if id := c.GetCurrentEnvironment(); id != "" {
+		return id, nil
+	}
+
+	return "", errors.NewErrorWithSuggestions("no environment found", "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
+}
+
 func (c *Context) GetCurrentEnvironment() string {
 	if c != nil && c.CurrentEnvironment != "" {
 		return c.CurrentEnvironment
@@ -254,13 +268,13 @@ func (c *Context) GetCurrentFlinkCloudProvider() string {
 	return ""
 }
 
-func (c *Context) SetCurrentFlinkCloudProvider(id string) error {
+func (c *Context) SetCurrentFlinkCloudProvider(cloud string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
 		return fmt.Errorf("no environment found")
 	}
 
-	ctx.CurrentFlinkCloudProvider = id
+	ctx.CurrentFlinkCloudProvider = cloud
 	return nil
 }
 func (c *Context) GetCurrentFlinkRegion() string {
@@ -427,4 +441,47 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 	output.ErrPrintf(false, "The issues are the following: %s.\n", strings.Join(problems, ", "))
 	output.ErrPrintln(false, "Deleting the malformed entries.")
 	output.ErrPrintf(false, "You can re-add the API key pair with `confluent api-key store --resource %s`\n", cluster.ID)
+}
+
+func (c *Context) ParseFlagsIntoContext(cmd *cobra.Command) error {
+	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
+		if c.GetCredentialType() == APIKey {
+			output.ErrPrintln(c.Config.EnableColor, "[WARN] The `--environment` flag is ignored when using API key credentials.")
+		} else {
+			c.Config.SetOverwrittenCurrentEnvironment(c.CurrentEnvironment)
+			c.SetCurrentEnvironment(environment)
+		}
+	}
+
+	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
+		if c.GetCredentialType() == APIKey {
+			output.ErrPrintln(c.Config.EnableColor, "[WARN] The `--cluster` flag is ignored when using API key credentials.")
+		} else {
+			c.Config.SetOverwrittenCurrentKafkaCluster(c.KafkaClusterContext.GetActiveKafkaClusterId())
+			c.KafkaClusterContext.SetActiveKafkaCluster(cluster)
+		}
+	}
+
+	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
+		c.Config.SetOverwrittenCurrentFlinkComputePool(c.GetCurrentFlinkComputePool())
+		if err := c.SetCurrentFlinkComputePool(computePool); err != nil {
+			return err
+		}
+	}
+
+	if region, _ := cmd.Flags().GetString("region"); region != "" {
+		c.Config.SetOverwrittenCurrentFlinkRegion(c.GetCurrentFlinkRegion())
+		if err := c.SetCurrentFlinkRegion(region); err != nil {
+			return err
+		}
+	}
+
+	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
+		c.Config.SetOverwrittenCurrentFlinkCloudProvider(c.GetCurrentFlinkCloudProvider())
+		if err := c.SetCurrentFlinkCloudProvider(cloud); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

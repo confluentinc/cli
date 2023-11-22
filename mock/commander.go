@@ -51,7 +51,7 @@ func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(*cobra.Comm
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {
 			command.Version = c.Version
-			command.Config.Config = c.Config
+			command.Config = c.Config
 		}
 		return nil
 	}
@@ -65,7 +65,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(*c
 		c.setClient(command)
 
 		ctx := command.Config.Context()
-		if ctx == nil || !ctx.HasLogin() {
+		if !ctx.HasLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
