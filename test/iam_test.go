@@ -282,7 +282,7 @@ func (s *CLITestSuite) TestIamPool() {
 		{args: "iam pool delete pool-55555 --provider op-12345", input: "identity-pool\n", fixture: "iam/identity-pool/delete-prompt.golden"},
 		{args: "iam pool delete pool-1 --provider op-12345 --force", fixture: "iam/identity-pool/delete-dne.golden", exitCode: 1},
 		{args: "iam pool describe pool-12345 --provider op-12345", fixture: "iam/identity-pool/describe.golden"},
-		{args: `iam pool update pool-12345 --provider op-12345 --name "updated-name" --description "updated description" --identity-claim new-sub --filter "claims.iss=https://new-company.new-provider.com"`, fixture: "iam/identity-pool/update.golden"},
+		{args: `iam pool update pool-12345 --provider op-12345 --name "updated name" --description "updated description" --identity-claim new-sub --filter "claims.iss=https://new-company.new-provider.com"`, fixture: "iam/identity-pool/update.golden"},
 		{args: "iam pool update pool-12345 --provider op-12345", fixture: "iam/identity-pool/no-op-update.golden", exitCode: 1},
 		{args: "iam pool list --provider op-12345", fixture: "iam/identity-pool/list.golden"},
 	}

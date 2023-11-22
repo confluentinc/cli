@@ -237,13 +237,13 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 		// comment out SR and warn users
 		if apiKeyPair.Key == "" && apiKeyPair.Secret == "" {
 			// both key and secret empty
-			configFile = commentAndWarnAboutSchemaRegistry("no Schema Registry API key or secret specified", "Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret.", configFile)
+			configFile = commentAndWarnAboutSchemaRegistry("Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret.", configFile)
 		} else if apiKeyPair.Key == "" {
 			// only key empty
-			configFile = commentAndWarnAboutSchemaRegistry("no Schema Registry API key specified", "Pass the `--schema-registry-api-key` flag to specify the Schema Registry API key.", configFile)
+			configFile = commentAndWarnAboutSchemaRegistry("Pass the `--schema-registry-api-key` flag to specify the Schema Registry API key.", configFile)
 		} else {
 			// only secret empty
-			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(`no Schema Registry API secret for key "%s" specified`, apiKeyPair.Key), "Pass the `--schema-registry-api-secret` flag to specify the Schema Registry API secret.", configFile)
+			configFile = commentAndWarnAboutSchemaRegistry("Pass the `--schema-registry-api-secret` flag to specify the Schema Registry API secret.", configFile)
 		}
 
 		return configFile, nil
@@ -343,8 +343,8 @@ func replaceTemplates(configFile string, m map[string]string) string {
 	return configFile
 }
 
-func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) string {
-	warning := errors.NewWarningWithSuggestions("Created client configuration file but Schema Registry is not fully configured.", reason, suggestions+"\nAlternatively, you can configure Schema Registry manually in the client configuration file before using it.")
+func commentAndWarnAboutSchemaRegistry(suggestions, configFile string) string {
+	warning := errors.NewWarningWithSuggestions("Created client configuration file but Schema Registry is not fully configured.", suggestions+"\nAlternatively, you can configure Schema Registry manually in the client configuration file before using it.")
 	output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
 
 	return commentSchemaRegistryLines(configFile)
