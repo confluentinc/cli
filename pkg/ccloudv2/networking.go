@@ -261,3 +261,8 @@ func (c *Client) DeleteNetworkLinkService(environment, id string) error {
 	httpResp, err := c.NetworkingClient.NetworkLinkServicesNetworkingV1Api.DeleteNetworkingV1NetworkLinkService(c.networkingApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) CreateNetworkLinkService(service networkingv1.NetworkingV1NetworkLinkService) (networkingv1.NetworkingV1NetworkLinkService, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworkLinkServicesNetworkingV1Api.CreateNetworkingV1NetworkLinkService(c.networkingApiContext()).NetworkingV1NetworkLinkService(service).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
