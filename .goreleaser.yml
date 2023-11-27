@@ -62,7 +62,7 @@ builds:
         - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
         - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
-  - id: confluent-darwin-amd64-homebrew
+  - id: confluent-darwin-amd64-disableupdates
     binary: confluent
     main: cmd/confluent/main.go
     flags:
@@ -106,7 +106,7 @@ builds:
         - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
         - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
-  - id: confluent-darwin-arm64-homebrew
+  - id: confluent-darwin-arm64-disableupdates
     binary: confluent
     main: cmd/confluent/main.go
     flags:
@@ -141,7 +141,7 @@ builds:
       - v1
     prebuilt:
       path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
-  - id: confluent-linux-homebrew
+  - id: confluent-linux-disableupdates
     builder: prebuilt
     goos:
       - linux
@@ -151,7 +151,7 @@ builds:
     goamd64:
       - v1
     prebuilt:
-      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-homebrew_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
+      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-disableupdates_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
   - id: confluent-windows-amd64
     binary: confluent
     main: cmd/confluent/main.go
@@ -208,9 +208,9 @@ archives:
   - id: archive-homebrew
     format: tar.gz
     builds:
-      - confluent-darwin-amd64-homebrew
-      - confluent-darwin-arm64-homebrew
-      - confluent-linux-homebrew
+      - confluent-darwin-amd64-disableupdates
+      - confluent-darwin-arm64-disableupdates
+      - confluent-linux-disableupdates
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_homebrew"
     wrap_in_directory: "{{ .ProjectName }}"
     files:
@@ -230,7 +230,7 @@ archives:
       - confluent-alpine-amd64
       - confluent-alpine-arm64
     name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
-    
+
 dockers:
   - ids:
       - confluent-alpine-amd64
@@ -241,6 +241,7 @@ dockers:
     dockerfile: "docker/Dockerfile"
     build_flag_templates:
       - --platform=linux/amd64
+    skip_push: "{{ .Env.DRY_RUN }}"
   - ids:
       - confluent-alpine-arm64
     goarch: arm64
@@ -250,6 +251,7 @@ dockers:
     dockerfile: "docker/Dockerfile"
     build_flag_templates:
       - --platform=linux/arm64
+    skip_push: "{{ .Env.DRY_RUN }}"
 
 docker_manifests:
   - name_template: "confluentinc/confluent-cli:{{ .Version }}"
