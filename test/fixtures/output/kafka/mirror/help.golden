@@ -4,13 +4,15 @@ Usage:
   confluent kafka mirror [command]
 
 Available Commands:
-  create      Create a mirror topic under the link.
-  describe    Describe a mirror topic.
-  failover    Failover mirror topics.
-  list        List mirror topics in a cluster or under a cluster link.
-  pause       Pause mirror topics.
-  promote     Promote mirror topics.
-  resume      Resume mirror topics.
+  create            Create a mirror topic under the link.
+  describe          Describe a mirror topic.
+  failover          Failover mirror topics.
+  list              List mirror topics in a cluster or under a cluster link.
+  pause             Pause mirror topics.
+  promote           Promote mirror topics.
+  resume            Resume mirror topics.
+  reverse-and-pause Reverses the direction of mirroring on local topics and pauses remote mirror topics.
+  reverse-and-start Reverses the direction of mirroring on local topics and starts remote mirror topics.
 
 Global Flags:
   -h, --help            Show help for this command.
