@@ -1,8 +1,8 @@
---- cli/Makefile	2023-09-29 13:08:09.000000000 -0700
-+++ debian/Makefile	2023-09-22 14:40:16.000000000 -0700
-@@ -1,120 +1,130 @@
+--- cli/Makefile	2023-11-27 12:52:07.000000000 -0800
++++ debian/Makefile	2023-11-27 11:39:55.000000000 -0800
+@@ -1,125 +1,130 @@
 -SHELL := /bin/bash
--GORELEASER_VERSION := v1.17.2
+-GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
  
 -# Compile natively based on the current system
@@ -81,6 +81,11 @@
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
+-
+-S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
+-S3_DEB_RPM_PROD_PREFIX=confluent-cli
+-S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
+-S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 +endif
