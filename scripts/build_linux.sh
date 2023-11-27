@@ -8,17 +8,6 @@ trap cleanup EXIT
 
 trap "exit 1" ERR
 
-function dry-run {
-  if [ "$DRY_RUN" = "true" ]; then
-    echo "[DRY_RUN] $1"
-  else
-    $1
-  fi
-}
-
-rm -rf deb/ rpm/
-mkdir -p deb rpm
-
 aws s3 sync s3://confluent-cli-release/confluent-cli/deb deb --exclude '*index.html' --exclude '' --exclude '*/'
 aws s3 sync s3://confluent-cli-release/confluent-cli/rpm rpm --exclude '*index.html' --exclude '' --exclude '*/'
 
@@ -56,6 +45,4 @@ docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
 docker container rm cli-linux-arm64-builder
 
 #TODO: create new make target to move from staging to prod and run s3-repo-utils
-dry-run "aws s3 sync deb s3://confluent-cli-release/confluent-cli-staging/$VERSION/deb"
-dry-run "aws s3 sync rpm s3://confluent-cli-release/confluent-cli-staging/$VERSION/rpm"
 #dry-run "s3-repo-utils -v website index --fake-index --prefix confluent-cli/ confluent-cli-release"
