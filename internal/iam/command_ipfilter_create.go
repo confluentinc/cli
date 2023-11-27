@@ -31,7 +31,6 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("resource-group"))
 	cobra.CheckErr(cmd.MarkFlagRequired("ip-groups"))
 
 	return cmd
