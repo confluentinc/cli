@@ -140,6 +140,11 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		IpGroupIdObjects[i] = iamv2.GlobalObjectReference{Id: ipGroupId}
 	}
 
+	if len(IpGroupIdObjects) == 0 {
+		return errors.NewErrorWithSuggestions("Cannot remove all IP groups from IP filter",
+			"Please double check the IP filter you are updating. Use `confluent iam ip-filter describe <ip-filter>` to see the IP groups associated with an IP filter.")
+	}
+
 	updateIpFilter.IpGroups = &IpGroupIdObjects
 
 	filter, err := c.V2Client.UpdateIamIpFilter(updateIpFilter, currentIpFilterId)
