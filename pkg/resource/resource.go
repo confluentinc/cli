@@ -31,6 +31,8 @@ const (
 	FlinkStatement              = "Flink SQL statement"
 	IdentityPool                = "identity pool"
 	IdentityProvider            = "identity provider"
+	IpGroup                     = "IP group"
+	IpFilter                    = "IP filter"
 	KafkaCluster                = "Kafka cluster"
 	KsqlCluster                 = "KSQL cluster"
 	MirrorTopic                 = "mirror topic"

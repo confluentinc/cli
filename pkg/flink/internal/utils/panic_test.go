@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/bradleyjkemp/cupaloy"
+	"github.com/bradleyjkemp/cupaloy/v2"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 )
