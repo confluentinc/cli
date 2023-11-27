@@ -26,8 +26,8 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddResourceGroupFlag(cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
+	pcmd.AddResourceGroupFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
