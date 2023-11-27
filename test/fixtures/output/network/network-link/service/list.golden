@@ -1,6 +1,6 @@
      ID     |   Name    | Network  | Description |     Accepted Environments      |      Accepted Networks       | Phase  
 ------------+-----------+----------+-------------+--------------------------------+------------------------------+--------
-  nls-11111 | test-nls1 | n-abcde1 | test nls    | env-11111                      | n-abcde2                     | READY  
-  nls-22222 | test-nls2 | n-abcde1 | test nls    | env-11111, env-22222           | n-abcde2, n-abcde3           | READY  
-  nls-33333 | test-nls3 | n-abcde1 | test nls    | env-11111, env-22222,          | n-abcde2, n-abcde3, n-abcde4 | READY  
+  nls-11111 | nls-test1 | n-abcde1 | test nls    | env-11111                      | n-abcde2                     | READY  
+  nls-22222 | nls-test2 | n-abcde1 | test nls    | env-11111, env-22222           | n-abcde2, n-abcde3           | READY  
+  nls-33333 | nls-test3 | n-abcde1 | test nls    | env-11111, env-22222,          | n-abcde2, n-abcde3, n-abcde4 | READY  
             |           |          |             | env-33333                      |                              |        

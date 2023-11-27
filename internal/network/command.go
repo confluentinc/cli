@@ -241,3 +241,30 @@ func (c *command) addPrivateLinkAttachmentFlag(cmd *cobra.Command) {
 	cmd.Flags().String("attachment", "", "Private link attachment ID.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "attachment", c.validPrivateLinkAttachmentArgsMultiple)
 }
+
+func addAcceptedNetworksFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("accepted-networks", nil, "A comma-separated list of accept policy networks.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "accepted-networks", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteNetworks(c.V2Client, environmentId)
+	})
+}
+
+func addAcceptedEnvironmentsFlag(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("accepted-environments", nil, "A comma-separated list of accept policy environments.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "accepted-environments", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return pcmd.AutocompleteEnvironments(command.Client, command.V2Client)
+	})
+}
