@@ -95,7 +95,7 @@ require (
 	golang.org/x/text v0.14.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.28.3
+	k8s.io/apimachinery v0.28.4
 	pgregory.net/rapid v1.1.0
 )
 
