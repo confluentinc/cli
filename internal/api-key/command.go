@@ -60,10 +60,10 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	return cmd
 }
 
-func (c *command) addResourceFlag(cmd *cobra.Command, addCloud bool) {
+func (c *command) addResourceFlag(cmd *cobra.Command, store bool) {
 	description := "The ID of the resource the API key is for."
-	if addCloud {
-		description += ` Use "cloud" for a Cloud API key.`
+	if !store {
+		description += ` Use "cloud" for a Cloud API key, or "flink" for a Flink API key.`
 	}
 
 	cmd.Flags().String("resource", "", description)
@@ -111,8 +111,9 @@ func (c *command) addResourceFlag(cmd *cobra.Command, addCloud bool) {
 			i++
 		}
 
-		if addCloud {
+		if store {
 			suggestions = append(suggestions, "cloud")
+			suggestions = append(suggestions, "flink")
 		}
 
 		return suggestions
