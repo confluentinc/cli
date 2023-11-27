@@ -1,6 +1,6 @@
 {
   "id": "nls-123456",
-  "name": "test-nls",
+  "name": "nls-test",
   "network": "n-abcde1",
   "environment": "env-00000",
   "description": "test nls",

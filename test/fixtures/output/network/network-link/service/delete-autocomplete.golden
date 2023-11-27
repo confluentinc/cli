@@ -1,5 +1,5 @@
-nls-11111	test-nls1
-nls-22222	test-nls2
-nls-33333	test-nls3
+nls-11111	nls-test1
+nls-22222	nls-test2
+nls-33333	nls-test3
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

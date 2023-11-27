@@ -573,7 +573,7 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
 	}
 }
 
-func (s *CLITestSuite) TestNetworkNetworkLinkServiceLDelete() {
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceDelete() {
 	tests := []CLITest{
 		{args: "network network-link service delete nls-111111 --force", fixture: "network/network-link/service/delete.golden"},
 		{args: "network network-link service delete nls-111111", input: "y\n", fixture: "network/network-link/service/delete-prompt.golden"},
@@ -589,10 +589,26 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceLDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkLinkServiceCreate() {
+	tests := []CLITest{
+		{args: "network network-link service create", fixture: "network/network-link/service/create-missing-args.golden", exitCode: 1},
+		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create-accepted-environments.golden"},
+		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accepted-networks n-111111,n-222222", fixture: "network/network-link/service/create-accepted-networks.golden"},
+		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accepted-networks n-111111,n-222222 --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create.golden"},
+		{args: "network network-link service create nls-duplicate --network n-123455", fixture: "network/network-link/service/create-duplicate.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkNetworkLinkService_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network network-link service describe ""`, login: "cloud", fixture: "network/network-link/service/describe-autocomplete.golden"},
 		{args: `__complete network network-link service delete ""`, login: "cloud", fixture: "network/network-link/service/delete-autocomplete.golden"},
+		{args: `__complete network network-link service create nls-test --network ""`, login: "cloud", fixture: "network/network-link/service/create-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
