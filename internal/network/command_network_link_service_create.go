@@ -18,14 +18,14 @@ func (c *command) newNetworkLinkServiceCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a network link service.",
-				Code: "confluent network network-link service create test_nls --network n-123456 --description 'test description' --accept-environments env-00000",
+				Code: "confluent network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-111111,env-222222",
 			},
 		),
 	}
 
 	addNetworkFlag(cmd, c.AuthenticatedCLICommand)
-	addAcceptNetworksFlag(cmd, c.AuthenticatedCLICommand)
-	addAcceptEnvironmentsFlag(cmd, c.AuthenticatedCLICommand)
+	addAcceptedNetworksFlag(cmd, c.AuthenticatedCLICommand)
+	addAcceptedEnvironmentsFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("description", "", "Network link service description.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -54,12 +54,12 @@ func (c *command) networkLinkServiceCreate(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	acceptedNetworks, err := cmd.Flags().GetStringSlice("accept-networks")
+	acceptedNetworks, err := cmd.Flags().GetStringSlice("accepted-networks")
 	if err != nil {
 		return err
 	}
 
-	acceptedEnvironments, err := cmd.Flags().GetStringSlice("accept-environments")
+	acceptedEnvironments, err := cmd.Flags().GetStringSlice("accepted-environments")
 	if err != nil {
 		return err
 	}

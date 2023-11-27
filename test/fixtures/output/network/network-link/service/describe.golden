@@ -1,7 +1,7 @@
 +-----------------------+----------------------+
 | ID                    | nls-123456           |
 | Name                  | nls-test             |
-| Network ID            | n-abcde1             |
+| Network               | n-abcde1             |
 | Environment           | env-00000            |
 | Description           | test nls             |
 | Accepted Environments | env-11111, env-22222 |

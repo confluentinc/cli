@@ -242,9 +242,9 @@ func (c *command) addPrivateLinkAttachmentFlag(cmd *cobra.Command) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "attachment", c.validPrivateLinkAttachmentArgsMultiple)
 }
 
-func addAcceptNetworksFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
-	cmd.Flags().StringSlice("accept-networks", nil, "A comma-separated list of accept policy networks.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "accept-networks", func(cmd *cobra.Command, args []string) []string {
+func addAcceptedNetworksFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("accepted-networks", nil, "A comma-separated list of accept policy networks.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "accepted-networks", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
@@ -258,9 +258,9 @@ func addAcceptNetworksFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) 
 	})
 }
 
-func addAcceptEnvironmentsFlag(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
-	cmd.Flags().StringSlice("accept-environments", nil, "A comma-separated list of accept policy environments.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "accept-environments", func(cmd *cobra.Command, args []string) []string {
+func addAcceptedEnvironmentsFlag(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("accepted-environments", nil, "A comma-separated list of accept policy environments.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "accepted-environments", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}

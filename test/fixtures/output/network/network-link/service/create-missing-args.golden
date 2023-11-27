@@ -5,16 +5,16 @@ Usage:
 Examples:
 Create a network link service.
 
-  $ confluent network network-link service create test_nls --network n-123456 --description 'test description' --accept-environments env-00000
+  $ confluent network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-111111,env-222222
 
 Flags:
-      --network string                Network ID.
-      --accept-networks strings       A comma-separated list of accept policy networks.
-      --accept-environments strings   A comma-separated list of accept policy environments.
-      --description string            Network link service description.
-      --context string                CLI context name.
-      --environment string            Environment ID.
-  -o, --output string                 Specify the output format as "human", "json", or "yaml". (default "human")
+      --network string                  Network ID.
+      --accepted-networks strings       A comma-separated list of accept policy networks.
+      --accepted-environments strings   A comma-separated list of accept policy environments.
+      --description string              Network link service description.
+      --context string                  CLI context name.
+      --environment string              Environment ID.
+  -o, --output string                   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
