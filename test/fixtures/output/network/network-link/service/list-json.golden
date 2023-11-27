@@ -1,7 +1,7 @@
 [
   {
     "id": "nls-11111",
-    "name": "test-nls1",
+    "name": "nls-test1",
     "network": "n-abcde1",
     "description": "test nls",
     "accepted_environments": ["env-11111"],
@@ -10,7 +10,7 @@
   },
   {
     "id": "nls-22222",
-    "name": "test-nls2",
+    "name": "nls-test2",
     "network": "n-abcde1",
     "description": "test nls",
     "accepted_environments": ["env-11111", "env-22222"],
@@ -19,7 +19,7 @@
   },
   {
     "id": "nls-33333",
-    "name": "test-nls3",
+    "name": "nls-test3",
     "network": "n-abcde1",
     "description": "test nls",
     "accepted_environments": ["env-11111", "env-22222", "env-33333"],
