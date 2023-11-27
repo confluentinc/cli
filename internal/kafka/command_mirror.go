@@ -41,6 +41,8 @@ func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newPauseCommand())
 	cmd.AddCommand(c.newPromoteCommand())
 	cmd.AddCommand(c.newResumeCommand())
+	cmd.AddCommand(c.newReverseAndStartMirrorCommand())
+	cmd.AddCommand(c.newReverseAndPauseMirrorCommand())
 
 	return cmd
 }
