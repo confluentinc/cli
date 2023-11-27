@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create a network link service.
 
-  $ confluent network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-111111,env-222222
+  $ confluent network network-link service create my-network-link-service --network n-123456 --description "example network link service" --accepted-environments env-111111,env-222222
 
 Flags:
       --network string                  REQUIRED: Network ID.
