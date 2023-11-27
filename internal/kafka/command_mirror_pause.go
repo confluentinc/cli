@@ -25,7 +25,7 @@ func (c *mirrorCommand) newPauseCommand() *cobra.Command {
 	}
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually pause the mirror topic, but simply validates it.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
