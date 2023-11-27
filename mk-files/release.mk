@@ -45,7 +45,10 @@ release-to-prod:
 	$(aws-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
-	$(call copy-stag-content-to-prod,archives,latest)
+	$(call copy-stag-content-to-prod,archives,latest); \
+	$(call dry-run, aws s3 sync $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/deb $(S3_DEB_RPM_PROD_PATH)/deb); \
+	$(call dry-run, aws s3 sync $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/rpm $(S3_DEB_RPM_PROD_PATH)/rpm); \
+	$(call dry-run, s3-repo-utils -v website index --fake-index --prefix $(S3_DEB_RPM_PROD_PREFIX)/ $(S3_DEB_RPM_BUCKET_NAME))
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
 	$(MAKE) verify-prod
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
@@ -82,8 +85,8 @@ gorelease:
 	rm -rf prebuilt/ deb/ rpm/ && \
 	mkdir prebuilt/ deb/ rpm/ && \
 	scripts/build_linux.sh && \
-	$(call dry-run,aws s3 sync deb s3://confluent-cli-release/confluent-cli-staging/$(VERSION_NO_V)/deb) && \
-	$(call dry-run,aws s3 sync rpm s3://confluent-cli-release/confluent-cli-staging/$(VERSION_NO_V)/rpm) && \
+	$(call dry-run,aws s3 sync deb $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/deb) && \
+	$(call dry-run,aws s3 sync rpm $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/rpm) && \
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
 	GORELEASER_KEY=$(GORELEASER_KEY) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m

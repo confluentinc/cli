@@ -43,6 +43,3 @@ docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/
 docker container cp cli-linux-arm64-builder:/cli/deb/. ./deb/
 docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
 docker container rm cli-linux-arm64-builder
-
-#TODO: create new make target to move from staging to prod and run s3-repo-utils
-#dry-run "s3-repo-utils -v website index --fake-index --prefix confluent-cli/ confluent-cli-release"

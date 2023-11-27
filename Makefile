@@ -55,7 +55,11 @@ DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
 S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-S3_DEB_RPM_STAG_PATH=s3://confluent-cli-release/confluent-cli-staging
+
+S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
+S3_DEB_RPM_PROD_PREFIX=confluent-cli
+S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
+S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
 
 .PHONY: clean
 clean:
