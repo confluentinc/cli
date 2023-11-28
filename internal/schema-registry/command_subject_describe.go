@@ -33,7 +33,7 @@ func (c *command) newSubjectDescribeCommand(cfg *config.Config) *cobra.Command {
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
-	cmd.Flags().Bool("deleted", false, "View the deleted schemas.")
+	cmd.Flags().Bool("deleted", false, "Include deleted schemas.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

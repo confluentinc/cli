@@ -78,12 +78,7 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 }
 
 func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
-	state, err := c.Context.AuthenticatedState()
-	if err != nil {
-		return false, err
-	}
-
-	dataplaneToken, err := pauth.GetDataplaneToken(state, c.Context.GetPlatformServer())
+	dataplaneToken, err := pauth.GetDataplaneToken(c.Context.Context)
 	if err != nil {
 		return false, err
 	}

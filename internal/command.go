@@ -45,6 +45,7 @@ import (
 	"github.com/confluentinc/cli/v3/internal/update"
 	"github.com/confluentinc/cli/v3/internal/version"
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
@@ -189,12 +190,12 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, u *usage.Usage) error {
-	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
+	if cfg.IsCloudLogin() && u.Command != nil && *u.Command != "" {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return err
 		}
-		u.Report(cfg.GetCloudClientV2(unsafeTrace))
+		u.Report(ccloudv2.NewClient(cfg, unsafeTrace))
 	}
 	return nil
 }

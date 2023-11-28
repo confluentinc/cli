@@ -35,7 +35,7 @@ func (c *clusterCommand) configurationList(cmd *cobra.Command, _ []string) error
 	}
 
 	list := output.NewList(cmd)
-	for _, config := range configs.GetData() {
+	for _, config := range configs {
 		list.Add(&configurationOut{
 			Name:     config.GetName(),
 			Value:    config.GetValue(),

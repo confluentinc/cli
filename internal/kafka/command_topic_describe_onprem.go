@@ -85,29 +85,29 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 
 	for i, partition := range partitions.Data {
 		// For each partition, get replicas
-		replicasResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partition.PartitionId)
+		replicas, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partition.PartitionId)
 		if err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-		} else if replicasResp.Data == nil {
+		} else if replicas.Data == nil {
 			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 		}
 		topic.Partitions[i] = &PartitionData{
 			TopicName:              topicName,
 			PartitionId:            partition.PartitionId,
-			ReplicaBrokerIds:       make([]int32, len(replicasResp.Data)),
-			InSyncReplicaBrokerIds: make([]int32, 0, len(replicasResp.Data)),
+			ReplicaBrokerIds:       make([]int32, len(replicas.Data)),
+			InSyncReplicaBrokerIds: make([]int32, 0, len(replicas.Data)),
 		}
-		for j, replicaResp := range replicasResp.Data {
-			if replicaResp.IsLeader {
-				topic.Partitions[i].LeaderBrokerId = replicaResp.BrokerId
+		for j, replica := range replicas.Data {
+			if replica.IsLeader {
+				topic.Partitions[i].LeaderBrokerId = replica.BrokerId
 			}
-			topic.Partitions[i].ReplicaBrokerIds[j] = replicaResp.BrokerId
-			if replicaResp.IsInSync {
-				topic.Partitions[i].InSyncReplicaBrokerIds = append(topic.Partitions[i].InSyncReplicaBrokerIds, replicaResp.BrokerId)
+			topic.Partitions[i].ReplicaBrokerIds[j] = replica.BrokerId
+			if replica.IsInSync {
+				topic.Partitions[i].InSyncReplicaBrokerIds = append(topic.Partitions[i].InSyncReplicaBrokerIds, replica.BrokerId)
 			}
 		}
 		if i == 0 {
-			topic.ReplicationFactor = len(replicasResp.Data)
+			topic.ReplicationFactor = len(replicas.Data)
 		}
 	}
 

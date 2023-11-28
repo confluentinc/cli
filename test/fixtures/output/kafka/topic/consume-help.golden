@@ -10,13 +10,18 @@ Consume items from topic "my-topic" and press "Ctrl-C" to exit.
 
   $ confluent kafka topic consume my-topic --from-beginning
 
+Consume from a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.
+
+  $ confluent kafka topic consume my_topic --api-key 0000000000000000 --api-secret <API_SECRET> --bootstrap SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --value-format avro --schema-registry-endpoint https://psrc-12345.us-west-2.aws.confluent.cloud --schema-registry-api-key 0000000000000000 --schema-registry-api-secret <SCHEMA_REGISTRY_API_SECRET>
+
 Flags:
+      --bootstrap string                    Kafka cluster endpoint (Confluent Cloud) or a comma-separated list of broker hosts, each formatted as "host" or "host:port" (Confluent Platform).
       --group string                        Consumer group ID. (default "confluent_cli_consumer_<randomly-generated-id>")
   -b, --from-beginning                      Consume from beginning of the topic.
       --offset int                          The offset from the beginning to consume from.
       --partition int32                     The partition to consume from. (default -1)
-      --key-format string                   Format of message key as "string", "avro", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
-      --value-format string                 Format message value as "string", "avro", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
+      --key-format string                   Format of message key as "string", "avro", "double", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
+      --value-format string                 Format message value as "string", "avro", "double", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --print-key                           Print key of the message.
       --print-offset                        Print partition number and offset of the message.
       --full-header                         Print complete content of message headers.
@@ -24,15 +29,23 @@ Flags:
       --timestamp                           Print message timestamp in milliseconds.
       --config strings                      A comma-separated list of configuration overrides ("key=value") for the consumer client.
       --config-file string                  The path to the configuration file for the consumer client, in JSON or Avro format.
-      --schema-registry-context string      The Schema Registry context under which to look up schema ID.
       --schema-registry-endpoint string     Endpoint for Schema Registry cluster.
-      --schema-registry-api-key string      Schema registry API key.
-      --schema-registry-api-secret string   Schema registry API secret.
       --api-key string                      API key.
       --api-secret string                   API secret.
+      --schema-registry-context string      The Schema Registry context under which to look up schema ID.
+      --schema-registry-api-key string      Schema registry API key.
+      --schema-registry-api-secret string   Schema registry API secret.
       --cluster string                      Kafka cluster ID.
       --context string                      CLI context name.
       --environment string                  Environment ID.
+      --ca-location string                  File or directory path to one or more CA certificates for verifying the broker's key with SSL.
+      --username string                     SASL_SSL username for use with PLAIN mechanism.
+      --password string                     SASL_SSL password for use with PLAIN mechanism.
+      --cert-location string                Path to client's public key (PEM) used for SSL authentication.
+      --key-location string                 Path to client's private key (PEM) used for SSL authentication.
+      --key-password string                 Private key passphrase for SSL authentication.
+      --protocol string                     Specify the broker communication protocol as "PLAINTEXT", "SASL_SSL", or "SSL". (default "SSL")
+      --sasl-mechanism string               SASL_SSL mechanism used for authentication. (default "PLAIN")
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -2,16 +2,17 @@ package ccloudv2
 
 import (
 	"context"
+	"net/http"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newNetworkingClient(url, userAgent string, unsafeTrace bool) *networkingv1.APIClient {
+func newNetworkingClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *networkingv1.APIClient {
 	cfg := networkingv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = networkingv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -19,7 +20,7 @@ func newNetworkingClient(url, userAgent string, unsafeTrace bool) *networkingv1.
 }
 
 func (c *Client) networkingApiContext() context.Context {
-	return context.WithValue(context.Background(), networkingv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), networkingv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) GetNetwork(environment, id string) (networkingv1.NetworkingV1Network, error) {
