@@ -1,6 +1,6 @@
-      ID      |   Name    | Network ID |                                   AWS RAM Share ARN                                   | AWS Transit Gateway ID |   Routes    | AWS Transit Gateway Attachment | Phase  
-              |           |            |                                                                                       |                        |             |               ID               |        
---------------+-----------+------------+---------------------------------------------------------------------------------------+------------------------+-------------+--------------------------------+--------
-  tgwa-111111 | aws-tgwa1 | n-abcde1   | arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx | tgw-00000000000000000  | 10.0.0.0/16 | tgw-attach-00000000000000000   | READY  
-  tgwa-222222 | aws-tgwa2 | n-abcde1   | arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx | tgw-00000000000000000  | 10.0.0.0/16 | tgw-attach-00000000000000000   | READY  
-  tgwa-333333 | aws-tgwa3 | n-abcde1   | arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx | tgw-00000000000000000  | 10.0.0.0/16 | tgw-attach-00000000000000000   | READY  
+      ID      |   Name    | Network  |                                   AWS RAM Share ARN                                   | AWS Transit Gateway ID |   Routes    | AWS Transit Gateway Attachment | Phase  
+              |           |          |                                                                                       |                        |             |               ID               |        
+--------------+-----------+----------+---------------------------------------------------------------------------------------+------------------------+-------------+--------------------------------+--------
+  tgwa-111111 | aws-tgwa1 | n-abcde1 | arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx | tgw-00000000000000000  | 10.0.0.0/16 | tgw-attach-00000000000000000   | READY  
+  tgwa-222222 | aws-tgwa2 | n-abcde1 | arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx | tgw-00000000000000000  | 10.0.0.0/16 | tgw-attach-00000000000000000   | READY  
+  tgwa-333333 | aws-tgwa3 | n-abcde1 | arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx | tgw-00000000000000000  | 10.0.0.0/16 | tgw-attach-00000000000000000   | READY  

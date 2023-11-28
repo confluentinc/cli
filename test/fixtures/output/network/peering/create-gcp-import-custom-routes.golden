@@ -1,7 +1,7 @@
 +-----------------+---------------------------+
 | ID              | peer-111111               |
 | Name            | gcp-peering               |
-| Network ID      | n-abcde1                  |
+| Network         | n-abcde1                  |
 | Cloud           | GCP                       |
 | Phase           | PROVISIONING              |
 | GCP Project     | temp-123456               |

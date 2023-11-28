@@ -45,7 +45,7 @@ func (c *command) transitGatewayAttachmentList(cmd *cobra.Command, _ []string) e
 			list.Add(&transitGatewayAttachmentHumanOut{
 				Id:                            attachment.GetId(),
 				Name:                          attachment.Spec.GetDisplayName(),
-				NetworkId:                     attachment.Spec.Network.GetId(),
+				Network:                       attachment.Spec.Network.GetId(),
 				AwsRamShareArn:                attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
 				AwsTransitGatewayId:           attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
 				Routes:                        strings.Join(attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(), ", "),
@@ -56,7 +56,7 @@ func (c *command) transitGatewayAttachmentList(cmd *cobra.Command, _ []string) e
 			list.Add(&transitGatewayAttachmentSerializedOut{
 				Id:                            attachment.GetId(),
 				Name:                          attachment.Spec.GetDisplayName(),
-				NetworkId:                     attachment.Spec.Network.GetId(),
+				Network:                       attachment.Spec.Network.GetId(),
 				AwsRamShareArn:                attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
 				AwsTransitGatewayId:           attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
 				Routes:                        attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(),
