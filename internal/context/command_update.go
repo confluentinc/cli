@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -60,8 +61,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 		ctx.Name = name
 
-		ctx.Config.Contexts[ctx.Name] = ctx.Context
-		ctx.Config.ContextStates[ctx.Name] = ctx.Context.State
+		ctx.Config.Contexts[ctx.Name] = ctx
+		ctx.Config.ContextStates[ctx.Name] = ctx.State
 
 		if err := ctx.Config.Save(); err != nil {
 			return err
@@ -74,11 +75,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if kafkaCluster != "" {
-		if _, err := ctx.FindKafkaCluster(nil, kafkaCluster); err != nil {
+		if _, err := kafka.FindCluster(nil, ctx, kafkaCluster); err != nil {
 			return err
 		}
 
-		if err := ctx.SetActiveKafkaCluster(kafkaCluster); err != nil {
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster)
+		if err := ctx.Save(); err != nil {
 			return err
 		}
 	}

@@ -98,7 +98,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	out := convertClusterToDescribeStruct(cluster, c.Context.Context)
+	out := convertClusterToDescribeStruct(cluster, c.Context)
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)

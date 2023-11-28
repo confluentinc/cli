@@ -11,6 +11,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/secret"
@@ -101,10 +103,9 @@ type Config struct {
 	Version  *pversion.Version `json:"-"`
 	Filename string            `json:"-"`
 
-	overwrittenCurrentContext          string
-	overwrittenCurrentEnvironment      string
-	overwrittenCurrentFlinkComputePool string
-	overwrittenCurrentKafkaCluster     string
+	overwrittenCurrentContext      string
+	overwrittenCurrentEnvironment  string
+	overwrittenCurrentKafkaCluster string
 }
 
 func (c *Config) SetOverwrittenCurrentContext(context string) {
@@ -119,12 +120,6 @@ func (c *Config) SetOverwrittenCurrentContext(context string) {
 func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
 	if c.overwrittenCurrentEnvironment == "" {
 		c.overwrittenCurrentEnvironment = environmentId
-	}
-}
-
-func (c *Config) SetOverwrittenFlinkComputePool(computePoolId string) {
-	if c.overwrittenCurrentFlinkComputePool == "" {
-		c.overwrittenCurrentFlinkComputePool = computePoolId
 	}
 }
 
@@ -230,12 +225,12 @@ func (c *Config) Load() error {
 
 // Save writes the CLI config to disk.
 func (c *Config) Save() error {
-	tempKafka := c.resolveOverwrittenKafka()
+	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
 	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
 	tempContext := c.resolveOverwrittenContext()
 	var tempAuthToken string
 	var tempAuthRefreshToken string
-	tempApiSecrets := map[string]string{}
+	tempCredentials := map[string]string{}
 
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
@@ -248,7 +243,7 @@ func (c *Config) Save() error {
 	if c.Credentials != nil {
 		for name, credential := range c.Credentials {
 			if credential.APIKeyPair != nil {
-				tempApiSecrets[name] = credential.APIKeyPair.Secret
+				tempCredentials[name] = credential.APIKeyPair.Secret
 			}
 		}
 		if err := c.encryptCredentialsAPISecret(); err != nil {
@@ -277,10 +272,10 @@ func (c *Config) Save() error {
 
 	c.restoreOverwrittenContext(tempContext)
 	c.restoreOverwrittenEnvironment(tempEnvironment)
-	c.restoreOverwrittenKafka(tempKafka)
+	c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
 	c.restoreOverwrittenAuthToken(tempAuthToken)
 	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
-	c.restoreOverwrittenCredentials(tempApiSecrets)
+	c.restoreOverwrittenCredentials(tempCredentials)
 
 	return nil
 }
@@ -338,7 +333,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 // If active Kafka cluster has been overwritten by flag value; if so, replace with previous active kafka
 // Return the flag value so that it can be restored after writing to file so that continued execution uses flag value
 // This prevents flags from updating state
-func (c *Config) resolveOverwrittenKafka() string {
+func (c *Config) resolveOverwrittenKafkaCluster() string {
 	ctx := c.Context()
 	var tempKafka string
 	if c.overwrittenCurrentKafkaCluster != "" && ctx != nil && ctx.KafkaClusterContext != nil {
@@ -352,9 +347,9 @@ func (c *Config) resolveOverwrittenKafka() string {
 }
 
 // Restore the flag cluster back into the struct so that it is used for any execution after Save()
-func (c *Config) restoreOverwrittenKafka(tempKafka string) {
-	if tempKafka != "" {
-		c.Context().KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
+func (c *Config) restoreOverwrittenKafkaCluster(tempKafkaCluster string) {
+	if tempKafkaCluster != "" {
+		c.Context().KafkaClusterContext.SetActiveKafkaCluster(tempKafkaCluster)
 	}
 }
 
@@ -623,9 +618,9 @@ func (c *Config) HasBasicLogin() bool {
 	}
 
 	if c.IsCloudLogin() {
-		return ctx.hasBasicCloudLogin()
+		return ctx.HasLogin() && ctx.GetCurrentEnvironment() != ""
 	} else {
-		return ctx.HasBasicMDSLogin()
+		return ctx.HasLogin()
 	}
 }
 
@@ -765,4 +760,18 @@ func (c *Config) isOrgSuspended() bool {
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
 	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
+}
+
+// Parse `--context` flag value into config struct
+// Call ParseFlagsIntoContext which handles environment and cluster flags
+func (c *Config) ParseFlagsIntoConfig(cmd *cobra.Command) error {
+	if context, _ := cmd.Flags().GetString("context"); context != "" {
+		if _, err := c.FindContext(context); err != nil {
+			return err
+		}
+		c.SetOverwrittenCurrentContext(c.CurrentContext)
+		c.CurrentContext = context
+	}
+
+	return nil
 }
