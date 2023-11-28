@@ -133,7 +133,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 			return nil
 		}
 
-		return AutocompleteContexts(command.Config.Config)
+		return AutocompleteContexts(command.Config)
 	})
 }
 
