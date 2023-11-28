@@ -4,8 +4,6 @@ Schema:
 {
     "schema": 1
 }
-Metadata:
-{}
 Ruleset:
 {
   "domainRules": [

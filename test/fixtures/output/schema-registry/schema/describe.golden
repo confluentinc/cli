@@ -6,7 +6,3 @@ Schema:
 }
 References:
 	ref -> payment 1
-Metadata:
-{}
-Ruleset:
-{}

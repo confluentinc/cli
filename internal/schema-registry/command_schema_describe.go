@@ -261,20 +261,20 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 		}
 	}
 
-	metadataJson, err := json.Marshal(metadata)
-	if err != nil {
-		return err
-	}
-	if metadataJson != nil {
+	if metadata.Properties != nil || metadata.Tags != nil || metadata.Sensitive != nil {
+		metadataJson, err := json.Marshal(metadata)
+		if err != nil {
+			return err
+		}
 		output.Println(false, "Metadata:")
 		output.Println(false, prettyJson(metadataJson))
 	}
 
-	rulesetJson, err := json.Marshal(ruleset)
-	if err != nil {
-		return err
-	}
-	if rulesetJson != nil {
+	if ruleset.DomainRules != nil || ruleset.MigrationRules != nil {
+		rulesetJson, err := json.Marshal(ruleset)
+		if err != nil {
+			return err
+		}
 		output.Println(false, "Ruleset:")
 		output.Println(false, prettyJson(rulesetJson))
 	}
