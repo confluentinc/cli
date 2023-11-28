@@ -46,8 +46,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcH
 }
 
 func (c *command) logout(_ *cobra.Command, _ []string) error {
-	if c.Config.Config.Context() != nil {
-		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().GetNetrcMachineName())
+	if c.Config.Context() != nil {
+		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Context().GetNetrcMachineName())
 		if err == nil {
 			log.CliLogger.Warnf(`Removed credentials for user "%s" from netrc file "%s"`, username, c.netrcHandler.GetFileName())
 		} else if !strings.Contains(err.Error(), "login credentials not found") && !strings.Contains(err.Error(), "keyword expected") {
@@ -56,7 +56,7 @@ func (c *command) logout(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	if err := pauth.PersistLogout(c.Config.Config); err != nil {
+	if err := pauth.PersistLogout(c.Config); err != nil {
 		return err
 	}
 

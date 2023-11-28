@@ -16,7 +16,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/auth"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -103,7 +102,7 @@ func (ld *launchDarklyManager) SetCommandAndFlags(cmd *cobra.Command, args []str
 	ld.flags = flags
 }
 
-func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache, defaultVal bool) bool {
+func (ld *launchDarklyManager) BoolVariation(key string, ctx *config.Context, client config.LaunchDarklyClient, shouldCache, defaultVal bool) bool {
 	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
@@ -113,7 +112,7 @@ func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.Dyna
 	return flagVal
 }
 
-func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache bool, defaultVal string) string {
+func (ld *launchDarklyManager) StringVariation(key string, ctx *config.Context, client config.LaunchDarklyClient, shouldCache bool, defaultVal string) string {
 	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	if flagVal, ok := flagValInterface.(string); ok {
 		return flagVal
@@ -122,7 +121,7 @@ func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.Dy
 	return defaultVal
 }
 
-func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache bool, defaultVal int) int {
+func (ld *launchDarklyManager) IntVariation(key string, ctx *config.Context, client config.LaunchDarklyClient, shouldCache bool, defaultVal int) int {
 	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	if val, ok := flagValInterface.(int); ok {
 		return val
@@ -134,11 +133,11 @@ func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.Dynam
 	return defaultVal
 }
 
-func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
+func (ld *launchDarklyManager) JsonVariation(key string, ctx *config.Context, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
 	return ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 }
 
-func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
+func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
 	if ld.isDisabled {
 		return defaultVal
 	}
@@ -199,8 +198,8 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.Launch
 	return flagVals, nil
 }
 
-func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User, client config.LaunchDarklyClient, key string) bool {
-	if ctx == nil || ctx.Context == nil || ctx.FeatureFlags == nil {
+func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client config.LaunchDarklyClient, key string) bool {
+	if ctx == nil || ctx.FeatureFlags == nil {
 		return false
 	}
 
@@ -238,7 +237,7 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	return base64.URLEncoding.EncodeToString(userBytes), nil
 }
 
-func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext) lduser.User {
+func (ld *launchDarklyManager) contextToLDUser(ctx *config.Context) lduser.User {
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
 
@@ -254,7 +253,7 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 		custom.Set("cli.flags", ldvalue.CopyArbitraryValue(ld.flags))
 	}
 
-	if ctx == nil || ctx.Context == nil {
+	if ctx == nil {
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 		customValueMap := custom.Build()
@@ -287,7 +286,7 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 	return userBuilder.Build()
 }
 
-func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[string]any, user lduser.User, client config.LaunchDarklyClient) {
+func writeFlagsToConfig(ctx *config.Context, key string, vals map[string]any, user lduser.User, client config.LaunchDarklyClient) {
 	if ctx == nil {
 		return
 	}
