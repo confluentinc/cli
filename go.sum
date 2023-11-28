@@ -179,6 +179,8 @@ github.com/confluentinc/proto-go-setter v0.3.0 h1:6BhgpDV5rWdEa+6LsnQWGV1udFboCa
 github.com/confluentinc/proto-go-setter v0.3.0/go.mod h1:WJkmDZf4f/nxGzjYJ+o3AsXI2hk64gLM5XlZrmlzs1s=
 github.com/confluentinc/schema-registry-sdk-go v0.0.24 h1:sJ3j5nZum/pG8DdUeiIcJ9i5XOYDXg5NIxfvUAvotNs=
 github.com/confluentinc/schema-registry-sdk-go v0.0.24/go.mod h1:rz5jgOSmMgeVGCzqsI01SdpmGtkb1nFYtfh67SyzZL4=
+github.com/confluentinc/schema-registry-sdk-go v0.1.0 h1:DeShezgrAf/xzBRFBGTyJyuBza5KNpDv9rH7ESuE9LQ=
+github.com/confluentinc/schema-registry-sdk-go v0.1.0/go.mod h1:TfsJDEeg16OOD5zYAx92JYWviNcJNxu8taszZ5H/0u8=
 github.com/containerd/console v1.0.3/go.mod h1:7LqA/THxQ86k76b8c/EMSiaJ3h1eZkMkXar0TQ1gf3U=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=

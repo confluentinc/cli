@@ -499,12 +499,12 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		schemaString, err := sr.RequestSchemaWithId(schemaId.Value(), subject, srClient)
+		schemaString, err := srClient.GetSchema(schemaId.Value(), subject)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		format, err = serdes.FormatTranslation(schemaString.SchemaType)
+		format, err = serdes.FormatTranslation(schemaString.GetSchemaType())
 		if err != nil {
 			return nil, nil, err
 		}
