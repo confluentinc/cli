@@ -410,7 +410,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %w", err)
 		}
-		output.Printf(false, "Registered schema \"%d\" under subject \"%s\".\n", id.Id, subject)
+		output.Printf(false, "Registered schema \"%d\" under subject \"%s\".\n", id.GetId(), subject)
 		return id.GetId(), nil
 	}
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
@@ -424,7 +424,7 @@ func updateSubjectCompatibility(details *accountDetails, compatibility, subject 
 	if err != nil {
 		return fmt.Errorf("failed to update subject level compatibility: %w", err)
 	}
-	output.Printf(false, "Subject level compatibility updated to \"%s\" for subject \"%s\".\n", config.Compatibility, subject)
+	output.Printf(false, "Subject level compatibility updated to \"%s\" for subject \"%s\".\n", config.GetCompatibility(), subject)
 	return nil
 }
 

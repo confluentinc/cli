@@ -94,7 +94,7 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, "Successfully updated top-level compatibility to \"%s\".\n", req.Compatibility)
+	output.Printf(c.Config.EnableColor, "Successfully updated top-level compatibility to \"%s\".\n", req.GetCompatibility())
 	return nil
 }
 
