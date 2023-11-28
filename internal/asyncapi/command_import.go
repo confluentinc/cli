@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antihax/optional"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	spec2 "github.com/swaggest/go-asyncapi/spec-2.4.0"
@@ -366,16 +365,15 @@ func combineTopicConfigs(kafkaBinding kafkaBinding) map[string]string {
 }
 
 func addTopicDescription(client *schemaregistry.Client, qualifiedName, description string) error {
-	atlasEntity := srsdk.AtlasEntityWithExtInfo{Entity: srsdk.AtlasEntity{
-		Attributes: map[string]any{
+	atlasEntity := srsdk.AtlasEntityWithExtInfo{Entity: &srsdk.AtlasEntity{
+		Attributes: &map[string]any{
 			"description":   description,
 			"qualifiedName": qualifiedName,
 		},
-		TypeName: "kafka_topic",
+		TypeName: srsdk.PtrString("kafka_topic"),
 	}}
 	return retry.Retry(5*time.Second, time.Minute, func() error {
-		opts := &srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)}
-		return client.PartialUpdateByUniqueAttributes(opts)
+		return client.PartialUpdateByUniqueAttributes(atlasEntity)
 	})
 }
 
@@ -405,16 +403,15 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		}
 
 		req := srsdk.RegisterSchemaRequest{
-			Schema:     string(jsonSchema),
-			SchemaType: resolveSchemaType(components.Messages[strcase.ToCamel(topicName)+"Message"].ContentType),
+			Schema:     srsdk.PtrString(string(jsonSchema)),
+			SchemaType: srsdk.PtrString(resolveSchemaType(components.Messages[strcase.ToCamel(topicName)+"Message"].ContentType)),
 		}
-		opts := &srsdk.RegisterOpts{Normalize: optional.NewBool(false)}
-		id, err := details.srClient.Register(subject, req, opts)
+		id, err := details.srClient.Register(subject, req, false)
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %w", err)
 		}
 		output.Printf(false, "Registered schema \"%d\" under subject \"%s\".\n", id.Id, subject)
-		return id.Id, nil
+		return id.GetId(), nil
 	}
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
 }
@@ -422,7 +419,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 func updateSubjectCompatibility(details *accountDetails, compatibility, subject string) error {
 	// Updating the subject level compatibility
 	log.CliLogger.Infof("Updating the Subject level compatibility to %s", compatibility)
-	req := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
+	req := srsdk.ConfigUpdateRequest{Compatibility: srsdk.PtrString(compatibility)}
 	config, err := details.srClient.UpdateSubjectLevelConfig(subject, req)
 	if err != nil {
 		return fmt.Errorf("failed to update subject level compatibility: %w", err)
@@ -445,13 +442,13 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 		for _, tag := range components.Messages[strcase.ToCamel(topicName)+"Message"].Tags {
 			tagDefConfigs = append(tagDefConfigs, srsdk.TagDef{
 				// tag of type cf_entity so that it can be attached at any topic or schema level
-				EntityTypes: []string{"cf_entity"},
-				Name:        tag.Name,
+				EntityTypes: &[]string{"cf_entity"},
+				Name:        srsdk.PtrString(tag.Name),
 			})
 			tagConfigs = append(tagConfigs, srsdk.Tag{
-				TypeName:   tag.Name,
-				EntityType: "sr_schema",
-				EntityName: fmt.Sprintf("%s:.:%s", details.schemaRegistryClusterId, strconv.Itoa(int(schemaId))),
+				TypeName:   srsdk.PtrString(tag.Name),
+				EntityType: srsdk.PtrString("sr_schema"),
+				EntityName: srsdk.PtrString(fmt.Sprintf("%s:.:%s", details.schemaRegistryClusterId, strconv.Itoa(int(schemaId)))),
 			})
 			tagNames = append(tagNames, tag.Name)
 		}
@@ -482,13 +479,13 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	for _, tag := range subscribe.TopicTags {
 		tagDefConfigs = append(tagDefConfigs, srsdk.TagDef{
 			// tag of type cf_entity so that it can be attached at any topic or schema level
-			EntityTypes: []string{"cf_entity"},
-			Name:        tag.Name,
+			EntityTypes: &[]string{"cf_entity"},
+			Name:        srsdk.PtrString(tag.Name),
 		})
 		tagConfigs = append(tagConfigs, srsdk.Tag{
-			TypeName:   tag.Name,
-			EntityType: "kafka_topic",
-			EntityName: fmt.Sprintf("%s:%s", details.kafkaClusterId, topicName),
+			TypeName:   srsdk.PtrString(tag.Name),
+			EntityType: srsdk.PtrString("kafka_topic"),
+			EntityName: srsdk.PtrString(fmt.Sprintf("%s:%s", details.kafkaClusterId, topicName)),
 		})
 		tagNames = append(tagNames, tag.Name)
 	}
@@ -506,18 +503,16 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 }
 
 func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfigs []srsdk.Tag) error {
-	tagDefOpts := &srsdk.CreateTagDefsOpts{TagDef: optional.NewInterface(tagDefConfigs)}
 	err := retry.Retry(5*time.Second, time.Minute, func() error {
-		_, err := details.srClient.CreateTagDefs(tagDefOpts)
+		_, err := details.srClient.CreateTagDefs(tagDefConfigs)
 		return err
 	})
 	if err != nil {
 		return fmt.Errorf("unable to create tag definition: %w", err)
 	}
 	log.CliLogger.Debugf("Tag Definitions created")
-	tagOpts := &srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
 	err = retry.Retry(5*time.Second, time.Minute, func() error {
-		_, err := details.srClient.CreateTags(tagOpts)
+		_, err := details.srClient.CreateTags(tagConfigs)
 		return err
 	})
 	if err != nil {

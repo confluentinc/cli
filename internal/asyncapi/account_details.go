@@ -52,43 +52,43 @@ func (d *accountDetails) getTags() error {
 		return catchOpenAPIError(err)
 	}
 	for _, topicLevelTag := range topicLevelTags {
-		d.channelDetails.topicLevelTags = append(d.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.TypeName})
+		d.channelDetails.topicLevelTags = append(d.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.GetTypeName()})
 	}
 
 	// Get schema level tags
 	d.channelDetails.schemaLevelTags = nil
-	schemaLevelTags, err := d.srClient.GetTags("sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
+	schemaLevelTags, err := d.srClient.GetTags("sr_schema", strconv.Itoa(int(d.channelDetails.schema.GetId())))
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
 	for _, schemaLevelTag := range schemaLevelTags {
-		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
+		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.GetTypeName()})
 	}
 	return nil
 }
 
 func (d *accountDetails) getSchemaDetails() error {
-	schema, err := d.srClient.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", nil)
+	schema, err := d.srClient.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", false)
 	if err != nil {
 		return err
 	}
 	d.channelDetails.schema = &schema
 
 	// The backend considers "AVRO" to be the default schema type.
-	if schema.SchemaType == "" {
-		schema.SchemaType = "AVRO"
+	if schema.GetSchemaType() == "" {
+		schema.SchemaType = srsdk.PtrString("AVRO")
 	}
 
-	if schema.SchemaType == "PROTOBUF" {
+	if schema.GetSchemaType() == "PROTOBUF" {
 		return fmt.Errorf("protobuf is not supported")
 	}
 
-	if schema.SchemaType == "AVRO" || schema.SchemaType == "JSON" {
-		d.channelDetails.contentType = fmt.Sprintf("application/%s", strings.ToLower(schema.SchemaType))
+	if schema.GetSchemaType() == "AVRO" || schema.GetSchemaType() == "JSON" {
+		d.channelDetails.contentType = fmt.Sprintf("application/%s", strings.ToLower(schema.GetSchemaType()))
 	}
 
-	if err := json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema); err != nil {
-		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.Schema, err)
+	if err := json.Unmarshal([]byte(schema.GetSchema()), &d.channelDetails.unmarshalledSchema); err != nil {
+		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.GetSchema(), err)
 		log.CliLogger.Warn(err)
 	}
 
@@ -113,8 +113,9 @@ func (d *accountDetails) getTopicDescription() error {
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
-	if atlasEntityWithExtInfo.Entity.Attributes["description"] != nil {
-		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", atlasEntityWithExtInfo.Entity.Attributes["description"])
+	attributes := atlasEntityWithExtInfo.Entity.GetAttributes()
+	if attributes["description"] != nil {
+		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", attributes["description"])
 	}
 	return nil
 }
