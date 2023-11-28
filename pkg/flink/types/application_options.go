@@ -1,7 +1,7 @@
 package types
 
 import (
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
 type ApplicationOptions struct {
@@ -14,7 +14,7 @@ type ApplicationOptions struct {
 	ComputePoolId    string
 	ServiceAccountId string
 	Verbose          bool
-	Context          *dynamicconfig.DynamicContext
+	Context          *config.Context
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
@@ -80,7 +80,7 @@ func (a *ApplicationOptions) GetVerbose() bool {
 	return false
 }
 
-func (a *ApplicationOptions) GetContext() *dynamicconfig.DynamicContext {
+func (a *ApplicationOptions) GetContext() *config.Context {
 	if a != nil {
 		return a.Context
 	}

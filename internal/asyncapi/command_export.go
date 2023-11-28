@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	pkafka "github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
@@ -370,7 +371,7 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 }
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
-	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	cluster, err := pkafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %w`, err)
 	}

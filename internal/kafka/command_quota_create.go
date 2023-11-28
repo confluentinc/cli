@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -65,7 +66,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}

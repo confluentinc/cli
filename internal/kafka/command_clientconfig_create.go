@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -171,7 +172,7 @@ func (c *clientConfigCommand) create(configId string, srApiAvailable bool) func(
 
 func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get kafka cluster from context or flags, including key pair
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return "", err
 	}
@@ -183,7 +184,7 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 	// Only validate that the key pair matches with the cluster if it's passed via the flag.
 	// This is because currently "api-key store" does not check if the secret is valid. Therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
-	flagKey, _, err := c.Context.KeyAndSecretFlags(cmd)
+	flagKey, err := getApiKey(cmd)
 	if err != nil {
 		return "", err
 	}
@@ -397,4 +398,28 @@ func commentSchemaRegistryLines(configFile string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func getApiKey(cmd *cobra.Command) (string, error) {
+	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
+		return "", nil
+	}
+	apiKey, err := cmd.Flags().GetString("api-key")
+	if err != nil {
+		return "", err
+	}
+
+	apiSecret, err := cmd.Flags().GetString("api-secret")
+	if err != nil {
+		return "", err
+	}
+
+	if apiKey == "" && apiSecret != "" {
+		return "", errors.NewErrorWithSuggestions(
+			"no API key specified",
+			"Use the `--api-key` flag to specify an API key.",
+		)
+	}
+
+	return apiKey, nil
 }

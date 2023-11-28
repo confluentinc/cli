@@ -70,10 +70,9 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *clusterCommand) removeKafkaClusterConfigs(deletedIds []string) error {
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	for _, id := range deletedIds {
-		errs = multierror.Append(errs, c.Context.RemoveKafkaClusterConfig(id))
+		c.Context.KafkaClusterContext.RemoveKafkaCluster(id)
 	}
 
-	return errs.ErrorOrNil()
+	return c.Context.Save()
 }
