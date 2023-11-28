@@ -1,10 +1,10 @@
-+-----------------------+----------------------+
-| ID                    | nls-abcde1           |
-| Name                  | nls-test             |
-| Network               | n-123456             |
-| Environment           | env-00000            |
-| Description           | test description     |
-| Accepted Environments | env-11111, env-22222 |
-| Accepted Networks     | n-111111, n-222222   |
-| Phase                 | READY                |
-+-----------------------+----------------------+
++-----------------------+------------------------------+
+| ID                    | nls-abcde1                   |
+| Name                  | my-network-link-service      |
+| Network               | n-123456                     |
+| Environment           | env-00000                    |
+| Description           | example network link service |
+| Accepted Environments | env-11111, env-22222         |
+| Accepted Networks     | n-111111, n-222222           |
+| Phase                 | READY                        |
++-----------------------+------------------------------+

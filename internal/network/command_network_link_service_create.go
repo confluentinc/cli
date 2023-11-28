@@ -17,16 +17,16 @@ func (c *command) newNetworkLinkServiceCreateCommand() *cobra.Command {
 		RunE:  c.networkLinkServiceCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a network link service.",
+				Text: `Create a network link service for network "n-123456" with accepted environments "env-111111" and "env-222222".`,
 				Code: `confluent network network-link service create my-network-link-service --network n-123456 --description "example network link service" --accepted-environments env-111111,env-222222`,
 			},
 		),
 	}
 
 	addNetworkFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("description", "", "Network link service description.")
 	addAcceptedNetworksFlag(cmd, c.AuthenticatedCLICommand)
 	addAcceptedEnvironmentsFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("description", "", "Network link service description.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
