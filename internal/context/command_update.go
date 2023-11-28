@@ -22,14 +22,12 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("kafka-cluster", "", "Set the active Kafka cluster for the context.")
 	pcmd.AddOutputFlag(cmd)
 
+	cmd.MarkFlagsOneRequired("name", "kafka-cluster")
+
 	return cmd
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	if err := errors.CheckNoUpdate(cmd.Flags(), "kafka-cluster", "name"); err != nil {
-		return err
-	}
-
 	ctx, err := c.context(args)
 	if err != nil {
 		return err

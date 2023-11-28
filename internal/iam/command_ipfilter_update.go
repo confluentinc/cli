@@ -36,20 +36,12 @@ func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cmd.MarkFlagsOneRequired("name", "resource-group", "add-ip-groups", "remove-ip-groups")
+
 	return cmd
 }
 
 func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"name",
-		"resource-group",
-		"add-ip-groups",
-		"remove-ip-groups",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
-
 	filterName, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err

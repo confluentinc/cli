@@ -29,7 +29,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("name", "", "Display name for quota.")
+	cmd.Flags().String("name", "", "Name of quota.")
 	cmd.Flags().String("description", "", "Description of quota.")
 	cmd.Flags().String("ingress", "", "Ingress throughput limit for client (bytes/second).")
 	cmd.Flags().String("egress", "", "Egress throughput limit for client (bytes/second).")

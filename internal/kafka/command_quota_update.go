@@ -6,7 +6,6 @@ import (
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -25,30 +24,21 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 		}),
 	}
 
+	cmd.Flags().String("name", "", "Update name.")
+	cmd.Flags().String("description", "", "Update description.")
 	cmd.Flags().String("ingress", "", "Update ingress limit for quota.")
 	cmd.Flags().String("egress", "", "Update egress limit for quota.")
 	cmd.Flags().StringSlice("add-principals", []string{}, "A comma-separated list of service accounts to add to the quota.")
 	cmd.Flags().StringSlice("remove-principals", []string{}, "A comma-separated list of service accounts to remove from the quota.")
-	cmd.Flags().String("description", "", "Update description.")
-	cmd.Flags().String("name", "", "Update display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsOneRequired("name", "description", "ingress", "egress", "add-principals", "remove-principals")
 
 	return cmd
 }
 
 func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"add-principals",
-		"description",
-		"egress",
-		"ingress",
-		"name",
-		"remove-principals",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
 	quotaId := args[0]
 
 	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
