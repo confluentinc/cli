@@ -1,9 +1,9 @@
 {
   "id": "nls-123456",
-  "name": "test-nls",
+  "name": "my-network-link-service",
   "network": "n-abcde1",
   "environment": "env-00000",
-  "description": "test nls",
+  "description": "example network link service",
   "accepted_environments": ["env-11111", "env-22222"],
   "accepted_networks": ["n-abcde2", "n-abcde3"],
   "phase": "READY"
