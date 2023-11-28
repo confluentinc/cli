@@ -163,7 +163,7 @@ func (c *Client) GetSchema(id int32, subject string) (srsdk.SchemaString, error)
 	return res, err
 }
 
-func (c *Client) GetSchemaByVersionAndDeleted(subject, version string, deleted bool) (srsdk.Schema, error) {
+func (c *Client) GetSchemaByVersion(subject, version string, deleted bool) (srsdk.Schema, error) {
 	res, _, err := c.DefaultApi.GetSchemaByVersion(c.context(), subject, version).Deleted(deleted).Execute()
 	return res, err
 }

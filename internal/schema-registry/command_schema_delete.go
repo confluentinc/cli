@@ -3,10 +3,7 @@ package schemaregistry
 import (
 	"fmt"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
-
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
@@ -90,14 +87,13 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 	}
 	if permanent {
 		if checkVersion != "latest" {
-			opts := &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)}
-			if _, err := client.GetSchemaByVersion(subject, checkVersion, opts); err != nil {
+			if _, err := client.GetSchemaByVersion(subject, checkVersion, true); err != nil {
 				return catchSchemaNotFoundError(err, subject, checkVersion)
-			} else if _, err := client.GetSchemaByVersion(subject, checkVersion, nil); err == nil {
+			} else if _, err := client.GetSchemaByVersion(subject, checkVersion, false); err == nil { // is it ok to use false? it was nil.
 				return fmt.Errorf("you must first soft delete a schema version before you can permanently delete it")
 			}
 		}
-	} else if _, err := client.GetSchemaByVersion(subject, checkVersion, nil); err != nil {
+	} else if _, err := client.GetSchemaByVersion(subject, checkVersion, false); err != nil { // same here
 		return catchSchemaNotFoundError(err, subject, checkVersion)
 	}
 
@@ -117,16 +113,14 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 
 	var versions []int32
 	if version == "all" {
-		opts := &srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
-		v, err := client.DeleteSubject(subject, opts)
+		v, err := client.DeleteSubject(subject, permanent)
 		if err != nil {
 			return catchSchemaNotFoundError(err, subject, version)
 		}
 		output.Printf(c.Config.EnableColor, "Successfully %s deleted all versions for subject \"%s\".\n", deleteType, subject)
 		versions = v
 	} else {
-		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
-		v, err := client.DeleteSchemaVersion(subject, version, opts)
+		v, err := client.DeleteSchemaVersion(subject, version, permanent)
 		if err != nil {
 			return catchSchemaNotFoundError(err, subject, version)
 		}

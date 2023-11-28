@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -29,8 +28,8 @@ type RegisterSchemaConfigs struct {
 	SchemaType string
 	SchemaPath string
 	Refs       []srsdk.SchemaReference
-	Metadata   *srsdk.Metadata
-	Ruleset    *srsdk.RuleSet
+	Metadata   srsdk.NullableMetadata
+	Ruleset    srsdk.NullableRuleSet
 	Normalize  bool
 }
 
@@ -41,32 +40,27 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 	}
 
 	request := srsdk.RegisterSchemaRequest{
-		Schema:     string(schema),
-		SchemaType: schemaCfg.SchemaType,
-		References: schemaCfg.Refs,
+		Schema:     srsdk.PtrString(string(schema)),
+		SchemaType: srsdk.PtrString(schemaCfg.SchemaType),
+		References: &schemaCfg.Refs,
 		Metadata:   schemaCfg.Metadata,
 		RuleSet:    schemaCfg.Ruleset,
 	}
 
-	opts := &srsdk.RegisterOpts{}
-	if schemaCfg.Normalize {
-		opts.Normalize = optional.NewBool(true)
-	}
-
-	response, err := client.Register(schemaCfg.Subject, request, opts)
+	response, err := client.Register(schemaCfg.Subject, request, schemaCfg.Normalize)
 	if err != nil {
 		return 0, err
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		if err := output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id}); err != nil {
+		if err := output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.GetId()}); err != nil {
 			return 0, err
 		}
 	} else {
 		output.Printf(false, "Successfully registered schema with ID \"%d\".\n", response.Id)
 	}
 
-	return response.Id, nil
+	return response.GetId(), nil
 }
 
 func ReadSchemaReferences(cmd *cobra.Command, isKey bool) ([]srsdk.SchemaReference, error) {
@@ -97,20 +91,20 @@ func ReadSchemaReferences(cmd *cobra.Command, isKey bool) ([]srsdk.SchemaReferen
 func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, client *schemaregistry.Client) (map[string]string, error) {
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {
-		tempStorePath := filepath.Join(schemaDir, ref.Name)
+		tempStorePath := filepath.Join(schemaDir, ref.GetName())
 		if !utils.FileExists(tempStorePath) {
-			schema, err := client.GetSchemaByVersion(ref.Subject, strconv.Itoa(int(ref.Version)), nil)
+			schema, err := client.GetSchemaByVersion(ref.GetSubject(), strconv.Itoa(int(ref.GetVersion())), false) // ?
 			if err != nil {
 				return nil, err
 			}
 			if err := os.MkdirAll(filepath.Dir(tempStorePath), 0755); err != nil {
 				return nil, err
 			}
-			if err := os.WriteFile(tempStorePath, []byte(schema.Schema), 0644); err != nil {
+			if err := os.WriteFile(tempStorePath, []byte(schema.GetSchema()), 0644); err != nil {
 				return nil, err
 			}
 		}
-		referencePathMap[ref.Name] = tempStorePath
+		referencePathMap[ref.GetName()] = tempStorePath
 	}
 	return referencePathMap, nil
 }
@@ -128,11 +122,6 @@ func createTempDir() (string, error) {
 	return dir, err
 }
 
-func RequestSchemaWithId(id int32, subject string, client *schemaregistry.Client) (srsdk.SchemaString, error) {
-	opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(subject)}
-	return client.GetSchema(id, opts)
-}
-
 func SetSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, schemaId int32, client *schemaregistry.Client) (string, map[string]string, error) {
 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retrieving schema or writing temp schema file
 	tempStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.txt", subject, schemaId))
@@ -141,7 +130,7 @@ func SetSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, sche
 
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		if err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644); err != nil {
+		if err := os.WriteFile(tempStorePath, []byte(schemaString.GetSchema()), 0644); err != nil {
 			return "", nil, err
 		}
 
@@ -152,7 +141,7 @@ func SetSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, sche
 		if err := os.WriteFile(tempRefStorePath, refBytes, 0644); err != nil {
 			return "", nil, err
 		}
-		references = schemaString.References
+		references = schemaString.GetReferences()
 	} else {
 		refBlob, err := os.ReadFile(tempRefStorePath)
 		if err != nil {

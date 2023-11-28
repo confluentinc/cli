@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
@@ -122,12 +121,12 @@ func describeById(id string, client *schemaregistry.Client) error {
 		)
 	}
 
-	schemaString, err := client.GetSchema(int32(schemaId), nil)
+	schemaString, err := client.GetSchema(int32(schemaId), "") // ?
 	if err != nil {
 		return err
 	}
 
-	return printSchema(schemaId, schemaString.Schema, schemaString.SchemaType, schemaString.References, schemaString.Metadata, schemaString.RuleSet)
+	return printSchema(schemaId, schemaString.GetSchema(), schemaString.GetSchemaType(), schemaString.GetReferences(), schemaString.GetMetadata(), schemaString.GetRuleSet())
 }
 
 func describeBySubject(cmd *cobra.Command, client *schemaregistry.Client) error {
@@ -141,12 +140,12 @@ func describeBySubject(cmd *cobra.Command, client *schemaregistry.Client) error 
 		return err
 	}
 
-	schema, err := client.GetSchemaByVersion(subject, version, nil)
+	schema, err := client.GetSchemaByVersion(subject, version, false) // ok to use false?
 	if err != nil {
 		return catchSchemaNotFoundError(err, subject, version)
 	}
 
-	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References, schema.Metadata, schema.Ruleset)
+	return printSchema(int64(schema.GetId()), schema.GetSchema(), schema.GetSchemaType(), schema.GetReferences(), schema.GetMetadata(), schema.GetRuleset())
 }
 
 func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client) error {
@@ -200,30 +199,30 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 
 	if id > 0 {
 		// should only come here at most once for the root if it is fetched by id
-		schemaString, err := client.GetSchema(id, nil)
+		schemaString, err := client.GetSchema(id, "") // is it ok? it was nil
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
 
 		root = schemaString
-		refs = schemaString.References
+		refs = schemaString.GetReferences()
 	} else if subject == "" || version == "" || visited[subjectVersionString] {
 		// dedupe the call if already visited
 		return root, schemaGraph, nil
 	} else {
 		visited[subjectVersionString] = true
 
-		schema, err := client.GetSchemaByVersion(subject, version, &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)})
+		schema, err := client.GetSchemaByVersion(subject, version, true)
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
 
 		schemaGraph = append(schemaGraph, schema)
-		refs = schema.References
+		refs = schema.GetReferences()
 	}
 
 	for _, reference := range refs {
-		_, subGraph, err := traverseDAG(client, visited, 0, reference.Subject, strconv.Itoa(int(reference.Version)))
+		_, subGraph, err := traverseDAG(client, visited, 0, reference.GetSubject(), strconv.Itoa(int(reference.GetVersion())))
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -234,7 +233,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 	return root, schemaGraph, nil
 }
 
-func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata *srsdk.Metadata, ruleset *srsdk.RuleSet) error {
+func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata srsdk.Metadata, ruleset srsdk.RuleSet) error {
 	output.Printf(false, "Schema ID: %d\n", schemaID)
 
 	// The backend considers "AVRO" to be the default schema type.
@@ -262,38 +261,36 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 		}
 	}
 
-	if metadata != nil {
-		output.Println(false, "Metadata:")
-		metadataJson, err := json.Marshal(*metadata)
-		if err != nil {
-			return err
-		}
-		output.Println(false, prettyJson(metadataJson))
+	metadataJson, err := json.Marshal(metadata)
+	if err != nil {
+		return err
+	}
+	if metadataJson != nil { // validate this! I don't want to empty output. If content is empty, could this json be nil?
+		output.Println(false, "Metadata:\nprettyJson(metadataJson)")
 	}
 
-	if ruleset != nil {
-		output.Println(false, "Ruleset:")
-		rulesetJson, err := json.Marshal(*ruleset)
-		if err != nil {
-			return err
-		}
-		output.Println(false, prettyJson(rulesetJson))
+	rulesetJson, err := json.Marshal(ruleset)
+	if err != nil {
+		return err
+	}
+	if rulesetJson != nil { // same
+		output.Println(false, "Ruleset:\nprettyJson(rulesetJson)")
 	}
 	return nil
 }
 
 func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
-	if root.Schema == "" {
+	if root.GetSchema() == "" {
 		return nil
 	}
 
 	// The backend considers "AVRO" to be the default schema type.
-	if root.SchemaType == "" {
-		root.SchemaType = "AVRO"
+	if root.GetSchemaType() == "" {
+		root.SchemaType = srsdk.PtrString("AVRO")
 	}
 
 	return &srsdk.Schema{
-		Id:         id,
+		Id:         srsdk.PtrInt32(id),
 		SchemaType: root.SchemaType,
 		References: root.References,
 		Schema:     root.Schema,

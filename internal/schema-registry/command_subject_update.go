@@ -119,7 +119,7 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject string, client
 }
 
 func (c *command) updateMode(subject, mode string, client *schemaregistry.Client) error {
-	res, err := client.UpdateMode(subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
+	res, err := client.UpdateMode(subject, srsdk.ModeUpdateRequest{Mode: srsdk.PtrString(strings.ToUpper(mode))})
 	if err != nil {
 		return catchSchemaNotFoundError(err, "subject", "")
 	}
