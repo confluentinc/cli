@@ -174,6 +174,6 @@ func (c *command) updateTopLevelMode(cmd *cobra.Command, mode string) error {
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, "Successfully updated top-level mode to \"%s\".\n", req.Mode)
+	output.Printf(c.Config.EnableColor, "Successfully updated top-level mode to \"%s\".\n", req.GetMode())
 	return nil
 }

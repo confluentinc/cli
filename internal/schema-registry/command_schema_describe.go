@@ -257,7 +257,7 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 	if len(refs) > 0 {
 		output.Println(false, "References:")
 		for i := 0; i < len(refs); i++ {
-			output.Printf(false, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+			output.Printf(false, "\t%s -> %s %d\n", refs[i].GetName(), refs[i].GetSubject(), refs[i].GetVersion())
 		}
 	}
 
