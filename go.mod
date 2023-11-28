@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.48.0
+	github.com/aws/aws-sdk-go v1.48.4
 	github.com/billgraziano/dpapi v0.5.0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/brianstrauch/cobra-shell v0.4.0
@@ -24,7 +24,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.16.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.17.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
@@ -81,7 +81,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/stripe/stripe-go/v76 v76.5.0
+	github.com/stripe/stripe-go/v76 v76.6.0
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/pretty v1.2.1
@@ -95,7 +95,7 @@ require (
 	golang.org/x/text v0.14.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.28.3
+	k8s.io/apimachinery v0.28.4
 	pgregory.net/rapid v1.1.0
 )
 
