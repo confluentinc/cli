@@ -85,6 +85,7 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagNameLength(2, 20),
 		linter.ExcludeFlag(
+			"accepted-environments",
 			"azure-subscription-id",
 			"destination-api-key",
 			"destination-api-secret",
