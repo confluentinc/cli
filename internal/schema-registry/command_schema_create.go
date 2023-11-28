@@ -137,7 +137,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 	if metadata != "" {
 		cfg.Metadata = srsdk.NullableMetadata{}
-		if err := read(metadata, cfg.Metadata); err != nil {
+		if err := read(metadata, &cfg.Metadata); err != nil {
 			return err
 		}
 	}
@@ -148,7 +148,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 	if ruleset != "" {
 		cfg.Ruleset = srsdk.NullableRuleSet{}
-		if err := read(ruleset, cfg.Ruleset); err != nil {
+		if err := read(ruleset, &cfg.Ruleset); err != nil {
 			return err
 		}
 	}

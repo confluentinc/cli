@@ -266,7 +266,8 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 		return err
 	}
 	if metadataJson != nil { // validate this! I don't want to empty output. If content is empty, could this json be nil?
-		output.Println(false, "Metadata:\nprettyJson(metadataJson)")
+		output.Println(false, "Metadata:")
+		output.Println(false, prettyJson(metadataJson))
 	}
 
 	rulesetJson, err := json.Marshal(ruleset)
@@ -274,7 +275,8 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 		return err
 	}
 	if rulesetJson != nil { // same
-		output.Println(false, "Ruleset:\nprettyJson(rulesetJson)")
+		output.Println(false, "Ruleset:")
+		output.Println(false, prettyJson(rulesetJson))
 	}
 	return nil
 }

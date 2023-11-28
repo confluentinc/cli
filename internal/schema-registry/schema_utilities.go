@@ -57,7 +57,7 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 			return 0, err
 		}
 	} else {
-		output.Printf(false, "Successfully registered schema with ID \"%d\".\n", response.Id)
+		output.Printf(false, "Successfully registered schema with ID \"%d\".\n", response.GetId())
 	}
 
 	return response.GetId(), nil
