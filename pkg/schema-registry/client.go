@@ -159,7 +159,7 @@ func (c *Client) Register(subject string, req srsdk.RegisterSchemaRequest, norma
 }
 
 func (c *Client) GetSchema(id int32, subject string) (srsdk.SchemaString, error) {
-	res, _, err := c.DefaultApi.GetSchema(c.context(), id).Subject(subject).Execute() // ?
+	res, _, err := c.DefaultApi.GetSchema(c.context(), id).Subject(subject).Execute()
 	return res, err
 }
 

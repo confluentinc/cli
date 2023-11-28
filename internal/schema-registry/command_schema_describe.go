@@ -121,7 +121,7 @@ func describeById(id string, client *schemaregistry.Client) error {
 		)
 	}
 
-	schemaString, err := client.GetSchema(int32(schemaId), "") // ?
+	schemaString, err := client.GetSchema(int32(schemaId), "")
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func describeBySubject(cmd *cobra.Command, client *schemaregistry.Client) error 
 		return err
 	}
 
-	schema, err := client.GetSchemaByVersion(subject, version, false) // ok to use false?
+	schema, err := client.GetSchemaByVersion(subject, version, false)
 	if err != nil {
 		return catchSchemaNotFoundError(err, subject, version)
 	}
@@ -199,7 +199,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 
 	if id > 0 {
 		// should only come here at most once for the root if it is fetched by id
-		schemaString, err := client.GetSchema(id, "") // is it ok? it was nil
+		schemaString, err := client.GetSchema(id, "")
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -265,7 +265,7 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 	if err != nil {
 		return err
 	}
-	if metadataJson != nil { // validate this! I don't want to empty output. If content is empty, could this json be nil?
+	if metadataJson != nil {
 		output.Println(false, "Metadata:")
 		output.Println(false, prettyJson(metadataJson))
 	}
@@ -274,7 +274,7 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 	if err != nil {
 		return err
 	}
-	if rulesetJson != nil { // same
+	if rulesetJson != nil {
 		output.Println(false, "Ruleset:")
 		output.Println(false, prettyJson(rulesetJson))
 	}
