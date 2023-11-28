@@ -13,21 +13,25 @@ import (
 
 func (c *command) newPeeringCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
+		Use:   "create [name]",
 		Short: "Create a peering.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.peeringCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an AWS VPC peering.",
+				Code: "confluent network peering create --network n-123456 --cloud aws --cloud-account 123456789012 --virtual-network vpc-1234567890abcdef0 --aws-routes 172.31.0.0/16,10.108.16.0/21",
+			},
+			examples.Example{
+				Text: "Create an AWS VPC peering with a display name.",
 				Code: "confluent network peering create aws-peering --network n-123456 --cloud aws --cloud-account 123456789012 --virtual-network vpc-1234567890abcdef0 --aws-routes 172.31.0.0/16,10.108.16.0/21",
 			},
 			examples.Example{
-				Text: "Create a GCP VPC peering.",
+				Text: "Create a GCP VPC peering with a display name.",
 				Code: "confluent network peering create gcp-peering --network n-123456 --cloud gcp --cloud-account temp-123456 --virtual-network customer-test-vpc-network --gcp-routes",
 			},
 			examples.Example{
-				Text: "Create an Azure VNet peering.",
+				Text: "Create an Azure VNet peering with a display name.",
 				Code: "confluent network peering create azure-peering --network n-123456 --cloud azure --cloud-account 1111tttt-1111-1111-1111-111111tttttt --virtual-network /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet --customer-region centralus",
 			},
 		),
@@ -53,7 +57,10 @@ func (c *command) newPeeringCreateCommand() *cobra.Command {
 }
 
 func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
-	name := args[0]
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	}
 
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -79,10 +86,13 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 
 	createPeering := networkingv1.NetworkingV1Peering{
 		Spec: &networkingv1.NetworkingV1PeeringSpec{
-			DisplayName: networkingv1.PtrString(name),
 			Environment: &networkingv1.ObjectReference{Id: environmentId},
 			Network:     &networkingv1.ObjectReference{Id: networkId},
 		},
+	}
+
+	if name != "" {
+		createPeering.Spec.SetDisplayName(name)
 	}
 
 	switch cloud {

@@ -1012,6 +1012,13 @@ func handleNetworkingPrivateLinkAttachmentCreate(t *testing.T) http.HandlerFunc 
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
+		if body.Spec.DisplayName == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, "The private link attachment name must be provided.")
+			require.NoError(t, err)
+			return
+		}
+
 		cloud := body.Spec.GetCloud()
 		region := body.Spec.GetRegion()
 
@@ -1167,6 +1174,13 @@ func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.Ha
 		body := &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{}
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
+
+		if body.Spec.DisplayName == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, "The private link attachment connection name must be provided.")
+			require.NoError(t, err)
+			return
+		}
 
 		if body.Spec.Cloud == nil {
 			w.WriteHeader(http.StatusBadRequest)
