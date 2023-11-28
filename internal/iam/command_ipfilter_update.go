@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -142,7 +143,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 
 	if len(IpGroupIdObjects) == 0 {
 		return errors.NewErrorWithSuggestions("Cannot remove all IP groups from IP filter",
-			"Please double check the IP filter you are updating. Use `confluent iam ip-filter describe <ip-filter>` to see the IP groups associated with an IP filter.")
+			fmt.Sprintf("Please double check the IP filter you are updating. Use `confluent iam ip-filter describe %s` to see the IP groups associated with an IP filter.", currentIpFilter.GetId()))
 	}
 
 	updateIpFilter.IpGroups = &IpGroupIdObjects

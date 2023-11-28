@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -125,7 +126,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 
 	if len(newCidrBlocks) == 0 {
 		return errors.NewErrorWithSuggestions("Cannot remove all CIDR blocks from IP group",
-			"Please double check the IP group you are updating. Use `confluent iam ip-group describe <ip-group>` to see the CIDR blocks associated with an IP group.")
+			fmt.Sprintf("Please double check the IP group you are updating. Use `confluent iam ip-group describe %s` to see the CIDR blocks associated with an IP group.", currentIpGroup.GetId()))
 	}
 
 	updateIpGroup.CidrBlocks = &newCidrBlocks
