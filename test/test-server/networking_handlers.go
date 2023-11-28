@@ -197,6 +197,8 @@ func handleNetworkingNetworkLinkService(t *testing.T) http.HandlerFunc {
 			handleNetworkingNetworkLinkServiceGet(t, id)(w, r)
 		case http.MethodDelete:
 			handleNetworkingNetworkLinkServiceDelete(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingNetworkLinkServiceUpdate(t, id)(w, r)
 		}
 	}
 }
@@ -1365,6 +1367,56 @@ func handleNetworkingNetworkLinkServiceCreate(t *testing.T) http.HandlerFunc {
 				},
 				Status: &networkingv1.NetworkingV1NetworkLinkServiceStatus{Phase: "READY"},
 			}
+			err = json.NewEncoder(w).Encode(service)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingNetworkLinkServiceUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "nls-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The network link service nls-invalid was not found.")
+			require.NoError(t, err)
+		default:
+			body := &networkingv1.NetworkingV1NetworkLinkService{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			service := networkingv1.NetworkingV1NetworkLinkService{
+				Id: networkingv1.PtrString("nls-abcde1"),
+				Spec: &networkingv1.NetworkingV1NetworkLinkServiceSpec{
+					DisplayName: networkingv1.PtrString(body.Spec.GetDisplayName()),
+					Description: networkingv1.PtrString(body.Spec.GetDescription()),
+					Accept: &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
+						Networks:     &[]string{"n-000000"},
+						Environments: &[]string{"env-000000"},
+					},
+					Environment: &networkingv1.GlobalObjectReference{Id: "env-00000"},
+					Network:     &networkingv1.EnvScopedObjectReference{Id: "n-abcde1"},
+				},
+				Status: &networkingv1.NetworkingV1NetworkLinkServiceStatus{Phase: "READY"},
+			}
+
+			if body.Spec.DisplayName == nil {
+				service.Spec.SetDisplayName("nls-111111")
+			}
+
+			if body.Spec.Description == nil {
+				service.Spec.SetDescription("test description")
+			}
+			
+			if body.Spec.Accept != nil {
+				if body.Spec.Accept.Networks != nil {
+					service.Spec.Accept.Networks = body.Spec.Accept.Networks
+				}
+				if body.Spec.Accept.Environments != nil {
+					service.Spec.Accept.Environments = body.Spec.Accept.Environments
+				}
+			}
+
 			err = json.NewEncoder(w).Encode(service)
 			require.NoError(t, err)
 		}

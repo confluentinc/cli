@@ -1,7 +1,7 @@
 {
   "id": "nls-123456",
   "name": "nls-test",
-  "network_id": "n-abcde1",
+  "network": "n-abcde1",
   "environment": "env-00000",
   "description": "test nls",
   "accepted_environments": ["env-11111", "env-22222"],
