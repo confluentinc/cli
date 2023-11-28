@@ -84,14 +84,6 @@ func (c *Context) HasLogin() bool {
 	return c.GetCredentialType() == Username && c.GetAuthToken() != ""
 }
 
-func (c *Context) HasBasicMDSLogin() bool {
-	return c.GetCredentialType() == Username && c.GetAuthToken() != ""
-}
-
-func (c *Context) hasBasicCloudLogin() bool {
-	return c.GetCredentialType() == Username && c.GetAuthToken() != "" && c.GetCurrentEnvironment() != ""
-}
-
 func (c *Context) DeleteUserAuth() error {
 	if c.State == nil {
 		return nil

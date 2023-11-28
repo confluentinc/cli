@@ -618,9 +618,9 @@ func (c *Config) HasBasicLogin() bool {
 	}
 
 	if c.IsCloudLogin() {
-		return ctx.hasBasicCloudLogin()
+		return ctx.HasLogin() && ctx.GetCurrentEnvironment() != ""
 	} else {
-		return ctx.HasBasicMDSLogin()
+		return ctx.HasLogin()
 	}
 }
 

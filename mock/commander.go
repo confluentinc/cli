@@ -82,7 +82,7 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 		c.setClient(command)
 
 		ctx := command.Config.Context()
-		if ctx == nil || !ctx.HasBasicMDSLogin() {
+		if !ctx.HasLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
