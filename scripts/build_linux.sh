@@ -15,10 +15,10 @@ aws ecr get-login-password --region us-west-1 | docker login --username AWS --pa
 
 export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud
 vault login -method=oidc -path=okta
-vault kv get -field deb_gpg_secret_key v1/ci/kv/cli/release-test > deb-secret.gpg
-vault kv get -field deb_gpg_passphrase v1/ci/kv/cli/release-test > deb-passphrase
-vault kv get -field rpm_gpg_secret_key v1/ci/kv/cli/release-test > rpm-secret.gpg
-vault kv get -field rpm_gpg_passphrase v1/ci/kv/cli/release-test > rpm-passphrase
+vault kv get -field deb_gpg_secret_key v1/ci/kv/cli/release > deb-secret.gpg
+vault kv get -field deb_gpg_passphrase v1/ci/kv/cli/release > deb-passphrase
+vault kv get -field rpm_gpg_secret_key v1/ci/kv/cli/release > rpm-secret.gpg
+vault kv get -field rpm_gpg_passphrase v1/ci/kv/cli/release > rpm-passphrase
 
 go mod vendor
 
