@@ -1,30 +1,37 @@
 [
   {
-    "address_type": "EGRESS",
     "ip_prefix": "10.200.0.0/28",
     "cloud": "ANY",
     "region": "global",
+    "address_type": "EGRESS",
     "services": ["EXTERNAL_OAUTH"]
   },
   {
-    "address_type": "EGRESS",
     "ip_prefix": "10.201.0.0/28",
     "cloud": "AWS",
-    "region": "us-west-2",
+    "region": "us-east-1",
+    "address_type": "EGRESS",
     "services": ["CONNECT"]
   },
   {
+    "ip_prefix": "10.201.0.0/28",
+    "cloud": "AWS",
+    "region": "us-west-2",
     "address_type": "EGRESS",
-    "ip_prefix": "10.202.0.0/28",
-    "cloud": "GCP",
-    "region": "us-central1",
-    "services": ["KAFKA"]
+    "services": ["CONNECT"]
   },
   {
-    "address_type": "EGRESS",
     "ip_prefix": "10.203.0.0/28",
     "cloud": "AZURE",
     "region": "centralus",
+    "address_type": "EGRESS",
     "services": ["KAFKA", "CONNECT"]
+  },
+  {
+    "ip_prefix": "10.202.0.0/28",
+    "cloud": "GCP",
+    "region": "us-central1",
+    "address_type": "EGRESS",
+    "services": ["KAFKA"]
   }
 ]

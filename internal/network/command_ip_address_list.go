@@ -1,6 +1,7 @@
 package network
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -10,18 +11,18 @@ import (
 )
 
 type listIpAddressHumanOut struct {
-	AddressType string `human:"Address Type"`
 	IpPrefix    string `human:"IP Prefix"`
 	Cloud       string `human:"Cloud"`
 	Region      string `human:"Region"`
+	AddressType string `human:"Address Type"`
 	Services    string `human:"Services"`
 }
 
 type listIpAddressSerializedOut struct {
-	AddressType string   `serialized:"address_type"`
 	IpPrefix    string   `serialized:"ip_prefix"`
 	Cloud       string   `serialized:"cloud"`
 	Region      string   `serialized:"region"`
+	AddressType string   `serialized:"address_type"`
 	Services    []string `serialized:"services"`
 }
 
@@ -44,25 +45,38 @@ func (c *command) ipAddressList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	// Sort ipAddresses by Cloud then Region ASC.
+	sort.Slice(ipAddresses, func(i, j int) bool {
+		cloudI := ipAddresses[i].GetCloud()
+		cloudJ := ipAddresses[j].GetCloud()
+		if cloudI == cloudJ {
+			return ipAddresses[i].GetRegion() < ipAddresses[j].GetRegion()
+		}
+		return ipAddresses[i].GetCloud() < ipAddresses[j].GetCloud()
+	})
+
 	list := output.NewList(cmd)
 	for _, ipAddress := range ipAddresses {
 		if output.GetFormat(cmd) == output.Human {
 			list.Add(&listIpAddressHumanOut{
-				AddressType: ipAddress.GetAddressType(),
 				IpPrefix:    ipAddress.GetIpPrefix(),
 				Cloud:       ipAddress.GetCloud(),
 				Region:      ipAddress.GetRegion(),
+				AddressType: ipAddress.GetAddressType(),
 				Services:    strings.Join(ipAddress.GetServices().Items, ", "),
 			})
 		} else {
 			list.Add(&listIpAddressSerializedOut{
-				AddressType: ipAddress.GetAddressType(),
 				IpPrefix:    ipAddress.GetIpPrefix(),
 				Cloud:       ipAddress.GetCloud(),
 				Region:      ipAddress.GetRegion(),
+				AddressType: ipAddress.GetAddressType(),
 				Services:    ipAddress.GetServices().Items,
 			})
 		}
 	}
+
+	// Disable default sort to use the custom sort above.
+	list.Sort(false)
 	return list.Print()
 }
