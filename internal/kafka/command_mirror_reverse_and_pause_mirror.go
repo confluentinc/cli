@@ -12,7 +12,7 @@ import (
 func (c *mirrorCommand) newReverseAndPauseMirrorCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "reverse-and-pause <destination-topic-1> [destination-topic-2] ... [destination-topic-N]",
-		Short:             "Reverses local mirror topics & pauses remote mirror topics.",
+		Short:             "Reverse local mirror topics and pause remote mirror topics.",
 		RunE:              c.reverseAndPauseMirror,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),

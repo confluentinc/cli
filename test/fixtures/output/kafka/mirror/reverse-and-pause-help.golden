@@ -1,4 +1,4 @@
-Reverses the direction of mirroring on local topics and pauses remote mirror topics.
+Reverse local mirror topics and pause remote mirror topics.
 
 Usage:
   confluent kafka mirror reverse-and-pause <destination-topic-1> [destination-topic-2] ... [destination-topic-N] [flags]
