@@ -31,6 +31,8 @@ blocks:
             # Run tests
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
+            - which golangci-lint
+            - golangci-lint version
             - make lint
             - make test
             - make test-installer
@@ -70,6 +72,7 @@ blocks:
           commands:
             # Set up Go
             - checkout
+            - choco install -y golang --version $(Get-Content .go-version)
             # TODO: https://confluentinc.atlassian.net/browse/DP-9532
 
             # Try to restore cached dependencies
