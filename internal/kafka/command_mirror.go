@@ -77,8 +77,8 @@ func (c *mirrorCommand) autocompleteMirrorTopics(cmd *cobra.Command) []string {
 		return nil
 	}
 
-	suggestions := make([]string, len(mirrors.GetData()))
-	for i, mirror := range mirrors.GetData() {
+	suggestions := make([]string, len(mirrors))
+	for i, mirror := range mirrors {
 		suggestions[i] = mirror.GetMirrorTopicName()
 	}
 	return suggestions

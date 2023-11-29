@@ -35,9 +35,9 @@
       "netrc_machine_name": "",
       "platform": "http://test",
       "credential": "username-test-user",
-      "current_environment": "acc-123",
+      "current_environment": "env-123456",
       "environments": {
-        "acc-123": {}
+        "env-123456": {}
       },
       "kafka_cluster_context": {
         "environment_context": false,

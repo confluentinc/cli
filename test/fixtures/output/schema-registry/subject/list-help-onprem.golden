@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry subject list [flags]
 
 Flags:
-      --deleted                           View the deleted subjects.
+      --deleted                           Include deleted subjects.
       --prefix string                     Subject prefix. (default ":*:")
       --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.

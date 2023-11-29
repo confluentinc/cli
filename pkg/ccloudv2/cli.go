@@ -24,7 +24,7 @@ func newCliClient(url, userAgent string, unsafeTrace bool) *cliv1.APIClient {
 }
 
 func (c *Client) cliApiContext() context.Context {
-	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateCliFeedback(feedback cliv1.CliV1Feedback) error {
