@@ -22,6 +22,8 @@ blocks:
             # Set up Go
             - checkout
             - sem-version go $(cat .go-version)
+            # Use the version of golangci-lint installed with Go instead of Homebrew
+            - export PATH="$GOENV_ROOT/bin:$PATH"
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
