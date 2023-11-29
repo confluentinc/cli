@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -58,5 +57,5 @@ func TestInstallPythonPlugin(t *testing.T) {
 
 	err = pluginInstaller.Install()
 	assert.NoError(t, err)
-	assert.True(t, utils.DoesPathExist(fmt.Sprintf("%s/%s", dir, "confluent-test_plugin.py")))
+	assert.True(t, utils.DoesPathExist(filepath.Join(dir, "confluent-test_plugin.py")))
 }
