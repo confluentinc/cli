@@ -12,7 +12,7 @@ Create a default client quota for all principals without an explicit quota assig
   $ confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234
 
 Flags:
-      --name string          REQUIRED: Display name for quota.
+      --name string          REQUIRED: Name of quota.
       --description string   Description of quota.
       --ingress string       Ingress throughput limit for client (bytes/second).
       --egress string        Egress throughput limit for client (bytes/second).

@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 )
 
 type validateOut struct {
@@ -93,7 +94,11 @@ func (c *command) compatibilityValidate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	references, err := ReadSchemaReferences(cmd, false)
+	references, err := cmd.Flags().GetString("references")
+	if err != nil {
+		return err
+	}
+	refs, err := schemaregistry.ReadSchemaReferences(references)
 	if err != nil {
 		return err
 	}
@@ -106,7 +111,7 @@ func (c *command) compatibilityValidate(cmd *cobra.Command, _ []string) error {
 	req := srsdk.RegisterSchemaRequest{
 		Schema:     srsdk.PtrString(string(schema)),
 		SchemaType: srsdk.PtrString(schemaType),
-		References: &references,
+		References: &refs,
 	}
 
 	res, err := client.TestCompatibilityBySubjectName(subject, version, req)
