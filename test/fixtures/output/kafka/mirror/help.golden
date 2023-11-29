@@ -11,8 +11,8 @@ Available Commands:
   pause             Pause mirror topics.
   promote           Promote mirror topics.
   resume            Resume mirror topics.
-  reverse-and-pause Reverses the direction of mirroring on local topics and pauses remote mirror topics.
-  reverse-and-start Reverses the direction of mirroring on local topics and starts remote mirror topics.
+  reverse-and-pause Reverse local mirror topics and pause remote mirror topics.
+  reverse-and-start Reverse local mirror topics and start remote mirror topics.
 
 Global Flags:
   -h, --help            Show help for this command.
