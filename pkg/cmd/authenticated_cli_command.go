@@ -197,7 +197,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			if u.Scheme != "http" && u.Scheme != "https" {
 				u.Scheme = "https"
 			}
-			configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}} //unsure
+			configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
 
 			caLocation, err := cmd.Flags().GetString("ca-location")
 			if err != nil {
