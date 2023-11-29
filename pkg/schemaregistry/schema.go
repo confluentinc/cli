@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/antihax/optional"
-
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v3/pkg/utils"
@@ -20,8 +18,8 @@ type RegisterSchemaConfigs struct {
 	SchemaType string
 	SchemaPath string
 	Refs       []srsdk.SchemaReference
-	Metadata   *srsdk.Metadata
-	Ruleset    *srsdk.RuleSet
+	Metadata   srsdk.NullableMetadata
+	Ruleset    srsdk.NullableRuleSet
 	Normalize  bool
 }
 
@@ -50,20 +48,20 @@ func ReadSchemaReferences(references string) ([]srsdk.SchemaReference, error) {
 func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, client *Client) (map[string]string, error) {
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {
-		tempStorePath := filepath.Join(schemaDir, ref.Name)
+		tempStorePath := filepath.Join(schemaDir, ref.GetName())
 		if !utils.FileExists(tempStorePath) {
-			schema, err := client.GetSchemaByVersion(ref.Subject, strconv.Itoa(int(ref.Version)), nil)
+			schema, err := client.GetSchemaByVersion(ref.GetSubject(), strconv.Itoa(int(ref.GetVersion())), false)
 			if err != nil {
 				return nil, err
 			}
 			if err := os.MkdirAll(filepath.Dir(tempStorePath), 0755); err != nil {
 				return nil, err
 			}
-			if err := os.WriteFile(tempStorePath, []byte(schema.Schema), 0644); err != nil {
+			if err := os.WriteFile(tempStorePath, []byte(schema.GetSchema()), 0644); err != nil {
 				return nil, err
 			}
 		}
-		referencePathMap[ref.Name] = tempStorePath
+		referencePathMap[ref.GetName()] = tempStorePath
 	}
 	return referencePathMap, nil
 }
@@ -75,22 +73,17 @@ func RegisterSchemaWithAuth(schemaCfg *RegisterSchemaConfigs, client *Client) (i
 	}
 
 	request := srsdk.RegisterSchemaRequest{
-		Schema:     string(schema),
-		SchemaType: schemaCfg.SchemaType,
-		References: schemaCfg.Refs,
+		Schema:     srsdk.PtrString(string(schema)),
+		SchemaType: srsdk.PtrString(schemaCfg.SchemaType),
+		References: &schemaCfg.Refs,
 		Metadata:   schemaCfg.Metadata,
 		RuleSet:    schemaCfg.Ruleset,
 	}
 
-	opts := &srsdk.RegisterOpts{}
-	if schemaCfg.Normalize {
-		opts.Normalize = optional.NewBool(true)
-	}
-
-	response, err := client.Register(schemaCfg.Subject, request, opts)
+	response, err := client.Register(schemaCfg.Subject, request, true)
 	if err != nil {
 		return 0, err
 	}
 
-	return response.Id, nil
+	return response.GetId(), nil
 }
