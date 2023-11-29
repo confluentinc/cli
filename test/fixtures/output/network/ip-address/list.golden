@@ -1,7 +1,8 @@
-    IP Prefix   | Cloud |   Region    | Address Type |    Services     
-----------------+-------+-------------+--------------+-----------------
-  10.200.0.0/28 | ANY   | global      | EGRESS       | EXTERNAL_OAUTH  
-  10.201.0.0/28 | AWS   | us-east-1   | EGRESS       | CONNECT         
-  10.201.0.0/28 | AWS   | us-west-2   | EGRESS       | CONNECT         
-  10.203.0.0/28 | AZURE | centralus   | EGRESS       | KAFKA, CONNECT  
-  10.202.0.0/28 | GCP   | us-central1 | EGRESS       | KAFKA           
+  Cloud |   Region    |   IP Prefix   | Address Type |    Services     
+--------+-------------+---------------+--------------+-----------------
+  ANY   | global      | 10.200.0.0/28 | EGRESS       | EXTERNAL_OAUTH  
+  AWS   | us-east-1   | 10.201.0.0/28 | EGRESS       | CONNECT         
+  AWS   | us-east-1   | 10.202.0.0/28 | EGRESS       | CONNECT         
+  AWS   | us-west-2   | 10.201.0.0/28 | EGRESS       | CONNECT         
+  AZURE | centralus   | 10.203.0.0/28 | EGRESS       | KAFKA, CONNECT  
+  GCP   | us-central1 | 10.202.0.0/28 | EGRESS       | KAFKA           

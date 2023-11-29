@@ -11,17 +11,17 @@ import (
 )
 
 type listIpAddressHumanOut struct {
-	IpPrefix    string `human:"IP Prefix"`
 	Cloud       string `human:"Cloud"`
 	Region      string `human:"Region"`
+	IpPrefix    string `human:"IP Prefix"`
 	AddressType string `human:"Address Type"`
 	Services    string `human:"Services"`
 }
 
 type listIpAddressSerializedOut struct {
-	IpPrefix    string   `serialized:"ip_prefix"`
 	Cloud       string   `serialized:"cloud"`
 	Region      string   `serialized:"region"`
+	IpPrefix    string   `serialized:"ip_prefix"`
 	AddressType string   `serialized:"address_type"`
 	Services    []string `serialized:"services"`
 }
@@ -45,14 +45,23 @@ func (c *command) ipAddressList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Sort ipAddresses by Cloud then Region ASC.
+	// Sort ipAddresses by Cloud then Region then IpPrefix ASC.
 	sort.Slice(ipAddresses, func(i, j int) bool {
-		cloudI := ipAddresses[i].GetCloud()
-		cloudJ := ipAddresses[j].GetCloud()
+		ipAddressI := ipAddresses[i]
+		ipAddressJ := ipAddresses[j]
+		cloudI := ipAddressI.GetCloud()
+		cloudJ := ipAddressJ.GetCloud()
+		regionI := ipAddressI.GetRegion()
+		regionJ := ipAddressJ.GetRegion()
+
 		if cloudI == cloudJ {
-			return ipAddresses[i].GetRegion() < ipAddresses[j].GetRegion()
+			if regionI == regionJ {
+				return ipAddressI.GetIpPrefix() < ipAddressJ.GetIpPrefix()
+			}
+			return regionI < regionJ
 		}
-		return ipAddresses[i].GetCloud() < ipAddresses[j].GetCloud()
+
+		return cloudI < cloudJ
 	})
 
 	list := output.NewList(cmd)

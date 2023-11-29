@@ -2,11 +2,11 @@ package network
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
@@ -112,34 +112,28 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 	}
 
-	zones := network.Spec.GetZones()
+	if output.GetFormat(cmd) == output.Human {
+		return printHumanTable(cmd, network)
+	}
+
+	return printSerializedTable(cmd, network)
+}
+
+func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
 	cloud := network.Spec.GetCloud()
 	phase := network.Status.GetPhase()
 	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes().Items
-	activeConnectionTypes := network.Status.GetActiveConnectionTypes().Items
 
 	human := &humanOut{
 		Id:                       network.GetId(),
 		EnvironmentId:            network.Spec.Environment.GetId(),
 		Name:                     network.Spec.GetDisplayName(),
-		Cloud:                    network.Spec.GetCloud(),
+		Cloud:                    cloud,
 		Region:                   network.Spec.GetRegion(),
-		Zones:                    strings.Join(zones, ", "),
-		Phase:                    network.Status.GetPhase(),
+		Zones:                    strings.Join(network.Spec.GetZones(), ", "),
+		Phase:                    phase,
 		SupportedConnectionTypes: strings.Join(supportedConnectionTypes, ", "),
-		ActiveConnectionTypes:    strings.Join(activeConnectionTypes, ", "),
-	}
-
-	serialized := &serializedOut{
-		Id:                       network.GetId(),
-		EnvironmentId:            network.Spec.Environment.GetId(),
-		Name:                     network.Spec.GetDisplayName(),
-		Cloud:                    network.Spec.GetCloud(),
-		Region:                   network.Spec.GetRegion(),
-		Zones:                    zones,
-		Phase:                    network.Status.GetPhase(),
-		SupportedConnectionTypes: supportedConnectionTypes,
-		ActiveConnectionTypes:    activeConnectionTypes,
+		ActiveConnectionTypes:    strings.Join(network.Status.GetActiveConnectionTypes().Items, ", "),
 	}
 
 	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
@@ -148,9 +142,6 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		human.DnsResolution = network.Spec.DnsConfig.GetResolution()
 		human.DnsDomain = network.Status.GetDnsDomain()
 		human.ZonalSubdomains = convertMapToString(network.Status.GetZonalSubdomains())
-		serialized.DnsResolution = network.Spec.DnsConfig.GetResolution()
-		serialized.DnsDomain = network.Status.GetDnsDomain()
-		serialized.ZonalSubdomains = network.Status.GetZonalSubdomains()
 		describeFields = append(describeFields, "DnsResolution", "DnsDomain", "ZonalSubdomains")
 
 		if network.Status.Cloud == nil {
@@ -160,22 +151,17 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		switch cloud {
 		case CloudAws:
 			human.AwsPrivateLinkEndpointService = network.Status.Cloud.NetworkingV1AwsNetwork.GetPrivateLinkEndpointService()
-			serialized.AwsPrivateLinkEndpointService = network.Status.Cloud.NetworkingV1AwsNetwork.GetPrivateLinkEndpointService()
 			describeFields = append(describeFields, "AwsPrivateLinkEndpointService")
 		case CloudGcp:
 			human.GcpPrivateServiceConnectServiceAttachments = convertMapToString(network.Status.Cloud.NetworkingV1GcpNetwork.GetPrivateServiceConnectServiceAttachments())
-			serialized.GcpPrivateServiceConnectServiceAttachments = network.Status.Cloud.NetworkingV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
 			describeFields = append(describeFields, "GcpPrivateServiceConnectServiceAttachments")
 		case CloudAzure:
 			human.AzurePrivateLinkServiceAliases = convertMapToString(network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceAliases())
 			human.AzurePrivateLinkServiceResourceIds = convertMapToString(network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceResourceIds())
-			serialized.AzurePrivateLinkServiceAliases = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceAliases()
-			serialized.AzurePrivateLinkServiceResourceIds = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceResourceIds()
 			describeFields = append(describeFields, "AzurePrivateLinkServiceAliases", "AzurePrivateLinkServiceResourceIds")
 		}
 	} else {
 		human.Cidr = network.Spec.GetCidr()
-		serialized.Cidr = network.Spec.GetCidr()
 		describeFields = append(describeFields, "Cidr")
 	}
 
@@ -188,18 +174,85 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		case CloudAws:
 			human.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
 			human.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
-			serialized.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
-			serialized.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
 			describeFields = append(describeFields, "AwsVpc", "AwsAccount")
 		case CloudGcp:
 			human.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
 			human.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
-			serialized.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
-			serialized.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
 			describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
 		case CloudAzure:
 			human.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
 			human.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
+			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
+		}
+	}
+
+	table := output.NewTable(cmd)
+	table.Add(human)
+	table.Filter(describeFields)
+	return table.Print()
+}
+
+func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
+	cloud := network.Spec.GetCloud()
+	phase := network.Status.GetPhase()
+	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes().Items
+
+	serialized := &serializedOut{
+		Id:                       network.GetId(),
+		EnvironmentId:            network.Spec.Environment.GetId(),
+		Name:                     network.Spec.GetDisplayName(),
+		Cloud:                    network.Spec.GetCloud(),
+		Region:                   network.Spec.GetRegion(),
+		Zones:                    network.Spec.GetZones(),
+		Phase:                    network.Status.GetPhase(),
+		SupportedConnectionTypes: supportedConnectionTypes,
+		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
+	}
+
+	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+
+	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
+		serialized.DnsResolution = network.Spec.DnsConfig.GetResolution()
+		serialized.DnsDomain = network.Status.GetDnsDomain()
+		serialized.ZonalSubdomains = network.Status.GetZonalSubdomains()
+		describeFields = append(describeFields, "DnsResolution", "DnsDomain", "ZonalSubdomains")
+
+		if network.Status.Cloud == nil {
+			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
+		}
+
+		switch cloud {
+		case CloudAws:
+			serialized.AwsPrivateLinkEndpointService = network.Status.Cloud.NetworkingV1AwsNetwork.GetPrivateLinkEndpointService()
+			describeFields = append(describeFields, "AwsPrivateLinkEndpointService")
+		case CloudGcp:
+			serialized.GcpPrivateServiceConnectServiceAttachments = network.Status.Cloud.NetworkingV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
+			describeFields = append(describeFields, "GcpPrivateServiceConnectServiceAttachments")
+		case CloudAzure:
+			serialized.AzurePrivateLinkServiceAliases = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceAliases()
+			serialized.AzurePrivateLinkServiceResourceIds = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceResourceIds()
+			describeFields = append(describeFields, "AzurePrivateLinkServiceAliases", "AzurePrivateLinkServiceResourceIds")
+		}
+	} else {
+		serialized.Cidr = network.Spec.GetCidr()
+		describeFields = append(describeFields, "Cidr")
+	}
+
+	if phase == "READY" {
+		if network.Status.Cloud == nil {
+			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
+		}
+
+		switch cloud {
+		case CloudAws:
+			serialized.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
+			serialized.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
+			describeFields = append(describeFields, "AwsVpc", "AwsAccount")
+		case CloudGcp:
+			serialized.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
+			serialized.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
+			describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
+		case CloudAzure:
 			serialized.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
 			serialized.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
 			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
@@ -207,12 +260,7 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 	}
 
 	table := output.NewTable(cmd)
-
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(human)
-	} else {
-		table.Add(serialized)
-	}
+	table.Add(serialized)
 
 	table.Filter(describeFields)
 	return table.Print()

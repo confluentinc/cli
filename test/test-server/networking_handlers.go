@@ -1345,16 +1345,22 @@ func handleNetworkingIpAddressList(t *testing.T) http.HandlerFunc {
 		anyIpAddress := getIpAddress("10.200.0.0/28", "ANY", "global", []string{"EXTERNAL_OAUTH"})
 		awsWestIpAddress := getIpAddress("10.201.0.0/28", "AWS", "us-west-2", []string{"CONNECT"})
 		awsEastIpAddress := getIpAddress("10.201.0.0/28", "AWS", "us-east-1", []string{"CONNECT"})
+		awsEastIpAddress2 := getIpAddress("10.202.0.0/28", "AWS", "us-east-1", []string{"CONNECT"})
 		gcpIpAddress := getIpAddress("10.202.0.0/28", "GCP", "us-central1", []string{"KAFKA"})
 		azureIpAddress := getIpAddress("10.203.0.0/28", "AZURE", "centralus", []string{"KAFKA", "CONNECT"})
 
 		pageToken := r.URL.Query().Get("page_token")
 		var ipAddressList networkingipv1.NetworkingV1IpAddressList
 		switch pageToken {
+		case "awse1-2":
+			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
+				Data:     []networkingipv1.NetworkingV1IpAddress{awsEastIpAddress2},
+				Metadata: networkingipv1.ListMeta{},
+			}
 		case "awse1":
 			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
 				Data:     []networkingipv1.NetworkingV1IpAddress{awsEastIpAddress},
-				Metadata: networkingipv1.ListMeta{},
+				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=awse1-2"))},
 			}
 		case "azure":
 			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
