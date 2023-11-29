@@ -22,8 +22,6 @@ blocks:
             # Set up Go
             - checkout
             - sem-version go $(cat .go-version)
-            # Use the version of golangci-lint installed with Go instead of Homebrew
-            - export PATH="$GOENV_ROOT/bin:$PATH"
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
@@ -31,6 +29,7 @@ blocks:
             # Run tests
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
+            - which go
             - make lint
             - make test
             - make test-installer
