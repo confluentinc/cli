@@ -1,7 +1,0 @@
-+----------------+-------------------------------------------------+
-| ID             | pool-12345                                      |
-| Name           | updated-name                                    |
-| Description    | updated description                             |
-| Identity Claim | new-sub                                         |
-| Filter         | claims.iss=https://new-company.new-provider.com |
-+----------------+-------------------------------------------------+

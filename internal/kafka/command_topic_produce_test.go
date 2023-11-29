@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type splitTest struct {
@@ -93,4 +94,9 @@ func TestGetKeyAndValue_Fail(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), missingKeyOrValueErrorMsg)
 	}
+}
+
+func TestGetMetaInfoFromSchemaId(t *testing.T) {
+	metaInfo := getMetaInfoFromSchemaId(100004)
+	require.Equal(t, []byte{0x0, 0x0, 0x1, 0x86, 0xa4}, metaInfo)
 }

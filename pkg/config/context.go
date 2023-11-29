@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/auth/sso"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
@@ -78,36 +80,8 @@ func (c *Context) Save() error {
 	return c.Config.Save()
 }
 
-func (c *Context) HasBasicMDSLogin() bool {
-	if c.Credential == nil {
-		return false
-	}
-
-	credType := c.GetCredentialType()
-	switch credType {
-	case Username:
-		return c.GetAuthToken() != ""
-	case APIKey:
-		return false
-	default:
-		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
-	}
-}
-
-func (c *Context) hasBasicCloudLogin() bool {
-	if c.Credential == nil {
-		return false
-	}
-
-	credType := c.GetCredentialType()
-	switch credType {
-	case Username:
-		return c.GetAuthToken() != "" && c.GetCurrentEnvironment() != ""
-	case APIKey:
-		return false
-	default:
-		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, c.Name))
-	}
+func (c *Context) HasLogin() bool {
+	return c.GetCredentialType() == Username && c.GetAuthToken() != ""
 }
 
 func (c *Context) DeleteUserAuth() error {
@@ -137,7 +111,7 @@ func (c *Context) IsCloud(isTest bool) bool {
 		return true
 	}
 
-	for _, hostname := range ccloudv2.Hostnames {
+	for _, hostname := range []string{"confluent.cloud", "confluentgov-internal.com", "confluentgov.com", "cpdev.cloud"} {
 		if strings.Contains(c.PlatformName, hostname) {
 			return true
 		}
@@ -212,6 +186,14 @@ func (c *Context) GetSuspensionStatus() *ccloudv1.SuspensionStatus {
 	return c.GetOrganization().GetSuspensionStatus()
 }
 
+func (c *Context) EnvironmentId() (string, error) {
+	if id := c.GetCurrentEnvironment(); id != "" {
+		return id, nil
+	}
+
+	return "", errors.NewErrorWithSuggestions("no environment found", "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
+}
+
 func (c *Context) GetCurrentEnvironment() string {
 	if c != nil && c.CurrentEnvironment != "" {
 		return c.CurrentEnvironment
@@ -278,13 +260,13 @@ func (c *Context) GetCurrentFlinkCloudProvider() string {
 	return ""
 }
 
-func (c *Context) SetCurrentFlinkCloudProvider(id string) error {
+func (c *Context) SetCurrentFlinkCloudProvider(cloud string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
 		return fmt.Errorf("no environment found")
 	}
 
-	ctx.CurrentFlinkCloudProvider = id
+	ctx.CurrentFlinkCloudProvider = cloud
 	return nil
 }
 func (c *Context) GetCurrentFlinkRegion() string {
@@ -389,6 +371,52 @@ func (c *Context) GetNetrcMachineName() string {
 	return ""
 }
 
+func (c *Context) RefreshSession(client *ccloudv1.Client) error {
+	if c.IsSso() {
+		idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, c.GetAuthRefreshToken())
+		if err != nil {
+			return err
+		}
+
+		req := &ccloudv1.AuthenticateRequest{
+			IdToken:       idToken,
+			OrgResourceId: c.GetCurrentOrganization(),
+		}
+
+		var res *ccloudv1.AuthenticateReply
+		if sso.IsOkta(client.BaseURL) {
+			res, err = client.Auth.OktaLogin(req)
+		} else {
+			res, err = client.Auth.Login(req)
+		}
+		if err != nil {
+			return err
+		}
+
+		c.State.AuthToken = res.GetToken()
+		c.State.AuthRefreshToken = refreshToken
+	} else {
+		req := &ccloudv1.AuthenticateRequest{
+			RefreshToken:  c.GetAuthRefreshToken(),
+			OrgResourceId: c.GetCurrentOrganization(),
+		}
+
+		res, err := client.Auth.Login(req)
+		if err != nil {
+			return err
+		}
+
+		c.State.AuthToken = res.GetToken()
+		c.State.AuthRefreshToken = res.GetRefreshToken()
+	}
+
+	return nil
+}
+
+func (c *Context) IsSso() bool {
+	return c.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_SSO || c.GetUser().GetSocialConnection() != ""
+}
+
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {
 	var problems []string
 	if missingKey {
@@ -405,4 +433,44 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 	output.ErrPrintf(false, "The issues are the following: %s.\n", strings.Join(problems, ", "))
 	output.ErrPrintln(false, "Deleting the malformed entries.")
 	output.ErrPrintf(false, "You can re-add the API key pair with `confluent api-key store --resource %s`\n", cluster.ID)
+}
+
+func (c *Context) ParseFlagsIntoContext(cmd *cobra.Command) error {
+	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
+		if c.GetCredentialType() == APIKey {
+			output.ErrPrintln(c.Config.EnableColor, "[WARN] The `--environment` flag is ignored when using API key credentials.")
+		} else {
+			c.Config.SetOverwrittenCurrentEnvironment(c.CurrentEnvironment)
+			c.SetCurrentEnvironment(environment)
+		}
+	}
+
+	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
+		if c.GetCredentialType() == APIKey {
+			output.ErrPrintln(c.Config.EnableColor, "[WARN] The `--cluster` flag is ignored when using API key credentials.")
+		} else {
+			c.Config.SetOverwrittenCurrentKafkaCluster(c.KafkaClusterContext.GetActiveKafkaClusterId())
+			c.KafkaClusterContext.SetActiveKafkaCluster(cluster)
+		}
+	}
+
+	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
+		if err := c.SetCurrentFlinkComputePool(computePool); err != nil {
+			return err
+		}
+	}
+
+	if region, _ := cmd.Flags().GetString("region"); region != "" {
+		if err := c.SetCurrentFlinkRegion(region); err != nil {
+			return err
+		}
+	}
+
+	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
+		if err := c.SetCurrentFlinkCloudProvider(cloud); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

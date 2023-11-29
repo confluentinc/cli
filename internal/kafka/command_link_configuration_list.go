@@ -39,7 +39,7 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	configList := append(configs.GetData(), kafkarestv3.ListLinkConfigsResponseData{
+	configList := append(configs, kafkarestv3.ListLinkConfigsResponseData{
 		Name:      "dest.cluster.id",
 		Value:     kafkaREST.GetClusterId(),
 		ReadOnly:  true,

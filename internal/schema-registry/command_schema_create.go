@@ -3,6 +3,7 @@ package schemaregistry
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,6 +13,8 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 )
 
 func (c *command) newSchemaCreateCommand(cfg *config.Config) *cobra.Command {
@@ -102,7 +105,11 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	refs, err := ReadSchemaReferences(cmd, false)
+	references, err := cmd.Flags().GetString("references")
+	if err != nil {
+		return err
+	}
+	refs, err := schemaregistry.ReadSchemaReferences(references)
 	if err != nil {
 		return err
 	}
@@ -112,7 +119,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cfg := &RegisterSchemaConfigs{
+	cfg := &schemaregistry.RegisterSchemaConfigs{
 		Subject:    subject,
 		SchemaType: schemaType,
 		SchemaPath: schema,
@@ -121,7 +128,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !c.Config.IsCloudLogin() {
-		dir, err := CreateTempDir()
+		dir, err := createTempDir()
 		if err != nil {
 			return err
 		}
@@ -158,11 +165,26 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if _, err := RegisterSchemaWithAuth(cmd, cfg, client); err != nil {
+	id, err := schemaregistry.RegisterSchemaWithAuth(cfg, client)
+	if err != nil {
 		return err
 	}
 
+	if output.GetFormat(cmd).IsSerialized() {
+		if err := output.SerializedOutput(cmd, &schemaregistry.RegisterSchemaResponse{Id: id}); err != nil {
+			return err
+		}
+	} else {
+		output.Printf(c.Config.EnableColor, "Successfully registered schema with ID \"%d\".\n", id)
+	}
+
 	return nil
+}
+
+func createTempDir() (string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	err := os.MkdirAll(dir, 0755)
+	return dir, err
 }
 
 func read(path string, v any) error {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
@@ -31,7 +31,7 @@ func NewACLConfig() *ACLConfiguration {
 }
 
 // parse returns ACLConfiguration from the contents of cmd
-func parse(context *dynamicconfig.DynamicContext, cmd *cobra.Command) ([]*ACLConfiguration, error) {
+func parse(context *config.Context, cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return nil, err

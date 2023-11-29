@@ -1,4 +1,0 @@
-Error: Flink region "eu-west-2" is invalid
-
-Suggestions:
-    Run `confluent flink region list` to see available regions.

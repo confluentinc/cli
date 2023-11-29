@@ -23,6 +23,7 @@ const (
 	UnknownConnectorIdErrorMsg        = `unknown connector ID "%s"`
 	InvalidApiKeyErrorMsg             = `invalid API key "%s" for resource "%s"`
 	InvalidApiKeySuggestions          = "To list API keys that belong to resource \"%[1]s\", use `confluent api-key list --resource %[1]s`.\nTo create new API key for resource \"%[1]s\", use `confluent api-key create --resource %[1]s`."
+	RequiredFlagNotSetErrorMsg        = "required flag `--%s` not set"
 
 	// kafka cluster commands
 	CkuMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
@@ -37,6 +38,7 @@ const (
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg    = "failed to create producer: %v"
 	FailedToCreateConsumerErrorMsg    = "failed to create consumer: %v"
+	FailedToGetConfigurationErrorMsg  = "failed to get configuration map: %w"
 	FailedToCreateAdminClientErrorMsg = "failed to create confluent-kafka-go admin client: %w"
 	FailedToProduceErrorMsg           = "failed to produce offset %d: %s\n"
 	UnknownValueFormatErrorMsg        = "unknown value schema format"
@@ -122,7 +124,6 @@ const (
 	InternalServerErrorMsg            = "internal server error"
 	UnknownErrorMsg                   = "unknown error"
 	InternalServerErrorSuggestions    = "Please check the status of your Kafka cluster or submit a support ticket."
-	EmptyResponseErrorMsg             = "empty server response"
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
 	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--ca-cert-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."
@@ -140,12 +141,10 @@ const (
 	NotLoggedInErrorMsg     = "not logged in"
 	AuthTokenSuggestions    = "You must be logged in to retrieve an oauthbearer token.\n" +
 		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and Schema Registry."
-	OnPremConfigGuideSuggestions   = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
-	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
-	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
-	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client with token"
-	CorruptedTokenErrorMsg         = "corrupted auth token"
-	CorruptedTokenSuggestions      = "Please log in again.\n" +
+	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
+	SRNotAuthenticatedErrorMsg   = "not logged in, or no Schema Registry endpoint specified"
+	CorruptedTokenErrorMsg       = "corrupted auth token"
+	CorruptedTokenSuggestions    = "Please log in again.\n" +
 		AvoidTimeoutSuggestions
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
@@ -153,6 +152,7 @@ const (
 	InvalidLoginURLErrorMsg      = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
 	InvalidLoginErrorMsg         = "incorrect email, password, or organization ID"
 	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
+		"To skip auto-login and force a username and password prompt, use the `--prompt` flag.\n" + // TODO: Remove in V4
 		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
 	FailedToReadInputErrorMsg        = "failed to read input"

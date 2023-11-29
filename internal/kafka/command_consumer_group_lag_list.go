@@ -43,7 +43,7 @@ func (c *consumerCommand) groupLagList(cmd *cobra.Command, args []string) error 
 	}
 
 	list := output.NewList(cmd)
-	for _, consumerLag := range consumerLags.GetData() {
+	for _, consumerLag := range consumerLags {
 		list.Add(&lagOut{
 			ClusterId:       consumerLag.GetClusterId(),
 			ConsumerGroupId: consumerLag.GetConsumerGroupId(),
