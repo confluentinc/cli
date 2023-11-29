@@ -526,13 +526,12 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(subject)}
-		schemaString, err := client.GetSchema(schemaId.Value(), opts)
+		schemaString, err := client.GetSchema(schemaId.Value(), subject)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		format, err = serdes.FormatTranslation(schemaString.SchemaType)
+		format, err = serdes.FormatTranslation(schemaString.GetSchemaType())
 		if err != nil {
 			return nil, nil, err
 		}
