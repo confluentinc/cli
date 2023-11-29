@@ -1,5 +1,5 @@
---- cli/Makefile	2023-09-29 13:08:09.000000000 -0700
-+++ debian/Makefile	2023-09-22 14:40:16.000000000 -0700
+--- cli/Makefile	2023-11-29 13:30:29.523846668 -0800
++++ debian/Makefile	2023-11-28 15:13:57.494207032 -0800
 @@ -1,120 +1,130 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.17.2
@@ -133,7 +133,7 @@
  
 -.PHONY: lint-go
 -lint-go:
--	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.1 && \
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2 && \
 -	golangci-lint run --timeout 10m
 -	@echo "✅  golangci-lint"
 -
