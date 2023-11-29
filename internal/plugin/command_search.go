@@ -93,7 +93,7 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 
 	manifestOutList := []*ManifestOut{}
 	for _, file := range files {
-		manifestPath := fmt.Sprintf("%s/%s/manifest.yml", dir, file.Name())
+		manifestPath := filepath.Join(dir, file.Name(), "manifest.yml")
 		if file.IsDir() && utils.DoesPathExist(manifestPath) {
 			manifestFile, err := os.ReadFile(manifestPath)
 			if err != nil {
