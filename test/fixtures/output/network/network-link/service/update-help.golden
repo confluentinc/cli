@@ -1,0 +1,27 @@
+Update an existing network link service.
+
+Usage:
+  confluent network network-link service update <id> [flags]
+
+Examples:
+Update the name and description of network link service "nls-123456".
+
+  $ confluent network network-link service update nls-123456 --name my-network-link-service --description "example network link service"'
+
+Update the accepted environments and accepted networks of network link service "nls-123456".
+
+  $ confluent network network-link service update nls-123456 --description "example network link service" --accepted-environments env-111111 --accepted-networks n-111111,n222222
+
+Flags:
+      --name string                     Name of the network link service.
+      --description string              Description of the network link service.
+      --accepted-networks strings       A comma-separated list of networks from which connections can be accepted.
+      --accepted-environments strings   A comma-separated list of environments from which connections can be accepted.
+      --context string                  CLI context name.
+      --environment string              Environment ID.
+  -o, --output string                   Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
