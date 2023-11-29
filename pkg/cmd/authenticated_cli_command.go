@@ -197,7 +197,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			if u.Scheme != "http" && u.Scheme != "https" {
 				u.Scheme = "https"
 			}
-			configuration.BasePath = u.String()
+			configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
 
 			caLocation, err := cmd.Flags().GetString("ca-location")
 			if err != nil {
@@ -221,7 +221,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			if len(clusters) == 0 {
 				return nil, errors.NewSRNotEnabledError()
 			}
-			configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
+			configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetHttpEndpoint()}} // unsure
 			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
 		} else {
 			return nil, errors.NewErrorWithSuggestions(
