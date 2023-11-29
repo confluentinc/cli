@@ -1,7 +1,7 @@
 +-------------+--------------+
 | ID          | pla-123456   |
 | Name        | aws-pla      |
-| Network ID  | n-abcde1     |
+| Network     | n-abcde1     |
 | Cloud       | AWS          |
 | AWS Account | 012345678901 |
 | Phase       | PROVISIONING |

@@ -2,7 +2,7 @@
   {
     "id": "peer-111111",
     "name": "aws-peering",
-    "network_id": "n-abcde1",
+    "network": "n-abcde1",
     "cloud": "AWS",
     "custom_region": "us-east-1",
     "virtual_network": "vpc-00000000000000000",
@@ -12,7 +12,7 @@
   {
     "id": "peer-111112",
     "name": "gcp-peering",
-    "network_id": "n-abcde1",
+    "network": "n-abcde1",
     "cloud": "GCP",
     "virtual_network": "v-1",
     "cloud_account": "p-1",
@@ -21,7 +21,7 @@
   {
     "id": "peer-111113",
     "name": "azure-peering",
-    "network_id": "n-abcde1",
+    "network": "n-abcde1",
     "cloud": "AZURE",
     "custom_region": "centralus",
     "virtual_network": "/subscriptions/s-1/resourceGroups/group-1/providers/Microsoft.Network/virtualNetworks/vnet-1",

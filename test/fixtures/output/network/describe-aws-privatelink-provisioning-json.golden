@@ -1,0 +1,12 @@
+{
+  "id": "n-abcde10",
+  "environment_id": "env-00000",
+  "name": "prod-aws-us-east1",
+  "cloud": "AWS",
+  "region": "us-east-1",
+  "zones": ["use1-az1", "use1-az2", "use1-az3"],
+  "phase": "PROVISIONING",
+  "supported_connection_types": ["PRIVATELINK"],
+  "active_connection_types": [],
+  "dns_resolution": "PRIVATE"
+}
