@@ -25,12 +25,12 @@ type InputController struct {
 	prompt                prompt.IPrompt
 	shouldExit            bool
 	reverseISearch        reverseisearch.ReverseISearch
-	lspClient             lsp.LSPClientInterface
+	lspClient             lsp.LSPInterface
 }
 
 const defaultWindowSize = 100
 
-func NewInputController(history *history.History, lspClient lsp.LSPClientInterface) types.InputControllerInterface {
+func NewInputController(history *history.History, lspClient lsp.LSPInterface) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
@@ -186,7 +186,7 @@ func (c *InputController) promptCompleter() prompt.Completer {
 			AddCompleter(autocomplete.SetCompleter).
 			AddCompleter(autocomplete.ShowCompleter)
 	} else {
-		completer.AddCompleter(c.lspClient.LSPCompleter)
+		completer.AddCompleter(lsp.LSPCompleter(c.lspClient))
 	}
 
 	// We're not sure if we'll keep this along the LSP. Commenting it out now so we can only see the LSP completions for now.

@@ -50,7 +50,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	// Store used to process statements and store local properties
 	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
 	resultFetcher := results.NewResultFetcher(dataStore)
-	var lspClient lsp.LSPClientInterface
+	var lspClient lsp.LSPInterface
 	if appOptions.GetLSPEnabled() {
 		lspClient = lsp.NewLSPClientWS(dataStore)
 	}
