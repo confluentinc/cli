@@ -3,8 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: e1-standard-2
-    os_image: ubuntu2004
+    type: s1-prod-ubuntu20-04-amd64-1
 
 auto_cancel:
   running:
@@ -22,18 +21,13 @@ blocks:
           commands:
             # Set up Go
             - checkout
-            - wget https://go.dev/dl/go$(cat .go-version).linux-amd64.tar.gz
-            - sudo tar -xvf go$(cat .go-version).linux-amd64.tar.gz -C /usr/local
-            - export GOROOT=/usr/local/go
-            - export PATH=$GOROOT/bin:$PATH
-            - export PATH=$(go env GOPATH)/bin:$PATH
+            - sem-version go $(cat .go-version)
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
 
             # Run tests
             - make generate-packaging-patch
-            - diff --version
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
             - make test
@@ -51,21 +45,44 @@ blocks:
     task:
       agent:
         machine:
-          type: a1-standard-4
-          os_image: macos-xcode14
+          type: s1-prod-macos-13-5-amd64 
       jobs:
         - name: darwin/amd64
           commands:
+            - checkout
+            - sem-version go $(cat .go-version)
+            - make test
+      epilogue:
+        always:
+          commands:
+            - test-results publish . -N "darwin/amd64"
+
+  - name: windows/amd64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-windows
+      jobs:
+        - name: windows/amd64
+          commands:
             # Set up Go
             - checkout
-            - wget https://go.dev/dl/go$(cat .go-version).darwin-amd64.tar.gz
-            - sudo tar -xvf go$(cat .go-version).darwin-amd64.tar.gz -C /usr/local
-            - export GOROOT=/usr/local/go
-            - export PATH=$GOROOT/bin:$PATH
-            - export PATH=$(go env GOPATH)/bin:$PATH
+            # TODO: https://confluentinc.atlassian.net/browse/DP-9532
+
+            # Try to restore cached dependencies
+            - cache restore windows-$($(Get-FileHash go.sum).Hash)
 
             # Run tests
-            - make test
+            - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
+            - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
+
+            # Cache Go dependencies
+            - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
+      epilogue:
+        always:
+          commands:
+            - test-results publish . -N "windows/amd64"
 
 after_pipeline:
   task:
