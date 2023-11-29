@@ -5,4 +5,6 @@ git:
   enable: true
 github:
   enable: true
-  repo_name: confluentinc/cli
+semaphore:
+  enable: true
+  pipeline_enable: false
