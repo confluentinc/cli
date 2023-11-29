@@ -1,14 +1,12 @@
 +----------------------------+------------------------------+
-| ID                         | n-abcde1                     |
+| ID                         | n-abcde10                    |
 | Environment                | env-00000                    |
 | Name                       | prod-aws-us-east1            |
 | Cloud                      | AWS                          |
 | Region                     | us-east-1                    |
-| CIDR                       | 10.200.0.0/16                |
 | Zones                      | use1-az1, use1-az2, use1-az3 |
-| Phase                      | READY                        |
-| Supported Connection Types | TRANSITGATEWAY, PEERING      |
-| Active Connection Types    | TRANSITGATEWAY, PEERING      |
-| AWS VPC                    | vpc-00000000000000000        |
-| AWS Account                | 000000000000                 |
+| Phase                      | PROVISIONING                 |
+| Supported Connection Types | PRIVATELINK                  |
+| Active Connection Types    |                              |
+| DNS Resolution             | PRIVATE                      |
 +----------------------------+------------------------------+
