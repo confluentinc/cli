@@ -8,9 +8,8 @@ zones:
     - use1-az1
     - use1-az2
     - use1-az3
-dns_resolution: CHASED_PRIVATE
 phase: PROVISIONING
 supported_connection_types:
-    - PRIVATELINK
     - TRANSITGATEWAY
+    - PEERING
 active_connection_types: []

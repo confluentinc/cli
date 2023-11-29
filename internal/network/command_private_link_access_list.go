@@ -13,7 +13,7 @@ import (
 type listPrivateLinkAccessOut struct {
 	Id           string `human:"ID" serialized:"id"`
 	Name         string `human:"Name" serialized:"name"`
-	NetworkId    string `human:"Network ID" serialized:"network_id"`
+	Network      string `human:"Network" serialized:"network"`
 	Cloud        string `human:"Cloud" serialized:"cloud"`
 	CloudAccount string `human:"Cloud Account,omitempty" serialized:"cloud_account,omitempty"`
 	Phase        string `human:"Phase" serialized:"phase"`
@@ -55,11 +55,11 @@ func (c *command) privateLinkAccessList(cmd *cobra.Command, _ []string) error {
 		}
 
 		out := &listPrivateLinkAccessOut{
-			Id:        access.GetId(),
-			Name:      access.Spec.GetDisplayName(),
-			NetworkId: access.Spec.Network.GetId(),
-			Cloud:     cloud,
-			Phase:     access.Status.GetPhase(),
+			Id:      access.GetId(),
+			Name:    access.Spec.GetDisplayName(),
+			Network: access.Spec.Network.GetId(),
+			Cloud:   cloud,
+			Phase:   access.Status.GetPhase(),
 		}
 
 		switch cloud {

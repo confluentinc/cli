@@ -11,13 +11,17 @@ import (
 
 func (c *command) newTransitGatewayAttachmentCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
+		Use:   "create [name]",
 		Short: "Create a transit gateway attachment.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.transitGatewayAttachmentCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a transit gateway attachment in AWS.",
+				Code: "confluent network transit-gateway-attachment create --network n-123456 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10",
+			},
+			examples.Example{
+				Text: "Create a transit gateway attachment in AWS with a display name.",
 				Code: "confluent network transit-gateway-attachment create my-tgw-attachment --network n-123456 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10",
 			},
 		),
@@ -40,7 +44,10 @@ func (c *command) newTransitGatewayAttachmentCreateCommand() *cobra.Command {
 }
 
 func (c *command) transitGatewayAttachmentCreate(cmd *cobra.Command, args []string) error {
-	name := args[0]
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	}
 
 	network, err := cmd.Flags().GetString("network")
 	if err != nil {
@@ -69,7 +76,6 @@ func (c *command) transitGatewayAttachmentCreate(cmd *cobra.Command, args []stri
 
 	createAttachment := networkingv1.NetworkingV1TransitGatewayAttachment{
 		Spec: &networkingv1.NetworkingV1TransitGatewayAttachmentSpec{
-			DisplayName: networkingv1.PtrString(name),
 			Environment: &networkingv1.ObjectReference{Id: environmentId},
 			Network:     &networkingv1.ObjectReference{Id: network},
 			Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecCloudOneOf{
@@ -81,6 +87,10 @@ func (c *command) transitGatewayAttachmentCreate(cmd *cobra.Command, args []stri
 				},
 			},
 		},
+	}
+
+	if name != "" {
+		createAttachment.Spec.SetDisplayName(name)
 	}
 
 	attachment, err := c.V2Client.CreateTransitGatewayAttachment(createAttachment)

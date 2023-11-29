@@ -15,7 +15,7 @@ import (
 type peeringHumanOut struct {
 	Id            string `human:"ID"`
 	Name          string `human:"Name"`
-	NetworkId     string `human:"Network ID"`
+	Network       string `human:"Network"`
 	Cloud         string `human:"Cloud"`
 	Phase         string `human:"Phase"`
 	CustomRegion  string `human:"Custom Region,omitempty"`
@@ -31,7 +31,7 @@ type peeringHumanOut struct {
 type peeringSerializedOut struct {
 	Id            string   `serialized:"id"`
 	Name          string   `serialized:"name"`
-	NetworkId     string   `serialized:"network_id"`
+	Network       string   `serialized:"network"`
 	Cloud         string   `serialized:"cloud"`
 	Phase         string   `serialized:"phase"`
 	CustomRegion  string   `serialized:"custom_region,omitempty"`
@@ -125,22 +125,22 @@ func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peer
 	}
 
 	human := &peeringHumanOut{
-		Id:        peering.GetId(),
-		Name:      peering.Spec.GetDisplayName(),
-		NetworkId: peering.Spec.Network.GetId(),
-		Cloud:     cloud,
-		Phase:     peering.Status.GetPhase(),
+		Id:      peering.GetId(),
+		Name:    peering.Spec.GetDisplayName(),
+		Network: peering.Spec.Network.GetId(),
+		Cloud:   cloud,
+		Phase:   peering.Status.GetPhase(),
 	}
 
 	serialized := &peeringSerializedOut{
-		Id:        peering.GetId(),
-		Name:      peering.Spec.GetDisplayName(),
-		NetworkId: peering.Spec.Network.GetId(),
-		Cloud:     cloud,
-		Phase:     peering.Status.GetPhase(),
+		Id:      peering.GetId(),
+		Name:    peering.Spec.GetDisplayName(),
+		Network: peering.Spec.Network.GetId(),
+		Cloud:   cloud,
+		Phase:   peering.Status.GetPhase(),
 	}
 
-	describeFields := []string{"Id", "Name", "NetworkId", "Cloud", "Phase"}
+	describeFields := []string{"Id", "Name", "Network", "Cloud", "Phase"}
 
 	switch cloud {
 	case CloudAws:

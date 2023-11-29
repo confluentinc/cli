@@ -1,7 +1,7 @@
 +-------------+--------------+
 | ID          | pla-123456   |
 | Name        | gcp-pla      |
-| Network ID  | n-abcde1     |
+| Network     | n-abcde1     |
 | Cloud       | GCP          |
 | GCP Project | temp-123456  |
 | Phase       | PROVISIONING |

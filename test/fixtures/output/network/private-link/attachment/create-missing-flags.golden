@@ -1,9 +1,9 @@
 Error: required flag(s) "cloud", "region" not set
 Usage:
-  confluent network private-link attachment create <name> [flags]
+  confluent network private-link attachment create [name] [flags]
 
 Examples:
-Create an AWS PrivateLink attachment.
+Create an AWS PrivateLink attachment with a display name.
 
   $ confluent network private-link attachment create aws-private-link-attachment --cloud aws --region us-west-2
 

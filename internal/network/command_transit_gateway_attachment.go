@@ -15,7 +15,7 @@ import (
 type transitGatewayAttachmentHumanOut struct {
 	Id                            string `human:"ID"`
 	Name                          string `human:"Name"`
-	NetworkId                     string `human:"Network ID"`
+	Network                       string `human:"Network"`
 	AwsRamShareArn                string `human:"AWS RAM Share ARN"`
 	AwsTransitGatewayId           string `human:"AWS Transit Gateway ID"`
 	Routes                        string `human:"Routes"`
@@ -26,7 +26,7 @@ type transitGatewayAttachmentHumanOut struct {
 type transitGatewayAttachmentSerializedOut struct {
 	Id                            string   `serialized:"id"`
 	Name                          string   `serialized:"name"`
-	NetworkId                     string   `serialized:"network_id"`
+	Network                       string   `serialized:"network"`
 	AwsRamShareArn                string   `serialized:"aws_ram_share_arn"`
 	AwsTransitGatewayId           string   `serialized:"aws_transit_gateway_id"`
 	Routes                        []string `serialized:"routes"`
@@ -102,7 +102,7 @@ func printTransitGatewayAttachmentTable(cmd *cobra.Command, attachment networkin
 		table.Add(&transitGatewayAttachmentHumanOut{
 			Id:                            attachment.GetId(),
 			Name:                          attachment.Spec.GetDisplayName(),
-			NetworkId:                     attachment.Spec.Network.GetId(),
+			Network:                       attachment.Spec.Network.GetId(),
 			AwsRamShareArn:                attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
 			AwsTransitGatewayId:           attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
 			Routes:                        strings.Join(attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(), ", "),
@@ -113,7 +113,7 @@ func printTransitGatewayAttachmentTable(cmd *cobra.Command, attachment networkin
 		table.Add(&transitGatewayAttachmentSerializedOut{
 			Id:                            attachment.GetId(),
 			Name:                          attachment.Spec.GetDisplayName(),
-			NetworkId:                     attachment.Spec.Network.GetId(),
+			Network:                       attachment.Spec.Network.GetId(),
 			AwsRamShareArn:                attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
 			AwsTransitGatewayId:           attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
 			Routes:                        attachment.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(),

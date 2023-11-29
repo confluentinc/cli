@@ -13,21 +13,25 @@ import (
 
 func (c *command) newPrivateLinkAccessCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
+		Use:   "create [name]",
 		Short: "Create a private link access.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.privateLinkAccessCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an AWS PrivateLink access.",
+				Code: "confluent network private-link access create --network n-123456 --cloud aws --cloud-account 123456789012",
+			},
+			examples.Example{
+				Text: "Create an AWS PrivateLink access with a display name.",
 				Code: "confluent network private-link access create aws-private-link-access --network n-123456 --cloud aws --cloud-account 123456789012",
 			},
 			examples.Example{
-				Text: "Create a GCP Private Service Connect access.",
+				Text: "Create a GCP Private Service Connect access with a display name.",
 				Code: "confluent network private-link access create gcp-private-link-access --network n-123456 --cloud gcp --cloud-account temp-123456",
 			},
 			examples.Example{
-				Text: "Create an Azure Private Link access.",
+				Text: "Create an Azure Private Link access with a display name.",
 				Code: "confluent network private-link access create azure-private-link-access --network n-123456 --cloud azure --cloud-account 1234abcd-12ab-34cd-1234-123456abcdef",
 			},
 		),
@@ -48,7 +52,10 @@ func (c *command) newPrivateLinkAccessCreateCommand() *cobra.Command {
 }
 
 func (c *command) privateLinkAccessCreate(cmd *cobra.Command, args []string) error {
-	name := args[0]
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	}
 
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -73,10 +80,13 @@ func (c *command) privateLinkAccessCreate(cmd *cobra.Command, args []string) err
 
 	createPrivateLinkAccess := networkingv1.NetworkingV1PrivateLinkAccess{
 		Spec: &networkingv1.NetworkingV1PrivateLinkAccessSpec{
-			DisplayName: networkingv1.PtrString(name),
 			Environment: &networkingv1.ObjectReference{Id: environmentId},
 			Network:     &networkingv1.ObjectReference{Id: network},
 		},
+	}
+
+	if name != "" {
+		createPrivateLinkAccess.Spec.SetDisplayName(name)
 	}
 
 	switch cloud {

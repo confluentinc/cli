@@ -13,13 +13,13 @@ import (
 
 func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
+		Use:   "create [name]",
 		Short: "Create a private link attachment connection.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.privateLinkAttachmentConnectionCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an AWS PrivateLink attachment connection.",
+				Text: "Create an AWS PrivateLink attachment connection with a display name.",
 				Code: "confluent network private-link attachment connection create aws-private-link-attachment-connection --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456",
 			},
 		),
@@ -40,6 +40,11 @@ func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Comma
 }
 
 func (c *command) privateLinkAttachmentConnectionCreate(cmd *cobra.Command, args []string) error {
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	}
+
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -63,10 +68,13 @@ func (c *command) privateLinkAttachmentConnectionCreate(cmd *cobra.Command, args
 
 	createPrivateLinkAttachmentConnection := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{
 		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpec{
-			DisplayName:           networkingprivatelinkv1.PtrString(args[0]),
 			Environment:           &networkingprivatelinkv1.ObjectReference{Id: environmentId},
 			PrivateLinkAttachment: &networkingprivatelinkv1.ObjectReference{Id: attachment},
 		},
+	}
+
+	if name != "" {
+		createPrivateLinkAttachmentConnection.Spec.SetDisplayName(name)
 	}
 
 	switch cloud {
