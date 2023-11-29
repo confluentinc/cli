@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"reflect"
 	"strings"
 
@@ -25,19 +24,19 @@ type InputController struct {
 	prompt                prompt.IPrompt
 	shouldExit            bool
 	reverseISearch        reverseisearch.ReverseISearch
-	lspClient             lsp.LSPInterface
+	lspCompleter          prompt.Completer
 }
 
 const defaultWindowSize = 100
 
-func NewInputController(history *history.History, lspClient lsp.LSPInterface) types.InputControllerInterface {
+func NewInputController(history *history.History, lspCompleter prompt.Completer) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
 		smartCompletion: true,
 		shouldExit:      false,
 		reverseISearch:  reverseisearch.NewReverseISearch(),
-		lspClient:       lspClient,
+		lspCompleter:    lspCompleter,
 	}
 	inputController.prompt = inputController.Prompt()
 	return inputController
@@ -180,13 +179,13 @@ func (c *InputController) Prompt() prompt.IPrompt {
 func (c *InputController) promptCompleter() prompt.Completer {
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion)
 
-	if c.lspClient == nil {
+	if c.lspCompleter == nil {
 		completer.
 			AddCompleter(autocomplete.ExamplesCompleter).
 			AddCompleter(autocomplete.SetCompleter).
 			AddCompleter(autocomplete.ShowCompleter)
 	} else {
-		completer.AddCompleter(lsp.LSPCompleter(c.lspClient))
+		completer.AddCompleter(c.lspCompleter)
 	}
 
 	// We're not sure if we'll keep this along the LSP. Commenting it out now so we can only see the LSP completions for now.

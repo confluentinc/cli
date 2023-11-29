@@ -2,6 +2,7 @@ package flink
 
 import (
 	"github.com/spf13/cobra"
+	"strings"
 
 	"github.com/confluentinc/cli/v3/pkg/auth"
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
@@ -132,6 +133,9 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
+	lspBaseUrl := c.getFlinkLanguageServiceUrl(flinkGatewayClient)
+	lspClient := lsp.NewLSPClientWS(lspBaseUrl, flinkGatewayClient.GetAuthToken(), c.Context.GetOrganization().GetResourceId(), environmentId)
+
 	jwtValidator := pcmd.NewJWTValidator()
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
@@ -149,7 +153,17 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		Verbose:          verbose > 0,
 		LSPEnabled:       lspEnabled,
 	}
+
+	client.StartApp(flinkGatewayClient, lspClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config.Config, unsafeTrace))
 	return nil
+}
+
+func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewayClient) string {
+	if cfg := gatewayClient.GetConfig(); cfg != nil && len(cfg.Servers) > 0 {
+		gatewayUrl := cfg.Servers[0].URL
+		return strings.ReplaceAll(gatewayUrl, "https://flink.", "flinkpls.")
+	}
+	return ""
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func() {
