@@ -205,13 +205,13 @@ archives:
     files:
       - LICENSE
       - legal/**/*
-  - id: archive-homebrew
+  - id: archive-disableupdates
     format: tar.gz
     builds:
       - confluent-darwin-amd64-disableupdates
       - confluent-darwin-arm64-disableupdates
       - confluent-linux-disableupdates
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_homebrew"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_disableupdates"
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE
@@ -283,7 +283,7 @@ blobs:
   - ids:
     - archive
     - archive-alpine
-    - archive-homebrew
+    - archive-disableupdates
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
@@ -293,7 +293,7 @@ blobs:
 brews:
   - name: cli
     ids:
-      - archive-homebrew
+      - archive-disableupdates
     repository:
       owner: confluentinc
       name: homebrew-tap
