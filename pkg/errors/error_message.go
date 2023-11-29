@@ -38,6 +38,7 @@ const (
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg    = "failed to create producer: %v"
 	FailedToCreateConsumerErrorMsg    = "failed to create consumer: %v"
+	FailedToGetConfigurationErrorMsg  = "failed to get configuration map: %w"
 	FailedToCreateAdminClientErrorMsg = "failed to create confluent-kafka-go admin client: %w"
 	FailedToProduceErrorMsg           = "failed to produce offset %d: %s\n"
 	UnknownValueFormatErrorMsg        = "unknown value schema format"
@@ -140,12 +141,10 @@ const (
 	NotLoggedInErrorMsg     = "not logged in"
 	AuthTokenSuggestions    = "You must be logged in to retrieve an oauthbearer token.\n" +
 		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and Schema Registry."
-	OnPremConfigGuideSuggestions   = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
-	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
-	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
-	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client: %w"
-	CorruptedTokenErrorMsg         = "corrupted auth token"
-	CorruptedTokenSuggestions      = "Please log in again.\n" +
+	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
+	SRNotAuthenticatedErrorMsg   = "not logged in, or no Schema Registry endpoint specified"
+	CorruptedTokenErrorMsg       = "corrupted auth token"
+	CorruptedTokenSuggestions    = "Please log in again.\n" +
 		AvoidTimeoutSuggestions
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +

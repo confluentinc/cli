@@ -357,7 +357,7 @@ func newProducerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 	if err := OverwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
-
+	log.CliLogger.Debug("Creating Confluent Kafka producer with the configuration map.")
 	return ckafka.NewProducer(configMap)
 }
 
@@ -365,7 +365,7 @@ func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 	if err := OverwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
-
+	log.CliLogger.Debug("Creating Confluent Kafka consumer with the configuration map.")
 	return ckafka.NewConsumer(configMap)
 }
 

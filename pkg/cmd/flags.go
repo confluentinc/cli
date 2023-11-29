@@ -133,7 +133,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 			return nil
 		}
 
-		return AutocompleteContexts(command.Config.Config)
+		return AutocompleteContexts(command.Config)
 	})
 }
 
@@ -324,6 +324,46 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []str
 	for i, identityPool := range identityPools {
 		description := fmt.Sprintf("%s: %s", identityPool.GetDisplayName(), identityPool.GetDescription())
 		suggestions[i] = fmt.Sprintf("%s\t%s", identityPool.GetId(), description)
+	}
+	return suggestions
+}
+
+func AddResourceGroupFlag(cmd *cobra.Command) {
+	arr := []string{"management"}
+	cmd.Flags().String("resource-group", "management", "Name of resource group. Currently, only \"management\" is supported.")
+	RegisterFlagCompletionFunc(cmd, "resource-group", func(_ *cobra.Command, _ []string) []string {
+		return arr
+	})
+}
+
+func AutocompleteIpFilters(client *ccloudv2.Client) []string {
+	ipFilters, err := client.ListIamIpFilters()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(ipFilters))
+	for i, ipFilter := range ipFilters {
+		var ipGroupIds []string
+		for _, ipGroup := range ipFilter.GetIpGroups() {
+			ipGroupIds = append(ipGroupIds, ipGroup.GetId())
+		}
+		description := fmt.Sprintf("%s: %s, %s", ipFilter.GetFilterName(), ipFilter.GetResourceGroup(), ipGroupIds)
+		suggestions[i] = fmt.Sprintf("%s\t%s", ipFilter.GetId(), description)
+	}
+	return suggestions
+}
+
+func AutocompleteIpGroups(client *ccloudv2.Client) []string {
+	ipGroups, err := client.ListIamIpGroups()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(ipGroups))
+	for i, ipGroup := range ipGroups {
+		description := fmt.Sprintf("%s: %s", ipGroup.GetGroupName(), ipGroup.GetCidrBlocks())
+		suggestions[i] = fmt.Sprintf("%s\t%s", ipGroup.GetId(), description)
 	}
 	return suggestions
 }
