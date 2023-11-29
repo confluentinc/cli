@@ -22,8 +22,6 @@ blocks:
             # Set up Go
             - checkout
             - sem-version go $(cat .go-version)
-            # https://github.com/golangci/golangci-lint/issues/3107
-            - export GOROOT=/usr/local/go
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
@@ -31,8 +29,8 @@ blocks:
             # Run tests
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
-            - which golangci-lint
-            - golangci-lint version
+            # https://github.com/golangci/golangci-lint/issues/3107
+            - brew uninstall golangci-lint
             - make lint
             - make test
             - make test-installer

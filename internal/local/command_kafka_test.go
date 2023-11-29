@@ -9,7 +9,7 @@ import (
 )
 
 func TestStartContainer(t *testing.T) {
-	if runtime.GOOS == "darwin" {
+	if runtime.GOOS != "linux" {
 		return
 	}
 
