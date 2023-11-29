@@ -551,8 +551,8 @@ func handleIamInvitations(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			invitationList := &iamv2.IamV2InvitationList{Data: []iamv2.IamV2Invitation{
-				buildIamInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
-				buildIamInvitation("2", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
+				buildIamInvitation("i-11111", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
+				buildIamInvitation("i-22222", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
 			}}
 			err := json.NewEncoder(w).Encode(invitationList)
 			require.NoError(t, err)
