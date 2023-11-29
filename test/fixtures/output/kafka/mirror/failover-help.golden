@@ -10,7 +10,7 @@ Failover mirror topics "my-topic-1" and "my-topic-2":
 
 Flags:
       --link string          REQUIRED: Name of cluster link.
-      --dry-run              If set, does not actually create the link, but simply validates it.
+      --dry-run              If set, does not actually failover the mirror topic, but simply validates it.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
       --environment string   Environment ID.
