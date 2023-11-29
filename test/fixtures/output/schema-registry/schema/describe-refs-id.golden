@@ -2,7 +2,6 @@
   "schemas": [
     {
       "id": 1001,
-      "schemaType": "AVRO",
       "references": [
         {
           "name": "ref_lvl1_1",
@@ -15,13 +14,11 @@
           "version": 1
         }
       ],
-      "schema": "schema0"
+      "schema": "schema0",
+      "schemaType": "AVRO"
     },
     {
-      "subject": "lvl1-1",
-      "version": 1,
       "id": 1002,
-      "schemaType": "AVRO",
       "references": [
         {
           "name": "ref_lvl2",
@@ -29,20 +26,21 @@
           "version": 1
         }
       ],
-      "schema": "schema11"
+      "schema": "schema11",
+      "schemaType": "AVRO",
+      "subject": "lvl1-1",
+      "version": 1
     },
     {
-      "subject": "lvl2",
-      "version": 1,
       "id": 1004,
+      "references": [],
+      "schema": "schema2",
       "schemaType": "AVRO",
-      "schema": "schema2"
+      "subject": "lvl2",
+      "version": 1
     },
     {
-      "subject": "lvl1-2",
-      "version": 1,
       "id": 1003,
-      "schemaType": "AVRO",
       "references": [
         {
           "name": "ref_lvl2",
@@ -50,7 +48,10 @@
           "version": 1
         }
       ],
-      "schema": "schema12"
+      "schema": "schema12",
+      "schemaType": "AVRO",
+      "subject": "lvl1-2",
+      "version": 1
     }
   ]
 }
