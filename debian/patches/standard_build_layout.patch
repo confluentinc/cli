@@ -1,8 +1,8 @@
---- cli/Makefile	2023-11-29 13:30:29.523846668 -0800
+--- cli/Makefile	2023-11-29 15:15:50.472387832 -0800
 +++ debian/Makefile	2023-11-28 15:13:57.494207032 -0800
 @@ -1,120 +1,130 @@
 -SHELL := /bin/bash
--GORELEASER_VERSION := v1.17.2
+-GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
  
 -# Compile natively based on the current system

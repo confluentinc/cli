@@ -9,7 +9,7 @@
   network: ""
   user: ""
 - quota_code: quota_a
-  name: Qutoa A
+  name: Quota A
   scope: kafka_cluster
   applied_limit: 16
   usage: "11"
