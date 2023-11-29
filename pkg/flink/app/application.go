@@ -1,7 +1,6 @@
 package app
 
 import (
-	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"sync"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
@@ -11,7 +10,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/flink-sql-language-service/pkg/api"
 )
 
 type Application struct {
@@ -39,7 +41,7 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 	}
 }
 
-func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
+func StartApp(gatewayClient ccloudv2.GatewayClientInterface, lspClient lsp.LSPInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
 	// Load history of previous commands from cache file
 	historyStore := history.LoadHistory()
 
@@ -48,12 +50,8 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	appController := controller.NewApplicationController(historyStore)
 
 	// Store used to process statements and store local properties
-	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
+	dataStore := store.NewStore(gatewayClient, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
 	resultFetcher := results.NewResultFetcher(dataStore)
-	var lspClient lsp.LSPInterface
-	if appOptions.GetLSPEnabled() {
-		lspClient = lsp.NewLSPClientWS(dataStore)
-	}
 
 	stdinBefore := utils.GetStdin()
 	consoleParser := utils.GetConsoleParser()
@@ -70,7 +68,19 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	})
 
 	// Instantiate Component Controllers
-	inputController := controller.NewInputController(historyStore, lspClient)
+	lspCompleter := lsp.LSPCompleter(lspClient, func() api.CliContext {
+		if authErr := synchronizedTokenRefresh(tokenRefreshFunc)(); authErr != nil {
+			log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
+		}
+
+		return api.CliContext{
+			AuthToken:     gatewayClient.GetAuthToken(),
+			Catalog:       dataStore.GetCurrentCatalog(),
+			Database:      dataStore.GetCurrentDatabase(),
+			ComputePoolId: appOptions.GetComputePoolId(),
+		}
+	})
+	inputController := controller.NewInputController(historyStore, lspCompleter)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
 	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)

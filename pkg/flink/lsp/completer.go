@@ -2,11 +2,12 @@ package lsp
 
 import (
 	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/flink-sql-language-service/pkg/api"
 	"github.com/confluentinc/go-prompt"
 	"github.com/sourcegraph/go-lsp"
 )
 
-func LSPCompleter(c LSPInterface) prompt.Completer {
+func LSPCompleter(c LSPInterface, configurationSettings func() api.CliContext) prompt.Completer {
 	return func(in prompt.Document) []prompt.Suggest {
 		textBeforeCursor := in.TextBeforeCursor()
 		if textBeforeCursor == "" {
@@ -19,7 +20,7 @@ func LSPCompleter(c LSPInterface) prompt.Completer {
 			return nil
 		}
 
-		err = c.DidChangeConfiguration()
+		err = c.DidChangeConfiguration(configurationSettings())
 		if err != nil {
 			log.CliLogger.Debugf("Error sending didChangeConfiguration lsp notification: %v\n", err)
 			return nil

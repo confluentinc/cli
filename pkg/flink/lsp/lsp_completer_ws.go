@@ -9,16 +9,15 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 	websocket2 "github.com/sourcegraph/jsonrpc2/websocket"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
-func NewWSObjectStream(store types.StoreInterface) jsonrpc2.ObjectStream {
+func NewWSObjectStream(baseUrl, authToken, organizationId, environmentId string) jsonrpc2.ObjectStream {
 	requestHeaders := http.Header{}
-	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", store.GetAuthToken()))
-	requestHeaders.Add("Organization-ID", store.GetOrganizationId())
-	requestHeaders.Add("Environment-ID", store.GetEnvironmentId())
-	socketUrl := "ws://localhost:8000/lsp"
+	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
+	requestHeaders.Add("Organization-ID", organizationId)
+	requestHeaders.Add("Environment-ID", environmentId)
+	socketUrl := fmt.Sprintf("wss://%s/lsp", baseUrl)
 	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, requestHeaders)
 	if err != nil {
 		return nil
@@ -26,10 +25,9 @@ func NewWSObjectStream(store types.StoreInterface) jsonrpc2.ObjectStream {
 	return websocket2.NewObjectStream(conn)
 }
 
-func NewLSPClientWS(store types.StoreInterface) LSPInterface {
-	stream := NewWSObjectStream(store)
+func NewLSPClientWS(baseUrl, authToken, organizationId, environmentId string) LSPInterface {
+	stream := NewWSObjectStream(baseUrl, authToken, organizationId, environmentId)
 	lspClient := &LSPClient{
-		store: store,
 		conn: jsonrpc2.NewConn(
 			context.Background(),
 			stream,
