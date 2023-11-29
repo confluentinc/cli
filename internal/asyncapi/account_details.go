@@ -74,10 +74,12 @@ func (d *accountDetails) getSchemaDetails() error {
 	}
 	d.channelDetails.schema = &schema
 
+	if schema.GetSchemaType() == "" {
+		schema.SchemaType = srsdk.PtrString("AVRO")
+	}
+
 	// The backend considers "AVRO" to be the default schema type.
 	switch schema.GetSchemaType() {
-	case "":
-		schema.SchemaType = srsdk.PtrString("AVRO")
 	case "PROTOBUF":
 		return fmt.Errorf("protobuf is not supported")
 	case "AVRO", "JSON":
@@ -111,7 +113,7 @@ func (d *accountDetails) getTopicDescription() error {
 		return catchOpenAPIError(err)
 	}
 	attributes := atlasEntityWithExtInfo.Entity.GetAttributes()
-	if attributes["description"] != nil {
+	if _, ok := attributes["description"]; ok {
 		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", attributes["description"])
 	}
 	return nil

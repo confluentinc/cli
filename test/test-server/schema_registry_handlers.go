@@ -534,7 +534,7 @@ func handleSRUniqueAttributes(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			attributes := req.Entity.GetAttributes()
-			if attributes["description"] != nil {
+			if _, ok := attributes["description"]; ok {
 				w.WriteHeader(http.StatusOK)
 			}
 		}

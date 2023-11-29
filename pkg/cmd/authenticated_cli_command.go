@@ -221,7 +221,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			if len(clusters) == 0 {
 				return nil, errors.NewSRNotEnabledError()
 			}
-			configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetHttpEndpoint()}} // unsure
+			configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetHttpEndpoint()}}
 			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
 		} else {
 			return nil, errors.NewErrorWithSuggestions(
