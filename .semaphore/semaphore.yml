@@ -21,7 +21,7 @@ blocks:
           commands:
             # Set up Go
             - checkout
-            - sem-version $(cat .go-version)
+            - sem-version go $(cat .go-version)
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
@@ -50,7 +50,7 @@ blocks:
         - name: darwin/amd64
           commands:
             - checkout
-            - sem-version $(cat .go-version)
+            - sem-version go $(cat .go-version)
             - make test
       epilogue:
         always:
@@ -67,6 +67,7 @@ blocks:
         - name: windows/amd64
           commands:
             # Set up Go
+            - checkout
             # TODO: https://confluentinc.atlassian.net/browse/DP-9532
 
             # Try to restore cached dependencies
