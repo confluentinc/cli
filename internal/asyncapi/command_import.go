@@ -406,12 +406,12 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 			Schema:     srsdk.PtrString(string(jsonSchema)),
 			SchemaType: srsdk.PtrString(resolveSchemaType(components.Messages[strcase.ToCamel(topicName)+"Message"].ContentType)),
 		}
-		id, err := details.srClient.Register(subject, req, false)
+		registerResp, err := details.srClient.Register(subject, req, false)
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %w", err)
 		}
-		output.Printf(false, "Registered schema \"%d\" under subject \"%s\".\n", id.GetId(), subject)
-		return id.GetId(), nil
+		output.Printf(false, "Registered schema \"%d\" under subject \"%s\".\n", registerResp.GetId(), subject)
+		return registerResp.GetId(), nil
 	}
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
 }

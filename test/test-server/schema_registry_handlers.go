@@ -32,13 +32,13 @@ func handleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodGet:
 			res := srsdk.Config{CompatibilityLevel: srsdk.PtrString("FULL")}
-			defaultMetadata := srsdk.Metadata{
+			metadata := srsdk.Metadata{
 				Properties: &map[string]string{
 					"owner": "Bob Jones",
 					"email": "bob@acme.com",
 				},
 			}
-			res.SetDefaultMetadata(defaultMetadata)
+			res.SetDefaultMetadata(metadata)
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -266,15 +266,19 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 		case 1005:
 			schema.Schema = srsdk.PtrString(`{"schema":1}`)
 			schema.References = &[]srsdk.SchemaReference{}
-			ruleSet := &srsdk.RuleSet{DomainRules: &[]srsdk.Rule{
-				{
-					Name: srsdk.PtrString("checkSsnLen"),
-					Kind: srsdk.PtrString("CONDITION"),
-					Mode: srsdk.PtrString("WRITE"),
-					Type: srsdk.PtrString("CEL"),
-					Expr: srsdk.PtrString("size(message.ssn) == 9"),
-				}}}
-			schema.Ruleset = *srsdk.NewNullableRuleSet(ruleSet)
+			schema.Ruleset = *srsdk.NewNullableRuleSet(
+				&srsdk.RuleSet{
+					DomainRules: &[]srsdk.Rule{
+						{
+							Name: srsdk.PtrString("checkSsnLen"),
+							Kind: srsdk.PtrString("CONDITION"),
+							Mode: srsdk.PtrString("WRITE"),
+							Type: srsdk.PtrString("CEL"),
+							Expr: srsdk.PtrString("size(message.ssn) == 9"),
+						},
+					},
+				},
+			)
 		default:
 			schema.Schema = srsdk.PtrString(`{"schema":1}`)
 			schema.References = &[]srsdk.SchemaReference{{
@@ -529,7 +533,7 @@ func handleSRUniqueAttributes(t *testing.T) http.HandlerFunc {
 			var req srsdk.AtlasEntityWithExtInfo
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			attributes := *req.Entity.Attributes
+			attributes := req.Entity.GetAttributes()
 			if attributes["description"] != nil {
 				w.WriteHeader(http.StatusOK)
 			}

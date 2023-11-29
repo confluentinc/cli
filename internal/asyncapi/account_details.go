@@ -75,15 +75,12 @@ func (d *accountDetails) getSchemaDetails() error {
 	d.channelDetails.schema = &schema
 
 	// The backend considers "AVRO" to be the default schema type.
-	if schema.GetSchemaType() == "" {
+	switch schema.GetSchemaType() {
+	case "":
 		schema.SchemaType = srsdk.PtrString("AVRO")
-	}
-
-	if schema.GetSchemaType() == "PROTOBUF" {
+	case "PROTOBUF":
 		return fmt.Errorf("protobuf is not supported")
-	}
-
-	if schema.GetSchemaType() == "AVRO" || schema.GetSchemaType() == "JSON" {
+	case "AVRO", "JSON":
 		d.channelDetails.contentType = fmt.Sprintf("application/%s", strings.ToLower(schema.GetSchemaType()))
 	}
 

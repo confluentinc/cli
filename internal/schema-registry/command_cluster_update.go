@@ -119,7 +119,6 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if metadataDefaults != "" {
-		req.DefaultMetadata = srsdk.NullableMetadata{}
 		if err := read(metadataDefaults, &req.DefaultMetadata); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
@@ -130,7 +129,6 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if metadataOverrides != "" {
-		req.OverrideMetadata = srsdk.NullableMetadata{}
 		if err := read(metadataOverrides, &req.OverrideMetadata); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
@@ -141,7 +139,6 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if rulesetDefaults != "" {
-		req.DefaultRuleSet = srsdk.NullableRuleSet{}
 		if err := read(rulesetDefaults, &req.DefaultRuleSet); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
@@ -152,7 +149,6 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if rulesetOverrides != "" {
-		req.OverrideRuleSet = srsdk.NullableRuleSet{}
 		if err := read(rulesetOverrides, &req.OverrideRuleSet); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}

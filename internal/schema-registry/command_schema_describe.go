@@ -233,8 +233,8 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 	return root, schemaGraph, nil
 }
 
-func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata srsdk.Metadata, ruleset srsdk.RuleSet) error {
-	output.Printf(false, "Schema ID: %d\n", schemaID)
+func printSchema(schemaId int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata srsdk.Metadata, ruleset srsdk.RuleSet) error {
+	output.Printf(false, "Schema ID: %d\n", schemaId)
 
 	// The backend considers "AVRO" to be the default schema type.
 	if schemaType == "" {
