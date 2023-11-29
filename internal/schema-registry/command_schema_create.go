@@ -7,8 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -136,8 +134,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if metadata != "" {
-		cfg.Metadata = new(srsdk.Metadata)
-		if err := read(metadata, cfg.Metadata); err != nil {
+		if err := read(metadata, &cfg.Metadata); err != nil {
 			return err
 		}
 	}
@@ -147,8 +144,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if ruleset != "" {
-		cfg.Ruleset = new(srsdk.RuleSet)
-		if err := read(ruleset, cfg.Ruleset); err != nil {
+		if err := read(ruleset, &cfg.Ruleset); err != nil {
 			return err
 		}
 	}

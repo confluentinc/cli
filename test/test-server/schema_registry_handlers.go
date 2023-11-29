@@ -31,15 +31,14 @@ func handleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
 			require.NoError(t, err)
 		case http.MethodGet:
-			res := srsdk.Config{
-				CompatibilityLevel: "FULL",
-				DefaultMetadata: &srsdk.Metadata{
-					Properties: map[string]string{
-						"owner": "Bob Jones",
-						"email": "bob@acme.com",
-					},
+			res := srsdk.Config{CompatibilityLevel: srsdk.PtrString("FULL")}
+			metadata := srsdk.Metadata{
+				Properties: &map[string]string{
+					"owner": "Bob Jones",
+					"email": "bob@acme.com",
 				},
 			}
+			res.SetDefaultMetadata(metadata)
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -61,7 +60,7 @@ func handleSRUpdateTopLevelMode(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
 			require.NoError(t, err)
 		case http.MethodGet:
-			req := &srsdk.Mode{Mode: "READWRITE"}
+			req := &srsdk.Mode{Mode: srsdk.PtrString("READWRITE")}
 			err := json.NewEncoder(w).Encode(req)
 			require.NoError(t, err)
 		}
@@ -76,7 +75,7 @@ func handleSRSubjectVersions(t *testing.T) http.HandlerFunc {
 			var req srsdk.RegisterSchemaRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			err = json.NewEncoder(w).Encode(srsdk.RegisterSchemaRequest{Id: 1})
+			err = json.NewEncoder(w).Encode(srsdk.RegisterSchemaRequest{Id: srsdk.PtrInt32(1)})
 			require.NoError(t, err)
 		case http.MethodGet:
 			var versions []int32
@@ -109,19 +108,19 @@ func handleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 				switch subject {
 				case "topic2-value":
 					err := json.NewEncoder(w).Encode(srsdk.Schema{
-						Subject:    subject,
-						Version:    1,
-						Id:         1,
-						SchemaType: "PROTOBUF",
+						Subject:    srsdk.PtrString(subject),
+						Version:    srsdk.PtrInt32(1),
+						Id:         srsdk.PtrInt32(1),
+						SchemaType: srsdk.PtrString("PROTOBUF"),
 					})
 					require.NoError(t, err)
 				default:
 					err := json.NewEncoder(w).Encode(srsdk.Schema{
-						Subject:    subject,
-						Version:    1,
-						Id:         1,
-						SchemaType: "avro",
-						Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"AVRO"}`,
+						Subject:    srsdk.PtrString(subject),
+						Version:    srsdk.PtrInt32(1),
+						Id:         srsdk.PtrInt32(1),
+						SchemaType: srsdk.PtrString("avro"),
+						Schema:     srsdk.PtrString(`{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"AVRO"}`),
 					})
 					require.NoError(t, err)
 				}
@@ -129,54 +128,55 @@ func handleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 				version64, err := strconv.ParseInt(versionStr, 10, 32)
 				require.NoError(t, err)
 				subject := vars["subject"]
-				schema := srsdk.Schema{Subject: subject, Version: int32(version64), SchemaType: "AVRO"}
+				version32 := int32(version64)
+				schema := srsdk.Schema{Subject: srsdk.PtrString(subject), Version: srsdk.PtrInt32(version32), SchemaType: srsdk.PtrString("AVRO")}
 				switch subject {
 				case "lvl0":
-					schema.Id = 1001
-					schema.Schema = "schema0"
-					schema.References = []srsdk.SchemaReference{
+					schema.Id = srsdk.PtrInt32(1001)
+					schema.Schema = srsdk.PtrString("schema0")
+					schema.References = &[]srsdk.SchemaReference{
 						{
-							Name:    "ref_lvl1_1",
-							Subject: "lvl1-1",
-							Version: 1,
+							Name:    srsdk.PtrString("ref_lvl1_1"),
+							Subject: srsdk.PtrString("lvl1-1"),
+							Version: srsdk.PtrInt32(1),
 						},
 						{
-							Name:    "ref_lvl1_2",
-							Subject: "lvl1-2",
-							Version: 1,
+							Name:    srsdk.PtrString("ref_lvl1_2"),
+							Subject: srsdk.PtrString("lvl1-2"),
+							Version: srsdk.PtrInt32(1),
 						},
 					}
 				case "lvl1-1":
-					schema.Id = 1002
-					schema.Schema = "schema11"
-					schema.References = []srsdk.SchemaReference{
+					schema.Id = srsdk.PtrInt32(1002)
+					schema.Schema = srsdk.PtrString("schema11")
+					schema.References = &[]srsdk.SchemaReference{
 						{
-							Name:    "ref_lvl2",
-							Subject: "lvl2",
-							Version: 1,
+							Name:    srsdk.PtrString("ref_lvl2"),
+							Subject: srsdk.PtrString("lvl2"),
+							Version: srsdk.PtrInt32(1),
 						},
 					}
 				case "lvl1-2":
-					schema.Id = 1003
-					schema.Schema = "schema12"
-					schema.References = []srsdk.SchemaReference{
+					schema.Id = srsdk.PtrInt32(1003)
+					schema.Schema = srsdk.PtrString("schema12")
+					schema.References = &[]srsdk.SchemaReference{
 						{
-							Name:    "ref_lvl2",
-							Subject: "lvl2",
-							Version: 1,
+							Name:    srsdk.PtrString("ref_lvl2"),
+							Subject: srsdk.PtrString("lvl2"),
+							Version: srsdk.PtrInt32(1),
 						},
 					}
 				case "lvl2":
-					schema.Id = 1004
-					schema.Schema = "schema2"
-					schema.References = []srsdk.SchemaReference{}
+					schema.Id = srsdk.PtrInt32(1004)
+					schema.Schema = srsdk.PtrString("schema2")
+					schema.References = &[]srsdk.SchemaReference{}
 				default:
-					schema.Id = 10
-					schema.Schema = `{"schema":1}`
-					schema.References = []srsdk.SchemaReference{{
-						Name:    "ref",
-						Subject: "payment",
-						Version: 1,
+					schema.Id = srsdk.PtrInt32(10)
+					schema.Schema = srsdk.PtrString(`{"schema":1}`)
+					schema.References = &[]srsdk.SchemaReference{{
+						Name:    srsdk.PtrString("ref"),
+						Subject: srsdk.PtrString("payment"),
+						Version: srsdk.PtrInt32(1),
 					}}
 				}
 				err = json.NewEncoder(w).Encode(schema)
@@ -195,21 +195,21 @@ func handleSRSchemas(t *testing.T) http.HandlerFunc {
 		subjectPrefix := r.URL.Query().Get("subjectPrefix")
 		schemas := []srsdk.Schema{
 			{
-				Subject: "mysubject-1",
-				Version: 1,
-				Id:      100001,
+				Subject: srsdk.PtrString("mysubject-1"),
+				Version: srsdk.PtrInt32(1),
+				Id:      srsdk.PtrInt32(100001),
 			},
 			{
-				Subject: "mysubject-1",
-				Version: 2,
-				Id:      100002,
+				Subject: srsdk.PtrString("mysubject-1"),
+				Version: srsdk.PtrInt32(2),
+				Id:      srsdk.PtrInt32(100002),
 			},
 		}
 		if subjectPrefix == "" {
 			schemas = append(schemas, srsdk.Schema{
-				Subject: "mysubject-2",
-				Version: 1,
-				Id:      100003,
+				Subject: srsdk.PtrString("mysubject-2"),
+				Version: srsdk.PtrInt32(1),
+				Id:      srsdk.PtrInt32(100003),
 			})
 		}
 
@@ -225,66 +225,68 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 		idStr := vars["id"]
 		id64, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
-
-		schema := srsdk.Schema{Subject: "my-subject", Version: 1, Id: int32(id64)}
+		id32 := int32(id64)
+		schema := srsdk.Schema{Subject: srsdk.PtrString("my-subject"), Version: srsdk.PtrInt32(1), Id: srsdk.PtrInt32(id32)}
 		switch id64 {
 		case 1001:
-			schema.Schema = "schema0"
-			schema.References = []srsdk.SchemaReference{
+			schema.Schema = srsdk.PtrString("schema0")
+			schema.References = &[]srsdk.SchemaReference{
 				{
-					Name:    "ref_lvl1_1",
-					Subject: "lvl1-1",
-					Version: 1,
+					Name:    srsdk.PtrString("ref_lvl1_1"),
+					Subject: srsdk.PtrString("lvl1-1"),
+					Version: srsdk.PtrInt32(1),
 				},
 				{
-					Name:    "ref_lvl1_2",
-					Subject: "lvl1-2",
-					Version: 1,
+					Name:    srsdk.PtrString("ref_lvl1_2"),
+					Subject: srsdk.PtrString("lvl1-2"),
+					Version: srsdk.PtrInt32(1),
 				},
 			}
 		case 1002:
-			schema.Schema = "schema11"
-			schema.References = []srsdk.SchemaReference{
+			schema.Schema = srsdk.PtrString("schema11")
+			schema.References = &[]srsdk.SchemaReference{
 				{
-					Name:    "ref_lvl2",
-					Subject: "lvl2",
-					Version: 1,
+					Name:    srsdk.PtrString("ref_lvl2"),
+					Subject: srsdk.PtrString("lvl2"),
+					Version: srsdk.PtrInt32(1),
 				},
 			}
 		case 1003:
-			schema.Schema = "schema12"
-			schema.References = []srsdk.SchemaReference{
+			schema.Schema = srsdk.PtrString("schema12")
+			schema.References = &[]srsdk.SchemaReference{
 				{
-					Name:    "ref_lvl2",
-					Subject: "lvl2",
-					Version: 1,
+					Name:    srsdk.PtrString("ref_lvl2"),
+					Subject: srsdk.PtrString("lvl2"),
+					Version: srsdk.PtrInt32(1),
 				},
 			}
 		case 1004:
-			schema.Schema = "schema2"
-			schema.References = []srsdk.SchemaReference{}
+			schema.Schema = srsdk.PtrString("schema2")
+			schema.References = &[]srsdk.SchemaReference{}
 		case 1005:
-			schema.Schema = `{"schema":1}`
-			schema.References = []srsdk.SchemaReference{}
-			schema.Ruleset = &srsdk.RuleSet{
-				DomainRules: []srsdk.Rule{
-					{
-						Name: "checkSsnLen",
-						Kind: "CONDITION",
-						Mode: "WRITE",
-						Type: "CEL",
-						Expr: "size(message.ssn) == 9",
+			schema.Schema = srsdk.PtrString(`{"schema":1}`)
+			schema.References = &[]srsdk.SchemaReference{}
+			schema.Ruleset = *srsdk.NewNullableRuleSet(
+				&srsdk.RuleSet{
+					DomainRules: &[]srsdk.Rule{
+						{
+							Name: srsdk.PtrString("checkSsnLen"),
+							Kind: srsdk.PtrString("CONDITION"),
+							Mode: srsdk.PtrString("WRITE"),
+							Type: srsdk.PtrString("CEL"),
+							Expr: srsdk.PtrString("size(message.ssn) == 9"),
+						},
 					},
 				},
-			}
+			)
 		default:
-			schema.Schema = `{"schema":1}`
-			schema.References = []srsdk.SchemaReference{{
-				Name:    "ref",
-				Subject: "payment",
-				Version: 1,
+			schema.Schema = srsdk.PtrString(`{"schema":1}`)
+			schema.References = &[]srsdk.SchemaReference{{
+				Name:    srsdk.PtrString("ref"),
+				Subject: srsdk.PtrString("payment"),
+				Version: srsdk.PtrInt32(1),
 			}}
-			schema.Ruleset = nil
+			schema.Ruleset = srsdk.NullableRuleSet{}
 		}
 		err = json.NewEncoder(w).Encode(schema)
 		require.NoError(t, err)
@@ -326,17 +328,17 @@ func handleSRExporter(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			info := srsdk.ExporterInfo{
-				Name:                name,
-				Subjects:            []string{"foo", "bar"},
-				ContextType:         "CUSTOM",
-				Context:             "mycontext",
-				SubjectRenameFormat: "my-${subject}",
-				Config:              map[string]string{"key1": "value1", "key2": "value2"},
+				Name:                srsdk.PtrString(name),
+				Subjects:            &[]string{"foo", "bar"},
+				ContextType:         srsdk.PtrString("CUSTOM"),
+				Context:             srsdk.PtrString("mycontext"),
+				SubjectRenameFormat: srsdk.PtrString("my-${subject}"),
+				Config:              &map[string]string{"key1": "value1", "key2": "value2"},
 			}
 			err := json.NewEncoder(w).Encode(info)
 			require.NoError(t, err)
 		case http.MethodPut:
-			err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
+			err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: srsdk.PtrString(name)})
 			require.NoError(t, err)
 		}
 	}
@@ -348,8 +350,8 @@ func handleSRExporterStatus(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		name := vars["name"]
 		status := srsdk.ExporterStatus{
-			Name:  name,
-			State: "RUNNING",
+			Name:  srsdk.PtrString(name),
+			State: srsdk.PtrString("RUNNING"),
 		}
 		err := json.NewEncoder(w).Encode(status)
 		require.NoError(t, err)
@@ -369,7 +371,7 @@ func handleSRExporterPause(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		name := vars["name"]
-		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
+		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: srsdk.PtrString(name)})
 		require.NoError(t, err)
 	}
 }
@@ -379,7 +381,7 @@ func handleSRExporterResume(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		name := vars["name"]
-		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
+		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: srsdk.PtrString(name)})
 		require.NoError(t, err)
 	}
 }
@@ -389,7 +391,7 @@ func handleSRExporterReset(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		name := vars["name"]
-		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
+		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: srsdk.PtrString(name)})
 		require.NoError(t, err)
 	}
 }
@@ -405,26 +407,28 @@ func handleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
 			require.NoError(t, err)
 		case http.MethodGet:
+			ruleSet := srsdk.RuleSet{
+				DomainRules: &[]srsdk.Rule{
+					{
+						Name: srsdk.PtrString("checkSsnLen"),
+						Kind: srsdk.PtrString("CONDITION"),
+						Mode: srsdk.PtrString("WRITE"),
+						Type: srsdk.PtrString("CEL"),
+						Expr: srsdk.PtrString("size(message.ssn) == 9"),
+					},
+				},
+			}
+			defaultMetadata := srsdk.Metadata{
+				Properties: &map[string]string{
+					"owner": "Bob Jones",
+					"email": "bob@acme.com",
+				},
+			}
 			res := srsdk.Config{
-				CompatibilityLevel: "FORWARD",
-				CompatibilityGroup: "application.version",
-				DefaultRuleSet: &srsdk.RuleSet{
-					DomainRules: []srsdk.Rule{
-						{
-							Name: "checkSsnLen",
-							Kind: "CONDITION",
-							Mode: "WRITE",
-							Type: "CEL",
-							Expr: "size(message.ssn) == 9",
-						},
-					},
-				},
-				DefaultMetadata: &srsdk.Metadata{
-					Properties: map[string]string{
-						"owner": "Bob Jones",
-						"email": "bob@acme.com",
-					},
-				},
+				CompatibilityLevel: srsdk.PtrString("FORWARD"),
+				CompatibilityGroup: srsdk.PtrString("application.version"),
+				DefaultRuleSet:     *srsdk.NewNullableRuleSet(&ruleSet),
+				DefaultMetadata:    *srsdk.NewNullableMetadata(&defaultMetadata),
 			}
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
@@ -450,7 +454,7 @@ func handleSRSubjectMode(t *testing.T) http.HandlerFunc {
 // Handler for: "/compatibility"
 func handleSRCompatibility(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := srsdk.CompatibilityCheckResponse{IsCompatible: true}
+		res := srsdk.CompatibilityCheckResponse{IsCompatible: srsdk.PtrBool(true)}
 		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
 	}
@@ -472,8 +476,8 @@ func handleSRTagDefs(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost:
 			tagDefs := []srsdk.TagDef{
-				{Name: "schema_tag"},
-				{Name: "topic_tag"},
+				{Name: srsdk.PtrString("schema_tag")},
+				{Name: srsdk.PtrString("topic_tag")},
 			}
 			w.WriteHeader(http.StatusOK)
 			err := json.NewEncoder(w).Encode(
@@ -505,14 +509,14 @@ func handleSRTags(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			res := []srsdk.TagResponse{
 				{
-					TypeName:   "schema_tag",
-					EntityType: "sr_schema",
-					EntityName: "lsrc-1234:.:1",
+					TypeName:   srsdk.PtrString("schema_tag"),
+					EntityType: srsdk.PtrString("sr_schema"),
+					EntityName: srsdk.PtrString("lsrc-1234:.:1"),
 				},
 				{
-					TypeName:   "topic_tag",
-					EntityType: "kafka_topic",
-					EntityName: "lsrc-1234:lkc-asyncapi:topic1",
+					TypeName:   srsdk.PtrString("topic_tag"),
+					EntityType: srsdk.PtrString("kafka_topic"),
+					EntityName: srsdk.PtrString("lsrc-1234:lkc-asyncapi:topic1"),
 				},
 			}
 			err := json.NewEncoder(w).Encode(res)
@@ -529,7 +533,8 @@ func handleSRUniqueAttributes(t *testing.T) http.HandlerFunc {
 			var req srsdk.AtlasEntityWithExtInfo
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			if req.Entity.Attributes["description"] != nil {
+			attributes := req.Entity.GetAttributes()
+			if attributes["description"] != nil {
 				w.WriteHeader(http.StatusOK)
 			}
 		}

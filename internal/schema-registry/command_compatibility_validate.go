@@ -104,9 +104,9 @@ func (c *command) compatibilityValidate(cmd *cobra.Command, _ []string) error {
 	}
 
 	req := srsdk.RegisterSchemaRequest{
-		Schema:     string(schema),
-		SchemaType: schemaType,
-		References: references,
+		Schema:     srsdk.PtrString(string(schema)),
+		SchemaType: srsdk.PtrString(schemaType),
+		References: &references,
 	}
 
 	res, err := client.TestCompatibilityBySubjectName(subject, version, req)
@@ -115,6 +115,6 @@ func (c *command) compatibilityValidate(cmd *cobra.Command, _ []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&validateOut{IsCompatible: res.IsCompatible})
+	table.Add(&validateOut{IsCompatible: res.GetIsCompatible()})
 	return table.Print()
 }
