@@ -1258,7 +1258,7 @@ func handleNetworkingNetworkLinkServiceGet(t *testing.T, id string) http.Handler
 			err := writeErrorJson(w, "The network-link-service nls-invalid was not found.")
 			require.NoError(t, err)
 		case "nls-123456":
-			nls := getNetworkLinkService("nls-123456", "nls-test")
+			nls := getNetworkLinkService("nls-123456", "my-network-link-service")
 			err := json.NewEncoder(w).Encode(nls)
 			require.NoError(t, err)
 		}
@@ -1270,7 +1270,7 @@ func getNetworkLinkService(id, name string) networkingv1.NetworkingV1NetworkLink
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingv1.NetworkingV1NetworkLinkServiceSpec{
 			DisplayName: networkingv1.PtrString(name),
-			Description: networkingv1.PtrString("test nls"),
+			Description: networkingv1.PtrString("example network link service"),
 			Accept: &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
 				Networks:     &[]string{"n-abcde2", "n-abcde3"},
 				Environments: &[]string{"env-11111", "env-22222"},
@@ -1299,27 +1299,27 @@ func getNetworkLinkService(id, name string) networkingv1.NetworkingV1NetworkLink
 
 func handleNetworkingNetworkLinkServiceList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		service1 := getNetworkLinkService("nls-11111", "nls-test1")
-		service2 := getNetworkLinkService("nls-22222", "nls-test2")
-		service3 := getNetworkLinkService("nls-33333", "nls-test3")
+		service1 := getNetworkLinkService("nls-11111", "my-network-link-service-1")
+		service2 := getNetworkLinkService("nls-22222", "my-network-link-service-2")
+		service3 := getNetworkLinkService("nls-33333", "my-network-link-service-3")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var networkLinkServiceList networkingv1.NetworkingV1NetworkLinkServiceList
 		switch pageToken {
-		case "nls-test3":
+		case "my-network-link-service-3":
 			networkLinkServiceList = networkingv1.NetworkingV1NetworkLinkServiceList{
 				Data:     []networkingv1.NetworkingV1NetworkLinkService{service3},
 				Metadata: networkingv1.ListMeta{},
 			}
-		case "nls-test2":
+		case "my-network-link-service-2":
 			networkLinkServiceList = networkingv1.NetworkingV1NetworkLinkServiceList{
 				Data:     []networkingv1.NetworkingV1NetworkLinkService{service2},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-services?environment=env-00000&page_size=1&page_token=nls-test3"))},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-services?environment=env-00000&page_size=1&page_token=my-network-link-service-3"))},
 			}
 		default:
 			networkLinkServiceList = networkingv1.NetworkingV1NetworkLinkServiceList{
 				Data:     []networkingv1.NetworkingV1NetworkLinkService{service1},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-services?environment=env-00000&page_size=1&page_token=nls-test2"))},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-services?environment=env-00000&page_size=1&page_token=my-network-link-service-2"))},
 			}
 		}
 
@@ -1394,20 +1394,20 @@ func handleNetworkingNetworkLinkServiceUpdate(t *testing.T, id string) http.Hand
 						Networks:     &[]string{"n-000000"},
 						Environments: &[]string{"env-000000"},
 					},
-					Environment: &networkingv1.GlobalObjectReference{Id: "env-00000"},
+					Environment: &networkingv1.GlobalObjectReference{Id: "env-000000"},
 					Network:     &networkingv1.EnvScopedObjectReference{Id: "n-abcde1"},
 				},
 				Status: &networkingv1.NetworkingV1NetworkLinkServiceStatus{Phase: "READY"},
 			}
 
-			if body.Spec.DisplayName == nil {
-				service.Spec.SetDisplayName("nls-111111")
+			if body.Spec.GetDisplayName() == "" {
+				service.Spec.SetDisplayName("my-network-link-service")
 			}
 
-			if body.Spec.Description == nil {
-				service.Spec.SetDescription("test description")
+			if body.Spec.GetDescription() == "" {
+				service.Spec.SetDescription("example network link service")
 			}
-			
+
 			if body.Spec.Accept != nil {
 				if body.Spec.Accept.Networks != nil {
 					service.Spec.Accept.Networks = body.Spec.Accept.Networks

@@ -1,16 +1,20 @@
-Create a network link service.
+Update an existing network link service.
 
 Usage:
-  confluent network network-link service create <name> [flags]
+  confluent network network-link service update <id> [flags]
 
 Examples:
-Create a network link service for network "n-123456" with accepted environments "env-111111" and "env-222222".
+Update the name and description of network link service "nls-123456".
 
-  $ confluent network network-link service create my-network-link-service --network n-123456 --description "example network link service" --accepted-environments env-111111,env-222222
+  $ confluent network network-link service update nls-123456 --name my-network-link-service --description "example network link service"'
+
+Update the accepted environments and accepted networks of network link service "nls-123456".
+
+  $ confluent network network-link service update nls-123456 --description "example network link service" --accepted-environments env-111111 --accepted-networks n-111111,n222222
 
 Flags:
-      --network string                  REQUIRED: Network ID.
-      --description string              Network link service description.
+      --name string                     Name of the network link service.
+      --description string              Description of the network link service.
       --accepted-networks strings       A comma-separated list of networks from which connections can be accepted.
       --accepted-environments strings   A comma-separated list of environments from which connections can be accepted.
       --context string                  CLI context name.

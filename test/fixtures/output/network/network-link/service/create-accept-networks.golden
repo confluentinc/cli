@@ -1,9 +1,0 @@
-+-------------------+--------------------+
-| ID                | nls-abcde1         |
-| Name              | nls-test           |
-| Network           | n-123456           |
-| Environment       | env-00000          |
-| Description       | test description   |
-| Accepted Networks | n-111111, n-222222 |
-| Phase             | READY              |
-+-------------------+--------------------+

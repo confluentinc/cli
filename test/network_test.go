@@ -573,7 +573,7 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
 	}
 }
 
-func (s *CLITestSuite) TestNetworkNetworkLinkServiceLDelete() {
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceDelete() {
 	tests := []CLITest{
 		{args: "network network-link service delete nls-111111 --force", fixture: "network/network-link/service/delete.golden"},
 		{args: "network network-link service delete nls-111111", input: "y\n", fixture: "network/network-link/service/delete-prompt.golden"},
@@ -592,9 +592,9 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceLDelete() {
 func (s *CLITestSuite) TestNetworkLinkServiceCreate() {
 	tests := []CLITest{
 		{args: "network network-link service create", fixture: "network/network-link/service/create-missing-args.golden", exitCode: 1},
-		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accept-environments env-11111,env-22222", fixture: "network/network-link/service/create-accept-environments.golden"},
-		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accept-networks n-111111,n-222222", fixture: "network/network-link/service/create-accept-networks.golden"},
-		{args: "network network-link service create nls-test --network n-123456 --description 'test description' --accept-networks n-111111,n-222222 --accept-environments env-11111,env-22222", fixture: "network/network-link/service/create.golden"},
+		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create-accepted-environments.golden"},
+		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222", fixture: "network/network-link/service/create-accepted-networks.golden"},
+		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222 --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create.golden"},
 		{args: "network network-link service create nls-duplicate --network n-123455", fixture: "network/network-link/service/create-duplicate.golden", exitCode: 1},
 	}
 
@@ -608,9 +608,9 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceUpdate() {
 	tests := []CLITest{
 		{args: "network network-link service update", fixture: "network/network-link/service/update-missing-args.golden", exitCode: 1},
 		{args: "network network-link service update nls-111111", fixture: "network/network-link/service/update-missing-flags.golden", exitCode: 1},
-		{args: "network nl service update nls-111111 --name nls-test --description 'test description'", fixture: "network/network-link/service/update.golden"},
+		{args: "network nl service update nls-111111 --name my-network-link-service --description 'example network link service'", fixture: "network/network-link/service/update.golden"},
 		{args: "network network-link service update nls-111111 --accepted-environments env-111111,env-222222 --accepted-networks n-111111", fixture: "network/network-link/service/update-accept-policy.golden"},
-		{args: "network network-link service update nls-invalid --name 'new name'", fixture: "network/network-link/service/update-nls-not-exist.golden", exitCode: 1},
+		{args: "network network-link service update nls-invalid --name 'my-network-link-servicee'", fixture: "network/network-link/service/update-nls-not-exist.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -623,7 +623,7 @@ func (s *CLITestSuite) TestNetworkNetworkLinkService_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network network-link service describe ""`, login: "cloud", fixture: "network/network-link/service/describe-autocomplete.golden"},
 		{args: `__complete network network-link service delete ""`, login: "cloud", fixture: "network/network-link/service/delete-autocomplete.golden"},
-		{args: `__complete network network-link service create nls-test --network ""`, login: "cloud", fixture: "network/network-link/service/create-autocomplete.golden"},
+		{args: `__complete network network-link service create my-network-link-service --network ""`, login: "cloud", fixture: "network/network-link/service/create-autocomplete.golden"},
 		{args: `__complete network network-link service update ""`, login: "cloud", fixture: "network/network-link/service/update-autocomplete.golden"},
 	}
 
