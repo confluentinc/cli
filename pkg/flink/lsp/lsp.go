@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/flink-sql-language-service/pkg/api"
 	"github.com/google/uuid"
 	"github.com/sourcegraph/go-lsp"
 )
@@ -14,7 +13,7 @@ type LSPInterface interface {
 	Initialize() (*lsp.InitializeResult, error)
 	DidOpen() error
 	DidChange(newText string) error
-	DidChangeConfiguration() error
+	DidChangeConfiguration(settings any) error
 	Completion(position lsp.Position) (lsp.CompletionList, error)
 	ShutdownAndExit()
 }
@@ -22,7 +21,6 @@ type LSPInterface interface {
 type LSPClient struct {
 	conn        types.JSONRpcConn
 	documentURI *lsp.DocumentURI
-	store       types.StoreInterface
 }
 
 func (c *LSPClient) Initialize() (*lsp.InitializeResult, error) {
@@ -94,16 +92,9 @@ func (c *LSPClient) DidChange(newText string) error {
 	return nil
 }
 
-func (c *LSPClient) DidChangeConfiguration() error {
+func (c *LSPClient) DidChangeConfiguration(settings any) error {
 	if c.conn == nil {
 		return errors.New("connection to LSP server not established/nil")
-	}
-
-	settings := api.CliContext{
-		AuthToken:     c.store.GetAuthToken(),
-		Catalog:       c.store.GetCurrentCatalog(),
-		Database:      c.store.GetCurrentDatabase(),
-		ComputePoolId: c.store.GetComputePool(),
 	}
 
 	didChangeConfigParams := lsp.DidChangeConfigurationParams{

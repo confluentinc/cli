@@ -26,28 +26,12 @@ type Store struct {
 	tokenRefreshFunc func() error
 }
 
-func (s *Store) GetAuthToken() string {
-	return s.authenticatedGatewayClient().GetAuthToken()
-}
-
 func (s *Store) GetCurrentCatalog() string {
 	return s.Properties.Get(config.ConfigKeyCatalog)
 }
 
 func (s *Store) GetCurrentDatabase() string {
 	return s.Properties.Get(config.ConfigKeyDatabase)
-}
-
-func (s *Store) GetComputePool() string {
-	return s.appOptions.GetComputePoolId()
-}
-
-func (s *Store) GetOrganizationId() string {
-	return s.appOptions.GetOrganizationId()
-}
-
-func (s *Store) GetEnvironmentId() string {
-	return s.appOptions.GetEnvironmentId()
 }
 
 func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {

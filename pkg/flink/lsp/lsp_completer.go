@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/flink-sql-language-service/pkg/server/tcp"
 	prompt "github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
@@ -20,10 +19,8 @@ type noopHandler struct{}
 
 func (noopHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {}
 
-func NewLocalLSPClient(store types.StoreInterface) LSPInterface {
-	lspClient := &LSPClient{
-		store: store,
-	}
+func NewLocalLSPClient() LSPInterface {
+	lspClient := &LSPClient{}
 
 	go func() {
 		for port := 49152; port <= 65535; port++ {
