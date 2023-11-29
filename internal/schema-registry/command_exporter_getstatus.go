@@ -61,11 +61,11 @@ func (c *command) exporterGetStatus(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&getStatusOut{
-		Name:       status.Name,
-		State:      status.State,
-		Offset:     strconv.FormatInt(status.Offset, 10),
-		Timestamp:  strconv.FormatInt(status.Ts, 10),
-		ErrorTrace: status.Trace,
+		Name:       status.GetName(),
+		State:      status.GetState(),
+		Offset:     strconv.FormatInt(status.GetOffset(), 10),
+		Timestamp:  strconv.FormatInt(status.GetTs(), 10),
+		ErrorTrace: status.GetTrace(),
 	})
 	return table.Print()
 }
