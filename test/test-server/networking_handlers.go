@@ -1397,7 +1397,7 @@ func handleNetworkingNetworkLinkEndpointGet(t *testing.T, id string) http.Handle
 		switch id {
 		case "nle-invalid":
 			w.WriteHeader(http.StatusNotFound)
-			err := writeErrorJson(w, "NetworkLinkEndpoint was not found.")
+			err := writeErrorJson(w, "The network link endpoint nle-invalid was not found.")
 			require.NoError(t, err)
 		case "nle-123456":
 			nle := getNetworkLinkEndpoint("nle-123456", "my-network-link-endpoint")
