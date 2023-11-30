@@ -13,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/flink-sql-language-service/pkg/api"
 )
 
 type Application struct {
@@ -68,12 +67,12 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, lspClient lsp.LSPIn
 	})
 
 	// Instantiate Component Controllers
-	lspCompleter := lsp.LSPCompleter(lspClient, func() api.CliContext {
+	lspCompleter := lsp.LSPCompleter(lspClient, func() lsp.CliContext {
 		if authErr := synchronizedTokenRefresh(tokenRefreshFunc)(); authErr != nil {
 			log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
 		}
 
-		return api.CliContext{
+		return lsp.CliContext{
 			AuthToken:     gatewayClient.GetAuthToken(),
 			Catalog:       dataStore.GetCurrentCatalog(),
 			Database:      dataStore.GetCurrentDatabase(),

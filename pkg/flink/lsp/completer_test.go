@@ -2,12 +2,10 @@ package lsp
 
 import (
 	"errors"
-	"testing"
-	"time"
-
 	"github.com/golang/mock/gomock"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/stretchr/testify/require"
+	"testing"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
@@ -102,7 +100,7 @@ func TestLSPCompletion(t *testing.T) {
 	uri := lsp.DocumentURI("file:///test.sql")
 	s := store.NewStore(mock.NewFakeFlinkGatewayClient(), func() {}, &types.ApplicationOptions{}, func() error { return nil })
 
-	lspClient := &LSPClient{documentURI: &uri, conn: conn, store: s}
+	lspClient := &LSPClient{documentURI: &uri, conn: conn}
 	Completion, err := lspClient.Completion(lsp.Position{})
 
 	require.NoError(t, err)
@@ -115,7 +113,7 @@ func TestLSPCompletionCallErr(t *testing.T) {
 	uri := lsp.DocumentURI("file:///test.sql")
 	s := store.NewStore(mock.NewFakeFlinkGatewayClient(), func() {}, &types.ApplicationOptions{}, func() error { return nil })
 
-	lspClient := &LSPClient{documentURI: &uri, conn: conn, store: s}
+	lspClient := &LSPClient{documentURI: &uri, conn: conn}
 	Completion, err := lspClient.Completion(lsp.Position{})
 
 	require.Error(t, err)
@@ -128,12 +126,4 @@ func TestLSPCompletionNoConnErr(t *testing.T) {
 	lspClient := &LSPClient{documentURI: &uri, conn: nil}
 	_, err := lspClient.Completion(lsp.Position{})
 	require.Error(t, err)
-}
-
-func TestNewLSPClient(t *testing.T) {
-	lspClient := NewLocalLSPClient(nil).(*LSPClient)
-	require.NotNil(t, lspClient)
-
-	isRunning := waitForConditionWithTimeout(func() bool { return lspClient.conn != nil }, 3*time.Second)
-	require.True(t, isRunning)
 }
