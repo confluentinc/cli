@@ -90,7 +90,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 		return "", err
 	}
 
-	log.CliLogger.Debugf("Decrypting secret: %s", encrypted)
+	log.CliLogger.Tracef("Decrypting secret: %s", encrypted)
 	encrypted = strings.TrimPrefix(encrypted, AesGcm+":")
 
 	cipherText, err := base64.RawStdEncoding.DecodeString(encrypted)
