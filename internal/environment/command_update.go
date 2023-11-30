@@ -35,7 +35,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	streamGovernancePackage, err := cmd.Flags().GetString("stream-governance")
+	streamGovernance, err := cmd.Flags().GetString("stream-governance")
 	if err != nil {
 		return err
 	}
