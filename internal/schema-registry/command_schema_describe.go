@@ -21,7 +21,18 @@ import (
 )
 
 type schemaOut struct {
-	Schemas []srsdk.Schema `json:"schemas"`
+	Schemas []schema `json:"schemas"`
+}
+
+type schema struct {
+	Subject    *string                 `json:"subject,omitempty"`
+	Version    *int32                  `json:"version,omitempty"`
+	Id         *int32                  `json:"id,omitempty"`
+	SchemaType *string                 `json:"schemaType,omitempty"`
+	References []srsdk.SchemaReference `json:"references,omitempty"`
+	Schema     *string                 `json:"schema,omitempty"`
+	Metadata   srsdk.Metadata          `json:"metadata,omitempty"`
+	Ruleset    srsdk.RuleSet           `json:"ruleset,omitempty"`
 }
 
 func (c *command) newSchemaDescribeCommand(cfg *config.Config) *cobra.Command {
@@ -179,7 +190,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 	// convert root from `SchemaString` to `Schema` so that we only have to deal with a single type, only if the root is fetched by id
 	root := convertRootSchema(&rootSchema, int32(schemaID))
 	if root != nil {
-		schemaGraph = append([]srsdk.Schema{*root}, schemaGraph...)
+		schemaGraph = append([]schema{*root}, schemaGraph...)
 	}
 
 	b, err := json.Marshal(&schemaOut{schemaGraph})
@@ -191,10 +202,10 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 	return nil
 }
 
-func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
+func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version string) (srsdk.SchemaString, []schema, error) {
 	root := srsdk.SchemaString{}
-	var schemaGraph []srsdk.Schema
-	var refs []srsdk.SchemaReference
+	var schemaGraph []schema
+	var refs *[]srsdk.SchemaReference
 	subjectVersionString := strings.Join([]string{subject, version}, "#")
 
 	if id > 0 {
@@ -205,23 +216,33 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 		}
 
 		root = schemaString
-		refs = schemaString.GetReferences()
+		refs = schemaString.References
 	} else if subject == "" || version == "" || visited[subjectVersionString] {
 		// dedupe the call if already visited
 		return root, schemaGraph, nil
 	} else {
 		visited[subjectVersionString] = true
 
-		schema, err := client.GetSchemaByVersion(subject, version, true)
+		srsdkSchema, err := client.GetSchemaByVersion(subject, version, true)
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
+		schema := schema{
+			Subject:    srsdkSchema.Subject,
+			Version:    srsdkSchema.Version,
+			Id:         srsdkSchema.Id,
+			SchemaType: srsdkSchema.SchemaType,
+			References: srsdkSchema.GetReferences(),
+			Schema:     srsdkSchema.Schema,
+			Metadata:   srsdkSchema.GetMetadata(),
+			Ruleset:    srsdkSchema.GetRuleset(),
+		}
 
 		schemaGraph = append(schemaGraph, schema)
-		refs = schema.GetReferences()
+		refs = srsdkSchema.References
 	}
 
-	for _, reference := range refs {
+	for _, reference := range *refs {
 		_, subGraph, err := traverseDAG(client, visited, 0, reference.GetSubject(), strconv.Itoa(int(reference.GetVersion())))
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
@@ -281,7 +302,7 @@ func printSchema(schemaId int64, schema, schemaType string, refs []srsdk.SchemaR
 	return nil
 }
 
-func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
+func convertRootSchema(root *srsdk.SchemaString, id int32) *schema {
 	if root.GetSchema() == "" {
 		return nil
 	}
@@ -291,10 +312,10 @@ func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
 		root.SchemaType = srsdk.PtrString("AVRO")
 	}
 
-	return &srsdk.Schema{
+	return &schema{
 		Id:         srsdk.PtrInt32(id),
 		SchemaType: root.SchemaType,
-		References: root.References,
+		References: root.GetReferences(),
 		Schema:     root.Schema,
 	}
 }
