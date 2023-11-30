@@ -47,16 +47,15 @@ func (c *command) ipAddressList(cmd *cobra.Command, _ []string) error {
 
 	// Sort ipAddresses by Cloud then Region then IpPrefix ASC.
 	sort.Slice(ipAddresses, func(i, j int) bool {
-		ipAddressI := ipAddresses[i]
-		ipAddressJ := ipAddresses[j]
-		cloudI := ipAddressI.GetCloud()
-		cloudJ := ipAddressJ.GetCloud()
-		regionI := ipAddressI.GetRegion()
-		regionJ := ipAddressJ.GetRegion()
+		cloudI := ipAddresses[i].GetCloud()
+		cloudJ := ipAddresses[j].GetCloud()
 
 		if cloudI == cloudJ {
+			regionI := ipAddresses[i].GetRegion()
+			regionJ := ipAddresses[j].GetRegion()
+
 			if regionI == regionJ {
-				return ipAddressI.GetIpPrefix() < ipAddressJ.GetIpPrefix()
+				return ipAddresses[i].GetIpPrefix() < ipAddresses[j].GetIpPrefix()
 			}
 			return regionI < regionJ
 		}

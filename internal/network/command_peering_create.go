@@ -23,15 +23,15 @@ func (c *command) newPeeringCreateCommand() *cobra.Command {
 				Code: "confluent network peering create --network n-123456 --cloud aws --cloud-account 123456789012 --virtual-network vpc-1234567890abcdef0 --aws-routes 172.31.0.0/16,10.108.16.0/21",
 			},
 			examples.Example{
-				Text: "Create an AWS VPC peering with a display name.",
+				Text: "Create a named AWS VPC peering.",
 				Code: "confluent network peering create aws-peering --network n-123456 --cloud aws --cloud-account 123456789012 --virtual-network vpc-1234567890abcdef0 --aws-routes 172.31.0.0/16,10.108.16.0/21",
 			},
 			examples.Example{
-				Text: "Create a GCP VPC peering with a display name.",
+				Text: "Create a named GCP VPC peering.",
 				Code: "confluent network peering create gcp-peering --network n-123456 --cloud gcp --cloud-account temp-123456 --virtual-network customer-test-vpc-network --gcp-routes",
 			},
 			examples.Example{
-				Text: "Create an Azure VNet peering with a display name.",
+				Text: "Create a named Azure VNet peering.",
 				Code: "confluent network peering create azure-peering --network n-123456 --cloud azure --cloud-account 1111tttt-1111-1111-1111-111111tttttt --virtual-network /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet --customer-region centralus",
 			},
 		),

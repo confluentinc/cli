@@ -21,7 +21,7 @@ func (c *command) newTransitGatewayAttachmentCreateCommand() *cobra.Command {
 				Code: "confluent network transit-gateway-attachment create --network n-123456 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10",
 			},
 			examples.Example{
-				Text: "Create a transit gateway attachment in AWS with a display name.",
+				Text: "Create a named transit gateway attachment in AWS.",
 				Code: "confluent network transit-gateway-attachment create my-tgw-attachment --network n-123456 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10",
 			},
 		),

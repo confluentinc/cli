@@ -14,7 +14,7 @@ import (
 
 type peeringHumanOut struct {
 	Id            string `human:"ID"`
-	Name          string `human:"Name"`
+	Name          string `human:"Name,omitempty"`
 	Network       string `human:"Network"`
 	Cloud         string `human:"Cloud"`
 	Phase         string `human:"Phase"`
@@ -30,7 +30,7 @@ type peeringHumanOut struct {
 
 type peeringSerializedOut struct {
 	Id            string   `serialized:"id"`
-	Name          string   `serialized:"name"`
+	Name          string   `serialized:"name,omitempty"`
 	Network       string   `serialized:"network"`
 	Cloud         string   `serialized:"cloud"`
 	Phase         string   `serialized:"phase"`

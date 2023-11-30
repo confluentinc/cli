@@ -1,6 +1,5 @@
 +---------------+-------------------------------+
 | ID            | peer-111111                   |
-| Name          |                               |
 | Network       | n-abcde1                      |
 | Cloud         | AWS                           |
 | Phase         | PROVISIONING                  |

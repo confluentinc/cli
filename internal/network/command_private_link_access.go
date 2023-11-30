@@ -13,7 +13,7 @@ import (
 
 type privateLinkAccessOut struct {
 	Id                string `human:"ID" serialized:"id"`
-	Name              string `human:"Name" serialized:"name"`
+	Name              string `human:"Name,omitempty" serialized:"name,omitempty"`
 	Network           string `human:"Network" serialized:"network"`
 	Cloud             string `human:"Cloud" serialized:"cloud"`
 	AwsAccount        string `human:"AWS Account,omitempty" serialized:"aws_account,omitempty"`

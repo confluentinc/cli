@@ -1,6 +1,5 @@
 +-----------------------------------+---------------------------------------------------------------------------------------+
 | ID                                | tgwa-123456                                                                           |
-| Name                              |                                                                                       |
 | Network                           | n-abcde1                                                                              |
 | AWS RAM Share ARN                 | arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx |
 | AWS Transit Gateway ID            | tgw-xxxxxxxxxxxxxxxxx                                                                 |

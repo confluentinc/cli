@@ -14,7 +14,7 @@
 | Aliases                        | 2=azure-vnet-privatelink-2.b0b0bb00-b000-0bb0-b00b-0bbb0000b00b.eastus2.azure.privatelinkservice,                                                         |
 |                                | 3=azure-vnet-privatelink-3.c0c0cc00-c000-0cc0-c00c-0ccc0000c00c.eastus2.azure.privatelinkservice                                                          |
 | Azure Private Link Service     | 1=/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1, |
-| Resource                       | 2=/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-2, |
+| Resources                      | 2=/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-2, |
 |                                | 3=/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-3  |
 | DNS Resolution                 | PRIVATE                                                                                                                                                   |
 | DNS Domain                     | 0123456789a.eastus2.azure.devel.cpdev.cloud                                                                                                               |

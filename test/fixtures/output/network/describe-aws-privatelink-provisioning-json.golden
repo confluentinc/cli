@@ -7,6 +7,5 @@
   "zones": ["use1-az1", "use1-az2", "use1-az3"],
   "phase": "PROVISIONING",
   "supported_connection_types": ["PRIVATELINK"],
-  "active_connection_types": [],
   "dns_resolution": "PRIVATE"
 }

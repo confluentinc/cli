@@ -14,7 +14,7 @@ import (
 
 type transitGatewayAttachmentHumanOut struct {
 	Id                            string `human:"ID"`
-	Name                          string `human:"Name"`
+	Name                          string `human:"Name,omitempty"`
 	Network                       string `human:"Network"`
 	AwsRamShareArn                string `human:"AWS RAM Share ARN"`
 	AwsTransitGatewayId           string `human:"AWS Transit Gateway ID"`
@@ -25,7 +25,7 @@ type transitGatewayAttachmentHumanOut struct {
 
 type transitGatewayAttachmentSerializedOut struct {
 	Id                            string   `serialized:"id"`
-	Name                          string   `serialized:"name"`
+	Name                          string   `serialized:"name,omitempty"`
 	Network                       string   `serialized:"network"`
 	AwsRamShareArn                string   `serialized:"aws_ram_share_arn"`
 	AwsTransitGatewayId           string   `serialized:"aws_transit_gateway_id"`

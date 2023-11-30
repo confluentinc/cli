@@ -7,6 +7,5 @@
   "zones": ["1", "2", "3"],
   "phase": "PROVISIONING",
   "supported_connection_types": ["PRIVATELINK"],
-  "active_connection_types": [],
   "dns_resolution": "PRIVATE"
 }

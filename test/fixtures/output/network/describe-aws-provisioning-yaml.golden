@@ -12,4 +12,3 @@ phase: PROVISIONING
 supported_connection_types:
     - TRANSITGATEWAY
     - PEERING
-active_connection_types: []

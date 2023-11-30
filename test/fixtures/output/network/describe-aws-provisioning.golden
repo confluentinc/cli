@@ -8,5 +8,4 @@
 | Zones                      | use1-az1, use1-az2, use1-az3 |
 | Phase                      | PROVISIONING                 |
 | Supported Connection Types | TRANSITGATEWAY, PEERING      |
-| Active Connection Types    |                              |
 +----------------------------+------------------------------+

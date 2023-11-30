@@ -7,6 +7,5 @@
 | Zones                      | 1, 2, 3           |
 | Phase                      | PROVISIONING      |
 | Supported Connection Types | PRIVATELINK       |
-| Active Connection Types    |                   |
 | DNS Resolution             | PRIVATE           |
 +----------------------------+-------------------+

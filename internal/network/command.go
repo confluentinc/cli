@@ -20,14 +20,14 @@ import (
 type humanOut struct {
 	Id                                         string `human:"ID"`
 	EnvironmentId                              string `human:"Environment"`
-	Name                                       string `human:"Name"`
+	Name                                       string `human:"Name,omitempty"`
 	Cloud                                      string `human:"Cloud"`
 	Region                                     string `human:"Region"`
-	Cidr                                       string `human:"CIDR"`
-	Zones                                      string `human:"Zones"`
+	Cidr                                       string `human:"CIDR,omitempty"`
+	Zones                                      string `human:"Zones,omitempty"`
 	Phase                                      string `human:"Phase"`
 	SupportedConnectionTypes                   string `human:"Supported Connection Types"`
-	ActiveConnectionTypes                      string `human:"Active Connection Types"`
+	ActiveConnectionTypes                      string `human:"Active Connection Types,omitempty"`
 	AwsVpc                                     string `human:"AWS VPC,omitempty"`
 	AwsAccount                                 string `human:"AWS Account,omitempty"`
 	AwsPrivateLinkEndpointService              string `human:"AWS Private Link Endpoint Service,omitempty"`
@@ -37,7 +37,7 @@ type humanOut struct {
 	AzureVNet                                  string `human:"Azure VNet,omitempty"`
 	AzureSubscription                          string `human:"Azure Subscription,omitempty"`
 	AzurePrivateLinkServiceAliases             string `human:"Azure Private Link Service Aliases,omitempty"`
-	AzurePrivateLinkServiceResourceIds         string `human:"Azure Private Link Service Resource,omitempty"`
+	AzurePrivateLinkServiceResourceIds         string `human:"Azure Private Link Service Resources,omitempty"`
 	DnsResolution                              string `human:"DNS Resolution,omitempty"`
 	DnsDomain                                  string `human:"DNS Domain,omitempty"`
 	ZonalSubdomains                            string `human:"Zonal Subdomains,omitempty"`
@@ -46,14 +46,14 @@ type humanOut struct {
 type serializedOut struct {
 	Id                                         string            `serialized:"id"`
 	EnvironmentId                              string            `serialized:"environment_id"`
-	Name                                       string            `serialized:"name"`
+	Name                                       string            `serialized:"name,omitempty"`
 	Cloud                                      string            `serialized:"cloud"`
 	Region                                     string            `serialized:"region"`
-	Cidr                                       string            `serialized:"cidr"`
-	Zones                                      []string          `serialized:"zones"`
+	Cidr                                       string            `serialized:"cidr,omitempty"`
+	Zones                                      []string          `serialized:"zones,omitempty"`
 	Phase                                      string            `serialized:"phase"`
 	SupportedConnectionTypes                   []string          `serialized:"supported_connection_types"`
-	ActiveConnectionTypes                      []string          `serialized:"active_connection_types"`
+	ActiveConnectionTypes                      []string          `serialized:"active_connection_types,omitempty"`
 	AwsVpc                                     string            `serialized:"aws_vpc,omitempty"`
 	AwsAccount                                 string            `serialized:"aws_account,omitempty"`
 	AwsPrivateLinkEndpointService              string            `serialized:"aws_private_link_endpoint_service,omitempty"`

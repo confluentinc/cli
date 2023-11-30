@@ -8,23 +8,23 @@ Create a Confluent network in AWS with connection type "transitgateway" by speci
 
   $ confluent network create --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16
 
-Create a Confluent network with a display name in AWS with connection type "transitgateway" by specifying zones and CIDR.
+Create a named Confluent network in AWS with connection type "transitgateway" by specifying zones and CIDR.
 
   $ confluent network create aws-tgw-network --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16
 
-Create a Confluent network with a display name in AWS with connection types "transitgateway" and "peering" by specifying zones and CIDR.
+Create a named Confluent network in AWS with connection types "transitgateway" and "peering" by specifying zones and CIDR.
 
   $ confluent network create aws-tgw-peering-network --cloud aws --region us-west-2 --connection-types transitgateway,peering --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16
 
-Create a Confluent network with a display name in AWS with connection type "peering" by specifying zone info.
+Create a named Confluent network in AWS with connection type "peering" by specifying zone info.
 
   $ confluent network create aws-peering-network --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27
 
-Create a Confluent network with a display name in GCP with connection type "peering" by specifying zones and CIDR.
+Create a named Confluent network in GCP with connection type "peering" by specifying zones and CIDR.
 
   $ confluent network create gcp-peering-network --cloud gcp --region us-central1 --connection-types peering --zones us-central1-a,us-central1-b,us-central1-c --cidr 10.1.0.0/16
 
-Create a Confluent network with a display name in Azure with connection type "privatelink" by specifying DNS resolution.
+Create a named Confluent network in Azure with connection type "privatelink" by specifying DNS resolution.
 
   $ confluent network create azure-pl-network --cloud azure --region eastus2 --connection-types privatelink --dns-resolution chased-private
 

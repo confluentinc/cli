@@ -23,15 +23,15 @@ func (c *command) newPrivateLinkAccessCreateCommand() *cobra.Command {
 				Code: "confluent network private-link access create --network n-123456 --cloud aws --cloud-account 123456789012",
 			},
 			examples.Example{
-				Text: "Create an AWS PrivateLink access with a display name.",
+				Text: "Create a named AWS PrivateLink access.",
 				Code: "confluent network private-link access create aws-private-link-access --network n-123456 --cloud aws --cloud-account 123456789012",
 			},
 			examples.Example{
-				Text: "Create a GCP Private Service Connect access with a display name.",
+				Text: "Create a named GCP Private Service Connect access.",
 				Code: "confluent network private-link access create gcp-private-link-access --network n-123456 --cloud gcp --cloud-account temp-123456",
 			},
 			examples.Example{
-				Text: "Create an Azure Private Link access with a display name.",
+				Text: "Create a named Azure Private Link access.",
 				Code: "confluent network private-link access create azure-private-link-access --network n-123456 --cloud azure --cloud-account 1234abcd-12ab-34cd-1234-123456abcdef",
 			},
 		),
