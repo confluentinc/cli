@@ -1,0 +1,5 @@
+      ID     |            Name            | Network  |          Description          | Network Link Service | Phase  
+-------------+----------------------------+----------+-------------------------------+----------------------+--------
+  nle-111111 | my-network-link-endpoint-1 | n-abcde1 | example network link endpoint | nls-123456           | READY  
+  nle-222222 | my-network-link-endpoint-2 | n-abcde1 | example network link endpoint | nls-123456           | READY  
+  nle-333333 | my-network-link-endpoint-3 | n-abcde1 | example network link endpoint | nls-123456           | READY  
