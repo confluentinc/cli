@@ -36,7 +36,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in GCP:",
-				Code: `confluent kafka cluster create sales092020 --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --byok cck-a123z"`,
+				Code: "confluent kafka cluster create sales092020 --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --byok cck-a123z",
 			},
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
@@ -188,7 +188,10 @@ func setCmkClusterConfig(typeString string, cku int32) *cmkv2.CmkV2ClusterSpecCo
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}}
 	case skuDedicated:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
+			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{
+				Kind: "Dedicated",
+				Cku: cku,
+			},
 		}
 	default:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{

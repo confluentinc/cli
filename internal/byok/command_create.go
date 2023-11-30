@@ -165,7 +165,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	case isAWSKey(keyString):
 		keyReq = c.createAwsKeyRequest(keyString)
 	case isGCPKey(keyString):
-		keyReq = c.createGCPKeyRequest(keyString)
+		keyReq = c.createGcpKeyRequest(keyString)
 	default:
 		return fmt.Errorf("invalid key format: %s", keyString)
 	}
@@ -187,7 +187,7 @@ func isAWSKey(key string) bool {
 	return keyArn.Service == "kms" && strings.HasPrefix(keyArn.Resource, "key/")
 }
 
-func isGCPKey(key string) bool {
+func isGcpKey(key string) bool {
 	return strings.HasPrefix(key, "projects/")
 }
 
@@ -262,9 +262,9 @@ func getPostCreateStepInstruction(key byokv1.ByokV1Key) string {
 	case key.Key.ByokV1AwsKey != nil:
 		return `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
 	case key.Key.ByokV1AzureKey != nil:
-		return "To ensure the key vault has the correct role assignments, please run the following Azure cli command (certified for azure-cli v2.45):"
+		return "To ensure the key vault has the correct role assignments, please run the following Azure CLI command (certified for `az` v2.45):"
 	case key.Key.ByokV1GcpKey != nil:
-		return "To ensure the key has the correct role assignments, please run the following Google Cloud cli command:"
+		return "To ensure the key has the correct role assignments, please run the following Google Cloud CLI command:"
 	default:
 		return ""
 	}
