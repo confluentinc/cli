@@ -10,7 +10,7 @@ Update the name and CKU count of a Kafka cluster:
 
 Flags:
       --name string          Name of the Kafka cluster.
-      --cku uint32           Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only.
+      --cku uint32           Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
