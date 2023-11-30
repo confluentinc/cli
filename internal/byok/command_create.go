@@ -49,39 +49,6 @@ const (
 	defaultGcpRoleName = "custom_kms_role"
 )
 
-type gcpPolicyMetadata struct {
-	project  string
-	location string
-	keyRing  string
-	key      string
-	group    string
-}
-
-func (g gcpPolicyMetadata) renderPolicy() string {
-	return fmt.Sprintf(`
-gcloud iam roles create %[1]s \
-	--project=%[2]s \
-	--description="Grant necessary permissions for Confluent to access KMS key" \
-	--permissions=cloudkms.cryptoKeyVersions.useToDecrypt,cloudkms.cryptoKeyVersions.useToEncrypt,cloudkms.cryptoKeys.get && \
-gcloud kms keys add-iam-policy-binding %[3]s \
-	--project=%[2]s \
-	--keyring="%[4]s" \
-	--location="%[5]s" \
-	--member="group:%[6]s" \
-	--role="projects/%[2]s/roles/%[1]s"`, g.getCustomRoleName(), g.project, g.key, g.keyRing, g.location, g.group)
-}
-
-func (g gcpPolicyMetadata) getCustomRoleName() string {
-	r := regexp.MustCompile(`^[a-zA-Z0-9_.]{3,64}$`)
-
-	customRoleName := strings.ReplaceAll(fmt.Sprintf("%s_%s_custom_kms_role", g.keyRing, g.key), "-", "_")
-	if ok := r.Match([]byte(customRoleName)); !ok {
-		return defaultGcpRoleName
-	}
-
-	return customRoleName
-}
-
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <key>",
@@ -142,7 +109,7 @@ func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (b
 	return keyReq, nil
 }
 
-func (c *command) createGCPKeyRequest(keyString string) byokv1.ByokV1Key {
+func (c *command) createGcpKeyRequest(keyString string) byokv1.ByokV1Key {
 	return byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1GcpKey: &byokv1.ByokV1GcpKey{
 		KeyId: keyString,
 		Kind:  "GcpKey",
@@ -164,7 +131,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		keyReq = request
 	case isAWSKey(keyString):
 		keyReq = c.createAwsKeyRequest(keyString)
-	case isGCPKey(keyString):
+	case isGcpKey(keyString):
 		keyReq = c.createGcpKeyRequest(keyString)
 	default:
 		return fmt.Errorf("invalid key format: %s", keyString)
