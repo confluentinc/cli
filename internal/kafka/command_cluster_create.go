@@ -187,12 +187,7 @@ func setCmkClusterConfig(typeString string, cku int32) *cmkv2.CmkV2ClusterSpecCo
 	case skuEnterprise:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}}
 	case skuDedicated:
-		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{
-				Kind: "Dedicated",
-				Cku: cku,
-			},
-		}
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku}}
 	default:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
 			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
