@@ -46,14 +46,13 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
-	sgConfig := environment.GetStreamGovernanceConfig()
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
 		IsCurrent:               environment.GetId() == c.Context.GetCurrentEnvironment(),
 		Id:                      environment.GetId(),
 		Name:                    environment.GetDisplayName(),
-		StreamGovernancePackage: sgConfig.GetPackage(),
+		StreamGovernancePackage: environment.StreamGovernanceConfig.GetPackage(),
 	})
 	return table.Print()
 }
