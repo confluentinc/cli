@@ -1,10 +1,12 @@
 package environment
 
 import (
-	"github.com/spf13/cobra"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -23,7 +25,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "stream-governance-package")
+	cmd.MarkFlagsOneRequired("name", "stream-governance")
 
 	return cmd
 }
@@ -33,7 +35,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	streamGovernancePackage, err := cmd.Flags().GetString("stream-governance-package")
+	streamGovernancePackage, err := cmd.Flags().GetString("stream-governance")
 	if err != nil {
 		return err
 	}
