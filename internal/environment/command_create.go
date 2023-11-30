@@ -29,7 +29,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	streamGovernancePackage, err := cmd.Flags().GetString("stream-governance")
+	streamGovernance, err := cmd.Flags().GetString("stream-governance")
 	if err != nil {
 		return err
 	}
