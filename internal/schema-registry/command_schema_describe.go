@@ -31,8 +31,8 @@ type schema struct {
 	SchemaType *string                 `json:"schemaType,omitempty"`
 	References []srsdk.SchemaReference `json:"references,omitempty"`
 	Schema     *string                 `json:"schema,omitempty"`
-	Metadata   srsdk.Metadata          `json:"metadata,omitempty"`
-	Ruleset    srsdk.RuleSet           `json:"ruleset,omitempty"`
+	Metadata   *srsdk.Metadata         `json:"metadata,omitempty"`
+	Ruleset    *srsdk.RuleSet          `json:"ruleset,omitempty"`
 }
 
 func (c *command) newSchemaDescribeCommand(cfg *config.Config) *cobra.Command {
@@ -234,8 +234,8 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 			SchemaType: srsdkSchema.SchemaType,
 			References: srsdkSchema.GetReferences(),
 			Schema:     srsdkSchema.Schema,
-			Metadata:   srsdkSchema.GetMetadata(),
-			Ruleset:    srsdkSchema.GetRuleset(),
+			Metadata:   srsdkSchema.Metadata.Get(),
+			Ruleset:    srsdkSchema.Ruleset.Get(),
 		}
 
 		schemaGraph = append(schemaGraph, schema)
