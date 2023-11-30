@@ -24,7 +24,7 @@ type schemaOut struct {
 	Schemas []schema `json:"schemas"`
 }
 
-type schema struct {
+type schema struct { // CLI-2918
 	Subject    *string                 `json:"subject,omitempty"`
 	Version    *int32                  `json:"version,omitempty"`
 	Id         *int32                  `json:"id,omitempty"`
