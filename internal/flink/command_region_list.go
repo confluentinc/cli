@@ -11,10 +11,10 @@ import (
 )
 
 type regionOut struct {
-	Id         string `human:"ID" serialized:"id"`
-	Name       string `human:"Name" serialized:"name"`
-	Cloud      string `human:"Cloud" serialized:"cloud"`
-	RegionName string `human:"Region Name" serialized:"region_name"`
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
+	Name      string `human:"Name" serialized:"name"`
+	Cloud     string `human:"Cloud" serialized:"cloud"`
+	Region    string `human:"Region" serialized:"region"`
 }
 
 func (c *command) newRegionListCommand() *cobra.Command {
@@ -51,12 +51,17 @@ func (c *command) regionList(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, region := range regions {
-		list.Add(&regionOut{
-			Id:         region.GetId(),
-			Name:       region.GetDisplayName(),
-			Cloud:      region.GetCloud(),
-			RegionName: region.GetRegionName(),
-		})
+		out := &regionOut{
+			Cloud:  region.GetCloud(),
+			Region: region.GetRegionName(),
+			Name:   region.GetDisplayName(),
+		}
+
+		if x := strings.SplitN(region.GetId(), ".", 2); len(x) == 2 {
+			out.IsCurrent = x[0] == c.Context.GetCurrentFlinkCloudProvider() && x[1] == c.Context.GetCurrentFlinkRegion()
+		}
+
+		list.Add(out)
 	}
 	return list.Print()
 }

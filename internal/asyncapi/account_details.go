@@ -14,7 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 )
 
 type channelDetails struct {
@@ -115,13 +115,6 @@ func (d *accountDetails) getTopicDescription() error {
 	}
 	if atlasEntityWithExtInfo.Entity.Attributes["description"] != nil {
 		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", atlasEntityWithExtInfo.Entity.Attributes["description"])
-	}
-	return nil
-}
-
-func (c *command) countAsyncApiUsage(details *accountDetails) error {
-	if err := details.srClient.AsyncapiPut(); err != nil {
-		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %w", err)
 	}
 	return nil
 }

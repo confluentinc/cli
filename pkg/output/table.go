@@ -155,23 +155,37 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 
 	w := tablewriter.NewWriter(writer)
 	w.SetAutoWrapText(auto)
+	w.SetAlignment(tablewriter.ALIGN_LEFT)
 
 	if t.isList {
-		var header []string
-		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
-			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
-			if !slices.Contains(tag, "-") {
-				header = append(header, tag[0])
-			}
-		}
-
 		w.SetAutoFormatHeaders(false)
 		w.SetBorder(false)
+
+		n := reflect.TypeOf(t.objects[0]).Elem().NumField()
+
+		var header []string
+		var alignment []int
+		for i := 0; i < n; i++ {
+			field := reflect.TypeOf(t.objects[0]).Elem().Field(i)
+			tag := strings.Split(field.Tag.Get(t.format.String()), ",")
+
+			if !slices.Contains(tag, "-") {
+				header = append(header, tag[0])
+
+				switch field.Type.Kind() {
+				case reflect.Int, reflect.Int32, reflect.Int64:
+					alignment = append(alignment, tablewriter.ALIGN_RIGHT)
+				default:
+					alignment = append(alignment, tablewriter.ALIGN_LEFT)
+				}
+			}
+		}
 		w.SetHeader(header)
+		w.SetColumnAlignment(alignment)
 
 		for _, object := range t.objects {
 			var row []string
-			for i := 0; i < reflect.TypeOf(object).Elem().NumField(); i++ {
+			for i := 0; i < n; i++ {
 				tag := strings.Split(reflect.TypeOf(object).Elem().Field(i).Tag.Get(t.format.String()), ",")
 				if !slices.Contains(tag, "-") {
 					val := reflect.ValueOf(object).Elem().Field(i)
@@ -181,12 +195,10 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 			w.Append(row)
 		}
 	} else if t.isMap() {
-		w.SetAlignment(tablewriter.ALIGN_LEFT)
 		for k, v := range t.objects[0].(map[string]string) {
 			w.Append([]string{k, v})
 		}
 	} else {
-		w.SetAlignment(tablewriter.ALIGN_LEFT)
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
 			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)

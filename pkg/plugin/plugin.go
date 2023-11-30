@@ -137,3 +137,7 @@ func ExecPlugin(info *pluginInfo) error {
 	}
 	return plugin.Run()
 }
+
+func ToCommandName(name string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-")
+}

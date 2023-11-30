@@ -68,10 +68,10 @@ func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(arg0, arg1, ar
 }
 
 // GetExceptions mocks base method.
-func (m *MockGatewayClientInterface) GetExceptions(arg0, arg1, arg2 string) (v1beta1.SqlV1beta1StatementExceptionList, error) {
+func (m *MockGatewayClientInterface) GetExceptions(arg0, arg1, arg2 string) ([]v1beta1.SqlV1beta1StatementException, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetExceptions", arg0, arg1, arg2)
-	ret0, _ := ret[0].(v1beta1.SqlV1beta1StatementExceptionList)
+	ret0, _ := ret[0].([]v1beta1.SqlV1beta1StatementException)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -113,18 +113,18 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetStatementResults(arg0, arg1
 }
 
 // ListStatements mocks base method.
-func (m *MockGatewayClientInterface) ListStatements(arg0, arg1, arg2, arg3 string) (v1beta1.SqlV1beta1StatementList, error) {
+func (m *MockGatewayClientInterface) ListStatements(arg0, arg1, arg2 string) ([]v1beta1.SqlV1beta1Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListStatements", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(v1beta1.SqlV1beta1StatementList)
+	ret := m.ctrl.Call(m, "ListStatements", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]v1beta1.SqlV1beta1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListStatements indicates an expected call of ListStatements.
-func (mr *MockGatewayClientInterfaceMockRecorder) ListStatements(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) ListStatements(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListStatements), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListStatements), arg0, arg1, arg2)
 }
 
 // UpdateStatement mocks base method.

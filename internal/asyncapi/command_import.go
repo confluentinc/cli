@@ -26,11 +26,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/retry"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-const parseErrorMessage string = "topic is already present and `--overwrite` is not set"
+const parseErrorMessage = "topic is already present and `--overwrite` is not set"
 
 type flagsImport struct {
 	file                    string
@@ -314,7 +314,7 @@ func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error
 	if err != nil {
 		return err
 	}
-	for _, configDetails := range configs.Data {
+	for _, configDetails := range configs {
 		if !configDetails.GetIsReadOnly() {
 			modifiableConfigs = append(modifiableConfigs, configDetails.GetName())
 		}

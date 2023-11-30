@@ -27,22 +27,16 @@ func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient
 	if err != nil {
 		return err
 	}
-	data := ToAlterConfigBatchRequestDataOnPrem(configMap)
+	configs := ToAlterConfigBatchRequestDataOnPrem(configMap)
 
 	if all {
-		resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId,
-			&kafkarestv3.UpdateKafkaClusterConfigsOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(data),
-			})
-		if err != nil {
+		opts := &kafkarestv3.UpdateKafkaClusterConfigsOpts{AlterConfigBatchRequestData: optional.NewInterface(configs)}
+		if resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId, opts); err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 	} else {
-		resp, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId,
-			&kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(data),
-			})
-		if err != nil {
+		opts := &kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts{AlterConfigBatchRequestData: optional.NewInterface(configs)}
+		if resp, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId, opts); err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 	}
@@ -56,7 +50,7 @@ func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient
 	}
 
 	list := output.NewList(cmd)
-	for _, config := range data.Data {
+	for _, config := range configs.Data {
 		list.Add(&ConfigOut{
 			Name:  config.Name,
 			Value: *config.Value,

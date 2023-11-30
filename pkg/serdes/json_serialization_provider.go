@@ -25,7 +25,7 @@ func (j *JsonSerializationProvider) LoadSchema(schemaPath string, referencePathM
 }
 
 func (j *JsonSerializationProvider) GetSchemaName() string {
-	return JsonSchemaBackendName
+	return jsonSchemaBackendName
 }
 
 func (j *JsonSerializationProvider) Serialize(str string) ([]byte, error) {

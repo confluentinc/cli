@@ -32,16 +32,12 @@ func NewJWTValidator() *JWTValidatorImpl {
 // Validate returns an error if the JWT in the specified context is invalid.
 // The JWT is invalid if it's not parsable or expired.
 func (v *JWTValidatorImpl) Validate(context *config.Context) error {
-	var authToken string
-	if context != nil {
-		authToken = context.State.AuthToken
-	}
-
-	var claims map[string]any
-	token, err := jwt.ParseSigned(authToken)
+	token, err := jwt.ParseSigned(context.GetAuthToken())
 	if err != nil {
 		return new(ccloudv1.InvalidTokenError)
 	}
+
+	var claims map[string]any
 	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 		return err
 	}

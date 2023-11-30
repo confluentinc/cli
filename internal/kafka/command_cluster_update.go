@@ -36,14 +36,12 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cmd.MarkFlagsOneRequired("name", "cku")
+
 	return cmd
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	if err := errors.CheckNoUpdate(cmd.Flags(), "cku", "name"); err != nil {
-		return err
-	}
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
