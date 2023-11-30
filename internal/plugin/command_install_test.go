@@ -32,7 +32,8 @@ func TestGetPluginManifest(t *testing.T) {
 }
 
 func TestGetLanguage(t *testing.T) {
-	dir, _ := filepath.Abs("../../test/fixtures/input/plugin")
+	dir, err := filepath.Abs(filepath.Join("..", "..", "test", "fixtures", "input", "plugin"))
+	assert.NoError(t, err)
 	manifest, err := getPluginManifest("confluent-test_plugin", dir)
 	assert.NoError(t, err)
 
@@ -51,7 +52,7 @@ func TestInstallPythonPlugin(t *testing.T) {
 
 	pluginInstaller := &plugin.PythonPluginInstaller{
 		Name:          "confluent-test_plugin",
-		RepositoryDir: "../../test/fixtures/input/plugin",
+		RepositoryDir: filepath.Join("..", "..", "test", "fixtures", "input", "plugin"),
 		InstallDir:    dir,
 	}
 

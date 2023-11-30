@@ -23,8 +23,13 @@ func TestGetPath_HomeDir(t *testing.T) {
 }
 
 func TestGetPath_HomeDirUnset(t *testing.T) {
-	err := os.Unsetenv("HOME")
-	require.NoError(t, err)
-
-	require.Equal(t, "~/pipeline.sql", expandHomeDir("~/pipeline.sql"))
+	if runtime.GOOS == "windows" {
+		err := os.Unsetenv("USERPROFILE")
+		require.NoError(t, err)
+		require.Equal(t, `~\pipeline.sql`, expandHomeDir(`~\pipeline.sql`))
+	} else {
+		err := os.Unsetenv("HOME")
+		require.NoError(t, err)
+		require.Equal(t, "~/pipeline.sql", expandHomeDir("~/pipeline.sql"))
+	}
 }
