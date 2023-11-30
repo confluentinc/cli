@@ -65,6 +65,8 @@ var ccloudV2Routes = []route{
 	{"/networking/v1/ip-addresses", handleNetworkingIpAddresses},
 	{"/networking/v1/networks", handleNetworkingNetworks},
 	{"/networking/v1/networks/{id}", handleNetworkingNetwork},
+	{"/networking/v1/network-link-endpoints", handleNetworkingNetworkLinkEndpoints},
+	{"/networking/v1/network-link-endpoints/{id}", handleNetworkingNetworkLinkEndpoint},
 	{"/networking/v1/network-link-services", handleNetworkingNetworkLinkServices},
 	{"/networking/v1/network-link-services/{id}", handleNetworkingNetworkLinkService},
 	{"/networking/v1/peerings", handleNetworkingPeerings},

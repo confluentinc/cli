@@ -1,0 +1,18 @@
+List network link endpoints.
+
+Usage:
+  confluent network network-link endpoint list [flags]
+
+Flags:
+      --name string                   Network Link endpoint display name.
+      --network string                Network ID.
+      --network-link-service string   Network link service ID.
+      --phase string                  Current phase of the network link endpoint.
+      --context string                CLI context name.
+      --environment string            Environment ID.
+  -o, --output string                 Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
