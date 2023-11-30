@@ -17,7 +17,9 @@
           "version": 1
         }
       ],
-      "schema": "schema0"
+      "schema": "schema0",
+      "metadata": {},
+      "ruleset": {}
     },
     {
       "subject": "lvl1-1",
@@ -31,14 +33,18 @@
           "version": 1
         }
       ],
-      "schema": "schema11"
+      "schema": "schema11",
+      "metadata": {},
+      "ruleset": {}
     },
     {
       "subject": "lvl2",
       "version": 1,
       "id": 1004,
       "schemaType": "AVRO",
-      "schema": "schema2"
+      "schema": "schema2",
+      "metadata": {},
+      "ruleset": {}
     },
     {
       "subject": "lvl1-2",
@@ -52,7 +58,9 @@
           "version": 1
         }
       ],
-      "schema": "schema12"
+      "schema": "schema12",
+      "metadata": {},
+      "ruleset": {}
     }
   ]
 }
