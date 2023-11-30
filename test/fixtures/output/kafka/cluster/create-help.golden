@@ -8,7 +8,7 @@ Usage:
 Examples:
 Create a new dedicated cluster that uses a customer-managed encryption key in GCP:
 
-  $ confluent kafka cluster create sales092020 --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --byok cck-a123z"
+  $ confluent kafka cluster create sales092020 --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --byok cck-a123z
 
 Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
 
