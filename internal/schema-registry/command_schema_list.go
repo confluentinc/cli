@@ -1,10 +1,7 @@
 package schemaregistry
 
 import (
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
-
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
@@ -85,8 +82,7 @@ func (c *command) schemaList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	opts := &srsdk.GetSchemasOpts{SubjectPrefix: optional.NewString(subjectPrefix), Deleted: optional.NewBool(all)}
-	schemas, err := client.GetSchemas(opts)
+	schemas, err := client.GetSchemas(subjectPrefix, all)
 	if err != nil {
 		return err
 	}
@@ -94,9 +90,9 @@ func (c *command) schemaList(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, schema := range schemas {
 		list.Add(&row{
-			SchemaId: schema.Id,
-			Subject:  schema.Subject,
-			Version:  schema.Version,
+			SchemaId: schema.GetId(),
+			Subject:  schema.GetSubject(),
+			Version:  schema.GetVersion(),
 		})
 	}
 	return list.Print()
