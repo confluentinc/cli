@@ -12,6 +12,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
+type noopHandler struct{}
+
+func (noopHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {}
+
 func NewWSObjectStream(baseUrl, authToken, organizationId, environmentId string) jsonrpc2.ObjectStream {
 	requestHeaders := http.Header{}
 	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
@@ -27,14 +31,13 @@ func NewWSObjectStream(baseUrl, authToken, organizationId, environmentId string)
 
 func NewLSPClientWS(baseUrl, authToken, organizationId, environmentId string) LSPInterface {
 	stream := NewWSObjectStream(baseUrl, authToken, organizationId, environmentId)
-	lspClient := &LSPClient{
-		conn: jsonrpc2.NewConn(
-			context.Background(),
-			stream,
-			noopHandler{},
-			nil,
-		),
-	}
+	conn := jsonrpc2.NewConn(
+		context.Background(),
+		stream,
+		noopHandler{},
+		nil,
+	)
+	lspClient := NewLSPClient(conn)
 
 	lspInitParams, err := lspClient.Initialize()
 	if err != nil {

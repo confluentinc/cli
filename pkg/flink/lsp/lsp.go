@@ -23,6 +23,19 @@ type LSPClient struct {
 	documentURI *lsp.DocumentURI
 }
 
+type CliContext struct {
+	AuthToken     string
+	Catalog       string
+	Database      string
+	ComputePoolId string
+}
+
+func NewLSPClient(conn types.JSONRpcConn) *LSPClient {
+	return &LSPClient{
+		conn: conn,
+	}
+}
+
 func (c *LSPClient) Initialize() (*lsp.InitializeResult, error) {
 	var resp lsp.InitializeResult
 
