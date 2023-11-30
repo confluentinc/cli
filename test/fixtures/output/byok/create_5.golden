@@ -1,0 +1,22 @@
++------------+---------------------------------------------------------------------------------------------------------------+
+| ID         | cck-004                                                                                                       |
+| Key        | projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3 |
+| Roles      |                                                                                                               |
+| Provider   | GCP                                                                                                           |
+| State      | AVAILABLE                                                                                                     |
+| Created At | 2022-12-24 00:00:00 +0000 UTC                                                                                 |
++------------+---------------------------------------------------------------------------------------------------------------+
+
+To ensure the key has the correct role assignments, please run the following Google Cloud cli command:
+
+
+gcloud iam roles create testkeyring_testbyokkey_custom_kms_role \
+	--project=exampleproject \
+	--description="Grant necessary permissions for Confluent to access KMS key" \
+	--permissions=cloudkms.cryptoKeyVersions.useToDecrypt,cloudkms.cryptoKeyVersions.useToEncrypt,cloudkms.cryptoKeys.get && \
+gcloud kms keys add-iam-policy-binding testbyokkey \
+	--project=exampleproject \
+	--keyring="testkeyring" \
+	--location="us-central1" \
+	--member="group:" \
+	--role="projects/exampleproject/roles/testkeyring_testbyokkey_custom_kms_role"
