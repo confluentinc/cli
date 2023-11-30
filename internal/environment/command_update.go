@@ -44,9 +44,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if name != "" {
 		environment.SetDisplayName(name)
 	}
-	if streamGovernancePackage != "" {
+	if streamGovernance != "" {
 		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
-			Package: orgv2.PtrString(strings.ToUpper(streamGovernancePackage)),
+			Package: orgv2.PtrString(strings.ToUpper(streamGovernance)),
 		})
 	}
 
