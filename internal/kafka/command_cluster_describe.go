@@ -29,7 +29,7 @@ type describeStruct struct {
 	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress"`
 	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress"`
 	Storage            string `human:"Storage" serialized:"storage"`
-	ServiceProvider    string `human:"Provider" serialized:"provider"`
+	Provider           string `human:"Provider" serialized:"provider"`
 	Region             string `human:"Region" serialized:"region"`
 	Availability       string `human:"Availability" serialized:"availability"`
 	Network            string `human:"Network,omitempty" serialized:"network,omitempty"`
@@ -130,7 +130,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		IngressLimit:       ingress,
 		EgressLimit:        egress,
 		Storage:            clusterStorage,
-		ServiceProvider:    strings.ToLower(cluster.Spec.GetCloud()),
+		Provider:           strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
 		Network:            cluster.Spec.Network.GetId(),

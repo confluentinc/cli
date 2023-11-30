@@ -14,8 +14,6 @@ import (
 
 // Handler for: "/sd/v1/pipelines/{id}"
 func handlePipeline(t *testing.T) http.HandlerFunc {
-	CreatedAt := time.Date(2022, 10, 4, 6, 0, 0, 0, time.UTC)
-	UpdatedAt := time.Date(2022, 10, 6, 6, 0, 0, 0, time.UTC)
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 		if id != "pipe-12345" && id != "pipe-54321" {
@@ -37,14 +35,10 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 					KsqlCluster:         &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
 					ActivationPrivilege: streamdesignerv1.PtrBool(false),
 				},
-
-				Status: &streamdesignerv1.SdV1PipelineStatus{
-					State: streamdesignerv1.PtrString("draft"),
-				},
-
+				Status: &streamdesignerv1.SdV1PipelineStatus{State: streamdesignerv1.PtrString("draft")},
 				Metadata: &streamdesignerv1.ObjectMeta{
-					CreatedAt: &CreatedAt,
-					UpdatedAt: &UpdatedAt,
+					CreatedAt: streamdesignerv1.PtrTime(time.Date(2022, 10, 4, 6, 0, 0, 0, time.UTC)),
+					UpdatedAt: streamdesignerv1.PtrTime(time.Date(2022, 10, 6, 6, 0, 0, 0, time.UTC)),
 				},
 			}
 
@@ -70,14 +64,10 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 					KsqlCluster:         &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
 					ActivationPrivilege: streamdesignerv1.PtrBool(false),
 				},
-
-				Status: &streamdesignerv1.SdV1PipelineStatus{
-					State: streamdesignerv1.PtrString("draft"),
-				},
-
+				Status: &streamdesignerv1.SdV1PipelineStatus{State: streamdesignerv1.PtrString("draft")},
 				Metadata: &streamdesignerv1.ObjectMeta{
-					CreatedAt: &CreatedAt,
-					UpdatedAt: &UpdatedAt,
+					CreatedAt: streamdesignerv1.PtrTime(time.Date(2022, 10, 4, 6, 0, 0, 0, time.UTC)),
+					UpdatedAt: streamdesignerv1.PtrTime(time.Date(2022, 10, 6, 6, 0, 0, 0, time.UTC)),
 				},
 			}
 
