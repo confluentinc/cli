@@ -1,7 +1,7 @@
 +---------------+-------------------------------+
 | ID            | peer-111111                   |
 | Name          | aws-peering                   |
-| Network ID    | n-abcde1                      |
+| Network       | n-abcde1                      |
 | Cloud         | AWS                           |
 | Phase         | PROVISIONING                  |
 | Custom Region | us-west-2                     |

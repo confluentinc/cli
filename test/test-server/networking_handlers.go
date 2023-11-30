@@ -196,27 +196,51 @@ func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 			err := writeErrorJson(w, "The network n-invalid was not found.")
 			require.NoError(t, err)
 		case "n-abcde1":
-			network := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY")
+			network := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		case "n-abcde2":
-			network := getGcpNetwork("n-abcde2", "prod-gcp-us-central1", "READY")
+			network := getGcpNetwork("n-abcde2", "prod-gcp-us-central1", "READY", []string{"PEERING"})
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		case "n-abcde3":
-			network := getAzureNetwork("n-abcde3", "prod-azure-eastus2", "READY")
+			network := getAzureNetwork("n-abcde3", "prod-azure-eastus2", "READY", []string{"PEERING"})
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		case "n-abcde4":
-			network := getAwsNetwork("n-abcde4", "prod-aws-us-east1", "PROVISIONING")
+			network := getAwsNetwork("n-abcde4", "prod-aws-us-east1", "PROVISIONING", []string{"TRANSITGATEWAY", "PEERING"})
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		case "n-abcde5":
-			network := getGcpNetwork("n-abcde5", "prod-gcp-us-central1", "PROVISIONING")
+			network := getGcpNetwork("n-abcde5", "prod-gcp-us-central1", "PROVISIONING", []string{"PEERING"})
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		case "n-abcde6":
-			network := getAzureNetwork("n-abcde6", "prod-azure-eastus2", "PROVISIONING")
+			network := getAzureNetwork("n-abcde6", "prod-azure-eastus2", "PROVISIONING", []string{"PEERING"})
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde7":
+			network := getAwsNetwork("n-abcde7", "prod-aws-us-east1", "READY", []string{"PRIVATELINK"})
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde8":
+			network := getGcpNetwork("n-abcde8", "prod-gcp-us-central1", "READY", []string{"PRIVATELINK"})
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde9":
+			network := getAzureNetwork("n-abcde9", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde10":
+			network := getAwsNetwork("n-abcde10", "prod-aws-us-east1", "PROVISIONING", []string{"PRIVATELINK"})
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde11":
+			network := getGcpNetwork("n-abcde11", "stag-gcp-us-central1", "PROVISIONING", []string{"PRIVATELINK"})
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
+		case "n-abcde12":
+			network := getAzureNetwork("n-abcde12", "dev-azure-eastus2", "PROVISIONING", []string{"PRIVATELINK"})
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		}
@@ -248,7 +272,7 @@ func handleNetworkingNetworkUpdate(t *testing.T, id string) http.HandlerFunc {
 			err := writeErrorJson(w, "The network n-invalid was not found.")
 			require.NoError(t, err)
 		case "n-abcde1":
-			network := getAwsNetwork("n-abcde1", "new-prod-aws-us-east1", "READY")
+			network := getAwsNetwork("n-abcde1", "new-prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		}
@@ -257,9 +281,9 @@ func handleNetworkingNetworkUpdate(t *testing.T, id string) http.HandlerFunc {
 
 func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		awsNetwork := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY")
-		gcpNetwork := getGcpNetwork("n-abcde2", "prod-gcp-us-central1", "READY")
-		azureNetwork := getAzureNetwork("n-abcde3", "prod-azure-eastus2", "READY")
+		awsNetwork := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+		gcpNetwork := getGcpNetwork("n-abcde2", "prod-gcp-us-central1", "READY", []string{"PEERING"})
+		azureNetwork := getAzureNetwork("n-abcde3", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
 
 		pageToken := r.URL.Query().Get("page_token")
 		var networkList networkingv1.NetworkingV1NetworkList
@@ -334,13 +358,30 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 				network.Spec.SetReservedCidr(*body.Spec.ReservedCidr)
 			}
 
+			if slices.Contains(connectionTypes, "PRIVATELINK") {
+				network.Status.DnsDomain = networkingv1.PtrString("")
+				network.Status.ZonalSubdomains = &map[string]string{}
+			}
+
+			switch *body.Spec.Cloud {
+			case "AWS":
+				network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+					NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
+						Kind: "AwsNetwork",
+					},
+				}
+				if slices.Contains(connectionTypes, "PRIVATELINK") {
+					network.Status.Cloud.NetworkingV1AwsNetwork.PrivateLinkEndpointService = networkingv1.PtrString("")
+				}
+			}
+
 			err = json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getAwsNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
+func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv1.NetworkingV1Network {
 	network := networkingv1.NetworkingV1Network{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingv1.NetworkingV1NetworkSpec{
@@ -350,30 +391,45 @@ func getAwsNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
 			Region:      networkingv1.PtrString("us-east-1"),
 			Cidr:        networkingv1.PtrString("10.200.0.0/16"),
 			Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
-			DnsConfig:   &networkingv1.NetworkingV1DnsConfig{Resolution: "CHASED_PRIVATE"},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}},
+			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
 			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+				NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
+					Kind: "AwsNetwork",
+				},
+			},
 		},
 	}
 
-	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK", "TRANSITGATEWAY"}}
-		network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
-			NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
-				Kind:    "AwsNetwork",
-				Vpc:     "vpc-00000000000000000",
-				Account: "000000000000",
-			},
+	if slices.Contains(connectionTypes, "PRIVATELINK") {
+		network.Spec.DnsConfig = &networkingv1.NetworkingV1DnsConfig{Resolution: "PRIVATE"}
+		network.Status.DnsDomain = networkingv1.PtrString("")
+		network.Status.ZonalSubdomains = &map[string]string{}
+		network.Status.Cloud.NetworkingV1AwsNetwork.PrivateLinkEndpointService = networkingv1.PtrString("")
+		if phase == "READY" {
+			network.Status.DnsDomain = networkingv1.PtrString("abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud")
+			network.Status.ZonalSubdomains = &map[string]string{
+				"use1-az1": "use1-az1.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud",
+				"use1-az2": "use1-az2.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud",
+				"use1-az3": "use1-az3.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud",
+			}
+			network.Status.Cloud.NetworkingV1AwsNetwork.PrivateLinkEndpointService = networkingv1.PtrString("com.amazonaws.vpce.us-east-2.vpce-svc-01234567890abcdef")
 		}
+	}
+
+	if phase == "READY" {
+		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.Cloud.NetworkingV1AwsNetwork.Vpc = "vpc-00000000000000000"
+		network.Status.Cloud.NetworkingV1AwsNetwork.Account = "000000000000"
 	}
 
 	return network
 }
 
-func getGcpNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
+func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv1.NetworkingV1Network {
 	network := networkingv1.NetworkingV1Network{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingv1.NetworkingV1NetworkSpec{
@@ -386,26 +442,46 @@ func getGcpNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: []string{"PRIVATELINK"}},
+			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
 			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+				NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
+					Kind: "GcpNetwork",
+				},
+			},
 		},
 	}
 
-	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PRIVATELINK"}}
-		network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
-			NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
-				Kind:       "GcpNetwork",
-				Project:    "gcp-project",
-				VpcNetwork: "gcp-vpc",
-			},
+	if slices.Contains(connectionTypes, "PRIVATELINK") {
+		network.Spec.DnsConfig = &networkingv1.NetworkingV1DnsConfig{Resolution: "PRIVATE"}
+		network.Status.DnsDomain = networkingv1.PtrString("")
+		network.Status.ZonalSubdomains = &map[string]string{}
+		network.Status.Cloud.NetworkingV1GcpNetwork.PrivateServiceConnectServiceAttachments = &map[string]string{}
+		if phase == "READY" {
+			network.Status.DnsDomain = networkingv1.PtrString("0123456789abcdef.us-central1.gcp.devel.cpdev.cloud")
+			network.Status.ZonalSubdomains = &map[string]string{
+				"us-central1-a": "us-central1-a.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud",
+				"us-central1-b": "us-central1-b.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud",
+				"us-central1-c": "us-central1-c.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud",
+			}
+			network.Status.Cloud.NetworkingV1GcpNetwork.PrivateServiceConnectServiceAttachments = &map[string]string{
+				"us-central1-a": "projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-a",
+				"us-central1-b": "projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-b",
+				"us-central1-c": "projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-c",
+			}
 		}
+	}
+
+	if phase == "READY" {
+		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.Cloud.NetworkingV1GcpNetwork.Project = "gcp-project"
+		network.Status.Cloud.NetworkingV1GcpNetwork.VpcNetwork = "gcp-vpc"
 	}
 
 	return network
 }
 
-func getAzureNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
+func getAzureNetwork(id, name, phase string, connectionTypes []string) networkingv1.NetworkingV1Network {
 	network := networkingv1.NetworkingV1Network{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingv1.NetworkingV1NetworkSpec{
@@ -418,21 +494,48 @@ func getAzureNetwork(id, name, phase string) networkingv1.NetworkingV1Network {
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: []string{"PEERING"}},
+			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
 			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+				NetworkingV1AzureNetwork: &networkingv1.NetworkingV1AzureNetwork{
+					Kind: "AzureNetwork",
+				},
+			},
 		},
 	}
 
-	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: []string{"PEERING"}}
-		network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
-			NetworkingV1AzureNetwork: &networkingv1.NetworkingV1AzureNetwork{
-				Kind:         "AzureNetwork",
-				Vnet:         "azure-vnet",
-				Subscription: "aa000000-a000-0a00-00aa-0000aaa0a0a0",
-			},
+	if slices.Contains(connectionTypes, "PRIVATELINK") {
+		network.Spec.DnsConfig = &networkingv1.NetworkingV1DnsConfig{Resolution: "PRIVATE"}
+		network.Status.DnsDomain = networkingv1.PtrString("")
+		network.Status.ZonalSubdomains = &map[string]string{}
+		network.Status.Cloud.NetworkingV1AzureNetwork.PrivateLinkServiceAliases = &map[string]string{}
+		network.Status.Cloud.NetworkingV1AzureNetwork.PrivateLinkServiceResourceIds = &map[string]string{}
+		if phase == "READY" {
+			network.Status.DnsDomain = networkingv1.PtrString("0123456789a.eastus2.azure.devel.cpdev.cloud")
+			network.Status.ZonalSubdomains = &map[string]string{
+				"1": "az1.0123456789a.eastus2.azure.devel.cpdev.cloud",
+				"2": "az2.0123456789a.eastus2.azure.devel.cpdev.cloud",
+				"3": "az3.0123456789a.eastus2.azure.devel.cpdev.cloud",
+			}
+			network.Status.Cloud.NetworkingV1AzureNetwork.PrivateLinkServiceAliases = &map[string]string{
+				"1": "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice",
+				"2": "azure-vnet-privatelink-2.b0b0bb00-b000-0bb0-b00b-0bbb0000b00b.eastus2.azure.privatelinkservice",
+				"3": "azure-vnet-privatelink-3.c0c0cc00-c000-0cc0-c00c-0ccc0000c00c.eastus2.azure.privatelinkservice",
+			}
+			network.Status.Cloud.NetworkingV1AzureNetwork.PrivateLinkServiceResourceIds = &map[string]string{
+				"1": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1",
+				"2": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-2",
+				"3": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-3",
+			}
 		}
 	}
+
+	if phase == "READY" {
+		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.Cloud.NetworkingV1AzureNetwork.Vnet = "azure-vnet"
+		network.Status.Cloud.NetworkingV1AzureNetwork.Subscription = "aa000000-a000-0a00-00aa-0000aaa0a0a0"
+	}
+
 	return network
 }
 
@@ -1012,6 +1115,13 @@ func handleNetworkingPrivateLinkAttachmentCreate(t *testing.T) http.HandlerFunc 
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
+		if body.Spec.DisplayName == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, "The private link attachment name must be provided.")
+			require.NoError(t, err)
+			return
+		}
+
 		cloud := body.Spec.GetCloud()
 		region := body.Spec.GetRegion()
 
@@ -1168,6 +1278,13 @@ func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.Ha
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
+		if body.Spec.DisplayName == nil {
+			w.WriteHeader(http.StatusBadRequest)
+			err := writeErrorJson(w, "The private link attachment connection name must be provided.")
+			require.NoError(t, err)
+			return
+		}
+
 		if body.Spec.Cloud == nil {
 			w.WriteHeader(http.StatusBadRequest)
 			err := writeErrorJson(w, "The request body is malformed (missing cloud).")
@@ -1226,32 +1343,44 @@ func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.Ha
 func handleNetworkingIpAddressList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		anyIpAddress := getIpAddress("10.200.0.0/28", "ANY", "global", []string{"EXTERNAL_OAUTH"})
-		awsIpAddress := getIpAddress("10.201.0.0/28", "AWS", "us-west-2", []string{"CONNECT"})
+		awsWestIpAddress := getIpAddress("10.201.0.0/28", "AWS", "us-west-2", []string{"CONNECT"})
+		awsEastIpAddress := getIpAddress("10.201.0.0/28", "AWS", "us-east-1", []string{"CONNECT"})
+		awsEastIpAddress2 := getIpAddress("10.202.0.0/28", "AWS", "us-east-1", []string{"CONNECT"})
 		gcpIpAddress := getIpAddress("10.202.0.0/28", "GCP", "us-central1", []string{"KAFKA"})
 		azureIpAddress := getIpAddress("10.203.0.0/28", "AZURE", "centralus", []string{"KAFKA", "CONNECT"})
 
 		pageToken := r.URL.Query().Get("page_token")
 		var ipAddressList networkingipv1.NetworkingV1IpAddressList
 		switch pageToken {
+		case "awse1-2":
+			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
+				Data:     []networkingipv1.NetworkingV1IpAddress{awsEastIpAddress2},
+				Metadata: networkingipv1.ListMeta{},
+			}
+		case "awse1":
+			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
+				Data:     []networkingipv1.NetworkingV1IpAddress{awsEastIpAddress},
+				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=awse1-2"))},
+			}
 		case "azure":
 			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
 				Data:     []networkingipv1.NetworkingV1IpAddress{azureIpAddress},
-				Metadata: networkingipv1.ListMeta{},
+				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=awse1"))},
 			}
 		case "gcp":
 			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
 				Data:     []networkingipv1.NetworkingV1IpAddress{gcpIpAddress},
 				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=azure"))},
 			}
-		case "aws":
+		case "awsw2":
 			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
-				Data:     []networkingipv1.NetworkingV1IpAddress{awsIpAddress},
+				Data:     []networkingipv1.NetworkingV1IpAddress{awsWestIpAddress},
 				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=gcp"))},
 			}
 		default:
 			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
 				Data:     []networkingipv1.NetworkingV1IpAddress{anyIpAddress},
-				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=aws"))},
+				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=awsw2"))},
 			}
 		}
 

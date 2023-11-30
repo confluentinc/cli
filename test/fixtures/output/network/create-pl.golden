@@ -4,10 +4,8 @@
 | Name                       | aws-pl                       |
 | Cloud                      | AWS                          |
 | Region                     | us-west-2                    |
-| CIDR                       |                              |
 | Zones                      | usw2-az1, usw2-az2, usw2-az3 |
-| DNS Resolution             | PRIVATE                      |
 | Phase                      | PROVISIONING                 |
 | Supported Connection Types | PRIVATELINK                  |
-| Active Connection Types    |                              |
+| DNS Resolution             | PRIVATE                      |
 +----------------------------+------------------------------+

@@ -6,9 +6,8 @@
     "region": "us-east-1",
     "cidr": "10.200.0.0/16",
     "zones": ["use1-az1", "use1-az2", "use1-az3"],
-    "dns_resolution": "CHASED_PRIVATE",
     "phase": "READY",
-    "active_connection_types": ["PRIVATELINK", "TRANSITGATEWAY"]
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
   },
   {
     "id": "n-abcde2",
@@ -17,9 +16,8 @@
     "region": "us-central1",
     "cidr": "10.1.0.0/16",
     "zones": ["us-central1-a", "us-central1-b", "us-central1-c"],
-    "dns_resolution": "",
     "phase": "READY",
-    "active_connection_types": ["PRIVATELINK"]
+    "active_connection_types": ["PEERING"]
   },
   {
     "id": "n-abcde3",
@@ -28,8 +26,8 @@
     "region": "eastus2",
     "cidr": "10.0.0.0/16",
     "zones": ["1", "2", "3"],
-    "dns_resolution": "",
     "phase": "READY",
-    "active_connection_types": ["PEERING"]
+    "active_connection_types": ["PRIVATELINK"],
+    "dns_resolution": "PRIVATE"
   }
 ]

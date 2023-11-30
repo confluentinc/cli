@@ -8,8 +8,8 @@
 | Zones                      | us-central1-a, us-central1-b,  |
 |                            | us-central1-c                  |
 | Phase                      | READY                          |
-| Supported Connection Types | PRIVATELINK                    |
-| Active Connection Types    | PRIVATELINK                    |
+| Supported Connection Types | PEERING                        |
+| Active Connection Types    | PEERING                        |
 | GCP Project                | gcp-project                    |
 | GCP VPC Network            | gcp-vpc                        |
 +----------------------------+--------------------------------+

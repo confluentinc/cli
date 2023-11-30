@@ -8,8 +8,20 @@ func (s *CLITestSuite) TestNetworkDescribe() {
 		{args: "network describe n-abcde4", fixture: "network/describe-aws-provisioning.golden"},
 		{args: "network describe n-abcde5", fixture: "network/describe-gcp-provisioning.golden"},
 		{args: "network describe n-abcde6", fixture: "network/describe-azure-provisioning.golden"},
+		{args: "network describe n-abcde7", fixture: "network/describe-aws-privatelink-ready.golden"},
+		{args: "network describe n-abcde8", fixture: "network/describe-gcp-privatelink-ready.golden"},
+		{args: "network describe n-abcde9", fixture: "network/describe-azure-privatelink-ready.golden"},
+		{args: "network describe n-abcde10", fixture: "network/describe-aws-privatelink-provisioning.golden"},
+		{args: "network describe n-abcde11", fixture: "network/describe-gcp-privatelink-provisioning.golden"},
+		{args: "network describe n-abcde12", fixture: "network/describe-azure-privatelink-provisioning.golden"},
 		{args: "network describe n-abcde1 --output yaml", fixture: "network/describe-aws-ready-yaml.golden"},
 		{args: "network describe n-abcde4 --output yaml", fixture: "network/describe-aws-provisioning-yaml.golden"},
+		{args: "network describe n-abcde7 --output json", fixture: "network/describe-aws-privatelink-ready-json.golden"},
+		{args: "network describe n-abcde8 --output json", fixture: "network/describe-gcp-privatelink-ready-json.golden"},
+		{args: "network describe n-abcde9 --output json", fixture: "network/describe-azure-privatelink-ready-json.golden"},
+		{args: "network describe n-abcde10 --output json", fixture: "network/describe-aws-privatelink-provisioning-json.golden"},
+		{args: "network describe n-abcde11 --output json", fixture: "network/describe-gcp-privatelink-provisioning-json.golden"},
+		{args: "network describe n-abcde12 --output json", fixture: "network/describe-azure-privatelink-provisioning-json.golden"},
 		{args: "network describe", fixture: "network/describe-missing-id.golden", exitCode: 1},
 		{args: "network describe n-invalid", fixture: "network/describe-invalid.golden", exitCode: 1},
 	}
@@ -65,6 +77,7 @@ func (s *CLITestSuite) TestNetworkList() {
 
 func (s *CLITestSuite) TestNetworkCreate() {
 	tests := []CLITest{
+		{args: "network create --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16 --environment env-00000", fixture: "network/create-no-name.golden"},
 		{args: "network create aws-tgw --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16 --environment env-00000", fixture: "network/create-tgw.golden"},
 		{args: "network create aws-tgw --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16 --environment env-00000 --output json", fixture: "network/create-tgw-json.golden"},
 		{args: "network create aws-tgw --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --environment env-00000", fixture: "network/create-tgw-missing-cidr.golden", exitCode: 1},
@@ -156,6 +169,7 @@ func (s *CLITestSuite) TestNetworkPeeringDelete() {
 
 func (s *CLITestSuite) TestNetworkPeeringCreate() {
 	tests := []CLITest{
+		{args: "network peering create --network n-abcde1 --cloud aws --cloud-account 012345678901 --virtual-network vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21", fixture: "network/peering/create-no-name.golden"},
 		{args: "network peering create aws-peering --network n-abcde1 --cloud aws --cloud-account 012345678901 --virtual-network vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21", fixture: "network/peering/create-aws.golden"},
 		{args: "network peering create aws-peering --network n-abcde1 --cloud aws --cloud-account 012345678901 --virtual-network vpc-abcdef0123456789a --aws-routes 172.31.0.0/16,10.108.16.0/21 --customer-region us-west-2", fixture: "network/peering/create-aws-customer-region.golden"},
 		{args: "network peering create aws-peering --network n-abcde1 --cloud aws --cloud-account 012345678901 --aws-routes 172.31.0.0/16,10.108.16.0/21", fixture: "network/peering/create-aws-missing-flags.golden", exitCode: 1},
@@ -249,10 +263,10 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentDelete() {
 func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentCreate() {
 	tests := []CLITest{
 		{args: "network tgwa create aws-tgwa --network n-abcde1 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10", fixture: "network/transit-gateway-attachment/create.golden"},
+		{args: "network transit-gateway-attachment create --network n-abcde1 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10", fixture: "network/transit-gateway-attachment/create-no-name.golden"},
 		{args: "network transit-gateway-attachment create aws-tgwa --network n-abcde1 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10", fixture: "network/transit-gateway-attachment/create.golden"},
 		{args: "network transit-gateway-attachment create aws-tgwa --network n-azure --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10", fixture: "network/transit-gateway-attachment/create-duplicate.golden", exitCode: 1},
 		{args: "network transit-gateway-attachment create aws-tgwa --network n-duplicate --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10", fixture: "network/transit-gateway-attachment/create-wrong-network-cloud.golden", exitCode: 1},
-		{args: "network transit-gateway-attachment create --network n-abcde1 --aws-ram-share-arn arn:aws:ram:us-west-2:123456789012:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx --aws-transit-gateway tgw-xxxxxxxxxxxxxxxxx --routes 10.0.0.0/16,100.64.0.0/10", fixture: "network/transit-gateway-attachment/create-missing-args.golden", exitCode: 1},
 		{args: "network transit-gateway-attachment create aws-tgwa --network n-abcde1 --routes 10.0.0.0/16,100.64.0.0/10", fixture: "network/transit-gateway-attachment/create-missing-flags.golden", exitCode: 1},
 	}
 
@@ -340,6 +354,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAccessDelete() {
 func (s *CLITestSuite) TestNetworkPrivateLinkAccessCreate() {
 	tests := []CLITest{
 		{args: "network private-link access create pla --network n-abcde1", fixture: "network/private-link/access/create-missing-flags.golden", exitCode: 1},
+		{args: "network private-link access create --network n-abcde1 --cloud aws --cloud-account 012345678901", fixture: "network/private-link/access/create-no-name.golden"},
 		{args: "network private-link access create aws-pla --network n-abcde1 --cloud aws --cloud-account 012345678901", fixture: "network/private-link/access/create-aws.golden"},
 		{args: "network private-link access create gcp-pla --network n-abcde1 --cloud gcp --cloud-account temp-123456", fixture: "network/private-link/access/create-gcp.golden"},
 		{args: "network private-link access create azure-pla --network n-abcde1 --cloud azure --cloud-account 1234abcd-12ab-34cd-1234-123456abcdef", fixture: "network/private-link/access/create-azure.golden"},
@@ -430,6 +445,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDelete() {
 func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentCreate() {
 	tests := []CLITest{
 		{args: "network private-link attachment create platt", fixture: "network/private-link/attachment/create-missing-flags.golden", exitCode: 1},
+		{args: "network private-link attachment create --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-no-name.golden", exitCode: 1},
 		{args: "network private-link attachment create aws-platt --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-aws.golden"},
 		{args: "network private-link attachment create gcp-platt --cloud gcp --region us-central1", fixture: "network/private-link/attachment/create-gcp-fail.golden", exitCode: 1},
 		{args: "network private-link attachment create azure-platt --cloud azure --region eastus2", fixture: "network/private-link/attachment/create-azure-fail.golden", exitCode: 1},
@@ -518,9 +534,9 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDelete() {
 
 func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionCreate() {
 	tests := []CLITest{
-		{args: "network private-link attachment connection create", fixture: "network/private-link/attachment/connection/create-missing-args.golden", exitCode: 1},
 		{args: "network private-link attachment connection create plattc", fixture: "network/private-link/attachment/connection/create-missing-flags.golden", exitCode: 1},
 		{args: "network private-link attachment connection create plattc-wrong-cloud --cloud invalid --endpoint vpce-1234567890abcdef0 --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-invalid-cloud.golden", exitCode: 1},
+		{args: "network private-link attachment connection create --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-no-name.golden", exitCode: 1},
 		{args: "network private-link attachment connection create aws-plattc --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-aws.golden"},
 		{args: "network private-link attachment connection create aws-plattc-wrong-endpoint --cloud aws --endpoint vpce-invalid --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-aws-invalid-endpoint.golden", exitCode: 1},
 		{args: "network private-link attachment connection create aws-plattc-invalid-platt --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-invalid", fixture: "network/private-link/attachment/connection/create-aws-platt-not-found.golden", exitCode: 1},

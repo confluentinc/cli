@@ -13,7 +13,7 @@ import (
 
 type privateLinkAttachmentOut struct {
 	Id                    string `human:"ID" serialized:"id"`
-	Name                  string `human:"Name" serialized:"name"`
+	Name                  string `human:"Name,omitempty" serialized:"name,omitempty"`
 	Cloud                 string `human:"Cloud" serialized:"cloud"`
 	Region                string `human:"Region" serialized:"region"`
 	AwsVpcEndpointService string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
