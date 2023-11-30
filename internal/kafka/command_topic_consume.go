@@ -10,13 +10,13 @@ import (
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
-	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
 
@@ -28,15 +28,19 @@ func (c *command) newConsumeCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.consume,
-		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Consume items from topic "my-topic" and press "Ctrl-C" to exit.`,
 				Code: "confluent kafka topic consume my-topic --from-beginning",
 			},
+			examples.Example{
+				Text: `Consume from a cloud Kafka topic named "my_topic" without logging in to Confluent Cloud.`,
+				Code: "confluent kafka topic consume my_topic --api-key 0000000000000000 --api-secret <API_SECRET> --bootstrap SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --value-format avro --schema-registry-endpoint https://psrc-12345.us-west-2.aws.confluent.cloud --schema-registry-api-key 0000000000000000 --schema-registry-api-secret <SCHEMA_REGISTRY_API_SECRET>",
+			},
 		),
 	}
 
+	cmd.Flags().String("bootstrap", "", `Kafka cluster endpoint (Confluent Cloud) or a comma-separated list of broker hosts, each formatted as "host" or "host:port" (Confluent Platform).`)
 	cmd.Flags().String("group", "confluent_cli_consumer_<randomly-generated-id>", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
@@ -50,15 +54,22 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	pcmd.AddConsumerConfigFileFlag(cmd)
-	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
-	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
+
+	// cloud-only flags
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
+	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	// on-prem only flags
+	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
+	pcmd.AddProtocolFlag(cmd)
+	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
@@ -69,9 +80,30 @@ func (c *command) newConsumeCommand() *cobra.Command {
 }
 
 func (c *command) consume(cmd *cobra.Command, args []string) error {
+	if c.Context.GetState() == nil {
+		if !cmd.Flags().Changed("bootstrap") {
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
+		}
+
+		if err := c.prepareAnonymousContext(cmd); err != nil {
+			return err
+		}
+		return c.consumeCloud(cmd, args)
+	} else if c.Context.Config.IsCloudLogin() {
+		return c.consumeCloud(cmd, args)
+	} else {
+		if !cmd.Flags().Changed("bootstrap") {
+			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
+		}
+
+		return c.consumeOnPrem(cmd, args)
+	}
+}
+
+func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -188,7 +220,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	schemaPath, err := sr.CreateTempDir()
+	schemaPath, err := createTempDir()
 	if err != nil {
 		return err
 	}
@@ -212,12 +244,135 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		Out:         cmd.OutOrStdout(),
 		Subject:     subject,
 		Properties: ConsumerProperties{
+			Delimiter:   delimiter,
+			FullHeader:  fullHeader,
 			PrintKey:    printKey,
 			PrintOffset: printOffset,
-			FullHeader:  fullHeader,
-			Timestamp:   timestamp,
-			Delimiter:   delimiter,
 			SchemaPath:  schemaPath,
+			Timestamp:   timestamp,
+		},
+	}
+	return RunConsumer(consumer, groupHandler)
+}
+
+func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
+	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	printOffset, err := cmd.Flags().GetBool("print-offset")
+	if err != nil {
+		return err
+	}
+
+	fullHeader, err := cmd.Flags().GetBool("full-header")
+	if err != nil {
+		return err
+	}
+
+	timestamp, err := cmd.Flags().GetBool("timestamp")
+	if err != nil {
+		return err
+	}
+
+	delimiter, err := cmd.Flags().GetString("delimiter")
+	if err != nil {
+		return err
+	}
+
+	keyFormat, err := cmd.Flags().GetString("key-format")
+	if err != nil {
+		return err
+	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
+	consumer, err := newOnPremConsumer(cmd, c.clientID, configFile, config)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.FailedToCreateConsumerErrorMsg, err),
+			errors.OnPremConfigGuideSuggestions,
+		)
+	}
+	log.CliLogger.Tracef("Create consumer succeeded")
+
+	if err := c.refreshOAuthBearerToken(cmd, consumer); err != nil {
+		return err
+	}
+
+	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
+	}
+	defer adminClient.Close()
+
+	topicName := args[0]
+	if err := ValidateTopic(adminClient, topicName); err != nil {
+		return err
+	}
+
+	offset, err := GetOffsetWithFallback(cmd)
+	if err != nil {
+		return err
+	}
+
+	partition, err := cmd.Flags().GetInt32("partition")
+	if err != nil {
+		return err
+	}
+	partitionFilter := PartitionFilter{
+		Changed: cmd.Flags().Changed("partition"),
+		Index:   partition,
+	}
+
+	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
+	if err := consumer.Subscribe(topicName, rebalanceCallback); err != nil {
+		return err
+	}
+
+	output.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
+
+	var srClient *schemaregistry.Client
+	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {
+		srClient, err = c.GetSchemaRegistryClient(cmd)
+		if err != nil {
+			return err
+		}
+	}
+
+	dir, err := createTempDir()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	groupHandler := &GroupHandler{
+		SrClient:    srClient,
+		KeyFormat:   keyFormat,
+		ValueFormat: valueFormat,
+		Out:         cmd.OutOrStdout(),
+		Properties: ConsumerProperties{
+			Delimiter:   delimiter,
+			FullHeader:  fullHeader,
+			PrintKey:    printKey,
+			PrintOffset: printOffset,
+			SchemaPath:  dir,
+			Timestamp:   timestamp,
 		},
 	}
 	return RunConsumer(consumer, groupHandler)

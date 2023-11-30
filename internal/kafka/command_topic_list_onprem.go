@@ -33,6 +33,7 @@ func (c *command) newListCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
+
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
@@ -56,7 +57,13 @@ func ListTopics(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restConte
 
 	list := output.NewList(cmd)
 	for _, topic := range topics.Data {
-		list.Add(&topicOut{Name: topic.TopicName})
+		list.Add(&topicOut{
+			Name:              topic.TopicName,
+			IsInternal:        topic.IsInternal,
+			ReplicationFactor: topic.ReplicationFactor,
+			PartitionCount:    topic.PartitionsCount,
+		})
 	}
+
 	return list.Print()
 }
