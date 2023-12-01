@@ -68,6 +68,8 @@ lint: lint-go lint-cli
 .PHONY: lint-go
 lint-go:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2 && \
+	which golangci-lint && \
+	type -a golangci-lint && \
 	golangci-lint run --timeout 10m
 	@echo "✅  golangci-lint"
 
