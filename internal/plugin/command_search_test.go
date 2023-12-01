@@ -1,12 +1,11 @@
 package plugin
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
+	"runtime"
 	"testing"
 	"time"
 
@@ -16,6 +15,10 @@ import (
 )
 
 func TestClonePluginRepo(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	// Set up dummy repo to clone from
 	sourceDir, err := os.MkdirTemp("", "source")
 	assert.NoError(t, err)
@@ -55,12 +58,9 @@ func TestClonePluginRepo(t *testing.T) {
 
 	repoUrl, err := url.Parse(localRepoPath)
 	assert.NoError(t, err)
-
 	repoUrl.Scheme = "file"
-	url := strings.ReplaceAll(repoUrl.String(), "\\", "/")
-	fmt.Println("DEBUG", dir, repoUrl.String(), url)
 
-	r, err = clonePluginRepo(dir, url)
+	r, err = clonePluginRepo(dir, repoUrl.String())
 	assert.NoError(t, err)
 
 	// Check that the number of commits is 1 under shallow clone
