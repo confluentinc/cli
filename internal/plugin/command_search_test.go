@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -25,7 +26,7 @@ func TestClonePluginRepo(t *testing.T) {
 	w, err := r.Worktree()
 	assert.NoError(t, err)
 
-	file, err := os.Create(fmt.Sprintf("%s/file.txt", sourceDir))
+	file, err := os.Create(filepath.Join(sourceDir, "file.txt"))
 	assert.NoError(t, err)
 	file.Close()
 
@@ -49,10 +50,17 @@ func TestClonePluginRepo(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	localRepoPath, _ := filepath.Abs(sourceDir)
-	repoUrl, _ := url.Parse(localRepoPath)
+	localRepoPath, err := filepath.Abs(sourceDir)
+	assert.NoError(t, err)
+
+	repoUrl, err := url.Parse(localRepoPath)
+	assert.NoError(t, err)
+
 	repoUrl.Scheme = "file"
-	r, err = clonePluginRepo(dir, repoUrl.String())
+	url := strings.ReplaceAll(repoUrl.String(), "\\", "/")
+	fmt.Println("DEBUG", dir, repoUrl.String(), url)
+
+	r, err = clonePluginRepo(dir, url)
 	assert.NoError(t, err)
 
 	// Check that the number of commits is 1 under shallow clone
