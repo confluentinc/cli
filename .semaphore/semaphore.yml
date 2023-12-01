@@ -22,7 +22,6 @@ blocks:
             # Set up Go
             - checkout
             - sem-version go $(cat .go-version)
-            # Use golangci-lint installed with Go instead of Homebrew
             - export PATH=$(go env GOPATH)/bin:$PATH
 
             # Try to restore cached dependencies
@@ -51,8 +50,12 @@ blocks:
       jobs:
         - name: darwin/amd64
           commands:
+            # Set up Go
             - checkout
             - sem-version go $(cat .go-version)
+            - export PATH=$(go env GOPATH)/bin:$PATH
+
+            # Run tests
             - make test
       epilogue:
         always:

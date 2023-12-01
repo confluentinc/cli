@@ -52,7 +52,7 @@ func TestClonePluginRepo(t *testing.T) {
 	localRepoPath, _ := filepath.Abs(sourceDir)
 	repoUrl, _ := url.Parse(localRepoPath)
 	repoUrl.Scheme = "file"
-	fmt.Println("DEBUG", dir)
+	fmt.Println("DEBUG", dir, repoUrl.String())
 	r, err = clonePluginRepo(dir, repoUrl.String())
 	assert.NoError(t, err)
 
