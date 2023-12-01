@@ -1,5 +1,5 @@
-      ID     |   Name    | Network ID | Cloud |            Cloud Account             | Phase  
--------------+-----------+------------+-------+--------------------------------------+--------
-  pla-111111 | aws-pla   | n-abcde1   | AWS   |                         012345678901 | READY  
-  pla-111112 | gcp-pla   | n-abcde1   | GCP   | temp-gear-123456                     | READY  
-  pla-111113 | azure-pla | n-abcde1   | AZURE | 1234abcd-12ab-34cd-1234-123456abcdef | READY  
+      ID     |   Name    | Network  | Cloud |            Cloud Account             | Phase  
+-------------+-----------+----------+-------+--------------------------------------+--------
+  pla-111111 | aws-pla   | n-abcde1 | AWS   |                         012345678901 | READY  
+  pla-111112 | gcp-pla   | n-abcde1 | GCP   | temp-gear-123456                     | READY  
+  pla-111113 | azure-pla | n-abcde1 | AZURE | 1234abcd-12ab-34cd-1234-123456abcdef | READY  

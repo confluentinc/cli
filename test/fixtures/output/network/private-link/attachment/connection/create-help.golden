@@ -1,10 +1,10 @@
 Create a private link attachment connection.
 
 Usage:
-  confluent network private-link attachment connection create <name> [flags]
+  confluent network private-link attachment connection create [name] [flags]
 
 Examples:
-Create an AWS PrivateLink attachment connection.
+Create a named AWS PrivateLink attachment connection.
 
   $ confluent network private-link attachment connection create aws-private-link-attachment-connection --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456
 

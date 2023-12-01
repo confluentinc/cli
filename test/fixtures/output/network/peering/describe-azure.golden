@@ -1,7 +1,7 @@
 +---------------+----------------------------------------------------------------------------------------------+
 | ID            | peer-111113                                                                                  |
 | Name          | azure-peering                                                                                |
-| Network ID    | n-abcde1                                                                                     |
+| Network       | n-abcde1                                                                                     |
 | Cloud         | AZURE                                                                                        |
 | Phase         | READY                                                                                        |
 | Custom Region | centralus                                                                                    |

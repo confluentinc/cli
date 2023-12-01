@@ -1,7 +1,7 @@
 {
   "id": "peer-111111",
   "name": "aws-peering",
-  "network_id": "n-abcde1",
+  "network": "n-abcde1",
   "cloud": "AWS",
   "phase": "READY",
   "custom_region": "us-east-1",

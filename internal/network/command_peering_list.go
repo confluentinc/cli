@@ -13,7 +13,7 @@ import (
 type listPeeringOut struct {
 	Id             string `human:"ID" serialized:"id"`
 	Name           string `human:"Name" serialized:"name"`
-	NetworkId      string `human:"Network ID" serialized:"network_id"`
+	Network        string `human:"Network" serialized:"network"`
 	Cloud          string `human:"Cloud" serialized:"cloud"`
 	CustomRegion   string `human:"Custom Region,omitempty" serialized:"custom_region,omitempty"`
 	VirtualNetwork string `human:"Virtual Nework,omitempty" serialized:"virtual_network,omitempty"`
@@ -57,11 +57,11 @@ func (c *command) peeringList(cmd *cobra.Command, _ []string) error {
 		}
 
 		out := &listPeeringOut{
-			Id:        peering.GetId(),
-			Name:      peering.Spec.GetDisplayName(),
-			NetworkId: peering.Spec.Network.GetId(),
-			Cloud:     cloud,
-			Phase:     peering.Status.GetPhase(),
+			Id:      peering.GetId(),
+			Name:    peering.Spec.GetDisplayName(),
+			Network: peering.Spec.Network.GetId(),
+			Cloud:   cloud,
+			Phase:   peering.Status.GetPhase(),
 		}
 		switch cloud {
 		case CloudAws:
