@@ -23,6 +23,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 					DisplayName: flinkv2.PtrString("my-compute-pool-1"),
 					MaxCfu:      flinkv2.PtrInt32(1),
 					Region:      flinkv2.PtrString("us-west-1"),
+					Cloud:       flinkv2.PtrString("AWS"),
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
 			}
@@ -32,6 +33,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 					DisplayName: flinkv2.PtrString("my-compute-pool-2"),
 					MaxCfu:      flinkv2.PtrInt32(2),
 					Region:      flinkv2.PtrString("us-west-2"),
+					Cloud:       flinkv2.PtrString("AWS"),
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
 			}
@@ -75,6 +77,7 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 					DisplayName:  flinkv2.PtrString("my-compute-pool-1"),
 					HttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrl.String()),
 					MaxCfu:       flinkv2.PtrInt32(1),
+					Cloud:        flinkv2.PtrString("AWS"),
 					Region:       flinkv2.PtrString("us-west-2"),
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
@@ -92,6 +95,7 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 				Spec: &flinkv2.FcpmV2ComputePoolSpec{
 					DisplayName: flinkv2.PtrString("my-compute-pool-1"),
 					MaxCfu:      flinkv2.PtrInt32(update.Spec.GetMaxCfu()),
+					Cloud:       flinkv2.PtrString("AWS"),
 					Region:      flinkv2.PtrString("us-west-2"),
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
