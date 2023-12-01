@@ -163,7 +163,7 @@ func IsFlagRequired(flag *pflag.Flag) bool {
 	required := flag.Annotations[cobra.BashCompOneRequiredFlag]
 	if len(required) == 1 && required[0] == "true" {
 		oneRequired := flag.Annotations["cobra_annotation_one_required"]
-		if len(oneRequired) == 0 || !slices.Contains(strings.Split(oneRequired[0], " "), flag.Name) {
+		if !(len(oneRequired) == 1 && slices.Contains(strings.Split(oneRequired[0], " "), flag.Name)) {
 			return true
 		}
 	}
