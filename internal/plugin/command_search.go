@@ -51,15 +51,15 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	confluentDir := filepath.Join(home, ".confluent")
-	dir, err := os.MkdirTemp(confluentDir, "cli-plugins")
+
+	dir, err := os.MkdirTemp(filepath.Join(home, ".confluent"), "cli-plugins")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(dir)
+	fmt.Println("DEBUG", dir)
 
-	_, err = clonePluginRepo(dir, cliPluginsUrl)
-	if err != nil {
+	if _, err := clonePluginRepo(dir, cliPluginsUrl); err != nil {
 		return err
 	}
 
@@ -72,7 +72,6 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 	for _, manifest := range manifests {
 		list.Add(manifest)
 	}
-
 	return list.Print()
 }
 
@@ -93,7 +92,7 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 
 	manifestOutList := []*ManifestOut{}
 	for _, file := range files {
-		manifestPath := fmt.Sprintf("%s/%s/manifest.yml", dir, file.Name())
+		manifestPath := filepath.Join(dir, file.Name(), "manifest.yml")
 		if file.IsDir() && utils.DoesPathExist(manifestPath) {
 			manifestFile, err := os.ReadFile(manifestPath)
 			if err != nil {
