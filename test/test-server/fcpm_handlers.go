@@ -3,6 +3,7 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -47,6 +48,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 			create := new(flinkv2.FcpmV2ComputePool)
 			err := json.NewDecoder(r.Body).Decode(create)
 			require.NoError(t, err)
+			create.Spec.Cloud = flinkv2.PtrString(strings.ToUpper(create.Spec.GetCloud()))
 
 			v = flinkv2.FcpmV2ComputePool{
 				Id:     flinkv2.PtrString("lfcp-123456"),

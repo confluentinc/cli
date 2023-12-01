@@ -4,7 +4,7 @@
 | Name        | my-compute-pool |
 | Current CFU | 0               |
 | Max CFU     | 5               |
-| Cloud       | aws             |
+| Cloud       | AWS             |
 | Region      | us-west-2       |
 | Status      | PROVISIONING    |
 +-------------+-----------------+
