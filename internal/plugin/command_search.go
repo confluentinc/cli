@@ -57,7 +57,6 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	defer os.RemoveAll(dir)
-	fmt.Println("DEBUG", dir)
 
 	if _, err := clonePluginRepo(dir, cliPluginsUrl); err != nil {
 		return err

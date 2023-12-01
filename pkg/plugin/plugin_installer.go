@@ -31,7 +31,6 @@ func installSimplePlugin(name, repositoryDir, installDir, language string) error
 
 	found := false
 	for _, entry := range entries {
-		fmt.Println("DEBUG", entry.Name())
 		if nameFromEntry(entry) != "" {
 			found = true
 

@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -60,7 +59,6 @@ func SearchPath(cfg *config.Config) map[string][]string {
 
 func nameFromEntry(entry os.DirEntry) string {
 	if !isExecutable(entry) {
-		fmt.Println("DEBUG", "Not executable")
 		return ""
 	}
 
@@ -77,8 +75,13 @@ func nameFromEntry(entry os.DirEntry) string {
 func isExecutable(entry fs.DirEntry) bool {
 	if runtime.GOOS == "windows" {
 		executableExtensions := filepath.SplitList(os.Getenv("PATHEXT"))
-		fmt.Println("DEBUG", executableExtensions)
 		extension := strings.ToUpper(filepath.Ext(entry.Name()))
+
+		// Hardcode supported plugin types that may not show up in this list
+		if !slices.Contains(executableExtensions, ".PY") {
+			executableExtensions = append(executableExtensions, ".PY")
+		}
+
 		return slices.Contains(executableExtensions, extension)
 	}
 
