@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -159,8 +160,14 @@ func LabelRequiredFlags(cmd *cobra.Command) {
 }
 
 func IsFlagRequired(flag *pflag.Flag) bool {
-	annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
-	return len(annotations) == 1 && annotations[0] == "true"
+	required := flag.Annotations[cobra.BashCompOneRequiredFlag]
+	if len(required) == 1 && required[0] == "true" {
+		oneRequired := flag.Annotations["cobra_annotation_one_required"]
+		if len(oneRequired) == 0 || !slices.Contains(strings.Split(oneRequired[0], " "), flag.Name) {
+			return true
+		}
+	}
+	return false
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
