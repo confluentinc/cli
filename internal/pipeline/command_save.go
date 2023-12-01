@@ -66,7 +66,7 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if sqlFile != "" && sqlFile != sqlFileTemplate {
-		path = getPath(sqlFile)
+		path = expandHomeDir(sqlFile)
 	}
 
 	if err := os.WriteFile(path, []byte(pipeline.Spec.SourceCode.GetSql()), 0644); err != nil {
@@ -77,11 +77,12 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func getPath(sqlFile string) string {
-	if strings.HasPrefix(sqlFile, "~") {
+func expandHomeDir(path string) string {
+	if strings.HasPrefix(path, "~") {
 		if home, err := os.UserHomeDir(); err == nil {
-			return strings.Replace(sqlFile, "~", home, 1)
+			return strings.Replace(path, "~", home, 1)
 		}
 	}
-	return sqlFile
+
+	return path
 }
