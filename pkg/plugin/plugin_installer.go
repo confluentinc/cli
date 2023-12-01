@@ -3,6 +3,7 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-version"
 )
@@ -21,7 +22,8 @@ type PluginInstaller interface {
 }
 
 func installSimplePlugin(name, repositoryDir, installDir, language string) error {
-	pluginDir := fmt.Sprintf("%s/%s", repositoryDir, name)
+	pluginDir := filepath.Join(repositoryDir, name)
+
 	entries, err := os.ReadDir(pluginDir)
 	if err != nil {
 		return err
@@ -29,15 +31,16 @@ func installSimplePlugin(name, repositoryDir, installDir, language string) error
 
 	found := false
 	for _, entry := range entries {
+		fmt.Println("DEBUG", entry.Name())
 		if nameFromEntry(entry) != "" {
 			found = true
 
-			fileData, err := os.ReadFile(fmt.Sprintf("%s/%s", pluginDir, entry.Name()))
+			fileData, err := os.ReadFile(filepath.Join(pluginDir, entry.Name()))
 			if err != nil {
 				return err
 			}
 
-			if err := os.WriteFile(fmt.Sprintf("%s/%s", installDir, entry.Name()), fileData, 0755); err != nil {
+			if err := os.WriteFile(filepath.Join(installDir, entry.Name()), fileData, 0755); err != nil {
 				return err
 			}
 		}

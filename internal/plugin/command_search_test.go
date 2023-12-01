@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -25,7 +24,7 @@ func TestClonePluginRepo(t *testing.T) {
 	w, err := r.Worktree()
 	assert.NoError(t, err)
 
-	file, err := os.Create(fmt.Sprintf("%s/file.txt", sourceDir))
+	file, err := os.Create(filepath.Join(sourceDir, "file.txt"))
 	assert.NoError(t, err)
 	file.Close()
 
