@@ -29,8 +29,8 @@ blocks:
             # Run tests
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
-            - which go
-            - type -a go
+            - which golangci-lint
+            - type -a golangci-lint
             - make lint
             - make test
             - make test-installer
