@@ -526,13 +526,12 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(subject)}
-		schemaString, err := client.GetSchema(schemaId.Value(), opts)
+		schemaString, err := client.GetSchema(schemaId.Value(), subject)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		format, err = serdes.FormatTranslation(schemaString.SchemaType)
+		format, err = serdes.FormatTranslation(schemaString.GetSchemaType())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -607,7 +606,7 @@ func setSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, sche
 
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		if err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644); err != nil {
+		if err := os.WriteFile(tempStorePath, []byte(schemaString.GetSchema()), 0644); err != nil {
 			return "", nil, err
 		}
 
@@ -618,7 +617,7 @@ func setSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, sche
 		if err := os.WriteFile(tempRefStorePath, refBytes, 0644); err != nil {
 			return "", nil, err
 		}
-		references = schemaString.References
+		references = schemaString.GetReferences()
 	} else {
 		refBlob, err := os.ReadFile(tempRefStorePath)
 		if err != nil {
