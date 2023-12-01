@@ -23,7 +23,6 @@ type PluginInstaller interface {
 
 func installSimplePlugin(name, repositoryDir, installDir, language string) error {
 	pluginDir := filepath.Join(repositoryDir, name)
-	fmt.Println("DEBUG", pluginDir)
 
 	entries, err := os.ReadDir(pluginDir)
 	if err != nil {
