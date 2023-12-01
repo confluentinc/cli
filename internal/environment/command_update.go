@@ -25,7 +25,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "stream-governance")
+	cmd.MarkFlagsOneRequired("name", "governance-package")
 
 	return cmd
 }
@@ -35,7 +35,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	streamGovernance, err := cmd.Flags().GetString("stream-governance")
+	governancePackage, err := cmd.Flags().GetString("governance-package")
 	if err != nil {
 		return err
 	}
@@ -44,9 +44,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if name != "" {
 		environment.SetDisplayName(name)
 	}
-	if streamGovernance != "" {
+	if governancePackage != "" {
 		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
-			Package: orgv2.PtrString(strings.ToUpper(streamGovernance)),
+			Package: orgv2.PtrString(strings.ToUpper(governancePackage)),
 		})
 	}
 

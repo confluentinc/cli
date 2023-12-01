@@ -29,15 +29,15 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	streamGovernance, err := cmd.Flags().GetString("stream-governance")
+	governancePackage, err := cmd.Flags().GetString("governance-package")
 	if err != nil {
 		return err
 	}
 
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
-	if streamGovernance != "" {
+	if governancePackage != "" {
 		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
-			Package: orgv2.PtrString(strings.ToUpper(streamGovernance)),
+			Package: orgv2.PtrString(strings.ToUpper(governancePackage)),
 		})
 	}
 
@@ -64,7 +64,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) addStreamGovernancePackageFlag(cmd *cobra.Command, defaultValue string) {
-	cmd.Flags().String("stream-governance", defaultValue,
+	cmd.Flags().String("governance-package", defaultValue,
 		fmt.Sprintf("Stream Governance package. %s.", utils.ArrayToCommaDelimitedString(
 			[]string{"essentials", "advanced"}, "or")))
 }
