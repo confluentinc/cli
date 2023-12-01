@@ -1,4 +1,4 @@
-  Current |     ID      |       Name        | Current CFU | Max CFU |  Region   |   Status     
-----------+-------------+-------------------+-------------+---------+-----------+--------------
-  *       | lfcp-123456 | my-compute-pool-1 |           0 |       1 | us-west-1 | PROVISIONED  
-          | lfcp-222222 | my-compute-pool-2 |           0 |       2 | us-west-2 | PROVISIONED  
+  Current |     ID      |       Name        | Current CFU | Max CFU | Cloud |  Region   |   Status     
+----------+-------------+-------------------+-------------+---------+-------+-----------+--------------
+  *       | lfcp-123456 | my-compute-pool-1 |           0 |       1 | AWS   | us-west-1 | PROVISIONED  
+          | lfcp-222222 | my-compute-pool-2 |           0 |       2 | AWS   | us-west-2 | PROVISIONED  
