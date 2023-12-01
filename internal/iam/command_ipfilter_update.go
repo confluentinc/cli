@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -35,20 +36,12 @@ func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cmd.MarkFlagsOneRequired("name", "resource-group", "add-ip-groups", "remove-ip-groups")
+
 	return cmd
 }
 
 func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"name",
-		"resource-group",
-		"add-ip-groups",
-		"remove-ip-groups",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
-
 	filterName, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
@@ -138,6 +131,11 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	IpGroupIdObjects := make([]iamv2.GlobalObjectReference, len(newIpGroupIds))
 	for i, ipGroupId := range newIpGroupIds {
 		IpGroupIdObjects[i] = iamv2.GlobalObjectReference{Id: ipGroupId}
+	}
+
+	if len(IpGroupIdObjects) == 0 {
+		return errors.NewErrorWithSuggestions("Cannot remove all IP groups from IP filter",
+			fmt.Sprintf("Please double check the IP filter you are updating. Use `confluent iam ip-filter describe %s` to see the IP groups associated with an IP filter.", currentIpFilter.GetId()))
 	}
 
 	updateIpFilter.IpGroups = &IpGroupIdObjects

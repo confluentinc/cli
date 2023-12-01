@@ -15,10 +15,10 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/auth"
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/hub"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
@@ -37,7 +37,7 @@ type AuthenticatedCLICommand struct {
 	metricsClient        *ccloudv2.MetricsClient
 	schemaRegistryClient *schemaregistry.Client
 
-	Context *dynamicconfig.DynamicContext
+	Context *config.Context
 }
 
 func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
@@ -80,7 +80,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
-		dataplaneToken, err := auth.GetDataplaneToken(c.Context.Context)
+		dataplaneToken, err := auth.GetDataplaneToken(c.Context)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +91,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 	return c.flinkGatewayClient, nil
 }
 
-func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(computePoolId string, ctx *dynamicconfig.DynamicContext) (string, error) {
+func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(computePoolId string, ctx *config.Context) (string, error) {
 	computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
 	if err != nil {
 		return "", err
@@ -166,11 +166,11 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 
 		configuration := metricsv2.NewConfiguration()
 		configuration.Debug = unsafeTrace
-		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config.Config, unsafeTrace)
+		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config, unsafeTrace)
 		configuration.Servers = metricsv2.ServerConfigurations{{URL: url}}
 		configuration.UserAgent = c.Config.Version.UserAgent
 
-		c.metricsClient = ccloudv2.NewMetricsClient(configuration, c.Config.Config)
+		c.metricsClient = ccloudv2.NewMetricsClient(configuration, c.Config)
 	}
 
 	return c.metricsClient, nil
@@ -186,7 +186,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 		configuration := srsdk.NewConfiguration()
 		configuration.UserAgent = c.Config.Version.UserAgent
 		configuration.Debug = unsafeTrace
-		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config.Config, unsafeTrace)
+		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config, unsafeTrace)
 
 		schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
 		if schemaRegistryEndpoint != "" {
@@ -197,7 +197,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			if u.Scheme != "http" && u.Scheme != "https" {
 				u.Scheme = "https"
 			}
-			configuration.BasePath = u.String()
+			configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
 
 			caLocation, err := cmd.Flags().GetString("ca-location")
 			if err != nil {
@@ -221,7 +221,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			if len(clusters) == 0 {
 				return nil, errors.NewSRNotEnabledError()
 			}
-			configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
+			configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetHttpEndpoint()}}
 			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
 		} else {
 			return nil, errors.NewErrorWithSuggestions(
@@ -240,7 +240,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			}
 			c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, apiKey)
 		} else {
-			c.schemaRegistryClient = schemaregistry.NewClient(configuration, c.Config.Config)
+			c.schemaRegistryClient = schemaregistry.NewClient(configuration, c.Config)
 		}
 
 		if err := c.schemaRegistryClient.Get(); err != nil {

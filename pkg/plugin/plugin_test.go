@@ -126,3 +126,7 @@ func TestVersionRegex(t *testing.T) {
 	require.False(t, bashInstaller.IsVersion("bash"))
 	require.False(t, bashInstaller.IsVersion("Inc."))
 }
+
+func TestToCommandName(t *testing.T) {
+	require.Equal(t, "confluent login headless-sso", ToCommandName("confluent-login-headless_sso"))
+}

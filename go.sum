@@ -117,8 +117,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd5
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0/go.mod h1:wNa9Qg2e2v/+PQsUyKh+qB22hhLkPR6Ahy6rP+1jmGI=
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0 h1:a2EaPzwLEYkgil7rlsqRUlt994PMGubtdgRrF8Kbo10=
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0/go.mod h1:c7nUjQ5pQCqz4LagF1qatcj5NX4icoiSTaCxfdxAwsY=
-github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1 h1:hk8Uc28S2dPd/few2yJKYY3FqTRuVO14qq4fhWrXwdw=
-github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1/go.mod h1:XZksYS523oCggD4EAD8GmOFhPRe11kRqNHcAHzDQpgI=
+github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2 h1:BV/dPTFVovJPylrcr9lcSmukCVxBxyUeHBr6hp7zUNk=
+github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2/go.mod h1:MMtRTfg1g32bQrRwfqvGpe+grS5pQzeq9V+L5GKydV4=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5 h1:w0Z2hFxg8ng8gycWKRZFdus1R+q8D/I5AmN06NZso5s=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5/go.mod h1:L8U9xs2duASJnjIYkwGrSbZNpApsbh+vlxsJlZMHJPA=
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0 h1:OOFNqtZN3Spuzz4TX6K6JfDM7zNDIE6BE1TtK78jFHQ=
@@ -183,8 +183,8 @@ github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787 h1:hHiVn9s
 github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787/go.mod h1:e8oa6xV9gIddL04yTbRjly4s7U3Fn57PAOUMTUPibUA=
 github.com/confluentinc/proto-go-setter v0.3.0 h1:6BhgpDV5rWdEa+6LsnQWGV1udFboCaNtIsOG/G8LKoU=
 github.com/confluentinc/proto-go-setter v0.3.0/go.mod h1:WJkmDZf4f/nxGzjYJ+o3AsXI2hk64gLM5XlZrmlzs1s=
-github.com/confluentinc/schema-registry-sdk-go v0.0.24 h1:sJ3j5nZum/pG8DdUeiIcJ9i5XOYDXg5NIxfvUAvotNs=
-github.com/confluentinc/schema-registry-sdk-go v0.0.24/go.mod h1:rz5jgOSmMgeVGCzqsI01SdpmGtkb1nFYtfh67SyzZL4=
+github.com/confluentinc/schema-registry-sdk-go v0.1.0 h1:DeShezgrAf/xzBRFBGTyJyuBza5KNpDv9rH7ESuE9LQ=
+github.com/confluentinc/schema-registry-sdk-go v0.1.0/go.mod h1:TfsJDEeg16OOD5zYAx92JYWviNcJNxu8taszZ5H/0u8=
 github.com/containerd/console v1.0.3/go.mod h1:7LqA/THxQ86k76b8c/EMSiaJ3h1eZkMkXar0TQ1gf3U=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=

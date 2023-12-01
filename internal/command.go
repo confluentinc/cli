@@ -48,7 +48,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
@@ -139,10 +138,8 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(update.New(cfg, prerunner, updateClient))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
-	dc := dynamicconfig.New(cfg)
-	_ = dc.ParseFlagsIntoConfig(cmd)
-
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), config.CliLaunchDarklyClient, true, false) {
+	_ = cfg.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(flink.New(cfg, prerunner))
 	}
 
@@ -256,8 +253,7 @@ func getCloudClient(cfg *config.Config, ccloudClientFactory pauth.CCloudClientFa
 }
 
 func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *config.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context())
-	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, config.CliLaunchDarklyClient, true, []any{})
+	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, cfg.Context(), config.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if cmd, _, err := cmd.Find(strings.Split(name, " ")); err == nil {
@@ -271,8 +267,7 @@ func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *config.Config) {
 }
 
 func disableCommandAndFlagHelpText(cmd *cobra.Command, cfg *config.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context())
-	disableResp := featureflags.GetLDDisableMap(ctx)
+	disableResp := featureflags.GetLDDisableMap(cfg.Context())
 	disabledCmdsAndFlags, ok := disableResp["patterns"].([]any)
 	if ok && len(disabledCmdsAndFlags) > 0 {
 		for _, pattern := range disabledCmdsAndFlags {

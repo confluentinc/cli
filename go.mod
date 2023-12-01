@@ -13,7 +13,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
+	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
@@ -45,7 +45,7 @@ require (
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20230117192233-7e6d894d74a9
 	github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20230117192233-7e6d894d74a9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
-	github.com/confluentinc/schema-registry-sdk-go v0.0.24
+	github.com/confluentinc/schema-registry-sdk-go v0.1.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.1
 	github.com/docker/docker v24.0.7+incompatible
