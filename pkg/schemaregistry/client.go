@@ -217,3 +217,43 @@ func (c *Client) GetByUniqueAttributes(typeName, qualifiedName string) (srsdk.At
 	res, _, err := c.DefaultApi.GetByUniqueAttributes(c.context(), typeName, qualifiedName).Execute()
 	return res, err
 }
+
+func (c *Client) CreateDek(name string) (srsdk.Dek, error) {
+	res, _, err := c.DefaultApi.CreateDek(c.context(), name).Execute()
+	return res, err
+}
+
+func (c *Client) DeleteDekVersion(name, subject, version string) error {
+	_, err := c.DefaultApi.DeleteDekVersion(c.context(), name, subject, version).Execute()
+	return err
+}
+
+func (c *Client) DeleteDekVersions(name, subject string) error {
+	_, err := c.DefaultApi.DeleteDekVersions(c.context(), name, subject).Execute()
+	return err
+}
+
+func (c *Client) GetDek(name, subject string) (srsdk.Dek, error) {
+	res, _, err := c.DefaultApi.GetDek(c.context(), name, subject).Execute()
+	return res, err
+}
+
+func (c *Client) GetDekByVersion(name, subject, version string) (srsdk.Dek, error) {
+	res, _, err := c.DefaultApi.GetDekByVersion(c.context(), name, subject, version).Execute()
+	return res, err
+}
+
+func (c *Client) GetDeKVersions(name, subject string) ([]int32, error) {
+	res, _, err := c.DefaultApi.GetDekVersions(c.context(), name, subject).Execute()
+	return res, err
+}
+
+func (c *Client) GetDekSubjects(name string) ([]string, error) {
+	res, _, err := c.DefaultApi.GetDekSubjects(c.context(), name).Execute()
+	return res, err
+}
+
+func (c *Client) UndeleteDekVersion(name, subject, version string) error {
+	_, err := c.DefaultApi.UndeleteDekVersion(c.context(), name, subject, version).Execute()
+	return err
+}
