@@ -60,9 +60,8 @@ type command struct {
 }
 
 var (
-	ConnectionTypes          = []string{"privatelink", "peering", "transitgateway"}
-	DnsResolutions           = []string{"private", "chased-private"}
-	NetworkLinkEndpointPhase = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "EXPIRED", "DISCONNECTED", "DISCONNECTING", "INACTIVE"}
+	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
+	DnsResolutions  = []string{"private", "chased-private"}
 
 	CloudAws   = "AWS"
 	CloudAzure = "AZURE"
@@ -268,14 +267,4 @@ func addAcceptedEnvironmentsFlag(cmd *cobra.Command, command *pcmd.Authenticated
 
 		return pcmd.AutocompleteEnvironments(command.Client, command.V2Client)
 	})
-}
-
-func (c *command) addNetworkLinkServiceFlag(cmd *cobra.Command) {
-	cmd.Flags().String("network-link-service", "", "Network link service ID.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
-}
-
-func addNetworkLinkEndpointPhaseFlag(cmd *cobra.Command) {
-	cmd.Flags().String("phase", "", "Current phase of the network link endpoint.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return NetworkLinkEndpointPhase })
 }

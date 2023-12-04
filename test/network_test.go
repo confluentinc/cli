@@ -637,7 +637,6 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointList() {
 		{args: "network nl endpoint list", fixture: "network/network-link/endpoint/list.golden"},
 		{args: "network network-link endpoint list", fixture: "network/network-link/endpoint/list.golden"},
 		{args: "network network-link endpoint list --output json", fixture: "network/network-link/endpoint/list-json.golden"},
-		{args: "network network-link endpoint list --name my-network-link-endpoint-1", fixture: "network/network-link/endpoint/list-args.golden"},
 	}
 
 	for _, test := range tests {

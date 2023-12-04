@@ -27,10 +27,6 @@ func (c *command) newNetworkLinkEndpointListCommand() *cobra.Command {
 		RunE:  c.networkLinkEndpointList,
 	}
 
-	cmd.Flags().String("name", "", "Network Link endpoint display name.")
-	addNetworkFlag(cmd, c.AuthenticatedCLICommand)
-	c.addNetworkLinkServiceFlag(cmd)
-	addNetworkLinkEndpointPhaseFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -44,26 +40,6 @@ func (c *command) networkLinkEndpointList(cmd *cobra.Command, _ []string) error 
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
-	}
-
-	network, err := cmd.Flags().GetString("network")
-	if err != nil {
-		return err
-	}
-
-	service, err := cmd.Flags().GetString("network-link-service")
-	if err != nil {
-		return err
-	}
-
-	phase, err := cmd.Flags().GetString("phase")
-	if err != nil {
-		return err
-	}
-
 	list := output.NewList(cmd)
 	for _, endpoint := range endpoints {
 		if endpoint.Spec == nil {
@@ -71,19 +47,6 @@ func (c *command) networkLinkEndpointList(cmd *cobra.Command, _ []string) error 
 		}
 		if endpoint.Status == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
-		}
-
-		if name != "" && endpoint.Spec.GetDisplayName() != name {
-			continue
-		}
-		if network != "" && endpoint.Spec.Network.GetId() != network {
-			continue
-		}
-		if service != "" && endpoint.Spec.NetworkLinkService.GetId() != service {
-			continue
-		}
-		if phase != "" && endpoint.Status.GetPhase() != phase {
-			continue
 		}
 
 		list.Add(&listNetworkLinkEndpointOut{
