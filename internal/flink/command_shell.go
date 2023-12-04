@@ -134,8 +134,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 
 	lspBaseUrl := c.getFlinkLanguageServiceUrl(flinkGatewayClient)
-	lspClient := lsp.NewLSPClientWS(lspBaseUrl, flinkGatewayClient.GetAuthToken(), c.Context.GetOrganization().GetResourceId(), environmentId)
-
 	jwtValidator := pcmd.NewJWTValidator()
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
@@ -152,9 +150,10 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
 		LSPEnabled:       lspEnabled,
+		LSPBaseUrl:       lspBaseUrl,
 	}
 
-	client.StartApp(flinkGatewayClient, lspClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config.Config, unsafeTrace))
+	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config.Config, unsafeTrace))
 	return nil
 }
 
