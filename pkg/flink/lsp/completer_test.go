@@ -7,9 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
 func TestLSPIntialize(t *testing.T) {
@@ -98,7 +96,6 @@ func TestLSPCompletion(t *testing.T) {
 	conn := mock.NewMockJSONRpcConn(gomock.NewController(t))
 	conn.EXPECT().Call(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 	uri := lsp.DocumentURI("file:///test.sql")
-	s := store.NewStore(mock.NewFakeFlinkGatewayClient(), func() {}, &types.ApplicationOptions{}, func() error { return nil })
 
 	lspClient := &LSPClient{documentURI: &uri, conn: conn}
 	Completion, err := lspClient.Completion(lsp.Position{})
@@ -111,7 +108,6 @@ func TestLSPCompletionCallErr(t *testing.T) {
 	conn := mock.NewMockJSONRpcConn(gomock.NewController(t))
 	conn.EXPECT().Call(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("some error")).Times(1)
 	uri := lsp.DocumentURI("file:///test.sql")
-	s := store.NewStore(mock.NewFakeFlinkGatewayClient(), func() {}, &types.ApplicationOptions{}, func() error { return nil })
 
 	lspClient := &LSPClient{documentURI: &uri, conn: conn}
 	Completion, err := lspClient.Completion(lsp.Position{})
