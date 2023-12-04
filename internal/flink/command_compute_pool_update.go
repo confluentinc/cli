@@ -103,6 +103,7 @@ func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
 		Name:       updatedComputePool.Spec.GetDisplayName(),
 		CurrentCfu: computePool.Status.GetCurrentCfu(),
 		MaxCfu:     updatedComputePool.Spec.GetMaxCfu(),
+		Cloud:      computePool.Spec.GetCloud(),
 		Region:     computePool.Spec.GetRegion(),
 		Status:     computePool.Status.GetPhase(),
 	})
