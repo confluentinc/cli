@@ -10,7 +10,6 @@ type computePoolOut struct {
 	Name       string `human:"Name" serialized:"name"`
 	CurrentCfu int32  `human:"Current CFU" serialized:"currrent_cfu"`
 	MaxCfu     int32  `human:"Max CFU" serialized:"max_cfu"`
-	Cloud      string `human:"Cloud" serialized:"cloud"`
 	Region     string `human:"Region" serialized:"region"`
 	Status     string `human:"Status" serialized:"status"`
 }
