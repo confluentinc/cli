@@ -40,7 +40,15 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 	}
 }
 
-func StartApp(gatewayClient ccloudv2.GatewayClientInterface, lspClient lsp.LSPInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
+func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
+	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
+	getAuthToken := func() string {
+		if authErr := synchronizedTokenRefreshFunc(); authErr != nil {
+			log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
+		}
+		return gatewayClient.GetAuthToken()
+	}
+
 	// Load history of previous commands from cache file
 	historyStore := history.LoadHistory()
 
@@ -49,8 +57,11 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, lspClient lsp.LSPIn
 	appController := controller.NewApplicationController(historyStore)
 
 	// Store used to process statements and store local properties
-	dataStore := store.NewStore(gatewayClient, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
+	dataStore := store.NewStore(gatewayClient, appController.ExitApplication, &appOptions, synchronizedTokenRefreshFunc)
 	resultFetcher := results.NewResultFetcher(dataStore)
+
+	// Instantiate lsp
+	lspClient := lsp.NewLSPClientWS(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId())
 
 	stdinBefore := utils.GetStdin()
 	consoleParser := utils.GetConsoleParser()
@@ -68,12 +79,8 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, lspClient lsp.LSPIn
 
 	// Instantiate Component Controllers
 	lspCompleter := lsp.LSPCompleter(lspClient, func() lsp.CliContext {
-		if authErr := synchronizedTokenRefresh(tokenRefreshFunc)(); authErr != nil {
-			log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
-		}
-
 		return lsp.CliContext{
-			AuthToken:     gatewayClient.GetAuthToken(),
+			AuthToken:     getAuthToken(),
 			Catalog:       dataStore.GetCurrentCatalog(),
 			Database:      dataStore.GetCurrentDatabase(),
 			ComputePoolId: appOptions.GetComputePoolId(),
@@ -93,7 +100,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, lspClient lsp.LSPIn
 		statementController:         statementController,
 		interactiveOutputController: interactiveOutputController,
 		basicOutputController:       basicOutputController,
-		refreshToken:                synchronizedTokenRefresh(tokenRefreshFunc),
+		refreshToken:                synchronizedTokenRefreshFunc,
 		reportUsage:                 reportUsageFunc,
 		appOptions:                  appOptions,
 	}
