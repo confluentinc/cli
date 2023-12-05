@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.48.4
 	github.com/billgraziano/dpapi v0.5.0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
-	github.com/brianstrauch/cobra-shell v0.4.0
+	github.com/brianstrauch/cobra-shell v0.5.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
