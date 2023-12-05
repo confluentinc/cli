@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -63,7 +64,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) useAPIKey(apiKey, clusterId string) error {
-	kcc, err := c.Context.FindKafkaCluster(c.V2Client, clusterId)
+	kcc, err := kafka.FindCluster(c.V2Client, c.Context, clusterId)
 	if err != nil {
 		return err
 	}

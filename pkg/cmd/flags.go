@@ -80,8 +80,8 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 }
 
 func AddByokProviderFlag(cmd *cobra.Command) {
-	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
-	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string { return []string{"aws", "azure"} })
+	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure", "gcp"}, "or")))
+	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string { return []string{"aws", "azure", "gcp"} })
 }
 
 func AddByokStateFlag(cmd *cobra.Command) {
@@ -134,7 +134,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 			return nil
 		}
 
-		return AutocompleteContexts(command.Config.Config)
+		return AutocompleteContexts(command.Config)
 	})
 }
 

@@ -16,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -162,16 +161,13 @@ func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
 	}
 	kafkaClusters := map[string]*config.KafkaClusterConfig{kafkaClusterCfg.ID: kafkaClusterCfg}
 
-	ctx := &config.Context{Platform: platform}
-	kafkaClusterContext := &config.KafkaClusterContext{
+	c.Context = &config.Context{Platform: platform}
+	c.Context.KafkaClusterContext = &config.KafkaClusterContext{
 		EnvContext:          false,
 		ActiveKafkaCluster:  kafkaClusterCfg.ID,
 		KafkaClusterConfigs: kafkaClusters,
-		Context:             ctx,
+		Context:             c.Context,
 	}
-	ctx.KafkaClusterContext = kafkaClusterContext
-
-	c.Context = &dynamicconfig.DynamicContext{Context: ctx}
 
 	return nil
 }

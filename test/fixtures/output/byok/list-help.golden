@@ -4,7 +4,7 @@ Usage:
   confluent byok list [flags]
 
 Flags:
-      --provider string   Specify the provider as "aws" or "azure".
+      --provider string   Specify the provider as "aws", "azure", or "gcp".
       --state string      Specify the state as "in-use" or "available".
   -o, --output string     Specify the output format as "human", "json", or "yaml". (default "human")
 

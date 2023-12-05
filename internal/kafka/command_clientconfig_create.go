@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -171,7 +172,7 @@ func (c *clientConfigCommand) create(configId string, srApiAvailable bool) func(
 
 func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get kafka cluster from context or flags, including key pair
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return "", err
 	}
@@ -183,7 +184,7 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 	// Only validate that the key pair matches with the cluster if it's passed via the flag.
 	// This is because currently "api-key store" does not check if the secret is valid. Therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
-	flagKey, _, err := c.Context.KeyAndSecretFlags(cmd)
+	flagKey, err := getApiKey(cmd)
 	if err != nil {
 		return "", err
 	}
@@ -237,13 +238,13 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 		// comment out SR and warn users
 		if apiKeyPair.Key == "" && apiKeyPair.Secret == "" {
 			// both key and secret empty
-			configFile = commentAndWarnAboutSchemaRegistry("no Schema Registry API key or secret specified", "Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret.", configFile)
+			configFile = commentAndWarnAboutSchemaRegistry("Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret.", configFile)
 		} else if apiKeyPair.Key == "" {
 			// only key empty
-			configFile = commentAndWarnAboutSchemaRegistry("no Schema Registry API key specified", "Pass the `--schema-registry-api-key` flag to specify the Schema Registry API key.", configFile)
+			configFile = commentAndWarnAboutSchemaRegistry("Pass the `--schema-registry-api-key` flag to specify the Schema Registry API key.", configFile)
 		} else {
 			// only secret empty
-			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(`no Schema Registry API secret for key "%s" specified`, apiKeyPair.Key), "Pass the `--schema-registry-api-secret` flag to specify the Schema Registry API secret.", configFile)
+			configFile = commentAndWarnAboutSchemaRegistry("Pass the `--schema-registry-api-secret` flag to specify the Schema Registry API secret.", configFile)
 		}
 
 		return configFile, nil
@@ -343,8 +344,8 @@ func replaceTemplates(configFile string, m map[string]string) string {
 	return configFile
 }
 
-func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) string {
-	warning := errors.NewWarningWithSuggestions("Created client configuration file but Schema Registry is not fully configured.", reason, suggestions+"\nAlternatively, you can configure Schema Registry manually in the client configuration file before using it.")
+func commentAndWarnAboutSchemaRegistry(suggestions, configFile string) string {
+	warning := errors.NewWarningWithSuggestions("Created client configuration file but Schema Registry is not fully configured.", suggestions+"\nAlternatively, you can configure Schema Registry manually in the client configuration file before using it.")
 	output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
 
 	return commentSchemaRegistryLines(configFile)
@@ -397,4 +398,28 @@ func commentSchemaRegistryLines(configFile string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func getApiKey(cmd *cobra.Command) (string, error) {
+	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
+		return "", nil
+	}
+	apiKey, err := cmd.Flags().GetString("api-key")
+	if err != nil {
+		return "", err
+	}
+
+	apiSecret, err := cmd.Flags().GetString("api-secret")
+	if err != nil {
+		return "", err
+	}
+
+	if apiKey == "" && apiSecret != "" {
+		return "", errors.NewErrorWithSuggestions(
+			"no API key specified",
+			"Use the `--api-key` flag to specify an API key.",
+		)
+	}
+
+	return apiKey, nil
 }

@@ -18,7 +18,7 @@ builds:
       - linux
     goarch:
       - arm64
-  - id: confluent-linux-arm64-homebrew
+  - id: confluent-linux-arm64-disableupdates
     binary: confluent
     main: cmd/confluent/main.go
     flags:

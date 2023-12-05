@@ -1,8 +1,8 @@
---- cli/Makefile	2023-11-08 10:52:28.526431785 -0800
-+++ debian/Makefile	2023-11-13 11:29:46.541290323 -0800
+--- cli/Makefile	2023-12-01 12:48:14.829910531 -0800
++++ debian/Makefile	2023-11-28 15:13:57.494207032 -0800
 @@ -1,120 +1,130 @@
 -SHELL := /bin/bash
--GORELEASER_VERSION := v1.17.2
+-GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
  
 -# Compile natively based on the current system
@@ -118,7 +118,7 @@
 +	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 +
 +	cd $(DESTDIR)$(LIBPATH); \
-+	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64; do \
++	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
 +		mkdir -p $${dir}; \
 +		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
 +		filepath=$${dir}/confluent$${ext}; \
@@ -133,7 +133,7 @@
  
 -.PHONY: lint-go
 -lint-go:
--	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.1 && \
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2 && \
 -	golangci-lint run --timeout 10m
 -	@echo "✅  golangci-lint"
 -
