@@ -230,7 +230,7 @@ archives:
       - confluent-alpine-amd64
       - confluent-alpine-arm64
     name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
-    
+
 dockers:
   - ids:
       - confluent-alpine-amd64
@@ -241,6 +241,7 @@ dockers:
     dockerfile: "docker/Dockerfile"
     build_flag_templates:
       - --platform=linux/amd64
+    skip_push: "{{ .Env.DRY_RUN }}"
   - ids:
       - confluent-alpine-arm64
     goarch: arm64
@@ -250,6 +251,7 @@ dockers:
     dockerfile: "docker/Dockerfile"
     build_flag_templates:
       - --platform=linux/arm64
+    skip_push: "{{ .Env.DRY_RUN }}"
 
 docker_manifests:
   - name_template: "confluentinc/confluent-cli:{{ .Version }}"

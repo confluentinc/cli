@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -343,12 +342,11 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	var references []srsdk.SchemaReference
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(h.Subject)}
-		schemaString, err := h.SrClient.GetSchema(schemaID, opts)
+		schemaString, err := h.SrClient.GetSchema(schemaID, h.Subject)
 		if err != nil {
 			return "", nil, err
 		}
-		if err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644); err != nil {
+		if err := os.WriteFile(tempStorePath, []byte(schemaString.GetSchema()), 0644); err != nil {
 			return "", nil, err
 		}
 
@@ -359,7 +357,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		if err := os.WriteFile(tempRefStorePath, refBytes, 0644); err != nil {
 			return "", nil, err
 		}
-		references = schemaString.References
+		references = schemaString.GetReferences()
 	} else {
 		refBlob, err := os.ReadFile(tempRefStorePath)
 		if err != nil {

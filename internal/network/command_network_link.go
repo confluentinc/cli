@@ -11,6 +11,7 @@ func (c *command) newNetworkLinkCommand() *cobra.Command {
 		Aliases: []string{"nl"},
 	}
 
+	cmd.AddCommand(c.newNetworkLinkEndpointCommand())
 	cmd.AddCommand(c.newNetworkLinkServiceCommand())
 
 	return cmd

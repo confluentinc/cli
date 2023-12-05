@@ -215,6 +215,27 @@ func handleNetworkingNetworkLinkServices(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/network-link-endpoint/{id}"
+func handleNetworkingNetworkLinkEndpoint(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingNetworkLinkEndpointGet(t, id)(w, r)
+		}
+	}
+}
+
+// Handler for "/networking/v1/network-link-endpoints"
+func handleNetworkingNetworkLinkEndpoints(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingNetworkLinkEndpointList(t)(w, r)
+		}
+	}
+}
+
 func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -1416,10 +1437,71 @@ func handleNetworkingNetworkLinkServiceUpdate(t *testing.T, id string) http.Hand
 					service.Spec.Accept.Environments = body.Spec.Accept.Environments
 				}
 			}
-
 			err = json.NewEncoder(w).Encode(service)
 			require.NoError(t, err)
 		}
+	}
+}
+
+func handleNetworkingNetworkLinkEndpointGet(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "nle-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The network link endpoint nle-invalid was not found.")
+			require.NoError(t, err)
+		case "nle-123456":
+			nle := getNetworkLinkEndpoint("nle-123456", "my-network-link-endpoint")
+			err := json.NewEncoder(w).Encode(nle)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func getNetworkLinkEndpoint(id, name string) networkingv1.NetworkingV1NetworkLinkEndpoint {
+	endpoint := networkingv1.NetworkingV1NetworkLinkEndpoint{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingv1.NetworkingV1NetworkLinkEndpointSpec{
+			DisplayName:        networkingv1.PtrString(name),
+			Description:        networkingv1.PtrString("example network link endpoint"),
+			Environment:        &networkingv1.GlobalObjectReference{Id: "env-00000"},
+			Network:            &networkingv1.EnvScopedObjectReference{Id: "n-abcde1"},
+			NetworkLinkService: &networkingv1.EnvScopedObjectReference{Id: "nls-123456"},
+		},
+		Status: &networkingv1.NetworkingV1NetworkLinkEndpointStatus{Phase: "READY"},
+	}
+
+	return endpoint
+}
+
+func handleNetworkingNetworkLinkEndpointList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		endpoint1 := getNetworkLinkEndpoint("nle-111111", "my-network-link-endpoint-1")
+		endpoint2 := getNetworkLinkEndpoint("nle-222222", "my-network-link-endpoint-2")
+		endpoint3 := getNetworkLinkEndpoint("nle-333333", "my-network-link-endpoint-3")
+
+		pageToken := r.URL.Query().Get("page_token")
+		var networkLinkEndpointList networkingv1.NetworkingV1NetworkLinkEndpointList
+		switch pageToken {
+		case "my-network-link-endpoint-3":
+			networkLinkEndpointList = networkingv1.NetworkingV1NetworkLinkEndpointList{
+				Data:     []networkingv1.NetworkingV1NetworkLinkEndpoint{endpoint3},
+				Metadata: networkingv1.ListMeta{},
+			}
+		case "my-network-link-endpoint-2":
+			networkLinkEndpointList = networkingv1.NetworkingV1NetworkLinkEndpointList{
+				Data:     []networkingv1.NetworkingV1NetworkLinkEndpoint{endpoint2},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-endpoints?environment=env-00000&page_size=1&page_token=my-network-link-endpoint-3"))},
+			}
+		default:
+			networkLinkEndpointList = networkingv1.NetworkingV1NetworkLinkEndpointList{
+				Data:     []networkingv1.NetworkingV1NetworkLinkEndpoint{endpoint1},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-endpoints?environment=env-00000&page_size=1&page_token=my-network-link-endpoint-2"))},
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(networkLinkEndpointList)
+		require.NoError(t, err)
 	}
 }
 

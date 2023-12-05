@@ -2,16 +2,17 @@ package ccloudv2
 
 import (
 	"context"
+	"net/http"
 
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newNetworkingPrivateLinkClient(url, userAgent string, unsafeTrace bool) *networkingprivatelinkv1.APIClient {
+func newNetworkingPrivateLinkClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *networkingprivatelinkv1.APIClient {
 	cfg := networkingprivatelinkv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = networkingprivatelinkv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -19,7 +20,7 @@ func newNetworkingPrivateLinkClient(url, userAgent string, unsafeTrace bool) *ne
 }
 
 func (c *Client) networkingPrivateLinkApiContext() context.Context {
-	return context.WithValue(context.Background(), networkingprivatelinkv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), networkingprivatelinkv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ListPrivateLinkAttachments(environment string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {

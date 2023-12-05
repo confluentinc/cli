@@ -219,7 +219,7 @@ func (c *command) getAccountDetails(cmd *cobra.Command, flags *flags) (*accountD
 	}
 	details.srClient = srClient
 
-	subjects, err := details.srClient.List(nil)
+	subjects, err := details.srClient.List("", false)
 	if err != nil {
 		return nil, err
 	}
