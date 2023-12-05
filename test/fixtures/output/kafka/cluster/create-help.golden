@@ -23,7 +23,7 @@ Flags:
       --type string           Specify the type of the Kafka cluster as "basic", "standard", "enterprise", or "dedicated". (default "basic")
       --cku int               Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".
       --byok string           Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use "confluent byok create" to register a key).
-      --network string          Network ID.
+      --network string        Network ID.
       --context string        CLI context name.
       --environment string    Environment ID.
   -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")

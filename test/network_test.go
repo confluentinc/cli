@@ -617,6 +617,45 @@ func (s *CLITestSuite) TestNetworkNetworkLinkService_Autocomplete() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDescribe() {
+	tests := []CLITest{
+		{args: "network nl endpoint describe nle-123456", fixture: "network/network-link/endpoint/describe.golden"},
+		{args: "network network-link endpoint describe nle-123456", fixture: "network/network-link/endpoint/describe.golden"},
+		{args: "network network-link endpoint describe nle-123456 --output json", fixture: "network/network-link/endpoint/describe-json.golden"},
+		{args: "network network-link endpoint describe", fixture: "network/network-link/endpoint/describe-missing-id.golden", exitCode: 1},
+		{args: "network network-link endpoint describe nle-invalid", fixture: "network/network-link/endpoint/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointList() {
+	tests := []CLITest{
+		{args: "network nl endpoint list", fixture: "network/network-link/endpoint/list.golden"},
+		{args: "network network-link endpoint list", fixture: "network/network-link/endpoint/list.golden"},
+		{args: "network network-link endpoint list --output json", fixture: "network/network-link/endpoint/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpoint_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network network-link endpoint describe ""`, login: "cloud", fixture: "network/network-link/endpoint/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkIpAddressList() {
 	tests := []CLITest{
 		{args: "network ip-address list", fixture: "network/ip-address/list.golden"},
