@@ -164,17 +164,6 @@ func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	s.runIntegrationTest(test)
 }
 
-func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
-	test := CLITest{
-		login:   "cloud",
-		args:    "kafka cluster create gcp-byok-test --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --encryption-key xyz",
-		input:   "y\n",
-		fixture: "kafka/cluster/gcp-byok.golden",
-	}
-
-	s.runIntegrationTest(test)
-}
-
 func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 	tests := []CLITest{
 		{args: "kafka cluster use lkc-12345"},

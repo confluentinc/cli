@@ -28,7 +28,7 @@ func Encrypt(_, password string, _, _ []byte) (string, error) {
 }
 
 func Decrypt(_, encrypted string, _, _ []byte) (string, error) {
-	log.CliLogger.Debugf("Decrypting secret: %s", encrypted)
+	log.CliLogger.Tracef("Decrypting secret: %s", encrypted)
 	decryptedPassword, err := dpapi.Decrypt(encrypted)
 	if err != nil {
 		return "", err

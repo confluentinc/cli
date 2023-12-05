@@ -90,6 +90,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 		return "", err
 	}
 
+	log.CliLogger.Tracef("Decrypting secret: %s", encrypted)
 	encrypted = strings.TrimPrefix(encrypted, AesGcm+":")
 
 	cipherText, err := base64.RawStdEncoding.DecodeString(encrypted)
@@ -100,7 +101,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	if len(nonce) != NonceLength {
 		return "", fmt.Errorf(errors.IncorrectNonceLengthErrorMsg)
 	}
-	log.CliLogger.Debugf("Decrypting secret: %s", cipherText)
+
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
 		return "", fmt.Errorf("CLI does not have write permission for `/etc/machine-id`, or `~/.confluent/config.json` is corrupted: %w", err)
