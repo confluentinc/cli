@@ -335,7 +335,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 	}
 
 	if currentUser {
-		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.Context.State.Auth.GetUser().GetResourceId())
+		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.Context.GetAuth().GetUser().GetResourceId())
 	}
 
 	inclusive, err := cmd.Flags().GetBool("inclusive")

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bradleyjkemp/cupaloy"
+	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

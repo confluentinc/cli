@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
@@ -37,7 +37,7 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 }
 
 // context retrieves either a specific context or the current context.
-func (c *command) context(args []string) (*dynamicconfig.DynamicContext, error) {
+func (c *command) context(args []string) (*config.Context, error) {
 	if len(args) == 1 {
 		return c.Config.FindContext(args[0])
 	}
@@ -65,5 +65,5 @@ func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string 
 		return nil
 	}
 
-	return pcmd.AutocompleteContexts(c.Config.Config)
+	return pcmd.AutocompleteContexts(c.Config)
 }

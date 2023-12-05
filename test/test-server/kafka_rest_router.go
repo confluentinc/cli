@@ -162,35 +162,25 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			response := `{
-				"kind": "KafkaTopicList",
-				"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics","next": null},
-				"data": [
+			topicList := cckafkarestv3.TopicDataList{
+				Data: []cckafkarestv3.TopicData{
 					{
-					"kind": "KafkaTopic",
-					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1","resource_name": "crn:///kafka=cluster-1/topic=topic-1"},
-					"cluster_id": "cluster-1",
-					"topic_name": "topic1",
-					"is_internal": false,
-					"replication_factor": 3,
-					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
-					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/configs"},
-					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions/-/reassignments"}
+						TopicName:         "topic1",
+						ClusterId:         "cluster-1",
+						IsInternal:        false,
+						ReplicationFactor: 3,
+						PartitionsCount:   6,
 					},
 					{
-					"kind": "KafkaTopic",
-					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2","resource_name": "crn:///kafka=cluster-1/topic=topic-2"},
-					"cluster_id": "cluster-1",
-					"topic_name": "topic2",
-					"is_internal": true,
-					"replication_factor": 4,
-					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
-					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/configs"},
-					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions/-/reassignments"}
-					}
-				]
-			}`
-			_, err := io.WriteString(w, response)
+						TopicName:         "topic2",
+						ClusterId:         "cluster-1",
+						IsInternal:        true,
+						ReplicationFactor: 4,
+						PartitionsCount:   12,
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(topicList)
 			require.NoError(t, err)
 		case http.MethodPost:
 			// Parse Create Args
@@ -1763,8 +1753,8 @@ func handleKafkaClustersClusterIdBrokersTasksTaskTypeGet(t *testing.T) http.Hand
 					TaskType:        cpkafkarestv3.BrokerTaskType(vars["task_type"]),
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 				},
 				{
 					ClusterId:       vars["cluster_id"],
@@ -1772,8 +1762,8 @@ func handleKafkaClustersClusterIdBrokersTasksTaskTypeGet(t *testing.T) http.Hand
 					TaskType:        cpkafkarestv3.BrokerTaskType(vars["task_type"]),
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"broker_shutdown_status": "COMPLETED"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 					ErrorCode:       &errorCode,
 					ErrorMessage:    &errorMessage,
 				},
@@ -1797,8 +1787,8 @@ func handleKafkaClustersClusterIdBrokersTasksGet(t *testing.T) http.HandlerFunc 
 					TaskType:        cpkafkarestv3.BROKERTASKTYPE_REMOVE_BROKER,
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 				},
 				{
 					ClusterId:       vars["cluster_id"],
@@ -1806,8 +1796,8 @@ func handleKafkaClustersClusterIdBrokersTasksGet(t *testing.T) http.HandlerFunc 
 					TaskType:        cpkafkarestv3.BROKERTASKTYPE_ADD_BROKER,
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 					ErrorCode:       &errorCode,
 					ErrorMessage:    &errorMessage,
 				},
@@ -1829,8 +1819,8 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(t *testing.T) h
 			TaskType:        cpkafkarestv3.BrokerTaskType(vars["task_type"]),
 			TaskStatus:      "SUCCESS",
 			SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-			CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-			UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+			CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+			UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 			ErrorMessage:    &errorMessage,
 			ErrorCode:       &errorCode,
 		})
@@ -1852,8 +1842,8 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t *testing.T) http.Hand
 					TaskType:        cpkafkarestv3.BROKERTASKTYPE_REMOVE_BROKER,
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 				},
 				{
 					ClusterId:       vars["cluster_id"],
@@ -1861,8 +1851,8 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t *testing.T) http.Hand
 					TaskType:        cpkafkarestv3.BROKERTASKTYPE_ADD_BROKER,
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 					ErrorCode:       &errorCode,
 					ErrorMessage:    &errorMessage,
 				},

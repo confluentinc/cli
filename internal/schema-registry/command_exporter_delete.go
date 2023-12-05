@@ -56,7 +56,7 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.SchemaExporter, info.Name); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.SchemaExporter, info.GetName()); err != nil {
 		return err
 	}
 

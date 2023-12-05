@@ -1,4 +1,4 @@
-Username: Password:    Name   
-----------
-  topic1  
-  topic2  
+Username: Password:    Name  | Internal | Replication Factor | Partition Count  
+---------+----------+--------------------+------------------
+  topic1 | false    |                  3 |               6  
+  topic2 | true     |                  4 |              12  

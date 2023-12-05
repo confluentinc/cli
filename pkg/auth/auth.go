@@ -203,15 +203,15 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-func GetDataplaneToken(authenticatedState *config.ContextState, server string) (string, error) {
-	endpoint := strings.Trim(server, "/") + "/api/access_tokens"
+func GetDataplaneToken(ctx *config.Context) (string, error) {
+	endpoint := strings.Trim(ctx.GetPlatformServer(), "/") + "/api/access_tokens"
 
 	res := &struct {
 		Token string `json:"token"`
 		Error string `json:"error"`
 	}{}
 
-	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+authenticatedState.AuthToken).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
+	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
 		return "", err
 	}
 	if res.Error != "" {
