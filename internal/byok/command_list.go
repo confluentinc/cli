@@ -35,6 +35,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		provider = "AWS"
 	case "azure":
 		provider = "Azure"
+	case "gcp":
+		provider = "GCP"
 	}
 
 	state, err := cmd.Flags().GetString("state")
@@ -61,6 +63,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			keyString = key.Key.ByokV1AwsKey.KeyArn
 		case key.Key.ByokV1AzureKey != nil:
 			keyString = key.Key.ByokV1AzureKey.KeyId
+		case key.Key.ByokV1GcpKey != nil:
+			keyString = key.Key.ByokV1GcpKey.KeyId
 		default:
 			return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 		}

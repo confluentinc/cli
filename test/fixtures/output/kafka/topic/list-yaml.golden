@@ -1,2 +1,8 @@
 - name: topic1
+  is_internal: false
+  replication_factor: 3
+  partition_count: 6
 - name: topic2
+  is_internal: true
+  replication_factor: 4
+  partition_count: 12

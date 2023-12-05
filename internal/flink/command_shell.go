@@ -55,7 +55,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 		jwtCtx := &config.Context{State: &config.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
-			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+			dataplaneToken, err := auth.GetDataplaneToken(c.Context)
 			if err != nil {
 				return err
 			}
@@ -159,7 +159,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		Verbose:          verbose > 0,
 	}
 
-	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config.Config, unsafeTrace))
+	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
 	return nil
 }
 

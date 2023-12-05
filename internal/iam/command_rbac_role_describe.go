@@ -30,10 +30,10 @@ func (c *roleCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 	}
 
-	pcmd.AddOutputFlag(cmd)
 	if c.cfg.IsOnPremLogin() {
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

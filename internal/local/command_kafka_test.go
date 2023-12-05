@@ -4,12 +4,12 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/require"
 )
 
 func TestStartContainer(t *testing.T) {
-	if runtime.GOOS == "darwin" {
+	if runtime.GOOS != "linux" {
 		return
 	}
 

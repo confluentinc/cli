@@ -149,7 +149,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	currentEnvironment, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
+	currentEnvironment, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config, client, url, credentials, save)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organizationId s
 		IsCloud: true,
 		URL:     url,
 	}
-	ctx := c.Config.Config.Context()
+	ctx := c.Config.Context()
 	if strings.Contains(ctx.GetNetrcMachineName(), url) {
 		filterParams.Name = ctx.GetNetrcMachineName()
 	}
@@ -286,7 +286,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	if err := pauth.PersistConfluentLoginToConfig(c.Config.Config, credentials, url, token, caCertPath, isLegacyContext, save); err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(c.Config, credentials, url, token, caCertPath, isLegacyContext, save); err != nil {
 		return err
 	}
 
@@ -323,7 +323,7 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		IgnoreCert: true,
 		URL:        url,
 	}
-	ctx := c.Config.Config.Context()
+	ctx := c.Config.Context()
 	if strings.Contains(ctx.GetNetrcMachineName(), url) {
 		netrcFilterParams.Name = ctx.GetNetrcMachineName()
 	}
@@ -380,7 +380,7 @@ func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pau
 		return nil
 	}
 
-	ctxName := c.Config.Config.Context().GetNetrcMachineName()
+	ctxName := c.Config.Context().GetNetrcMachineName()
 	if err := keychain.Write(isCloud, ctxName, url, credentials.Username, credentials.Password); err != nil {
 		return err
 	}
