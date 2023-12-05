@@ -5,15 +5,15 @@ Usage:
 Examples:
 Update the name and description of network link service "nls-123456".
 
-  $ confluent network network-link service update nls-123456 --name my-network-link-service --description "example network link service"'
+  $ confluent network network-link service update nls-123456 --name my-network-link-service --description "example network link service"
 
 Update the accepted environments and accepted networks of network link service "nls-123456".
 
-  $ confluent network network-link service update nls-123456 --description "example network link service" --accepted-environments env-111111 --accepted-networks n-111111,n222222
+  $ confluent network network-link service update nls-123456 --description "example network link service" --accepted-environments env-111111 --accepted-networks n-111111,n-222222
 
 Flags:
       --name string                     Name of the network link service.
-      --description string              Description of the network link service
+      --description string              Description of the network link service.
       --accepted-networks strings       A comma-separated list of networks from which connections can be accepted.
       --accepted-environments strings   A comma-separated list of environments from which connections can be accepted.
       --context string                  CLI context name.

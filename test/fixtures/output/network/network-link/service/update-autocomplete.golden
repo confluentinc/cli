@@ -1,0 +1,9 @@
+--name	Name of the network link service.
+--description	Description of the network link service.
+--accepted-networks	A comma-separated list of networks from which connections can be accepted.
+--accepted-environments	A comma-separated list of environments from which connections can be accepted.
+nls-111111	my-network-link-service-1
+nls-222222	my-network-link-service-2
+nls-333333	my-network-link-service-3
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

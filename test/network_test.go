@@ -608,9 +608,9 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceUpdate() {
 	tests := []CLITest{
 		{args: "network network-link service update", fixture: "network/network-link/service/update-missing-args.golden", exitCode: 1},
 		{args: "network network-link service update nls-111111", fixture: "network/network-link/service/update-missing-flags.golden", exitCode: 1},
-		{args: "network nl service update nls-111111 --name my-network-link-service --description 'example network link service'", fixture: "network/network-link/service/update.golden"},
-		{args: "network network-link service update nls-111111 --accepted-environments env-111111,env-222222 --accepted-networks n-111111", fixture: "network/network-link/service/update-accept-policy.golden"},
-		{args: "network network-link service update nls-invalid --name 'my-network-link-servicee'", fixture: "network/network-link/service/update-nls-not-exist.golden", exitCode: 1},
+		{args: "network nl service update nls-111111 --name my-new-network-link-service --description 'example new network link service'", fixture: "network/network-link/service/update.golden"},
+		{args: "network network-link service update nls-111111 --accepted-environments env-22222 --accepted-networks n-111111", fixture: "network/network-link/service/update-accept-policy.golden"},
+		{args: "network network-link service update nls-invalid --name 'my-network-link-service'", fixture: "network/network-link/service/update-nls-not-exist.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
