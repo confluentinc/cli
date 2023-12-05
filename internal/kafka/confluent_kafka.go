@@ -13,18 +13,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	sr "github.com/confluentinc/cli/v3/internal/schema-registry"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -76,7 +74,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Hand
 	}
 	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
-		if c.Context.State == nil { // require log-in to use oauthbearer token
+		if c.Context.GetState() == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.Context.GetAuthToken())
@@ -127,7 +125,7 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
 	}
 
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
@@ -136,7 +134,7 @@ func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, 
 func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
 	}
 
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
@@ -145,7 +143,7 @@ func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, confi
 func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
 	}
 
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
@@ -154,7 +152,7 @@ func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configSt
 func newOnPremConsumer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getOnPremConsumerConfigMap(cmd, clientID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
 	}
 
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
@@ -344,12 +342,11 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	var references []srsdk.SchemaReference
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(h.Subject)}
-		schemaString, err := h.SrClient.GetSchema(schemaID, opts)
+		schemaString, err := h.SrClient.GetSchema(schemaID, h.Subject)
 		if err != nil {
 			return "", nil, err
 		}
-		if err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644); err != nil {
+		if err := os.WriteFile(tempStorePath, []byte(schemaString.GetSchema()), 0644); err != nil {
 			return "", nil, err
 		}
 
@@ -360,7 +357,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		if err := os.WriteFile(tempRefStorePath, refBytes, 0644); err != nil {
 			return "", nil, err
 		}
-		references = schemaString.References
+		references = schemaString.GetReferences()
 	} else {
 		refBlob, err := os.ReadFile(tempRefStorePath)
 		if err != nil {
@@ -372,7 +369,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient)
+	referencePathMap, err := schemaregistry.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient)
 	if err != nil {
 		return "", nil, err
 	}

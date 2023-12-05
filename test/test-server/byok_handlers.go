@@ -109,6 +109,14 @@ func handleByokKeysCreate(t *testing.T, byokStoreV1 map[string]*byokv1.ByokV1Key
 				},
 			}
 			byokKey.Provider = byokv1.PtrString("AZURE")
+		case req.Key.ByokV1GcpKey != nil:
+			byokKey.Key = &byokv1.ByokV1KeyKeyOneOf{
+				ByokV1GcpKey: &byokv1.ByokV1GcpKey{
+					KeyId: req.Key.ByokV1GcpKey.KeyId,
+					Kind:  req.Key.ByokV1GcpKey.Kind,
+				},
+			}
+			byokKey.Provider = byokv1.PtrString("GCP")
 		}
 
 		byokStoreV1[*byokKey.Id] = byokKey

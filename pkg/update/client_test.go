@@ -584,8 +584,9 @@ func TestUpdateBinary(t *testing.T) {
 	installDir, err := os.MkdirTemp("", "cli-test4-")
 	require.NoError(t, err)
 	defer os.Remove(installDir)
-	installedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", installDir, binName))
-	_ = os.WriteFile(installedBin, []byte("old version"), os.ModePerm)
+
+	err = os.WriteFile(filepath.Join(installDir, binName), []byte("old version"), os.ModePerm)
+	require.NoError(t, err)
 
 	clock := clockwork.NewFakeClockAt(time.Now())
 

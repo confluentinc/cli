@@ -3,6 +3,7 @@ package byok
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,4 +41,33 @@ func TestRemoveKeyVersionFromAzureKeyId(t *testing.T) {
 			require.Equal(t, test.expected, actual)
 		})
 	}
+}
+
+func TestGcpMetadataCustomRoleName(t *testing.T) {
+	t.Run("success, custom role name generated", func(t *testing.T) {
+		metadata := gcpPolicyMetadata{
+			keyRing: "testKeyRing",
+			key:     "testKey",
+		}
+		customRoleName := metadata.getCustomRoleName()
+		assert.Equal(t, "testKeyRing_testKey_custom_kms_role", customRoleName)
+	})
+
+	t.Run("success, hyphens replaced", func(t *testing.T) {
+		metadata := gcpPolicyMetadata{
+			keyRing: "test-key-ring",
+			key:     "test-key",
+		}
+		customRoleName := metadata.getCustomRoleName()
+		assert.Equal(t, "test_key_ring_test_key_custom_kms_role", customRoleName)
+	})
+
+	t.Run("failure, default role name returned", func(t *testing.T) {
+		metadata := gcpPolicyMetadata{
+			keyRing: "test&key&ring",
+			key:     "test&key",
+		}
+		customRoleName := metadata.getCustomRoleName()
+		assert.Equal(t, "custom_kms_role", customRoleName)
+	})
 }

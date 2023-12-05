@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 )
 
 func (c *command) newActivateCommand() *cobra.Command {
@@ -24,9 +25,9 @@ func (c *command) newActivateCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -37,7 +38,7 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}

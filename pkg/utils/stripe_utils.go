@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/token"
+	"github.com/stripe/stripe-go/v76"
+	"github.com/stripe/stripe-go/v76/token"
 )
 
 const (

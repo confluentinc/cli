@@ -56,7 +56,7 @@ func (c *command) install(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, "Installed plugin \"%s\".\n", args[0])
+	output.Printf(c.Config.EnableColor, "Installed plugin `%s`.\n", plugin.ToCommandName(manifest.Name))
 
 	return nil
 }
@@ -72,7 +72,7 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 			continue
 		}
 
-		manifestPath := fmt.Sprintf("%s/%s/manifest.yml", dir, file.Name())
+		manifestPath := filepath.Join(dir, file.Name(), "manifest.yml")
 		if !utils.DoesPathExist(manifestPath) {
 			return nil, fmt.Errorf("manifest not found for plugin %s", pluginName)
 		}

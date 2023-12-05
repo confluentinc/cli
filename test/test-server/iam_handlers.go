@@ -446,14 +446,113 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "iam/v2/ip-filters"
+func handleIamIpFilters(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "management", []string{"ipg-12345", "ipg-abcde"})
+			err := json.NewEncoder(w).Encode(iamv2.IamV2IpFilterList{Data: []iamv2.IamV2IpFilter{ipFilter}})
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req iamv2.IamV2IpFilter
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+
+			ipFilter := &iamv2.IamV2IpFilter{
+				Id:            iamv2.PtrString(ipFilterId),
+				FilterName:    req.FilterName,
+				ResourceGroup: req.ResourceGroup,
+				IpGroups:      req.IpGroups,
+			}
+			err = json.NewEncoder(w).Encode(ipFilter)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "iam/iv2/ip-filters/{id}"
+func handleIamIpFilter(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPatch:
+			var req iamv2.IamV2IpFilter
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := &iamv2.IamV2IpFilter{
+				Id:            req.Id,
+				FilterName:    req.FilterName,
+				ResourceGroup: req.ResourceGroup,
+				IpGroups:      req.IpGroups,
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodGet:
+			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "management", []string{"ipg-12345", "ipg-abcde"})
+			err := json.NewEncoder(w).Encode(ipFilter)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/ip-groups"
+func handleIamIpGroups(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			err := json.NewEncoder(w).Encode(iamv2.IamV2IpGroupList{Data: []iamv2.IamV2IpGroup{ipGroup}})
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req iamv2.IamV2IpGroup
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			ipGroup := &iamv2.IamV2IpGroup{
+				Id:         iamv2.PtrString(ipGroupId),
+				GroupName:  req.GroupName,
+				CidrBlocks: req.CidrBlocks,
+			}
+			err = json.NewEncoder(w).Encode(ipGroup)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/ip-groups/{id}"
+func handleIamIpGroup(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPatch:
+			var req iamv2.IamV2IpGroup
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := &iamv2.IamV2IpGroup{
+				Id:         req.Id,
+				GroupName:  req.GroupName,
+				CidrBlocks: req.CidrBlocks,
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodGet:
+			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			err := json.NewEncoder(w).Encode(ipGroup)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
 // Handler for "iam/v2/invitations"
 func handleIamInvitations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			invitationList := &iamv2.IamV2InvitationList{Data: []iamv2.IamV2Invitation{
-				buildIamInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
-				buildIamInvitation("2", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
+				buildIamInvitation("i-11111", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
+				buildIamInvitation("i-22222", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
 			}}
 			err := json.NewEncoder(w).Encode(invitationList)
 			require.NoError(t, err)
@@ -565,6 +664,30 @@ func buildIamProvider(id, name, description, issuer, jwksUri string) identitypro
 		Description: iamv2.PtrString(description),
 		Issuer:      iamv2.PtrString(issuer),
 		JwksUri:     iamv2.PtrString(jwksUri),
+	}
+}
+
+func buildIamIpFilter(id string, name string, resourceGroup string, ipGroupIds []string) iamv2.IamV2IpFilter {
+	// Convert the IP group IDs into IP group objects
+	IpGroupIdObjects := make([]iamv2.GlobalObjectReference, len(ipGroupIds))
+	for i, ipGroupId := range ipGroupIds {
+		// The empty string fields will get filled in automatically by the cc-policy-service
+		IpGroupIdObjects[i] = iamv2.GlobalObjectReference{Id: ipGroupId}
+	}
+
+	return iamv2.IamV2IpFilter{
+		Id:            iamv2.PtrString(id),
+		FilterName:    iamv2.PtrString(name),
+		ResourceGroup: iamv2.PtrString(resourceGroup),
+		IpGroups:      &IpGroupIdObjects,
+	}
+}
+
+func buildIamIpGroup(id string, name string, cidrBlocks []string) iamv2.IamV2IpGroup {
+	return iamv2.IamV2IpGroup{
+		Id:         iamv2.PtrString(id),
+		GroupName:  iamv2.PtrString(name),
+		CidrBlocks: &cidrBlocks,
 	}
 }
 
