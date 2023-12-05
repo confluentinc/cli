@@ -218,8 +218,35 @@ func (c *Client) GetByUniqueAttributes(typeName, qualifiedName string) (srsdk.At
 	return res, err
 }
 
-func (c *Client) CreateDek(name string) (srsdk.Dek, error) {
-	res, _, err := c.DefaultApi.CreateDek(c.context(), name).Execute()
+// kek first.
+
+func (c *Client) CreateKek(name string, createReq srsdk.CreateKekRequest) (srsdk.Kek, error) {
+	res, _, err := c.DefaultApi.CreateKek(c.context()).CreateKekRequest(createReq).Execute()
+	return res, err
+}
+
+func (c *Client) DeleteKek(name string, permanent bool) error {
+	_, err := c.DefaultApi.DeleteKek(c.context(), name).Permanent(permanent).Execute()
+	return err
+}
+
+func (c *Client) ListKeks(deleted bool) ([]string, error) {
+	res, _, err := c.DefaultApi.GetKekNames(c.context()).Deleted(deleted).Execute() // no page token?
+	return res, err
+}
+
+func (c *Client) DescribeKek(name string, deleted bool) (srsdk.Kek, error) {
+	res, _, err := c.DefaultApi.GetKek(c.context(), name).Deleted(deleted).Execute()
+	return res, err
+}
+
+func (c *Client) UpdateKek(name string, updateReq srsdk.UpdateKekRequest) (srsdk.Kek, error) {
+	res, _, err := c.DefaultApi.PutKek(c.context(), name).UpdateKekRequest(updateReq).Execute()
+	return res, err
+}
+
+func (c *Client) CreateDek(name string, createReq srsdk.CreateDekRequest) (srsdk.Dek, error) {
+	res, _, err := c.DefaultApi.CreateDek(c.context(), name).CreateDekRequest(createReq).Execute()
 	return res, err
 }
 
