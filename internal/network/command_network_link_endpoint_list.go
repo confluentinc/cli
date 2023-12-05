@@ -10,15 +10,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type listNetworkLinkEndpointOut struct {
-	Id                 string `human:"ID" serialized:"id"`
-	Name               string `human:"Name" serialized:"name"`
-	Network            string `human:"Network" serialized:"network"`
-	Description        string `human:"Description,omitempty" serialized:"description,omitempty"`
-	NetworkLinkService string `human:"Network Link Service" serialized:"network_link_service"`
-	Phase              string `human:"Phase" serialized:"phase"`
-}
-
 func (c *command) newNetworkLinkEndpointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -49,14 +40,16 @@ func (c *command) networkLinkEndpointList(cmd *cobra.Command, _ []string) error 
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
-		list.Add(&listNetworkLinkEndpointOut{
+		list.Add(&networkLinkEndpointOut{
 			Id:                 endpoint.GetId(),
 			Name:               endpoint.Spec.GetDisplayName(),
 			Network:            endpoint.Spec.Network.GetId(),
-			NetworkLinkService: endpoint.Spec.NetworkLinkService.GetId(),
+			Environment:        endpoint.Spec.Environment.GetId(),
 			Description:        endpoint.Spec.GetDescription(),
+			NetworkLinkService: endpoint.Spec.NetworkLinkService.GetId(),
 			Phase:              endpoint.Status.GetPhase(),
 		})
 	}
+	list.Filter([]string{"Id", "Name", "Network", "Description", "NetworkLinkService", "Phase"})
 	return list.Print()
 }
