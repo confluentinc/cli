@@ -62,7 +62,7 @@ blocks:
   #         commands:
   #           - test-results publish . -N "darwin/amd64"
 
- - name: windows/amd64
+  - name: windows/amd64
     dependencies: []
     task:
       agent:
