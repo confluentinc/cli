@@ -80,6 +80,8 @@ blocks:
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
 
             # Run tests
+            - make build-for-integration-test
+            - ls
             - go install gotest.tools/gotestsum@v1.8.2
             # - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
