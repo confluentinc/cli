@@ -1,16 +1,16 @@
-Pause mirror topics.
+Reverse local mirror topics and start remote mirror topics.
 
 Usage:
-  confluent kafka mirror pause <destination-topic-1> [destination-topic-2] ... [destination-topic-N] [flags]
+  confluent kafka mirror reverse-and-start <destination-topic-1> [destination-topic-2] ... [destination-topic-N] [flags]
 
 Examples:
-Pause mirror topics "my-topic-1" and "my-topic-2":
+Reverses local mirror topics and starts remote mirror topics "my-topic-1" and "my-topic-2":
 
-  $ confluent kafka mirror pause my-topic-1 my-topic-2 --link my-link
+  $ confluent kafka mirror reverse-and-start my-topic-1 my-topic-2 --link my-link
 
 Flags:
       --link string          REQUIRED: Name of cluster link.
-      --dry-run              If set, does not actually pause the mirror topic, but simply validates it.
+      --dry-run              If set, does not actually reverse the local mirror topic and starts the remote mirror topic, but simply validates it.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
       --environment string   Environment ID.
