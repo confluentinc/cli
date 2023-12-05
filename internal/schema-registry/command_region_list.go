@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -53,7 +53,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	return printRegionList(cmd, regionList)
 }
 
-func printRegionList(cmd *cobra.Command, regionList []srcm.SrcmV2Region) error {
+func printRegionList(cmd *cobra.Command, regionList []srcmv2.SrcmV2Region) error {
 	outputList := output.NewList(cmd)
 
 	for _, region := range regionList {

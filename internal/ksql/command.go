@@ -78,13 +78,7 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 }
 
 func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
-	ctx := c.Config.Context()
-	state, err := ctx.AuthenticatedState()
-	if err != nil {
-		return false, err
-	}
-
-	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+	dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 	if err != nil {
 		return false, err
 	}
@@ -115,6 +109,10 @@ func (c *ksqlCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *ksqlCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

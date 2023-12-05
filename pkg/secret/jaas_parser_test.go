@@ -64,7 +64,7 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 `,
 			},
 			wantErr:    true,
-			wantErrMsg: fmt.Sprintf(errors.InvalidJAASConfigErrorMsg, errors.LoginModuleControlFlagErrorMsg),
+			wantErrMsg: fmt.Sprintf(errors.InvalidJaasConfigErrorMsg, errors.LoginModuleControlFlagErrorMsg),
 		},
 		{
 			name: "Invalid: ; field missing in JAAS file",
@@ -76,7 +76,7 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 `,
 			},
 			wantErr:    true,
-			wantErrMsg: fmt.Sprintf(errors.InvalidJAASConfigErrorMsg, fmt.Sprintf(errors.ExpectedConfigNameErrorMsg, "")),
+			wantErrMsg: fmt.Sprintf(errors.InvalidJaasConfigErrorMsg, fmt.Sprintf(errors.ExpectedConfigNameErrorMsg, "")),
 		},
 	}
 	for _, test := range tests {

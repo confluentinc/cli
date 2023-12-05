@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -90,7 +91,7 @@ func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else if cmd.Flags().Changed("context-name") {
-		return errors.New(`can only set context name if context type is "custom"`)
+		return fmt.Errorf(`can only set context name if context type is "custom"`)
 	}
 
 	subjectFormat, err := cmd.Flags().GetString("subject-format")
@@ -118,18 +119,18 @@ func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	req := srsdk.CreateExporterRequest{
-		Name:                args[0],
-		Subjects:            subjects,
-		SubjectRenameFormat: subjectFormat,
-		ContextType:         contextType,
-		Context:             contextName,
-		Config:              configMap,
+		Name:                srsdk.PtrString(args[0]),
+		Subjects:            &subjects,
+		SubjectRenameFormat: srsdk.PtrString(subjectFormat),
+		ContextType:         srsdk.PtrString(contextType),
+		Context:             srsdk.PtrString(contextName),
+		Config:              &configMap,
 	}
 
 	if _, err := client.CreateExporter(req); err != nil {
 		return err
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.SchemaExporter, args[0])
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.SchemaExporter, args[0])
 	return nil
 }

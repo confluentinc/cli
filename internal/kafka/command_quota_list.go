@@ -3,7 +3,7 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -52,8 +52,8 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func filterQuotasByPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principalId string) []v1.KafkaQuotasV1ClientQuota {
-	var filteredQuotas []v1.KafkaQuotasV1ClientQuota
+func filterQuotasByPrincipal(quotas []kafkaquotasv1.KafkaQuotasV1ClientQuota, principalId string) []kafkaquotasv1.KafkaQuotasV1ClientQuota {
+	var filteredQuotas []kafkaquotasv1.KafkaQuotasV1ClientQuota
 	for _, quota := range quotas {
 		for _, principal := range *quota.Spec.Principals {
 			if principal.Id == principalId {

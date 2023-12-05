@@ -2,7 +2,6 @@ package testserver
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"testing"
 
@@ -10,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 // Handler for POST "/cmk/v2/clusters"
@@ -21,10 +22,10 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 
 		cluster := &cmkv2.CmkV2Cluster{
 			Spec: &cmkv2.CmkV2ClusterSpec{
-				DisplayName:            cmkv2.PtrString(*req.Spec.DisplayName),
-				Cloud:                  cmkv2.PtrString(*req.Spec.Cloud),
-				Region:                 cmkv2.PtrString(*req.Spec.Region),
-				Config:                 new(cmkv2.CmkV2ClusterSpecConfigOneOf),
+				DisplayName:            cmkv2.PtrString(req.Spec.GetDisplayName()),
+				Cloud:                  cmkv2.PtrString(req.Spec.GetCloud()),
+				Region:                 cmkv2.PtrString(req.Spec.GetRegion()),
+				Config:                 &cmkv2.CmkV2ClusterSpecConfigOneOf{},
 				KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
 				HttpEndpoint:           cmkv2.PtrString("https://pkc-endpoint"),
 				Availability:           req.Spec.Availability,
@@ -46,9 +47,8 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			}
 			cluster.Status.Cku = cmkv2.PtrInt32(1)
 		} else if req.Spec.Config.CmkV2Enterprise != nil {
-			if *req.Spec.Availability == "SINGLE_ZONE" {
-				w.WriteHeader(http.StatusUnprocessableEntity)
-				_, err := io.WriteString(w, `{"errors":[{"status":"422","detail":"Durability must be HIGH for an Enterprise cluster"}]}`)
+			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
+				err := writeError(w, "Durability must be HIGH for an Enterprise cluster")
 				require.NoError(t, err)
 				return
 			}
@@ -57,9 +57,27 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}
 		}
 
+		if req.Spec.GetCloud() == "oops" {
+			err := writeError(w, "Service provider must be set to AWS, GCP or AZURE.")
+			require.NoError(t, err)
+			return
+		}
+
+		if req.Spec.GetRegion() == "oops" {
+			err := writeError(w, "Unable to schedule given the cloud and/or region in request is invalid or unavailable")
+			require.NoError(t, err)
+			return
+		}
+
 		err = json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}
+}
+
+func writeError(w http.ResponseWriter, detail string) error {
+	w.WriteHeader(http.StatusUnprocessableEntity)
+	body := &errors.ErrorResponseBody{Errors: []errors.ErrorDetail{{Detail: detail}}}
+	return json.NewEncoder(w).Encode(body)
 }
 
 // Handler for "/cmk/v2/clusters"
@@ -71,32 +89,24 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 			cluster := cmkv2.CmkV2Cluster{
 				Id: cmkv2.PtrString("lkc-123"),
 				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName: cmkv2.PtrString("abc"),
-					Cloud:       cmkv2.PtrString("gcp"),
-					Region:      cmkv2.PtrString("us-central1"),
-					Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-						CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-					},
+					DisplayName:  cmkv2.PtrString("abc"),
+					Cloud:        cmkv2.PtrString("gcp"),
+					Region:       cmkv2.PtrString("us-central1"),
+					Config:       &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
 					Availability: cmkv2.PtrString("SINGLE_ZONE"),
 				},
-				Status: &cmkv2.CmkV2ClusterStatus{
-					Phase: "PROVISIONING",
-				},
+				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
 			clusterMultizone := cmkv2.CmkV2Cluster{
 				Id: cmkv2.PtrString("lkc-456"),
 				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName: cmkv2.PtrString("def"),
-					Cloud:       cmkv2.PtrString("gcp"),
-					Region:      cmkv2.PtrString("us-central1"),
-					Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-						CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-					},
+					DisplayName:  cmkv2.PtrString("def"),
+					Cloud:        cmkv2.PtrString("gcp"),
+					Region:       cmkv2.PtrString("us-central1"),
+					Config:       &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
 					Availability: cmkv2.PtrString("MULTI_ZONE"),
 				},
-				Status: &cmkv2.CmkV2ClusterStatus{
-					Phase: "PROVISIONING",
-				},
+				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
 			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone}}
 			err := json.NewEncoder(w).Encode(clusterList)
@@ -223,25 +233,22 @@ func handleCmkKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update"
 func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			cluster := getCmkBasicDescribeCluster("lkc-update", "lkc-update")
 			cluster.Status = &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"}
 			err := json.NewEncoder(w).Encode(cluster)
 			require.NoError(t, err)
-		}
-		// Update client call
-		if r.Method == http.MethodPatch {
+		case http.MethodPatch:
 			var req cmkv2.CmkV2Cluster
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			req.Id = cmkv2.PtrString("lkc-update")
-			if req.Spec.Config != nil && req.Spec.Config.CmkV2Dedicated.Cku > 0 {
-			} else { // update name
-				cluster := getCmkBasicDescribeCluster(*req.Id, *req.Spec.DisplayName)
+			if req.Spec.Config == nil || req.Spec.Config.CmkV2Dedicated.Cku == 0 {
+				req.Id = cmkv2.PtrString("lkc-update")
+				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
 				err := json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
 			}
-			require.NoError(t, err)
 		}
 	}
 }

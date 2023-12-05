@@ -86,13 +86,11 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 
 func (a *Application) readEvalPrintLoop() {
 	for a.isAuthenticated() {
-		a.readEvalPrint()
+		utils.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
 	}
 }
 
 func (a *Application) readEvalPrint() {
-	defer a.panicRecovery()
-
 	userInput := a.inputController.GetUserInput()
 	if a.inputController.HasUserEnabledReverseSearch() {
 		a.inputController.StartReverseSearch()
@@ -114,17 +112,15 @@ func (a *Application) readEvalPrint() {
 }
 
 func (a *Application) panicRecovery() {
-	if r := recover(); r != nil {
-		a.statementController.CleanupStatement()
-		a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
-		a.reportUsage()
-		utils.OutputErr("Error: internal error occurred")
-	}
+	a.statementController.CleanupStatement()
+	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
+	a.reportUsage()
+	utils.OutputErr("Error: internal error occurred")
 }
 
 func (a *Application) isAuthenticated() bool {
-	if authErr := a.refreshToken(); authErr != nil {
-		utils.OutputErrf("Error: %v\n", authErr)
+	if err := a.refreshToken(); err != nil {
+		utils.OutputErrf("Error: %v", err)
 		a.appController.ExitApplication()
 		return false
 	}

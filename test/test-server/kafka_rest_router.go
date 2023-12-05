@@ -109,6 +109,9 @@ func handleKafkaRestClusters(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster}/acls"
 func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster"]
+
 		data := []cckafkarestv3.AclData{{
 			ResourceType: cckafkarestv3.TOPIC,
 			ResourceName: "test-topic",
@@ -118,6 +121,17 @@ func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 			Principal:    "User:sa-12345",
 			PatternType:  "LITERAL",
 		}}
+		if clusterId == "lkc-acls" {
+			data = append(data, cckafkarestv3.AclData{
+				ResourceType: cckafkarestv3.TOPIC,
+				ResourceName: "test-topic",
+				Operation:    "READ",
+				Permission:   "ALLOW",
+				Host:         "*",
+				Principal:    "User:012345",
+				PatternType:  "LITERAL",
+			})
+		}
 
 		var res any
 
@@ -128,7 +142,7 @@ func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 			w.WriteHeader(http.StatusCreated)
 			res = cckafkarestv3.AclData{}
 		case http.MethodDelete:
-			res = cckafkarestv3.InlineResponse200{Data: data}
+			res = cckafkarestv3.InlineResponse200{Data: []cckafkarestv3.AclData{data[0]}}
 		}
 
 		err := json.NewEncoder(w).Encode(res)
@@ -148,35 +162,25 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			response := `{
-				"kind": "KafkaTopicList",
-				"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics","next": null},
-				"data": [
+			topicList := cckafkarestv3.TopicDataList{
+				Data: []cckafkarestv3.TopicData{
 					{
-					"kind": "KafkaTopic",
-					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1","resource_name": "crn:///kafka=cluster-1/topic=topic-1"},
-					"cluster_id": "cluster-1",
-					"topic_name": "topic1",
-					"is_internal": false,
-					"replication_factor": 3,
-					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
-					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/configs"},
-					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions/-/reassignments"}
+						TopicName:         "topic1",
+						ClusterId:         "cluster-1",
+						IsInternal:        false,
+						ReplicationFactor: 3,
+						PartitionsCount:   6,
 					},
 					{
-					"kind": "KafkaTopic",
-					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2","resource_name": "crn:///kafka=cluster-1/topic=topic-2"},
-					"cluster_id": "cluster-1",
-					"topic_name": "topic2",
-					"is_internal": true,
-					"replication_factor": 4,
-					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
-					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/configs"},
-					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions/-/reassignments"}
-					}
-				]
-			}`
-			_, err := io.WriteString(w, response)
+						TopicName:         "topic2",
+						ClusterId:         "cluster-1",
+						IsInternal:        true,
+						ReplicationFactor: 4,
+						PartitionsCount:   12,
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(topicList)
 			require.NoError(t, err)
 		case http.MethodPost:
 			// Parse Create Args
@@ -605,35 +609,36 @@ func handleKafkaRestLinks(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups"
 func handleKafkaRestConsumerGroups(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		clusterId := mux.Vars(r)["cluster_id"]
 		switch r.Method {
 		case http.MethodGet:
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupDataList{
-				Kind:     "",
-				Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
+				// aside from the ConsumerGroupData.Consumer, the ccloud-sdk-go-v2 and kafka-rest-sdk-go versions of this struct are identical,
+				// so we do not need to handle cloud and onprem cases separately
 				Data: []cpkafkarestv3.ConsumerGroupData{
 					{
-						Kind:              "",
-						Metadata:          cpkafkarestv3.ResourceMetadata{},
-						ClusterId:         "cluster-1",
+						ClusterId:         clusterId,
 						ConsumerGroupId:   "consumer-group-1",
 						IsSimple:          true,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
 						State:             "STABLE",
-						Coordinator:       cpkafkarestv3.Relationship{},
-						Consumer:          cpkafkarestv3.Relationship{},
-						LagSummary:        cpkafkarestv3.Relationship{},
+						Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
 					},
 					{
-						Kind:              "",
-						Metadata:          cpkafkarestv3.ResourceMetadata{},
-						ClusterId:         "cluster-1",
+						ClusterId:         clusterId,
 						ConsumerGroupId:   "consumer-group-2",
-						IsSimple:          true,
-						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
+						IsSimple:          false,
+						PartitionAssignor: "org.apache.kafka.clients.consumer.StickyAssignor",
+						State:             "PREPARING_REBALANCE",
+						Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-2"},
+					},
+					{
+						ClusterId:         clusterId,
+						ConsumerGroupId:   "consumer-group-3",
+						IsSimple:          false,
+						PartitionAssignor: "org.apache.kafka.clients.consumer.RangeAssignor",
 						State:             "DEAD",
-						Coordinator:       cpkafkarestv3.Relationship{},
-						Consumer:          cpkafkarestv3.Relationship{},
-						LagSummary:        cpkafkarestv3.Relationship{},
+						Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-3"},
 					},
 				},
 			})
@@ -649,7 +654,7 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 		link := mux.Vars(r)["link"]
 		switch r.Method {
 		case http.MethodGet:
-			if link == "link-1" {
+			if link == "link-1" || link == "myLink_1" {
 				switch cluster {
 				case "cluster-1":
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
@@ -715,17 +720,15 @@ func handleKafkaRestConsumerGroup(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
+				// aside from the ConsumerGroupData.Consumer, the ccloud-sdk-go-v2 and kafka-rest-sdk-go versions of this struct are identical,
+				// so we do not need to handle cloud and onprem cases separately
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupData{
-					Kind:              "",
-					Metadata:          cpkafkarestv3.ResourceMetadata{},
-					ClusterId:         "cluster-1",
+					ClusterId:         vars["cluster_id"],
 					ConsumerGroupId:   "consumer-group-1",
 					IsSimple:          true,
-					PartitionAssignor: "RoundRobin",
+					PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
 					State:             "STABLE",
 					Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
-					Consumer:          cpkafkarestv3.Relationship{},
-					LagSummary:        cpkafkarestv3.Relationship{},
 				})
 				require.NoError(t, err)
 			} else {
@@ -804,8 +807,8 @@ func handleKafkaRestAllMirrors(t *testing.T) http.HandlerFunc {
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers"
 func handleKafkaRestConsumers(t *testing.T) http.HandlerFunc {
-	instance1 := "instance-1"
-	instance2 := "instance-2"
+	instance1 := "consumer-instance-1"
+	instance2 := "consumer-instance-2"
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -814,24 +817,18 @@ func handleKafkaRestConsumers(t *testing.T) http.HandlerFunc {
 				Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
 				Data: []cpkafkarestv3.ConsumerData{
 					{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
 						ClusterId:       "cluster-1",
 						ConsumerGroupId: "consumer-group-1",
 						ConsumerId:      "consumer-1",
 						InstanceId:      &instance1,
 						ClientId:        "client-1",
-						Assignments:     cpkafkarestv3.Relationship{},
 					},
 					{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
 						ClusterId:       "cluster-1",
 						ConsumerGroupId: "consumer-group-1",
 						ConsumerId:      "consumer-2",
 						InstanceId:      &instance2,
 						ClientId:        "client-2",
-						Assignments:     cpkafkarestv3.Relationship{},
 					},
 				},
 			})
@@ -900,6 +897,72 @@ func handleKafkaRestMirrors(t *testing.T) http.HandlerFunc {
 					MirrorStatus: cckafkarestv3.STOPPED,
 					StateTimeMs:  222222222,
 				},
+				{
+					LinkName:        "link-3",
+					MirrorTopicName: "dest-topic-3",
+					SourceTopicName: "src-topic-3",
+					NumPartitions:   2,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+						},
+					},
+					MirrorStatus: cckafkarestv3.LINK_FAILED,
+					StateTimeMs:  222222222,
+				},
+				{
+					LinkName:        "link-4",
+					MirrorTopicName: "dest-topic-4",
+					SourceTopicName: "src-topic-4",
+					NumPartitions:   2,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+						},
+					},
+					MirrorStatus: cckafkarestv3.LINK_PAUSED,
+					StateTimeMs:  222222222,
+				},
+				{
+					LinkName:        "link-5",
+					MirrorTopicName: "dest-topic-5",
+					SourceTopicName: "src-topic-5",
+					NumPartitions:   2,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+						},
+					},
+					MirrorStatus: cckafkarestv3.SOURCE_UNAVAILABLE,
+					StateTimeMs:  222222222,
+				},
 			}})
 			require.NoError(t, err)
 		}
@@ -915,9 +978,7 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				instance := "instance-1"
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupLagSummaryData{
-					Kind:              "",
-					Metadata:          cpkafkarestv3.ResourceMetadata{},
-					ClusterId:         "cluster-1",
+					ClusterId:         vars["cluster_id"],
 					ConsumerGroupId:   "consumer-group-1",
 					MaxLagConsumerId:  "consumer-1",
 					MaxLagInstanceId:  &instance,
@@ -926,8 +987,6 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 					MaxLagPartitionId: 1,
 					MaxLag:            100,
 					TotalLag:          110,
-					MaxLagConsumer:    cpkafkarestv3.Relationship{},
-					MaxLagPartition:   cpkafkarestv3.Relationship{},
 				})
 				require.NoError(t, err)
 			} else {
@@ -1174,9 +1233,7 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 					Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
 					Data: []cpkafkarestv3.ConsumerLagData{
 						{
-							Kind:            "",
-							Metadata:        cpkafkarestv3.ResourceMetadata{},
-							ClusterId:       "cluster-1",
+							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
 							TopicName:       "topic-1",
 							PartitionId:     1,
@@ -1188,9 +1245,7 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 							ClientId:        "client-1",
 						},
 						{
-							Kind:            "",
-							Metadata:        cpkafkarestv3.ResourceMetadata{},
-							ClusterId:       "cluster-1",
+							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
 							TopicName:       "topic-1",
 							PartitionId:     2,
@@ -1331,15 +1386,13 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 				}
 				requestedPartition := vars["partition_id"]
 				offsets := partitionOffsetsMap[requestedPartition]
-				if vars["topic_name"] == "topic-1" && offsets != (partitionOffsets{}) {
+				if offsets != (partitionOffsets{}) {
 					instance := "instance-1"
 					partitionId, _ := strconv.Atoi(requestedPartition)
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerLagData{
-						Kind:            "",
-						Metadata:        cpkafkarestv3.ResourceMetadata{},
-						ClusterId:       "cluster-1",
+						ClusterId:       vars["cluster_id"],
 						ConsumerGroupId: "consumer-group-1",
-						TopicName:       "topic-1",
+						TopicName:       vars["topic_name"],
 						PartitionId:     int32(partitionId),
 						CurrentOffset:   offsets.currentOffset,
 						LogEndOffset:    offsets.logEndOffset,
@@ -1365,31 +1418,53 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 func handleKafkaTopicPartitions(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		topicName := vars["topic_name"]
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionDataList{
-				Data: []cpkafkarestv3.PartitionData{
-					{
-						ClusterId:   vars["cluster_id"],
-						PartitionId: 0,
-						TopicName:   vars["topic_name"],
-						Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+			if clusterId == "lkc-12345" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.PartitionDataList{
+					Data: []cckafkarestv3.PartitionData{
+						{
+							ClusterId:   clusterId,
+							PartitionId: 0,
+							TopicName:   topicName,
+							Leader:      &cckafkarestv3.Relationship{Related: fmt.Sprintf("https://pkc-00000.region.provider.confluent.cloud/kafka/v3/clusters/%s/topics/%s/partitions/0/replicas/2", clusterId, topicName)},
+						},
+						{
+							ClusterId:   clusterId,
+							PartitionId: 1,
+							TopicName:   topicName,
+							Leader:      &cckafkarestv3.Relationship{Related: fmt.Sprintf("https://pkc-00000.region.provider.confluent.cloud/kafka/v3/clusters/%s/topics/%s/partitions/0/replicas/1", clusterId, topicName)},
+						},
 					},
-					{
-						ClusterId:   vars["cluster_id"],
-						PartitionId: 1,
-						TopicName:   vars["topic_name"],
-						Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/1"},
+				})
+				require.NoError(t, err)
+			} else {
+				err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionDataList{
+					Data: []cpkafkarestv3.PartitionData{
+						{
+							ClusterId:   clusterId,
+							PartitionId: 0,
+							TopicName:   topicName,
+							Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+						},
+						{
+							ClusterId:   clusterId,
+							PartitionId: 1,
+							TopicName:   topicName,
+							Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/1"},
+						},
+						{
+							ClusterId:   vars["cluster_id"],
+							PartitionId: 2,
+							TopicName:   topicName,
+							Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/0"},
+						},
 					},
-					{
-						ClusterId:   vars["cluster_id"],
-						PartitionId: 2,
-						TopicName:   vars["topic_name"],
-						Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/0"},
-					},
-				},
-			})
-			require.NoError(t, err)
+				})
+				require.NoError(t, err)
+			}
 		}
 	}
 }
@@ -1398,18 +1473,30 @@ func handleKafkaTopicPartitions(t *testing.T) http.HandlerFunc {
 func handleKafkaTopicPartitionId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		topicName := vars["topic_name"]
 		partitionIdStr := vars["partition_id"]
 		partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
 		require.NoError(t, err)
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionData{
-				ClusterId:   vars["cluster_id"],
-				PartitionId: int32(partitionId),
-				TopicName:   vars["topic_name"],
-				Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
-			})
-			require.NoError(t, err)
+			if clusterId == "lkc-12345" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.PartitionData{
+					ClusterId:   clusterId,
+					PartitionId: int32(partitionId),
+					TopicName:   topicName,
+					Leader:      &cckafkarestv3.Relationship{Related: fmt.Sprintf("https://pkc-00000.region.provider.confluent.cloud/kafka/v3/clusters/%s/topics/%s/partitions/%s/replicas/1", clusterId, topicName, partitionIdStr)},
+				})
+				require.NoError(t, err)
+			} else {
+				err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionData{
+					ClusterId:   clusterId,
+					PartitionId: int32(partitionId),
+					TopicName:   topicName,
+					Leader:      cpkafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+				})
+				require.NoError(t, err)
+			}
 		}
 	}
 }
@@ -1542,14 +1629,14 @@ func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs:alter"
-func handleKafkaBrokerConfigsAlter(t *testing.T) http.HandlerFunc {
+func handleKafkaBrokerConfigsAlter(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter"
-func handleKafkaBrokerIdConfigsAlter(t *testing.T) http.HandlerFunc {
+func handleKafkaBrokerIdConfigsAlter(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}
@@ -1666,8 +1753,8 @@ func handleKafkaClustersClusterIdBrokersTasksTaskTypeGet(t *testing.T) http.Hand
 					TaskType:        cpkafkarestv3.BrokerTaskType(vars["task_type"]),
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 				},
 				{
 					ClusterId:       vars["cluster_id"],
@@ -1675,8 +1762,8 @@ func handleKafkaClustersClusterIdBrokersTasksTaskTypeGet(t *testing.T) http.Hand
 					TaskType:        cpkafkarestv3.BrokerTaskType(vars["task_type"]),
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"broker_shutdown_status": "COMPLETED"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 					ErrorCode:       &errorCode,
 					ErrorMessage:    &errorMessage,
 				},
@@ -1700,8 +1787,8 @@ func handleKafkaClustersClusterIdBrokersTasksGet(t *testing.T) http.HandlerFunc 
 					TaskType:        cpkafkarestv3.BROKERTASKTYPE_REMOVE_BROKER,
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 				},
 				{
 					ClusterId:       vars["cluster_id"],
@@ -1709,8 +1796,8 @@ func handleKafkaClustersClusterIdBrokersTasksGet(t *testing.T) http.HandlerFunc 
 					TaskType:        cpkafkarestv3.BROKERTASKTYPE_ADD_BROKER,
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 					ErrorCode:       &errorCode,
 					ErrorMessage:    &errorMessage,
 				},
@@ -1732,8 +1819,8 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(t *testing.T) h
 			TaskType:        cpkafkarestv3.BrokerTaskType(vars["task_type"]),
 			TaskStatus:      "SUCCESS",
 			SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-			CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-			UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+			CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+			UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 			ErrorMessage:    &errorMessage,
 			ErrorCode:       &errorCode,
 		})
@@ -1755,8 +1842,8 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t *testing.T) http.Hand
 					TaskType:        cpkafkarestv3.BROKERTASKTYPE_REMOVE_BROKER,
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 				},
 				{
 					ClusterId:       vars["cluster_id"],
@@ -1764,8 +1851,8 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t *testing.T) http.Hand
 					TaskType:        cpkafkarestv3.BROKERTASKTYPE_ADD_BROKER,
 					TaskStatus:      "SUCCESS",
 					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
-					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
-					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.UTC),
 					ErrorCode:       &errorCode,
 					ErrorMessage:    &errorMessage,
 				},

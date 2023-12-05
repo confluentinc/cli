@@ -1,35 +1,21 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
-
-func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {
-	clusters, resp, err := client.ClusterV3Api.ClustersGet(ctx)
-	if err != nil {
-		return "", kafkarest.NewError(client.GetConfig().BasePath, err, resp)
-	}
-	if clusters.Data == nil || len(clusters.Data) == 0 {
-		return "", errors.NewErrorWithSuggestions(errors.NoClustersFoundErrorMsg, errors.NoClustersFoundSuggestions)
-	}
-	return clusters.Data[0].ClusterId, nil
-}
 
 // validate that a topic exists before attempting to produce/consume messages
 func ValidateTopic(adminClient *ckafka.AdminClient, topic string) error {
 	timeout := 10 * time.Second
 	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
-		return fmt.Errorf("failed to obtain topics from client: %v", err)
+		return fmt.Errorf("failed to obtain topics from client: %w", err)
 	}
 
 	var foundTopic bool
@@ -41,7 +27,10 @@ func ValidateTopic(adminClient *ckafka.AdminClient, topic string) error {
 	}
 	if !foundTopic {
 		log.CliLogger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, "<cluster-id>", "<cluster-id>", "<cluster-id>"))
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic),
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, "<cluster-id>"),
+		)
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")

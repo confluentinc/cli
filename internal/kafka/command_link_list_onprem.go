@@ -49,29 +49,24 @@ func (c *linkCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	client, ctx, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
+	client, ctx, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
 
-	clusterId, err := getClusterIdForRestRequests(client, ctx)
-	if err != nil {
-		return err
-	}
-
-	listLinksRespDataList, httpResp, err := client.ClusterLinkingV3Api.ListKafkaLinks(ctx, clusterId)
+	links, httpResp, err := client.ClusterLinkingV3Api.ListKafkaLinks(ctx, clusterId)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
 	list := output.NewList(cmd)
-	for _, data := range listLinksRespDataList.Data {
+	for _, link := range links.Data {
 		if includeTopics {
-			for _, topic := range data.TopicNames {
-				list.Add(newLinkOnPrem(data, topic))
+			for _, topic := range link.TopicNames {
+				list.Add(newLinkOnPrem(link, topic))
 			}
 		} else {
-			list.Add(newLinkOnPrem(data, ""))
+			list.Add(newLinkOnPrem(link, ""))
 		}
 	}
 	list.Filter(getListFieldsOnPrem(includeTopics))

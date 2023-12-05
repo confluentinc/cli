@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/confluentinc/cli/v3/internal"
 	"github.com/confluentinc/cli/v3/pkg/config"
@@ -49,33 +50,39 @@ func main() {
 		panic(err)
 	}
 
-	removeUnreleasedDocs()
-
 	if err := os.Setenv("HOME", currentHOME); err != nil {
 		panic(err)
 	}
 }
 
-// removeUnreleasedDocs hides documentation for unreleased features
-func removeUnreleasedDocs() {
-	removeUnreleasedCommands("flink")
+func removeUnreleasedCommands(command string) { //nolint:unused
+	subcommands := strings.Split(command, " ")
+
+	line := fmt.Sprintf(`\s{3}%s/index\n`, subcommands[len(subcommands)-1])
+	file := filepath.Join(append(append([]string{"docs"}, subcommands[:len(subcommands)-1]...), "index.rst")...)
+	if err := removeLineFromFile(line, file); err != nil {
+		panic(err)
+	}
+
+	line = fmt.Sprintf("\\s{7}:ref:`confluent_%s`\\s+.+\\s+\n", strings.Join(subcommands, "_"))
+	if len(subcommands) == 1 {
+		file = filepath.Join("docs", "overview.rst")
+		if err := removeLineFromFile(line, file); err != nil {
+			panic(err)
+		}
+	} else {
+		if err := removeLineFromFile(line, file); err != nil {
+			panic(err)
+		}
+	}
+
+	path := filepath.Join(append([]string{"docs"}, subcommands...)...)
+	if err := os.RemoveAll(path); err != nil {
+		panic(err)
+	}
 }
 
-func removeUnreleasedCommands(command string) {
-	if err := removeLineFromFile(fmt.Sprintf(`\s{3}%s/index\n`, command), filepath.Join("docs", "index.rst")); err != nil {
-		panic(err)
-	}
-
-	if err := removeLineFromFile(fmt.Sprintf("\\s{7}:ref:`confluent_%s`\\s+.+\\s+\n", command), filepath.Join("docs", "overview.rst")); err != nil {
-		panic(err)
-	}
-
-	if err := os.RemoveAll(filepath.Join("docs", command)); err != nil {
-		panic(err)
-	}
-}
-
-func removeLineFromFile(line, file string) error {
+func removeLineFromFile(line, file string) error { //nolint:unused
 	out, err := os.ReadFile(file)
 	if err != nil {
 		return err

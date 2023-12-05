@@ -1,20 +1,20 @@
 package types
 
 import (
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
 type ApplicationOptions struct {
-	UnsafeTrace     bool
-	UserAgent       string
-	EnvironmentId   string
-	EnvironmentName string
-	OrgResourceId   string
-	Database        string
-	ComputePoolId   string
-	IdentityPoolId  string
-	Verbose         bool
-	Context         *dynamicconfig.DynamicContext
+	UnsafeTrace      bool
+	UserAgent        string
+	EnvironmentId    string
+	EnvironmentName  string
+	OrganizationId   string
+	Database         string
+	ComputePoolId    string
+	ServiceAccountId string
+	Verbose          bool
+	Context          *config.Context
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
@@ -45,9 +45,9 @@ func (a *ApplicationOptions) GetEnvironmentName() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetOrgResourceId() string {
+func (a *ApplicationOptions) GetOrganizationId() string {
 	if a != nil {
-		return a.OrgResourceId
+		return a.OrganizationId
 	}
 	return ""
 }
@@ -66,12 +66,13 @@ func (a *ApplicationOptions) GetComputePoolId() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetIdentityPoolId() string {
+func (a *ApplicationOptions) GetServiceAccountId() string {
 	if a != nil {
-		return a.IdentityPoolId
+		return a.ServiceAccountId
 	}
 	return ""
 }
+
 func (a *ApplicationOptions) GetVerbose() bool {
 	if a != nil {
 		return a.Verbose
@@ -79,7 +80,7 @@ func (a *ApplicationOptions) GetVerbose() bool {
 	return false
 }
 
-func (a *ApplicationOptions) GetContext() *dynamicconfig.DynamicContext {
+func (a *ApplicationOptions) GetContext() *config.Context {
 	if a != nil {
 		return a.Context
 	}

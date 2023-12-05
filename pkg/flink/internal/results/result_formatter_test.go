@@ -9,11 +9,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type ResultFormatterTestSuite struct {
@@ -65,7 +64,7 @@ func (s *ResultFormatterTestSuite) TestGetTruncatedColumnWidthsDistributesLeftov
 	}
 
 	for idx, tc := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		require.Equal(s.T(), tc.expectedTruncatedColumnWidths, GetTruncatedColumnWidths(tc.columnWidths, tc.maxCharacters))
 	}
 }
@@ -74,13 +73,13 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		atomicDataType := generators.AtomicDataType().Draw(t, "atomic data type")
 		atomicField := generators.GetResultItemGeneratorForType(atomicDataType).Draw(t, "atomic result field")
-		convertedField := convertToInternalField(atomicField, flinkgatewayv1alpha1.ColumnDetails{
+		convertedField := convertToInternalField(atomicField, flinkgatewayv1beta1.ColumnDetails{
 			Name: "Test_Column",
 			Type: atomicDataType,
 		})
 
 		val := "NULL"
-		if types.NewResultFieldType(atomicDataType) != types.NULL {
+		if types.NewResultFieldType(atomicDataType) != types.Null {
 			val, _ = atomicField.(string)
 		}
 
@@ -100,19 +99,19 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 
 func (s *ResultFormatterTestSuite) TestFormatArrayField() {
 	arrayField := types.ArrayStatementResultField{
-		Type:        types.ARRAY,
-		ElementType: types.VARCHAR,
+		Type:        types.Array,
+		ElementType: types.Varchar,
 		Values: []types.StatementResultField{
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "Test",
 			},
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "Hello",
 			},
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "World",
 			},
 		},
@@ -145,7 +144,7 @@ func (s *ResultFormatterTestSuite) TestFormatArrayField() {
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		formattedField := TruncateString(arrayField.ToString(), testCase.maxCharCountToDisplay)
 		if testCase.maxCharCountToDisplay >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
@@ -156,27 +155,27 @@ func (s *ResultFormatterTestSuite) TestFormatArrayField() {
 
 func (s *ResultFormatterTestSuite) TestFormatMapField() {
 	mapField := types.MapStatementResultField{
-		Type:      types.ARRAY,
-		KeyType:   types.VARCHAR,
-		ValueType: types.VARCHAR,
+		Type:      types.Array,
+		KeyType:   types.Varchar,
+		ValueType: types.Varchar,
 		Entries: []types.MapStatementResultFieldEntry{
 			{
 				Key: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Key1",
 				},
 				Value: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Value1",
 				},
 			},
 			{
 				Key: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Key2",
 				},
 				Value: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Value2",
 				},
 			},
@@ -210,7 +209,7 @@ func (s *ResultFormatterTestSuite) TestFormatMapField() {
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		formattedField := TruncateString(mapField.ToString(), testCase.maxCharCountToDisplay)
 		if testCase.maxCharCountToDisplay >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
@@ -221,19 +220,19 @@ func (s *ResultFormatterTestSuite) TestFormatMapField() {
 
 func (s *ResultFormatterTestSuite) TestFormatRowField() {
 	arrayField := types.RowStatementResultField{
-		Type:         types.ARRAY,
-		ElementTypes: []types.StatementResultFieldType{types.VARCHAR, types.VARCHAR, types.VARCHAR},
+		Type:         types.Array,
+		ElementTypes: []types.StatementResultFieldType{types.Varchar, types.Varchar, types.Varchar},
 		Values: []types.StatementResultField{
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "Test",
 			},
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "Hello",
 			},
 			types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: "World",
 			},
 		},
@@ -266,7 +265,7 @@ func (s *ResultFormatterTestSuite) TestFormatRowField() {
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		formattedField := TruncateString(arrayField.ToString(), testCase.maxCharCountToDisplay)
 		if testCase.maxCharCountToDisplay >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
@@ -277,27 +276,27 @@ func (s *ResultFormatterTestSuite) TestFormatRowField() {
 
 func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 	mapField := types.MapStatementResultField{
-		Type:      types.ARRAY,
-		KeyType:   types.VARCHAR,
-		ValueType: types.VARCHAR,
+		Type:      types.Array,
+		KeyType:   types.Varchar,
+		ValueType: types.Varchar,
 		Entries: []types.MapStatementResultFieldEntry{
 			{
 				Key: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Key1",
 				},
 				Value: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Value1",
 				},
 			},
 			{
 				Key: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Key2",
 				},
 				Value: types.AtomicStatementResultField{
-					Type:  types.VARCHAR,
+					Type:  types.Varchar,
 					Value: "Value2",
 				},
 			},
@@ -305,8 +304,8 @@ func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 	}
 
 	field := types.ArrayStatementResultField{
-		Type:        types.ARRAY,
-		ElementType: types.MAP,
+		Type:        types.Array,
+		ElementType: types.Map,
 		Values: []types.StatementResultField{
 			mapField,
 			mapField,
@@ -340,11 +339,47 @@ func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 	}
 
 	for idx, testCase := range testCases {
-		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%d\n", idx)
 		formattedField := TruncateString(field.ToString(), testCase.maxCharCountToDisplay)
 		if testCase.maxCharCountToDisplay >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
 		}
 		require.Equal(s.T(), testCase.expected, formattedField)
+	}
+}
+
+func (s *ResultFormatterTestSuite) TestTruncateMultiLineStringShouldNotTruncate() {
+	testCases := []struct {
+		input                 string
+		expected              string
+		maxCharCountToDisplay int
+	}{
+		{
+			input:                 "SELECT * FROM \n table",
+			expected:              "SELECT * FROM \n table",
+			maxCharCountToDisplay: 15,
+		},
+		{
+			input:                 "SELECT * FROM \n table",
+			expected:              "SELECT * FR...",
+			maxCharCountToDisplay: 14,
+		},
+		// this looks strange in a table, because not the whole width of the cell is used, but then the text
+		// is still suddenly truncated. We could improve this case to only truncate starting from the line that actually
+		// crossed the max width threshold. The desired output in this case would be:
+		// SELECT * FROM
+		// table-with-a-real...
+		{
+			input:    "SELECT * FROM \n table-with-a-really-long-table-name",
+			expected: "SELECT * FROM \n t...",
+			// TODO: we should fix this to output this instead
+			// expected:              "SELECT * FROM \n table-with-a-real...",
+			maxCharCountToDisplay: 20,
+		},
+	}
+
+	for idx, testCase := range testCases {
+		fmt.Printf("Evaluating test case #%d\n", idx)
+		require.Equal(s.T(), testCase.expected, TruncateString(testCase.input, testCase.maxCharCountToDisplay))
 	}
 }

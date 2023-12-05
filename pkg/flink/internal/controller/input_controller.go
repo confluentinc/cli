@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -9,7 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/autocomplete"
-	lexer "github.com/confluentinc/cli/v3/pkg/flink/internal/highlighting"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/reverseisearch"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -43,20 +43,26 @@ func NewInputController(history *history.History) types.InputControllerInterface
 func (c *InputController) GetUserInput() string {
 	// if the initial buffer is not empty, we insert the text and reset the InitialBuffer
 	if c.InitialBuffer != "" {
+		c.clearBuffer()
 		c.prompt.Buffer().InsertText(c.InitialBuffer, false, true)
 		c.InitialBuffer = ""
 	}
 	return c.prompt.Input()
 }
 
+func (c *InputController) clearBuffer() {
+	// DeleteBeforeCursor() clears everything left of the cursor
+	c.prompt.Buffer().DeleteBeforeCursor(len(c.prompt.Buffer().Text()))
+	// Delete() ensures we also delete when the cursor is not at the rightmost position
+	// NOTE: we cannot exclusively use Delete() because it won't work if the cursor is at the rightmost position
+	c.prompt.Buffer().Delete(len(c.prompt.Buffer().Text()))
+}
+
 func (c *InputController) HasUserInitiatedExit(userInput string) bool {
 	// the user input should actually never be an empty string. The only case in which go-prompt returns an empty string,
 	// is when the user presses CtrlD. This is why we need to specifically handle this case here.
 	userPressedCtrlD := userInput == ""
-	if c.shouldExit || userPressedCtrlD {
-		return true
-	}
-	return false
+	return c.shouldExit || userPressedCtrlD
 }
 
 func (c *InputController) HasUserEnabledReverseSearch() bool {
@@ -64,7 +70,7 @@ func (c *InputController) HasUserEnabledReverseSearch() bool {
 }
 
 func (c *InputController) StartReverseSearch() {
-	searchResult := c.reverseISearch.ReverseISearch(c.History.Data)
+	searchResult := c.reverseISearch.ReverseISearch(c.History.Data, c.prompt.Buffer().Text())
 	c.reverseISearchEnabled = false
 	c.InitialBuffer = searchResult
 }
@@ -83,21 +89,21 @@ func (c *InputController) getMaxCol() (int, error) {
 	p := c.prompt
 	v := reflect.ValueOf(p)
 	if v.Kind() != reflect.Pointer {
-		return -1, errors.New("could not reflect prompt")
+		return -1, fmt.Errorf("could not reflect prompt")
 	} else {
 		v = v.Elem()
 	}
 
 	v = v.FieldByName("renderer")
 	if v.Kind() != reflect.Pointer {
-		return -1, errors.New("could not reflect prompt.renderer")
+		return -1, fmt.Errorf("could not reflect prompt.renderer")
 	} else {
 		v = v.Elem()
 	}
 
 	v = v.FieldByName("col")
 	if v.Kind() != reflect.Uint16 {
-		return -1, errors.New("could not reflect prompt.renderer.col")
+		return -1, fmt.Errorf("could not reflect prompt.renderer.col")
 	}
 
 	maxCol := v.Uint()
@@ -159,7 +165,7 @@ func (c *InputController) Prompt() prompt.IPrompt {
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
 		prompt.OptionSuggestionBGColor(prompt.DarkGray),
-		prompt.OptionSetLexer(lexer.Lexer),
+		prompt.OptionSetLexer(highlighting.Lexer),
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)

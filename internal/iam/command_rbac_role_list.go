@@ -20,10 +20,10 @@ func (c *roleCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	pcmd.AddOutputFlag(cmd)
 	if c.cfg.IsOnPremLogin() {
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -59,6 +59,11 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 			return err
 		}
 		roles = append(roles, flinkRoles...)
+		workloadRoles, err := c.namespaceRoles(workloadNamespace)
+		if err != nil {
+			return err
+		}
+		roles = append(roles, workloadRoles...)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {

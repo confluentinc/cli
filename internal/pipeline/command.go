@@ -10,6 +10,7 @@ import (
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -109,6 +110,10 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -130,7 +135,7 @@ func (c *command) autocompletePipelines() []string {
 }
 
 func (c *command) getPipelines() ([]streamdesignerv1.SdV1Pipeline, error) {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return nil, err
 	}

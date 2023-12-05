@@ -1,0 +1,4 @@
+Error: broker "3" not found
+
+Suggestions:
+    List available brokers with `confluent kafka broker list`.

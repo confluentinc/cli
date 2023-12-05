@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -20,11 +21,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	pkafka "github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 type confluentBinding struct {
@@ -60,8 +61,8 @@ type flags struct {
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
-const messageOffset int = 5
-const protobufErrorMessage string = "protobuf is not supported"
+const messageOffset = 5
+const protobufErrorMessage = "protobuf is not supported"
 
 func (c *command) newExportCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -117,7 +118,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	messages := make(map[string]spec.Message)
 	var schemaContextPrefix string
 	if flags.schemaContext != "default" {
-		log.CliLogger.Debugf("Using schema context \"%s\"\n", flags.schemaContext)
+		log.CliLogger.Debugf(`Using schema context "%s"`, flags.schemaContext)
 		schemaContextPrefix = fmt.Sprintf(":.%s:", flags.schemaContext)
 	}
 	channelCount := 0
@@ -166,10 +167,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.countAsyncApiUsage(accountDetails); err != nil {
-		log.CliLogger.Debug(err)
-	}
-	output.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
+	output.Printf(c.Config.EnableColor, "AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
 }
 
@@ -178,7 +176,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		if err.Error() == protobufErrorMessage {
 			return err
 		}
-		return fmt.Errorf("failed to get schema details: %v", err)
+		return fmt.Errorf("failed to get schema details: %w", err)
 	}
 	if err := details.getTags(); err != nil {
 		log.CliLogger.Warnf("Failed to get tags: %v", err)
@@ -205,7 +203,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
 	details.channelDetails.mapOfMessageCompat = mapOfMessageCompat
-	output.Printf("Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
+	output.Printf(c.Config.EnableColor, "Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
 	return nil
 }
 
@@ -221,7 +219,7 @@ func (c *command) getAccountDetails(cmd *cobra.Command, flags *flags) (*accountD
 	}
 	details.srClient = srClient
 
-	subjects, err := details.srClient.List(nil)
+	subjects, err := details.srClient.List("", false)
 	if err != nil {
 		return nil, err
 	}
@@ -258,14 +256,14 @@ func handlePanic() {
 	}
 }
 
-func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.Client, valueFormatFlag string) (any, error) {
+func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.Client, valueFormatFlag string) (any, error) {
 	defer handlePanic()
 	if err := consumer.Subscribe(topicName, nil); err != nil {
-		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
+		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %w`, topicName, err)
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
 	if err != nil {
-		return nil, fmt.Errorf(`no example received for topic "%s": %v`, topicName, err)
+		return nil, fmt.Errorf(`no example received for topic "%s": %w`, topicName, err)
 	}
 	value := message.Value
 	var valueFormat string
@@ -284,7 +282,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		Subject:     topicName + "-value",
 		Properties:  kafka.ConsumerProperties{},
 	}
-	if types.Contains(serdes.SchemaBasedFormats, valueFormat) {
+	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {
 		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)
 		if err != nil {
 			return nil, err
@@ -312,18 +310,18 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 		return nil, err
 	}
 	var numPartitions int32
-	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(topicName)
+	partitions, err := kafkaREST.CloudClient.ListKafkaPartitions(topicName)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
+		return nil, fmt.Errorf("unable to get topic partitions: %w", err)
 	}
-	if partitionsResp.Data != nil {
-		numPartitions = int32(len(partitionsResp.Data))
+	if partitions != nil {
+		numPartitions = int32(len(partitions))
 	}
 	customConfigMap := make(map[string]string)
 	topicConfigMap := make(map[string]any)
 
 	// Determine whether the given config value can be put into the AsyncAPI Kafka bindings or put into our custom struct for extra configs
-	for _, config := range configs.Data {
+	for _, config := range configs {
 		switch config.GetName() {
 		case "cleanup.policy":
 			topicConfigMap[config.GetName()] = strings.Split(config.GetValue(), ",")
@@ -373,27 +371,41 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 }
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
-	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := pkafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
-		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
+		return fmt.Errorf(`failed to find Kafka cluster: %w`, err)
 	}
 
-	if err := clusterConfig.DecryptAPIKeys(); err != nil {
+	if err := cluster.DecryptAPIKeys(); err != nil {
 		return err
 	}
 
 	var clusterCreds *config.APIKeyPair
 	if flags.kafkaApiKey != "" {
-		if _, ok := clusterConfig.APIKeys[flags.kafkaApiKey]; !ok {
-			return c.Context.FetchAPIKeyError(flags.kafkaApiKey, clusterConfig.ID)
+		if _, ok := cluster.APIKeys[flags.kafkaApiKey]; !ok {
+			key, httpResp, err := c.V2Client.GetApiKey(flags.kafkaApiKey)
+			if err != nil {
+				return errors.CatchCCloudV2Error(err, httpResp)
+			}
+			// check if the key is for the right cluster
+			if key.Spec.Resource.Id != cluster.ID {
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.InvalidApiKeyErrorMsg, flags.kafkaApiKey, cluster.ID),
+					fmt.Sprintf(errors.InvalidApiKeySuggestions, cluster.ID),
+				)
+			}
+			// the requested api-key exists, but the secret is not saved locally
+			return &errors.UnconfiguredAPISecretError{APIKey: flags.kafkaApiKey, ClusterID: cluster.ID}
 		}
-		clusterCreds = clusterConfig.APIKeys[flags.kafkaApiKey]
+		clusterCreds = cluster.APIKeys[flags.kafkaApiKey]
 	} else {
-		clusterCreds = clusterConfig.APIKeys[clusterConfig.APIKey]
+		clusterCreds = cluster.APIKeys[cluster.APIKey]
 	}
 	if clusterCreds == nil {
-		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster",
-			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.")
+		return errors.NewErrorWithSuggestions(
+			"API key not set for the Kafka cluster",
+			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.",
+		)
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
@@ -419,7 +431,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		return errors.NewSRNotEnabledError()
 	}
 
-	details.kafkaClusterId = clusterConfig.ID
+	details.kafkaClusterId = cluster.ID
 	details.schemaRegistryClusterId = clusters[0].GetId()
 	details.clusterCreds = clusterCreds
 	details.kafkaUrl = kafkaREST.CloudClient.GetUrl()
@@ -509,7 +521,7 @@ func getMessageCompatibility(client *schemaregistry.Client, subject string) (map
 		log.CliLogger.Warnf("Failed to get subject level configuration: %v", err)
 		config, err = client.GetTopLevelConfig()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get top level configuration: %v", err)
+			return nil, fmt.Errorf("failed to get top level configuration: %w", err)
 		}
 	}
 	return map[string]any{"x-messageCompatibility": config.CompatibilityLevel}, nil
@@ -592,7 +604,7 @@ func createConsumer(broker string, clusterCreds *config.APIKeyPair, groupId stri
 		"enable.auto.commit": "false",
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Kafka consumer: %v", err)
+		return nil, fmt.Errorf("failed to create Kafka consumer: %w", err)
 	}
 	return consumer, nil
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcluster "github.com/confluentinc/cli/v3/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -30,8 +30,8 @@ func (c *ksqlCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
-	ksqlClusterType := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
+	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
+	ksqlClusterType := &mdsv1.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, ksqlClusterType)
 	if err != nil {

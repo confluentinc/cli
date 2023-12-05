@@ -1,10 +1,7 @@
 package schemaregistry
 
 import (
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
-
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
@@ -23,7 +20,7 @@ func (c *command) newSubjectListCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.subjectList,
 	}
 
-	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
+	cmd.Flags().Bool("deleted", false, "Include deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -63,11 +60,7 @@ func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	opts := &srsdk.ListOpts{
-		Deleted:       optional.NewBool(deleted),
-		SubjectPrefix: optional.NewString(prefix),
-	}
-	subjects, err := client.List(opts)
+	subjects, err := client.List(prefix, deleted)
 	if err != nil {
 		return err
 	}

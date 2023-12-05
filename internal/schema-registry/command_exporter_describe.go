@@ -64,12 +64,12 @@ func (c *command) exporterDescribe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&exporterOut{
-		Name:          info.Name,
-		Subjects:      strings.Join(info.Subjects, ", "),
-		SubjectFormat: info.SubjectRenameFormat,
-		ContextType:   info.ContextType,
-		Context:       info.Context,
-		Config:        convertMapToString(info.Config),
+		Name:          info.GetName(),
+		Subjects:      strings.Join(info.GetSubjects(), ", "),
+		SubjectFormat: info.GetSubjectRenameFormat(),
+		ContextType:   info.GetContextType(),
+		Context:       info.GetContext(),
+		Config:        convertMapToString(info.GetConfig()),
 	})
 	return table.Print()
 }

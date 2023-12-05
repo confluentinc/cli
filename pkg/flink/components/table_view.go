@@ -7,7 +7,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/samber/lo"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -33,13 +32,13 @@ type TableView struct {
 }
 
 const (
-	numPaddingRows              = 1
-	minColumnWidth          int = 4 // min characters displayed in a column
-	ExitTableViewShortcut       = "Q"
-	ToggleRefreshShortcut       = "P"
-	ToggleTableModeShortcut     = "M"
-	JumpUpShortcut              = "U"
-	JumpDownShortcut            = "D"
+	numPaddingRows          = 1
+	minColumnWidth          = 4 // min characters displayed in a column
+	ExitTableViewShortcut   = "Q"
+	ToggleRefreshShortcut   = "P"
+	ToggleTableModeShortcut = "M"
+	JumpUpShortcut          = "U"
+	JumpDownShortcut        = "D"
 )
 
 func NewTableView() TableViewInterface {
@@ -160,7 +159,7 @@ func (t *TableView) truncateTableColumns() {
 	truncatedColumnWidths := results.GetTruncatedColumnWidths(t.columnWidths, t.tableWidth)
 	for rowIdx := 0; rowIdx < t.table.GetRowCount(); rowIdx++ {
 		for colIdx := 0; colIdx < t.table.GetColumnCount(); colIdx++ {
-			t.table.GetCell(rowIdx, colIdx).SetMaxWidth(lo.Max([]int{truncatedColumnWidths[colIdx], minColumnWidth}))
+			t.table.GetCell(rowIdx, colIdx).SetMaxWidth(max(truncatedColumnWidths[colIdx], minColumnWidth))
 		}
 	}
 }

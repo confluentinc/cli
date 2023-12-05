@@ -12,6 +12,8 @@ const (
 	dryrunFlagName     = "dry-run"
 )
 
+const createdLinkResourceMsg = `Created %s "%s" with configs:`
+
 type linkCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
@@ -52,6 +54,10 @@ func (c *linkCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *linkCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

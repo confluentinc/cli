@@ -1,0 +1,1 @@
+Error: "yes" is not a valid value for configuration field "disable_update_check", which is of type: bool

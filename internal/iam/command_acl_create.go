@@ -1,10 +1,12 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -51,10 +53,10 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 	if err != nil {
-		return c.handleACLError(cmd, err, response)
+		return c.handleAclError(cmd, err, response)
 	}
 
-	return printACLs(cmd, acl.CreateAclRequest.Scope.Clusters.KafkaCluster, []mds.AclBinding{acl.CreateAclRequest.AclBinding})
+	return printAcls(cmd, acl.CreateAclRequest.Scope.Clusters.KafkaCluster, []mdsv1.AclBinding{acl.CreateAclRequest.AclBinding})
 }
 
 func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration {
@@ -62,17 +64,17 @@ func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration 
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.AclBinding.Entry.PermissionType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if aclConfiguration.AclBinding.Pattern.PatternType == "" {
-		aclConfiguration.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_LITERAL
+		aclConfiguration.AclBinding.Pattern.PatternType = mdsv1.PATTERNTYPE_LITERAL
 	}
 
 	if aclConfiguration.AclBinding.Pattern.ResourceType == "" {
-		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
-			convertToFlags(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
-				mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
+			convertToFlags(mdsv1.ACLRESOURCETYPE_TOPIC, mdsv1.ACLRESOURCETYPE_GROUP,
+				mdsv1.ACLRESOURCETYPE_CLUSTER, mdsv1.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
 	return aclConfiguration
 }

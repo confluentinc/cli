@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -49,11 +49,11 @@ func (c *roleCommand) createContext() context.Context {
 	if c.cfg.IsCloudLogin() {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.Context.GetAuthToken())
 	} else {
-		return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
+		return context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 	}
 }
 
-func createPrettyRole(role mds.Role) (*prettyRole, error) {
+func createPrettyRole(role mdsv1.Role) (*prettyRole, error) {
 	marshalled, err := json.Marshal(role.AccessPolicy)
 	if err != nil {
 		return nil, err

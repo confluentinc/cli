@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
@@ -50,7 +50,7 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	fileSpec := mds.AuditLogConfigSpec{}
+	fileSpec := mdsv1.AuditLogConfigSpec{}
 	if err := json.Unmarshal(data, &fileSpec); err != nil {
 		return err
 	}
@@ -64,14 +64,14 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 		if force {
 			gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 			if err != nil {
-				return HandleMdsAuditLogApiError(cmd, err, response)
+				return HandleMdsAuditLogApiError(err, response)
 			}
-			putSpec = &mds.AuditLogConfigSpec{
+			putSpec = &mdsv1.AuditLogConfigSpec{
 				Destinations:       fileSpec.Destinations,
 				ExcludedPrincipals: fileSpec.ExcludedPrincipals,
 				DefaultTopics:      fileSpec.DefaultTopics,
 				Routes:             fileSpec.Routes,
-				Metadata: &mds.AuditLogConfigMetadata{
+				Metadata: &mdsv1.AuditLogConfigMetadata{
 					ResourceVersion: gotSpec.Metadata.ResourceVersion,
 				},
 			}
@@ -83,14 +83,14 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 	result, httpResp, err := c.MDSClient.AuditLogConfigurationApi.PutConfig(c.createContext(), *putSpec)
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusConflict {
-			if apiError, ok := err.(mds.GenericOpenAPIError); ok {
+			if apiError, ok := err.(mdsv1.GenericOpenAPIError); ok {
 				_ = enc.Encode(apiError.Model())
 				// We can just ignore this extra error. Why?
 				// We expected a payload we could display as JSON, but got something unexpected.
 				// That's OK though, we'll still handle and show the API error message.
 			}
 		}
-		return HandleMdsAuditLogApiError(cmd, err, httpResp)
+		return HandleMdsAuditLogApiError(err, httpResp)
 	}
 
 	return enc.Encode(result)

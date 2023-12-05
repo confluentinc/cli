@@ -3,16 +3,13 @@ package schemaregistry
 import (
 	"fmt"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
-
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -90,14 +87,13 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 	}
 	if permanent {
 		if checkVersion != "latest" {
-			opts := &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)}
-			if _, err := client.GetSchemaByVersion(subject, checkVersion, opts); err != nil {
+			if _, err := client.GetSchemaByVersion(subject, checkVersion, true); err != nil {
 				return catchSchemaNotFoundError(err, subject, checkVersion)
-			} else if _, err := client.GetSchemaByVersion(subject, checkVersion, nil); err == nil {
-				return errors.New("you must first soft delete a schema version before you can permanently delete it")
+			} else if _, err := client.GetSchemaByVersion(subject, checkVersion, false); err == nil {
+				return fmt.Errorf("you must first soft delete a schema version before you can permanently delete it")
 			}
 		}
-	} else if _, err := client.GetSchemaByVersion(subject, checkVersion, nil); err != nil {
+	} else if _, err := client.GetSchemaByVersion(subject, checkVersion, false); err != nil {
 		return catchSchemaNotFoundError(err, subject, checkVersion)
 	}
 
@@ -106,7 +102,7 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 	if permanent {
 		promptMsg = fmt.Sprintf("Are you sure you want to permanently delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C", "schema", subjectWithVersion, subject)
 	}
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, subject); err != nil {
+	if err := deletion.ConfirmDeletionWithString(cmd, promptMsg, subject); err != nil {
 		return err
 	}
 
@@ -117,20 +113,18 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 
 	var versions []int32
 	if version == "all" {
-		opts := &srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
-		v, err := client.DeleteSubject(subject, opts)
+		v, err := client.DeleteSubject(subject, permanent)
 		if err != nil {
 			return catchSchemaNotFoundError(err, subject, version)
 		}
-		output.Printf("Successfully %s deleted all versions for subject \"%s\".\n", deleteType, subject)
+		output.Printf(c.Config.EnableColor, "Successfully %s deleted all versions for subject \"%s\".\n", deleteType, subject)
 		versions = v
 	} else {
-		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
-		v, err := client.DeleteSchemaVersion(subject, version, opts)
+		v, err := client.DeleteSchemaVersion(subject, version, permanent)
 		if err != nil {
 			return catchSchemaNotFoundError(err, subject, version)
 		}
-		output.Printf("Successfully %s deleted version \"%s\" for subject \"%s\".\n", deleteType, version, subject)
+		output.Printf(c.Config.EnableColor, "Successfully %s deleted version \"%s\" for subject \"%s\".\n", deleteType, version, subject)
 		versions = []int32{v}
 	}
 

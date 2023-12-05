@@ -1,7 +1,6 @@
 package reverseisearch
 
 import (
-	"math"
 	"strings"
 
 	"github.com/confluentinc/go-prompt"
@@ -10,7 +9,7 @@ import (
 const BckISearch = "bck-i-search: "
 
 type ReverseISearch interface {
-	ReverseISearch(history []string) string
+	ReverseISearch(history []string, initialText string) string
 }
 
 type reverseISearch struct{}
@@ -35,7 +34,7 @@ func reverseISearchLivePrefix(livePrefixState *LivePrefixState) func() (string, 
 	}
 }
 
-func (r reverseISearch) ReverseISearch(history []string) string {
+func (r reverseISearch) ReverseISearch(history []string, initialBufferText string) string {
 	writer := prompt.NewStdoutWriter()
 
 	livePrefixState := &LivePrefixState{
@@ -46,7 +45,7 @@ func (r reverseISearch) ReverseISearch(history []string) string {
 	reverseISearchEnabled := true
 	searchState := &SearchState{
 		CurrentIndex: len(history) - 1,
-		CurrentMatch: "",
+		CurrentMatch: initialBufferText,
 	}
 
 	exitFromSearch := func(buffer *prompt.Buffer) {
@@ -210,7 +209,7 @@ func search(substr string, s []string, startIndex int) searchResult {
 		return searchResult{-1, "", -1}
 	}
 	// if start > size, just use size
-	upperBound := int(math.Min(float64(startIndex), float64(len(s)-1)))
+	upperBound := min(startIndex, len(s)-1)
 	for i := upperBound; i >= 0; i-- {
 		substrI := strings.ToUpper(s[i])
 		if strings.Contains(substrI, substr) {

@@ -4,27 +4,27 @@ import (
 	"context"
 	"net/http"
 
-	billing "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
+	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newBillingClient(url, userAgent string, unsafeTrace bool) *billing.APIClient {
-	cfg := billing.NewConfiguration()
+func newBillingClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *billingv1.APIClient {
+	cfg := billingv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
-	cfg.Servers = billing.ServerConfigurations{{URL: url}}
+	cfg.HTTPClient = httpClient
+	cfg.Servers = billingv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
-	return billing.NewAPIClient(cfg)
+	return billingv1.NewAPIClient(cfg)
 }
 
 func (c *Client) billingApiContext() context.Context {
-	return context.WithValue(context.Background(), billing.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), billingv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-func (c *Client) ListBillingCosts(startDate, endDate string) ([]billing.BillingV1Cost, error) {
-	var list []billing.BillingV1Cost
+func (c *Client) ListBillingCosts(startDate, endDate string) ([]billingv1.BillingV1Cost, error) {
+	var list []billingv1.BillingV1Cost
 
 	done := false
 	pageToken := ""
@@ -43,7 +43,7 @@ func (c *Client) ListBillingCosts(startDate, endDate string) ([]billing.BillingV
 	return list, nil
 }
 
-func (c *Client) executeListCosts(startDate, endDate, pageToken string) (billing.BillingV1CostList, *http.Response, error) {
+func (c *Client) executeListCosts(startDate, endDate, pageToken string) (billingv1.BillingV1CostList, *http.Response, error) {
 	req := c.BillingClient.CostsBillingV1Api.ListBillingV1Costs(c.billingApiContext()).PageSize(10000).StartDate(startDate).EndDate(endDate)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

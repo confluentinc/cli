@@ -5,11 +5,10 @@ Usage:
 
 Available Commands:
   create      Create an identity pool.
-  delete      Delete an identity pool.
+  delete      Delete one or more identity pools.
   describe    Describe an identity pool.
   list        List identity pools.
   update      Update an identity pool.
-  use         Choose an identity pool to be used in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.

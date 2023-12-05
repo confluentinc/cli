@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
@@ -18,11 +17,22 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 )
 
 type schemaOut struct {
-	Schemas []srsdk.Schema `json:"schemas"`
+	Schemas []schema `json:"schemas"`
+}
+
+type schema struct { // CLI-2918
+	Subject    *string                 `json:"subject,omitempty"`
+	Version    *int32                  `json:"version,omitempty"`
+	Id         *int32                  `json:"id,omitempty"`
+	SchemaType *string                 `json:"schemaType,omitempty"`
+	References []srsdk.SchemaReference `json:"references,omitempty"`
+	Schema     *string                 `json:"schema,omitempty"`
+	Metadata   *srsdk.Metadata         `json:"metadata,omitempty"`
+	Ruleset    *srsdk.RuleSet          `json:"ruleset,omitempty"`
 }
 
 func (c *command) newSchemaDescribeCommand(cfg *config.Config) *cobra.Command {
@@ -83,9 +93,9 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) > 0 && (subject != "" || version != "") {
-		return errors.New(errors.BothSchemaAndSubjectErrorMsg)
+		return fmt.Errorf("cannot specify both schema ID and subject/version")
 	} else if len(args) == 0 && (subject == "" || version == "") {
-		return errors.New(errors.SchemaOrSubjectErrorMsg)
+		return fmt.Errorf("must specify either schema ID or subject/version")
 	}
 
 	client, err := c.GetSchemaRegistryClient(cmd)
@@ -116,15 +126,18 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 func describeById(id string, client *schemaregistry.Client) error {
 	schemaId, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, id), errors.SchemaIntegerSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`invalid schema ID "%s"`, id),
+			"Schema ID must be an integer.",
+		)
 	}
 
-	schemaString, err := client.GetSchema(int32(schemaId), nil)
+	schemaString, err := client.GetSchema(int32(schemaId), "")
 	if err != nil {
 		return err
 	}
 
-	return printSchema(schemaId, schemaString.Schema, schemaString.SchemaType, schemaString.References, schemaString.Metadata, schemaString.RuleSet)
+	return printSchema(schemaId, schemaString.GetSchema(), schemaString.GetSchemaType(), schemaString.GetReferences(), schemaString.GetMetadata(), schemaString.GetRuleSet())
 }
 
 func describeBySubject(cmd *cobra.Command, client *schemaregistry.Client) error {
@@ -138,12 +151,12 @@ func describeBySubject(cmd *cobra.Command, client *schemaregistry.Client) error 
 		return err
 	}
 
-	schema, err := client.GetSchemaByVersion(subject, version, nil)
+	schema, err := client.GetSchemaByVersion(subject, version, false)
 	if err != nil {
 		return catchSchemaNotFoundError(err, subject, version)
 	}
 
-	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References, schema.Metadata, schema.Ruleset)
+	return printSchema(int64(schema.GetId()), schema.GetSchema(), schema.GetSchemaType(), schema.GetReferences(), schema.GetMetadata(), schema.GetRuleset())
 }
 
 func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client) error {
@@ -177,27 +190,27 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 	// convert root from `SchemaString` to `Schema` so that we only have to deal with a single type, only if the root is fetched by id
 	root := convertRootSchema(&rootSchema, int32(schemaID))
 	if root != nil {
-		schemaGraph = append([]srsdk.Schema{*root}, schemaGraph...)
+		schemaGraph = append([]schema{*root}, schemaGraph...)
 	}
 
 	b, err := json.Marshal(&schemaOut{schemaGraph})
 	if err != nil {
 		return err
 	}
-	output.Print(string(pretty.Pretty(b)))
+	output.Print(false, string(pretty.Pretty(b)))
 
 	return nil
 }
 
-func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
+func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version string) (srsdk.SchemaString, []schema, error) {
 	root := srsdk.SchemaString{}
-	var schemaGraph []srsdk.Schema
-	var refs []srsdk.SchemaReference
+	var schemaGraph []schema
+	var refs *[]srsdk.SchemaReference
 	subjectVersionString := strings.Join([]string{subject, version}, "#")
 
 	if id > 0 {
 		// should only come here at most once for the root if it is fetched by id
-		schemaString, err := client.GetSchema(id, nil)
+		schemaString, err := client.GetSchema(id, "")
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -210,17 +223,27 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 	} else {
 		visited[subjectVersionString] = true
 
-		schema, err := client.GetSchemaByVersion(subject, version, &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)})
+		srsdkSchema, err := client.GetSchemaByVersion(subject, version, true)
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
+		schema := schema{
+			Subject:    srsdkSchema.Subject,
+			Version:    srsdkSchema.Version,
+			Id:         srsdkSchema.Id,
+			SchemaType: srsdkSchema.SchemaType,
+			References: srsdkSchema.GetReferences(),
+			Schema:     srsdkSchema.Schema,
+			Metadata:   srsdkSchema.Metadata.Get(),
+			Ruleset:    srsdkSchema.Ruleset.Get(),
+		}
 
 		schemaGraph = append(schemaGraph, schema)
-		refs = schema.References
+		refs = srsdkSchema.References
 	}
 
-	for _, reference := range refs {
-		_, subGraph, err := traverseDAG(client, visited, 0, reference.Subject, strconv.Itoa(int(reference.Version)))
+	for _, reference := range *refs {
+		_, subGraph, err := traverseDAG(client, visited, 0, reference.GetSubject(), strconv.Itoa(int(reference.GetVersion())))
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -231,14 +254,14 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 	return root, schemaGraph, nil
 }
 
-func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata *srsdk.Metadata, ruleset *srsdk.RuleSet) error {
-	output.Printf("Schema ID: %d\n", schemaID)
+func printSchema(schemaId int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata srsdk.Metadata, ruleset srsdk.RuleSet) error {
+	output.Printf(false, "Schema ID: %d\n", schemaId)
 
 	// The backend considers "AVRO" to be the default schema type.
 	if schemaType == "" {
 		schemaType = "AVRO"
 	}
-	output.Println("Type: " + schemaType)
+	output.Println(false, "Type: "+schemaType)
 
 	switch schemaType {
 	case "JSON", "AVRO":
@@ -249,50 +272,50 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 		schema = jsonBuffer.String()
 	}
 
-	output.Println("Schema:")
-	output.Println(schema)
+	output.Println(false, "Schema:")
+	output.Println(false, schema)
 
 	if len(refs) > 0 {
-		output.Println("References:")
+		output.Println(false, "References:")
 		for i := 0; i < len(refs); i++ {
-			output.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+			output.Printf(false, "\t%s -> %s %d\n", refs[i].GetName(), refs[i].GetSubject(), refs[i].GetVersion())
 		}
 	}
 
-	if metadata != nil {
-		output.Println("Metadata:")
-		metadataJson, err := json.Marshal(*metadata)
+	if metadata.Properties != nil || metadata.Tags != nil || metadata.Sensitive != nil {
+		metadataJson, err := json.Marshal(metadata)
 		if err != nil {
 			return err
 		}
-		output.Println(prettyJson(metadataJson))
+		output.Println(false, "Metadata:")
+		output.Println(false, prettyJson(metadataJson))
 	}
 
-	if ruleset != nil {
-		output.Println("Ruleset:")
-		rulesetJson, err := json.Marshal(*ruleset)
+	if ruleset.DomainRules != nil || ruleset.MigrationRules != nil {
+		rulesetJson, err := json.Marshal(ruleset)
 		if err != nil {
 			return err
 		}
-		output.Println(prettyJson(rulesetJson))
+		output.Println(false, "Ruleset:")
+		output.Println(false, prettyJson(rulesetJson))
 	}
 	return nil
 }
 
-func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
-	if root.Schema == "" {
+func convertRootSchema(root *srsdk.SchemaString, id int32) *schema {
+	if root.GetSchema() == "" {
 		return nil
 	}
 
 	// The backend considers "AVRO" to be the default schema type.
-	if root.SchemaType == "" {
-		root.SchemaType = "AVRO"
+	if root.GetSchemaType() == "" {
+		root.SchemaType = srsdk.PtrString("AVRO")
 	}
 
-	return &srsdk.Schema{
-		Id:         id,
+	return &schema{
+		Id:         srsdk.PtrInt32(id),
 		SchemaType: root.SchemaType,
-		References: root.References,
+		References: root.GetReferences(),
 		Schema:     root.Schema,
 	}
 }

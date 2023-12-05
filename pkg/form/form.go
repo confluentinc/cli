@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -45,7 +44,7 @@ func New(fields ...Field) *Form {
 func (f *Form) Prompt(prompt Prompt) error {
 	for i := 0; i < len(f.Fields); i++ {
 		field := f.Fields[i]
-		output.Print(field.String())
+		output.Print(false, field.String())
 
 		val, err := field.read(prompt)
 		if err != nil {
@@ -55,7 +54,7 @@ func (f *Form) Prompt(prompt Prompt) error {
 		res, err := field.validate(val)
 		if err != nil {
 			if fmt.Sprintf(errors.InvalidInputFormatErrorMsg, val, field.ID) == err.Error() {
-				output.ErrPrintln(err)
+				output.ErrPrintf(false, "Error: %v\n", err)
 				i-- // re-prompt on invalid regex
 				continue
 			}
@@ -71,53 +70,23 @@ func (f *Form) Prompt(prompt Prompt) error {
 	return nil
 }
 
-func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, error) {
-	force, err := cmd.Flags().GetBool("force")
-	if err != nil {
-		return false, err
-	}
-	if force {
-		return true, nil
-	}
-
-	prompt := NewPrompt()
-	isYesNo := stringToType == ""
-	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
-	if err := f.Prompt(prompt); err != nil && isYesNo {
-		return false, errors.New(errors.FailedToReadInputErrorMsg)
-	} else if err != nil {
-		return false, err
-	}
-
-	if isYesNo {
-		return f.Responses["confirm"].(bool), nil
-	}
-
-	if f.Responses["confirm"].(string) == stringToType || f.Responses["confirm"].(string) == fmt.Sprintf(`"%s"`, stringToType) {
-		return true, nil
-	}
-
-	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
-	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
-}
-
 func ConfirmEnter() error {
 	// This function prevents echoing of user input instead of displaying text or *'s by using
 	// term.ReadPassword so that the CLI will appear to wait until 'enter' or 'Ctrl-C' are entered.
-	output.Print("Press enter to continue or Ctrl-C to cancel:")
+	output.Print(false, "Press enter to continue or Ctrl-C to cancel:")
 
 	if _, err := term.ReadPassword(int(os.Stdin.Fd())); err != nil {
 		return err
 	}
 	// Warning: do not remove this print line; it prevents an unexpected interaction with browser.OpenUrl causing pages to open in the background
-	output.Print("\n")
+	output.Println(false, "")
 
 	return nil
 }
 
 func checkRequiredYes(field Field, res any) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-		output.Println("You must accept to continue. To abandon flow, use Ctrl-C.")
+		output.Println(false, "You must accept to continue. To abandon flow, use Ctrl-C.")
 		return true
 	}
 	return false

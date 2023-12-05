@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
-	"github.com/go-yaml/yaml"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sevlyar/retag"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
-
-	"github.com/confluentinc/cli/v3/pkg/types"
+	"gopkg.in/yaml.v3"
 )
 
 type Table struct {
@@ -156,25 +155,39 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 
 	w := tablewriter.NewWriter(writer)
 	w.SetAutoWrapText(auto)
+	w.SetAlignment(tablewriter.ALIGN_LEFT)
 
 	if t.isList {
-		var header []string
-		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
-			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
-			if !types.Contains(tag, "-") {
-				header = append(header, tag[0])
-			}
-		}
-
 		w.SetAutoFormatHeaders(false)
 		w.SetBorder(false)
+
+		n := reflect.TypeOf(t.objects[0]).Elem().NumField()
+
+		var header []string
+		var alignment []int
+		for i := 0; i < n; i++ {
+			field := reflect.TypeOf(t.objects[0]).Elem().Field(i)
+			tag := strings.Split(field.Tag.Get(t.format.String()), ",")
+
+			if !slices.Contains(tag, "-") {
+				header = append(header, tag[0])
+
+				switch field.Type.Kind() {
+				case reflect.Int, reflect.Int32, reflect.Int64:
+					alignment = append(alignment, tablewriter.ALIGN_RIGHT)
+				default:
+					alignment = append(alignment, tablewriter.ALIGN_LEFT)
+				}
+			}
+		}
 		w.SetHeader(header)
+		w.SetColumnAlignment(alignment)
 
 		for _, object := range t.objects {
 			var row []string
-			for i := 0; i < reflect.TypeOf(object).Elem().NumField(); i++ {
+			for i := 0; i < n; i++ {
 				tag := strings.Split(reflect.TypeOf(object).Elem().Field(i).Tag.Get(t.format.String()), ",")
-				if !types.Contains(tag, "-") {
+				if !slices.Contains(tag, "-") {
 					val := reflect.ValueOf(object).Elem().Field(i)
 					row = append(row, getValueAsString(val, tag))
 				}
@@ -189,7 +202,7 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
 			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
-			if !types.Contains(tag, "-") && !(types.Contains(tag, "omitempty") && val.IsZero()) {
+			if !slices.Contains(tag, "-") && !(slices.Contains(tag, "omitempty") && val.IsZero()) {
 				w.Append([]string{tag[0], fmt.Sprint(val)})
 			}
 		}
@@ -201,7 +214,7 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 }
 
 func getValueAsString(val reflect.Value, tag []string) string {
-	if types.Contains(tag, "Current") {
+	if slices.Contains(tag, "Current") {
 		if val.Bool() {
 			return "*"
 		} else {

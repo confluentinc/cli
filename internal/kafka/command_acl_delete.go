@@ -5,14 +5,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pacl "github.com/confluentinc/cli/v3/pkg/acl"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-const ValidACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
+const validACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -45,7 +47,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
-	acls, err := parse(cmd)
+	acls, err := parse(c.Context, cmd)
 	if err != nil {
 		return err
 	}
@@ -75,16 +77,16 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 		if len(aclDataList.Data) == 0 {
-			return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", ValidACLSuggestion)
+			return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", validACLSuggestion)
 		}
 		count += len(aclDataList.Data)
 	}
 
-	promptMsg := errors.DeleteACLConfirmMsg
+	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)
 	if count > 1 {
-		promptMsg = errors.DeleteACLsConfirmMsg
+		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.Plural(resource.ACL))
 	}
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil {
 		return err
 	}
 
@@ -93,7 +95,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(filter)
 		if err != nil {
 			if i > 0 {
-				output.ErrPrintln(printAclsDeleted(count))
+				output.ErrPrintln(c.Config.EnableColor, printAclsDeleted(count))
 			}
 			return err
 		}
@@ -101,7 +103,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(deleteResp.Data)
 	}
 
-	output.ErrPrintln(printAclsDeleted(count))
+	output.ErrPrintln(c.Config.EnableColor, printAclsDeleted(count))
 	return nil
 }
 

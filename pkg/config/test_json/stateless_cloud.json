@@ -1,8 +1,8 @@
 {
-  "disable_update_check": false,
-  "disable_plugins": false,
   "disable_feature_flags": false,
-  "no_browser": false,
+  "disable_plugins": false,
+  "disable_update_check": false,
+  "enable_color": false,
   "platforms": {
     "http://127.0.0.1:1024": {
       "name": "http://127.0.0.1:1024",
@@ -55,8 +55,7 @@
             "last_update": "0001-01-01T00:00:00Z"
           }
         }
-      },
-      "schema_registry_clusters": {}
+      }
     }
   },
   "context_states": {

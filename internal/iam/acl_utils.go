@@ -9,15 +9,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/acl"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
 type ACLConfiguration struct {
-	*mds.CreateAclRequest
+	*mdsv1.CreateAclRequest
 	errors error
 }
 
@@ -25,7 +26,7 @@ func aclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("kafka-cluster", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", acl.ConvertToLower(acl.AclOperations)))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", acl.ConvertToLower(acl.Operations)))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -44,15 +45,15 @@ the --prefix option was also passed.`)
 // parse returns ACLConfiguration from the contents of cmd
 func parse(cmd *cobra.Command) *ACLConfiguration {
 	aclConfiguration := &ACLConfiguration{
-		CreateAclRequest: &mds.CreateAclRequest{
-			Scope: mds.KafkaScope{
-				Clusters: mds.KafkaScopeClusters{},
+		CreateAclRequest: &mdsv1.CreateAclRequest{
+			Scope: mdsv1.KafkaScope{
+				Clusters: mdsv1.KafkaScopeClusters{},
 			},
-			AclBinding: mds.AclBinding{
-				Entry: mds.AccessControlEntry{
+			AclBinding: mdsv1.AclBinding{
+				Entry: mdsv1.AccessControlEntry{
 					Host: "*",
 				},
-				Pattern: mds.KafkaResourcePattern{},
+				Pattern: mdsv1.KafkaResourcePattern{},
 			},
 		},
 	}
@@ -80,36 +81,35 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "transactional-id":
 			setResourcePattern(conf, n, v)
 		case "allow":
-			conf.AclBinding.Entry.PermissionType = mds.ACLPERMISSIONTYPE_ALLOW
+			conf.AclBinding.Entry.PermissionType = mdsv1.ACLPERMISSIONTYPE_ALLOW
 		case "deny":
-			conf.AclBinding.Entry.PermissionType = mds.ACLPERMISSIONTYPE_DENY
+			conf.AclBinding.Entry.PermissionType = mdsv1.ACLPERMISSIONTYPE_DENY
 		case "prefix":
-			conf.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_PREFIXED
+			conf.AclBinding.Pattern.PatternType = mdsv1.PATTERNTYPE_PREFIXED
 		case "principal":
 			conf.AclBinding.Entry.Principal = v
 		case "host":
 			conf.AclBinding.Entry.Host = v
 		case "operation":
-			v = strings.ToUpper(v)
-			v = strings.ReplaceAll(v, "-", "_")
+			v = ccloudv2.ToUpper(v)
 			enumUtils := utils.EnumUtils{}
 			enumUtils.Init(
-				mds.ACLOPERATION_UNKNOWN,
-				mds.ACLOPERATION_ANY,
-				mds.ACLOPERATION_ALL,
-				mds.ACLOPERATION_READ,
-				mds.ACLOPERATION_WRITE,
-				mds.ACLOPERATION_CREATE,
-				mds.ACLOPERATION_DELETE,
-				mds.ACLOPERATION_ALTER,
-				mds.ACLOPERATION_DESCRIBE,
-				mds.ACLOPERATION_CLUSTER_ACTION,
-				mds.ACLOPERATION_DESCRIBE_CONFIGS,
-				mds.ACLOPERATION_ALTER_CONFIGS,
-				mds.ACLOPERATION_IDEMPOTENT_WRITE,
+				mdsv1.ACLOPERATION_UNKNOWN,
+				mdsv1.ACLOPERATION_ANY,
+				mdsv1.ACLOPERATION_ALL,
+				mdsv1.ACLOPERATION_READ,
+				mdsv1.ACLOPERATION_WRITE,
+				mdsv1.ACLOPERATION_CREATE,
+				mdsv1.ACLOPERATION_DELETE,
+				mdsv1.ACLOPERATION_ALTER,
+				mdsv1.ACLOPERATION_DESCRIBE,
+				mdsv1.ACLOPERATION_CLUSTER_ACTION,
+				mdsv1.ACLOPERATION_DESCRIBE_CONFIGS,
+				mdsv1.ACLOPERATION_ALTER_CONFIGS,
+				mdsv1.ACLOPERATION_IDEMPOTENT_WRITE,
 			)
 			if op, ok := enumUtils[v]; ok {
-				conf.AclBinding.Entry.Operation = op.(mds.AclOperation)
+				conf.AclBinding.Entry.Operation = op.(mdsv1.AclOperation)
 				break
 			}
 			conf.errors = multierror.Append(conf.errors, fmt.Errorf("invalid operation value: %s", v))
@@ -121,22 +121,21 @@ func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	if conf.AclBinding.Pattern.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",
-			convertToFlags(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
-				mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
+			convertToFlags(mdsv1.ACLRESOURCETYPE_TOPIC, mdsv1.ACLRESOURCETYPE_GROUP,
+				mdsv1.ACLRESOURCETYPE_CLUSTER, mdsv1.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 		return
 	}
 
 	// Normalize the resource pattern name
-	n = strings.ToUpper(n)
-	n = strings.ReplaceAll(n, "-", "_")
+	n = ccloudv2.ToUpper(n)
 
 	enumUtils := utils.EnumUtils{}
-	enumUtils.Init(mds.ACLRESOURCETYPE_TOPIC, mds.ACLRESOURCETYPE_GROUP,
-		mds.ACLRESOURCETYPE_CLUSTER, mds.ACLRESOURCETYPE_TRANSACTIONAL_ID)
-	conf.AclBinding.Pattern.ResourceType = enumUtils[n].(mds.AclResourceType)
+	enumUtils.Init(mdsv1.ACLRESOURCETYPE_TOPIC, mdsv1.ACLRESOURCETYPE_GROUP,
+		mdsv1.ACLRESOURCETYPE_CLUSTER, mdsv1.ACLRESOURCETYPE_TRANSACTIONAL_ID)
+	conf.AclBinding.Pattern.ResourceType = enumUtils[n].(mdsv1.AclResourceType)
 
-	if conf.AclBinding.Pattern.ResourceType == mds.ACLRESOURCETYPE_CLUSTER {
-		conf.AclBinding.Pattern.PatternType = mds.PATTERNTYPE_LITERAL
+	if conf.AclBinding.Pattern.ResourceType == mdsv1.ACLRESOURCETYPE_CLUSTER {
+		conf.AclBinding.Pattern.PatternType = mdsv1.PATTERNTYPE_LITERAL
 	}
 	conf.AclBinding.Pattern.Name = v
 }
@@ -145,14 +144,13 @@ func convertToFlags(operations ...any) string {
 	ops := make([]string, len(operations))
 
 	for i, v := range operations {
-		if v == mds.ACLRESOURCETYPE_GROUP {
+		if v == mdsv1.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
-		if v == mds.ACLRESOURCETYPE_CLUSTER {
+		if v == mdsv1.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
-		ops[i] = fmt.Sprintf("`--%s`", s)
+		ops[i] = fmt.Sprintf("`--%s`", ccloudv2.ToLower(fmt.Sprint(v)))
 	}
 
 	sort.Strings(ops)

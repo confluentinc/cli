@@ -53,12 +53,7 @@ func (c *command) newCreateCommandOnPrem() *cobra.Command {
 func (c *command) createOnPrem(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
-	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
@@ -127,7 +122,10 @@ func CreateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 			}
 			if decodedError.Message == fmt.Sprintf("Topic '%s' already exists.", topicName) {
 				if !ifNotExists {
-					return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsOnPremErrorMsg, topicName), errors.TopicExistsOnPremSuggestions)
+					return errors.NewErrorWithSuggestions(
+						fmt.Sprintf(`topic "%s" already exists for the Kafka cluster`, topicName),
+						"To list topics for the cluster, use `confluent kafka topic list --url <url>`.",
+					)
 				} // ignore error if ifNotExists flag is set
 				return nil
 			}
@@ -135,6 +133,6 @@ func CreateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(false, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

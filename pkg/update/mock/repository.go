@@ -25,7 +25,7 @@ type Repository struct {
 	GetAvailableReleaseNotesVersionsFunc func(name string) (github_com_hashicorp_go_version.Collection, error)
 
 	lockDownloadVersion sync.Mutex
-	DownloadVersionFunc func(name, version, downloadDir string) ([]byte, error)
+	DownloadVersionFunc func(name, version string) ([]byte, error)
 
 	lockDownloadReleaseNotes sync.Mutex
 	DownloadReleaseNotesFunc func(name, version string) (string, error)
@@ -49,9 +49,8 @@ type Repository struct {
 			Name string
 		}
 		DownloadVersion []struct {
-			Name        string
-			Version     string
-			DownloadDir string
+			Name    string
+			Version string
 		}
 		DownloadReleaseNotes []struct {
 			Name    string
@@ -223,7 +222,7 @@ func (m *Repository) GetAvailableReleaseNotesVersionsCalls() []struct {
 }
 
 // DownloadVersion mocks base method by wrapping the associated func.
-func (m *Repository) DownloadVersion(name, version, downloadDir string) ([]byte, error) {
+func (m *Repository) DownloadVersion(name, version string) ([]byte, error) {
 	m.lockDownloadVersion.Lock()
 	defer m.lockDownloadVersion.Unlock()
 
@@ -232,18 +231,16 @@ func (m *Repository) DownloadVersion(name, version, downloadDir string) ([]byte,
 	}
 
 	call := struct {
-		Name        string
-		Version     string
-		DownloadDir string
+		Name    string
+		Version string
 	}{
-		Name:        name,
-		Version:     version,
-		DownloadDir: downloadDir,
+		Name:    name,
+		Version: version,
 	}
 
 	m.calls.DownloadVersion = append(m.calls.DownloadVersion, call)
 
-	return m.DownloadVersionFunc(name, version, downloadDir)
+	return m.DownloadVersionFunc(name, version)
 }
 
 // DownloadVersionCalled returns true if DownloadVersion was called at least once.
@@ -256,9 +253,8 @@ func (m *Repository) DownloadVersionCalled() bool {
 
 // DownloadVersionCalls returns the calls made to DownloadVersion.
 func (m *Repository) DownloadVersionCalls() []struct {
-	Name        string
-	Version     string
-	DownloadDir string
+	Name    string
+	Version string
 } {
 	m.lockDownloadVersion.Lock()
 	defer m.lockDownloadVersion.Unlock()

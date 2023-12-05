@@ -6,6 +6,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
+const parsedGenericOpenApiErrorMsg = "metadata service backend error: %s"
+
 type CLITypedError interface {
 	error
 	UserFacingError() error
@@ -18,7 +20,7 @@ func (e *NotLoggedInError) Error() string {
 }
 
 func (e *NotLoggedInError) UserFacingError() error {
-	return NewErrorWithSuggestions(NotLoggedInErrorMsg, NotLoggedInSuggestions)
+	return NewErrorWithSuggestions(NotLoggedInErrorMsg, "You must be logged in to run this command.\n"+AvoidTimeoutSuggestions)
 }
 
 type EndOfFreeTrialError struct {
@@ -40,7 +42,7 @@ func (e *SRNotAuthenticatedError) Error() string {
 }
 
 func (e *SRNotAuthenticatedError) UserFacingError() error {
-	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, SRNotAuthenticatedSuggestions)
+	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, "You must specify the endpoint for a Schema Registry cluster (`--schema-registry-endpoint`) or be logged in using `confluent login` to run this command.\n"+AvoidTimeoutSuggestions)
 }
 
 type SRNotEnabledError struct {
@@ -49,7 +51,11 @@ type SRNotEnabledError struct {
 }
 
 func NewSRNotEnabledError() CLITypedError {
-	return &SRNotEnabledError{ErrorMsg: SRNotEnabledErrorMsg, SuggestionsMsg: SRNotEnabledSuggestions}
+	return &SRNotEnabledError{
+		ErrorMsg: "Schema Registry not enabled",
+		SuggestionsMsg: "Schema Registry must be enabled for the environment in order to run the command.\n" +
+			"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`.",
+	}
 }
 
 func (e *SRNotEnabledError) Error() string {
@@ -69,8 +75,10 @@ func (e *KafkaClusterNotFoundError) Error() string {
 }
 
 func (e *KafkaClusterNotFoundError) UserFacingError() error {
-	errMsg := fmt.Sprintf(KafkaNotFoundErrorMsg, e.ClusterID)
-	return NewErrorWithSuggestions(errMsg, KafkaNotFoundSuggestions)
+	return NewErrorWithSuggestions(
+		fmt.Sprintf(`Kafka cluster "%s" not found`, e.ClusterID),
+		"To list Kafka clusters, use `confluent kafka cluster list`.",
+	)
 }
 
 // UnspecifiedAPIKeyError means the user needs to set an api-key for this cluster
@@ -98,9 +106,7 @@ type UnconfiguredAPISecretError struct {
 }
 
 func (e *UnconfiguredAPISecretError) Error() string {
-	errorMsg := fmt.Sprintf(NoAPISecretStoredErrorMsg, e.APIKey, e.ClusterID)
-	suggestionsMsg := fmt.Sprintf(NoAPISecretStoredSuggestions, e.APIKey, e.ClusterID)
-	return NewErrorWithSuggestions(errorMsg, suggestionsMsg).Error()
+	return e.UserFacingError().Error()
 }
 
 func (e *UnconfiguredAPISecretError) UserFacingError() error {
@@ -110,18 +116,22 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 }
 
 func NewCorruptedConfigError(format, contextName, configFile string) CLITypedError {
-	e := &CorruptedConfigError{}
 	var errorWithStackTrace error
 	if contextName != "" {
-		errorWithStackTrace = Errorf(format, contextName)
+		errorWithStackTrace = fmt.Errorf(format, contextName)
 	} else {
-		errorWithStackTrace = Errorf(format)
+		errorWithStackTrace = fmt.Errorf(format)
 	}
 	// logging stack trace of the error use pkg/errors error type
 	log.CliLogger.Debugf("%+v", errorWithStackTrace)
-	e.errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorWithStackTrace.Error())
-	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile)
-	return e
+	return &CorruptedConfigError{
+		errorMsg: fmt.Sprintf("corrupted CLI config: %v", errorWithStackTrace),
+		suggestionsMsg: fmt.Sprintf("Your configuration file \"%s\" is corrupted.\n"+
+			"Remove config file, and run `confluent login` or `confluent context create`.\n"+
+			"Unfortunately, your active CLI state will be lost as a result.\n"+
+			"Please file a support ticket with details about your configuration file to help us address this issue.\n"+
+			"Please rerun the command with `--unsafe-trace` and attach the output with the support ticket.", configFile),
+	}
 }
 
 type CorruptedConfigError struct {
@@ -138,7 +148,7 @@ func (e *CorruptedConfigError) UserFacingError() error {
 }
 
 func NewUpdateClientWrapError(err error, errorMsg string) CLITypedError {
-	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error()}
+	return &UpdateClientError{errorMsg: fmt.Sprintf("%s: %v", errorMsg, err)}
 }
 
 type UpdateClientError struct {
@@ -150,8 +160,10 @@ func (e *UpdateClientError) Error() string {
 }
 
 func (e *UpdateClientError) UserFacingError() error {
-	errMsg := fmt.Sprintf(prefixFormat, UpdateClientFailurePrefix, e.errorMsg)
-	return NewErrorWithSuggestions(errMsg, UpdateClientFailureSuggestions)
+	return NewErrorWithSuggestions(
+		fmt.Sprintf("update client failure: %s", e.errorMsg),
+		"Please submit a support ticket.\nIn the meantime, see link for other ways to download the latest CLI version:\nhttps://docs.confluent.io/current/cli/installing.html",
+	)
 }
 
 type MDSV2Alpha1ErrorType1 struct {
@@ -164,7 +176,7 @@ type MDSV2Alpha1ErrorType1 struct {
 func (e *MDSV2Alpha1ErrorType1) Error() string { return e.Message }
 
 func (e *MDSV2Alpha1ErrorType1) UserFacingError() error {
-	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Message)
+	return fmt.Errorf(parsedGenericOpenApiErrorMsg, e.Message)
 }
 
 type MDSV2Alpha1ErrorType2 struct {
@@ -186,11 +198,11 @@ type MDSV2Alpha1ErrorType2Array struct {
 func (e *MDSV2Alpha1ErrorType2Array) Error() string {
 	errorMessage := ""
 	for _, error := range e.Errors {
-		errorMessage = fmt.Sprintf("%s ", error.Error()) + errorMessage
+		errorMessage = fmt.Sprintf("%s %s", error.Error(), errorMessage)
 	}
 	return errorMessage
 }
 
 func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error {
-	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Error())
+	return fmt.Errorf(parsedGenericOpenApiErrorMsg, e.Error())
 }

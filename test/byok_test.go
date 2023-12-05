@@ -14,9 +14,7 @@ func (s *CLITestSuite) TestByok() {
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000 --key-vault /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault", fixture: "byok/create_2.golden"},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000", fixture: "byok/create_3.golden", exitCode: 1},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000", fixture: "byok/create_4.golden", exitCode: 1},
-		// delete tests
-		{args: "byok delete cck-001", input: "y\n", fixture: "byok/delete_1.golden"},
-		{args: "byok delete cck-404", fixture: "byok/delete_2.golden", exitCode: 1},
+		{args: "byok create projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3", fixture: "byok/create_5.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
@@ -27,12 +25,31 @@ func (s *CLITestSuite) TestByok() {
 	}
 }
 
+func (s *CLITestSuite) TestByokDelete() {
+	tests := []CLITest{
+		{args: "byok delete cck-001", input: "y\n", fixture: "byok/delete/success.golden"},
+		{args: "byok delete cck-404", fixture: "byok/delete/fail.golden", exitCode: 1},
+		{args: "byok delete cck-002 cck-006 cck-007 cck-100", fixture: "byok/delete/multiple-fail.golden", exitCode: 1},
+		{args: "byok delete cck-002 cck-003", input: "n\n", fixture: "byok/delete/multiple-refuse.golden"},
+		{args: "byok delete cck-002 cck-003", input: "y\n", fixture: "byok/delete/multiple-success.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestByokDescribe() {
 	tests := []CLITest{
 		{args: "byok describe cck-001", fixture: "byok/describe-aws.golden"},
 		{args: "byok describe cck-001 -o json", fixture: "byok/describe-aws-json.golden"},
 		{args: "byok describe cck-003", fixture: "byok/describe-azure.golden"},
 		{args: "byok describe cck-003 -o json", fixture: "byok/describe-azure-json.golden"},
+		{args: "byok describe cck-004", fixture: "byok/describe-gcp.golden"},
+		{args: "byok describe cck-004 -o json", fixture: "byok/describe-gcp-json.golden"},
 	}
 
 	for _, test := range tests {

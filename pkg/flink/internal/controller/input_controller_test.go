@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/confluentinc/go-prompt"
 
@@ -51,7 +51,7 @@ func (s *InputControllerTestSuite) TestGetUserInputSetsInitialBuffer() {
 	s.inputController.InitialBuffer = "not-empty"
 	input := fmt.Sprintf("%s %s", s.inputController.InitialBuffer, "input")
 	buffer := prompt.NewBuffer()
-	s.prompt.EXPECT().Buffer().Return(buffer)
+	s.prompt.EXPECT().Buffer().Return(buffer).Times(5)
 	s.prompt.EXPECT().Input().Return(input)
 
 	actual := s.inputController.GetUserInput()
@@ -78,7 +78,8 @@ func (s *InputControllerTestSuite) TestHasUserEnabledReverseSearchShouldBeFalse(
 
 func (s *InputControllerTestSuite) TestStartReverseSearch() {
 	searchResult := "search result"
-	s.reverseISearch.EXPECT().ReverseISearch(s.history.Data).Return(searchResult)
+	s.reverseISearch.EXPECT().ReverseISearch(s.history.Data, "").Return(searchResult)
+	s.prompt.EXPECT().Buffer().Return(prompt.NewBuffer())
 
 	s.inputController.StartReverseSearch()
 

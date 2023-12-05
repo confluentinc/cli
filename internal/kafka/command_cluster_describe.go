@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Provider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
@@ -28,7 +29,7 @@ type describeStruct struct {
 	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress"`
 	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress"`
 	Storage            string `human:"Storage" serialized:"storage"`
-	ServiceProvider    string `human:"Provider" serialized:"provider"`
+	Provider           string `human:"Provider" serialized:"provider"`
 	Region             string `human:"Region" serialized:"region"`
 	Availability       string `human:"Availability" serialized:"availability"`
 	Status             string `human:"Status" serialized:"status"`
@@ -83,12 +84,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
 		if resource.LookupType(args[0]) != resource.KafkaCluster {
-			return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
+			return "", fmt.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
 		}
 		return args[0], nil
 	}
 
-	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
+	lkc := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 	if lkc == "" {
 		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
 	}
@@ -97,13 +98,13 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	out := convertClusterToDescribeStruct(cluster, c.Context.Context)
+	out := convertClusterToDescribeStruct(cluster, c.Context)
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
 		// topicCount is 0 when err != nil, and will be omitted by `omitempty`
 		if err != nil {
-			log.CliLogger.Infof(errors.OmitTopicCountMsg, err)
+			log.CliLogger.Infof("The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v", err)
 		}
 		out.TopicCount = topicCount
 	}
@@ -128,7 +129,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		IngressLimit:       ingress,
 		EgressLimit:        egress,
 		Storage:            clusterStorage,
-		ServiceProvider:    strings.ToLower(cluster.Spec.GetCloud()),
+		Provider:           strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
 		Status:             getCmkClusterStatus(cluster),

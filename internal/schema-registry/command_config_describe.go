@@ -2,29 +2,16 @@ package schemaregistry
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tidwall/pretty"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
-
-type configOut struct {
-	CompatibilityLevel string `human:"Compatibility Level,omitempty" serialized:"compatibility_level,omitempty"`
-	CompatibilityGroup string `human:"Compatibility Group,omitempty" serialized:"compatibility_group,omitempty"`
-	MetadataDefaults   string `human:"Metadata Defaults,omitempty" serialized:"metadata_defaults,omitempty"`
-	MetadataOverrides  string `human:"Metadata Overrides,omitempty" serialized:"metadata_overrides,omitempty"`
-	RulesetDefaults    string `human:"Ruleset Defaults,omitempty" serialized:"ruleset_defaults,omitempty"`
-	RulesetOverrides   string `human:"Ruleset Overrides,omitempty" serialized:"ruleset_overrides,omitempty"`
-}
 
 func (c *command) newConfigDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -71,7 +58,7 @@ func (c *command) newConfigDescribeCommand(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) configDescribe(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
@@ -96,11 +83,11 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	out := &configOut{
-		CompatibilityLevel: config.CompatibilityLevel,
-		CompatibilityGroup: config.CompatibilityGroup,
+		CompatibilityLevel: config.GetCompatibilityLevel(),
+		CompatibilityGroup: config.GetCompatibilityGroup(),
 	}
 
-	if config.DefaultMetadata != nil {
+	if config.DefaultMetadata.IsSet() {
 		defaultMetadata, err := json.Marshal(config.DefaultMetadata)
 		if err != nil {
 			return err
@@ -108,7 +95,7 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 		out.MetadataDefaults = prettyJson(defaultMetadata)
 	}
 
-	if config.OverrideMetadata != nil {
+	if config.OverrideMetadata.IsSet() {
 		overrideMetadata, err := json.Marshal(config.OverrideMetadata)
 		if err != nil {
 			return err
@@ -116,7 +103,7 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 		out.MetadataOverrides = prettyJson(overrideMetadata)
 	}
 
-	if config.DefaultRuleSet != nil {
+	if config.DefaultRuleSet.IsSet() {
 		defaultRuleset, err := json.Marshal(config.DefaultRuleSet)
 		if err != nil {
 			return err
@@ -124,7 +111,7 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 		out.RulesetDefaults = prettyJson(defaultRuleset)
 	}
 
-	if config.OverrideRuleSet != nil {
+	if config.OverrideRuleSet.IsSet() {
 		overrideRuleset, err := json.Marshal(config.OverrideRuleSet)
 		if err != nil {
 			return err
@@ -135,16 +122,4 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 	table := output.NewTable(cmd)
 	table.Add(out)
 	return table.PrintWithAutoWrap(false)
-}
-
-func catchSubjectLevelConfigNotFoundError(err error, subject string) error {
-	if err != nil && strings.Contains(err.Error(), "Not Found") {
-		return errors.New(fmt.Sprintf(`subject "%s" does not have subject-level compatibility configured`, subject))
-	}
-
-	return err
-}
-
-func prettyJson(str []byte) string {
-	return strings.TrimSpace(string(pretty.Pretty(str)))
 }

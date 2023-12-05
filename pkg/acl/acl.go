@@ -3,6 +3,7 @@ package acl
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -14,6 +15,7 @@ import (
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -22,7 +24,7 @@ import (
 
 var listFields = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
 
-var AclOperations = []mdsv1.AclOperation{
+var Operations = []mdsv1.AclOperation{
 	mdsv1.ACLOPERATION_ALL,
 	mdsv1.ACLOPERATION_ALTER,
 	mdsv1.ACLOPERATION_ALTER_CONFIGS,
@@ -46,7 +48,7 @@ type out struct {
 	PatternType  string `human:"Pattern Type" serialized:"pattern_type"`
 }
 
-type AclRequestDataWithError struct {
+type RequestDataWithError struct {
 	ResourceType cpkafkarestv3.AclResourceType
 	ResourceName string
 	PatternType  string
@@ -56,6 +58,9 @@ type AclRequestDataWithError struct {
 	Permission   string
 	Errors       error
 }
+
+// use w/ resource.ACL or resource.Plural(resource.ACL)
+var DeleteACLConfirmMsg = "Are you sure you want to delete the %s corresponding to these parameters?"
 
 func PrintACLsFromKafkaRestResponseOnPrem(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
 	list := output.NewList(cmd)
@@ -89,10 +94,10 @@ func PrintACLs(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
 	return list.Print()
 }
 
-func AclFlags() *pflag.FlagSet {
+func Flags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower(AclOperations)))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower(Operations)))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -105,8 +110,8 @@ func AclFlags() *pflag.FlagSet {
 	return flgSet
 }
 
-func ParseAclRequest(cmd *cobra.Command) *AclRequestDataWithError {
-	aclRequest := &AclRequestDataWithError{
+func ParseRequest(cmd *cobra.Command) *RequestDataWithError {
+	aclRequest := &RequestDataWithError{
 		Host:   "*",
 		Errors: nil,
 	}
@@ -114,7 +119,7 @@ func ParseAclRequest(cmd *cobra.Command) *AclRequestDataWithError {
 	return aclRequest
 }
 
-func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
+func populateAclRequest(conf *RequestDataWithError) func(*pflag.Flag) {
 	return func(flag *pflag.Flag) {
 		v := flag.Value.String()
 		switch n := flag.Name; n {
@@ -141,8 +146,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 		case "host":
 			conf.Host = v
 		case "operation":
-			v = strings.ToUpper(v)
-			v = strings.ReplaceAll(v, "-", "_")
+			v = ccloudv2.ToUpper(v)
 			enumUtils := utils.EnumUtils{}
 			enumUtils.Init(
 				"UNKNOWN",
@@ -168,14 +172,14 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 	}
 }
 
-func setAclRequestPermission(conf *AclRequestDataWithError, permission string) {
+func setAclRequestPermission(conf *RequestDataWithError, permission string) {
 	if conf.Permission != "" {
-		conf.Errors = multierror.Append(conf.Errors, errors.Errorf(errors.OnlySetAllowOrDenyErrorMsg))
+		conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL"))
 	}
 	conf.Permission = permission
 }
 
-func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
+func setAclRequestResourcePattern(conf *RequestDataWithError, n, v string) {
 	if conf.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("exactly one of %v must be set",
@@ -185,8 +189,7 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	}
 
 	// Normalize the resource pattern name
-	n = strings.ToUpper(n)
-	n = strings.ReplaceAll(n, "-", "_")
+	n = ccloudv2.ToUpper(n)
 
 	enumUtils := utils.EnumUtils{}
 	enumUtils.Init(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
@@ -210,8 +213,7 @@ func convertToFlags(operations ...any) string {
 		if v == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
-		ops[i] = fmt.Sprintf("`--%s`", s)
+		ops[i] = fmt.Sprintf("`--%s`", ccloudv2.ToLower(fmt.Sprint(v)))
 	}
 
 	sort.Strings(ops)
@@ -222,18 +224,18 @@ func ConvertToLower[T any](operations []T) string {
 	ops := make([]string, len(operations))
 
 	for i, v := range operations {
-		ops[i] = strings.ReplaceAll(fmt.Sprint(v), "_", "-")
+		ops[i] = ccloudv2.ToLower(fmt.Sprint(v))
 	}
 
-	return strings.ToLower(strings.Join(ops, ", "))
+	return strings.Join(ops, ", ")
 }
 
-func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithError) *AclRequestDataWithError {
+func ValidateCreateDeleteAclRequestData(aclConfiguration *RequestDataWithError) *RequestDataWithError {
 	// delete is deliberately less powerful in the cli than in the API to prevent accidental
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
 	// repeated invocation of the cli by external scripts.
 	if aclConfiguration.Permission == "" {
-		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
 
 	if aclConfiguration.PatternType == "" {
@@ -241,14 +243,14 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 	}
 
 	if aclConfiguration.ResourceType == "" {
-		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
+		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
 			convertToFlags(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
 				cpkafkarestv3.ACLRESOURCETYPE_CLUSTER, cpkafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
 	return aclConfiguration
 }
 
-func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.CreateKafkaAclsOpts {
+func RequestToCreateRequest(acl *RequestDataWithError) *cpkafkarestv3.CreateKafkaAclsOpts {
 	return &cpkafkarestv3.CreateKafkaAclsOpts{
 		CreateAclRequestData: optional.NewInterface(cpkafkarestv3.CreateAclRequestData{
 			ResourceType: acl.ResourceType,
@@ -264,7 +266,7 @@ func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.C
 
 // Functions for converting AclRequestDataWithError into structs for create, delete, and list requests
 
-func AclRequestToListAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.GetKafkaAclsOpts {
+func RequestToListRequest(acl *RequestDataWithError) *cpkafkarestv3.GetKafkaAclsOpts {
 	opts := &cpkafkarestv3.GetKafkaAclsOpts{}
 	if acl.ResourceType != "" {
 		opts.ResourceType = optional.NewInterface(acl.ResourceType)
@@ -290,7 +292,7 @@ func AclRequestToListAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.Get
 	return opts
 }
 
-func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.DeleteKafkaAclsOpts {
+func RequestToDeleteRequest(acl *RequestDataWithError) *cpkafkarestv3.DeleteKafkaAclsOpts {
 	return &cpkafkarestv3.DeleteKafkaAclsOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
@@ -302,7 +304,7 @@ func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.D
 	}
 }
 
-func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.AclData {
+func CreateAclRequestDataToAclData(data *RequestDataWithError) cpkafkarestv3.AclData {
 	return cpkafkarestv3.AclData{
 		ResourceType: data.ResourceType,
 		ResourceName: data.ResourceName,
@@ -315,10 +317,23 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.
 }
 
 func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.AclData) error {
+	all, err := cmd.Flags().GetBool("all")
+	if err != nil {
+		return err
+	}
+
 	list := output.NewList(cmd)
 	for _, acl := range acls {
+		principal := acl.GetPrincipal()
+		if !all {
+			if hasIntegerId, err := principalHasIntegerId(principal); err != nil {
+				return err
+			} else if hasIntegerId {
+				continue
+			}
+		}
 		list.Add(&out{
-			Principal:    acl.GetPrincipal(),
+			Principal:    principal,
 			Permission:   acl.GetPermission(),
 			Operation:    acl.GetOperation(),
 			ResourceType: string(acl.GetResourceType()),
@@ -328,6 +343,18 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.Acl
 	}
 	list.Filter(listFields)
 	return list.Print()
+}
+
+func principalHasIntegerId(principal string) (bool, error) {
+	x := strings.Split(principal, ":")
+	if len(x) < 2 {
+		return false, fmt.Errorf("unrecognized principal format %s", principal)
+	}
+	suffix := x[1]
+
+	// The principal has a numeric ID
+	_, err := strconv.ParseInt(suffix, 10, 32)
+	return err == nil, nil
 }
 
 func GetCreateAclRequestData(binding *ccstructs.ACLBinding) cckafkarestv3.CreateAclRequestData {

@@ -10,21 +10,20 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a ksqlDB cluster.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more ksqlDB clusters.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -36,50 +35,42 @@ func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
-	id := args[0]
-	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	// Check KSQL exists
-	cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
-	if err != nil {
-		return errors.CatchKSQLNotFoundError(err, id)
+	idToCluster := c.mapIdToCluster(args, environmentId)
+
+	existenceFunc := func(id string) bool {
+		_, ok := idToCluster[id]
+		return ok
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.KsqlCluster, id, cluster.Spec.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, cluster.Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.KsqlCluster, idToCluster[args[0]].Spec.GetDisplayName()); err != nil {
 		return err
 	}
 
-	// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
-	// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
-	// the topics.
-	if c.getClusterStatus(&cluster) == "PROVISIONED" {
-		if err := c.deleteTopics(cluster.GetId(), cluster.Status.GetHttpEndpoint()); err != nil {
-			return err
+	deleteFunc := func(id string) error {
+		// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
+		// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
+		// the topics.
+		cluster := idToCluster[id]
+		if c.getClusterStatus(&cluster) == "PROVISIONED" {
+			if err := c.deleteTopics(cluster.GetId(), cluster.Status.GetHttpEndpoint()); err != nil {
+				return err
+			}
 		}
+
+		return c.V2Client.DeleteKsqlCluster(id, environmentId)
 	}
 
-	if err := c.V2Client.DeleteKsqlCluster(id, environmentId); err != nil {
-		return err
-	}
-
-	output.Printf(errors.DeletedResourceMsg, resource.KsqlCluster, id)
-	return nil
+	_, err = deletion.Delete(args, deleteFunc, resource.KsqlCluster)
+	return err
 }
 
 func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
-	ctx := c.Config.Context()
-	state, err := ctx.AuthenticatedState()
-	if err != nil {
-		return err
-	}
-
-	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+	dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 	if err != nil {
 		return err
 	}
@@ -98,7 +89,23 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 		if err != nil {
 			return err
 		}
-		return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, clusterId, string(body))
+		return fmt.Errorf(`failed to terminate ksqlDB cluster "%s" due to "%s"`, clusterId, string(body))
 	}
 	return nil
+}
+
+func (c *ksqlCommand) mapIdToCluster(args []string, environmentId string) map[string]ksqlv2.KsqldbcmV2Cluster {
+	// NOTE: This function does not return an error for invalid IDs; validation will instead
+	// be done by deletion.ValidateAndConfirmDeletion using this map. This allows for consistent existence
+	// error messaging across all delete commands which support multiple deletion.
+
+	idToCluster := make(map[string]ksqlv2.KsqldbcmV2Cluster)
+	for _, id := range args {
+		cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
+		if err == nil {
+			idToCluster[id] = cluster
+		}
+	}
+
+	return idToCluster
 }

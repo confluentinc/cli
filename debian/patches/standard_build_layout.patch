@@ -1,8 +1,8 @@
---- cli/Makefile	2023-08-15 10:48:47.373424147 -0700
-+++ debian/Makefile	2023-07-07 11:26:58.304825004 -0700
+--- cli/Makefile	2023-12-01 12:48:14.829910531 -0800
++++ debian/Makefile	2023-11-28 15:13:57.494207032 -0800
 @@ -1,120 +1,130 @@
 -SHELL := /bin/bash
--GORELEASER_VERSION := v1.17.2
+-GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
  
 -# Compile natively based on the current system
@@ -133,8 +133,8 @@
  
 -.PHONY: lint-go
 -lint-go:
--	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
--	golangci-lint run --timeout=10m
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2 && \
+-	golangci-lint run --timeout 10m
 -	@echo "✅  golangci-lint"
 -
 -.PHONY: lint-cli
@@ -152,9 +152,9 @@
 -unit-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.8.2 && \
--	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
+-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
 -else
--	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
+-	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
 -endif
 +	chown -R root:root $(DESTDIR)$(PREFIX)
  
@@ -182,7 +182,7 @@
 -	export GOCOVERDIR=test/coverage && \
 -	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
 -	mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
+-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
 -	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 +
@@ -198,7 +198,7 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	go test -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
+-	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  

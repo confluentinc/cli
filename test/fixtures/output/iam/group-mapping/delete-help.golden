@@ -1,12 +1,12 @@
-Delete a group mapping.
+Delete one or more group mappings.
 
 Usage:
-  confluent iam group-mapping delete <id> [flags]
+  confluent iam group-mapping delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
-Delete group mapping "pool-12345":
+Delete group mapping "group-123456":
 
-  $ confluent iam group-mapping delete pool-12345
+  $ confluent iam group-mapping delete group-123456
 
 Flags:
       --context string   CLI context name.

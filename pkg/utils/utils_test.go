@@ -6,8 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 const (
@@ -16,16 +14,6 @@ const (
 	serviceAccountFlagName = "service-account"
 	helpFlagName           = "help"
 )
-
-func TestContains(t *testing.T) {
-	req := require.New(t)
-	req.True(types.Contains([]string{"a"}, "a"))
-}
-
-func TestDoesNotContain(t *testing.T) {
-	req := require.New(t)
-	req.False(types.Contains([]string{}, "a"))
-}
 
 func TestDoesPathExist(t *testing.T) {
 	t.Run("DoesPathExist: empty path returns false", func(t *testing.T) {
@@ -41,46 +29,6 @@ func TestLoadPropertiesFile(t *testing.T) {
 		_, err := LoadPropertiesFile("")
 		req.Error(err)
 	})
-}
-
-func TestUserInviteEmailRegex(t *testing.T) {
-	type RegexTest struct {
-		email   string
-		matched bool
-	}
-	tests := []*RegexTest{
-		{
-			email:   "",
-			matched: false,
-		},
-		{
-			email:   "mtodzo@confluent.io",
-			matched: true,
-		},
-		{
-			email:   "m@t.t.com",
-			matched: true,
-		},
-		{
-			email:   "m@t",
-			matched: true,
-		},
-		{
-			email:   "google.com",
-			matched: false,
-		},
-		{
-			email:   "@images.google.com",
-			matched: false,
-		},
-		{
-			email:   "david.hyde+cli@confluent.io",
-			matched: true,
-		},
-	}
-	for _, test := range tests {
-		require.Equal(t, test.matched, ValidateEmail(test.email))
-	}
 }
 
 func TestIsFlagArg(t *testing.T) {

@@ -11,11 +11,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *Command) newKafkaTopicDeleteCommand() *cobra.Command {
+func (c *command) newKafkaTopicDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <topic>",
-		Short: "Delete a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
+		Use:   "delete <topic-1> [topic-2] ... [topic-n]",
+		Short: "Delete one or more Kafka topics.",
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.kafkaTopicDelete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -30,11 +30,11 @@ func (c *Command) newKafkaTopicDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *Command) kafkaTopicDelete(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicDelete(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
-	return kafka.DeleteTopic(cmd, restClient, context.Background(), args[0], clusterId)
+	return kafka.DeleteTopic(cmd, restClient, context.Background(), args, clusterId)
 }

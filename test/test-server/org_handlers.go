@@ -13,8 +13,8 @@ import (
 )
 
 var OrgEnvironments = []*orgv2.OrgV2Environment{
-	{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
-	{Id: orgv2.PtrString("not-595"), DisplayName: orgv2.PtrString("other")},
+	{Id: orgv2.PtrString("env-596"), DisplayName: orgv2.PtrString("default")},
+	{Id: orgv2.PtrString("env-595"), DisplayName: orgv2.PtrString("other")},
 	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")},
 	{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate")},
 }
@@ -37,6 +37,10 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(environment)
 			require.NoError(t, err)
 		case http.MethodDelete:
+			if id == "env-000" || id == "env-111" {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
 			_, err := io.WriteString(w, "")
 			require.NoError(t, err)
 		case http.MethodPatch:
@@ -65,7 +69,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 
 			environment := &orgv2.OrgV2Environment{
-				Id:          orgv2.PtrString("a-5555"),
+				Id:          orgv2.PtrString("env-5555"),
 				DisplayName: orgv2.PtrString(req.GetDisplayName()),
 			}
 			err = json.NewEncoder(w).Encode(environment)
@@ -92,6 +96,7 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 		organization := &orgv2.OrgV2Organization{
 			Id:          orgv2.PtrString(id),
 			DisplayName: orgv2.PtrString(displayName),
+			JitEnabled:  orgv2.PtrBool(true),
 		}
 		err := json.NewEncoder(w).Encode(organization)
 		require.NoError(t, err)
@@ -104,9 +109,9 @@ func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			organizationList := &orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{
-				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1")},
-				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2")},
-				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3")},
+				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1"), JitEnabled: orgv2.PtrBool(true)},
+				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2"), JitEnabled: orgv2.PtrBool(true)},
+				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3"), JitEnabled: orgv2.PtrBool(true)},
 			}}
 			err := json.NewEncoder(w).Encode(organizationList)
 			require.NoError(t, err)

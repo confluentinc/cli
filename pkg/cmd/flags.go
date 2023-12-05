@@ -9,14 +9,12 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/serdes"
 	"github.com/confluentinc/cli/v3/pkg/types"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
-
-var serializationFormats = []string{"string", "avro", "integer", "jsonschema", "protobuf"}
 
 func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("api-key", "", "API key.")
@@ -81,8 +79,8 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 }
 
 func AddByokProviderFlag(cmd *cobra.Command) {
-	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
-	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string { return []string{"aws", "azure"} })
+	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure", "gcp"}, "or")))
+	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string { return []string{"aws", "azure", "gcp"} })
 }
 
 func AddByokStateFlag(cmd *cobra.Command) {
@@ -135,7 +133,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 			return nil
 		}
 
-		return AutocompleteContexts(command.Config.Config)
+		return AutocompleteContexts(command.Config)
 	})
 }
 
@@ -150,11 +148,11 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.Client, command.V2Client, command.Context)
+		return AutocompleteEnvironments(command.Client, command.V2Client)
 	})
 }
 
-func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) []string {
+func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Client) []string {
 	environments, err := v2Client.ListOrgEnvironments()
 	if err != nil {
 		return nil
@@ -330,6 +328,46 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []str
 	return suggestions
 }
 
+func AddResourceGroupFlag(cmd *cobra.Command) {
+	arr := []string{"management"}
+	cmd.Flags().String("resource-group", "management", "Name of resource group. Currently, only \"management\" is supported.")
+	RegisterFlagCompletionFunc(cmd, "resource-group", func(_ *cobra.Command, _ []string) []string {
+		return arr
+	})
+}
+
+func AutocompleteIpFilters(client *ccloudv2.Client) []string {
+	ipFilters, err := client.ListIamIpFilters()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(ipFilters))
+	for i, ipFilter := range ipFilters {
+		var ipGroupIds []string
+		for _, ipGroup := range ipFilter.GetIpGroups() {
+			ipGroupIds = append(ipGroupIds, ipGroup.GetId())
+		}
+		description := fmt.Sprintf("%s: %s, %s", ipFilter.GetFilterName(), ipFilter.GetResourceGroup(), ipGroupIds)
+		suggestions[i] = fmt.Sprintf("%s\t%s", ipFilter.GetId(), description)
+	}
+	return suggestions
+}
+
+func AutocompleteIpGroups(client *ccloudv2.Client) []string {
+	ipGroups, err := client.ListIamIpGroups()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(ipGroups))
+	for i, ipGroup := range ipGroups {
+		description := fmt.Sprintf("%s: %s", ipGroup.GetGroupName(), ipGroup.GetCidrBlocks())
+		suggestions[i] = fmt.Sprintf("%s\t%s", ipGroup.GetId(), description)
+	}
+	return suggestions
+}
+
 func AddRegionFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	cmd.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
 	RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
@@ -411,13 +449,13 @@ func AddTypeFlag(cmd *cobra.Command) {
 }
 
 func AddKeyFormatFlag(cmd *cobra.Command) {
-	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serializationFormats, "or")))
-	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string { return serializationFormats })
+	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serdes.Formats, "or")))
+	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string { return serdes.Formats })
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
-	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serializationFormats, "or")))
-	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serializationFormats })
+	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serdes.Formats, "or")))
+	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serdes.Formats })
 }
 
 func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
@@ -443,9 +481,27 @@ func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 		return nil
 	}
 
-	suggestions := make([]string, len(links.Data))
-	for i, link := range links.Data {
+	suggestions := make([]string, len(links))
+	for i, link := range links {
 		suggestions[i] = link.GetLinkName()
+	}
+	return suggestions
+}
+
+func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
+	kafkaREST, err := command.GetKafkaREST()
+	if err != nil {
+		return nil
+	}
+
+	consumerGroups, err := kafkaREST.CloudClient.ListKafkaConsumerGroups()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(consumerGroups))
+	for i, consumerGroup := range consumerGroups {
+		suggestions[i] = consumerGroup.GetConsumerGroupId()
 	}
 	return suggestions
 }

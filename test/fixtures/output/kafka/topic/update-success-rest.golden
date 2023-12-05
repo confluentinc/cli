@@ -2,4 +2,4 @@ Updated the following configuration values for topic "topic-exist-rest" (read-on
         Name       |  Value   | Read-Only  
 -------------------+----------+------------
   compression.type | producer | true       
-  retention.ms     |        1 | false      
+  retention.ms     | 1        | false      

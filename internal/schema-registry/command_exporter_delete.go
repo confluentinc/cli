@@ -1,23 +1,19 @@
 package schemaregistry
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newExporterDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <name>",
-		Short: "Delete a schema exporter.",
-		Args:  cobra.ExactArgs(1),
+		Use:   "delete <name-1> [name-2] ... [name-n]",
+		Short: "Delete one or more schema exporters.",
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.exporterDelete,
 	}
 
@@ -52,18 +48,22 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 
 	info, err := client.GetExporterInfo(args[0])
 	if err != nil {
+		return resource.ResourcesNotFoundError(cmd, resource.SchemaExporter, args[0])
+	}
+
+	existenceFunc := func(id string) bool {
+		_, err := client.GetExporterInfo(id)
+		return err == nil
+	}
+
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.SchemaExporter, info.GetName()); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.SchemaExporter, info.Name, info.Name)
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, info.Name); err != nil {
-		return err
+	deleteFunc := func(id string) error {
+		return client.DeleteExporter(id)
 	}
 
-	if err := client.DeleteExporter(args[0]); err != nil {
-		return err
-	}
-
-	output.Printf(errors.DeletedResourceMsg, resource.SchemaExporter, args[0])
-	return nil
+	_, err = deletion.Delete(args, deleteFunc, resource.SchemaExporter)
+	return err
 }

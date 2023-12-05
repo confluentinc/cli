@@ -7,9 +7,12 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
+
+const useAPIKeyMsg = "Using API Key \"%s\".\n"
 
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -39,20 +42,49 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if resource.LookupType(resourceId) != resource.KafkaCluster {
-			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
+			return fmt.Errorf(nonKafkaNotImplementedErrorMsg)
 		}
 		clusterId = resourceId
 	} else {
 		clusterId = c.Context.KafkaClusterContext.FindApiKeyClusterId(args[0])
 		if clusterId == "" {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(`API key "%s" and associated Kafka cluster are not stored in local CLI state`, args[0]), fmt.Sprintf(errors.APIKeyUseFailedSuggestions, args[0]))
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(`API key "%s" and associated Kafka cluster are not stored in local CLI state`, args[0]),
+				fmt.Sprintf(apiKeyUseFailedSuggestions, args[0]),
+			)
 		}
 	}
 
-	if err := c.Context.UseAPIKey(args[0], clusterId); err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, args[0]))
+	if err := c.useAPIKey(args[0], clusterId); err != nil {
+		return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, args[0]))
 	}
 
-	output.Printf(errors.UseAPIKeyMsg, args[0])
+	output.Printf(c.Config.EnableColor, useAPIKeyMsg, args[0])
 	return nil
+}
+
+func (c *command) useAPIKey(apiKey, clusterId string) error {
+	kcc, err := kafka.FindCluster(c.V2Client, c.Context, clusterId)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := kcc.APIKeys[apiKey]; !ok {
+		// check if this is API key exists server-side
+		key, httpResp, err := c.V2Client.GetApiKey(apiKey)
+		if err != nil {
+			return errors.CatchCCloudV2Error(err, httpResp)
+		}
+		// check if the key is for the right cluster
+		if key.Spec.Resource.Id != clusterId {
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(errors.InvalidApiKeyErrorMsg, apiKey, clusterId),
+				fmt.Sprintf(errors.InvalidApiKeySuggestions, clusterId),
+			)
+		}
+		// the requested api-key exists, but the secret is not saved locally
+		return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterId}
+	}
+	kcc.APIKey = apiKey
+	return c.Config.Save()
 }

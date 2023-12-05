@@ -21,13 +21,6 @@ type createOut struct {
 	ApiSecret string `human:"API Secret" serialized:"api_secret"`
 }
 
-var resourceTypeToKind = map[string]string{
-	resource.KafkaCluster:          "Cluster",
-	resource.KsqlCluster:           "ksqlDB",
-	resource.SchemaRegistryCluster: "SchemaRegistry",
-	resource.Cloud:                 "Cloud",
-}
-
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -84,6 +77,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	if serviceAccount == "" {
+		serviceAccount = c.Context.GetCurrentServiceAccount()
+	}
 
 	owner := serviceAccount
 	if owner == "" {
@@ -94,7 +90,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		owner = userId
 	}
 
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
+	resourceType, resourceId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -102,18 +98,15 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
 		Description: apikeysv2.PtrString(description),
 		Owner:       &apikeysv2.ObjectReference{Id: owner},
-		Resource: &apikeysv2.ObjectReference{
-			Id:   clusterId,
-			Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
-		},
+		Resource:    &apikeysv2.ObjectReference{Id: resourceId},
 	}}
 	if resourceType == resource.Cloud {
-		key.Spec.Resource.Id = "cloud"
+		key.Spec.Resource.Id = resource.Cloud
 	}
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
 	if err != nil {
-		return c.catchServiceAccountNotValidError(err, httpResp, clusterId, serviceAccount)
+		return c.catchServiceAccountNotValidError(err, httpResp, resourceId, serviceAccount)
 	}
 
 	userKey := &config.APIKeyPair{
@@ -122,8 +115,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln(errors.APIKeyTime)
-		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
+		output.ErrPrintln(c.Config.EnableColor, "It may take a couple of minutes for the API key to be ready.")
+		output.ErrPrintln(c.Config.EnableColor, "Save the API key and secret. The secret is not retrievable later.")
 	}
 
 	table := output.NewTable(cmd)
@@ -136,8 +129,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if resourceType == resource.KafkaCluster {
-		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
-			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
+		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, resourceId); err != nil {
+			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 		}
 	}
 
@@ -147,12 +140,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 	if use {
 		if resourceType != resource.KafkaCluster {
-			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), "`--use` set but ineffective")
+			return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
 		}
-		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
-			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
+		if err := c.useAPIKey(userKey.Key, resourceId); err != nil {
+			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(errors.UseAPIKeyMsg, userKey.Key)
+		output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

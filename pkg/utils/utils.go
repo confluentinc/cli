@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -12,32 +11,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
-
-func Max(x, y int64) int64 {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func TestEq(a, b []string) bool {
-	// If one is nil, the other must also be nil.
-	if (a == nil) != (b == nil) {
-		return false
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
-}
 
 func DoesPathExist(path string) bool {
 	if path == "" {
@@ -58,7 +31,7 @@ func FileExists(filename string) bool {
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
-		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
+		return nil, fmt.Errorf(errors.InvalidFilePathErrorMsg, path)
 	}
 
 	loader := new(properties.Loader)
@@ -89,11 +62,6 @@ func NormalizeByteArrayNewLines(raw []byte) []byte {
 	normalized := bytes.ReplaceAll(raw, []byte{13, 10}, []byte{10})
 	normalized = bytes.ReplaceAll(normalized, []byte{13}, []byte{10})
 	return normalized
-}
-
-func ValidateEmail(email string) bool {
-	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	return rgxEmail.MatchString(email)
 }
 
 func Abbreviate(s string, maxLength int) string {

@@ -1,12 +1,15 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
+	pacl "github.com/confluentinc/cli/v3/pkg/acl"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
@@ -41,23 +44,23 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return acl.errors
 	}
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 	if err != nil {
-		return c.handleACLError(cmd, err, response)
+		return c.handleAclError(cmd, err, response)
 	}
 
-	promptMsg := errors.DeleteACLConfirmMsg
+	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)
 	if len(bindings) > 1 {
-		promptMsg = errors.DeleteACLsConfirmMsg
+		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.Plural(resource.ACL))
 	}
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil {
 		return err
 	}
 
-	bindings, response, err = c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	bindings, response, err = c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 	if err != nil {
-		return c.handleACLError(cmd, err, response)
+		return c.handleAclError(cmd, err, response)
 	}
 
-	return printACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
+	return printAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }

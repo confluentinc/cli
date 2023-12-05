@@ -3,10 +3,9 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -25,30 +24,21 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 		}),
 	}
 
+	cmd.Flags().String("name", "", "Update name.")
+	cmd.Flags().String("description", "", "Update description.")
 	cmd.Flags().String("ingress", "", "Update ingress limit for quota.")
 	cmd.Flags().String("egress", "", "Update egress limit for quota.")
 	cmd.Flags().StringSlice("add-principals", []string{}, "A comma-separated list of service accounts to add to the quota.")
 	cmd.Flags().StringSlice("remove-principals", []string{}, "A comma-separated list of service accounts to remove from the quota.")
-	cmd.Flags().String("description", "", "Update description.")
-	cmd.Flags().String("name", "", "Update display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsOneRequired("name", "description", "ingress", "egress", "add-principals", "remove-principals")
 
 	return cmd
 }
 
 func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"add-principals",
-		"description",
-		"egress",
-		"ingress",
-		"name",
-		"remove-principals",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
 	quotaId := args[0]
 
 	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
@@ -73,9 +63,9 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	quotaUpdate := kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
+	quotaUpdate := kafkaquotasv1.KafkaQuotasV1ClientQuotaUpdate{
 		Id: &quotaId,
-		Spec: &kafkaquotas.KafkaQuotasV1ClientQuotaSpecUpdate{
+		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpecUpdate{
 			DisplayName: &updateName,
 			Description: &updateDescription,
 			Throughput:  updateThroughput,
@@ -93,7 +83,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	return table.Print()
 }
 
-func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotas.GlobalObjectReference) (*[]kafkaquotas.GlobalObjectReference, error) {
+func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotasv1.GlobalObjectReference) (*[]kafkaquotasv1.GlobalObjectReference, error) {
 	if cmd.Flags().Changed("add-principals") {
 		addPrincipals, err := cmd.Flags().GetStringSlice("add-principals")
 		if err != nil {
@@ -123,7 +113,7 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 	return &updatePrincipals, nil
 }
 
-func getUpdatedThroughput(cmd *cobra.Command, throughput *kafkaquotas.KafkaQuotasV1Throughput) (*kafkaquotas.KafkaQuotasV1Throughput, error) {
+func getUpdatedThroughput(cmd *cobra.Command, throughput *kafkaquotasv1.KafkaQuotasV1Throughput) (*kafkaquotasv1.KafkaQuotasV1Throughput, error) {
 	if cmd.Flags().Changed("ingress") {
 		ingress, err := cmd.Flags().GetString("ingress")
 		if err != nil {

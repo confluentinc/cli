@@ -17,7 +17,8 @@ func (s *CLITestSuite) TestPipeline() {
 
 	tests := []CLITest{
 		{args: "pipeline list", fixture: "pipeline/list.golden"},
-		{args: "pipeline describe pipe-12345", fixture: "pipeline/describe-pass.golden"},
+		{args: "pipeline describe pipe-12345", fixture: "pipeline/describe.golden"},
+		{args: "pipeline describe pipe-12345 -o yaml", fixture: "pipeline/describe-yaml.golden"},
 		{args: fmt.Sprintf("pipeline save pipe-12345 --sql-file %s", testOutputFile.Name()), fixture: "pipeline/save.golden", regex: true},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --use-schema-registry", fixture: "pipeline/create-with-ksql-sr-cluster.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345", fixture: "pipeline/create.golden"},
@@ -27,12 +28,14 @@ func (s *CLITestSuite) TestPipeline() {
 		// secret value with space (e.g. name="some value") also works but cannot be integration tested, due to cli_test.runCommand() is splitting these args by space character
 		{args: "pipeline delete pipe-12345 --force", fixture: "pipeline/delete.golden"},
 		{args: "pipeline delete pipe-12345", input: "testPipeline\n", fixture: "pipeline/delete-prompt.golden"},
+		{args: "pipeline delete pipe-12345 pipe-12346", fixture: "pipeline/delete-multiple-fail.golden", exitCode: 1},
+		{args: "pipeline delete pipe-12345 pipe-54321", input: "n\n", fixture: "pipeline/delete-multiple-refuse.golden"},
+		{args: "pipeline delete pipe-12345 pipe-54321", input: "y\n", fixture: "pipeline/delete-multiple-success.golden"},
 		{args: "pipeline activate pipe-12345", fixture: "pipeline/activate.golden"},
 		{args: "pipeline deactivate pipe-12345", fixture: "pipeline/deactivate.golden"},
 		{args: "pipeline deactivate pipe-12345 --retained-topics topic1", fixture: "pipeline/deactivate.golden"},
 		{args: "pipeline update pipe-12345 --name newName --description newDescription", fixture: "pipeline/update-with-new-name-and-desc.golden"},
 		{args: "pipeline update pipe-12345 --name newName --description newDescription -o json", fixture: "pipeline/update-with-json-output.golden"},
-		{args: "pipeline update pipe-12345 --activation-privilege", fixture: "pipeline/update-activation-privilege.golden"},
 		{args: "pipeline update pipe-12345 --activation-privilege=true", fixture: "pipeline/update-activation-privilege.golden"},
 		{args: "pipeline update pipe-12345 --activation-privilege=false", fixture: "pipeline/update.golden"},
 		{args: fmt.Sprintf("pipeline update pipe-12345 --sql-file %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},

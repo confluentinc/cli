@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -34,18 +34,16 @@ type errorMessage struct {
 	Message   string `json:"message" yaml:"message"`
 }
 
-func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Response) error {
+func HandleMdsAuditLogApiError(err error, response *http.Response) error {
 	if response != nil {
 		switch status := response.StatusCode; status {
 		case http.StatusNotFound:
-			cmd.SilenceUsage = true
-			return errors.NewWrapErrorWithSuggestions(err, errors.UnableToAccessEndpointErrorMsg, errors.UnableToAccessEndpointSuggestions)
+			return errors.NewWrapErrorWithSuggestions(err, "unable to access endpoint", errors.EnsureCpSixPlusSuggestions)
 		case http.StatusForbidden:
 			switch e := err.(type) {
-			case mds.GenericOpenAPIError:
-				cmd.SilenceUsage = true
-				em := errorMessage{}
-				if err = json.Unmarshal(e.Body(), &em); err != nil {
+			case mdsv1.GenericOpenAPIError:
+				em := &errorMessage{}
+				if err := json.Unmarshal(e.Body(), em); err != nil {
 					return err
 				}
 				return fmt.Errorf("%s\n%s", e.Error(), em.Message)

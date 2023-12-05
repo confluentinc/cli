@@ -1,20 +1,15 @@
 package kafka
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
-
-type linkConfigurationOut struct {
-	ConfigName  string   `human:"Config Name" serialized:"config_name"`
-	ConfigValue string   `human:"Config Value" serialized:"config_value"`
-	ReadOnly    bool     `human:"Read-Only" serialized:"read_only"`
-	Sensitive   bool     `human:"Sensitive" serialized:"sensitive"`
-	Source      string   `human:"Source" serialized:"source"`
-	Synonyms    []string `human:"Synonyms" serialized:"synonyms"`
-}
 
 func (c *linkCommand) newConfigurationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -34,35 +29,44 @@ func (c *linkCommand) newConfigurationListCommand() *cobra.Command {
 }
 
 func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error {
-	linkName := args[0]
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	configs, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(linkName)
+	configs, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(args[0])
 	if err != nil {
 		return err
 	}
 
-	list := output.NewList(cmd)
-	list.Add(&linkConfigurationOut{
-		ConfigName:  "dest.cluster.id",
-		ConfigValue: kafkaREST.GetClusterId(),
-		ReadOnly:    true,
-		Sensitive:   true,
+	configList := append(configs, kafkarestv3.ListLinkConfigsResponseData{
+		Name:      "dest.cluster.id",
+		Value:     kafkaREST.GetClusterId(),
+		ReadOnly:  true,
+		Sensitive: true,
 	})
 
-	for _, config := range configs.GetData() {
-		list.Add(&linkConfigurationOut{
-			ConfigName:  config.GetName(),
-			ConfigValue: config.GetValue(),
-			ReadOnly:    config.GetReadOnly(),
-			Sensitive:   config.GetSensitive(),
-			Source:      config.GetSource(),
-			Synonyms:    config.GetSynonyms(),
-		})
+	list := output.NewList(cmd)
+	for _, config := range configList {
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&linkConfigurationHumanOut{
+				ConfigName:  config.GetName(),
+				ConfigValue: config.GetValue(),
+				ReadOnly:    config.GetReadOnly(),
+				Sensitive:   config.GetSensitive(),
+				Source:      config.GetSource(),
+				Synonyms:    strings.Join(config.GetSynonyms(), ", "),
+			})
+		} else {
+			list.Add(&linkConfigurationSerializedOut{
+				ConfigName:  config.GetName(),
+				ConfigValue: config.GetValue(),
+				ReadOnly:    config.GetReadOnly(),
+				Sensitive:   config.GetSensitive(),
+				Source:      config.GetSource(),
+				Synonyms:    config.GetSynonyms(),
+			})
+		}
 	}
 	return list.Print()
 }

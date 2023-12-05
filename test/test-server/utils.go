@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"sort"
 	"time"
 
@@ -138,7 +139,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("DEACTIVATEDUSERKEY"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceId},
+			Owner:       &apikeysv2.ObjectReference{Id: deactivatedUserResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -154,8 +155,8 @@ func apiKeysFilterV2(url *url.URL) *apikeysv2.IamV2ApiKeyList {
 	resourceId := q.Get("spec.resource")
 
 	for _, key := range keyStoreV2 {
-		uidFilter := (uid == "") || (uid == key.Spec.Owner.Id)
-		clusterFilter := (resourceId == "") || containsResourceId(key, resourceId)
+		uidFilter := uid == "" || uid == key.Spec.Owner.GetId()
+		clusterFilter := resourceId == "" || containsResourceId(key, resourceId)
 		if uidFilter && clusterFilter {
 			apiKeys = append(apiKeys, *key)
 		}
@@ -169,12 +170,9 @@ func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
 		return key.Spec.Resource.Id == resourceId
 	}
 
-	for _, resource := range key.Spec.GetResources() {
-		if resource.Id == resourceId {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(key.Spec.GetResources(), func(o apikeysv2.ObjectReference) bool {
+		return o.GetId() == resourceId
+	})
 }
 
 func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
@@ -227,6 +225,19 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 			},
 		},
 		Provider: byokv1.PtrString("Azure"),
+		State:    byokv1.PtrString("AVAILABLE"),
+	}
+
+	byokStoreV1["cck-004"] = &byokv1.ByokV1Key{
+		Id:       byokv1.PtrString("cck-004"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 13, 0, 30, 0, time.UTC))},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1GcpKey: &byokv1.ByokV1GcpKey{
+				KeyId: "projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3",
+				Kind:  "GcpKey",
+			},
+		},
+		Provider: byokv1.PtrString("GCP"),
 		State:    byokv1.PtrString("AVAILABLE"),
 	}
 

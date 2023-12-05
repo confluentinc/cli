@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/browser"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func Login(authURL string, noBrowser bool, connectionName string) (string, string, error) {
@@ -23,8 +23,10 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 	if noBrowser {
 		// no browser flag does not need to launch the server
 		// it prints the url and has the user copy this into their browser instead
-		url := state.getAuthorizationCodeUrl(connectionName, isOkta)
-		fmt.Printf(errors.NoBrowserSSOInstructionsMsg, url)
+		output.Println(false, "Navigate to the following link in your browser to authenticate:")
+		output.Println(false, state.getAuthorizationCodeUrl(connectionName, isOkta))
+		output.Println(false, "")
+		output.Println(false, "After authenticating in your browser, paste the code here:")
 
 		// wait for the user to paste the code
 		// the code should come in the format {state}/{auth0_auth_code}
@@ -33,11 +35,11 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		input := scanner.Text()
 		split := strings.SplitAfterN(input, "/", 2)
 		if len(split) < 2 {
-			return "", "", errors.New(errors.PastedInputErrorMsg)
+			return "", "", fmt.Errorf("pasted input had invalid format")
 		}
 		auth0State := strings.Replace(split[0], "/", "", 1)
 		if !(auth0State == state.SSOProviderState) {
-			return "", "", errors.New(errors.LoginFailedStateParamErrorMsg)
+			return "", "", fmt.Errorf("authentication code either did not contain a state parameter or the state parameter was invalid; login will fail")
 		}
 
 		state.SSOProviderAuthenticationCode = split[1]
@@ -46,16 +48,16 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		// described at https://auth0.com/docs/flows/guides/auth-code-pkce/call-api-auth-code-pkce
 		server := newServer(state)
 		if err := server.startServer(); err != nil {
-			return "", "", errors.Wrap(err, errors.StartHTTPServerErrorMsg)
+			return "", "", fmt.Errorf("unable to start HTTP server: %w", err)
 		}
 
 		// Get authorization code for making subsequent token request
 		url := state.getAuthorizationCodeUrl(connectionName, isOkta)
 		if err := browser.OpenURL(url); err != nil {
-			return "", "", errors.Wrap(err, errors.OpenWebBrowserErrorMsg)
+			return "", "", fmt.Errorf("unable to open web browser for authorization: %w", err)
 		}
 
-		if err = server.awaitAuthorizationCode(30 * time.Second); err != nil {
+		if err := server.awaitAuthorizationCode(30 * time.Second); err != nil {
 			return "", "", err
 		}
 	}

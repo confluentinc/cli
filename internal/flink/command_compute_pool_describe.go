@@ -29,7 +29,10 @@ func (c *command) computePoolDescribe(cmd *cobra.Command, args []string) error {
 		id = args[0]
 	}
 	if id == "" {
-		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or as an argument.")
+		return errors.NewErrorWithSuggestions(
+			"no compute pool selected",
+			"Select a compute pool with `confluent flink compute-pool use` or as an argument.",
+		)
 	}
 
 	environmentId, err := c.Context.EnvironmentId()
@@ -44,12 +47,14 @@ func (c *command) computePoolDescribe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&computePoolOut{
-		IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
-		Id:        computePool.GetId(),
-		Name:      computePool.Spec.GetDisplayName(),
-		Cfu:       computePool.Spec.GetMaxCfu(),
-		Region:    computePool.Spec.GetRegion(),
-		Status:    computePool.Status.GetPhase(),
+		IsCurrent:  computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
+		Id:         computePool.GetId(),
+		Name:       computePool.Spec.GetDisplayName(),
+		CurrentCfu: computePool.Status.GetCurrentCfu(),
+		MaxCfu:     computePool.Spec.GetMaxCfu(),
+		Cloud:      computePool.Spec.GetCloud(),
+		Region:     computePool.Spec.GetRegion(),
+		Status:     computePool.Status.GetPhase(),
 	})
 	return table.Print()
 }

@@ -6,6 +6,8 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
+const badResourceIdErrorMsg = `failed parsing resource ID: missing prefix "%s-" is required`
+
 var authMethodFormats = map[string]string{
 	"AUTH_TYPE_LOCAL":   "Username/Password",
 	"AUTH_TYPE_SSO":     "SSO",
@@ -46,6 +48,10 @@ func (c *userCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *userCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func (c *Command) newKafkaTopicCommand() *cobra.Command {
+func (c *command) newKafkaTopicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Run Kafka topic related commands.",
@@ -56,8 +57,16 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	}
 
 	if len(clusterListData.Data) < 1 {
-		return nil, "", errors.New("failed to obtain local cluster information")
+		return nil, "", fmt.Errorf("failed to obtain local cluster information")
 	}
 
 	return kafkaRestClient, clusterListData.Data[0].ClusterId, nil
+}
+
+func (c *command) getPlaintextBootstrapServers() string {
+	portStrings := make([]string, 0, len(c.Config.LocalPorts.PlaintextPorts))
+	for _, port := range c.Config.LocalPorts.PlaintextPorts {
+		portStrings = append(portStrings, ":"+port)
+	}
+	return strings.Join(portStrings, ",")
 }

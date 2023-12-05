@@ -11,13 +11,14 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/keystore"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
+	keystore     *keystore.ConfigKeyStore
 	flagResolver pcmd.FlagResolver
 }
 
@@ -27,7 +28,16 @@ const (
 	updateOperation = "updating"
 )
 
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
+const (
+	apiKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
+	apiKeyUseFailedErrorMsg             = "unable to set active API key"
+	apiKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
+	nonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
+	refuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use the `--force` flag."
+	unableToStoreApiKeyErrorMsg         = "unable to store API key locally: %w"
+)
+
+func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
 		Short:       "Manage API keys.",
@@ -36,7 +46,6 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 
 	c := &command{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-		keystore:                keystore,
 		flagResolver:            resolver,
 	}
 
@@ -129,6 +138,10 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -190,7 +203,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	case presource.Cloud:
 		break
 	case presource.KafkaCluster:
-		cluster, err := c.Context.FindKafkaCluster(resource)
+		cluster, err := kafka.FindCluster(c.V2Client, c.Context, resource)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
@@ -207,14 +220,15 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 		}
 		clusterId = cluster.GetId()
 	case presource.SchemaRegistryCluster:
-		cluster, err := c.Context.SchemaRegistryCluster(cmd)
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return "", "", "", err
+		}
+		cluster, err := v2Client.GetSchemaRegistryClusterById(resource, environmentId)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
-		clusterId = cluster.Id
-		if cluster.SrCredentials != nil {
-			apiKey = cluster.SrCredentials.Key
-		}
+		clusterId = cluster.GetId()
 	default:
 		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resource)
 	}

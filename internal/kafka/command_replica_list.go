@@ -83,62 +83,57 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
 
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
-	if err != nil {
-		return err
-	}
-
-	var replicaStatusDataList kafkarestv3.ReplicaStatusDataList
+	var replicas kafkarestv3.ReplicaStatusDataList
 	var resp *http.Response
 	if partitionId != -1 {
-		replicaStatusDataList, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(restContext, clusterId, topic, partitionId)
+		replicas, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(restContext, clusterId, topic, partitionId)
 	} else {
-		replicaStatusDataList, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(restContext, clusterId, topic)
+		replicas, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(restContext, clusterId, topic)
 	}
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, data := range replicaStatusDataList.Data {
+	for _, replica := range replicas.Data {
 		if output.GetFormat(cmd) == output.Human {
 			list.Add(&replicaHumanOut{
-				ClusterId:          data.ClusterId,
-				TopicName:          data.TopicName,
-				BrokerId:           data.BrokerId,
-				PartitionId:        data.PartitionId,
-				IsLeader:           data.IsLeader,
-				IsObserver:         data.IsObserver,
-				IsIsrEligible:      data.IsIsrEligible,
-				IsInIsr:            data.IsInIsr,
-				IsCaughtUp:         data.IsCaughtUp,
-				LogStartOffset:     data.LogStartOffset,
-				LogEndOffset:       data.LogEndOffset,
-				LastCaughtUpTimeMs: utils.FormatUnixTime(data.LastCaughtUpTimeMs),
-				LastFetchTimeMs:    utils.FormatUnixTime(data.LastFetchTimeMs),
-				LinkName:           data.LinkName,
+				ClusterId:          replica.ClusterId,
+				TopicName:          replica.TopicName,
+				BrokerId:           replica.BrokerId,
+				PartitionId:        replica.PartitionId,
+				IsLeader:           replica.IsLeader,
+				IsObserver:         replica.IsObserver,
+				IsIsrEligible:      replica.IsIsrEligible,
+				IsInIsr:            replica.IsInIsr,
+				IsCaughtUp:         replica.IsCaughtUp,
+				LogStartOffset:     replica.LogStartOffset,
+				LogEndOffset:       replica.LogEndOffset,
+				LastCaughtUpTimeMs: utils.FormatUnixTime(replica.LastCaughtUpTimeMs),
+				LastFetchTimeMs:    utils.FormatUnixTime(replica.LastFetchTimeMs),
+				LinkName:           replica.LinkName,
 			})
 		} else {
 			list.Add(&replicaSerializedOut{
-				ClusterId:          data.ClusterId,
-				TopicName:          data.TopicName,
-				BrokerId:           data.BrokerId,
-				PartitionId:        data.PartitionId,
-				IsLeader:           data.IsLeader,
-				IsObserver:         data.IsObserver,
-				IsIsrEligible:      data.IsIsrEligible,
-				IsInIsr:            data.IsInIsr,
-				IsCaughtUp:         data.IsCaughtUp,
-				LogStartOffset:     data.LogStartOffset,
-				LogEndOffset:       data.LogEndOffset,
-				LastCaughtUpTimeMs: data.LastCaughtUpTimeMs,
-				LastFetchTimeMs:    data.LastFetchTimeMs,
-				LinkName:           data.LinkName,
+				ClusterId:          replica.ClusterId,
+				TopicName:          replica.TopicName,
+				BrokerId:           replica.BrokerId,
+				PartitionId:        replica.PartitionId,
+				IsLeader:           replica.IsLeader,
+				IsObserver:         replica.IsObserver,
+				IsIsrEligible:      replica.IsIsrEligible,
+				IsInIsr:            replica.IsInIsr,
+				IsCaughtUp:         replica.IsCaughtUp,
+				LogStartOffset:     replica.LogStartOffset,
+				LogEndOffset:       replica.LogEndOffset,
+				LastCaughtUpTimeMs: replica.LastCaughtUpTimeMs,
+				LastFetchTimeMs:    replica.LastFetchTimeMs,
+				LinkName:           replica.LinkName,
 			})
 		}
 	}

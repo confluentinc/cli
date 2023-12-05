@@ -9,11 +9,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type identityPoolCommand struct {
+type poolCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type identityPoolOut struct {
+type poolOut struct {
 	Id            string `human:"ID" serialized:"id"`
 	DisplayName   string `human:"Name" serialized:"name"`
 	Description   string `human:"Description" serialized:"description"`
@@ -28,21 +28,20 @@ func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	c := &identityPoolCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &poolCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
-	cmd.AddCommand(c.newUseCommand())
 
 	return cmd
 }
 
 func printIdentityPool(cmd *cobra.Command, pool identityproviderv2.IamV2IdentityPool) error {
 	table := output.NewTable(cmd)
-	table.Add(&identityPoolOut{
+	table.Add(&poolOut{
 		Id:            pool.GetId(),
 		DisplayName:   pool.GetDisplayName(),
 		Description:   pool.GetDescription(),
@@ -52,11 +51,15 @@ func printIdentityPool(cmd *cobra.Command, pool identityproviderv2.IamV2Identity
 	return table.Print()
 }
 
-func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *poolCommand) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *poolCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
