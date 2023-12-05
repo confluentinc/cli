@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -368,29 +369,48 @@ func AutocompleteIpGroups(client *ccloudv2.Client) []string {
 	return suggestions
 }
 
-func AddRegionFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
+func AddRegionFlagKafka(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("region", "", `Cloud region for Kafka (use "confluent kafka region list" to see all).`)
 	RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
 
 		cloud, _ := cmd.Flags().GetString("cloud")
-		return autocompleteRegions(command.Client, cloud)
+
+		regions, err := kafka.ListRegions(command.Client, cloud)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.RegionId
+		}
+		return suggestions
 	})
 }
 
-func autocompleteRegions(client *ccloudv1.Client, cloud string) []string {
-	regions, err := kafka.ListRegions(client, cloud)
-	if err != nil {
-		return nil
-	}
+func AddRegionFlagFlink(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("region", "", `Cloud region for Flink (use "confluent flink region list" to see all).`)
+	RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
 
-	suggestions := make([]string, len(regions))
-	for i, region := range regions {
-		suggestions[i] = region.RegionId
-	}
-	return suggestions
+		cloud, _ := cmd.Flags().GetString("cloud")
+
+		regions, err := command.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.GetRegionName()
+		}
+		return suggestions
+	})
 }
 
 func AddSchemaTypeFlag(cmd *cobra.Command) {

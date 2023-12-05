@@ -19,13 +19,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-var resourceKindToType = map[string]string{
-	"Cluster":        "kafka",
-	"ksqlDB":         "ksql",
-	"SchemaRegistry": "schema-registry",
-	"Cloud":          "cloud",
-}
-
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -138,8 +131,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Description:  apiKey.Spec.GetDescription(),
 				OwnerId:      ownerId,
 				OwnerEmail:   email,
-				ResourceType: resourceKindToType[resource.GetKind()],
-				ResourceId:   getApiKeyResourceId(resource.GetId()),
+				ResourceType: getResourceType(resource),
+				ResourceId:   getResourceId(resource.GetId()),
 				Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}
@@ -150,7 +143,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[string]bool {
 	saMap := make(map[string]bool)
 	for _, sa := range serviceAccounts {
-		saMap[*sa.Id] = true
+		saMap[sa.GetId()] = true
 	}
 	return saMap
 }
@@ -189,8 +182,8 @@ func (c *command) getEmail(resourceId string, auditLogServiceAccountId int32, re
 	return "<deactivated user>"
 }
 
-func getApiKeyResourceId(id string) string {
-	if id == "cloud" {
+func getResourceId(id string) string {
+	if id == resource.Cloud {
 		return ""
 	}
 	return id
