@@ -8,6 +8,7 @@ Available Commands:
   delete      Delete a network link service.
   describe    Describe a network link service.
   list        List network link services.
+  update      Update an existing network link service.
 
 Global Flags:
   -h, --help            Show help for this command.
