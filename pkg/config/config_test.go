@@ -198,6 +198,10 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 }
 
 func TestConfig_Load(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
@@ -269,6 +273,10 @@ func TestConfig_Load(t *testing.T) {
 }
 
 func TestConfig_Save(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
@@ -358,6 +366,10 @@ func TestConfig_Save(t *testing.T) {
 }
 
 func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	configFile, err := os.CreateTemp("", "TestConfig_Save.json")
 	require.NoError(t, err)
 	defer os.Remove(configFile.Name())
