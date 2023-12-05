@@ -119,12 +119,12 @@ func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	req := srsdk.CreateExporterRequest{
-		Name:                args[0],
-		Subjects:            subjects,
-		SubjectRenameFormat: subjectFormat,
-		ContextType:         contextType,
-		Context:             contextName,
-		Config:              configMap,
+		Name:                srsdk.PtrString(args[0]),
+		Subjects:            &subjects,
+		SubjectRenameFormat: srsdk.PtrString(subjectFormat),
+		ContextType:         srsdk.PtrString(contextType),
+		Context:             srsdk.PtrString(contextName),
+		Config:              &configMap,
 	}
 
 	if _, err := client.CreateExporter(req); err != nil {

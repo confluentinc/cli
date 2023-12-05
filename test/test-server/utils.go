@@ -228,6 +228,19 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 		State:    byokv1.PtrString("AVAILABLE"),
 	}
 
+	byokStoreV1["cck-004"] = &byokv1.ByokV1Key{
+		Id:       byokv1.PtrString("cck-004"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 13, 0, 30, 0, time.UTC))},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1GcpKey: &byokv1.ByokV1GcpKey{
+				KeyId: "projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3",
+				Kind:  "GcpKey",
+			},
+		},
+		Provider: byokv1.PtrString("GCP"),
+		State:    byokv1.PtrString("AVAILABLE"),
+	}
+
 	return byokStoreV1
 }
 
