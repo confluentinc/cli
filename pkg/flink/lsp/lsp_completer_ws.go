@@ -61,7 +61,6 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 		if !isConnected {
 			var err error
 			w.lspClient, w.conn, err = newLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId)
-			// if we had an error during the refresh, we return to avoid infinite retries
 			if err != nil {
 				w.lspClient.ShutdownAndExit()
 			}
@@ -88,7 +87,12 @@ func NewLSPClientWS(getAuthToken func() string, baseUrl, organizationId, environ
 }
 
 func newLSPConnection(baseUrl, authToken, organizationId, environmentId string) (LSPInterface, *jsonrpc2.Conn, error) {
-	stream := newWSObjectStream(baseUrl, authToken, organizationId, environmentId)
+	stream, err := newWSObjectStream(baseUrl, authToken, organizationId, environmentId)
+	if err != nil {
+		log.CliLogger.Debugf("Error dialing websocket: %v\n", err)
+		return nil, nil, err
+	}
+
 	conn := jsonrpc2.NewConn(
 		context.Background(),
 		stream,
@@ -113,7 +117,7 @@ func newLSPConnection(baseUrl, authToken, organizationId, environmentId string) 
 	return lspClient, conn, nil
 }
 
-func newWSObjectStream(baseUrl, authToken, organizationId, environmentId string) jsonrpc2.ObjectStream {
+func newWSObjectStream(baseUrl, authToken, organizationId, environmentId string) (jsonrpc2.ObjectStream, error) {
 	requestHeaders := http.Header{}
 	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
 	requestHeaders.Add("Organization-ID", organizationId)
@@ -121,7 +125,7 @@ func newWSObjectStream(baseUrl, authToken, organizationId, environmentId string)
 	socketUrl := fmt.Sprintf("wss://%s/lsp", baseUrl)
 	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, requestHeaders)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return websocket2.NewObjectStream(conn)
+	return websocket2.NewObjectStream(conn), nil
 }
