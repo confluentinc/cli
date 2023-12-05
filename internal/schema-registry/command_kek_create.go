@@ -1,8 +1,6 @@
 package schemaregistry
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
@@ -22,6 +21,7 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	// all descriptions need to be updated. @RobertY
+	// what are required?
 	cmd.Flags().String("name", "", "Name of the KEK.")
 	cmd.Flags().String("kms-type", "", "The type of KMS.")
 	cmd.Flags().String("kms-key-id", "", "The key ID of KMS.")
@@ -36,7 +36,7 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		addCaLocationFlag(cmd)
 		addSchemaRegistryEndpointFlag(cmd) // guess it's needed?
 	}
-	pcmd.AddOutputFlag(cmd) // ? hmm?
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -72,7 +72,7 @@ func (c *command) kekCreate(cmd *cobra.Command, _ []string) error {
 	for _, item := range kmsPropsSlices {
 		pair := strings.Split(item, ":")
 		if len(pair) != 2 {
-			return errors.New("ill format") // updated this...
+			return errors.NewErrorWithSuggestions(kmsPropsFormatErrorMsg, kmsPropsFormatSuggestions)
 		}
 		kmsProps[pair[0]] = pair[1]
 	}
@@ -97,6 +97,9 @@ func (c *command) kekCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	res, err := client.CreateKek(name, createReq)
-	fmt.Printf("%+v\n", res) // do we need a list/table? Or just print "successfully created dek <id>"
-	return err
+	if err != nil {
+		return err
+	}
+
+	return printKek(cmd, res)
 }

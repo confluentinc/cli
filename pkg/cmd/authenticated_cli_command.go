@@ -240,6 +240,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			}
 			c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, apiKey)
 		} else {
+			fmt.Println("hi here")
 			c.schemaRegistryClient = schemaregistry.NewClient(configuration, c.Config)
 		}
 

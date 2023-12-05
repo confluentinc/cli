@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -10,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 func (c *command) newKekUpdateCommand(cfg *config.Config) *cobra.Command {
@@ -32,7 +32,9 @@ func (c *command) newKekUpdateCommand(cfg *config.Config) *cobra.Command {
 		addCaLocationFlag(cmd)
 		addSchemaRegistryEndpointFlag(cmd) // guess it's needed?
 	}
-	pcmd.AddOutputFlag(cmd) // ? hmm?
+	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsOneRequired("kms-props", "doc", "shared")
 
 	return cmd
 }
@@ -64,7 +66,7 @@ func (c *command) kekUpdate(cmd *cobra.Command, args []string) error {
 		for _, item := range kmsPropsSlices {
 			pair := strings.Split(item, ":")
 			if len(pair) != 2 {
-				return errors.New("ill format") // updated this...
+				return errors.NewErrorWithSuggestions(kmsPropsFormatErrorMsg, kmsPropsFormatSuggestions)
 			}
 			kmsProps[pair[0]] = pair[1]
 		}
