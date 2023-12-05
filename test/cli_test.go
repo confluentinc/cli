@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -85,9 +84,9 @@ func (s *CLITestSuite) SetupSuite() {
 	output, err := exec.Command("make", "build-for-integration-test").CombinedOutput()
 	req.NoError(err, string(output))
 
-	if runtime.GOOS == "windows" {
-		testBin += ".exe"
-	}
+	// if runtime.GOOS == "windows" {
+	// 	testBin += ".exe"
+	// }
 
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
