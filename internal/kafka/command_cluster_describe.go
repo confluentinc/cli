@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Provider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
@@ -29,7 +29,7 @@ type describeStruct struct {
 	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress"`
 	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress"`
 	Storage            string `human:"Storage" serialized:"storage"`
-	ServiceProvider    string `human:"Provider" serialized:"provider"`
+	Provider           string `human:"Provider" serialized:"provider"`
 	Region             string `human:"Region" serialized:"region"`
 	Availability       string `human:"Availability" serialized:"availability"`
 	Status             string `human:"Status" serialized:"status"`
@@ -98,7 +98,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	out := convertClusterToDescribeStruct(cluster, c.Context.Context)
+	out := convertClusterToDescribeStruct(cluster, c.Context)
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
@@ -129,7 +129,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		IngressLimit:       ingress,
 		EgressLimit:        egress,
 		Storage:            clusterStorage,
-		ServiceProvider:    strings.ToLower(cluster.Spec.GetCloud()),
+		Provider:           strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
 		Status:             getCmkClusterStatus(cluster),

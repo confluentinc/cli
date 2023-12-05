@@ -20,7 +20,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
@@ -43,7 +42,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 		DisplayName:  cmkv2.PtrString("gcp-byok-test"),
 		Cloud:        cmkv2.PtrString("gcp"),
 		Region:       cmkv2.PtrString("us-central1"),
-		Config:       setCmkClusterConfig("dedicated", 1, "xyz"),
+		Config:       setCmkClusterConfig("dedicated", 1),
 		Availability: cmkv2.PtrString(lowAvailability),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),
@@ -125,7 +124,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	cfg := config.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
 	c := &clusterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	c.Context = dynamicconfig.NewDynamicContext(cfg.Context())
+	c.Context = cfg.Context()
 	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

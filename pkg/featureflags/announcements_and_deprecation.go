@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -109,8 +108,8 @@ func DeprecateFlags(cmd *cobra.Command, flags []string) {
 	}
 }
 
-func PrintAnnouncements(cfg *config.Config, featureFlag string, ctx *dynamicconfig.DynamicContext, cmd *cobra.Command) {
-	flagResponse := Manager.JsonVariation(featureFlag, ctx, config.CliLaunchDarklyClient, true, []any{})
+func PrintAnnouncements(cfg *config.Config, featureFlag string, cmd *cobra.Command) {
+	flagResponse := Manager.JsonVariation(featureFlag, cfg.Context(), config.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := GetAnnouncementsOrDeprecation(flagResponse)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {

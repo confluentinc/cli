@@ -66,19 +66,16 @@ func UpdateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 	data := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configMap))
 	i := 0
 	for key, val := range configMap {
-		v := val
+		val := val
 		data[i] = kafkarestv3.AlterConfigBatchRequestDataData{
 			Name:  key,
-			Value: &v,
+			Value: &val,
 		}
 		i++
 	}
 
-	opts := &kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
-		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
-	}
-	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName, opts)
-	if err != nil {
+	opts := &kafkarestv3.UpdateKafkaTopicConfigBatchOpts{AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data})}
+	if resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName, opts); err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 

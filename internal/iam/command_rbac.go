@@ -21,7 +21,7 @@ var (
 	workloadNamespace       = optional.NewString("workload")
 )
 
-func newRBACCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newRbacCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rbac",
 		Short: "Manage RBAC permissions.",

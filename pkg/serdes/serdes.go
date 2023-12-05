@@ -7,20 +7,34 @@ import (
 )
 
 const (
-	AvroSchemaName     string = "avro"
-	IntegerSchemaName  string = "integer"
-	JsonSchemaName     string = "jsonschema"
-	ProtobufSchemaName string = "protobuf"
-	StringSchemaName   string = "string"
+	avroSchemaName     = "avro"
+	doubleSchemaName   = "double"
+	integerSchemaName  = "integer"
+	jsonSchemaName     = "jsonschema"
+	protobufSchemaName = "protobuf"
+	stringSchemaName   = "string"
 )
+
+var Formats = []string{
+	stringSchemaName,
+	avroSchemaName,
+	doubleSchemaName,
+	integerSchemaName,
+	jsonSchemaName,
+	protobufSchemaName,
+}
+
+var SchemaBasedFormats = []string{
+	avroSchemaName,
+	jsonSchemaName,
+	protobufSchemaName,
+}
 
 const (
-	AvroSchemaBackendName     string = "AVRO"
-	JsonSchemaBackendName     string = "JSON"
-	ProtobufSchemaBackendName string = "PROTOBUF"
+	avroSchemaBackendName     = "AVRO"
+	jsonSchemaBackendName     = "JSON"
+	protobufSchemaBackendName = "PROTOBUF"
 )
-
-var SchemaBasedFormats = []string{"avro", "jsonschema", "protobuf"}
 
 type SerializationProvider interface {
 	LoadSchema(string, map[string]string) error
@@ -36,12 +50,12 @@ type DeserializationProvider interface {
 func FormatTranslation(backendValueFormat string) (string, error) {
 	var cliValueFormat string
 	switch backendValueFormat {
-	case "", AvroSchemaBackendName:
-		cliValueFormat = AvroSchemaName
-	case ProtobufSchemaBackendName:
-		cliValueFormat = ProtobufSchemaName
-	case JsonSchemaBackendName:
-		cliValueFormat = JsonSchemaName
+	case "", avroSchemaBackendName:
+		cliValueFormat = avroSchemaName
+	case protobufSchemaBackendName:
+		cliValueFormat = protobufSchemaName
+	case jsonSchemaBackendName:
+		cliValueFormat = jsonSchemaName
 	default:
 		return "", fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
@@ -50,15 +64,17 @@ func FormatTranslation(backendValueFormat string) (string, error) {
 
 func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
 	switch valueFormat {
-	case AvroSchemaName:
+	case avroSchemaName:
 		return new(AvroSerializationProvider), nil
-	case IntegerSchemaName:
+	case doubleSchemaName:
+		return new(DoubleSerializationProvider), nil
+	case integerSchemaName:
 		return new(IntegerSerializationProvider), nil
-	case JsonSchemaName:
+	case jsonSchemaName:
 		return new(JsonSerializationProvider), nil
-	case ProtobufSchemaName:
+	case protobufSchemaName:
 		return new(ProtobufSerializationProvider), nil
-	case StringSchemaName:
+	case stringSchemaName:
 		return new(StringSerializationProvider), nil
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
@@ -67,15 +83,17 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 
 func GetDeserializationProvider(valueFormat string) (DeserializationProvider, error) {
 	switch valueFormat {
-	case AvroSchemaName:
+	case avroSchemaName:
 		return new(AvroDeserializationProvider), nil
-	case IntegerSchemaName:
+	case doubleSchemaName:
+		return new(DoubleDeserializationProvider), nil
+	case integerSchemaName:
 		return new(IntegerDeserializationProvider), nil
-	case JsonSchemaName:
+	case jsonSchemaName:
 		return new(JsonSchemaDeserializationProvider), nil
-	case ProtobufSchemaName:
+	case protobufSchemaName:
 		return new(ProtobufDeserializationProvider), nil
-	case StringSchemaName:
+	case stringSchemaName:
 		return new(StringDeserializationProvider), nil
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)

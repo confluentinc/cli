@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -43,7 +44,7 @@ func (c *command) newSaveCommand() *cobra.Command {
 }
 
 func (c *command) save(cmd *cobra.Command, args []string) error {
-	cluster, err := c.Context.GetKafkaClusterForCommand(c.V2Client)
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if sqlFile != "" && sqlFile != sqlFileTemplate {
-		path = getPath(sqlFile)
+		path = expandHomeDir(sqlFile)
 	}
 
 	if err := os.WriteFile(path, []byte(pipeline.Spec.SourceCode.GetSql()), 0644); err != nil {
@@ -76,11 +77,12 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func getPath(sqlFile string) string {
-	if strings.HasPrefix(sqlFile, "~") {
+func expandHomeDir(path string) string {
+	if strings.HasPrefix(path, "~") {
 		if home, err := os.UserHomeDir(); err == nil {
-			return strings.Replace(sqlFile, "~", home, 1)
+			return strings.Replace(path, "~", home, 1)
 		}
 	}
-	return sqlFile
+
+	return path
 }

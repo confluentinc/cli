@@ -158,8 +158,8 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		UsedSchemas:           numSchemas,
 		AvailableSchemas:      availableSchemas,
 		FreeSchemasLimit:      freeSchemasLimit,
-		GlobalCompatibility:   config.CompatibilityLevel,
-		Mode:                  mode.Mode,
+		GlobalCompatibility:   config.GetCompatibilityLevel(),
+		Mode:                  mode.GetMode(),
 	})
 	return table.Print()
 }

@@ -23,7 +23,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/errors/flink"
 	flinkconfig "github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
@@ -272,7 +271,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: http.StatusInternalServerError}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
-	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{}, flinkError).AnyTimes()
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return([]flinkgatewayv1beta1.SqlV1beta1StatementException{}, flinkError).AnyTimes()
 
 	// Schedule routine to cancel context
 	go func() {
@@ -1160,9 +1159,7 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 		OrganizationId: "orgId",
 		EnvironmentId:  "envId",
 		ComputePoolId:  "computePoolId",
-		Context: &dynamicconfig.DynamicContext{
-			Context: &config.Context{State: contextState, Config: &config.Config{}},
-		},
+		Context:        &config.Context{State: contextState, Config: &config.Config{}},
 	}
 	store := Store{
 		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
@@ -1436,11 +1433,9 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 	}
 	exception1 := "Exception 1"
 	exception2 := "Exception 2"
-	exceptionsResponse := flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{
-		Data: []flinkgatewayv1beta1.SqlV1beta1StatementException{
-			{Stacktrace: &exception1},
-			{Stacktrace: &exception2},
-		},
+	exceptionsResponse := []flinkgatewayv1beta1.SqlV1beta1StatementException{
+		{Stacktrace: &exception1},
+		{Stacktrace: &exception2},
 	}
 	expectedError := &types.StatementError{
 		Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
@@ -1480,11 +1475,9 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 	}
 	exception1 := "Exception 1"
 	exception2 := "Exception 2"
-	exceptionsResponse := flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{
-		Data: []flinkgatewayv1beta1.SqlV1beta1StatementException{
-			{Stacktrace: &exception1},
-			{Stacktrace: &exception2},
-		},
+	exceptionsResponse := []flinkgatewayv1beta1.SqlV1beta1StatementException{
+		{Stacktrace: &exception1},
+		{Stacktrace: &exception2},
 	}
 
 	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil).Times(2)
@@ -1565,14 +1558,10 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 
 	statementName := "Test Statement"
 	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
-		Name: &statementName,
-		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
-			Phase: "FAILED",
-		},
+		Name:   &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{Phase: "FAILED"},
 	}
-	exceptionsResponse := flinkgatewayv1beta1.SqlV1beta1StatementExceptionList{
-		Data: []flinkgatewayv1beta1.SqlV1beta1StatementException{},
-	}
+	exceptionsResponse := []flinkgatewayv1beta1.SqlV1beta1StatementException{}
 
 	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
 

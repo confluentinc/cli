@@ -3,6 +3,8 @@ package kafka
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -14,12 +16,20 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type getReassignmentOut struct {
-	ClusterId        string  `human:"Cluster" serialized:"cluster_id"`
-	TopicName        string  `human:"Topic Name" serialized:"topic_name"`
-	PartitionId      int32   `human:"Partition ID" serialized:"partition_id"`
-	AddingReplicas   []int32 `human:"Adding Replicas" serialized:"adding_replicas"`
-	RemovingReplicas []int32 `human:"Removing Replicas" serialized:"removing_replicas"`
+type getReassignmentOutHuman struct {
+	ClusterId        string `human:"Cluster"`
+	TopicName        string `human:"Topic Name"`
+	PartitionId      int32  `human:"Partition ID"`
+	AddingReplicas   string `human:"Adding Replicas"`
+	RemovingReplicas string `human:"Removing Replicas"`
+}
+
+type getReassignmentOutSerialized struct {
+	ClusterId        string  `serialized:"cluster_id"`
+	TopicName        string  `serialized:"topic_name"`
+	PartitionId      int32   `serialized:"partition_id"`
+	AddingReplicas   []int32 `serialized:"adding_replicas"`
+	RemovingReplicas []int32 `serialized:"removing_replicas"`
 }
 
 func (c *partitionCommand) newReassignmentListCommand() *cobra.Command {
@@ -62,7 +72,7 @@ func (c *partitionCommand) reassignmentList(cmd *cobra.Command, args []string) e
 	if err != nil {
 		return err
 	}
-	var reassignmentListResp kafkarestv3.ReassignmentDataList
+	var reassignments kafkarestv3.ReassignmentDataList
 	var resp *http.Response
 	if len(args) > 0 {
 		partitionId, err := partitionIdFromArg(args)
@@ -78,26 +88,44 @@ func (c *partitionCommand) reassignmentList(cmd *cobra.Command, args []string) e
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 		if reassignmentGetResp.Kind != "" {
-			reassignmentListResp.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
+			reassignments.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
 		}
 	} else if topic != "" {
-		reassignmentListResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsReassignmentGet(restContext, clusterId, topic)
+		reassignments, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsReassignmentGet(restContext, clusterId, topic)
 	} else {
-		reassignmentListResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsPartitionsReassignmentGet(restContext, clusterId)
+		reassignments, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsPartitionsReassignmentGet(restContext, clusterId)
 	}
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, reassignment := range reassignmentListResp.Data {
-		list.Add(&getReassignmentOut{
-			ClusterId:        reassignment.ClusterId,
-			TopicName:        reassignment.TopicName,
-			PartitionId:      reassignment.PartitionId,
-			AddingReplicas:   reassignment.AddingReplicas,
-			RemovingReplicas: reassignment.RemovingReplicas,
-		})
+	for _, reassignment := range reassignments.Data {
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&getReassignmentOutHuman{
+				ClusterId:        reassignment.ClusterId,
+				TopicName:        reassignment.TopicName,
+				PartitionId:      reassignment.PartitionId,
+				AddingReplicas:   join(reassignment.AddingReplicas),
+				RemovingReplicas: join(reassignment.RemovingReplicas),
+			})
+		} else {
+			list.Add(&getReassignmentOutSerialized{
+				ClusterId:        reassignment.ClusterId,
+				TopicName:        reassignment.TopicName,
+				PartitionId:      reassignment.PartitionId,
+				AddingReplicas:   reassignment.AddingReplicas,
+				RemovingReplicas: reassignment.RemovingReplicas,
+			})
+		}
 	}
 	return list.Print()
+}
+
+func join(replicas []int32) string {
+	s := make([]string, len(replicas))
+	for i, replica := range replicas {
+		s[i] = strconv.Itoa(int(replica))
+	}
+	return strings.Join(s, ", ")
 }

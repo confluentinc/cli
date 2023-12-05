@@ -1,0 +1,8 @@
+[WARN] 1.2.3.4/12 is marked for addition and deletion
+[WARN] 1.2.3.4/12 is marked for deletion but does not exist
++-------------+--------------------------------+
+| ID          | ipg-wjnde                      |
+| Name        | new-demo-group                 |
+| CIDR blocks | 147.150.200.0/24,              |
+|             | 168.150.200.0/24               |
++-------------+--------------------------------+
