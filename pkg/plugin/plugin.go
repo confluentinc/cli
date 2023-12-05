@@ -74,8 +74,15 @@ func nameFromEntry(entry os.DirEntry) string {
 
 func isExecutable(entry fs.DirEntry) bool {
 	if runtime.GOOS == "windows" {
+		executableExtensions := filepath.SplitList(os.Getenv("PATHEXT"))
 		extension := strings.ToUpper(filepath.Ext(entry.Name()))
-		return slices.Contains(filepath.SplitList(os.Getenv("PATHEXT")), extension)
+
+		// Hardcode supported plugin types that may not show up in this list
+		if !slices.Contains(executableExtensions, ".PY") {
+			executableExtensions = append(executableExtensions, ".PY")
+		}
+
+		return slices.Contains(executableExtensions, extension)
 	}
 
 	fileInfo, err := entry.Info()
