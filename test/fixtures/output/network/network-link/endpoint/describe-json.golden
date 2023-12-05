@@ -1,0 +1,9 @@
+{
+  "id": "nle-123456",
+  "name": "my-network-link-endpoint",
+  "network": "n-abcde1",
+  "environment": "env-00000",
+  "description": "example network link endpoint",
+  "network_link_service": "nls-123456",
+  "phase": "READY"
+}

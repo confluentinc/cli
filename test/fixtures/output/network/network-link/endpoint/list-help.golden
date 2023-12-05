@@ -1,18 +1,14 @@
-Manage network links.
+List network link endpoints.
 
 Usage:
-  confluent network network-link [command]
+  confluent network network-link endpoint list [flags]
 
-Aliases:
-  network-link, nl
-
-Available Commands:
-  endpoint    Manage network link endpoints.
-  service     Manage network link services.
+Flags:
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
-Use "confluent network network-link [command] --help" for more information about a command.
