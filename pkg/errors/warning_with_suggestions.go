@@ -1,24 +1,20 @@
 package errors
 
-type WarningWithSuggestions struct {
+type warningWithSuggestions struct {
 	warnMsg        string
-	reasonMsg      string
 	suggestionsMsg string
 }
 
-func NewWarningWithSuggestions(warnMsg, reasonMsg, suggestionsMsg string) *WarningWithSuggestions {
-	return &WarningWithSuggestions{
+func NewWarningWithSuggestions(warnMsg, suggestionsMsg string) *warningWithSuggestions {
+	return &warningWithSuggestions{
 		warnMsg:        warnMsg,
-		reasonMsg:      reasonMsg,
 		suggestionsMsg: suggestionsMsg,
 	}
 }
 
-func (w *WarningWithSuggestions) DisplayWarningWithSuggestions() string {
-	if w.warnMsg != "" && w.reasonMsg != "" && w.suggestionsMsg != "" {
+func (w *warningWithSuggestions) DisplayWarningWithSuggestions() string {
+	if w.warnMsg != "" && w.suggestionsMsg != "" {
 		lines := "[WARN] " + w.warnMsg + "\n"
-		lines += "\n"
-		lines += "Reason: " + w.reasonMsg + "\n"
 		lines += ComposeSuggestionsMessage(w.suggestionsMsg) + "\n"
 		return lines
 	}

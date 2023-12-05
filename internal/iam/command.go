@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -24,9 +23,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.Long = "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) permissions."
 	}
 
-	dc := dynamicconfig.New(cfg)
-	_ = dc.ParseFlagsIntoConfig(cmd)
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.iam.group_mapping.enable", dc.Context(), config.CliLaunchDarklyClient, true, false) {
+	_ = cfg.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.iam.group_mapping.enable", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(newGroupMappingCommand(prerunner))
 	}
 	cmd.AddCommand(newAclCommand(prerunner))
@@ -34,7 +32,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newIpGroupCommand(prerunner))
 	cmd.AddCommand(newPoolCommand(prerunner))
 	cmd.AddCommand(newProviderCommand(prerunner))
-	cmd.AddCommand(newRBACCommand(cfg, prerunner))
+	cmd.AddCommand(newRbacCommand(cfg, prerunner))
 	cmd.AddCommand(newServiceAccountCommand(prerunner))
 	cmd.AddCommand(newUserCommand(prerunner))
 

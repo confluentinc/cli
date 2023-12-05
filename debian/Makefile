@@ -56,7 +56,7 @@ install: apply-patches
 	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
 	cd $(DESTDIR)$(LIBPATH); \
-	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64; do \
+	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
 		mkdir -p $${dir}; \
 		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
 		filepath=$${dir}/confluent$${ext}; \

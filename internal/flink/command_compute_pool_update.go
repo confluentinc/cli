@@ -31,14 +31,12 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cmd.MarkFlagsOneRequired("name", "max-cfu")
+
 	return cmd
 }
 
 func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
-	if err := errors.CheckNoUpdate(cmd.Flags(), "name", "max-cfu"); err != nil {
-		return err
-	}
-
 	id := c.Context.GetCurrentFlinkComputePool()
 	if len(args) > 0 {
 		id = args[0]
@@ -105,6 +103,7 @@ func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
 		Name:       updatedComputePool.Spec.GetDisplayName(),
 		CurrentCfu: computePool.Status.GetCurrentCfu(),
 		MaxCfu:     updatedComputePool.Spec.GetMaxCfu(),
+		Cloud:      computePool.Spec.GetCloud(),
 		Region:     computePool.Spec.GetRegion(),
 		Status:     computePool.Status.GetPhase(),
 	})
