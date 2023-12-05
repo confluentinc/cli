@@ -162,6 +162,6 @@ func (c *LSPClient) ShutdownAndExit() {
 	err = c.conn.Call(context.Background(), "exit", nil, nil)
 
 	if err != nil {
-		log.CliLogger.Debugf("Error existing lsp server: %v\n", err)
+		log.CliLogger.Debugf("Error exiting lsp server: %v\n", err)
 	}
 }
