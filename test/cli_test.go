@@ -209,11 +209,19 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
 
+	out, err := exec.Command("pwd").CombinedOutput()
+	require.NoError(t, err)
+	fmt.Println("pwd", out)
+
+	out, err = exec.Command("ls", dir).CombinedOutput()
+	require.NoError(t, err)
+	fmt.Println("ls", out)
+
 	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdin = strings.NewReader(input)
 
-	out, err := cmd.CombinedOutput()
+	out, err = cmd.CombinedOutput()
 	if exitCode == 0 {
 		require.NoError(t, err, string(out))
 	}
