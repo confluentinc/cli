@@ -11,13 +11,17 @@ import (
 
 func (c *command) newNetworkLinkEndpointCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
+		Use:   "create [name]",
 		Short: "Create a network link endpoint.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.networkLinkEndpointCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a network link endpoint for network "n-123456" and network link service "nls-abcde1".`,
+				Code: `confluent network network-link endpoint create --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1`,
+			},
+			examples.Example{
+				Text: `Create a named network link endpoint for network "n-123456" and network link service "nls-abcde1".`,
 				Code: `confluent network network-link endpoint create my-network-link-endpoint --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1`,
 			},
 		),
@@ -37,9 +41,12 @@ func (c *command) newNetworkLinkEndpointCreateCommand() *cobra.Command {
 }
 
 func (c *command) networkLinkEndpointCreate(cmd *cobra.Command, args []string) error {
-	name := args[0]
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	}
 
-	networkId, err := cmd.Flags().GetString("network")
+	network, err := cmd.Flags().GetString("network")
 	if err != nil {
 		return err
 	}
@@ -54,19 +61,22 @@ func (c *command) networkLinkEndpointCreate(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	service, err := cmd.Flags().GetString("network-link-service")
+	networkLinkService, err := cmd.Flags().GetString("network-link-service")
 	if err != nil {
 		return err
 	}
 
 	createNetworkLinkEndpoint := networkingv1.NetworkingV1NetworkLinkEndpoint{
 		Spec: &networkingv1.NetworkingV1NetworkLinkEndpointSpec{
-			DisplayName:        networkingv1.PtrString(name),
 			Description:        networkingv1.PtrString(description),
 			Environment:        &networkingv1.GlobalObjectReference{Id: environmentId},
-			Network:            &networkingv1.EnvScopedObjectReference{Id: networkId},
-			NetworkLinkService: &networkingv1.EnvScopedObjectReference{Id: service},
+			Network:            &networkingv1.EnvScopedObjectReference{Id: network},
+			NetworkLinkService: &networkingv1.EnvScopedObjectReference{Id: networkLinkService},
 		},
+	}
+
+	if name != "" {
+		createNetworkLinkEndpoint.Spec.SetDisplayName(name)
 	}
 
 	endpoint, err := c.V2Client.CreateNetworkLinkEndpoint(createNetworkLinkEndpoint)

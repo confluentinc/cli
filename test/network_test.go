@@ -663,7 +663,8 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDelete() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpointCreate() {
 	tests := []CLITest{
-		{args: "network network-link endpoint create", fixture: "network/network-link/endpoint/create-missing-args.golden", exitCode: 1},
+		{args: "network network-link endpoint create", fixture: "network/network-link/endpoint/create-missing-flags.golden", exitCode: 1},
+		{args: "network network-link endpoint create --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-no-name.golden"},
 		{args: "network network-link endpoint create my-network-link-endpoint --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create.golden"},
 		{args: "network network-link endpoint create nle-duplicate --network n-123455 --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-duplicate.golden", exitCode: 1},
 		{args: "network network-link endpoint create nle-same-id --network n-123455 --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-same-id.golden", exitCode: 1},

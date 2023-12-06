@@ -15,8 +15,8 @@ import (
 
 func (c *command) newNetworkLinkServiceDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a network link service.",
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more network link services.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validNetworkLinkServiceArgs),
 		RunE:              c.networkLinkServiceDelete,

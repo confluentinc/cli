@@ -1,10 +1,14 @@
 Create a network link endpoint.
 
 Usage:
-  confluent network network-link endpoint create <name> [flags]
+  confluent network network-link endpoint create [name] [flags]
 
 Examples:
 Create a network link endpoint for network "n-123456" and network link service "nls-abcde1".
+
+  $ confluent network network-link endpoint create --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1
+
+Create a named network link endpoint for network "n-123456" and network link service "nls-abcde1".
 
   $ confluent network network-link endpoint create my-network-link-endpoint --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1
 

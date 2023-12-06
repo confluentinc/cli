@@ -15,8 +15,8 @@ import (
 
 func (c *command) newNetworkLinkEndpointDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a network link endpoint.",
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more network link endpoints.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validNetworkLinkEndpointArgs),
 		RunE:              c.networkLinkEndpointDelete,

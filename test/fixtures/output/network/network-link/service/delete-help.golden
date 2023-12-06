@@ -1,7 +1,7 @@
-Delete a network link service.
+Delete one or more network link services.
 
 Usage:
-  confluent network network-link service delete <id> [flags]
+  confluent network network-link service delete <id-1> [id-2] ... [id-n] [flags]
 
 Flags:
       --force                Skip the deletion confirmation prompt.

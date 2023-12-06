@@ -1463,7 +1463,6 @@ func handleNetworkingNetworkLinkEndpointDelete(_ *testing.T, id string) http.Han
 		switch id {
 		case "nle-invalid":
 			w.WriteHeader(http.StatusNotFound)
-			return
 		case "nle-111111", "nle-222222":
 			w.WriteHeader(http.StatusNoContent)
 		}
@@ -1476,15 +1475,14 @@ func handleNetworkingNetworkLinkEndpointCreate(t *testing.T) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
-		name := body.Spec.GetDisplayName()
-		switch name {
+		switch body.Spec.GetDisplayName() {
 		case "nle-duplicate":
 			w.WriteHeader(http.StatusConflict)
 			err := writeErrorJson(w, "Cannot have more than 1 active/in provision/pending accept/disconnected NetworkLinkEndpoint attached to the same NetworkLinkService in the same network.")
 			require.NoError(t, err)
 		case "nle-same-id":
 			w.WriteHeader(http.StatusConflict)
-			err := writeErrorJson(w, "Network id for NetworkLinkEndpoint and NetworkLinkService cannot be the same.")
+			err := writeErrorJson(w, "Network ID for NetworkLinkEndpoint and NetworkLinkService cannot be the same.")
 			require.NoError(t, err)
 		default:
 			endpoint := networkingv1.NetworkingV1NetworkLinkEndpoint{
