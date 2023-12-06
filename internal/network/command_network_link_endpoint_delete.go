@@ -13,13 +13,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func (c *command) newNetworkLinkServiceDeleteCommand() *cobra.Command {
+func (c *command) newNetworkLinkEndpointDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
-		Short:             "Delete one or more network link services.",
+		Short:             "Delete one or more network link endpoints.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validNetworkLinkServiceArgs),
-		RunE:              c.networkLinkServiceDelete,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validNetworkLinkEndpointArgs),
+		RunE:              c.networkLinkEndpointDelete,
 	}
 
 	pcmd.AddForceFlag(cmd)
@@ -29,24 +29,24 @@ func (c *command) newNetworkLinkServiceDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) networkLinkServiceDelete(cmd *cobra.Command, args []string) error {
+func (c *command) networkLinkEndpointDelete(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetNetworkLinkService(environmentId, id)
+		_, err := c.V2Client.GetNetworkLinkEndpoint(environmentId, id)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.NetworkLinkService); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.NetworkLinkEndpoint); err != nil {
 		return err
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteNetworkLinkService(environmentId, id); err != nil {
-			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.NetworkLinkService, id, err)
+		if err := c.V2Client.DeleteNetworkLinkEndpoint(environmentId, id); err != nil {
+			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.NetworkLinkEndpoint, id, err)
 		}
 		return nil
 	}
@@ -54,9 +54,9 @@ func (c *command) networkLinkServiceDelete(cmd *cobra.Command, args []string) er
 	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 	deleteMsg := "Requested to delete %s %s.\n"
 	if len(deletedIds) == 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, resource.NetworkLinkService, fmt.Sprintf(`"%s"`, deletedIds[0]))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.NetworkLinkEndpoint, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.NetworkLinkService), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.NetworkLinkEndpoint), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err

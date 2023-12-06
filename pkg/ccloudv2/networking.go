@@ -302,3 +302,13 @@ func (c *Client) GetNetworkLinkEndpoint(environment, id string) (networkingv1.Ne
 	resp, httpResp, err := c.NetworkingClient.NetworkLinkEndpointsNetworkingV1Api.GetNetworkingV1NetworkLinkEndpoint(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) DeleteNetworkLinkEndpoint(environment, id string) error {
+	httpResp, err := c.NetworkingClient.NetworkLinkEndpointsNetworkingV1Api.DeleteNetworkingV1NetworkLinkEndpoint(c.networkingApiContext(), id).Environment(environment).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) CreateNetworkLinkEndpoint(endpoint networkingv1.NetworkingV1NetworkLinkEndpoint) (networkingv1.NetworkingV1NetworkLinkEndpoint, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworkLinkEndpointsNetworkingV1Api.CreateNetworkingV1NetworkLinkEndpoint(c.networkingApiContext()).NetworkingV1NetworkLinkEndpoint(endpoint).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}

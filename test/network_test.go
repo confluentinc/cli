@@ -645,9 +645,42 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointList() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDelete() {
+	tests := []CLITest{
+		{args: "network network-link endpoint delete nle-111111 --force", fixture: "network/network-link/endpoint/delete.golden"},
+		{args: "network network-link endpoint delete nle-111111", input: "y\n", fixture: "network/network-link/endpoint/delete-prompt.golden"},
+		{args: "network network-link endpoint delete nle-111111 nle-222222", input: "n\n", fixture: "network/network-link/endpoint/delete-multiple-refuse.golden"},
+		{args: "network network-link endpoint delete nle-111111 nle-222222", input: "y\n", fixture: "network/network-link/endpoint/delete-multiple-success.golden"},
+		{args: "network network-link endpoint delete nle-111111 nle-invalid", fixture: "network/network-link/endpoint/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network network-link endpoint delete nle-invalid --force", fixture: "network/network-link/endpoint/delete-nle-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointCreate() {
+	tests := []CLITest{
+		{args: "network network-link endpoint create", fixture: "network/network-link/endpoint/create-missing-flags.golden", exitCode: 1},
+		{args: "network network-link endpoint create --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-no-name.golden"},
+		{args: "network network-link endpoint create my-network-link-endpoint --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create.golden"},
+		{args: "network network-link endpoint create nle-duplicate --network n-123455 --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-duplicate.golden", exitCode: 1},
+		{args: "network network-link endpoint create nle-same-id --network n-123455 --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-same-id.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpoint_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network network-link endpoint describe ""`, login: "cloud", fixture: "network/network-link/endpoint/describe-autocomplete.golden"},
+		{args: `__complete network network-link endpoint delete ""`, login: "cloud", fixture: "network/network-link/endpoint/delete-autocomplete.golden"},
+		{args: `__complete network network-link endpoint create my-network-link-endpoint --network ""`, login: "cloud", fixture: "network/network-link/endpoint/create-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
