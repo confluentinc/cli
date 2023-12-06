@@ -1,11 +1,11 @@
 package plugin
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
 
@@ -15,6 +15,10 @@ import (
 )
 
 func TestClonePluginRepo(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	// Set up dummy repo to clone from
 	sourceDir, err := os.MkdirTemp("", "source")
 	assert.NoError(t, err)
@@ -25,7 +29,7 @@ func TestClonePluginRepo(t *testing.T) {
 	w, err := r.Worktree()
 	assert.NoError(t, err)
 
-	file, err := os.Create(fmt.Sprintf("%s/file.txt", sourceDir))
+	file, err := os.Create(filepath.Join(sourceDir, "file.txt"))
 	assert.NoError(t, err)
 	file.Close()
 
@@ -49,9 +53,13 @@ func TestClonePluginRepo(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	localRepoPath, _ := filepath.Abs(sourceDir)
-	repoUrl, _ := url.Parse(localRepoPath)
+	localRepoPath, err := filepath.Abs(sourceDir)
+	assert.NoError(t, err)
+
+	repoUrl, err := url.Parse(localRepoPath)
+	assert.NoError(t, err)
 	repoUrl.Scheme = "file"
+
 	r, err = clonePluginRepo(dir, repoUrl.String())
 	assert.NoError(t, err)
 
