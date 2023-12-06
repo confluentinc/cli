@@ -1,0 +1,22 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  confluent network network-link endpoint create <name> [flags]
+
+Examples:
+Create a network link endpoint for network "n-123456" and network link service "nls-abcde1".
+
+  $ confluent network network-link endpoint create my-network-link-endpoint --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1
+
+Flags:
+      --network string                Network ID.
+      --network-link-service string   Network link service ID.
+      --description string            Network link endpoint description.
+      --context string                CLI context name.
+      --environment string            Environment ID.
+  -o, --output string                 Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

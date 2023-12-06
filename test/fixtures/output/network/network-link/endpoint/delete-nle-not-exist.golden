@@ -1,0 +1,4 @@
+Error: network link endpoint "nle-invalid" not found
+
+Suggestions:
+    List available network link endpoints with `confluent network network-link endpoint list`.

@@ -268,3 +268,8 @@ func addAcceptedEnvironmentsFlag(cmd *cobra.Command, command *pcmd.Authenticated
 		return pcmd.AutocompleteEnvironments(command.Client, command.V2Client)
 	})
 }
+
+func (c *command) addNetworkLinkServiceFlag(cmd *cobra.Command) {
+	cmd.Flags().String("network-link-service", "", "Network link service ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
+}
