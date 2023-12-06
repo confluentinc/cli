@@ -209,7 +209,7 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
 
-	out, err := exec.Command("pwd").CombinedOutput()
+	out, err := exec.Command("Get-Location").CombinedOutput()
 	require.NoError(t, err)
 	fmt.Println("pwd", out)
 
