@@ -220,6 +220,8 @@ func handleNetworkingNetworkLinkEndpoint(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingNetworkLinkEndpointGet(t, id)(w, r)
+		case http.MethodDelete:
+			handleNetworkingNetworkLinkEndpointDelete(t, id)(w, r)
 		}
 	}
 }
@@ -230,6 +232,8 @@ func handleNetworkingNetworkLinkEndpoints(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingNetworkLinkEndpointList(t)(w, r)
+		case http.MethodPost:
+			handleNetworkingNetworkLinkEndpointCreate(t)(w, r)
 		}
 	}
 }
@@ -1451,6 +1455,52 @@ func handleNetworkingNetworkLinkEndpointList(t *testing.T) http.HandlerFunc {
 
 		err := json.NewEncoder(w).Encode(networkLinkEndpointList)
 		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingNetworkLinkEndpointDelete(_ *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "nle-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			return
+		case "nle-111111", "nle-222222":
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
+func handleNetworkingNetworkLinkEndpointCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkingv1.NetworkingV1NetworkLinkEndpoint{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		name := body.Spec.GetDisplayName()
+		switch name {
+		case "nle-duplicate":
+			w.WriteHeader(http.StatusConflict)
+			err := writeErrorJson(w, "Cannot have more than 1 active/in provision/pending accept/disconnected NetworkLinkEndpoint attached to the same NetworkLinkService in the same network.")
+			require.NoError(t, err)
+		case "nle-same-id":
+			w.WriteHeader(http.StatusConflict)
+			err := writeErrorJson(w, "Network id for NetworkLinkEndpoint and NetworkLinkService cannot be the same.")
+			require.NoError(t, err)
+		default:
+			endpoint := networkingv1.NetworkingV1NetworkLinkEndpoint{
+				Id: networkingv1.PtrString("nle-abcde1"),
+				Spec: &networkingv1.NetworkingV1NetworkLinkEndpointSpec{
+					DisplayName:        networkingv1.PtrString(body.Spec.GetDisplayName()),
+					Description:        networkingv1.PtrString(body.Spec.GetDescription()),
+					Environment:        &networkingv1.GlobalObjectReference{Id: "env-00000"},
+					Network:            body.Spec.Network,
+					NetworkLinkService: &networkingv1.EnvScopedObjectReference{Id: body.Spec.NetworkLinkService.GetId()},
+				},
+				Status: &networkingv1.NetworkingV1NetworkLinkEndpointStatus{Phase: "PENDING_ACCEPT"},
+			}
+			err = json.NewEncoder(w).Encode(endpoint)
+			require.NoError(t, err)
+		}
 	}
 }
 

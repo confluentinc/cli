@@ -36,6 +36,7 @@ const (
 	KsqlCluster                     = "KSQL cluster"
 	MirrorTopic                     = "mirror topic"
 	Network                         = "network"
+	NetworkLinkEndpoint             = "network link endpoint"
 	NetworkLinkService              = "network link service"
 	Organization                    = "organization"
 	Peering                         = "peering"
