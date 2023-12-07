@@ -610,6 +610,7 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceUpdate() {
 		{args: "network network-link service update nls-111111", fixture: "network/network-link/service/update-missing-flags.golden", exitCode: 1},
 		{args: "network nl service update nls-111111 --name my-new-network-link-service --description 'example new network link service'", fixture: "network/network-link/service/update.golden"},
 		{args: "network network-link service update nls-111111 --accepted-environments env-22222 --accepted-networks n-111111", fixture: "network/network-link/service/update-accept-policy.golden"},
+		{args: "network network-link service update nls-111111 --accepted-environments env-11111,env-22222 --accepted-networks n-111111,n-222222", fixture: "network/network-link/service/update-accept-policy-multiple.golden"},
 		{args: "network network-link service update nls-invalid --name 'my-network-link-service'", fixture: "network/network-link/service/update-nls-not-exist.golden", exitCode: 1},
 	}
 
