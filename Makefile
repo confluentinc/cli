@@ -94,7 +94,8 @@ endif
 .PHONY: build-for-integration-test
 build-for-integration-test:
 ifdef CI
-	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+	echo "$(DATE)"
+	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date="date" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 else
 	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
