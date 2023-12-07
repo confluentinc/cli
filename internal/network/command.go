@@ -73,13 +73,15 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-var (
-	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
-	DnsResolutions  = []string{"private", "chased-private"}
-
+const (
 	CloudAws   = "AWS"
 	CloudAzure = "AZURE"
 	CloudGcp   = "GCP"
+)
+
+var (
+	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
+	DnsResolutions  = []string{"private", "chased-private"}
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {

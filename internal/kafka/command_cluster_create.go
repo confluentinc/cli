@@ -145,7 +145,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if clusterType != skuDedicated {
-			return errors.NewErrorWithSuggestions("the `--network` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type`.")
+			return errors.NewErrorWithSuggestions("the `--network` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type dedicated`.")
 		}
 		createCluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: network}
 	}
