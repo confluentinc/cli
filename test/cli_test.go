@@ -82,12 +82,14 @@ func (s *CLITestSuite) SetupSuite() {
 	err := os.Chdir("..")
 	req.NoError(err)
 
-	output, err := exec.Command("make", "build-for-integration-test").CombinedOutput()
-	req.NoError(err, string(output))
-
+	target := "build-for-integration-test"
 	if runtime.GOOS == "windows" {
+		target += "-windows"
 		testBin += ".exe"
 	}
+
+	output, err := exec.Command("make", target).CombinedOutput()
+	req.NoError(err, string(output))
 
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
