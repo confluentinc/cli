@@ -99,13 +99,20 @@ else
 	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
 
+.PHONY: build-for-integration-test-windows
+build-for-integration-test-windows:
+ifdef CI
+	go build -cover -ldflags="-s -w -X main.commit="commit" -X main.date="date" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+else
+	go build -ldflags="-s -w -X main.commit="commit" -X main.date="date" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+endif
+
 .PHONY: integration-test
 integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
 	export GOCOVERDIR=test/coverage && \
-	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
-	mkdir $${GOCOVERDIR} && \
+	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
 	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
