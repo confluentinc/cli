@@ -205,19 +205,16 @@ func (s *CLITestSuite) validateTestOutput(test CLITest, t *testing.T, output str
 func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
+	fmt.Println("pwd", dir)
 
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
-
-	out, err := exec.Command("ls", dir).CombinedOutput()
-	require.NoError(t, err)
-	fmt.Println("ls", dir, out)
 
 	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdin = strings.NewReader(input)
 
-	out, err = cmd.CombinedOutput()
+	out, err := cmd.CombinedOutput()
 	if exitCode == 0 {
 		require.NoError(t, err, string(out))
 	}
