@@ -9,7 +9,7 @@ import (
 func LSPCompleter(c LSPInterface, configurationSettings func() CliContext) prompt.Completer {
 	return func(in prompt.Document) []prompt.Suggest {
 		textBeforeCursor := in.TextBeforeCursor()
-		if textBeforeCursor == "" {
+		if textBeforeCursor == "" || c == nil {
 			return nil
 		}
 
