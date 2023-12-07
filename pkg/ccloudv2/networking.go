@@ -268,6 +268,11 @@ func (c *Client) CreateNetworkLinkService(service networkingv1.NetworkingV1Netwo
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
+func (c *Client) UpdateNetworkLinkService(id string, networkLinkServiceUpdate networkingv1.NetworkingV1NetworkLinkServiceUpdate) (networkingv1.NetworkingV1NetworkLinkService, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworkLinkServicesNetworkingV1Api.UpdateNetworkingV1NetworkLinkService(c.networkingApiContext(), id).NetworkingV1NetworkLinkServiceUpdate(networkLinkServiceUpdate).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
 func (c *Client) ListNetworkLinkEndpoints(environment string) ([]networkingv1.NetworkingV1NetworkLinkEndpoint, error) {
 	var list []networkingv1.NetworkingV1NetworkLinkEndpoint
 
