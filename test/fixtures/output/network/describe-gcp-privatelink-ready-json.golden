@@ -1,0 +1,25 @@
+{
+  "id": "n-abcde8",
+  "environment_id": "env-00000",
+  "name": "prod-gcp-us-central1",
+  "cloud": "GCP",
+  "region": "us-central1",
+  "zones": ["us-central1-a", "us-central1-b", "us-central1-c"],
+  "phase": "READY",
+  "supported_connection_types": ["PRIVATELINK"],
+  "active_connection_types": ["PRIVATELINK"],
+  "gcp_project": "gcp-project",
+  "gcp_vpc_network": "gcp-vpc",
+  "gcp_private_service_connect_service_attachments": {
+    "us-central1-a": "projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-a",
+    "us-central1-b": "projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-b",
+    "us-central1-c": "projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-c"
+  },
+  "dns_resolution": "PRIVATE",
+  "dns_domain": "0123456789abcdef.us-central1.gcp.devel.cpdev.cloud",
+  "zonal_subdomains": {
+    "us-central1-a": "us-central1-a.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud",
+    "us-central1-b": "us-central1-b.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud",
+    "us-central1-c": "us-central1-c.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud"
+  }
+}
