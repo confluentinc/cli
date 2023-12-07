@@ -208,8 +208,6 @@ func (s *CLITestSuite) validateTestOutput(test CLITest, t *testing.T, output str
 func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
-	fmt.Println("pwd", dir)
-	fmt.Println("goos", runtime.GOOS)
 
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
