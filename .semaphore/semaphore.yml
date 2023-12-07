@@ -81,11 +81,11 @@ blocks:
 
             # Run tests
             - $env:GOCOVERDIR = 'test/coverage'
-            - New-Item $${GOCOVERDIR} -ItemType Directory
+            - New-Item $env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
             # - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
-            - go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+            - go tool covdata textfmt -i $env:GOCOVERDIR -o test/coverage.out
 
             # Cache Go dependencies
             - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
