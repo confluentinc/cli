@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -206,11 +207,12 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 	fmt.Println("pwd", dir)
+	fmt.Println("goos", runtime.GOOS)
 
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
 
-	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
+	cmd := exec.Command(filepath.Join(dir, binaryName+".exe"), args...)
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdin = strings.NewReader(input)
 
