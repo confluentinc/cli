@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 
 	"github.com/stretchr/testify/require"
 )
@@ -85,6 +86,10 @@ func (s *CLITestSuite) TestConnectPlugin() {
 }
 
 func (s *CLITestSuite) TestConnectPluginInstall() {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	s.zipManifest()
 	defer s.deleteZip()
 

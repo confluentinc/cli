@@ -102,9 +102,9 @@ endif
 .PHONY: build-for-integration-test-windows
 build-for-integration-test-windows:
 ifdef CI
-	go build -cover -ldflags="-s -w -X main.commit="commit" -X main.date="date" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 else
-	go build -ldflags="-s -w -X main.commit="commit" -X main.date="date" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 endif
 
 .PHONY: integration-test
