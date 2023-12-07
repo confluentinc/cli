@@ -85,9 +85,9 @@ func (s *CLITestSuite) SetupSuite() {
 	output, err := exec.Command("make", "build-for-integration-test").CombinedOutput()
 	req.NoError(err, string(output))
 
-	if runtime.GOOS == "windows" {
-		testBin += ".exe"
-	}
+	// if runtime.GOOS == "windows" {
+	// 	testBin += ".exe"
+	// }
 
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
@@ -206,11 +206,13 @@ func (s *CLITestSuite) validateTestOutput(test CLITest, t *testing.T, output str
 func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
+	fmt.Println("pwd", dir)
+	fmt.Println("goos", runtime.GOOS)
 
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
 
-	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
+	cmd := exec.Command(filepath.Join(dir, binaryName+".exe"), args...)
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdin = strings.NewReader(input)
 
