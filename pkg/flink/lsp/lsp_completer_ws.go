@@ -57,13 +57,15 @@ func (w *WebsocketLSPClient) client() LSPInterface {
 func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 	select {
 	case _, isConnected := <-w.conn.DisconnectNotify():
-		// if it is not connected refresh the connection
-		if !isConnected {
-			var err error
-			w.lspClient, w.conn, err = newLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId)
-			if err != nil {
-				w.lspClient.ShutdownAndExit()
-			}
+		// this shouldn't happen, but if we are connected do nothing
+		if isConnected {
+			break
+		}
+
+		// we only update client and conn if there was no error, otherwise we leave them as is
+		if lspClient, conn, err := newLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId); err == nil {
+			w.lspClient = lspClient
+			w.conn = conn
 		}
 	default:
 		// we need the default case here, otherwise the select/case will block until the channel has data
