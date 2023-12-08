@@ -1,0 +1,8 @@
++-------------+--------------+
+| ID          | pla-111111   |
+| Name        | new-name     |
+| Network     | n-abcde1     |
+| Cloud       | AWS          |
+| AWS Account | 012345678901 |
+| Phase       | READY        |
++-------------+--------------+
