@@ -34,7 +34,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().Bool("enable-lsp", false, "Enables the LSP")
+	cmd.Flags().Bool("enable-lsp", false, "Enables the flink language service integration.")
 
 	return cmd
 }
