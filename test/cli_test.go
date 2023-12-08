@@ -209,9 +209,11 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
+	if runtime.GOOS == "windows" {
+		argString = strings.ReplaceAll(argString, `\`, `\\`)
+	}
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
-	fmt.Println("args", args)
 
 	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
 	cmd.Env = append(os.Environ(), env...)
@@ -230,7 +232,6 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
 	cfg := config.New()
-	fmt.Println("filename", cfg.Filename)
 	cfg.DisablePlugins = !arePluginsEnabled
 	err := cfg.Save()
 	require.NoError(t, err)
