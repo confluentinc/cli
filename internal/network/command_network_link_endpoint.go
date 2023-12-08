@@ -32,6 +32,7 @@ func (c *command) newNetworkLinkEndpointCommand() *cobra.Command {
 	cmd.AddCommand(c.newNetworkLinkEndpointDeleteCommand())
 	cmd.AddCommand(c.newNetworkLinkEndpointDescribeCommand())
 	cmd.AddCommand(c.newNetworkLinkEndpointListCommand())
+	cmd.AddCommand(c.newNetworkLinkEndpointUpdateCommand())
 
 	return cmd
 }
