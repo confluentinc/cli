@@ -346,5 +346,5 @@ func (s *CLITestSuite) TestLogin_RemoveSlashFromPlatformName() {
 	err = json.Unmarshal(got, &data)
 	s.NoError(err)
 
-	s.Equal(s.TestBackend.GetCloudUrl(), data.Context().PlatformName)
+	s.Equal(s.TestBackend.GetCloudUrl(), data.Context().GetPlatform().GetName())
 }

@@ -66,15 +66,6 @@ var (
 	)
 )
 
-// Whitelist is the configuration fields that are visible by the `config` subcommands.
-var Whitelist = []string{
-	"disable_feature_flags",
-	"disable_plugins",
-	"disable_update_check",
-	"disable_updates",
-	"enable_color",
-}
-
 // Config represents the CLI configuration.
 type Config struct {
 	DisableFeatureFlags bool `json:"disable_feature_flags"`
