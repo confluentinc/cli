@@ -13,8 +13,8 @@ import (
 
 type privateLinkAccessOut struct {
 	Id                string `human:"ID" serialized:"id"`
-	Name              string `human:"Name" serialized:"name"`
-	NetworkId         string `human:"Network ID" serialized:"network_id"`
+	Name              string `human:"Name,omitempty" serialized:"name,omitempty"`
+	Network           string `human:"Network" serialized:"network"`
 	Cloud             string `human:"Cloud" serialized:"cloud"`
 	AwsAccount        string `human:"AWS Account,omitempty" serialized:"aws_account,omitempty"`
 	GcpProject        string `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
@@ -103,11 +103,11 @@ func printPrivateLinkAccessTable(cmd *cobra.Command, access networkingv1.Network
 	}
 
 	out := &privateLinkAccessOut{
-		Id:        access.GetId(),
-		Name:      access.Spec.GetDisplayName(),
-		NetworkId: access.Spec.Network.GetId(),
-		Cloud:     cloud,
-		Phase:     access.Status.GetPhase(),
+		Id:      access.GetId(),
+		Name:    access.Spec.GetDisplayName(),
+		Network: access.Spec.Network.GetId(),
+		Cloud:   cloud,
+		Phase:   access.Status.GetPhase(),
 	}
 
 	switch cloud {

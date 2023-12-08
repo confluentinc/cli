@@ -36,13 +36,14 @@ func (c *Client) context() context.Context {
 		return context.WithValue(ctx, srsdk.ContextBasicAuth, c.apiKey)
 	}
 
-	if c.cfg.Context().GetState() != nil {
+	if c.cfg.IsCloudLogin() {
 		dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
 		if err != nil {
 			return ctx
 		}
-
 		return context.WithValue(ctx, srsdk.ContextAccessToken, dataplaneToken)
+	} else if c.cfg.Context().GetState() != nil {
+		return context.WithValue(ctx, srsdk.ContextAccessToken, c.cfg.Context().GetAuthToken())
 	}
 
 	return ctx

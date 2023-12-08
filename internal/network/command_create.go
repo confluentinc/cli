@@ -14,29 +14,33 @@ import (
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
+		Use:   "create [name]",
 		Short: "Create a network.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a Confluent network in AWS with connection type "transitgateway" by specifying zones and CIDR.`,
+				Code: "confluent network create --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16",
+			},
+			examples.Example{
+				Text: `Create a named Confluent network in AWS with connection type "transitgateway" by specifying zones and CIDR.`,
 				Code: "confluent network create aws-tgw-network --cloud aws --region us-west-2 --connection-types transitgateway --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16",
 			},
 			examples.Example{
-				Text: `Create a Confluent network in AWS with connection types "transitgateway" and "peering" by specifying zones and CIDR.`,
+				Text: `Create a named Confluent network in AWS with connection types "transitgateway" and "peering" by specifying zones and CIDR.`,
 				Code: "confluent network create aws-tgw-peering-network --cloud aws --region us-west-2 --connection-types transitgateway,peering --zones usw2-az1,usw2-az2,usw2-az4 --cidr 10.1.0.0/16",
 			},
 			examples.Example{
-				Text: `Create a Confluent network in AWS with connection type "peering" by specifying zone info.`,
+				Text: `Create a named Confluent network in AWS with connection type "peering" by specifying zone info.`,
 				Code: "confluent network create aws-peering-network --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27",
 			},
 			examples.Example{
-				Text: `Create a Confluent network in GCP with connection type "peering" by specifying zones and CIDR.`,
+				Text: `Create a named Confluent network in GCP with connection type "peering" by specifying zones and CIDR.`,
 				Code: "confluent network create gcp-peering-network --cloud gcp --region us-central1 --connection-types peering --zones us-central1-a,us-central1-b,us-central1-c --cidr 10.1.0.0/16",
 			},
 			examples.Example{
-				Text: `Create a Confluent network in Azure with connection type "privatelink" by specifying DNS resolution.`,
+				Text: `Create a named Confluent network in Azure with connection type "privatelink" by specifying DNS resolution.`,
 				Code: "confluent network create azure-pl-network --cloud azure --region eastus2 --connection-types privatelink --dns-resolution chased-private",
 			},
 		),
@@ -62,7 +66,10 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	name := args[0]
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	}
 
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -122,7 +129,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	createNetwork := networkingv1.NetworkingV1Network{
 		Spec: &networkingv1.NetworkingV1NetworkSpec{
-			DisplayName:     networkingv1.PtrString(name),
 			Cloud:           networkingv1.PtrString(cloud),
 			Region:          networkingv1.PtrString(region),
 			ConnectionTypes: &networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes},
@@ -130,6 +136,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		},
 	}
 
+	if name != "" {
+		createNetwork.Spec.SetDisplayName(name)
+	}
+	
 	if cidr != "" {
 		createNetwork.Spec.SetCidr(cidr)
 	}

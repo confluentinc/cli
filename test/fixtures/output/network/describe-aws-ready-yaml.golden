@@ -8,13 +8,12 @@ zones:
     - use1-az1
     - use1-az2
     - use1-az3
-dns_resolution: CHASED_PRIVATE
 phase: READY
 supported_connection_types:
-    - PRIVATELINK
     - TRANSITGATEWAY
+    - PEERING
 active_connection_types:
-    - PRIVATELINK
     - TRANSITGATEWAY
+    - PEERING
 aws_vpc: vpc-00000000000000000
 aws_account: "000000000000"

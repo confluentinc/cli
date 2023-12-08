@@ -13,7 +13,7 @@ import (
 
 type privateLinkAttachmentConnectionOut struct {
 	Id                        string `human:"ID" serialized:"id"`
-	Name                      string `human:"Name" serialized:"name"`
+	Name                      string `human:"Name,omitempty" serialized:"name,omitempty"`
 	Cloud                     string `human:"Cloud" serialized:"cloud"`
 	PrivateLinkAttachmentId   string `human:"Private Link Attachment ID" serialized:"private_link_attachment_id"`
 	Phase                     string `human:"Phase" serialized:"phase"`

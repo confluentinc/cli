@@ -35,11 +35,11 @@ type Client struct {
 	ApiKeysClient               *apikeysv2.APIClient
 	BillingClient               *billingv1.APIClient
 	ByokClient                  *byokv1.APIClient
-	ConnectCustomPluginClient   *connectcustompluginv1.APIClient
 	CdxClient                   *cdxv1.APIClient
 	CliClient                   *cliv1.APIClient
 	CmkClient                   *cmkv2.APIClient
 	ConnectClient               *connectv1.APIClient
+	ConnectCustomPluginClient   *connectcustompluginv1.APIClient
 	FlinkClient                 *flinkv2.APIClient
 	IamClient                   *iamv2.APIClient
 	IdentityProviderClient      *identityproviderv2.APIClient
@@ -50,8 +50,8 @@ type Client struct {
 	NetworkingIpClient          *networkingipv1.APIClient
 	NetworkingPrivateLinkClient *networkingprivatelinkv1.APIClient
 	OrgClient                   *orgv2.APIClient
-	SrcmClient                  *srcmv2.APIClient
 	ServiceQuotaClient          *servicequotav1.APIClient
+	SrcmClient                  *srcmv2.APIClient
 	SsoClient                   *ssov2.APIClient
 	StreamDesignerClient        *streamdesignerv1.APIClient
 }

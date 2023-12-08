@@ -115,7 +115,6 @@ var flagRules = []linter.FlagRule{
 		linter.RequireFlagDelimiter('-', 2),
 		linter.ExcludeFlag(
 			"aws-ram-share-arn",
-			"aws-transit-gateway",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
 			"schema-registry-api-key",
