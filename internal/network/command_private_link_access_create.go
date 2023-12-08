@@ -88,7 +88,7 @@ func (c *command) privateLinkAccessCreate(cmd *cobra.Command, args []string) err
 	if name != "" {
 		createPrivateLinkAccess.Spec.SetDisplayName(name)
 	}
-	
+
 	switch cloud {
 	case CloudAws:
 		createPrivateLinkAccess.Spec.Cloud = &networkingv1.NetworkingV1PrivateLinkAccessSpecCloudOneOf{

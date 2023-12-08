@@ -76,7 +76,7 @@ func (c *command) privateLinkAttachmentConnectionCreate(cmd *cobra.Command, args
 	if name != "" {
 		createPrivateLinkAttachmentConnection.Spec.SetDisplayName(name)
 	}
-	
+
 	switch cloud {
 	case CloudAws:
 		createPrivateLinkAttachmentConnection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{

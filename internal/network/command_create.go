@@ -139,7 +139,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if name != "" {
 		createNetwork.Spec.SetDisplayName(name)
 	}
-	
+
 	if cidr != "" {
 		createNetwork.Spec.SetCidr(cidr)
 	}

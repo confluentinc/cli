@@ -94,7 +94,7 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 	if name != "" {
 		createPeering.Spec.SetDisplayName(name)
 	}
-	
+
 	switch cloud {
 	case CloudAws:
 		awsPeering, err := createAwsPeeringRequest(cmd, region)

@@ -70,7 +70,7 @@ func (c *command) privateLinkAttachmentCreate(cmd *cobra.Command, args []string)
 	if name != "" {
 		createPrivateLinkAttachment.Spec.SetDisplayName(name)
 	}
-	
+
 	attachment, err := c.V2Client.CreatePrivateLinkAttachment(createPrivateLinkAttachment)
 	if err != nil {
 		return err
