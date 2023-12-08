@@ -2,6 +2,7 @@ package app
 
 import (
 	"sync"
+	"time"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
@@ -10,7 +11,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/go-prompt"
 )
 
 type Application struct {
@@ -38,7 +42,15 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 	}
 }
 
-func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
+func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
+	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
+	getAuthToken := func() string {
+		if authErr := synchronizedTokenRefreshFunc(); authErr != nil {
+			log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
+		}
+		return gatewayClient.GetAuthToken()
+	}
+
 	// Load history of previous commands from cache file
 	historyStore := history.LoadHistory()
 
@@ -47,8 +59,11 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	appController := controller.NewApplicationController(historyStore)
 
 	// Store used to process statements and store local properties
-	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
+	dataStore := store.NewStore(gatewayClient, appController.ExitApplication, &appOptions, synchronizedTokenRefreshFunc)
 	resultFetcher := results.NewResultFetcher(dataStore)
+
+	// Instantiate lsp
+	lspClient := lsp.NewLSPClientWS(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId())
 
 	stdinBefore := utils.GetStdin()
 	consoleParser := utils.GetConsoleParser()
@@ -59,10 +74,25 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
 		utils.RestoreStdin(stdinBefore)
+		if lspClient != nil {
+			lspClient.ShutdownAndExit()
+		}
 	})
 
 	// Instantiate Component Controllers
-	inputController := controller.NewInputController(historyStore)
+	var lspCompleter prompt.Completer
+	if appOptions.LSPEnabled {
+		lspCompleter = lsp.LSPCompleter(lspClient, func() lsp.CliContext {
+			return lsp.CliContext{
+				AuthToken:     getAuthToken(),
+				Catalog:       dataStore.GetCurrentCatalog(),
+				Database:      dataStore.GetCurrentDatabase(),
+				ComputePoolId: appOptions.GetComputePoolId(),
+			}
+		})
+	}
+
+	inputController := controller.NewInputController(historyStore, lspCompleter)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
 	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
@@ -76,7 +106,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 		statementController:         statementController,
 		interactiveOutputController: interactiveOutputController,
 		basicOutputController:       basicOutputController,
-		refreshToken:                synchronizedTokenRefresh(tokenRefreshFunc),
+		refreshToken:                synchronizedTokenRefreshFunc,
 		reportUsage:                 reportUsageFunc,
 		appOptions:                  appOptions,
 	}
@@ -85,8 +115,12 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 }
 
 func (a *Application) readEvalPrintLoop() {
+	run := utils.NewPanicRecovererWithLimit(3, 3*time.Second)
 	for a.isAuthenticated() {
-		utils.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
+		shouldExit := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
+		if shouldExit {
+			break
+		}
 	}
 }
 
@@ -112,10 +146,10 @@ func (a *Application) readEvalPrint() {
 }
 
 func (a *Application) panicRecovery() {
+	log.CliLogger.Warn("Internal error ocurred. Executing panic recovery.")
 	a.statementController.CleanupStatement()
 	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
 	a.reportUsage()
-	utils.OutputErr("Error: internal error occurred")
 }
 
 func (a *Application) isAuthenticated() bool {
