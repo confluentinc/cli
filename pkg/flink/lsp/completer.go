@@ -1,9 +1,11 @@
 package lsp
 
 import (
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/go-prompt"
 	"github.com/sourcegraph/go-lsp"
+
+	"github.com/confluentinc/go-prompt"
+
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 func LSPCompleter(c LSPInterface, configurationSettings func() CliContext) prompt.Completer {
@@ -41,7 +43,6 @@ func LSPCompleter(c LSPInterface, configurationSettings func() CliContext) promp
 }
 
 func lspCompletionsToSuggests(completions []lsp.CompletionItem, wordUntilCursor string, startOfPreviousWord int) []prompt.Suggest {
-
 	suggestions := []prompt.Suggest{}
 	for _, completion := range completions {
 		if completion.TextEdit != nil {
@@ -83,5 +84,4 @@ func lspTextEditToSuggestion(completion lsp.CompletionItem, wordUntilCursor stri
 			Description: completion.Detail,
 		}
 	}
-
 }

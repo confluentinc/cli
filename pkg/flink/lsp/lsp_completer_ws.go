@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/gorilla/websocket"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/sourcegraph/jsonrpc2"
 	websocket2 "github.com/sourcegraph/jsonrpc2/websocket"
+
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 type noopHandler struct{}
