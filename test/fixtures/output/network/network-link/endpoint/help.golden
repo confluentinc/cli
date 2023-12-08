@@ -4,6 +4,8 @@ Usage:
   confluent network network-link endpoint [command]
 
 Available Commands:
+  create      Create a network link endpoint.
+  delete      Delete one or more network link endpoints.
   describe    Describe a network link endpoint.
   list        List network link endpoints.
 
