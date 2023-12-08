@@ -1,6 +1,9 @@
 package flink
 
 import (
+	"net/url"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/auth"
@@ -11,6 +14,7 @@ import (
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
@@ -32,6 +36,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	cmd.Flags().Bool("language-service", false, "Enables the flink language service integration (experimental).")
 
 	return cmd
 }
@@ -142,6 +147,20 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
+	lspEnabled, err := cmd.Flags().GetBool("language-service")
+	if err != nil {
+		return err
+	}
+
+	var lspBaseUrl string
+	if lspEnabled {
+		lspBaseUrl, err = c.getFlinkLanguageServiceUrl(flinkGatewayClient)
+		if err != nil {
+			log.CliLogger.Warnf("Shell won't connect to language service. Error getting language service url: %v\n", err)
+			return err
+		}
+	}
+
 	jwtValidator := pcmd.NewJWTValidator()
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
@@ -157,10 +176,30 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		ComputePoolId:    computePool,
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
+		LSPEnabled:       lspEnabled,
+		LSPBaseUrl:       lspBaseUrl,
 	}
 
 	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
 	return nil
+}
+
+func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewayClient) (string, error) {
+	if cfg := gatewayClient.GetConfig(); cfg != nil && len(cfg.Servers) > 0 {
+		gatewayUrl := cfg.Servers[0].URL
+		parsedUrl, err := url.Parse(gatewayUrl)
+
+		if err != nil {
+			return "", err
+		}
+
+		parsedUrl.Host = strings.Replace(parsedUrl.Host, "flink.", "flinkpls.", 1)
+		parsedUrl.Scheme = "wss"
+		parsedUrl.Path = "/lsp"
+
+		return parsedUrl.String(), nil
+	}
+	return "", nil
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func() {
