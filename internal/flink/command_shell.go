@@ -1,14 +1,17 @@
 package flink
 
 import (
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/auth"
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	client "github.com/confluentinc/cli/v3/pkg/flink/app"
+	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
@@ -67,6 +70,16 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
+	if useFakeGateway {
+		client.StartApp(
+			mock.NewFakeFlinkGatewayClient(),
+			func() error { return nil },
+			types.ApplicationOptions{
+				Context:   c.Context,
+				UserAgent: c.Version.UserAgent,
+			}, func() {})
+		return nil
+	}
 	lspEnabled, _ := cmd.Flags().GetBool("enable-lsp")
 
 	environmentId, err := cmd.Flags().GetString("environment")
@@ -153,7 +166,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		LSPBaseUrl:       lspBaseUrl,
 	}
 
-	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config.Config, unsafeTrace))
+	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
 	return nil
 }
 
