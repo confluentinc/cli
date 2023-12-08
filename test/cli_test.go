@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/anmitsu/go-shlex"
+	"github.com/google/shlex"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -209,7 +209,16 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
-	args, err := shlex.Split(argString, runtime.GOOS != "windows")
+	// HACK: google/shlex does not support non-POSIX shell parsing
+	if runtime.GOOS == "windows" {
+		strings.ReplaceAll(argString, `\'`, "SINGLE QUOTE")
+		strings.ReplaceAll(argString, `\"`, "DOUBLE QUOTE")
+		strings.ReplaceAll(argString, `\`, `\\`)
+		strings.ReplaceAll(argString, "SINGLE QUOTE", `\'`)
+		strings.ReplaceAll(argString, "DOUBLE QUOTE", `\"`)
+	}
+
+	args, err := shlex.Split(argString)
 	require.NoError(t, err)
 
 	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
