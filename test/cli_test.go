@@ -211,11 +211,11 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 
 	// HACK: google/shlex does not support non-POSIX shell parsing
 	if runtime.GOOS == "windows" {
-		strings.ReplaceAll(argString, `\'`, "SINGLE QUOTE")
-		strings.ReplaceAll(argString, `\"`, "DOUBLE QUOTE")
-		strings.ReplaceAll(argString, `\`, `\\`)
-		strings.ReplaceAll(argString, "SINGLE QUOTE", `\'`)
-		strings.ReplaceAll(argString, "DOUBLE QUOTE", `\"`)
+		argString = strings.ReplaceAll(argString, `\'`, "SINGLE QUOTE")
+		argString = strings.ReplaceAll(argString, `\"`, "DOUBLE QUOTE")
+		argString = strings.ReplaceAll(argString, `\`, `\\`)
+		argString = strings.ReplaceAll(argString, "SINGLE QUOTE", `\'`)
+		argString = strings.ReplaceAll(argString, "DOUBLE QUOTE", `\"`)
 	}
 
 	args, err := shlex.Split(argString)
