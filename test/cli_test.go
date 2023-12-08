@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/shlex"
+	"github.com/anmitsu/go-shlex"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -82,12 +82,14 @@ func (s *CLITestSuite) SetupSuite() {
 	err := os.Chdir("..")
 	req.NoError(err)
 
-	output, err := exec.Command("make", "build-for-integration-test").CombinedOutput()
-	req.NoError(err, string(output))
-
+	target := "build-for-integration-test"
 	if runtime.GOOS == "windows" {
+		target += "-windows"
 		testBin += ".exe"
 	}
+
+	output, err := exec.Command("make", target).CombinedOutput()
+	req.NoError(err, string(output))
 
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
@@ -207,7 +209,7 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
-	args, err := shlex.Split(argString)
+	args, err := shlex.Split(argString, runtime.GOOS != "windows")
 	require.NoError(t, err)
 
 	cmd := exec.Command(filepath.Join(dir, binaryName), args...)

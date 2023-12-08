@@ -28,7 +28,6 @@ func newPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comma
 		cmd.AddCommand(c.newListCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
-
 		cmd.AddCommand(c.newInstallCommand())
 	}
 
