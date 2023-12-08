@@ -36,7 +36,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().Bool("enable-lsp", false, "Enables the flink language service integration (experimental).")
+	cmd.Flags().Bool("language-service", false, "Enables the flink language service integration (experimental).")
 
 	return cmd
 }
@@ -147,7 +147,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	lspEnabled, err := cmd.Flags().GetBool("enable-lsp")
+	lspEnabled, err := cmd.Flags().GetBool("language-service")
 	if err != nil {
 		return err
 	}
