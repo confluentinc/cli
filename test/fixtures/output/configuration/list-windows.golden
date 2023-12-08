@@ -1,8 +1,8 @@
-          Name          | Value | Read-Only
+          Name          | Value | Read-Only  
 ------------------------+-------+------------
-  disable_feature_flags | false | false
-  disable_plugins       | true  | false
-  disable_plugins_once  | true  | false
-  disable_update_check  | false | false
-  disable_updates       | false | false
+  disable_feature_flags | false | false      
+  disable_plugins       | true  | false      
+  disable_plugins_once  | true  | false      
+  disable_update_check  | false | false      
+  disable_updates       | false | false      
   enable_color          | false | false      

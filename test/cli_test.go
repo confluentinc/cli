@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/shlex"
+	"github.com/anmitsu/go-shlex"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -209,10 +209,7 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
-	if runtime.GOOS == "windows" {
-		argString = strings.ReplaceAll(argString, `\`, `\\`)
-	}
-	args, err := shlex.Split(argString)
+	args, err := shlex.Split(argString, runtime.GOOS != "windows")
 	require.NoError(t, err)
 
 	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
@@ -232,6 +229,7 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
 	cfg := config.New()
+	fmt.Println("filename", cfg.GetFilename())
 	cfg.DisablePlugins = !arePluginsEnabled
 	err := cfg.Save()
 	require.NoError(t, err)
