@@ -188,8 +188,7 @@ func (c *InputController) promptCompleter() prompt.Completer {
 		completer.AddCompleter(c.lspCompleter)
 	}
 
-	// We're not sure if we'll keep this along the LSP. Commenting it out now so we can only see the LSP completions for now.
-	//completer.AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data))
+	completer.AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data))
 
 	return completer.BuildCompleter()
 }
