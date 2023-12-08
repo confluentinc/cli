@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/websocket"
 	"github.com/sourcegraph/go-lsp"
@@ -18,6 +19,8 @@ type noopHandler struct{}
 func (noopHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {}
 
 type WebsocketLSPClient struct {
+	sync.Mutex
+
 	baseUrl        string
 	getAuthToken   func() string
 	organizationId string
@@ -52,6 +55,9 @@ func (w *WebsocketLSPClient) ShutdownAndExit() {
 }
 
 func (w *WebsocketLSPClient) client() LSPInterface {
+	w.Lock()
+	defer w.Unlock()
+
 	w.refreshWebsocketConnection()
 	return w.lspClient
 }
