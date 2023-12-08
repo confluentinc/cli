@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/go-prompt"
 )
 
 type Application struct {
@@ -79,14 +80,18 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	})
 
 	// Instantiate Component Controllers
-	lspCompleter := lsp.LSPCompleter(lspClient, func() lsp.CliContext {
-		return lsp.CliContext{
-			AuthToken:     getAuthToken(),
-			Catalog:       dataStore.GetCurrentCatalog(),
-			Database:      dataStore.GetCurrentDatabase(),
-			ComputePoolId: appOptions.GetComputePoolId(),
-		}
-	})
+	var lspCompleter prompt.Completer
+	if appOptions.LSPEnabled {
+		lspCompleter = lsp.LSPCompleter(lspClient, func() lsp.CliContext {
+			return lsp.CliContext{
+				AuthToken:     getAuthToken(),
+				Catalog:       dataStore.GetCurrentCatalog(),
+				Database:      dataStore.GetCurrentDatabase(),
+				ComputePoolId: appOptions.GetComputePoolId(),
+			}
+		})
+	}
+
 	inputController := controller.NewInputController(historyStore, lspCompleter)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
