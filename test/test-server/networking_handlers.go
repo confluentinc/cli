@@ -224,6 +224,8 @@ func handleNetworkingNetworkLinkEndpoint(t *testing.T) http.HandlerFunc {
 			handleNetworkingNetworkLinkEndpointGet(t, id)(w, r)
 		case http.MethodDelete:
 			handleNetworkingNetworkLinkEndpointDelete(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingNetworkLinkEndpointUpdate(t, id)(w, r)
 		}
 	}
 }
@@ -1645,6 +1647,31 @@ func handleNetworkingNetworkLinkEndpointCreate(t *testing.T) http.HandlerFunc {
 					NetworkLinkService: &networkingv1.EnvScopedObjectReference{Id: body.Spec.NetworkLinkService.GetId()},
 				},
 				Status: &networkingv1.NetworkingV1NetworkLinkEndpointStatus{Phase: "PENDING_ACCEPT"},
+			}
+			err = json.NewEncoder(w).Encode(endpoint)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingNetworkLinkEndpointUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "nle-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The network link endpoint nle-invalid was not found.")
+			require.NoError(t, err)
+		default:
+			body := &networkingv1.NetworkingV1NetworkLinkEndpoint{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			endpoint := getNetworkLinkEndpoint("nle-111111", "my-network-link-endpoint")
+			if body.Spec.DisplayName != nil {
+				endpoint.Spec.SetDisplayName(body.Spec.GetDisplayName())
+			}
+			if body.Spec.Description != nil {
+				endpoint.Spec.SetDescription(body.Spec.GetDescription())
 			}
 			err = json.NewEncoder(w).Encode(endpoint)
 			require.NoError(t, err)
