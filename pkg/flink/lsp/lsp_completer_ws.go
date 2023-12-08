@@ -3,12 +3,13 @@ package lsp
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/gorilla/websocket"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/sourcegraph/jsonrpc2"
 	websocket2 "github.com/sourcegraph/jsonrpc2/websocket"
-	"net/http"
 )
 
 type noopHandler struct{}
@@ -119,12 +120,11 @@ func newLSPConnection(baseUrl, authToken, organizationId, environmentId string) 
 	return lspClient, conn, nil
 }
 
-func newWSObjectStream(baseUrl, authToken, organizationId, environmentId string) (jsonrpc2.ObjectStream, error) {
+func newWSObjectStream(socketUrl, authToken, organizationId, environmentId string) (jsonrpc2.ObjectStream, error) {
 	requestHeaders := http.Header{}
 	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
 	requestHeaders.Add("Organization-ID", organizationId)
 	requestHeaders.Add("Environment-ID", environmentId)
-	socketUrl := fmt.Sprintf("wss://%s/lsp", baseUrl)
 	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, requestHeaders)
 	if err != nil {
 		return nil, err
