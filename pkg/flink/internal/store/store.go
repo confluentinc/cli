@@ -27,11 +27,11 @@ type Store struct {
 }
 
 func (s *Store) GetCurrentCatalog() string {
-	return s.Properties.Get(config.ConfigKeyCatalog)
+	return s.Properties.Get(config.KeyCatalog)
 }
 
 func (s *Store) GetCurrentDatabase() string {
-	return s.Properties.Get(config.ConfigKeyDatabase)
+	return s.Properties.Get(config.KeyDatabase)
 }
 
 func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
