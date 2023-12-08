@@ -20,10 +20,7 @@ import (
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
-const (
-	defaultConfigFileFmt = "%s/.confluent/config.json"
-	emptyFieldIndicator  = "EMPTY"
-)
+const emptyFieldIndicator = "EMPTY"
 
 const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
@@ -617,10 +614,14 @@ func (c *Config) HasBasicLogin() bool {
 
 func (c *Config) GetFilename() string {
 	if c.Filename == "" {
-		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir))
+		c.Filename = GetDefaultFilename()
 	}
 	return c.Filename
+}
+
+func GetDefaultFilename() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".confluent", "config.json")
 }
 
 func (c *Config) CheckIsOnPremLogin() error {

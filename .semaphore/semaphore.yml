@@ -41,7 +41,7 @@ blocks:
   #         commands:
   #           - test-results publish . -N "linux/amd64"
 
-  # - name: darwin/amd64
+  # - name: darwin/arm64
   #   dependencies: []
   #   task:
   #     agent:

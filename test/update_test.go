@@ -4,20 +4,23 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestUpdate() {
 	s.T().Skip("Skipping this test until its less flaky")
 
-	configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
-
 	// Remove the cache file so we'll see the update prompt
-	path := os.Getenv("HOME") + "/.confluent/update_check"
-	err := os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
+	home, err := os.UserHomeDir()
+	require.NoError(s.T(), err)
+	path := filepath.Join(home, ".confluent", "update_check")
+	err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
 	require.NoError(s.T(), err)
 
 	// Be nice and restore the config when we're done
+	configFile := config.GetDefaultFilename()
+
 	oldConfig, err := os.ReadFile(configFile)
 	require.NoError(s.T(), err)
 	defer func() {
