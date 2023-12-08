@@ -1,15 +1,6 @@
 version: v1.0
 name: Confluent CLI
 
-before:
-  hooks:
-    - cmd: ls
-      output: true
-    - cmd: echo "here" > here.txt
-      output: true
-    - cmd: ls
-      output: true
-
 agent:
   machine:
     type: s1-prod-ubuntu20-04-amd64-1
