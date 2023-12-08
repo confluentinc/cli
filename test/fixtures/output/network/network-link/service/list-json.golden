@@ -1,6 +1,6 @@
 [
   {
-    "id": "nls-11111",
+    "id": "nls-111111",
     "name": "my-network-link-service-1",
     "network": "n-abcde1",
     "description": "example network link service",
@@ -9,7 +9,7 @@
     "phase": "READY"
   },
   {
-    "id": "nls-22222",
+    "id": "nls-222222",
     "name": "my-network-link-service-2",
     "network": "n-abcde1",
     "description": "example network link service",
@@ -18,7 +18,7 @@
     "phase": "READY"
   },
   {
-    "id": "nls-33333",
+    "id": "nls-333333",
     "name": "my-network-link-service-3",
     "network": "n-abcde1",
     "description": "example network link service",

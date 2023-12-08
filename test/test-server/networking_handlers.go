@@ -197,6 +197,8 @@ func handleNetworkingNetworkLinkService(t *testing.T) http.HandlerFunc {
 			handleNetworkingNetworkLinkServiceGet(t, id)(w, r)
 		case http.MethodDelete:
 			handleNetworkingNetworkLinkServiceDelete(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingNetworkLinkServiceUpdate(t, id)(w, r)
 		}
 	}
 }
@@ -1274,10 +1276,10 @@ func handleNetworkingNetworkLinkServiceGet(t *testing.T, id string) http.Handler
 		switch id {
 		case "nls-invalid":
 			w.WriteHeader(http.StatusNotFound)
-			err := writeErrorJson(w, "The network-link-service nls-invalid was not found.")
+			err := writeErrorJson(w, "The network link service nls-invalid was not found.")
 			require.NoError(t, err)
-		case "nls-123456":
-			nls := getNetworkLinkService("nls-123456", "my-network-link-service")
+		default:
+			nls := getNetworkLinkService(id, "my-network-link-service")
 			err := json.NewEncoder(w).Encode(nls)
 			require.NoError(t, err)
 		}
@@ -1301,12 +1303,12 @@ func getNetworkLinkService(id, name string) networkingv1.NetworkingV1NetworkLink
 	}
 
 	switch id {
-	case "nls-11111":
+	case "nls-111111":
 		service.Spec.Accept = &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
 			Networks:     &[]string{"n-abcde2"},
 			Environments: &[]string{"env-11111"},
 		}
-	case "nls-33333":
+	case "nls-333333":
 		service.Spec.Accept = &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{
 			Networks:     &[]string{"n-abcde2", "n-abcde3", "n-abcde4"},
 			Environments: &[]string{"env-11111", "env-22222", "env-33333"},
@@ -1318,9 +1320,9 @@ func getNetworkLinkService(id, name string) networkingv1.NetworkingV1NetworkLink
 
 func handleNetworkingNetworkLinkServiceList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		service1 := getNetworkLinkService("nls-11111", "my-network-link-service-1")
-		service2 := getNetworkLinkService("nls-22222", "my-network-link-service-2")
-		service3 := getNetworkLinkService("nls-33333", "my-network-link-service-3")
+		service1 := getNetworkLinkService("nls-111111", "my-network-link-service-1")
+		service2 := getNetworkLinkService("nls-222222", "my-network-link-service-2")
+		service3 := getNetworkLinkService("nls-333333", "my-network-link-service-3")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var networkLinkServiceList networkingv1.NetworkingV1NetworkLinkServiceList
@@ -1385,6 +1387,37 @@ func handleNetworkingNetworkLinkServiceCreate(t *testing.T) http.HandlerFunc {
 					Network:     body.Spec.Network,
 				},
 				Status: &networkingv1.NetworkingV1NetworkLinkServiceStatus{Phase: "READY"},
+			}
+			err = json.NewEncoder(w).Encode(service)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingNetworkLinkServiceUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "nls-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The network link service nls-invalid was not found.")
+			require.NoError(t, err)
+		default:
+			body := &networkingv1.NetworkingV1NetworkLinkService{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			service := getNetworkLinkService("nls-111111", "my-network-link-service")
+			if body.Spec.DisplayName != nil {
+				service.Spec.SetDisplayName(body.Spec.GetDisplayName())
+			}
+			if body.Spec.Description != nil {
+				service.Spec.SetDescription(body.Spec.GetDescription())
+			}
+			if body.Spec.Accept.GetNetworks() != nil {
+				service.Spec.Accept.SetNetworks(body.Spec.Accept.GetNetworks())
+			}
+			if body.Spec.Accept.GetEnvironments() != nil {
+				service.Spec.Accept.SetEnvironments(body.Spec.Accept.GetEnvironments())
 			}
 			err = json.NewEncoder(w).Encode(service)
 			require.NoError(t, err)
