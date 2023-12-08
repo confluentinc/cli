@@ -82,12 +82,14 @@ func (s *CLITestSuite) SetupSuite() {
 	err := os.Chdir("..")
 	req.NoError(err)
 
-	output, err := exec.Command("make", "build-for-integration-test").CombinedOutput()
-	req.NoError(err, string(output))
-
+	target := "build-for-integration-test"
 	if runtime.GOOS == "windows" {
+		target += "-windows"
 		testBin += ".exe"
 	}
+
+	output, err := exec.Command("make", target).CombinedOutput()
+	req.NoError(err, string(output))
 
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
@@ -206,6 +208,15 @@ func (s *CLITestSuite) validateTestOutput(test CLITest, t *testing.T, output str
 func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
+
+	// HACK: google/shlex does not support non-POSIX shell parsing
+	if runtime.GOOS == "windows" {
+		strings.ReplaceAll(argString, `\'`, "SINGLE QUOTE")
+		strings.ReplaceAll(argString, `\"`, "DOUBLE QUOTE")
+		strings.ReplaceAll(argString, `\`, `\\`)
+		strings.ReplaceAll(argString, "SINGLE QUOTE", `\'`)
+		strings.ReplaceAll(argString, "DOUBLE QUOTE", `\"`)
+	}
 
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
