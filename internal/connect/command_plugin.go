@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"runtime"
+
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
@@ -29,7 +31,9 @@ func newPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comma
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 
-		cmd.AddCommand(c.newInstallCommand())
+		if runtime.GOOS != "windows" {
+			cmd.AddCommand(c.newInstallCommand())
+		}
 	}
 
 	cmd.AddCommand(c.newDescribeCommand())

@@ -10,7 +10,7 @@ import (
 )
 
 func (s *CLITestSuite) TestLocalKafka() {
-	if runtime.GOOS == "darwin" {
+	if runtime.GOOS != "linux" {
 		s.T().Skip()
 	}
 
