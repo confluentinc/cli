@@ -4,6 +4,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/confluentinc/go-prompt"
+
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
@@ -14,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/go-prompt"
 )
 
 type Application struct {
@@ -146,7 +147,7 @@ func (a *Application) readEvalPrint() {
 }
 
 func (a *Application) panicRecovery() {
-	log.CliLogger.Warn("Internal error ocurred. Executing panic recovery.")
+	log.CliLogger.Warn("Internal error occurred. Executing panic recovery.")
 	a.statementController.CleanupStatement()
 	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
 	a.reportUsage()

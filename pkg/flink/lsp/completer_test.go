@@ -2,10 +2,11 @@ package lsp
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 )
