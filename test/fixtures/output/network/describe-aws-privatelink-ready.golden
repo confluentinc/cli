@@ -1,0 +1,20 @@
++--------------------------------+----------------------------------------------------------------+
+| ID                             | n-abcde7                                                       |
+| Environment                    | env-00000                                                      |
+| Name                           | prod-aws-us-east1                                              |
+| Cloud                          | AWS                                                            |
+| Region                         | us-east-1                                                      |
+| Zones                          | use1-az1, use1-az2, use1-az3                                   |
+| Phase                          | READY                                                          |
+| Supported Connection Types     | PRIVATELINK                                                    |
+| Active Connection Types        | PRIVATELINK                                                    |
+| AWS VPC                        | vpc-00000000000000000                                          |
+| AWS Account                    | 000000000000                                                   |
+| AWS Private Link Endpoint      | com.amazonaws.vpce.us-east-2.vpce-svc-01234567890abcdef        |
+| Service                        |                                                                |
+| DNS Resolution                 | PRIVATE                                                        |
+| DNS Domain                     | abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud                    |
+| Zonal Subdomains               | use1-az1=use1-az1.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud, |
+|                                | use1-az2=use1-az2.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud, |
+|                                | use1-az3=use1-az3.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud  |
++--------------------------------+----------------------------------------------------------------+
