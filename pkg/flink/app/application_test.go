@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/require"
@@ -277,4 +278,87 @@ func (s *ApplicationTestSuite) TestPanicRecovery() {
 	// Then
 	cupaloy.SnapshotT(s.T(), actual)
 	require.Equal(s.T(), 1, callCount)
+}
+
+func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitExceeded() {
+	// Given
+	recoverCount := 5
+	callCount := 0
+	s.app.reportUsage = func() {
+		callCount++
+	}
+	s.inputController.EXPECT().GetUserInput().Times(recoverCount).Do(func() {
+		panic("err in repl")
+	})
+	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
+
+	// When
+	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
+		run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
+		for i := 0; i <= recoverCount; i++ {
+			shouldExit := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+			if shouldExit {
+				break
+			}
+		}
+	})
+
+	// Then
+	cupaloy.SnapshotT(s.T(), actual)
+	require.Equal(s.T(), recoverCount, callCount)
+}
+
+func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitNotExceeded() {
+	// Given
+	recoverCount := 5
+	callCount := 0
+	s.app.reportUsage = func() {
+		callCount++
+	}
+	s.inputController.EXPECT().GetUserInput().Times(recoverCount).Do(func() {
+		panic("err in repl")
+	})
+	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
+
+	// When
+	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
+		run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
+		for i := 0; i < recoverCount; i++ {
+			shouldExit := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+
+			if shouldExit {
+				break
+			}
+		}
+	})
+
+	// Then
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), recoverCount, callCount)
+}
+
+func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenSparsePannics() {
+	// Given
+	recoverCount := 15
+	callCount := 0
+	s.app.reportUsage = func() {
+		callCount++
+	}
+	s.inputController.EXPECT().GetUserInput().Times(recoverCount).Do(func() {
+		panic("err in repl")
+	})
+	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
+
+	// When
+	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
+		run := utils.NewPanicRecovererWithLimit(recoverCount/3, 0)
+		for i := 0; i < recoverCount; i++ {
+			shouldExit := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+			require.False(s.T(), shouldExit)
+		}
+	})
+
+	// Then
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), recoverCount, callCount)
 }

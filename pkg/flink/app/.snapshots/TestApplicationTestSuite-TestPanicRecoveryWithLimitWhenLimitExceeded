@@ -1,0 +1,3 @@
+Error: internal error. Run `confluent flink shell -vvv` to enable debug logs when starting the flink shell and report the output to the CLI team. Kindly share steps reproduce, if possible.
+Please, restart the CLI.
+

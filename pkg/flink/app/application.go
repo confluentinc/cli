@@ -2,6 +2,7 @@ package app
 
 import (
 	"sync"
+	"time"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
@@ -109,8 +110,12 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 }
 
 func (a *Application) readEvalPrintLoop() {
+	run := utils.NewPanicRecovererWithLimit(3, 3*time.Second)
 	for a.isAuthenticated() {
-		utils.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
+		shouldExit := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
+		if shouldExit {
+			break
+		}
 	}
 }
 
@@ -136,10 +141,10 @@ func (a *Application) readEvalPrint() {
 }
 
 func (a *Application) panicRecovery() {
+	log.CliLogger.Warn("Internal error ocurred. Executing panic recovery.")
 	a.statementController.CleanupStatement()
 	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
 	a.reportUsage()
-	utils.OutputErr("Error: internal error occurred")
 }
 
 func (a *Application) isAuthenticated() bool {
