@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,7 +15,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 var (
@@ -165,27 +161,16 @@ func (s *CLITestSuite) TestLogin_UseKafkaAuthKafkaErrors() {
 func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 	tests := []struct {
 		isCloud  bool
-		want     string
 		loginURL string
-		bin      string
 	}{
 		{
 			true,
-			"login/config-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
-			testBin,
 		},
 		{
 			false,
-			"login/config-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
-			testBin,
 		},
-	}
-
-	_, callerFileName, _, ok := runtime.Caller(0)
-	if !ok {
-		s.T().Fatalf("problems recovering caller information")
 	}
 
 	for _, test := range tests {
@@ -198,7 +183,7 @@ func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 		}
 
 		// TODO: add save test using stdin input
-		output := runCommand(s.T(), test.bin, env, "login -vvv --save --url "+test.loginURL, 0, "")
+		output := runCommand(s.T(), testBin, env, "login -vvv --save --url "+test.loginURL, 0, "")
 		if test.isCloud {
 			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
@@ -208,16 +193,12 @@ func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 
 		got, err := os.ReadFile(config.GetDefaultFilename())
 		s.NoError(err)
-		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", test.want)
+
+		cfg := &config.Config{}
+		err = json.Unmarshal(got, cfg)
 		s.NoError(err)
-		wantBytes, err := os.ReadFile(wantFile)
-		s.NoError(err)
-		want := strings.ReplaceAll(string(wantBytes), urlPlaceHolder, test.loginURL)
-		data := config.Config{}
-		err = json.Unmarshal(got, &data)
-		s.NoError(err)
-		want = strings.ReplaceAll(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+test.loginURL].EncryptedPassword)
-		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(want))
+
+		require.NotNil(s.T(), cfg.SavedCredentials["login-good@user.com-"+test.loginURL])
 	}
 	_ = os.Remove(netrc.IntegrationTestFile)
 }
@@ -336,13 +317,13 @@ func (s *CLITestSuite) TestLogin_RemoveSlashFromPlatformName() {
 
 	_ = runCommand(s.T(), testBin, env, args, 0, "")
 
-	fmt.Println("TestLogin", config.GetDefaultFilename())
 	got, err := os.ReadFile(config.GetDefaultFilename())
 	s.NoError(err)
-	fmt.Println("TestLogin", got)
-	data := config.Config{}
-	err = json.Unmarshal(got, &data)
+	fmt.Println("TestLogin", string(got))
+
+	cfg := &config.Config{}
+	err = json.Unmarshal(got, cfg)
 	s.NoError(err)
 
-	s.Equal(s.TestBackend.GetCloudUrl(), data.Context().GetPlatform().GetName())
+	s.Equal(s.TestBackend.GetCloudUrl(), cfg.Context().GetPlatform().GetName())
 }

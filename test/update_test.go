@@ -4,8 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
 func (s *CLITestSuite) TestUpdate() {
