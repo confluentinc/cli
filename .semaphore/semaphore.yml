@@ -41,7 +41,7 @@ blocks:
           commands:
             - test-results publish . -N "linux/amd64"
 
-  - name: darwin/amd64
+  - name: darwin/arm64
     dependencies: []
     task:
       agent:
@@ -61,6 +61,38 @@ blocks:
         always:
           commands:
             - test-results publish . -N "darwin/amd64"
+
+  - name: windows/amd64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-windows
+      jobs:
+        - name: windows/amd64
+          commands:
+            # Set up Go
+            - checkout
+            - choco install -y golang --version $(Get-Content .go-version)
+            # TODO: https://confluentinc.atlassian.net/browse/DP-9532
+
+            # Try to restore cached dependencies
+            - cache restore windows-$($(Get-FileHash go.sum).Hash)
+
+            # Run tests
+            - $env:GOCOVERDIR = 'test/coverage'
+            - New-Item $env:GOCOVERDIR -ItemType Directory
+            - go install gotest.tools/gotestsum@v1.8.2
+            # - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
+            - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
+            - go tool covdata textfmt -i $env:GOCOVERDIR -o test/coverage.out
+
+            # Cache Go dependencies
+            - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
+      epilogue:
+        always:
+          commands:
+            - test-results publish . -N "windows/amd64"
 
 after_pipeline:
   task:
