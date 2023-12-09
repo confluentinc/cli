@@ -189,7 +189,6 @@ func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 	}
 
 	for _, test := range tests {
-		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
 		// run the login command with --save flag and check output
 		var env []string
 		if test.isCloud {
@@ -207,8 +206,7 @@ func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 			s.Contains(output, loggedInAsOutput)
 		}
 
-		// check netrc file result
-		got, err := os.ReadFile(configFile)
+		got, err := os.ReadFile(config.GetDefaultFilename())
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", test.want)
 		s.NoError(err)
@@ -251,7 +249,7 @@ func (s *CLITestSuite) TestLogin_UpdateNetrcPassword() {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 
-		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
+		configFile := config.GetDefaultFilename()
 		old, err := os.ReadFile(configFile)
 		s.NoError(err)
 		oldData := config.Config{}
@@ -333,18 +331,18 @@ func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
 func (s *CLITestSuite) TestLogin_RemoveSlashFromPlatformName() {
 	resetConfiguration(s.T(), false)
 
-	configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
-
 	args := fmt.Sprintf("login --url %s/", s.TestBackend.GetCloudUrl())
 	env := []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 
 	_ = runCommand(s.T(), testBin, env, args, 0, "")
 
-	got, err := os.ReadFile(configFile)
+	fmt.Println("TestLogin", config.GetDefaultFilename())
+	got, err := os.ReadFile(config.GetDefaultFilename())
 	s.NoError(err)
+	fmt.Println("TestLogin", got)
 	data := config.Config{}
 	err = json.Unmarshal(got, &data)
 	s.NoError(err)
 
-	s.Equal(s.TestBackend.GetCloudUrl(), data.Context().PlatformName)
+	s.Equal(s.TestBackend.GetCloudUrl(), data.Context().GetPlatform().GetName())
 }
