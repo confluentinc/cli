@@ -18,8 +18,6 @@ import (
 )
 
 var (
-	urlPlaceHolder          = "<URL_PLACEHOLDER>"
-	passwordPlaceholder     = "<PASSWORD_PLACEHOLDER>"
 	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
 	loggedInEnvOutput       = "Using environment \"env-596\".\n"
