@@ -317,16 +317,10 @@ func (s *CLITestSuite) TestLogin_RemoveSlashFromPlatformName() {
 
 	got, err := os.ReadFile(config.GetDefaultFilename())
 	s.NoError(err)
-	fmt.Println("TestLogin", string(got))
 
 	cfg := &config.Config{}
 	err = json.Unmarshal(got, cfg)
 	s.NoError(err)
 
-	fmt.Println(cfg)
-	fmt.Println(cfg.Context())
-	fmt.Println(cfg.Context().GetPlatform())
-	fmt.Println(cfg.Context().GetPlatform().GetName())
-
-	s.Equal(s.TestBackend.GetCloudUrl(), cfg.Context().GetPlatform().GetName())
+	s.Equal(s.TestBackend.GetCloudUrl(), cfg.Context().PlatformName)
 }
