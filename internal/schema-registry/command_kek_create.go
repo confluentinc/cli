@@ -20,14 +20,12 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.kekCreate,
 	}
 
-	// all descriptions need to be updated. @RobertY
-	// what are required?
 	cmd.Flags().String("name", "", "Name of the KEK.")
-	cmd.Flags().String("kms-type", "", "The type of KMS.")
+	cmd.Flags().String("kms-type", "", "The type of KMS, typically one of `aws-kms`, `azure-kms`, and `gcp-kms`.")
 	cmd.Flags().String("kms-key-id", "", "The key ID of KMS.")
-	cmd.Flags().StringSlice("kms-props", nil, "A comma-separated list?")
-	cmd.Flags().String("doc", "", "")
-	cmd.Flags().Bool("shared", false, "")
+	cmd.Flags().StringSlice("kms-props", nil, "A comma-separated list of additional properties used to access the KMS.")
+	cmd.Flags().String("doc", "", "An optional user-friendly description for the KEK.")
+	cmd.Flags().Bool("shared", false, "If the DEK Registry has shared access to the KMS.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -37,6 +35,10 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		addSchemaRegistryEndpointFlag(cmd) // guess it's needed?
 	}
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagRequired("name")
+	cmd.MarkFlagRequired("kms-type")
+	cmd.MarkFlagRequired("kms-key-id")
 
 	return cmd
 }

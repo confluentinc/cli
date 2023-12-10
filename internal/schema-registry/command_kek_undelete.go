@@ -5,18 +5,17 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c *command) newKekDescribeCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newKekUndeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <name>",
-		Short: "Describe a Kek.",
+		Use:   "undelete <name>",
+		Short: "Undelete a KEK.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.kekDescribe,
+		RunE:  c.kekUndelete,
 	}
-
-	// all descriptions need to be updated. @RobertY
-	cmd.Flags().Bool("deleted", false, "Include deleted KEK.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -25,26 +24,26 @@ func (c *command) newKekDescribeCommand(cfg *config.Config) *cobra.Command {
 		addCaLocationFlag(cmd)
 		addSchemaRegistryEndpointFlag(cmd)
 	}
-	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) kekDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) kekUndelete(cmd *cobra.Command, args []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	deleted, err := cmd.Flags().GetBool("deleted")
+	_, err = client.DescribeKek(args[0], true)
+	if err != nil {
+		return resource.ResourcesNotFoundError(cmd, resource.Kek, args[0])
+	}
+
+	err = client.UndeletKek(args[0])
 	if err != nil {
 		return err
 	}
 
-	res, err := client.DescribeKek(args[0], deleted)
-	if err != nil {
-		return err
-	}
-
-	return printKek(cmd, res)
+	output.Printf(c.Config.EnableColor, "Undeleted KEK \"%s\".\n", args[0])
+	return nil
 }

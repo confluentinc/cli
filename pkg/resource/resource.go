@@ -24,6 +24,7 @@ const (
 	CustomConnectorPlugin       = "custom connector plugin"
 	ConsumerShare               = "consumer share"
 	Context                     = "context"
+	Dek                         = "DEK"
 	Environment                 = "environment"
 	FlinkComputePool            = "Flink compute pool"
 	FlinkRegion                 = "Flink region"

@@ -13,7 +13,7 @@ func (c *command) newKekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
 		Short: "Delete one or more KEK.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.kekDelete,
 	}
 

@@ -18,14 +18,14 @@ const (
 )
 
 type kekHumanOut struct {
-	Name     string `human:"Name"`
-	KmsType  string `human:"KMS Type"`
-	KmsKeyId string `human:"KMS Key ID"`
-	KmsProps string `human:"KMS Props"` // how to print this? Make it a []string of key:value?
-	Doc      string `human:"Doc"`
-	Shared   bool   `human:"Shared"`
-	Ts       int64  `human:"TS"`
-	Deleted  bool   `human:"Deleted"`
+	Name      string `human:"Name"`
+	KmsType   string `human:"KMS Type"`
+	KmsKeyId  string `human:"KMS Key ID"`
+	KmsProps  string `human:"KMS Props"` // how to print this? Make it a []string of key:value?
+	Doc       string `human:"Doc"`
+	Shared    bool   `human:"Shared"`
+	Timestamp int64  `human:"Timestamp"`
+	Deleted   bool   `human:"Deleted"`
 }
 
 type kekSerializedOut struct {
@@ -35,7 +35,7 @@ type kekSerializedOut struct {
 	KmsProps map[string]string `serialized:"kmsProps,omitempty"`
 	Doc      string            `serialized:"doc,omitempty"`
 	Shared   bool              `serialized:"shared,omitempty"`
-	Ts       int64             `serialized:"ts,omitempty"`
+	Ts       int64             `serialized:"timestamp,omitempty"`
 	Deleted  bool              `serialized:"deleted,omitempty"`
 }
 
@@ -50,6 +50,7 @@ func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(c.newKekDeleteCommand(cfg))
 	cmd.AddCommand(c.newKekDescribeCommand(cfg))
 	cmd.AddCommand(c.newKekListCommand(cfg))
+	cmd.AddCommand(c.newKekUndeleteCommand(cfg))
 	cmd.AddCommand(c.newKekUpdateCommand(cfg))
 
 	return cmd
@@ -63,14 +64,14 @@ func printKek(cmd *cobra.Command, res srsdk.Kek) error {
 			kmsPropsSlices = append(kmsPropsSlices, fmt.Sprintf("%s:%s", key, value))
 		}
 		table.Add(&kekHumanOut{
-			Name:     res.GetName(),
-			KmsType:  res.GetKmsType(),
-			KmsKeyId: res.GetKmsKeyId(),
-			KmsProps: strings.Join(kmsPropsSlices, ", "),
-			Doc:      res.GetDoc(),
-			Shared:   res.GetShared(),
-			Ts:       res.GetTs(),
-			Deleted:  res.GetDeleted(),
+			Name:      res.GetName(),
+			KmsType:   res.GetKmsType(),
+			KmsKeyId:  res.GetKmsKeyId(),
+			KmsProps:  strings.Join(kmsPropsSlices, ", "),
+			Doc:       res.GetDoc(),
+			Shared:    res.GetShared(),
+			Timestamp: res.GetTs(),
+			Deleted:   res.GetDeleted(),
 		})
 	} else {
 		table.Add(&kekSerializedOut{
