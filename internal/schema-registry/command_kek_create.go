@@ -1,29 +1,26 @@
 package schemaregistry
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Kek.",
+		Short: "Create a KEK.",
 		Args:  cobra.NoArgs,
 		RunE:  c.kekCreate,
 	}
 
 	cmd.Flags().String("name", "", "Name of the KEK.")
-	cmd.Flags().String("kms-type", "", "The type of KMS, typically one of `aws-kms`, `azure-kms`, and `gcp-kms`.")
+	cmd.Flags().String("kms-type", "aws-kms", "The type of KMS, typically one of `aws-kms`, `azure-kms`, and `gcp-kms`.")
 	cmd.Flags().String("kms-key-id", "", "The key ID of KMS.")
-	cmd.Flags().StringSlice("kms-props", nil, "A comma-separated list of additional properties used to access the KMS.")
+	cmd.Flags().StringSlice("kms-props", nil, "A comma-separated list of additional properties (key=value) used to access the KMS.")
 	cmd.Flags().String("doc", "", "An optional user-friendly description for the KEK.")
 	cmd.Flags().Bool("shared", false, "If the DEK Registry has shared access to the KMS.")
 
@@ -32,7 +29,7 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd) // guess it's needed?
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
 
@@ -64,19 +61,9 @@ func (c *command) kekCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	kmsPropsSlices, err := cmd.Flags().GetStringSlice("kms-props")
+	kmsProps, err := constructKmsProps(cmd)
 	if err != nil {
 		return err
-	}
-
-	// construct the map
-	kmsProps := make(map[string]string)
-	for _, item := range kmsPropsSlices {
-		pair := strings.Split(item, ":")
-		if len(pair) != 2 {
-			return errors.NewErrorWithSuggestions(kmsPropsFormatErrorMsg, kmsPropsFormatSuggestions)
-		}
-		kmsProps[pair[0]] = pair[1]
 	}
 
 	doc, err := cmd.Flags().GetString("doc")

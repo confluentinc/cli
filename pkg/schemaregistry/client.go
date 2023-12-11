@@ -261,11 +261,6 @@ func (c *Client) GetDekSubjects(name string) ([]string, error) {
 	return res, err
 }
 
-func (c *Client) GetDek(name, subject, algorithm string, deleted bool) (srsdk.Dek, error) {
-	res, _, err := c.DefaultApi.GetDek(c.context(), name, subject).Algorithm(algorithm).Deleted(deleted).Execute()
-	return res, err
-}
-
 func (c *Client) GetDekByVersion(name, subject, version, algorithm string, deleted bool) (srsdk.Dek, error) {
 	res, _, err := c.DefaultApi.GetDekByVersion(c.context(), name, subject, version).Algorithm(algorithm).Deleted(deleted).Execute()
 	return res, err

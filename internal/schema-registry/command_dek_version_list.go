@@ -5,20 +5,20 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *command) newDekDescribeCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newDekVersionListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe",
-		Short: "Describe a Dek.",
+		Use:   "list",
+		Short: "List Schema Registry DEK versions.",
 		Args:  cobra.NoArgs,
-		RunE:  c.dekDescribe,
+		RunE:  c.dekVersionList,
 	}
 
 	cmd.Flags().String("name", "", "Name of the KEK.")
 	cmd.Flags().String("subject", "", "Subject of the DEK.")
 	pcmd.AddAlgorithmFlag(cmd)
-	cmd.Flags().String("version", "1", "Version of the DEK.")
 	cmd.Flags().Bool("deleted", false, "Include deleted DEK.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -30,13 +30,9 @@ func (c *command) newDekDescribeCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
-	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
-
 	return cmd
 }
-
-func (c *command) dekDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) dekVersionList(cmd *cobra.Command, args []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
@@ -52,11 +48,6 @@ func (c *command) dekDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	version, err := cmd.Flags().GetString("version")
-	if err != nil {
-		return err
-	}
-
 	algorithm, err := cmd.Flags().GetString("algorithm")
 	if err != nil {
 		return err
@@ -67,10 +58,14 @@ func (c *command) dekDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dek, err := client.GetDekByVersion(name, subject, version, algorithm, deleted)
+	versions, err := client.GetDeKVersions(name, subject, algorithm, deleted)
 	if err != nil {
 		return err
 	}
 
-	return printDek(cmd, dek)
+	list := output.NewList(cmd)
+	for _, version := range versions {
+		list.Add(&versionOut{Version: version})
+	}
+	return list.Print()
 }

@@ -10,12 +10,11 @@ import (
 func (c *command) newKekDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe a Kek.",
+		Short: "Describe a KEK.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.kekDescribe,
 	}
 
-	// all descriptions need to be updated. @RobertY
 	cmd.Flags().Bool("deleted", false, "Include deleted KEK.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

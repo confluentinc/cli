@@ -8,19 +8,15 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type kekListOut struct {
-	Name string `human:"Name" serialized:"name"`
-}
-
-func (c *command) newKekListCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newDekSubjectListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List KEK.",
+		Short: "List Schema Registry DEK subjects.",
 		Args:  cobra.NoArgs,
-		RunE:  c.kekList,
+		RunE:  c.dekSubjectList,
 	}
 
-	cmd.Flags().Bool("deleted", false, "Include deleted KEK.")
+	cmd.Flags().String("name", "", "Name of the KEK.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -31,28 +27,29 @@ func (c *command) newKekListCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+
 	return cmd
 }
-
-func (c *command) kekList(cmd *cobra.Command, _ []string) error {
+func (c *command) dekSubjectList(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	deleted, err := cmd.Flags().GetBool("deleted")
+	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}
 
-	keks, err := client.ListKeks(deleted)
+	subjects, err := client.GetDekSubjects(name)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, kek := range keks {
-		list.Add(&kekListOut{Name: kek})
+	for _, subject := range subjects {
+		list.Add(&subjectListOut{Subject: subject})
 	}
 	return list.Print()
 }

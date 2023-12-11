@@ -15,7 +15,7 @@ import (
 func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a dek.",
+		Short: "Delete a DEK.",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekDelete,
 	}

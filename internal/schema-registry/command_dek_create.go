@@ -12,7 +12,7 @@ import (
 func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a dek.",
+		Short: "Create a DEK.",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekCreate,
 	}

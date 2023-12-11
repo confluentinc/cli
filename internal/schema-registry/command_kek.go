@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
@@ -17,11 +18,28 @@ const (
 	kmsPropsFormatSuggestions = "KMS props must be specified in this format: `<key>:<value>`."
 )
 
+func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "kek",
+		Short:       "Manage Schema Registry KEK.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+	}
+
+	cmd.AddCommand(c.newKekCreateCommand(cfg))
+	cmd.AddCommand(c.newKekDeleteCommand(cfg))
+	cmd.AddCommand(c.newKekDescribeCommand(cfg))
+	cmd.AddCommand(c.newKekListCommand(cfg))
+	cmd.AddCommand(c.newKekUndeleteCommand(cfg))
+	cmd.AddCommand(c.newKekUpdateCommand(cfg))
+
+	return cmd
+}
+
 type kekHumanOut struct {
 	Name      string `human:"Name"`
 	KmsType   string `human:"KMS Type"`
 	KmsKeyId  string `human:"KMS Key ID"`
-	KmsProps  string `human:"KMS Props"` // how to print this? Make it a []string of key:value?
+	KmsProps  string `human:"KMS Props"`
 	Doc       string `human:"Doc"`
 	Shared    bool   `human:"Shared"`
 	Timestamp int64  `human:"Timestamp"`
@@ -37,23 +55,6 @@ type kekSerializedOut struct {
 	Shared   bool              `serialized:"shared,omitempty"`
 	Ts       int64             `serialized:"timestamp,omitempty"`
 	Deleted  bool              `serialized:"deleted,omitempty"`
-}
-
-func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:         "kek",
-		Short:       "Manage Schema Registry Kek.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
-	}
-
-	cmd.AddCommand(c.newKekCreateCommand(cfg))
-	cmd.AddCommand(c.newKekDeleteCommand(cfg))
-	cmd.AddCommand(c.newKekDescribeCommand(cfg))
-	cmd.AddCommand(c.newKekListCommand(cfg))
-	cmd.AddCommand(c.newKekUndeleteCommand(cfg))
-	cmd.AddCommand(c.newKekUpdateCommand(cfg))
-
-	return cmd
 }
 
 func printKek(cmd *cobra.Command, res srsdk.Kek) error {
@@ -86,4 +87,22 @@ func printKek(cmd *cobra.Command, res srsdk.Kek) error {
 		})
 	}
 	return table.Print()
+}
+
+func constructKmsProps(cmd *cobra.Command) (map[string]string, error) {
+	kmsPropsSlices, err := cmd.Flags().GetStringSlice("kms-props")
+	if err != nil {
+		return nil, err
+	}
+
+	kmsProps := make(map[string]string)
+	for _, item := range kmsPropsSlices {
+		pair := strings.Split(item, ":")
+		if len(pair) != 2 {
+			return nil, errors.NewErrorWithSuggestions(kmsPropsFormatErrorMsg, kmsPropsFormatSuggestions)
+		}
+		kmsProps[pair[0]] = pair[1]
+	}
+
+	return kmsProps, nil
 }

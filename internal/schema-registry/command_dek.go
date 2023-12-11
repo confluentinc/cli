@@ -13,14 +13,16 @@ import (
 func (c *command) newDekCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "dek",
-		Short:       "Manage Schema Registry dek.",
+		Short:       "Manage Schema Registry DEK.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
 	cmd.AddCommand(c.newDekCreateCommand(cfg))
-	cmd.AddCommand(c.newDekDescribeCommand(cfg))
 	cmd.AddCommand(c.newDekDeleteCommand(cfg))
+	cmd.AddCommand(c.newDekDescribeCommand(cfg))
+	cmd.AddCommand(c.newDekSubjectCommand(cfg))
 	cmd.AddCommand(c.newDekUndeleteCommand(cfg))
+	cmd.AddCommand(c.newDekVersionCommand(cfg))
 
 	return cmd
 }
