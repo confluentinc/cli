@@ -161,6 +161,10 @@ func (c *InputController) Prompt() prompt.IPrompt {
 			ASCIICode: []byte{0x1b, 0x66},
 			Fn:        prompt.GoRightWord,
 		}),
+		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			ASCIICode: []byte{0x1b, 0x7F},
+			Fn:        prompt.DeleteWord,
+		}),
 		prompt.OptionPrefixTextColor(prompt.Yellow),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
@@ -169,14 +173,10 @@ func (c *InputController) Prompt() prompt.IPrompt {
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)
-			// We add exit here because we also want to exit without the need of adding semicolon, which is the default flow for all statements
-			if text == "exit" {
-				return true
-			}
-			if text == "" || !strings.HasSuffix(text, ";") {
+			if text == "" {
 				return false
 			}
-			return true
+			return text == "exit" || strings.HasSuffix(text, ";") || lastKeyStroke == prompt.AltEnter
 		}),
 	)
 }
