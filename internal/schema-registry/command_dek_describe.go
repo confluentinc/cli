@@ -10,7 +10,7 @@ import (
 func (c *command) newDekDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe a Dek.",
+		Short: "Describe a DEK.",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekDescribe,
 	}

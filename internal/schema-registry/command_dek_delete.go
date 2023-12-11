@@ -23,7 +23,7 @@ func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the KEK.")
 	cmd.Flags().String("subject", "", "Subject of the DEK.")
 	pcmd.AddAlgorithmFlag(cmd)
-	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all verions of DEK will be deleted.")
+	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of DEK will be deleted.")
 	cmd.Flags().Bool("permanent", false, "Delete DEK permanently.")
 	pcmd.AddForceFlag(cmd)
 

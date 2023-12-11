@@ -15,7 +15,7 @@ import (
 
 const (
 	kmsPropsFormatErrorMsg    = "incorrect KMS props format specified"
-	kmsPropsFormatSuggestions = "KMS props must be specified in this format: `<key>:<value>`."
+	kmsPropsFormatSuggestions = "KMS props must be specified in this format: `<key>=<value>`."
 )
 
 func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
@@ -39,7 +39,7 @@ type kekHumanOut struct {
 	Name      string `human:"Name"`
 	KmsType   string `human:"KMS Type"`
 	KmsKeyId  string `human:"KMS Key ID"`
-	KmsProps  string `human:"KMS Props"`
+	KmsProps  string `human:"KMS Properties"`
 	Doc       string `human:"Doc"`
 	Shared    bool   `human:"Shared"`
 	Timestamp int64  `human:"Timestamp"`
@@ -48,9 +48,9 @@ type kekHumanOut struct {
 
 type kekSerializedOut struct {
 	Name     string            `serialized:"name,omitempty"`
-	KmsType  string            `serialized:"kmsType,omitempty"`
-	KmsKeyId string            `serialized:"kmsKeyId,omitempty"`
-	KmsProps map[string]string `serialized:"kmsProps,omitempty"`
+	KmsType  string            `serialized:"kms_type,omitempty"`
+	KmsKeyId string            `serialized:"kms_key_id,omitempty"`
+	KmsProps map[string]string `serialized:"kms_properties,omitempty"`
 	Doc      string            `serialized:"doc,omitempty"`
 	Shared   bool              `serialized:"shared,omitempty"`
 	Ts       int64             `serialized:"timestamp,omitempty"`
@@ -62,7 +62,7 @@ func printKek(cmd *cobra.Command, res srsdk.Kek) error {
 	if output.GetFormat(cmd) == output.Human {
 		var kmsPropsSlices []string
 		for key, value := range res.GetKmsProps() {
-			kmsPropsSlices = append(kmsPropsSlices, fmt.Sprintf("%s:%s", key, value))
+			kmsPropsSlices = append(kmsPropsSlices, fmt.Sprintf("%s=%s", key, value))
 		}
 		table.Add(&kekHumanOut{
 			Name:      res.GetName(),
