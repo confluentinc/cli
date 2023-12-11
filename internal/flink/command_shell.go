@@ -36,7 +36,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().Bool("language-service", false, "Enables the flink language service integration (experimental).")
+	cmd.Flags().Bool("language-service", false, "Enables the Flink language service integration (experimental).")
 
 	return cmd
 }
@@ -147,16 +147,16 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	lspEnabled, err := cmd.Flags().GetBool("language-service")
+	languageService, err := cmd.Flags().GetBool("language-service")
 	if err != nil {
 		return err
 	}
 
 	var lspBaseUrl string
-	if lspEnabled {
+	if languageService {
 		lspBaseUrl, err = c.getFlinkLanguageServiceUrl(flinkGatewayClient)
 		if err != nil {
-			log.CliLogger.Warnf("Shell won't connect to language service. Error getting language service url: %v\n", err)
+			log.CliLogger.Warnf("Flink shell failed to connect to language service: error getting language service URL: %v\n", err)
 			return err
 		}
 	}
@@ -176,7 +176,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		ComputePoolId:    computePool,
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
-		LSPEnabled:       lspEnabled,
+		LSPEnabled:       languageService,
 		LSPBaseUrl:       lspBaseUrl,
 	}
 

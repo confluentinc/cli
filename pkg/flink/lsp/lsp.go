@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
-type LSPInterface interface {
+type LspInterface interface {
 	Initialize() (*lsp.InitializeResult, error)
 	DidOpen() error
 	DidChange(newText string) error

@@ -27,7 +27,7 @@ type WebsocketLSPClient struct {
 	environmentId  string
 
 	conn      *jsonrpc2.Conn
-	lspClient LSPInterface
+	lspClient LspInterface
 }
 
 func (w *WebsocketLSPClient) Initialize() (*lsp.InitializeResult, error) {
@@ -54,7 +54,7 @@ func (w *WebsocketLSPClient) ShutdownAndExit() {
 	w.client().ShutdownAndExit()
 }
 
-func (w *WebsocketLSPClient) client() LSPInterface {
+func (w *WebsocketLSPClient) client() LspInterface {
 	w.Lock()
 	defer w.Unlock()
 
@@ -80,7 +80,7 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 	}
 }
 
-func NewLSPClientWS(getAuthToken func() string, baseUrl, organizationId, environmentId string) LSPInterface {
+func NewLSPClientWS(getAuthToken func() string, baseUrl, organizationId, environmentId string) LspInterface {
 	lspClient, conn, err := newLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId)
 	if err != nil {
 		return nil
@@ -96,7 +96,7 @@ func NewLSPClientWS(getAuthToken func() string, baseUrl, organizationId, environ
 	return websocketClient
 }
 
-func newLSPConnection(baseUrl, authToken, organizationId, environmentId string) (LSPInterface, *jsonrpc2.Conn, error) {
+func newLSPConnection(baseUrl, authToken, organizationId, environmentId string) (LspInterface, *jsonrpc2.Conn, error) {
 	stream, err := newWSObjectStream(baseUrl, authToken, organizationId, environmentId)
 	if err != nil {
 		log.CliLogger.Debugf("Error dialing websocket: %v\n", err)

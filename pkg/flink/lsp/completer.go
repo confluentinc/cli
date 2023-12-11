@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
-func LSPCompleter(c LSPInterface, configurationSettings func() CliContext) prompt.Completer {
+func LspCompleter(c LspInterface, configurationSettings func() CliContext) prompt.Completer {
 	return func(in prompt.Document) []prompt.Suggest {
 		textBeforeCursor := in.TextBeforeCursor()
 		if textBeforeCursor == "" || c == nil {
