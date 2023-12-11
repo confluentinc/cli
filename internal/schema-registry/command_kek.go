@@ -1,0 +1,108 @@
+package schemaregistry
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+)
+
+const (
+	kmsPropsFormatErrorMsg    = "incorrect KMS props format specified"
+	kmsPropsFormatSuggestions = "KMS props must be specified in this format: `<key>=<value>`."
+)
+
+func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "kek",
+		Short:       "Manage Schema Registry KEK.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+	}
+
+	cmd.AddCommand(c.newKekCreateCommand(cfg))
+	cmd.AddCommand(c.newKekDeleteCommand(cfg))
+	cmd.AddCommand(c.newKekDescribeCommand(cfg))
+	cmd.AddCommand(c.newKekListCommand(cfg))
+	cmd.AddCommand(c.newKekUndeleteCommand(cfg))
+	cmd.AddCommand(c.newKekUpdateCommand(cfg))
+
+	return cmd
+}
+
+type kekHumanOut struct {
+	Name      string `human:"Name"`
+	KmsType   string `human:"KMS Type"`
+	KmsKeyId  string `human:"KMS Key ID"`
+	KmsProps  string `human:"KMS Properties"`
+	Doc       string `human:"Doc"`
+	Shared    bool   `human:"Shared"`
+	Timestamp int64  `human:"Timestamp"`
+	Deleted   bool   `human:"Deleted"`
+}
+
+type kekSerializedOut struct {
+	Name     string            `serialized:"name,omitempty"`
+	KmsType  string            `serialized:"kms_type,omitempty"`
+	KmsKeyId string            `serialized:"kms_key_id,omitempty"`
+	KmsProps map[string]string `serialized:"kms_properties,omitempty"`
+	Doc      string            `serialized:"doc,omitempty"`
+	Shared   bool              `serialized:"shared,omitempty"`
+	Ts       int64             `serialized:"timestamp,omitempty"`
+	Deleted  bool              `serialized:"deleted,omitempty"`
+}
+
+func printKek(cmd *cobra.Command, res srsdk.Kek) error {
+	table := output.NewTable(cmd)
+	if output.GetFormat(cmd) == output.Human {
+		var kmsPropsSlices []string
+		for key, value := range res.GetKmsProps() {
+			kmsPropsSlices = append(kmsPropsSlices, fmt.Sprintf("%s=%s", key, value))
+		}
+		table.Add(&kekHumanOut{
+			Name:      res.GetName(),
+			KmsType:   res.GetKmsType(),
+			KmsKeyId:  res.GetKmsKeyId(),
+			KmsProps:  strings.Join(kmsPropsSlices, ", "),
+			Doc:       res.GetDoc(),
+			Shared:    res.GetShared(),
+			Timestamp: res.GetTs(),
+			Deleted:   res.GetDeleted(),
+		})
+	} else {
+		table.Add(&kekSerializedOut{
+			Name:     res.GetName(),
+			KmsType:  res.GetKmsType(),
+			KmsKeyId: res.GetKmsKeyId(),
+			KmsProps: res.GetKmsProps(),
+			Doc:      res.GetDoc(),
+			Shared:   res.GetShared(),
+			Ts:       res.GetTs(),
+			Deleted:  res.GetDeleted(),
+		})
+	}
+	return table.Print()
+}
+
+func constructKmsProps(cmd *cobra.Command) (map[string]string, error) {
+	kmsPropsSlices, err := cmd.Flags().GetStringSlice("kms-props")
+	if err != nil {
+		return nil, err
+	}
+
+	kmsProps := make(map[string]string)
+	for _, item := range kmsPropsSlices {
+		pair := strings.Split(item, "=")
+		if len(pair) != 2 {
+			return nil, errors.NewErrorWithSuggestions(kmsPropsFormatErrorMsg, kmsPropsFormatSuggestions)
+		}
+		kmsProps[pair[0]] = pair[1]
+	}
+
+	return kmsProps, nil
+}
