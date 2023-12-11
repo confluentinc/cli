@@ -6,6 +6,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
+var DekAlgorithms = []string{
+	"AES128_GCM",
+	"AES256_GCM",
+	"AES256_SIV",
+}
+
 const (
 	avroSchemaName     = "avro"
 	doubleSchemaName   = "double"
