@@ -97,7 +97,7 @@ func constructKmsProps(cmd *cobra.Command) (map[string]string, error) {
 
 	kmsProps := make(map[string]string)
 	for _, item := range kmsPropsSlices {
-		pair := strings.Split(item, ":")
+		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
 			return nil, errors.NewErrorWithSuggestions(kmsPropsFormatErrorMsg, kmsPropsFormatSuggestions)
 		}

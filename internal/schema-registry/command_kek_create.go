@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
 func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
@@ -15,6 +16,12 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		Short: "Create a KEK.",
 		Args:  cobra.NoArgs,
 		RunE:  c.kekCreate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Create a KEK with a AWS KMS key:`,
+				Code: "confluent schema-registry kek create --name test --kms-type AWS_KMS --kms-key-id <KMS-key-ID> --kms-props KeyUsage=ENCRYPT_DECRYPT,KeyState=Enabled",
+			},
+		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the KEK.")

@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
 func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
@@ -15,6 +16,12 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 		Short: "Create a DEK.",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekCreate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Create a DEK with a KEK named test, and subject test-value:`,
+				Code: "confluent schema-registry dek create --name test --subject test-value --version 1",
+			},
+		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the KEK.")

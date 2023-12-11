@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -14,6 +15,12 @@ func (c *command) newDekSubjectListCommand(cfg *config.Config) *cobra.Command {
 		Short: "List Schema Registry DEK subjects.",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekSubjectList,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `List subjects for DEK created with a KEK named test:`,
+				Code: "confluent schema-registry dek subject list --name test",
+			},
+		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the KEK.")
