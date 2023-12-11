@@ -231,7 +231,7 @@ func (c *Client) DeleteKek(name string, permanent bool) error {
 	return err
 }
 
-func (c *Client) UndeletKek(name string) error {
+func (c *Client) UndeleteKek(name string) error {
 	_, err := c.DefaultApi.UndeleteKek(c.context(), name).Execute()
 	return err
 }
