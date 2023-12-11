@@ -470,6 +470,11 @@ func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
+func AddAlgorithmFlag(cmd *cobra.Command) {
+	cmd.Flags().String("algorithm", "AES256_GCM", fmt.Sprintf("Use algorithm %s for the DEK.", utils.ArrayToCommaDelimitedString(serdes.DekAlgorithms, "or")))
+	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serdes.DekAlgorithms })
+}
+
 func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 	kafkaREST, err := command.GetKafkaREST()
 	if err != nil {
