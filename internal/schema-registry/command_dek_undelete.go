@@ -14,7 +14,7 @@ import (
 func (c *command) newDekUndeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "undelete",
-		Short: "Undelete a dek.",
+		Short: "Undelete a DEK.",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekUndelete,
 	}
@@ -23,7 +23,6 @@ func (c *command) newDekUndeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("subject", "", "Subject of the DEK.")
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of DEK will be undeleted.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -75,6 +74,6 @@ func (c *command) dekUndelete(cmd *cobra.Command, _ []string) error {
 		return undeleteErr
 	}
 
-	output.ErrPrintln(c.Config.EnableColor, fmt.Sprintf("Undeleted the %s corresponding to the parameters.", resource.Dek))
+	output.ErrPrintf(c.Config.EnableColor, fmt.Sprintf("Undeleted the %s corresponding to the parameters.", resource.Dek))
 	return nil
 }

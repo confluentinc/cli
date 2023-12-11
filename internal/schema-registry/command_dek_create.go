@@ -29,7 +29,6 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().Int32("version", 1, "Version of the DEK.")
 	cmd.Flags().String("encrypted-key-material", "", "The encrypted key material for the DEK.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

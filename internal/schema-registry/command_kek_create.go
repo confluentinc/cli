@@ -19,18 +19,17 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a KEK with a AWS KMS key:`,
-				Code: "confluent schema-registry kek create --name test --kms-type AWS_KMS --kms-key-id <KMS-key-ID> --kms-props KeyUsage=ENCRYPT_DECRYPT,KeyState=Enabled",
+				Code: "confluent schema-registry kek create --name test --kms-type AWS_KMS --kms-key-id arn:aws:kms:us-west-2:037502941121:key/a1231e22-1n78-4l0d-9d50-9pww5faedb54 --kms-properties KeyUsage=ENCRYPT_DECRYPT,KeyState=Enabled",
 			},
 		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the KEK.")
-	cmd.Flags().String("kms-type", "aws-kms", "The type of KMS, typically one of `aws-kms`, `azure-kms`, and `gcp-kms`.")
+	pcmd.AddKmsTypeFlag(cmd)
 	cmd.Flags().String("kms-key-id", "", "The key ID of KMS.")
-	cmd.Flags().StringSlice("kms-props", nil, "A comma-separated list of additional properties (key=value) used to access the KMS.")
+	cmd.Flags().StringSlice("kms-properties", nil, "A comma-separated list of additional properties (key=value) used to access the KMS.")
 	cmd.Flags().String("doc", "", "An optional user-friendly description for the KEK.")
 	cmd.Flags().Bool("shared", false, "If the DEK Registry has shared access to the KMS.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

@@ -472,7 +472,12 @@ func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 
 func AddAlgorithmFlag(cmd *cobra.Command) {
 	cmd.Flags().String("algorithm", "AES256_GCM", fmt.Sprintf("Use algorithm %s for the DEK.", utils.ArrayToCommaDelimitedString(serdes.DekAlgorithms, "or")))
-	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serdes.DekAlgorithms })
+	RegisterFlagCompletionFunc(cmd, "algorithm", func(_ *cobra.Command, _ []string) []string { return serdes.DekAlgorithms })
+}
+
+func AddKmsTypeFlag(cmd *cobra.Command) {
+	cmd.Flags().String("kms-type", "aws-kms", fmt.Sprintf("The type of KMS, typically one of %s.", utils.ArrayToCommaDelimitedString(serdes.DekAlgorithms, "or")))
+	RegisterFlagCompletionFunc(cmd, "kms-type", func(_ *cobra.Command, _ []string) []string { return serdes.KmsTypes })
 }
 
 func AutocompleteLinks(command *AuthenticatedCLICommand) []string {

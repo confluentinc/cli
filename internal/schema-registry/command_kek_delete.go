@@ -12,14 +12,13 @@ import (
 func (c *command) newKekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
-		Short: "Delete one or more KEK.",
+		Short: "Delete one or more KEKs.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.kekDelete,
 	}
 
 	cmd.Flags().Bool("permanent", false, "Delete the KEK permanently.")
 	pcmd.AddForceFlag(cmd)
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

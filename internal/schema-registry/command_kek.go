@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,14 +13,14 @@ import (
 )
 
 const (
-	kmsPropsFormatErrorMsg    = "incorrect KMS props format specified"
-	kmsPropsFormatSuggestions = "KMS props must be specified in this format: `<key>=<value>`."
+	kmsPropsFormatErrorMsg    = "incorrect --kms-properties format specified"
+	kmsPropsFormatSuggestions = `--kms-properties must be formatted as "<key>=<value>".`
 )
 
 func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "kek",
-		Short:       "Manage Schema Registry KEK.",
+		Short:       "Manage Schema Registry Key Encryption Keys (KEKs).",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
@@ -35,74 +34,46 @@ func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-type kekHumanOut struct {
-	Name      string `human:"Name"`
-	KmsType   string `human:"KMS Type"`
-	KmsKeyId  string `human:"KMS Key ID"`
-	KmsProps  string `human:"KMS Properties"`
-	Doc       string `human:"Doc"`
-	Shared    bool   `human:"Shared"`
-	Timestamp int64  `human:"Timestamp"`
-	Deleted   bool   `human:"Deleted"`
+type kekOut struct {
+	Name      string `human:"Name,omitempty" serialized:"name,omitempty" `
+	KmsType   string `human:"KMS Type,omitempty" serialized:"kms_type,omitempty"`
+	KmsKeyId  string `human:"KMS Key ID,omitempty" serialized:"kms_key_id,omitempty"`
+	KmsProps  string `human:"KMS Properties,omitempty" serialized:"kms_properties,omitempty"`
+	Doc       string `human:"Doc,omitempty" serialized:"doc,omitempty"`
+	IsShared  bool   `human:"Is Shared,omitempty" serialized:"is_shared,omitempty"`
+	Timestamp int64  `human:"Timestamp,omitempty" serialized:"timestamp,omitempty"`
+	Deleted   bool   `human:"Deleted,omitempty" serialized:"deleted,omitempty"`
 }
 
-type kekSerializedOut struct {
-	Name     string            `serialized:"name,omitempty"`
-	KmsType  string            `serialized:"kms_type,omitempty"`
-	KmsKeyId string            `serialized:"kms_key_id,omitempty"`
-	KmsProps map[string]string `serialized:"kms_properties,omitempty"`
-	Doc      string            `serialized:"doc,omitempty"`
-	Shared   bool              `serialized:"shared,omitempty"`
-	Ts       int64             `serialized:"timestamp,omitempty"`
-	Deleted  bool              `serialized:"deleted,omitempty"`
-}
-
-func printKek(cmd *cobra.Command, res srsdk.Kek) error {
+func printKek(cmd *cobra.Command, kek srsdk.Kek) error {
 	table := output.NewTable(cmd)
-	if output.GetFormat(cmd) == output.Human {
-		var kmsPropsSlices []string
-		for key, value := range res.GetKmsProps() {
-			kmsPropsSlices = append(kmsPropsSlices, fmt.Sprintf("%s=%s", key, value))
-		}
-		table.Add(&kekHumanOut{
-			Name:      res.GetName(),
-			KmsType:   res.GetKmsType(),
-			KmsKeyId:  res.GetKmsKeyId(),
-			KmsProps:  strings.Join(kmsPropsSlices, ", "),
-			Doc:       res.GetDoc(),
-			Shared:    res.GetShared(),
-			Timestamp: res.GetTs(),
-			Deleted:   res.GetDeleted(),
-		})
-	} else {
-		table.Add(&kekSerializedOut{
-			Name:     res.GetName(),
-			KmsType:  res.GetKmsType(),
-			KmsKeyId: res.GetKmsKeyId(),
-			KmsProps: res.GetKmsProps(),
-			Doc:      res.GetDoc(),
-			Shared:   res.GetShared(),
-			Ts:       res.GetTs(),
-			Deleted:  res.GetDeleted(),
-		})
-	}
+	table.Add(&kekOut{
+		Name:      kek.GetName(),
+		KmsType:   kek.GetKmsType(),
+		KmsKeyId:  kek.GetKmsKeyId(),
+		KmsProps:  convertMapToString(kek.GetKmsProps()),
+		Doc:       kek.GetDoc(),
+		IsShared:  kek.GetShared(),
+		Timestamp: kek.GetTs(),
+		Deleted:   kek.GetDeleted(),
+	})
 	return table.Print()
 }
 
 func constructKmsProps(cmd *cobra.Command) (map[string]string, error) {
-	kmsPropsSlices, err := cmd.Flags().GetStringSlice("kms-props")
+	kmsProperties, err := cmd.Flags().GetStringSlice("kms-properties")
 	if err != nil {
 		return nil, err
 	}
 
-	kmsProps := make(map[string]string)
-	for _, item := range kmsPropsSlices {
+	kmsPropertiesMap := make(map[string]string)
+	for _, item := range kmsProperties {
 		pair := strings.Split(item, "=")
 		if len(pair) != 2 {
 			return nil, errors.NewErrorWithSuggestions(kmsPropsFormatErrorMsg, kmsPropsFormatSuggestions)
 		}
-		kmsProps[pair[0]] = pair[1]
+		kmsPropertiesMap[pair[0]] = pair[1]
 	}
 
-	return kmsProps, nil
+	return kmsPropertiesMap, nil
 }

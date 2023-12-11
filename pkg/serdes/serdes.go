@@ -12,6 +12,12 @@ var DekAlgorithms = []string{
 	"AES256_SIV",
 }
 
+var KmsTypes = []string{
+	"aws-kms",
+	"azure-kms",
+	"gcp-kms",
+}
+
 const (
 	avroSchemaName     = "avro"
 	doubleSchemaName   = "double"

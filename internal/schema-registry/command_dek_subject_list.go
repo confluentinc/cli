@@ -24,7 +24,6 @@ func (c *command) newDekSubjectListCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the KEK.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

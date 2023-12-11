@@ -20,7 +20,6 @@ func (c *command) newDekVersionListCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("subject", "", "Subject of the DEK.")
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().Bool("deleted", false, "Include deleted DEK.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

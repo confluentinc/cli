@@ -26,7 +26,6 @@ func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of DEK will be deleted.")
 	cmd.Flags().Bool("permanent", false, "Delete DEK permanently.")
 	pcmd.AddForceFlag(cmd)
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -88,6 +87,6 @@ func (c *command) dekDelete(cmd *cobra.Command, _ []string) error {
 		return deleteErr
 	}
 
-	output.ErrPrintln(c.Config.EnableColor, fmt.Sprintf("Deleted the %s corresponding to the parameters.", resource.Dek))
+	output.ErrPrintf(c.Config.EnableColor, fmt.Sprintf("Deleted the %s corresponding to the parameters.", resource.Dek))
 	return nil
 }

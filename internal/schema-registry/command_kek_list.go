@@ -8,20 +8,15 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type kekListOut struct {
-	Name string `human:"Name" serialized:"name"`
-}
-
 func (c *command) newKekListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List KEK.",
+		Short: "List KEKs.",
 		Args:  cobra.NoArgs,
 		RunE:  c.kekList,
 	}
 
-	cmd.Flags().Bool("deleted", false, "Include deleted KEK.")
-
+	cmd.Flags().Bool("deleted", false, "Include deleted KEKs.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -51,8 +46,21 @@ func (c *command) kekList(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, kek := range keks {
-		list.Add(&kekListOut{Name: kek})
+	for _, kekName := range keks {
+		kek, err := client.DescribeKek(kekName, deleted)
+		if err != nil {
+			return err
+		}
+		list.Add(&kekOut{
+			Name:      kekName,
+			KmsType:   kek.GetKmsType(),
+			KmsKeyId:  kek.GetKmsKeyId(),
+			KmsProps:  convertMapToString(kek.GetKmsProps()),
+			Doc:       kek.GetDoc(),
+			IsShared:  kek.GetShared(),
+			Timestamp: kek.GetTs(),
+			Deleted:   kek.GetDeleted(),
+		})
 	}
 	return list.Print()
 }

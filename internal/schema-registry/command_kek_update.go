@@ -17,10 +17,9 @@ func (c *command) newKekUpdateCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.kekUpdate,
 	}
 
-	cmd.Flags().StringSlice("kms-props", nil, "A comma-separated list of additional properties (key=value) used to access the KMS.")
+	cmd.Flags().StringSlice("kms-properties", nil, "A comma-separated list of additional properties (key=value) used to access the KMS.")
 	cmd.Flags().String("doc", "", "An optional user-friendly description for the KEK.")
 	cmd.Flags().Bool("shared", false, "If the DEK Registry has shared access to the KMS.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -30,7 +29,7 @@ func (c *command) newKekUpdateCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("kms-props", "doc", "shared")
+	cmd.MarkFlagsOneRequired("kms-properties", "doc", "shared")
 
 	return cmd
 }
@@ -52,7 +51,7 @@ func (c *command) kekUpdate(cmd *cobra.Command, args []string) error {
 		Shared:   kek.Shared,
 	}
 
-	if cmd.Flags().Changed("kms-props") {
+	if cmd.Flags().Changed("kms-properties") {
 		kmsProps, err := constructKmsProps(cmd)
 		if err != nil {
 			return err
