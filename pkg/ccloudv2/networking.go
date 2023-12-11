@@ -317,3 +317,8 @@ func (c *Client) CreateNetworkLinkEndpoint(endpoint networkingv1.NetworkingV1Net
 	resp, httpResp, err := c.NetworkingClient.NetworkLinkEndpointsNetworkingV1Api.CreateNetworkingV1NetworkLinkEndpoint(c.networkingApiContext()).NetworkingV1NetworkLinkEndpoint(endpoint).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) UpdateNetworkLinkEndpoint(id string, networkLinkEndpointUpdate networkingv1.NetworkingV1NetworkLinkEndpointUpdate) (networkingv1.NetworkingV1NetworkLinkEndpoint, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworkLinkEndpointsNetworkingV1Api.UpdateNetworkingV1NetworkLinkEndpoint(c.networkingApiContext(), id).NetworkingV1NetworkLinkEndpointUpdate(networkLinkEndpointUpdate).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}

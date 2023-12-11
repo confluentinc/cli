@@ -1,0 +1,21 @@
+Error: at least one of the flags in the group [name description] is required
+Usage:
+  confluent network network-link endpoint update <id> [flags]
+
+Examples:
+Update the name and description of network link endpoint "nle-123456".
+
+  $ confluent network network-link endpoint update nle-123456 --name my-network-link-endpoint --description "example network link endpoint"
+
+Flags:
+      --name string          Name of the network link endpoint.
+      --description string   Description of the network link endpoint.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

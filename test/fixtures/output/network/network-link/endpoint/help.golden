@@ -8,6 +8,7 @@ Available Commands:
   delete      Delete one or more network link endpoints.
   describe    Describe a network link endpoint.
   list        List network link endpoints.
+  update      Update an existing network link endpoint.
 
 Global Flags:
   -h, --help            Show help for this command.

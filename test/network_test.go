@@ -605,7 +605,7 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestNetworkLinkServiceCreate() {
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceCreate() {
 	tests := []CLITest{
 		{args: "network network-link service create", fixture: "network/network-link/service/create-missing-args.golden", exitCode: 1},
 		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create-accepted-environments.golden"},
@@ -709,11 +709,27 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointCreate() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointUpdate() {
+	tests := []CLITest{
+		{args: "network network-link endpoint update", fixture: "network/network-link/endpoint/update-missing-args.golden", exitCode: 1},
+		{args: "network network-link endpoint update nle-111111", fixture: "network/network-link/endpoint/update-missing-flags.golden", exitCode: 1},
+		{args: "network nl endpoint update nle-111111 --name my-new-network-link-endpoint", fixture: "network/network-link/endpoint/update.golden"},
+		{args: "network network-link endpoint update nle-111111 --name my-new-network-link-endpoint --description 'example new network link endpoint'", fixture: "network/network-link/endpoint/update-name-description.golden"},
+		{args: "network network-link endpoint update nle-invalid --name 'my-network-link-endpoint'", fixture: "network/network-link/endpoint/update-nle-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpoint_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network network-link endpoint describe ""`, login: "cloud", fixture: "network/network-link/endpoint/describe-autocomplete.golden"},
 		{args: `__complete network network-link endpoint delete ""`, login: "cloud", fixture: "network/network-link/endpoint/delete-autocomplete.golden"},
 		{args: `__complete network network-link endpoint create my-network-link-endpoint --network ""`, login: "cloud", fixture: "network/network-link/endpoint/create-autocomplete.golden"},
+		{args: `__complete network network-link endpoint update ""`, login: "cloud", fixture: "network/network-link/endpoint/update-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
