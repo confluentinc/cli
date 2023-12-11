@@ -10,16 +10,6 @@
     "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
   },
   {
-    "id": "n-abcde2",
-    "name": "prod-gcp-us-central1",
-    "cloud": "GCP",
-    "region": "us-central1",
-    "cidr": "10.1.0.0/16",
-    "zones": ["us-central1-a", "us-central1-b", "us-central1-c"],
-    "phase": "READY",
-    "active_connection_types": ["PEERING"]
-  },
-  {
     "id": "n-abcde3",
     "name": "prod-azure-eastus2",
     "cloud": "AZURE",
@@ -29,5 +19,15 @@
     "phase": "READY",
     "active_connection_types": ["PRIVATELINK"],
     "dns_resolution": "PRIVATE"
+  },
+  {
+    "id": "n-abcde2",
+    "name": "prod-gcp-us-central1",
+    "cloud": "GCP",
+    "region": "us-central1",
+    "cidr": "10.1.0.0/16",
+    "zones": ["us-central1-a", "us-central1-b", "us-central1-c"],
+    "phase": "READY",
+    "active_connection_types": ["PEERING"]
   }
 ]
