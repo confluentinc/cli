@@ -48,7 +48,7 @@ blocks:
         machine:
           type: s1-prod-macos-13-5-arm64 
       jobs:
-        - name: darwin/amd64
+        - name: darwin/arm64
           commands:
             # Set up Go
             - checkout
