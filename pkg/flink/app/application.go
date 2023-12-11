@@ -83,7 +83,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	// Instantiate Component Controllers
 	var lspCompleter prompt.Completer
 	if appOptions.LSPEnabled {
-		lspCompleter = lsp.LSPCompleter(lspClient, func() lsp.CliContext {
+		lspCompleter = lsp.LspCompleter(lspClient, func() lsp.CliContext {
 			return lsp.CliContext{
 				AuthToken:     getAuthToken(),
 				Catalog:       dataStore.GetCurrentCatalog(),
