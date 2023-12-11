@@ -218,3 +218,75 @@ func (c *Client) GetByUniqueAttributes(typeName, qualifiedName string) (srsdk.At
 	res, _, err := c.DefaultApi.GetByUniqueAttributes(c.context(), typeName, qualifiedName).Execute()
 	return res, err
 }
+
+// kek first.
+
+func (c *Client) CreateKek(name string, createReq srsdk.CreateKekRequest) (srsdk.Kek, error) {
+	res, _, err := c.DefaultApi.CreateKek(c.context()).CreateKekRequest(createReq).Execute()
+	return res, err
+}
+
+func (c *Client) DeleteKek(name string, permanent bool) error {
+	_, err := c.DefaultApi.DeleteKek(c.context(), name).Permanent(permanent).Execute()
+	return err
+}
+
+func (c *Client) UndeletKek(name string) error {
+	_, err := c.DefaultApi.UndeleteKek(c.context(), name).Execute()
+	return err
+}
+
+func (c *Client) ListKeks(deleted bool) ([]string, error) {
+	res, _, err := c.DefaultApi.GetKekNames(c.context()).Deleted(deleted).Execute() // no page token?
+	return res, err
+}
+
+func (c *Client) DescribeKek(name string, deleted bool) (srsdk.Kek, error) {
+	res, _, err := c.DefaultApi.GetKek(c.context(), name).Deleted(deleted).Execute()
+	return res, err
+}
+
+func (c *Client) UpdateKek(name string, updateReq srsdk.UpdateKekRequest) (srsdk.Kek, error) {
+	res, _, err := c.DefaultApi.PutKek(c.context(), name).UpdateKekRequest(updateReq).Execute()
+	return res, err
+}
+
+func (c *Client) CreateDek(name string, createReq srsdk.CreateDekRequest) (srsdk.Dek, error) {
+	res, _, err := c.DefaultApi.CreateDek(c.context(), name).CreateDekRequest(createReq).Execute()
+	return res, err
+}
+
+func (c *Client) GetDekSubjects(name string) ([]string, error) {
+	res, _, err := c.DefaultApi.GetDekSubjects(c.context(), name).Execute()
+	return res, err
+}
+
+func (c *Client) GetDekByVersion(name, subject, version, algorithm string, deleted bool) (srsdk.Dek, error) {
+	res, _, err := c.DefaultApi.GetDekByVersion(c.context(), name, subject, version).Algorithm(algorithm).Deleted(deleted).Execute()
+	return res, err
+}
+
+func (c *Client) GetDeKVersions(name, subject, algorithm string, deleted bool) ([]int32, error) {
+	res, _, err := c.DefaultApi.GetDekVersions(c.context(), name, subject).Algorithm(algorithm).Deleted(deleted).Execute()
+	return res, err
+}
+
+func (c *Client) DeleteDekVersion(name, subject, version, algorithm string, permanent bool) error {
+	_, err := c.DefaultApi.DeleteDekVersion(c.context(), name, subject, version).Algorithm(algorithm).Permanent(permanent).Execute()
+	return err
+}
+
+func (c *Client) DeleteDekVersions(name, subject, algorithm string, permanent bool) error {
+	_, err := c.DefaultApi.DeleteDekVersions(c.context(), name, subject).Algorithm(algorithm).Permanent(permanent).Execute()
+	return err
+}
+
+func (c *Client) UndeleteDekVersion(name, subject, version, algorithm string) error {
+	_, err := c.DefaultApi.UndeleteDekVersion(c.context(), name, subject, version).Algorithm(algorithm).Execute()
+	return err
+}
+
+func (c *Client) UndeleteDekVersions(name, subject, algorithm string) error {
+	_, err := c.DefaultApi.UndeleteDekVersions(c.context(), name, subject).Algorithm(algorithm).Execute()
+	return err
+}
