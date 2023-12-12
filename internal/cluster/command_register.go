@@ -26,6 +26,12 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Register cluster.",
 		Long:  "Register cluster with the MDS cluster registry.",
 		Args:  cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Register a cluster with the MDS cluster registry:",
+				Code: "confluent cluster register --cluster-name myCluster2 --kafka-cluster-id LRx92c9yQ+ws786HYosuBn --hosts 10.6.6.6:9000, 10.3.3.3:9003 --protocol SASL_PLAINTEXT"
+			},
+		),
 	}
 
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
