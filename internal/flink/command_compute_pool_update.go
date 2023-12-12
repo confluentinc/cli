@@ -96,13 +96,12 @@ func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updatedComputePoolEnv := updatedComputePool.Spec.GetEnvironment()
 	table := output.NewTable(cmd)
 	table.Add(&computePoolOut{
 		IsCurrent:   computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 		Id:          computePool.GetId(),
 		Name:        updatedComputePool.Spec.GetDisplayName(),
-		Environment: updatedComputePoolEnv.GetId(),
+		Environment: updatedComputePool.Spec.Environment.GetId(),
 		CurrentCfu:  computePool.Status.GetCurrentCfu(),
 		MaxCfu:      updatedComputePool.Spec.GetMaxCfu(),
 		Cloud:       computePool.Spec.GetCloud(),

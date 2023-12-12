@@ -40,12 +40,11 @@ func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, computePool := range computePools {
-		computePoolEnv := computePool.Spec.GetEnvironment()
 		list.Add(&computePoolOut{
 			IsCurrent:   computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 			Id:          computePool.GetId(),
 			Name:        computePool.Spec.GetDisplayName(),
-			Environment: computePoolEnv.GetId(),
+			Environment: computePool.Spec.Environment.GetId(),
 			CurrentCfu:  computePool.Status.GetCurrentCfu(),
 			MaxCfu:      computePool.Spec.GetMaxCfu(),
 			Cloud:       computePool.Spec.GetCloud(),
