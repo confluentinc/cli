@@ -20,6 +20,7 @@ type GatewayClientInterface interface {
 	GetExceptions(environmentId, statementId, orgId string) ([]flinkgatewayv1beta1.SqlV1beta1StatementException, error)
 	DeleteStatement(environmentId, statementName, orgId string) error
 	UpdateStatement(environmentId, statementName, orgId string, statement flinkgatewayv1beta1.SqlV1beta1Statement) error
+	GetAuthToken() string
 }
 
 type FlinkGatewayClient struct {
@@ -60,6 +61,10 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 	}
 
 	return nil
+}
+
+func (c *FlinkGatewayClient) GetAuthToken() string {
+	return c.AuthToken
 }
 
 func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
