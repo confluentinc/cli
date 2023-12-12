@@ -73,14 +73,13 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
 	if useFakeGateway {
-		client.StartApp(
+		return client.StartApp(
 			mock.NewFakeFlinkGatewayClient(),
 			func() error { return nil },
 			types.ApplicationOptions{
 				Context:   c.Context,
 				UserAgent: c.Version.UserAgent,
 			}, func() {})
-		return nil
 	}
 
 	environmentId, err := cmd.Flags().GetString("environment")
@@ -180,8 +179,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		LSPBaseUrl:       lspBaseUrl,
 	}
 
-	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
-	return nil
+	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
 }
 
 func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewayClient) (string, error) {

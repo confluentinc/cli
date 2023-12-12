@@ -3,6 +3,7 @@ package utils
 import (
 	"time"
 
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
@@ -14,7 +15,7 @@ type PanicRecovererWithLimitImpl struct {
 }
 
 type PanicRecovererWithLimit interface {
-	WithCustomPanicRecovery(fn func(), customRecovery func()) func() bool
+	WithCustomPanicRecovery(fn func(), customRecovery func()) func() error
 }
 
 func NewPanicRecovererWithLimit(maxRecovers int, timeBetweenPanics time.Duration) PanicRecovererWithLimit {
@@ -27,23 +28,22 @@ func NewPanicRecovererWithLimit(maxRecovers int, timeBetweenPanics time.Duration
 	return &recoverer
 }
 
-func (p *PanicRecovererWithLimitImpl) WithCustomPanicRecovery(fn func(), customRecovery func()) func() bool {
+func (p *PanicRecovererWithLimitImpl) WithCustomPanicRecovery(fn func(), customRecovery func()) func() error {
 	if time.Since(p.lastRecover) > p.timeBetweenPanics {
 		p.recovers = 0
 	}
 
 	p.recovers++
 	if p.recovers > p.maxRecovers {
-		return func() bool {
-			OutputErr("Error: internal error. Run `confluent flink shell -vvv` to enable debug logs when starting the flink shell and report the output to the CLI team. Kindly share steps reproduce, if possible.\nPlease, restart the CLI.")
-			return true
+		return func() error {
+			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, "Run `confluent flink shell -vvv` to enable debug logs when starting the flink shell and report the output to the CLI team. Kindly share steps reproduce, if possible.\nPlease, restart the CLI.")
 		}
 	}
 
 	p.lastRecover = time.Now()
-	return func() bool {
+	return func() error {
 		WithCustomPanicRecovery(fn, customRecovery)()
-		return false
+		return nil
 	}
 }
 
