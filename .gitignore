@@ -2,21 +2,3 @@
 /docs/
 /legal/
 /prebuilt/
-/release-notes/
-
-# Editor configurations
-*.el
-.idea/
-.vscode/
-
-# Output of the Go coverage tool
-*.out
-bin/
-coverage/
-
-# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
-vendor/*
-!vendor/vendor.json
-
-*.sw*
-**/*.DS_Store
