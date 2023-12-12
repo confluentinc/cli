@@ -7,6 +7,7 @@ import (
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
@@ -43,7 +44,7 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 	}
 }
 
-func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
+func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) error {
 	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
 	getAuthToken := func() string {
 		if authErr := synchronizedTokenRefreshFunc(); authErr != nil {
@@ -70,7 +71,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	consoleParser := utils.GetConsoleParser()
 	if consoleParser == nil {
 		utils.OutputErr("Error: failed to initialize console parser")
-		return
+		return errors.NewErrorWithSuggestions("failed to initialize console parser", "Restart your shell session or try another terminal.")
 	}
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
@@ -112,17 +113,18 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 		appOptions:                  appOptions,
 	}
 	components.PrintWelcomeHeader()
-	app.readEvalPrintLoop()
+	return app.readEvalPrintLoop()
 }
 
-func (a *Application) readEvalPrintLoop() {
+func (a *Application) readEvalPrintLoop() error {
 	run := utils.NewPanicRecovererWithLimit(3, 3*time.Second)
 	for a.isAuthenticated() {
-		shouldExit := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
-		if shouldExit {
-			break
+		err := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
+		if err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
 func (a *Application) readEvalPrint() {

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
@@ -72,7 +73,10 @@ func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {
 	s.app.refreshToken = unauthenticated
 	s.appController.EXPECT().ExitApplication()
 
-	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrintLoop)
+	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
+		err := s.app.readEvalPrintLoop()
+		require.NoError(s.T(), err)
+	})
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -283,29 +287,22 @@ func (s *ApplicationTestSuite) TestPanicRecovery() {
 func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitExceeded() {
 	// Given
 	recoverCount := 5
-	callCount := 0
-	s.app.reportUsage = func() {
-		callCount++
-	}
 	s.inputController.EXPECT().GetUserInput().Times(recoverCount).Do(func() {
 		panic("err in repl")
 	})
 	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
 
 	// When
-	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-		run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
-		for i := 0; i <= recoverCount; i++ {
-			shouldExit := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
-			if shouldExit {
-				break
-			}
-		}
-	})
+	run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
+	for i := 0; i < recoverCount; i++ {
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		require.NoError(s.T(), err)
+	}
+	err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
 
 	// Then
-	cupaloy.SnapshotT(s.T(), actual)
-	require.Equal(s.T(), recoverCount, callCount)
+	require.Error(s.T(), err)
+	require.Equal(s.T(), err, errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, "Run `confluent flink shell -vvv` to enable debug logs when starting the flink shell and report the output to the CLI team. Kindly share steps reproduce, if possible.\nPlease, restart the CLI."))
 }
 
 func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitNotExceeded() {
@@ -321,19 +318,13 @@ func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitNotExceeded() 
 	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
 
 	// When
-	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-		run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
-		for i := 0; i < recoverCount; i++ {
-			shouldExit := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
-
-			if shouldExit {
-				break
-			}
-		}
-	})
+	run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
+	for i := 0; i < recoverCount; i++ {
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		require.NoError(s.T(), err)
+	}
 
 	// Then
-	require.Empty(s.T(), actual)
 	require.Equal(s.T(), recoverCount, callCount)
 }
 
@@ -350,15 +341,13 @@ func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenSparsePannics() {
 	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
 
 	// When
-	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-		run := utils.NewPanicRecovererWithLimit(recoverCount/3, 0)
-		for i := 0; i < recoverCount; i++ {
-			shouldExit := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
-			require.False(s.T(), shouldExit)
-		}
-	})
+	run := utils.NewPanicRecovererWithLimit(recoverCount/3, 0)
+	for i := 0; i < recoverCount; i++ {
+		time.Sleep(time.Millisecond * 10)
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		require.NoError(s.T(), err)
+	}
 
 	// Then
-	require.Empty(s.T(), actual)
 	require.Equal(s.T(), recoverCount, callCount)
 }
