@@ -40,9 +40,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	// Sort networks by DisplayName, then Cloud, then Region, then CreatedAt ASC.
 	sort.Slice(networks, func(i, j int) bool {
-		if networks[i].Spec.GetDisplayName() != networks[j].Spec.GetDisplayName() {
-			return networks[i].Spec.GetDisplayName() < networks[j].Spec.GetDisplayName()
-		}
 		if networks[i].Spec.GetCloud() != networks[j].Spec.GetCloud() {
 			return networks[i].Spec.GetCloud() < networks[j].Spec.GetCloud()
 		}

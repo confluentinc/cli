@@ -1,6 +1,6 @@
 [
   {
-    "id": "n-abcde1",
+    "id": "n-abcde3",
     "name": "prod-aws-us-east1",
     "cloud": "AWS",
     "region": "us-east-1",
@@ -10,7 +10,26 @@
     "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
   },
   {
-    "id": "n-abcde3",
+    "id": "n-abcde5",
+    "cloud": "AWS",
+    "region": "us-east-1",
+    "cidr": "10.200.0.0/16",
+    "zones": ["use1-az1", "use1-az2", "use1-az3"],
+    "phase": "READY",
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
+  },
+  {
+    "id": "n-abcde4",
+    "name": "prod-aws-us-east1",
+    "cloud": "AWS",
+    "region": "us-west-2",
+    "cidr": "10.200.0.0/16",
+    "zones": ["use1-az1", "use1-az2", "use1-az3"],
+    "phase": "READY",
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
+  },
+  {
+    "id": "n-abcde2",
     "name": "prod-azure-eastus2",
     "cloud": "AZURE",
     "region": "eastus2",
@@ -21,7 +40,7 @@
     "dns_resolution": "PRIVATE"
   },
   {
-    "id": "n-abcde2",
+    "id": "n-abcde1",
     "name": "prod-gcp-us-central1",
     "cloud": "GCP",
     "region": "us-central1",
