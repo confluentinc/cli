@@ -154,14 +154,17 @@ func (c *InputController) Prompt() prompt.IPrompt {
 			},
 		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			// Alt/Option + Arrow Left
 			ASCIICode: []byte{0x1b, 0x62},
 			Fn:        prompt.GoLeftWord,
 		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			// Alt/Option + Arrow Right
 			ASCIICode: []byte{0x1b, 0x66},
 			Fn:        prompt.GoRightWord,
 		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			// Alt/Option + Backspace
 			ASCIICode: []byte{0x1b, 0x7F},
 			Fn:        prompt.DeleteWord,
 		}),
