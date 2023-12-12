@@ -21,7 +21,7 @@ blocks:
           commands:
             - checkout
             - sem-version go $(cat .go-version)
-            # - export PATH=$(go env GOPATH)/bin:$PATH
+            - export PATH=$(go env GOPATH)/bin:$PATH
             - cache restore linux-$(checksum go.sum)
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
@@ -45,7 +45,7 @@ blocks:
           commands:
             - checkout
             - sem-version go $(cat .go-version)
-            # - export PATH=$(go env GOPATH)/bin:$PATH
+            - export PATH=$(go env GOPATH)/bin:$PATH
             - cache restore darwin-$(checksum go.sum)
             - make test
             - cache store darwin-$(checksum go.sum) $(go env GOPATH)/pkg/mod
