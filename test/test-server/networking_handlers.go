@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -335,27 +336,46 @@ func handleNetworkingNetworkUpdate(t *testing.T, id string) http.HandlerFunc {
 
 func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		awsNetwork := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
-		gcpNetwork := getGcpNetwork("n-abcde2", "prod-gcp-us-central1", "READY", []string{"PEERING"})
-		azureNetwork := getAzureNetwork("n-abcde3", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
+		gcpNetwork := getGcpNetwork("n-abcde1", "prod-gcp-us-central1", "READY", []string{"PEERING"})
+		azureNetwork := getAzureNetwork("n-abcde2", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
+
+		// Same cloud, sort by region
+		awsNetwork := getAwsNetwork("n-abcde3", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+		awsNetwork2 := getAwsNetwork("n-abcde4", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+		awsNetwork2.Spec.SetRegion("us-west-2")
+
+		// Same cloud, region, sort by created_at
+		awsNetwork3 := getAwsNetwork("n-abcde5", "", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+		awsNetwork.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+		awsNetwork3.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 1, time.UTC))}
 
 		pageToken := r.URL.Query().Get("page_token")
 		var networkList networkingv1.NetworkingV1NetworkList
 		switch pageToken {
+		case "aws3":
+			networkList = networkingv1.NetworkingV1NetworkList{
+				Data:     []networkingv1.NetworkingV1Network{awsNetwork3},
+				Metadata: networkingv1.ListMeta{},
+			}
+		case "aws2":
+			networkList = networkingv1.NetworkingV1NetworkList{
+				Data:     []networkingv1.NetworkingV1Network{awsNetwork2},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=aws3"))},
+			}
+		case "aws":
+			networkList = networkingv1.NetworkingV1NetworkList{
+				Data:     []networkingv1.NetworkingV1Network{awsNetwork},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=aws2"))},
+			}
 		case "azure":
 			networkList = networkingv1.NetworkingV1NetworkList{
 				Data:     []networkingv1.NetworkingV1Network{azureNetwork},
-				Metadata: networkingv1.ListMeta{},
-			}
-		case "gcp":
-			networkList = networkingv1.NetworkingV1NetworkList{
-				Data:     []networkingv1.NetworkingV1Network{gcpNetwork},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=azure"))},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=aws"))},
 			}
 		default:
 			networkList = networkingv1.NetworkingV1NetworkList{
-				Data:     []networkingv1.NetworkingV1Network{awsNetwork},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=gcp"))},
+				Data:     []networkingv1.NetworkingV1Network{gcpNetwork},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=azure"))},
 			}
 		}
 

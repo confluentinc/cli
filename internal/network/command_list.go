@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -36,6 +37,18 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	// Sort networks by DisplayName, then Cloud, then Region, then CreatedAt ASC.
+	sort.Slice(networks, func(i, j int) bool {
+		if networks[i].Spec.GetCloud() != networks[j].Spec.GetCloud() {
+			return networks[i].Spec.GetCloud() < networks[j].Spec.GetCloud()
+		}
+		if networks[i].Spec.GetRegion() != networks[j].Spec.GetRegion() {
+			return networks[i].Spec.GetRegion() < networks[j].Spec.GetRegion()
+		}
+
+		return networks[i].Metadata.GetCreatedAt().Before(networks[j].Metadata.GetCreatedAt())
+	})
 
 	list := output.NewList(cmd)
 	for _, network := range networks {
@@ -77,6 +90,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 	}
+
+	// Disable default sort to use the custom sort above.
+	list.Sort(false)
 	list.Filter([]string{"Id", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
 	return list.Print()
 }
