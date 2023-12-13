@@ -111,7 +111,7 @@ install-arm64: apply-patches
 	chmod 755 $${filepath}
 
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+	echo "confluent version v$(CLI_VERSION)" > $(DESTDIR)/$(DOCPATH)/version.txt
 
 	chown -R root:root $(DESTDIR)$(PREFIX)
 

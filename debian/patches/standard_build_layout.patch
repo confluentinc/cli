@@ -1,5 +1,5 @@
 --- cli/Makefile	2023-12-12 17:45:30.000000000 -0800
-+++ debian/Makefile	2023-12-13 12:04:35.000000000 -0800
++++ debian/Makefile	2023-12-13 12:22:39.000000000 -0800
 @@ -1,127 +1,200 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
@@ -220,7 +220,7 @@
 +	chmod 755 $${filepath}
 +
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
++	echo "confluent version v$(CLI_VERSION)" > $(DESTDIR)/$(DOCPATH)/version.txt
 +
 +	chown -R root:root $(DESTDIR)$(PREFIX)
 +
