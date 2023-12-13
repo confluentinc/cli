@@ -319,7 +319,6 @@ func hoursToSeconds(hours float32) int {
 func TestIsUserSecretKey(t *testing.T) {
 	require.True(t, isUserSecretKey("confluent.user.flink.secret"))
 	require.True(t, isUserSecretKey("confluent.user.flinksecret"))
-	require.True(t, isUserSecretKey("confluent.user.flinsecret"))
 	require.True(t, isUserSecretKey("confluent.user.flink.ecret"))
 	require.True(t, isUserSecretKey("confluent.user.flink.ssecret"))
 	require.True(t, isUserSecretKey("confluent.user.flink.scret"))
@@ -332,7 +331,6 @@ func TestIsUserSecretKey(t *testing.T) {
 	require.True(t, isUserSecretKey("confluent.user.flink.secreet"))
 	require.True(t, isUserSecretKey("confluent.user.flink.secre"))
 	require.True(t, isUserSecretKey("confluent.user.flink.secrett"))
-	require.True(t, isUserSecretKey("secret"))
 
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secret"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKsecret"))
@@ -351,8 +349,8 @@ func TestIsUserSecretKey(t *testing.T) {
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secrett"))
 
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRET"))
-	require.True(t, isUserSecretKey("OPENAPI.KEYSECRET"))
-	require.True(t, isUserSecretKey("OPENAPI.KEYSECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKSECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKSECRET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.ECRET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SSECRET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SCRET"))
@@ -365,7 +363,6 @@ func TestIsUserSecretKey(t *testing.T) {
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECREET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRE"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRETT"))
-	require.True(t, isUserSecretKey("SECRET"))
 
 	require.False(t, isUserSecretKey(""))
 	require.False(t, isUserSecretKey("gustavo"))

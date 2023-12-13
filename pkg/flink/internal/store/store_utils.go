@@ -14,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/texttheater/golang-levenshtein/levenshtein"
 )
 
 type StatementType string
@@ -392,22 +393,10 @@ func startsWithValidSQL(statement string) bool {
 }
 
 func isUserSecretKey(key string) bool {
-	parts := strings.Split(key, ".")
-	count := len(parts)
+	key = strings.ToLower(key)
+	distance := levenshtein.DistanceForStrings([]rune("confluent.user.flink.secret"), []rune(key), levenshtein.DefaultOptions)
 
-	if count < 1 {
-		return false
-	}
-
-	last := strings.ToLower(parts[count-1])
-
-	// add *ecrets, s*crets and so on. Maybe not * but only two letter that are wrong after the s? hmm
-	matches, err := regexp.MatchString(".*?ecret|s.{0,2}?cret|se.{0,2}?ret|sec.{0,2}?et|secr.{0,2}?t|secre.{0,2}?", last)
-	if matches && err == nil {
-		return true
-	}
-
-	return false
+	return distance < 2
 }
 
 // Removes leading, trailling spaces, and semicolon from end, if present
