@@ -399,11 +399,11 @@ func isUserSecretKey(key string) bool {
 		return false
 	}
 
-	last := parts[count-1]
+	last := strings.ToLower(parts[count-1])
 
 	// add *ecrets, s*crets and so on. Maybe not * but only two letter that are wrong after the s? hmm
 	matches, err := regexp.MatchString(".*?ecret|s.{0,2}?cret|se.{0,2}?ret|sec.{0,2}?et|secr.{0,2}?t|secre.{0,2}?", last)
-	if matches && err != nil {
+	if matches && err == nil {
 		return true
 	}
 

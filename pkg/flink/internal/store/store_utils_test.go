@@ -101,16 +101,6 @@ func TestProcessSetStatement(t *testing.T) {
 		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 
-	t.Run("should parse and identify sensitive set statement", func(t *testing.T) {
-		result, err := s.processSetStatement("set 'confluent.user.flink.secret' = 'mysecret'")
-		assert.Nil(t, err)
-		assert.EqualValues(t, true, result.IsSensitiveStatement)
-
-		result, err = s.processSetStatement("set 'confluent.user.flink.seecret' = 'mysecret'")
-		assert.Nil(t, err)
-		assert.EqualValues(t, true, result.IsSensitiveStatement)
-	})
-
 	t.Run("should update config for valid configKey", func(t *testing.T) {
 		result, err := s.processSetStatement("set 'location'='USA'")
 		assert.Nil(t, err)
@@ -151,6 +141,16 @@ func TestProcessSetStatement(t *testing.T) {
 			Message:    "cannot set an empty statement name",
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
 		}, err)
+	})
+
+	t.Run("should parse and identify sensitive set statement", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'confluent.user.flink.secret' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+
+		result, err = s.processSetStatement("set 'confluent.user.flink.seecret' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
 	})
 }
 
@@ -374,7 +374,7 @@ func TestIsUserSecretKey(t *testing.T) {
 	require.False(t, isUserSecretKey("OPENAPI.KEY"))
 	require.False(t, isUserSecretKey("CONFLUENT.USER.FLINK.NAME"))
 	require.False(t, isUserSecretKey("CONFLUENT.USER.FLINK.SCERECETASDT"))
-	require.False(t, isUserSecretKey("CONFLUENT.USER.FLINK.SEEEEECRET"))
+	require.False(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECCCCCCCCRET"))
 	require.False(t, isUserSecretKey("SEEEEECRET.OPENAPI.KEY"))
 	require.False(t, isUserSecretKey("SECRET.OPENAPI.KEY"))
 }
