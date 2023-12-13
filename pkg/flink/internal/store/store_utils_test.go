@@ -142,6 +142,16 @@ func TestProcessSetStatement(t *testing.T) {
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
 		}, err)
 	})
+
+	t.Run("should parse and identify sensitive set statement", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'confluent.user.flink.secret' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+
+		result, err = s.processSetStatement("set 'confluent.user.flink.seecret' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+	})
 }
 
 func TestProcessResetStatement(t *testing.T) {
@@ -304,6 +314,66 @@ func TestParseStatementType(t *testing.T) {
 
 func hoursToSeconds(hours float32) int {
 	return int(hours * 60 * 60)
+}
+
+func TestIsUserSecretKey(t *testing.T) {
+	require.True(t, isUserSecretKey("confluent.user.flink.secret"))
+	require.True(t, isUserSecretKey("confluent.user.flinksecret"))
+	require.True(t, isUserSecretKey("confluent.user.flink.ecret"))
+	require.True(t, isUserSecretKey("confluent.user.flink.ssecret"))
+	require.True(t, isUserSecretKey("confluent.user.flink.scret"))
+	require.True(t, isUserSecretKey("confluent.user.flink.seecret"))
+	require.True(t, isUserSecretKey("confluent.user.flink.seret"))
+	require.True(t, isUserSecretKey("confluent.user.flink.seccret"))
+	require.True(t, isUserSecretKey("confluent.user.flink.secet"))
+	require.True(t, isUserSecretKey("confluent.user.flink.secrret"))
+	require.True(t, isUserSecretKey("confluent.user.flink.secrt"))
+	require.True(t, isUserSecretKey("confluent.user.flink.secreet"))
+	require.True(t, isUserSecretKey("confluent.user.flink.secre"))
+	require.True(t, isUserSecretKey("confluent.user.flink.secrett"))
+
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKsecret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKsecret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.ecret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.ssecret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.scret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.seecret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.seret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.seccret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secet"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secrret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secrt"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secreet"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secre"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secrett"))
+
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKSECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKSECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.ECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SSECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SCRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SEECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SERET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECCRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRT"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECREET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRE"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRETT"))
+
+	require.False(t, isUserSecretKey(""))
+	require.False(t, isUserSecretKey("gustavo"))
+	require.False(t, isUserSecretKey("sql.current-catalog"))
+	require.False(t, isUserSecretKey("client.results-timeout"))
+	require.False(t, isUserSecretKey("OPENAPI.KEY"))
+	require.False(t, isUserSecretKey("CONFLUENT.USER.FLINK.NAME"))
+	require.False(t, isUserSecretKey("CONFLUENT.USER.FLINK.SCERECETASDT"))
+	require.False(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECCCCCCCCRET"))
+	require.False(t, isUserSecretKey("SEEEEECRET.OPENAPI.KEY"))
+	require.False(t, isUserSecretKey("SECRET.OPENAPI.KEY"))
 }
 
 func TestFormatUTCOffsetToTimezone(t *testing.T) {
