@@ -687,7 +687,7 @@ func handleSRDekVersion(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Hnalder for: "/dek-registry/v1/keks/{name}/deks/{subject}/versions/{version}/undelete"
+// Handler for: "/dek-registry/v1/keks/{name}/deks/{subject}/versions/{version}/undelete"
 func handleSRDekUndelete(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
