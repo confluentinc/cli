@@ -39,10 +39,10 @@ func (c *command) kekDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	res, err := client.DescribeKek(args[0], deleted)
+	kek, err := client.DescribeKek(args[0], deleted)
 	if err != nil {
 		return err
 	}
 
-	return printKek(cmd, res)
+	return printKek(cmd, kek)
 }

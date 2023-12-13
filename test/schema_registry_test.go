@@ -161,3 +161,35 @@ func (s *CLITestSuite) TestSchemaRegistryRegionList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestSchemaRegistryKek() {
+	tests := []CLITest{
+		{args: "schema-registry kek create --name kek-name --kms-type AWS_KMS --kms-key-id arn:aws:kms:us-west-2:9979:key/abcd --kms-properties KeyState=Enabled --doc description", fixture: "schema-registry/kek/create.golden"},
+		{args: "schema-registry kek list -o json", fixture: "schema-registry/kek/list-all-json.golden"},
+		{args: "schema-registry kek describe kek-name", fixture: "schema-registry/kek/describe.golden"},
+		{args: "schema-registry kek update kek-name --doc new-description", fixture: "schema-registry/kek/update.golden"},
+		{args: "schema-registry kek delete kek-name --force", fixture: "schema-registry/region/delete.golden"},
+		{args: "schema-registry kek undelete kek-name --force", fixture: "schema-registry/region/undelete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestSchemaRegistryDek() {
+	tests := []CLITest{
+		{args: "schema-registry dek create --name kek-name --subject payments --algorithm AES256_GCM --version 1 --encrypted-key-material encrypted-key-material", fixture: "schema-registry/dek/create.golden"},
+		{args: "schema-registry dek subject list --name kek-name", fixture: "schema-registry/dek/list-subject.golden"},
+		{args: "schema-registry dek version list --name kek-name --subject payments", fixture: "schema-registry/dek/list-version.golden"},
+		{args: "schema-registry dek describe --name kek-name --subject payments", fixture: "schema-registry/dek/describe.golden"},
+		{args: "schema-registry dek delete --name kek-name --subject payments --force", fixture: "schema-registry/dek/delete.golden"},
+		{args: "schema-registry dek undelete --name kek-name --subject payments --version 2", fixture: "schema-registry/dek/undelete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

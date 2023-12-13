@@ -237,7 +237,7 @@ func (c *Client) UndeleteKek(name string) error {
 }
 
 func (c *Client) ListKeks(deleted bool) ([]string, error) {
-	res, _, err := c.DefaultApi.GetKekNames(c.context()).Deleted(deleted).Execute() // no page token?
+	res, _, err := c.DefaultApi.GetKekNames(c.context()).Deleted(deleted).Execute()
 	return res, err
 }
 

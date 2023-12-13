@@ -42,7 +42,7 @@ type kekOut struct {
 	Doc       string `human:"Doc,omitempty" serialized:"doc,omitempty"`
 	IsShared  bool   `human:"Is Shared,omitempty" serialized:"is_shared,omitempty"`
 	Timestamp int64  `human:"Timestamp,omitempty" serialized:"timestamp,omitempty"`
-	Deleted   bool   `human:"Deleted,omitempty" serialized:"deleted,omitempty"`
+	Deleted   bool   `human:"Is Deleted,omitempty" serialized:"is_deleted,omitempty"`
 }
 
 func printKek(cmd *cobra.Command, kek srsdk.Kek) error {
