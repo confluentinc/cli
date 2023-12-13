@@ -152,6 +152,17 @@ func (s *CLITestSuite) TestApiKey() {
 	}
 }
 
+func (s *CLITestSuite) TestApiKeyCreate() {
+	tests := []CLITest{
+		{args: "api-key create --resource flink --cloud aws --region us-east-1", fixture: "api-key/create-flink.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestApiKeyDescribe() {
 	resetConfiguration(s.T(), false)
 
@@ -177,6 +188,17 @@ func (s *CLITestSuite) TestApiKeyDelete() {
 	}
 
 	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestApiKeyList() {
+	tests := []CLITest{
+		{args: "api-key list --resource flink", fixture: "api-key/list-flink.golden"},
+	}
 
 	for _, test := range tests {
 		test.login = "cloud"
