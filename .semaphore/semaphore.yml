@@ -19,23 +19,16 @@ blocks:
       jobs:
         - name: linux/amd64
           commands:
-            # Set up Go
             - checkout
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
-
-            # Try to restore cached dependencies
-            - cache restore linux-$(checksum go.sum)
-
-            # Run tests
+            # - cache restore linux-$(checksum go.sum)
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
             - make test
             - make test-installer
-
-            # Cache Go dependencies
-            - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
+            # - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
@@ -46,21 +39,20 @@ blocks:
     task:
       agent:
         machine:
-          type: s1-prod-macos-13-5-arm64 
+          type: s1-prod-macos-13-5-arm64
       jobs:
         - name: darwin/arm64
           commands:
-            # Set up Go
             - checkout
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
-
-            # Run tests
+            # - cache restore darwin-$(checksum go.sum)
             - make test
+            # - cache store darwin-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
-            - test-results publish . -N "darwin/amd64"
+            - test-results publish . -N "darwin/arm64"
 
   - name: windows/amd64
     dependencies: []
@@ -71,24 +63,17 @@ blocks:
       jobs:
         - name: windows/amd64
           commands:
-            # Set up Go
             - checkout
+            # https://confluentinc.atlassian.net/browse/DP-9532
             - choco install -y golang --version $(Get-Content .go-version)
-            # TODO: https://confluentinc.atlassian.net/browse/DP-9532
-
-            # Try to restore cached dependencies
-            - cache restore windows-$($(Get-FileHash go.sum).Hash)
-
-            # Run tests
+            # - cache restore windows-$($(Get-FileHash go.sum).Hash)
             - $env:GOCOVERDIR = 'test/coverage'
             - New-Item $env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
             - go tool covdata textfmt -i $env:GOCOVERDIR -o test/coverage.out
-
-            # Cache Go dependencies
-            - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
+            # - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
       epilogue:
         always:
           commands:
