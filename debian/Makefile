@@ -115,6 +115,10 @@ install-arm64: apply-patches
 
 	chown -R root:root $(DESTDIR)$(PREFIX)
 
+clean-build-files:
+	git reset --hard HEAD
+	git status --porcelain | cut -d ' ' -f 2 | xargs rm -rf
+
 clean:
 	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
@@ -143,7 +147,7 @@ else
 	RPM_RELEASE_ID=$(REVISION)
 endif
 
-rpm: rpm-amd64
+rpm: rpm-amd64 clean-build-files
 
 rpm-amd64: rpm-amd64-spec
 	echo "Building the RPM"

@@ -1,6 +1,6 @@
 --- cli/Makefile	2023-12-12 17:45:30.000000000 -0800
-+++ debian/Makefile	2023-12-13 11:08:31.000000000 -0800
-@@ -1,127 +1,196 @@
++++ debian/Makefile	2023-12-13 11:52:22.000000000 -0800
+@@ -1,127 +1,200 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -224,6 +224,10 @@
 +
 +	chown -R root:root $(DESTDIR)$(PREFIX)
 +
++clean-build-files:
++	git reset --hard HEAD
++	git status --porcelain | cut -d ' ' -f 2 | xargs rm -rf
++
 +clean:
 +	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
@@ -255,7 +259,7 @@
  
 -.PHONY: test
 -test: unit-test integration-test
-+rpm: rpm-amd64
++rpm: rpm-amd64 clean-build-files
 +
 +rpm-amd64: rpm-amd64-spec
 +	echo "Building the RPM"
