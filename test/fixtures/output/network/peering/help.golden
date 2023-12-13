@@ -1,0 +1,18 @@
+Manage peerings.
+
+Usage:
+  confluent network peering [command]
+
+Available Commands:
+  create      Create a peering.
+  delete      Delete one or more peerings.
+  describe    Describe a peering.
+  list        List peerings.
+  update      Update an existing peering.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network peering [command] --help" for more information about a command.

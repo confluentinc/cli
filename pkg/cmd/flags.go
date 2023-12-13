@@ -54,7 +54,7 @@ func AddAvailabilityFlag(cmd *cobra.Command) {
 }
 
 func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("byok", "", `Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use "confluent byok create" to register a key).`)
+	cmd.Flags().String("byok", "", `Confluent Cloud Key ID of a registered encryption key (use "confluent byok create" to register a key).`)
 
 	RegisterFlagCompletionFunc(cmd, "byok", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
@@ -502,6 +502,34 @@ func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
 	suggestions := make([]string, len(consumerGroups))
 	for i, consumerGroup := range consumerGroups {
 		suggestions[i] = consumerGroup.GetConsumerGroupId()
+	}
+	return suggestions
+}
+
+func AddNetworkFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("network", "", "Network ID.")
+	RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteNetworks(environmentId, c.V2Client)
+	})
+}
+
+func AutocompleteNetworks(environmentId string, client *ccloudv2.Client) []string {
+	networks, err := client.ListNetworks(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(networks))
+	for i, network := range networks {
+		suggestions[i] = fmt.Sprintf("%s\t%s", network.GetId(), network.Spec.GetDisplayName())
 	}
 	return suggestions
 }
