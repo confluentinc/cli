@@ -1,5 +1,5 @@
 --- cli/Makefile	2023-12-12 17:45:30.000000000 -0800
-+++ debian/Makefile	2023-12-13 11:54:56.000000000 -0800
++++ debian/Makefile	2023-12-13 12:04:35.000000000 -0800
 @@ -1,127 +1,200 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
@@ -273,7 +273,7 @@
 +
 +rpm-arm64: rpm-arm64-spec
 +	echo "Building the RPM"
-+	rpmbuild --target aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
++	rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 +	echo
 +	echo "================================================="

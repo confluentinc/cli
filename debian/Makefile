@@ -161,7 +161,7 @@ rpm-amd64: rpm-amd64-spec
 
 rpm-arm64: rpm-arm64-spec
 	echo "Building the RPM"
-	rpmbuild --target aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
+	rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 	echo
 	echo "================================================="
