@@ -230,3 +230,6 @@ flycheck_*.el
 
 !/.github/
 !/.github/**
+
+# RPM packages
+*.rpm
