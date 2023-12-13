@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/texttheater/golang-levenshtein/levenshtein"
+
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
@@ -70,14 +72,17 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
 		}
 	}
+	hasUserSecret := isUserSecretKey(configKey)
+
 	s.Properties.Set(configKey, configVal)
 
 	return &types.ProcessedStatement{
-		Kind:             config.OpSet,
-		StatusDetail:     "configuration updated successfully",
-		Status:           types.COMPLETED,
-		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
-		IsLocalStatement: true,
+		Kind:                 config.OpSet,
+		StatusDetail:         "configuration updated successfully",
+		Status:               types.COMPLETED,
+		StatementResults:     createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		IsLocalStatement:     true,
+		IsSensitiveStatement: hasUserSecret,
 	}, nil
 }
 
@@ -386,6 +391,13 @@ func startsWithValidSQL(statement string) bool {
 	words := strings.Fields(statement)
 	firstWord := strings.ToUpper(words[0])
 	return config.SQLKeywords.Contains(firstWord)
+}
+
+func isUserSecretKey(key string) bool {
+	key = strings.ToLower(key)
+	distance := levenshtein.DistanceForStrings([]rune("confluent.user.flink.secret"), []rune(key), levenshtein.DefaultOptions)
+
+	return distance < 2
 }
 
 // Removes leading, trailling spaces, and semicolon from end, if present
