@@ -30,6 +30,16 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+<<<<<<< HEAD
+*.sw*
+**/*.DS_Store
+
+# RPM/DEB
+/rpm/
+/deb/
+*.gpg
+*passphrase
+=======
 # Go workspace file
 go.work
 
@@ -229,3 +239,4 @@ flycheck_*.el
 
 !/.github/
 !/.github/**
+>>>>>>> b739d4bb9905b9de1cdca0e36837a847f1ec9087
