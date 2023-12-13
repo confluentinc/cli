@@ -1,6 +1,6 @@
 --- cli/Makefile	2023-12-12 17:45:30.000000000 -0800
-+++ debian/Makefile	2023-12-13 12:22:39.000000000 -0800
-@@ -1,127 +1,200 @@
++++ debian/Makefile	2023-12-13 12:27:41.000000000 -0800
+@@ -1,127 +1,201 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -259,7 +259,8 @@
  
 -.PHONY: test
 -test: unit-test integration-test
-+rpm: rpm-amd64 clean-build-files rpm-arm64
++rpm: rpm-amd64 clean-build-files
++	make -f debian/Makefile rpm-arm64
 +
 +rpm-amd64: rpm-amd64-spec
 +	echo "Building the RPM"

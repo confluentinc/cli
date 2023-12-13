@@ -147,7 +147,8 @@ else
 	RPM_RELEASE_ID=$(REVISION)
 endif
 
-rpm: rpm-amd64 clean-build-files rpm-arm64
+rpm: rpm-amd64 clean-build-files
+	make -f debian/Makefile rpm-arm64
 
 rpm-amd64: rpm-amd64-spec
 	echo "Building the RPM"
