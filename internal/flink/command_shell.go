@@ -186,7 +186,6 @@ func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewa
 	if cfg := gatewayClient.GetConfig(); cfg != nil && len(cfg.Servers) > 0 {
 		gatewayUrl := cfg.Servers[0].URL
 		parsedUrl, err := url.Parse(gatewayUrl)
-
 		if err != nil {
 			return "", err
 		}
