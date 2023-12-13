@@ -70,14 +70,17 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
 		}
 	}
+	hasUserSecret := isUserSecretKey(configKey)
+
 	s.Properties.Set(configKey, configVal)
 
 	return &types.ProcessedStatement{
-		Kind:             config.OpSet,
-		StatusDetail:     "configuration updated successfully",
-		Status:           types.COMPLETED,
-		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
-		IsLocalStatement: true,
+		Kind:                 config.OpSet,
+		StatusDetail:         "configuration updated successfully",
+		Status:               types.COMPLETED,
+		StatementResults:     createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		IsLocalStatement:     true,
+		IsSensitiveStatement: hasUserSecret,
 	}, nil
 }
 
@@ -386,6 +389,25 @@ func startsWithValidSQL(statement string) bool {
 	words := strings.Fields(statement)
 	firstWord := strings.ToUpper(words[0])
 	return config.SQLKeywords.Contains(firstWord)
+}
+
+func isUserSecretKey(key string) bool {
+	parts := strings.Split(key, ".")
+	count := len(parts)
+
+	if count < 1 {
+		return false
+	}
+
+	last := strings.ToLower(parts[count-1])
+
+	// add *ecrets, s*crets and so on. Maybe not * but only two letter that are wrong after the s? hmm
+	matches, err := regexp.MatchString(".*?ecret|s.{0,2}?cret|se.{0,2}?ret|sec.{0,2}?et|secr.{0,2}?t|secre.{0,2}?", last)
+	if matches && err == nil {
+		return true
+	}
+
+	return false
 }
 
 // Removes leading, trailling spaces, and semicolon from end, if present
