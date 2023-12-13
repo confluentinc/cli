@@ -47,6 +47,9 @@ nfpms:
     formats:
       - deb
       - rpm
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/cli/COPYRIGHT
     deb:
       signature:
         key_file: /run/secrets/deb_gpg_secret_key
