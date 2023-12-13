@@ -92,6 +92,29 @@ install-amd64: apply-patches
 
 	chown -R root:root $(DESTDIR)$(PREFIX)
 
+install-arm64: apply-patches
+	rm -rf $(DESTDIR)$(PREFIX)
+	mkdir -p $(DESTDIR)$(PREFIX)
+
+	mkdir -p $(DESTDIR)$(BINPATH)
+	mkdir -p $(DESTDIR)$(LIBPATH)
+	mkdir -p $(DESTDIR)$(DOCPATH)
+	mkdir -p $(DESTDIR)$(SYSCONFDIR)
+
+	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
+	chmod 755 $(DESTDIR)$(BINPATH)/confluent
+
+	cd $(DESTDIR)$(LIBPATH); \
+	mkdir -p linux_arm64; \
+	filepath=linux_arm64/confluent; \
+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_linux_arm64 -o $${filepath}; \
+	chmod 755 $${filepath}
+
+	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+
+	chown -R root:root $(DESTDIR)$(PREFIX)
+
 clean:
 	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
@@ -120,9 +143,21 @@ else
 	RPM_RELEASE_ID=$(REVISION)
 endif
 
-rpm: rpm-amd64-spec
+rpm: rpm-amd64
+
+rpm-amd64: rpm-amd64-spec
 	echo "Building the RPM"
 	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
+	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
+	echo
+	echo "================================================="
+	echo "The RPMs have been created and can be found here:"
+	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
+	echo "================================================="
+
+rpm-arm64: rpm-arm64-spec
+	echo "Building the RPM"
+	rpmbuild --target aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 	echo
 	echo "================================================="
@@ -137,6 +172,14 @@ rpm: rpm-amd64-spec
 # the symlink because the RPM_VERSION doesn't include all the version info -- it
 # can leave of things like -beta, -rc1, etc.
 rpm-amd64-spec: rpm-build-area install-amd64 debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+
+rpm-arm64-spec: rpm-build-area install-arm64 debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
