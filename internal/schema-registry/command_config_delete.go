@@ -64,7 +64,7 @@ func (c *command) configDelete(cmd *cobra.Command, _ []string) error {
 	var outStr string
 	if subject != "" {
 		promptMsg := fmt.Sprintf(`Are you sure you want to delete the subject-level compatibility level config and revert it to the global default for "%s"?`, subject)
-		if err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil {
+		if err := deletion.ConfirmPromptYesNo(cmd, promptMsg); err != nil {
 			return err
 		}
 		outStr, err = client.DeleteSubjectLevelConfig(subject)
@@ -73,7 +73,7 @@ func (c *command) configDelete(cmd *cobra.Command, _ []string) error {
 		}
 	} else {
 		promptMsg := `Are you sure you want to delete the global compatibility level config and revert it to the default?`
-		if err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil {
+		if err := deletion.ConfirmPromptYesNo(cmd, promptMsg); err != nil {
 			return err
 		}
 		outStr, err = client.DeleteTopLevelConfig()
