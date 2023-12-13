@@ -1,0 +1,18 @@
+Manage private link accesses.
+
+Usage:
+  confluent network private-link access [command]
+
+Available Commands:
+  create      Create a private link access.
+  delete      Delete one or more private link accesses.
+  describe    Describe a private link access.
+  list        List private link accesses.
+  update      Update an existing private link access.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network private-link access [command] --help" for more information about a command.
