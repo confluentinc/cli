@@ -318,7 +318,7 @@ func hoursToSeconds(hours float32) int {
 
 func TestIsUserSecretKey(t *testing.T) {
 	require.True(t, isUserSecretKey("confluent.user.flink.secret"))
-	require.True(t, isUserSecretKey("confluent.user.flinksecret"))
+	require.True(t, isUserSecretKey("confluent.user.flinsecret"))
 	require.True(t, isUserSecretKey("confluent.user.flink.ecret"))
 	require.True(t, isUserSecretKey("confluent.user.flink.ssecret"))
 	require.True(t, isUserSecretKey("confluent.user.flink.scret"))
@@ -331,9 +331,11 @@ func TestIsUserSecretKey(t *testing.T) {
 	require.True(t, isUserSecretKey("confluent.user.flink.secreet"))
 	require.True(t, isUserSecretKey("confluent.user.flink.secre"))
 	require.True(t, isUserSecretKey("confluent.user.flink.secrett"))
+	require.True(t, isUserSecretKey("confluent.user.flink.secrettt"))
 
-	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.seCrEt"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKsecret"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINsecret"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKsecret"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.ecret"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.ssecret"))
@@ -347,10 +349,11 @@ func TestIsUserSecretKey(t *testing.T) {
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secreet"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secre"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secrett"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.secrettt"))
 
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKSECRET"))
-	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINKSECRET"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINSECRET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.ECRET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SSECRET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SCRET"))
@@ -363,6 +366,7 @@ func TestIsUserSecretKey(t *testing.T) {
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECREET"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRE"))
 	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRETT"))
+	require.True(t, isUserSecretKey("CONFLUENT.USER.FLINK.SECRETTT"))
 
 	require.False(t, isUserSecretKey(""))
 	require.False(t, isUserSecretKey("gustavo"))

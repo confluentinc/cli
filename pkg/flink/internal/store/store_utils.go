@@ -397,7 +397,7 @@ func isUserSecretKey(key string) bool {
 	key = strings.ToLower(key)
 	distance := levenshtein.DistanceForStrings([]rune("confluent.user.flink.secret"), []rune(key), levenshtein.DefaultOptions)
 
-	return distance < 2
+	return distance <= 2
 }
 
 // Removes leading, trailling spaces, and semicolon from end, if present
