@@ -59,7 +59,7 @@ func (c *command) kekList(cmd *cobra.Command, _ []string) error {
 			Doc:       kek.GetDoc(),
 			IsShared:  kek.GetShared(),
 			Timestamp: kek.GetTs(),
-			Deleted:   kek.GetDeleted(),
+			IsDeleted: kek.GetDeleted(),
 		})
 	}
 	return list.Print()

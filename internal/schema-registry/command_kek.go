@@ -5,11 +5,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 const (
@@ -42,7 +43,7 @@ type kekOut struct {
 	Doc       string `human:"Doc,omitempty" serialized:"doc,omitempty"`
 	IsShared  bool   `human:"Is Shared,omitempty" serialized:"is_shared,omitempty"`
 	Timestamp int64  `human:"Timestamp,omitempty" serialized:"timestamp,omitempty"`
-	Deleted   bool   `human:"Is Deleted,omitempty" serialized:"is_deleted,omitempty"`
+	IsDeleted bool   `human:"Deleted,omitempty" serialized:"is_deleted,omitempty"`
 }
 
 func printKek(cmd *cobra.Command, kek srsdk.Kek) error {
@@ -55,7 +56,7 @@ func printKek(cmd *cobra.Command, kek srsdk.Kek) error {
 		Doc:       kek.GetDoc(),
 		IsShared:  kek.GetShared(),
 		Timestamp: kek.GetTs(),
-		Deleted:   kek.GetDeleted(),
+		IsDeleted: kek.GetDeleted(),
 	})
 	return table.Print()
 }

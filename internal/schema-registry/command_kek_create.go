@@ -39,9 +39,9 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("kms-type")
-	cmd.MarkFlagRequired("kms-key-id")
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kms-type"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kms-key-id"))
 
 	return cmd
 }
