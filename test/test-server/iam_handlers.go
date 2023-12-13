@@ -137,8 +137,9 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 		switch req.Spec.Resource.GetKind() {
 		case "Region":
 			apiKey = &apikeysv2.IamV2ApiKey{
-				Id:   apikeysv2.PtrString("FLINKREGIONAPIKEY"),
-				Spec: &apikeysv2.IamV2ApiKeySpec{Secret: apikeysv2.PtrString("FLINKREGIONAPISECRET")},
+				Id:         apikeysv2.PtrString("FLINKREGIONAPIKEY"),
+				ApiVersion: apikeysv2.PtrString("fcpm/v2"),
+				Spec:       &apikeysv2.IamV2ApiKeySpec{Secret: apikeysv2.PtrString("FLINKREGIONAPISECRET")},
 			}
 		default:
 			apiKey.Id = apikeysv2.PtrString(fmt.Sprintf("MYKEY%d", keyIndex))
@@ -146,14 +147,15 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 				Owner:  req.Spec.Owner,
 				Secret: apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
 				Resource: &apikeysv2.ObjectReference{
-					Id:   req.Spec.Resource.GetId(),
-					Kind: apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
+					Id:         req.Spec.Resource.GetId(),
+					ApiVersion: apikeysv2.PtrString("cmk/v2"),
+					Kind:       apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
 				},
 				Description: req.Spec.Description,
 			}
 			apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
 			keyIndex++
-			keyStoreV2[*apiKey.Id] = apiKey
+			keyStoreV2[apiKey.GetId()] = apiKey
 		}
 
 		err = json.NewEncoder(w).Encode(apiKey)

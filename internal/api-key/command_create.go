@@ -56,7 +56,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	c.addResourceFlag(cmd, true)
+	c.addResourceFlag(cmd, false)
 	cmd.Flags().String("description", "", "Description of API key.")
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)

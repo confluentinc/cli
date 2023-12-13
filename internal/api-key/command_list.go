@@ -33,7 +33,7 @@ func (c *command) newListCommand() *cobra.Command {
 		),
 	}
 
-	c.addResourceFlag(cmd, true)
+	c.addResourceFlag(cmd, false)
 	cmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
@@ -52,7 +52,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if resourceType == resource.Cloud {
-		clusterId = resource.Cloud
+		clusterId = resourceType
 	}
 
 	serviceAccount, err := cmd.Flags().GetString("service-account")
