@@ -22,13 +22,11 @@ blocks:
             - checkout
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
-            # - cache restore linux-$(checksum go.sum)
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
             - make test
             - make test-installer
-            # - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
@@ -46,9 +44,7 @@ blocks:
             - checkout
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
-            # - cache restore darwin-$(checksum go.sum)
             - make test
-            # - cache store darwin-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
@@ -66,14 +62,12 @@ blocks:
             - checkout
             # https://confluentinc.atlassian.net/browse/DP-9532
             - choco install -y golang --version $(Get-Content .go-version)
-            # - cache restore windows-$($(Get-FileHash go.sum).Hash)
             - $env:GOCOVERDIR = 'test/coverage'
             - New-Item $env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
             - go tool covdata textfmt -i $env:GOCOVERDIR -o test/coverage.out
-            # - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
       epilogue:
         always:
           commands:
