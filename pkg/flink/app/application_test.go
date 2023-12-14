@@ -104,8 +104,25 @@ func (s *ApplicationTestSuite) TestReplExitsAppWhenUserInitiatedExit() {
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecuteStatementError() {
+func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryIfNoErrorAndNotSensistiveStatement() {
 	userInput := "test-input"
+	statement := types.ProcessedStatement{PageToken: "not-empty"}
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
+	s.resultFetcher.EXPECT().Init(statement)
+	s.interactiveOutputController.EXPECT().VisualizeResults()
+
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), []string{userInput}, s.history.Data)
+}
+
+func (s *ApplicationTestSuite) TestReplDoesntAppendStatementToHistoryIfError() {
+	userInput := "test-input"
+
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
 	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
@@ -113,8 +130,24 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecut
 
 	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
-	cupaloy.SnapshotT(s.T(), actual)
-	require.Equal(s.T(), []string{userInput}, s.history.Data)
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), []string{}, s.history.Data)
+}
+
+func (s *ApplicationTestSuite) TestReplDoesntAppendStatementToHistoryIfSensistiveStatement() {
+	userInput := "test-input"
+	statement := types.ProcessedStatement{PageToken: "not-empty", IsSensitiveStatement: true}
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
+	s.resultFetcher.EXPECT().Init(statement)
+	s.interactiveOutputController.EXPECT().VisualizeResults()
+
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), []string{}, s.history.Data)
 }
 
 func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {

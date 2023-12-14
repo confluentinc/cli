@@ -142,6 +142,16 @@ func TestProcessSetStatement(t *testing.T) {
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
 		}, err)
 	})
+
+	t.Run("should parse and identify sensitive set statement", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'confluent.user.flink.secret' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+
+		result, err = s.processSetStatement("set 'confluent.user.flink.seecret' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+	})
 }
 
 func TestProcessResetStatement(t *testing.T) {
@@ -304,6 +314,70 @@ func TestParseStatementType(t *testing.T) {
 
 func hoursToSeconds(hours float32) int {
 	return int(hours * 60 * 60)
+}
+
+func TestIsUserSecretKey(t *testing.T) {
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.secret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flinsecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.ecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.ssecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.scret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.seecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.seret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.seccret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.secet"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.secrret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.secrt"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.secreet"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.secre"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.secrett"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "confluent.user.flink.secrettt"))
+
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.seCrEt"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINKsecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINsecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINKsecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.ecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.ssecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.scret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.seecret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.seret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.seccret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.secet"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.secrret"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.secrt"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.secreet"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.secre"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.secrett"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.secrettt"))
+
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINKSECRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINSECRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.ECRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SSECRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SCRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SEECRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SERET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECCRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECRRET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECRT"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECREET"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECRE"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECRETT"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECRETTT"))
+
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, ""))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "gustavo"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "sql.current-catalog"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "client.results-timeout"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "OPENAPI.KEY"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.NAME"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SCERECETASDT"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "CONFLUENT.USER.FLINK.SECCCCCCCCRET"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "SEEEEECRET.OPENAPI.KEY"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyFlinkSecret, "SECRET.OPENAPI.KEY"))
 }
 
 func TestFormatUTCOffsetToTimezone(t *testing.T) {
