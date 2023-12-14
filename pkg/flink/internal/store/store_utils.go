@@ -74,7 +74,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		}
 	}
 
-	hasSensitiveKey := lo.SomeBy(config.Sensitivekeys, func(sensitiveKey string) bool {
+	hasSensitiveKey := lo.SomeBy(config.SensitiveKeys, func(sensitiveKey string) bool {
 		return isKeySimilarToSensitiveKey(sensitiveKey, configKey)
 	})
 
