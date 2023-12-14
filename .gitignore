@@ -3,7 +3,6 @@
 /legal/
 /prebuilt/
 /test/bin/
-/.vscode/
 
 #
 # BEGIN managed content - any manual changes below this block will be discarded
@@ -45,7 +44,8 @@ go.work
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -79,6 +79,7 @@ Temporary Items
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+/.vscode/
 
 # AWS User-specific
 .idea/**/aws.xml

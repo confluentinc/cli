@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/texttheater/golang-levenshtein/levenshtein"
 
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
@@ -72,7 +73,10 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
 		}
 	}
-	hasUserSecret := isUserSecretKey(configKey)
+
+	hasSensitiveKey := lo.SomeBy(config.Sensitivekeys, func(sensitiveKey string) bool {
+		return isKeySimilarToSensitiveKey(sensitiveKey, configKey)
+	})
 
 	s.Properties.Set(configKey, configVal)
 
@@ -82,7 +86,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		Status:               types.COMPLETED,
 		StatementResults:     createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
 		IsLocalStatement:     true,
-		IsSensitiveStatement: hasUserSecret,
+		IsSensitiveStatement: hasSensitiveKey,
 	}, nil
 }
 
@@ -393,9 +397,9 @@ func startsWithValidSQL(statement string) bool {
 	return config.SQLKeywords.Contains(firstWord)
 }
 
-func isUserSecretKey(key string) bool {
+func isKeySimilarToSensitiveKey(sensitiveKeyName string, key string) bool {
 	key = strings.ToLower(key)
-	distance := levenshtein.DistanceForStrings([]rune("confluent.user.flink.secret"), []rune(key), levenshtein.DefaultOptions)
+	distance := levenshtein.DistanceForStrings([]rune(sensitiveKeyName), []rune(key), levenshtein.DefaultOptions)
 
 	return distance <= 2
 }
