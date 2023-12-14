@@ -22,4 +22,4 @@ const (
 	KeyFlinkSecret    = "confluent.user.flink.secret"
 )
 
-var Sensitivekeys = []string{KeyFlinkSecret}
+var SensitiveKeys = []string{KeyFlinkSecret}
