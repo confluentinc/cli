@@ -1,0 +1,9 @@
++------------------------+------------------------+
+| Name                   | kek-name               |
+| Subject                | payments               |
+| Version                | 1                      |
+| Algorithm              | AES256_GCM             |
+| Encrypted Key Material | encrypted-key-material |
+| Key Material           | key-material           |
+| Timestamp              | 1702346517344          |
++------------------------+------------------------+

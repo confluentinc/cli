@@ -1,0 +1,10 @@
+[
+  {
+    "name": "kek-name",
+    "kms_type": "AWS_KMS",
+    "kms_key_id": "arn:aws:kms:us-west-2:9979:key/abcd",
+    "kms_properties": "KeyState=\"Enabled\"",
+    "doc": "description",
+    "timestamp": 1702346517344
+  }
+]
