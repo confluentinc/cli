@@ -120,7 +120,7 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryIfNoErrorAndNotS
 	require.Equal(s.T(), []string{userInput}, s.history.Data)
 }
 
-func (s *ApplicationTestSuite) TestReplDoesntAppendsStatementToHistoryIfError() {
+func (s *ApplicationTestSuite) TestReplDoesntAppendStatementToHistoryIfError() {
 	userInput := "test-input"
 
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
