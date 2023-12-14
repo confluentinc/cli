@@ -16,7 +16,7 @@ func (c *command) newKekListCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.kekList,
 	}
 
-	cmd.Flags().Bool("deleted", false, "Include deleted KEKs.")
+	cmd.Flags().Bool("deleted", false, "Include soft-deleted KEKs.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

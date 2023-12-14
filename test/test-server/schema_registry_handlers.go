@@ -645,8 +645,6 @@ func handleSRDekSubject(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
-		case http.MethodGet:
-
 		}
 	}
 }
