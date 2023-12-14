@@ -137,11 +137,13 @@ func (a *Application) readEvalPrint() {
 		a.appController.ExitApplication()
 		return
 	}
-	a.history.Append(userInput)
 
 	executedStatement, err := a.statementController.ExecuteStatement(userInput)
 	if err != nil {
 		return
+	}
+	if !executedStatement.IsSensitiveStatement {
+		a.history.Append(userInput)
 	}
 
 	a.resultFetcher.Init(*executedStatement)
