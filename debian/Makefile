@@ -133,7 +133,7 @@ rpm-amd64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELE
 	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 
-rpm-arm64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+rpm-arm64-spec:
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)

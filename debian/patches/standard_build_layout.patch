@@ -1,5 +1,5 @@
 --- cli/Makefile	2023-12-14 11:01:54.000000000 -0800
-+++ debian/Makefile	2023-12-14 18:24:37.000000000 -0800
++++ debian/Makefile	2023-12-14 18:29:16.000000000 -0800
 @@ -1,127 +1,150 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
@@ -245,7 +245,7 @@
 +	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +
-+rpm-arm64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
++rpm-arm64-spec:
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
