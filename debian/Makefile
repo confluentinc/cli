@@ -97,20 +97,14 @@ else
 	RPM_RELEASE_ID=$(REVISION)
 endif
 
-rpm: rpm-amd64 rpm-arm64
+rpm: rpm-amd64-build rpm-arm64-build
 
-rpm-amd64: rpm-amd64-spec
-	echo "Building the RPM"
+rpm-amd64-build: rpm-amd64-spec
+	echo "Building the amd64 RPM"
 	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
-	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
-	echo
-	echo "================================================="
-	echo "The RPMs have been created and can be found here:"
-	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
-	echo "================================================="
 
-rpm-arm64: rpm-arm64-spec
-	echo "Building the RPM"
+rpm-arm64-build: rpm-arm64-spec
+	echo "Building the arm64 RPM"
 	rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 	echo
