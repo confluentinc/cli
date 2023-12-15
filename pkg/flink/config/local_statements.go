@@ -16,10 +16,10 @@ const (
 	KeyCatalog        = "sql.current-catalog"
 	KeyDatabase       = "sql.current-database"
 	KeyLocalTimeZone  = "sql.local-time-zone"
+	KeyOpenaiSecret   = "sql.secrets.openai"
 	KeyResultsTimeout = "client.results-timeout"
 	KeyServiceAccount = "client.service-account"
 	KeyStatementName  = "client.statement-name"
-	KeyFlinkSecret    = "confluent.user.flink.secret"
 )
 
-var SensitiveKeys = []string{KeyFlinkSecret}
+var SensitiveKeys = []string{KeyOpenaiSecret}
