@@ -19,4 +19,7 @@ const (
 	KeyResultsTimeout = "client.results-timeout"
 	KeyServiceAccount = "client.service-account"
 	KeyStatementName  = "client.statement-name"
+	KeyFlinkSecret    = "confluent.user.flink.secret"
 )
+
+var SensitiveKeys = []string{KeyFlinkSecret}

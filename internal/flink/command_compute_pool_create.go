@@ -25,7 +25,7 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	c.addRegionFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Int32("max-cfu", 5, "Maximum number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
