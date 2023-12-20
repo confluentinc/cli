@@ -28,7 +28,7 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Dependency directories
+# Dependency directories (remove the comment below to include it)
 vendor/
 
 # Go workspace file
@@ -79,7 +79,6 @@ Temporary Items
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
-/.vscode/
 
 # AWS User-specific
 .idea/**/aws.xml
