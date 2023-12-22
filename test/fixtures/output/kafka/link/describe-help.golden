@@ -4,7 +4,6 @@ Usage:
   confluent kafka link describe <link> [flags]
 
 Flags:
-      --include-tasks        Include tasks in the response.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
       --environment string   Environment ID.
