@@ -1,0 +1,8 @@
+  Link Name | Mirror Topic Name | Source Topic Name | Mirror Status | Status Time (ms) | Partition | Partition Mirror Lag | Last Source Fetch Offset |               Mirror state transition errors                 
+------------+-------------------+-------------------+---------------+------------------+-----------+----------------------+--------------------------+--------------------------------------------------------------
+  link-1    | dest-topic-1      | src-topic-1       | ACTIVE        |        111111111 |         0 |               142857 |                  1293009 | [{"error_code":"AUTHENTICATION_ERROR","error_message":"Auth  
+            |                   |                   |               |                  |           |                      |                          | issue."}]                                                    
+  link-1    | dest-topic-1      | src-topic-1       | ACTIVE        |        111111111 |         1 |               285714 |                 28340404 | [{"error_code":"AUTHENTICATION_ERROR","error_message":"Auth  
+            |                   |                   |               |                  |           |                      |                          | issue."}]                                                    
+  link-1    | dest-topic-1      | src-topic-1       | ACTIVE        |        111111111 |         2 |               571428 |                  5739304 | [{"error_code":"AUTHENTICATION_ERROR","error_message":"Auth  
+            |                   |                   |               |                  |           |                      |                          | issue."}]                                                    

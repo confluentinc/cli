@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -75,7 +76,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	table.Add(describeOut)
-	table.Filter(getDescribeFields())
+	table.Filter(getDescribeClusterLinksFields(includeTasks))
 	return table.Print()
 }
 
@@ -102,15 +103,26 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) (*des
 }
 
 func toTaskOut(tasks []kafkarestv3.LinkTask) (string, error) {
-	bytes, err := json.Marshal(tasks)
+	var tasksToEncode []kafkarestv3.LinkTask
+	if tasks != nil {
+		tasksToEncode = tasks
+	} else {
+		// If nil create an empty slice so that the encoded JSON is [] instead of null.
+		tasksToEncode = make([]kafkarestv3.LinkTask, 0)
+	}
+	var b bytes.Buffer
+	err := json.NewEncoder(&b).Encode(tasksToEncode)
 	if err != nil {
 		return "", err
 	} else {
-		return string(bytes), nil
+		return b.String(), nil
 	}
 }
 
-func getDescribeFields() []string {
-	x := []string{"Name"}
-	return append(x, "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage", "Tasks")
+func getDescribeClusterLinksFields(includeTasks bool) []string {
+	x := []string{"Name", "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage"}
+	if includeTasks {
+		x = append(x, "Tasks")
+	}
+	return x
 }

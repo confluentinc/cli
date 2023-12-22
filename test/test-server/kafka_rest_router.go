@@ -1477,6 +1477,11 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
+			includeStateTransitionErrors := r.URL.Query().Get("include_state_transition_errors")
+			var mirrorStateTransitionErrors []cckafkarestv3.LinkTaskError
+			if includeStateTransitionErrors == "true" {
+				mirrorStateTransitionErrors = []cckafkarestv3.LinkTaskError{*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue.")}
+			}
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
 				Metadata:        cckafkarestv3.ResourceMetadata{},
@@ -1503,8 +1508,9 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 						},
 					},
 				},
-				MirrorStatus: cckafkarestv3.ACTIVE,
-				StateTimeMs:  111111111,
+				MirrorStatus:                cckafkarestv3.ACTIVE,
+				StateTimeMs:                 111111111,
+				MirrorStateTransitionErrors: &mirrorStateTransitionErrors,
 			})
 			require.NoError(t, err)
 		}
