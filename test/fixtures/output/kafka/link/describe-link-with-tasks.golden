@@ -1,8 +1,9 @@
-+---------------------+-----------+
-| Name                | link-5    |
-| Source Cluster      |           |
-| Destination Cluster |           |
-| Remote Cluster      | cluster-2 |
-| State               | AVAILABLE |
-| Tasks               | null      |
-+---------------------+-----------+
++---------------------+----------------------------------------------------------------------------------------------------------------------------------------+
+| Name                | link-5                                                                                                                                 |
+| Source Cluster      |                                                                                                                                        |
+| Destination Cluster |                                                                                                                                        |
+| Remote Cluster      | cluster-2                                                                                                                              |
+| State               | AVAILABLE                                                                                                                              |
+| Tasks               | [{"errors":[],"state":"ACTIVE","task_name":"ConsumerOffsetSync"},{"errors":[{"error_code":"AUTHENTICATION_ERROR","error_message":"Auth |
+|                     | issue."}],"state":"IN_ERROR","task_name":"AclSync"}]                                                                                   |
++---------------------+----------------------------------------------------------------------------------------------------------------------------------------+
