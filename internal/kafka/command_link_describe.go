@@ -1,12 +1,19 @@
 package kafka
 
 import (
+	"context"
+	"encoding/json"
+	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/spf13/cobra"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
+)
+
+const (
+	includeTasks = "include-tasks"
 )
 
 type describeOut struct {
@@ -18,6 +25,7 @@ type describeOut struct {
 	State                string `human:"State" serialized:"state"`
 	Error                string `human:"Error,omitempty" serialized:"error,omitempty"`
 	ErrorMessage         string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	Tasks                string `human:"Tasks,omitempty" serialized:"tasks,omitempty"`
 }
 
 func (c *linkCommand) newDescribeCommand() *cobra.Command {
@@ -28,6 +36,8 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
 	}
+
+	cmd.Flags().Bool(includeTasks, false, "Include tasks in the response.")
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -45,21 +55,38 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	link, err := kafkaREST.CloudClient.GetKafkaLink(linkName)
+	cloudClient := kafkaREST.CloudClient
+	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, cloudClient.AuthToken)
+	req := cloudClient.ClusterLinkingV3Api.GetKafkaLink(apiContext, cloudClient.ClusterId, linkName)
+	includeTasks, err := cmd.Flags().GetBool(includeTasks)
+	if err != nil {
+		return err
+	}
+	req = req.IncludeTasks(includeTasks)
+	res, httpResp, err := req.Execute()
+	link, err := res, kafkarest.NewError(cloudClient.GetUrl(), err, httpResp)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(newDescribeLink(link, ""))
-	table.Filter(getListFields(false))
+	describeOut, err := newDescribeLink(link, "")
+	if err != nil {
+		return err
+	}
+	table.Add(describeOut)
+	table.Filter(getDescribeFields())
 	return table.Print()
 }
 
-func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
+func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) (*describeOut, error) {
 	var linkError string
 	if link.GetLinkError() != "NO_ERROR" {
 		linkError = link.GetLinkError()
+	}
+	tasks, err := toTaskOut(link.GetTasks())
+	if err != nil {
+		return nil, err
 	}
 	return &describeOut{
 		Name:                 link.GetLinkName(),
@@ -70,5 +97,20 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *desc
 		State:                link.GetLinkState(),
 		Error:                linkError,
 		ErrorMessage:         link.GetLinkErrorMessage(),
+		Tasks:                tasks,
+	}, nil
+}
+
+func toTaskOut(tasks []kafkarestv3.LinkTask) (string, error) {
+	bytes, err := json.Marshal(tasks)
+	if err != nil {
+		return "", err
+	} else {
+		return string(bytes), nil
 	}
+}
+
+func getDescribeFields() []string {
+	x := []string{"Name"}
+	return append(x, "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage", "Tasks")
 }
