@@ -716,14 +716,14 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 				})
 				require.NoError(t, err)
 			} else if link == "link-5" {
-				// includeTasks := mux.Vars(r)["include_tasks"]
+				includeTasks := r.URL.Query().Get("include_tasks")
 				var tasks []cckafkarestv3.LinkTask
-				// if includeTasks == "true" {
-				tasks = []cckafkarestv3.LinkTask{
-					*cckafkarestv3.NewLinkTask("ConsumerOffsetSync", "ACTIVE", []cckafkarestv3.LinkTaskError{}),
-					*cckafkarestv3.NewLinkTask("AclSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue.")}),
+				if includeTasks == "true" {
+					tasks = []cckafkarestv3.LinkTask{
+						*cckafkarestv3.NewLinkTask("ConsumerOffsetSync", "ACTIVE", []cckafkarestv3.LinkTaskError{}),
+						*cckafkarestv3.NewLinkTask("AclSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue.")}),
+					}
 				}
-				//				}
 				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
 					Kind:            "",
 					Metadata:        cckafkarestv3.ResourceMetadata{},
