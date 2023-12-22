@@ -721,7 +721,11 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 				if includeTasks == "true" {
 					tasks = []cckafkarestv3.LinkTask{
 						*cckafkarestv3.NewLinkTask("ConsumerOffsetSync", "ACTIVE", []cckafkarestv3.LinkTaskError{}),
-						*cckafkarestv3.NewLinkTask("AclSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue.")}),
+						*cckafkarestv3.NewLinkTask("AutoCreateMirror", "NOT_CONFIGURED", []cckafkarestv3.LinkTaskError{}),
+						*cckafkarestv3.NewLinkTask("AclSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{
+							*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
+							*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
+						}),
 					}
 				}
 				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
@@ -1477,6 +1481,14 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
+			includeStateTransitionErrors := r.URL.Query().Get("include_state_transition_errors")
+			var mirrorStateTransitionErrors []cckafkarestv3.LinkTaskError
+			if includeStateTransitionErrors == "true" {
+				mirrorStateTransitionErrors = []cckafkarestv3.LinkTaskError{
+					*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
+					*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
+				}
+			}
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
 				Metadata:        cckafkarestv3.ResourceMetadata{},
@@ -1503,8 +1515,9 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 						},
 					},
 				},
-				MirrorStatus: cckafkarestv3.ACTIVE,
-				StateTimeMs:  111111111,
+				MirrorStatus:                cckafkarestv3.ACTIVE,
+				StateTimeMs:                 111111111,
+				MirrorStateTransitionErrors: &mirrorStateTransitionErrors,
 			})
 			require.NoError(t, err)
 		}

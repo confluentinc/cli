@@ -1,9 +1,15 @@
-+---------------------+----------------------------------------------------------------------------------------------------------------------------------------+
-| Name                | link-5                                                                                                                                 |
-| Source Cluster      |                                                                                                                                        |
-| Destination Cluster |                                                                                                                                        |
-| Remote Cluster      | cluster-2                                                                                                                              |
-| State               | AVAILABLE                                                                                                                              |
-| Tasks               | [{"errors":[],"state":"ACTIVE","task_name":"ConsumerOffsetSync"},{"errors":[{"error_code":"AUTHENTICATION_ERROR","error_message":"Auth |
-|                     | issue."}],"state":"IN_ERROR","task_name":"AclSync"}]                                                                                   |
-+---------------------+----------------------------------------------------------------------------------------------------------------------------------------+
+Link
++---------------------+-----------+
+| Name                | link-5    |
+| Source Cluster      |           |
+| Destination Cluster |           |
+| Remote Cluster      | cluster-2 |
+| State               | AVAILABLE |
++---------------------+-----------+
+Link tasks
+      Task name      |     state      |       Error code       | Error message  
+---------------------+----------------+------------------------+----------------
+  AclSync            | IN_ERROR       | AUTHENTICATION_ERROR   | Auth issue.    
+  AclSync            | IN_ERROR       | MISCONFIGURATION_ERROR | Wrong config.  
+  AutoCreateMirror   | NOT_CONFIGURED |                        |                
+  ConsumerOffsetSync | ACTIVE         |                        |                
