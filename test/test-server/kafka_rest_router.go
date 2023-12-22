@@ -602,6 +602,13 @@ func handleKafkaRestLinks(t *testing.T) http.HandlerFunc {
 					TopicNames:      topics,
 					LinkError:       noErrorErr,
 				},
+				{
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cluster2),
+					LinkName:        "link-5",
+					ClusterLinkId:   "LINKID5",
+					TopicNames:      topics,
+					LinkError:       noErrorErr,
+				},
 			}})
 			require.NoError(t, err)
 		}
@@ -704,6 +711,17 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 					RemoteClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
 					LinkName:        link,
 					ClusterLinkId:   "LINKID4",
+					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+				})
+				require.NoError(t, err)
+			} else if link == "link-5" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+					Kind:            "",
+					Metadata:        cckafkarestv3.ResourceMetadata{},
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+					LinkName:        link,
+					ClusterLinkId:   "LINKID5",
 					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
 					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
 				})
