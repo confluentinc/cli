@@ -1,10 +1,16 @@
 package kafka
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	v3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -47,24 +53,94 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	mirror, err := kafkaREST.CloudClient.ReadKafkaMirrorTopic(link, mirrorTopicName)
+	cloudClient := kafkaREST.CloudClient
+	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, cloudClient.AuthToken)
+
+	req := cloudClient.ClusterLinkingV3Api.ReadKafkaMirrorTopic(apiContext, cloudClient.ClusterId, link, mirrorTopicName)
+	req = req.IncludeStateTransitionErrors(true)
+
+	res, httpResp, err := req.Execute()
+	mirror, err := res, kafkarest.NewError(cloudClient.GetUrl(), err, httpResp)
 	if err != nil {
 		return err
 	}
 
-	list := output.NewList(cmd)
+	mirrorOuts := make([]mirrorOut, 0)
+
+	mirrorStateTransitionErrors := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
 	for _, partitionLag := range mirror.GetMirrorLags().Items {
-		list.Add(&mirrorOut{
-			LinkName:              mirror.GetLinkName(),
-			MirrorTopicName:       mirror.GetMirrorTopicName(),
-			SourceTopicName:       mirror.GetSourceTopicName(),
-			MirrorStatus:          string(mirror.GetMirrorStatus()),
-			StatusTimeMs:          mirror.GetStateTimeMs(),
-			Partition:             partitionLag.GetPartition(),
-			PartitionMirrorLag:    partitionLag.GetLag(),
-			LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
+		mirrorOuts = append(mirrorOuts, mirrorOut{
+			LinkName:                    mirror.GetLinkName(),
+			MirrorTopicName:             mirror.GetMirrorTopicName(),
+			SourceTopicName:             mirror.GetSourceTopicName(),
+			MirrorStatus:                string(mirror.GetMirrorStatus()),
+			StatusTimeMs:                mirror.GetStateTimeMs(),
+			Partition:                   partitionLag.GetPartition(),
+			PartitionMirrorLag:          partitionLag.GetLag(),
+			LastSourceFetchOffset:       partitionLag.GetLastSourceFetchOffset(),
+			MirrorStateTransitionErrors: mirrorStateTransitionErrors,
 		})
 	}
-	list.Filter([]string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"})
-	return list.Print()
+	list := output.NewList(cmd)
+	for i := range mirrorOuts {
+		list.Add(&mirrorOuts[i])
+	}
+	isSerialized := output.GetFormat(cmd).IsSerialized()
+	if isSerialized {
+		// If we are serializing the output then there's no need to do any customization of the output. It will get
+		// correctly serialized.
+		list.Filter(getDescribeMirrorsFields(true))
+		return list.Print()
+	} else {
+		// If we are not serializing the output, which means it's for human consumption, then we do some customization
+		// so it's more readable.
+		// We print two lists. The first one contains the mirror information per partition. After that we print a list
+		// containing the mirror state transition errors. This is because the state transition error information is at the
+		// topic level, so if we used the first list we'd duplicate the transition error for each partition which
+		// would look awkward and confusing.
+		list.Filter(getDescribeMirrorsFields(false))
+		err = list.Print()
+		if err != nil {
+			return err
+		}
+		if len(mirrorStateTransitionErrors) > 0 {
+			errsList := output.NewList(cmd)
+			for i := range mirrorStateTransitionErrors {
+				errsList.Add(&mirrorStateTransitionErrors[i])
+			}
+			return errsList.Print()
+		} else {
+			return nil
+		}
+	}
+}
+
+type mirrorTransitionErrorOut struct {
+	ErrorCode    string `human:"Mirror state transition error code" serialized:"error_code"`
+	ErrorMessage string `human:"Mirror state transition error message" serialized:"error_message"`
+}
+
+func getDescribeMirrorsFields(includeTransitionErrors bool) []string {
+	x := []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"}
+	if includeTransitionErrors {
+		x = append(x, "MirrorStateTransitionErrors", "ErrorCode", "ErrorMessage")
+	}
+	return x
+}
+
+func toMirrorStateTransitionError(errs []v3.LinkTaskError) []mirrorTransitionErrorOut {
+	var errsToEncode []kafkarestv3.LinkTaskError
+	if errs != nil {
+		errsToEncode = errs
+	} else {
+		errsToEncode = make([]kafkarestv3.LinkTaskError, 0)
+	}
+	transitionErrorOuts := make([]mirrorTransitionErrorOut, 0)
+	for _, errToEncode := range errsToEncode {
+		transitionErrorOuts = append(transitionErrorOuts, mirrorTransitionErrorOut{
+			ErrorCode:    errToEncode.ErrorCode,
+			ErrorMessage: errToEncode.ErrorMessage,
+		})
+	}
+	return transitionErrorOuts
 }
