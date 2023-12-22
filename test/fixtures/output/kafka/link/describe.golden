@@ -1,8 +1,10 @@
+Link
 +---------------------+--------------------+
 | Name                | link-1             |
 | Source Cluster      | lkc-describe-topic |
 | Destination Cluster |                    |
 | Remote Cluster      |                    |
 | State               | AVAILABLE          |
-| Tasks               | null               |
 +---------------------+--------------------+
+Link tasks
+None found.
