@@ -81,7 +81,7 @@ require (
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/rivo/tview v0.0.0-20230511053024-822bd067b165
-	github.com/samber/lo v1.38.1
+	github.com/samber/lo v1.39.0
 	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
 	github.com/sourcegraph/go-lsp v0.0.0-20200429204803-219e11d77f5d
 	github.com/sourcegraph/jsonrpc2 v0.2.0
