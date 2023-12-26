@@ -1,5 +1,15 @@
 project_name: confluent
 
+before:
+  hooks:
+    - cmd: az login
+    - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
+    - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
+
+after:
+  hooks:
+    - cmd: rm CLIEVCodeSigningCertificate2.pfx
+
 builds:
   - id: confluent-alpine-amd64
     binary: confluent
@@ -171,14 +181,9 @@ builds:
     goarch:
       - amd64
     hooks:
-      pre:
-        - cmd: az login
-        - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
-        - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
       post:
         - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
-        - cmd: rm CLIEVCodeSigningCertificate2.pfx
-  - id: confluent-windows-amd64-chocolatey
+  - id: confluent-windows-amd64-disableupdates
     binary: confluent
     main: cmd/confluent/main.go
     ldflags:
@@ -197,14 +202,8 @@ builds:
     goarch:
       - amd64
     hooks:
-      # TODO: We might have to convert some of these to global before/after hooks since we'll now have multiple Windows binaries w/ different ldflags
-      pre:
-        - cmd: az login
-        - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
-        - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
       post:
         - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
-        - cmd: rm CLIEVCodeSigningCertificate2.pfx
 
 archives:
   - id: archive
@@ -238,17 +237,11 @@ archives:
       - confluent-darwin-amd64-disableupdates
       - confluent-darwin-arm64-disableupdates
       - confluent-linux-disableupdates
+      - confluent-windows-amd64-disableupdates
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_disableupdates"
-    wrap_in_directory: "{{ .ProjectName }}"
-    files:
-      - LICENSE
-      - legal/**/*
-  - id: archive-chocolatey
-    # TODO: Check naming requirements for Chocolatey
-    format: zip
-    builds:
-      - confluent-windows-amd64-chocolatey
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_chocolatey"
+    format_overrides:
+      - goos: windows
+        format: zip
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE
