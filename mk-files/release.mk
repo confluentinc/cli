@@ -71,6 +71,11 @@ else
 	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
 endif
 
+.PHONY: gorelease-windows
+gorelease-windows:
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-windows.yml
+
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease
 gorelease:

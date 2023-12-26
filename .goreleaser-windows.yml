@@ -1,0 +1,19 @@
+project_name: confluent
+
+builds:
+  - id: confluent-windows-amd64-disableupdates
+    builder: prebuilt
+    goos:
+      - windows
+    goarch:
+      - amd64
+    goamd64:
+      - v1
+    prebuilt:
+      path: "dist/confluent-{{ .Os }}-{{ .Arch }}-chocolatey{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent.exe"
+
+release:
+  disable: true
+
+archives:
+  - format: binary
