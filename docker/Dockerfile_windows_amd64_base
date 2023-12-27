@@ -1,0 +1,30 @@
+FROM --platform=linux/amd64 ubuntu:jammy-20231211.1
+
+RUN apt update 
+
+RUN apt -y install make sudo
+
+RUN sudo apt -y install git wget build-essential curl mingw-w64 ca-certificates gnupg
+
+# The official choco linux image does not have a new enough mingw-w64 version to successfully cross compile the CLI
+# So we build & install choco from source on Ubuntu Jammy (which is able to compile the CLI)
+# mono is required to run choco & .NET is required to build it
+# https://github.com/chocolatey/choco#other-platforms
+RUN sudo gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
+    echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list && \
+    sudo apt update && \
+    sudo apt -y install mono-devel
+
+RUN sudo apt install -y dotnet-sdk-7.0 aspnetcore-runtime-7.0
+
+RUN git clone https://github.com/chocolatey/choco.git && \
+    cd /choco && \
+    git checkout 2.2.2 && \
+    ./build.sh && \
+    cp -r ./code_drop/temp/_PublishedApps/choco /opt/chocolatey && \
+    mkdir /opt/chocolatey/lib && \
+    cp ./docker/choco_wrapper /usr/local/bin/choco
+
+ENV ChocolateyInstall=/opt/chocolatey
+
+RUN mkdir -p /cli
