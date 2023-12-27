@@ -71,8 +71,8 @@ else
 	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
 endif
 
-.PHONY: gorelease-windows
-gorelease-windows:
+.PHONY: gorelease-windows-amd64
+gorelease-windows-amd64:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-windows.yml
 

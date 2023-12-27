@@ -1,0 +1,15 @@
+FROM --platform=linux/amd64 ubuntu:jammy-20231211.1
+
+COPY . /cli/
+
+RUN apt update && apt -y install make sudo
+
+RUN sudo apt -y install git wget build-essential mingw-w64
+
+RUN export GO_VERSION=$(cat /cli/.go-version) && \
+    wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
+    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
+
+ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
+
+RUN cd /cli && make gorelease-windows-amd64
