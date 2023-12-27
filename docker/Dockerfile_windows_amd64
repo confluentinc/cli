@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 cli-ubuntu-base-windows-amd64:latest
+FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-windows-amd64:latest
 
 COPY . /cli/
 
