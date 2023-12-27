@@ -283,7 +283,6 @@ blobs:
   - ids:
     - archive
     - archive-alpine
-    - archive-chocolatey
     - archive-disableupdates
     provider: s3
     bucket: confluent.cloud
