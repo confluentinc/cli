@@ -4,7 +4,7 @@ RUN apt update
 
 RUN apt -y install make sudo
 
-RUN sudo apt -y install git wget build-essential curl mingw-w64 ca-certificates gnupg
+RUN sudo apt -y install git wget build-essential curl mingw-w64 ca-certificates gnupg osslsigncode
 
 # The official choco linux image does not have a new enough mingw-w64 version to successfully cross compile the CLI
 # So we build & install choco from source on Ubuntu Jammy (which is able to compile the CLI)

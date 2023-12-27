@@ -10,7 +10,6 @@ trap "exit 1" ERR
 
 az login
 az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
-xattr -dr com.apple.quarantine ./lib/osslsigncode
 
 go mod vendor
 
