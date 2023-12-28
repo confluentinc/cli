@@ -58,7 +58,7 @@ archives:
     format: zip
     builds:
       - confluent-windows-amd64-disableupdates
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_disableupdates"
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE
