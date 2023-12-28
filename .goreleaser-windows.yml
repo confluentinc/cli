@@ -1,0 +1,57 @@
+project_name: confluent
+
+dist: prebuilt
+
+builds:
+  - id: confluent-windows-amd64
+    binary: confluent
+    main: cmd/confluent/main.go
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - windows
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - cmd: osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 /run/secrets/CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out /sign-temp/confluent.exe
+        - cmd: rm -f {{ .Path }}
+        - cmd: mv /sign-temp/confluent.exe {{ .Path }}
+  - id: confluent-windows-amd64-disableupdates
+    binary: confluent
+    main: cmd/confluent/main.go
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true -buildmode=exe
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - windows
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - cmd: osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 /run/secrets/CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out /sign-temp-disableupdates/confluent.exe
+        - cmd: rm -f {{ .Path }}
+        - cmd: mv /sign-temp-disableupdates/confluent.exe {{ .Path }}
+
+release:
+  disable: true
+
+archives:
+  - format: binary
