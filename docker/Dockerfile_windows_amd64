@@ -1,0 +1,13 @@
+FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-windows-amd64:latest
+
+COPY . /cli/
+
+RUN export GO_VERSION=$(cat /cli/.go-version) && \
+    wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
+    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
+
+ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
+
+RUN --mount=type=secret,id=CLIEVCodeSigningCertificate2.pfx \
+    cd /cli && \
+    make gorelease-windows-amd64
