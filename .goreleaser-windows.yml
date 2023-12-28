@@ -54,4 +54,31 @@ release:
   disable: true
 
 archives:
-  - format: binary
+  - id: archive
+    format: zip
+    builds:
+      - confluent-windows-amd64-disableupdates
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: "{{ .ProjectName }}"
+    files:
+      - LICENSE
+      - legal/**/*
+
+chocolateys:
+  - name: confluent
+    ids:
+      - archive
+    owners: confluentinc
+    title: Confluent CLI
+    authors: Confluent Inc.
+    project_url: https://docs.confluent.io/confluent-cli/current/overview.html
+    url_template: "https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/{{ .Version }}/{{ .ArtifactName }}"
+    copyright: 2023 Confluent Inc.
+    license_url: https://github.com/confluentinc/cli/blob/main/LICENSE
+    require_license_acceptance: false
+    project_source_url: https://github.com/confluentinc/cli
+    bug_tracker_url: https://github.com/confluentinc/cli/issues
+    summary: CLI for Confluent Cloud and Confluent Platform
+    description: CLI for Confluent Cloud and Confluent Platform
+    release_notes: https://docs.confluent.io/confluent-cli/current/release-notes.html
+    skip_publish: true
