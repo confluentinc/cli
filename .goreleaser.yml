@@ -162,16 +162,6 @@ builds:
       - v1
     prebuilt:
       path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent.exe"
-  - id: confluent-windows-amd64-disableupdates
-    builder: prebuilt
-    goos:
-      - windows
-    goarch:
-      - amd64
-    goamd64:
-      - v1
-    prebuilt:
-      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-disableupdates_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent.exe"
 
 archives:
   - id: archive
@@ -205,11 +195,7 @@ archives:
       - confluent-darwin-amd64-disableupdates
       - confluent-darwin-arm64-disableupdates
       - confluent-linux-disableupdates
-      - confluent-windows-amd64-disableupdates
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_disableupdates"
-    format_overrides:
-      - goos: windows
-        format: zip
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE

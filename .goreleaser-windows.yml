@@ -54,7 +54,7 @@ release:
   disable: true
 
 archives:
-  - id: archive
+  - id: archive-disableupdates
     format: zip
     builds:
       - confluent-windows-amd64-disableupdates
@@ -67,7 +67,7 @@ archives:
 chocolateys:
   - name: confluent
     ids:
-      - archive
+      - archive-disableupdates
     owners: confluentinc
     title: Confluent CLI
     authors: Confluent Inc.
