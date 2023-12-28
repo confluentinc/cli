@@ -14,7 +14,7 @@ az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEV
 go mod vendor
 
 # Build windows/amd64
-docker build . --file ./docker/Dockerfile_windows_amd64 --tag cli-windows-amd64-builder-image
+docker build . --file ./docker/Dockerfile_windows_amd64 --tag cli-windows-amd64-builder-image --secret id=CLIEVCodeSigningCertificate2.pfx,src=CLIEVCodeSigningCertificate2.pfx
 docker container create --name cli-windows-amd64-builder cli-windows-amd64-builder-image
 docker container cp cli-windows-amd64-builder:/cli/prebuilt/. ./prebuilt/
 docker container rm cli-windows-amd64-builder

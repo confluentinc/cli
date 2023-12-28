@@ -8,4 +8,6 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
-RUN cd /cli && make gorelease-windows-amd64
+RUN --mount=type=secret,id=CLIEVCodeSigningCertificate2.pfx \
+    cd /cli && \
+    make gorelease-windows-amd64

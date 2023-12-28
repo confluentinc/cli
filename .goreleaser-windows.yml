@@ -23,7 +23,7 @@ builds:
       - amd64
     hooks:
       post:
-        - cmd: osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out /sign-temp/confluent.exe
+        - cmd: osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 /run/secrets/CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out /sign-temp/confluent.exe
         - cmd: rm -f {{ .Path }}
         - cmd: mv /sign-temp/confluent.exe {{ .Path }}
   - id: confluent-windows-amd64-disableupdates
@@ -46,7 +46,7 @@ builds:
       - amd64
     hooks:
       post:
-        - cmd: osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out /sign-temp-disableupdates/confluent.exe
+        - cmd: osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 /run/secrets/CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out /sign-temp-disableupdates/confluent.exe
         - cmd: rm -f {{ .Path }}
         - cmd: mv /sign-temp-disableupdates/confluent.exe {{ .Path }}
 
