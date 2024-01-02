@@ -1,7 +1,0 @@
-+---------------------+-----------+
-| Name                | link-5    |
-| Source Cluster      |           |
-| Destination Cluster |           |
-| Remote Cluster      | cluster-2 |
-| State               | AVAILABLE |
-+---------------------+-----------+
