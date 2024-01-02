@@ -13,10 +13,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-const (
-	includeTasks = "include-tasks"
-)
-
 type describeOut struct {
 	Name                 string `human:"Name" serialized:"link_name"`
 	TopicName            string `human:"Topic Name" serialized:"topic_name"`
@@ -38,8 +34,6 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
-	cmd.Flags().Bool(includeTasks, false, "Include tasks in the response.")
-
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -59,11 +53,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	cloudClient := kafkaREST.CloudClient
 	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, cloudClient.AuthToken)
 	req := cloudClient.ClusterLinkingV3Api.GetKafkaLink(apiContext, cloudClient.ClusterId, linkName)
-	includeTasks, err := cmd.Flags().GetBool(includeTasks)
-	if err != nil {
-		return err
-	}
-	req = req.IncludeTasks(includeTasks)
+	req = req.IncludeTasks(true)
 	res, httpResp, err := req.Execute()
 	link, err := res, kafkarest.NewError(cloudClient.GetUrl(), err, httpResp)
 	if err != nil {
@@ -76,7 +66,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	table.Add(describeOut)
-	table.Filter(getDescribeClusterLinksFields(includeTasks))
+	table.Filter(getDescribeClusterLinksFields())
 	return table.Print()
 }
 
@@ -119,10 +109,7 @@ func toTaskOut(tasks []kafkarestv3.LinkTask) (string, error) {
 	}
 }
 
-func getDescribeClusterLinksFields(includeTasks bool) []string {
-	x := []string{"Name", "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage"}
-	if includeTasks {
-		x = append(x, "Tasks")
-	}
+func getDescribeClusterLinksFields() []string {
+	x := []string{"Name", "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage", "Tasks"}
 	return x
 }
