@@ -17,9 +17,9 @@ func (c *command) newKekUpdateCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.kekUpdate,
 	}
 
-	cmd.Flags().StringSlice("kms-properties", nil, "A comma-separated list of additional properties (key=value) used to access the KMS.")
+	cmd.Flags().StringSlice("kms-properties", nil, "A comma-separated list of additional properties (key=value) used to access the Key Management Service (KMS).")
 	cmd.Flags().String("doc", "", "An optional user-friendly description for the KEK.")
-	cmd.Flags().Bool("shared", false, "If the DEK Registry has shared access to the KMS.")
+	cmd.Flags().Bool("shared", false, "If the DEK Registry has shared access to the Key Management Service (KMS).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

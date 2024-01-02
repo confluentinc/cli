@@ -219,8 +219,6 @@ func (c *Client) GetByUniqueAttributes(typeName, qualifiedName string) (srsdk.At
 	return res, err
 }
 
-// kek first.
-
 func (c *Client) CreateKek(name string, createReq srsdk.CreateKekRequest) (srsdk.Kek, error) {
 	res, _, err := c.DefaultApi.CreateKek(c.context()).CreateKekRequest(createReq).Execute()
 	return res, err
@@ -236,13 +234,13 @@ func (c *Client) UndeleteKek(name string) error {
 	return err
 }
 
-func (c *Client) ListKeks(deleted bool) ([]string, error) {
-	res, _, err := c.DefaultApi.GetKekNames(c.context()).Deleted(deleted).Execute()
+func (c *Client) ListKeks(all bool) ([]string, error) {
+	res, _, err := c.DefaultApi.GetKekNames(c.context()).Deleted(all).Execute()
 	return res, err
 }
 
-func (c *Client) DescribeKek(name string, deleted bool) (srsdk.Kek, error) {
-	res, _, err := c.DefaultApi.GetKek(c.context(), name).Deleted(deleted).Execute()
+func (c *Client) DescribeKek(name string, all bool) (srsdk.Kek, error) {
+	res, _, err := c.DefaultApi.GetKek(c.context(), name).Deleted(all).Execute()
 	return res, err
 }
 
@@ -261,13 +259,13 @@ func (c *Client) GetDekSubjects(name string) ([]string, error) {
 	return res, err
 }
 
-func (c *Client) GetDekByVersion(name, subject, version, algorithm string, deleted bool) (srsdk.Dek, error) {
-	res, _, err := c.DefaultApi.GetDekByVersion(c.context(), name, subject, version).Algorithm(algorithm).Deleted(deleted).Execute()
+func (c *Client) GetDekByVersion(name, subject, version, algorithm string, all bool) (srsdk.Dek, error) {
+	res, _, err := c.DefaultApi.GetDekByVersion(c.context(), name, subject, version).Algorithm(algorithm).Deleted(all).Execute()
 	return res, err
 }
 
-func (c *Client) GetDeKVersions(name, subject, algorithm string, deleted bool) ([]int32, error) {
-	res, _, err := c.DefaultApi.GetDekVersions(c.context(), name, subject).Algorithm(algorithm).Deleted(deleted).Execute()
+func (c *Client) GetDeKVersions(name, subject, algorithm string, all bool) ([]int32, error) {
+	res, _, err := c.DefaultApi.GetDekVersions(c.context(), name, subject).Algorithm(algorithm).Deleted(all).Execute()
 	return res, err
 }
 

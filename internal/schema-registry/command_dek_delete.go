@@ -77,16 +77,15 @@ func (c *command) dekDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var deleteErr error
 	if version == "" {
-		deleteErr = client.DeleteDekVersions(name, subject, algorithm, permanent)
+		err = client.DeleteDekVersions(name, subject, algorithm, permanent)
 	} else {
-		deleteErr = client.DeleteDekVersion(name, subject, version, algorithm, permanent)
+		err = client.DeleteDekVersion(name, subject, version, algorithm, permanent)
 	}
-	if deleteErr != nil {
-		return deleteErr
+	if err != nil {
+		return err
 	}
 
-	output.ErrPrintf(c.Config.EnableColor, fmt.Sprintf("Deleted the %s corresponding to the parameters.", resource.Dek))
+	output.ErrPrintf(c.Config.EnableColor, "Deleted the %s corresponding to the parameters:.\n", resource.Dek)
 	return nil
 }

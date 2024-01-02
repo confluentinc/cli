@@ -15,7 +15,7 @@ func (c *command) newKekDescribeCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.kekDescribe,
 	}
 
-	cmd.Flags().Bool("deleted", false, "Include soft-deleted KEKs.")
+	cmd.Flags().Bool("all", false, "Include soft-deleted KEKs.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -34,12 +34,12 @@ func (c *command) kekDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := cmd.Flags().GetBool("deleted")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
 
-	kek, err := client.DescribeKek(args[0], deleted)
+	kek, err := client.DescribeKek(args[0], all)
 	if err != nil {
 		return err
 	}

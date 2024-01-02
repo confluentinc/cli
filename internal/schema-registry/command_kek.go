@@ -36,27 +36,27 @@ func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
 }
 
 type kekOut struct {
-	Name      string `human:"Name,omitempty" serialized:"name,omitempty" `
-	KmsType   string `human:"KMS Type,omitempty" serialized:"kms_type,omitempty"`
-	KmsKeyId  string `human:"KMS Key ID,omitempty" serialized:"kms_key_id,omitempty"`
-	KmsProps  string `human:"KMS Properties,omitempty" serialized:"kms_properties,omitempty"`
-	Doc       string `human:"Doc,omitempty" serialized:"doc,omitempty"`
-	IsShared  bool   `human:"Is Shared,omitempty" serialized:"is_shared,omitempty"`
-	Timestamp int64  `human:"Timestamp,omitempty" serialized:"timestamp,omitempty"`
-	IsDeleted bool   `human:"Deleted,omitempty" serialized:"is_deleted,omitempty"`
+	Name          string `human:"Name,omitempty" serialized:"name,omitempty" `
+	KmsType       string `human:"KMS Type,omitempty" serialized:"kms_type,omitempty"`
+	KmsKeyId      string `human:"KMS Key ID,omitempty" serialized:"kms_key_id,omitempty"`
+	KmsProperties string `human:"KMS Properties,omitempty" serialized:"kms_properties,omitempty"`
+	Doc           string `human:"Doc,omitempty" serialized:"doc,omitempty"`
+	IsShared      bool   `human:"Is Shared,omitempty" serialized:"is_shared,omitempty"`
+	Timestamp     int64  `human:"Timestamp,omitempty" serialized:"timestamp,omitempty"`
+	IsDeleted     bool   `human:"Deleted,omitempty" serialized:"is_deleted,omitempty"`
 }
 
 func printKek(cmd *cobra.Command, kek srsdk.Kek) error {
 	table := output.NewTable(cmd)
 	table.Add(&kekOut{
-		Name:      kek.GetName(),
-		KmsType:   kek.GetKmsType(),
-		KmsKeyId:  kek.GetKmsKeyId(),
-		KmsProps:  convertMapToString(kek.GetKmsProps()),
-		Doc:       kek.GetDoc(),
-		IsShared:  kek.GetShared(),
-		Timestamp: kek.GetTs(),
-		IsDeleted: kek.GetDeleted(),
+		Name:          kek.GetName(),
+		KmsType:       kek.GetKmsType(),
+		KmsKeyId:      kek.GetKmsKeyId(),
+		KmsProperties: convertMapToString(kek.GetKmsProps()),
+		Doc:           kek.GetDoc(),
+		IsShared:      kek.GetShared(),
+		Timestamp:     kek.GetTs(),
+		IsDeleted:     kek.GetDeleted(),
 	})
 	return table.Print()
 }

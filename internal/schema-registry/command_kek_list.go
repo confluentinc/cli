@@ -16,7 +16,7 @@ func (c *command) newKekListCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.kekList,
 	}
 
-	cmd.Flags().Bool("deleted", false, "Include soft-deleted KEKs.")
+	cmd.Flags().Bool("all", false, "Include soft-deleted KEKs.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -35,31 +35,31 @@ func (c *command) kekList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	deleted, err := cmd.Flags().GetBool("deleted")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
 
-	keks, err := client.ListKeks(deleted)
+	keks, err := client.ListKeks(all)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
 	for _, kekName := range keks {
-		kek, err := client.DescribeKek(kekName, deleted)
+		kek, err := client.DescribeKek(kekName, all)
 		if err != nil {
 			return err
 		}
 		list.Add(&kekOut{
-			Name:      kekName,
-			KmsType:   kek.GetKmsType(),
-			KmsKeyId:  kek.GetKmsKeyId(),
-			KmsProps:  convertMapToString(kek.GetKmsProps()),
-			Doc:       kek.GetDoc(),
-			IsShared:  kek.GetShared(),
-			Timestamp: kek.GetTs(),
-			IsDeleted: kek.GetDeleted(),
+			Name:          kekName,
+			KmsType:       kek.GetKmsType(),
+			KmsKeyId:      kek.GetKmsKeyId(),
+			KmsProperties: convertMapToString(kek.GetKmsProps()),
+			Doc:           kek.GetDoc(),
+			IsShared:      kek.GetShared(),
+			Timestamp:     kek.GetTs(),
+			IsDeleted:     kek.GetDeleted(),
 		})
 	}
 	return list.Print()

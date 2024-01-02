@@ -19,7 +19,7 @@ func (c *command) newDekDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("subject", "", "Subject of the DEK.")
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().String("version", "1", "Version of the DEK.")
-	cmd.Flags().Bool("deleted", false, "Include soft-deleted DEK.")
+	cmd.Flags().Bool("all", false, "Include soft-deleted DEK.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -61,12 +61,12 @@ func (c *command) dekDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := cmd.Flags().GetBool("deleted")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
 
-	dek, err := client.GetDekByVersion(name, subject, version, algorithm, deleted)
+	dek, err := client.GetDekByVersion(name, subject, version, algorithm, all)
 	if err != nil {
 		return err
 	}

@@ -476,7 +476,7 @@ func AddAlgorithmFlag(cmd *cobra.Command) {
 }
 
 func AddKmsTypeFlag(cmd *cobra.Command) {
-	cmd.Flags().String("kms-type", "aws-kms", fmt.Sprintf("The type of KMS, typically one of %s.", utils.ArrayToCommaDelimitedString(serdes.DekAlgorithms, "or")))
+	cmd.Flags().String("kms-type", "aws-kms", fmt.Sprintf("The type of Key Management Service (KMS), typically one of %s.", utils.ArrayToCommaDelimitedString(serdes.DekAlgorithms, "or")))
 	RegisterFlagCompletionFunc(cmd, "kms-type", func(_ *cobra.Command, _ []string) []string { return serdes.KmsTypes })
 }
 
