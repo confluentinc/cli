@@ -2,7 +2,6 @@ package flink
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -85,30 +84,6 @@ func (c *command) autocompleteDatabases(cmd *cobra.Command, args []string) []str
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
-	}
-	return suggestions
-}
-
-func (c *command) addRegionFlag(cmd *cobra.Command) {
-	cmd.Flags().String("region", "", `Cloud region for compute pool (use "confluent flink region list" to see all).`)
-	pcmd.RegisterFlagCompletionFunc(cmd, "region", c.autocompleteRegions)
-}
-
-func (c *command) autocompleteRegions(cmd *cobra.Command, args []string) []string {
-	if err := c.PersistentPreRunE(cmd, args); err != nil {
-		return nil
-	}
-
-	cloud, _ := cmd.Flags().GetString("cloud")
-
-	regions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(regions))
-	for i, region := range regions {
-		suggestions[i] = region.GetRegionName()
 	}
 	return suggestions
 }

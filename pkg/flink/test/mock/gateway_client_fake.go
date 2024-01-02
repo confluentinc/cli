@@ -27,6 +27,10 @@ type FakeFlinkGatewayClient struct {
 	fakeCount  int
 }
 
+func (c *FakeFlinkGatewayClient) GetAuthToken() string {
+	return ""
+}
+
 func NewFakeFlinkGatewayClient() ccloudv2.GatewayClientInterface {
 	return &FakeFlinkGatewayClient{}
 }
