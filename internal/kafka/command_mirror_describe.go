@@ -14,10 +14,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-const (
-	includeStateTransitionErrors = "include-state-transition-errors"
-)
-
 func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <destination-topic-name>",
@@ -32,8 +28,6 @@ func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 			},
 		),
 	}
-
-	cmd.Flags().Bool(includeStateTransitionErrors, false, "Include state transition errors in the response.")
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -63,11 +57,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, cloudClient.AuthToken)
 
 	req := cloudClient.ClusterLinkingV3Api.ReadKafkaMirrorTopic(apiContext, cloudClient.ClusterId, link, mirrorTopicName)
-	includeStateTransitionErrors, err := cmd.Flags().GetBool(includeStateTransitionErrors)
-	if err != nil {
-		return err
-	}
-	req = req.IncludeStateTransitionErrors(includeStateTransitionErrors)
+	req = req.IncludeStateTransitionErrors(true)
 
 	res, httpResp, err := req.Execute()
 	mirror, err := res, kafkarest.NewError(cloudClient.GetUrl(), err, httpResp)
@@ -95,15 +85,12 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			MirrorStateTransitionErrors: mirrorStateTransitionErrors,
 		})
 	}
-	list.Filter(getDescribeMirrorsFields(includeStateTransitionErrors))
+	list.Filter(getDescribeMirrorsFields())
 	return list.Print()
 }
 
-func getDescribeMirrorsFields(includeStateTransitionErrors bool) []string {
-	x := []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"}
-	if includeStateTransitionErrors {
-		x = append(x, "MirrorStateTransitionErrors")
-	}
+func getDescribeMirrorsFields() []string {
+	x := []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset", "MirrorStateTransitionErrors"}
 	return x
 }
 
