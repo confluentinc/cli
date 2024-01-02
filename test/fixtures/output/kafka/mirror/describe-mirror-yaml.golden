@@ -6,6 +6,8 @@
   partition: 0
   partition_mirror_lag: 142857
   last_source_fetch_offset: 1293009
+  mirror_state_transition_errors: |
+    [{"error_code":"AUTHENTICATION_ERROR","error_message":"Auth issue."}]
 - link_name: link-1
   mirror_topic_name: dest-topic-1
   source_topic_name: src-topic-1
@@ -14,6 +16,8 @@
   partition: 1
   partition_mirror_lag: 285714
   last_source_fetch_offset: 28340404
+  mirror_state_transition_errors: |
+    [{"error_code":"AUTHENTICATION_ERROR","error_message":"Auth issue."}]
 - link_name: link-1
   mirror_topic_name: dest-topic-1
   source_topic_name: src-topic-1
@@ -22,3 +26,5 @@
   partition: 2
   partition_mirror_lag: 571428
   last_source_fetch_offset: 5739304
+  mirror_state_transition_errors: |
+    [{"error_code":"AUTHENTICATION_ERROR","error_message":"Auth issue."}]
