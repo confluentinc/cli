@@ -22,7 +22,7 @@ func (c *command) newDekUndeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the KEK.")
 	cmd.Flags().String("subject", "", "Subject of the DEK.")
 	pcmd.AddAlgorithmFlag(cmd)
-	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of DEK will be undeleted.")
+	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of the DEK will be undeleted.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

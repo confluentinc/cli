@@ -7,8 +7,8 @@ Flags:
       --name string          REQUIRED: Name of the KEK.
       --subject string       REQUIRED: Subject of the DEK.
       --algorithm string     Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the DEK.
-      --version string       Version of the DEK. When not specified, all versions of DEK will be deleted.
-      --permanent            Delete DEK permanently.
+      --version string       Version of the DEK. When not specified, all versions of the DEK will be deleted.
+      --permanent            Delete the DEK permanently.
       --force                Skip the deletion confirmation prompt.
       --context string       CLI context name.
       --environment string   Environment ID.

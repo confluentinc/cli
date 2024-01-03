@@ -8,7 +8,7 @@ Flags:
       --subject string       REQUIRED: Subject of the DEK.
       --algorithm string     Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the DEK.
       --version string       Version of the DEK. (default "1")
-      --deleted              Include soft-deleted DEK.
+      --all                  Include soft-deleted DEK.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

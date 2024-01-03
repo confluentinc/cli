@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry dek create [flags]
 
 Examples:
-Create a DEK with a KEK named test, and subject test-value:
+Create a DEK with KEK "test", and subject "test-value":
 
   $ confluent schema-registry dek create --name test --subject test-value --version 1
 

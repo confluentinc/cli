@@ -10,11 +10,11 @@ Create a KEK with a AWS KMS key:
 
 Flags:
       --name string                       REQUIRED: Name of the KEK.
-      --kms-type string                   REQUIRED: The type of KMS, typically one of "AES128_GCM", "AES256_GCM", or "AES256_SIV". (default "aws-kms")
-      --kms-key-id string                 REQUIRED: The key ID of KMS.
-      --kms-properties strings            A comma-separated list of additional properties (key=value) used to access the KMS.
+      --kms-type string                   REQUIRED: The type of Key Management Service (KMS), typically one of "AES128_GCM", "AES256_GCM", or "AES256_SIV". (default "aws-kms")
+      --kms-key-id string                 REQUIRED: The key ID of Key Management Service (KMS).
+      --kms-properties strings            A comma-separated list of additional properties (key=value) used to access the Key Management Service (KMS).
       --doc string                        An optional user-friendly description for the KEK.
-      --shared                            If the DEK Registry has shared access to the KMS.
+      --shared                            If the DEK Registry has shared access to the Key Management Service (KMS).
       --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.

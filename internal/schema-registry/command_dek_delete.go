@@ -23,8 +23,8 @@ func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the KEK.")
 	cmd.Flags().String("subject", "", "Subject of the DEK.")
 	pcmd.AddAlgorithmFlag(cmd)
-	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of DEK will be deleted.")
-	cmd.Flags().Bool("permanent", false, "Delete DEK permanently.")
+	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of the DEK will be deleted.")
+	cmd.Flags().Bool("permanent", false, "Delete the DEK permanently.")
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -86,6 +86,6 @@ func (c *command) dekDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.ErrPrintf(c.Config.EnableColor, "Deleted the %s corresponding to the parameters:.\n", resource.Dek)
+	output.ErrPrintf(c.Config.EnableColor, "Deleted the %s corresponding to the parameters.\n", resource.Dek)
 	return nil
 }

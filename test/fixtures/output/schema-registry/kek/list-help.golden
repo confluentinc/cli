@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry kek list [flags]
 
 Flags:
-      --deleted              Include soft-deleted KEKs.
+      --all                  Include soft-deleted KEKs.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
