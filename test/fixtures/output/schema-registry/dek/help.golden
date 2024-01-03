@@ -1,0 +1,19 @@
+Manage Schema Registry Data Encryption Keys (DEKs).
+
+Usage:
+  confluent schema-registry dek [command]
+
+Available Commands:
+  create      Create a DEK.
+  delete      Delete a DEK.
+  describe    Describe a DEK.
+  subject     Manage Schema Registry DEK subjects.
+  undelete    Undelete a DEK.
+  version     Manage Schema Registry DEK versions.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent schema-registry dek [command] --help" for more information about a command.
