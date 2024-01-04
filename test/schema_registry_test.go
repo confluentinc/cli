@@ -14,12 +14,11 @@ var (
 
 func (s *CLITestSuite) TestSchemaRegistryCluster() {
 	tests := []CLITest{
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced -o json", fixture: "schema-registry/cluster/enable-json.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package essentials -o yaml", fixture: "schema-registry/cluster/enable-yaml.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced", fixture: "schema-registry/cluster/enable.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo somethingwrong --package advanced", fixture: "schema-registry/cluster/enable-invalid-geo.golden", exitCode: 1},
-		{args: "schema-registry cluster enable --cloud aws --geo us --package invalid-package", fixture: "schema-registry/cluster/enable-invalid-package.golden", exitCode: 1},
-		{args: "schema-registry cluster enable --geo us --package essentials", fixture: "schema-registry/cluster/enable-missing-flag.golden", exitCode: 1},
+		{args: "schema-registry cluster enable --cloud gcp --region us-central1 --package advanced -o json", fixture: "schema-registry/cluster/enable-json.golden"},
+		{args: "schema-registry cluster enable --cloud gcp --region us-central1 --package essentials -o yaml", fixture: "schema-registry/cluster/enable-yaml.golden"},
+		{args: "schema-registry cluster enable --cloud gcp --region us-central1 --package advanced", fixture: "schema-registry/cluster/enable.golden"},
+		{args: "schema-registry cluster enable --cloud aws --region us-west-2 --package invalid-package", fixture: "schema-registry/cluster/enable-invalid-package.golden", exitCode: 1},
+		{args: "schema-registry cluster enable --region us-central1 --package essentials", fixture: "schema-registry/cluster/enable-missing-flag.golden", exitCode: 1},
 		{args: fmt.Sprintf("schema-registry cluster delete --environment %s", testserver.SRApiEnvId), input: "y\n", fixture: "schema-registry/cluster/delete.golden"},
 		{args: fmt.Sprintf("schema-registry cluster delete --environment %s", testserver.SRApiEnvId), input: "n\n", fixture: "schema-registry/cluster/delete-terminated.golden"},
 		{args: fmt.Sprintf("schema-registry cluster delete --environment %s", testserver.SRApiEnvId), input: "invalid_confirmation\n", fixture: "schema-registry/cluster/delete-invalid-confirmation.golden", exitCode: 1},
