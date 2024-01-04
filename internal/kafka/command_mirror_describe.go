@@ -67,8 +67,8 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 
 	mirrorOuts := make([]mirrorOut, 0)
 
+	mirrorStateTransitionErrors := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
 	for _, partitionLag := range mirror.GetMirrorLags().Items {
-		mirrorStateTransitionErrors := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
 		mirrorOuts = append(mirrorOuts, mirrorOut{
 			LinkName:                    mirror.GetLinkName(),
 			MirrorTopicName:             mirror.GetMirrorTopicName(),
@@ -82,50 +82,23 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		})
 	}
 	isSerialized := output.GetFormat(cmd).IsSerialized()
+	list := output.NewList(cmd)
+	for i := range mirrorOuts {
+		list.Add(&mirrorOuts[i])
+	}
 	if isSerialized {
-		list := output.NewList(cmd)
-		for _, mi := range mirrorOuts {
-			list.Add(&mirrorOut{
-				LinkName:                    mi.LinkName,
-				MirrorTopicName:             mi.MirrorTopicName,
-				SourceTopicName:             mi.SourceTopicName,
-				MirrorStatus:                mi.MirrorStatus,
-				StatusTimeMs:                mi.StatusTimeMs,
-				Partition:                   mi.Partition,
-				PartitionMirrorLag:          mi.PartitionMirrorLag,
-				LastSourceFetchOffset:       mi.LastSourceFetchOffset,
-				MirrorStateTransitionErrors: mi.MirrorStateTransitionErrors,
-			})
-		}
 		list.Filter(getDescribeMirrorsFields(true))
 		return list.Print()
 	} else {
-		list := output.NewList(cmd)
-		errsList := output.NewList(cmd)
-		for _, mi := range mirrorOuts {
-			list.Add(&mirrorOut{
-				LinkName:              mi.LinkName,
-				MirrorTopicName:       mi.MirrorTopicName,
-				SourceTopicName:       mi.SourceTopicName,
-				MirrorStatus:          mi.MirrorStatus,
-				StatusTimeMs:          mi.StatusTimeMs,
-				Partition:             mi.Partition,
-				PartitionMirrorLag:    mi.PartitionMirrorLag,
-				LastSourceFetchOffset: mi.LastSourceFetchOffset,
-			})
-		}
 		list.Filter(getDescribeMirrorsFields(false))
 		output.Println(false, "Mirrors:")
 		err = list.Print()
 		if err != nil {
 			return err
 		}
-		mirrorStateTransitionErrors := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
-		for _, transitionErr := range mirrorStateTransitionErrors {
-			errsList.Add(&mirrorTransitionErrorOut{
-				ErrorCode:    transitionErr.ErrorCode,
-				ErrorMessage: transitionErr.ErrorMessage,
-			})
+		errsList := output.NewList(cmd)
+		for i := range mirrorStateTransitionErrors {
+			errsList.Add(&mirrorStateTransitionErrors[i])
 		}
 		output.Println(false, "Mirror transition errors:")
 		return errsList.Print()

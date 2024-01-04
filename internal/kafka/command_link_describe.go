@@ -85,13 +85,8 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		}
 		taskOuts := describeOut.Tasks
 		list := output.NewList(cmd)
-		for _, t := range taskOuts {
-			list.Add(&taskOut{
-				TaskName:     t.TaskName,
-				State:        t.State,
-				ErrorCode:    t.ErrorCode,
-				ErrorMessage: t.ErrorMessage,
-			})
+		for i := range taskOuts {
+			list.Add(&taskOuts[i])
 		}
 		output.Println(false, "Link tasks:")
 		return list.Print()
