@@ -6,7 +6,7 @@ Usage:
 Examples:
 Update name and CFU count of a Flink compute pool.
 
-  $ confluent flink compute-pool update my-compute-pool --name "new name" --max-cfu 5
+  $ confluent flink compute-pool update lfcp-1234 --name "new name" --max-cfu 5
 
 Flags:
       --name string          Name of the compute pool.
