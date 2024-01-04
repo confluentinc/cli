@@ -1,0 +1,7 @@
+Link:
+Link tasks:
+      Task name      |  state   |       Error code       | Error message  
+---------------------+----------+------------------------+----------------
+  AclSync            | IN_ERROR | AUTHENTICATION_ERROR   | Auth issue.    
+  AclSync            | IN_ERROR | MISCONFIGURATION_ERROR | Wrong config.  
+  ConsumerOffsetSync | ACTIVE   |                        |                

@@ -602,6 +602,13 @@ func handleKafkaRestLinks(t *testing.T) http.HandlerFunc {
 					TopicNames:      topics,
 					LinkError:       noErrorErr,
 				},
+				{
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cluster2),
+					LinkName:        "link-5",
+					ClusterLinkId:   "LINKID5",
+					TopicNames:      topics,
+					LinkError:       noErrorErr,
+				},
 			}})
 			require.NoError(t, err)
 		}
@@ -706,6 +713,29 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 					ClusterLinkId:   "LINKID4",
 					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
 					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+				})
+				require.NoError(t, err)
+			} else if link == "link-5" {
+				includeTasks := r.URL.Query().Get("include_tasks")
+				var tasks []cckafkarestv3.LinkTask
+				if includeTasks == "true" {
+					tasks = []cckafkarestv3.LinkTask{
+						*cckafkarestv3.NewLinkTask("ConsumerOffsetSync", "ACTIVE", []cckafkarestv3.LinkTaskError{}),
+						*cckafkarestv3.NewLinkTask("AclSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{
+							*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
+							*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
+						}),
+					}
+				}
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+					Kind:            "",
+					Metadata:        cckafkarestv3.ResourceMetadata{},
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+					LinkName:        link,
+					ClusterLinkId:   "LINKID5",
+					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+					Tasks:           tasks,
 				})
 				require.NoError(t, err)
 			}
@@ -1450,6 +1480,14 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
+			includeStateTransitionErrors := r.URL.Query().Get("include_state_transition_errors")
+			var mirrorStateTransitionErrors []cckafkarestv3.LinkTaskError
+			if includeStateTransitionErrors == "true" {
+				mirrorStateTransitionErrors = []cckafkarestv3.LinkTaskError{
+					*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
+					*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
+				}
+			}
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
 				Metadata:        cckafkarestv3.ResourceMetadata{},
@@ -1476,8 +1514,9 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 						},
 					},
 				},
-				MirrorStatus: cckafkarestv3.ACTIVE,
-				StateTimeMs:  111111111,
+				MirrorStatus:                cckafkarestv3.ACTIVE,
+				StateTimeMs:                 111111111,
+				MirrorStateTransitionErrors: &mirrorStateTransitionErrors,
 			})
 			require.NoError(t, err)
 		}

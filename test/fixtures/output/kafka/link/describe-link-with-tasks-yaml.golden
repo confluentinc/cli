@@ -1,0 +1,12 @@
+link_name: link-5
+source_cluster_id: ""
+destination_cluster_id: ""
+remote_cluster_id: cluster-2
+state: AVAILABLE
+tasks:
+    - state: ACTIVE
+      error_message: ""
+    - state: IN_ERROR
+      error_message: Auth issue.
+    - state: IN_ERROR
+      error_message: Wrong config.
