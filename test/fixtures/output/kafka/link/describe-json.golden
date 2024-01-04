@@ -3,6 +3,5 @@
   "source_cluster_id": "lkc-describe-topic",
   "destination_cluster_id": "",
   "remote_cluster_id": "",
-  "state": "AVAILABLE",
-  "tasks": "[]\n"
+  "state": "AVAILABLE"
 }

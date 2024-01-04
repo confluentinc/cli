@@ -1,9 +1,7 @@
 package kafka
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 
 	"github.com/spf13/cobra"
 
@@ -15,15 +13,22 @@ import (
 )
 
 type describeOut struct {
-	Name                 string `human:"Name" serialized:"link_name"`
-	TopicName            string `human:"Topic Name" serialized:"topic_name"`
-	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster_id"`
-	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster_id"`
-	RemoteClusterId      string `human:"Remote Cluster" serialized:"remote_cluster_id"`
-	State                string `human:"State" serialized:"state"`
-	Error                string `human:"Error,omitempty" serialized:"error,omitempty"`
-	ErrorMessage         string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
-	Tasks                string `human:"Tasks,omitempty" serialized:"tasks,omitempty"`
+	Name                 string    `human:"Name" serialized:"link_name"`
+	TopicName            string    `human:"Topic Name" serialized:"topic_name"`
+	SourceClusterId      string    `human:"Source Cluster" serialized:"source_cluster_id"`
+	DestinationClusterId string    `human:"Destination Cluster" serialized:"destination_cluster_id"`
+	RemoteClusterId      string    `human:"Remote Cluster" serialized:"remote_cluster_id"`
+	State                string    `human:"State" serialized:"state"`
+	Error                string    `human:"Error,omitempty" serialized:"error,omitempty"`
+	ErrorMessage         string    `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	Tasks                []taskOut `serialized:"tasks,omitempty"`
+}
+
+type taskOut struct {
+	TaskName     string `human:"Task name" serialized:"task_name"`
+	State        string `human:"state" serialized:"state"`
+	ErrorCode    string `human:"Error code" serialized:"error_code"`
+	ErrorMessage string `human:"Error message" serialized:"error_message"`
 }
 
 func (c *linkCommand) newDescribeCommand() *cobra.Command {
@@ -62,24 +67,39 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	describeOut, err := newDescribeLink(link, "")
-	if err != nil {
-		return err
-	}
+	describeOut := newDescribeLink(link, "")
 	table.Add(describeOut)
-	table.Filter(getDescribeClusterLinksFields())
-	return table.Print()
+	isSerialized := output.GetFormat(cmd).IsSerialized()
+	if isSerialized {
+		table.Filter(getDescribeClusterLinksFields(true))
+		return table.Print()
+	} else {
+		table.Filter(getDescribeClusterLinksFields(false))
+		output.Println(false, "Link:")
+		if err != nil {
+			return err
+		}
+		taskOuts := describeOut.Tasks
+		list := output.NewList(cmd)
+		for _, t := range taskOuts {
+			list.Add(&taskOut{
+				TaskName:     t.TaskName,
+				State:        t.State,
+				ErrorCode:    t.ErrorCode,
+				ErrorMessage: t.ErrorMessage,
+			})
+		}
+		output.Println(false, "Link tasks:")
+		return list.Print()
+	}
 }
 
-func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) (*describeOut, error) {
+func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
 	var linkError string
 	if link.GetLinkError() != "NO_ERROR" {
 		linkError = link.GetLinkError()
 	}
-	tasks, err := toTaskOut(link.GetTasks())
-	if err != nil {
-		return nil, err
-	}
+	tasks := toTaskOut(link.GetTasks())
 	return &describeOut{
 		Name:                 link.GetLinkName(),
 		TopicName:            topic,
@@ -90,27 +110,41 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) (*des
 		Error:                linkError,
 		ErrorMessage:         link.GetLinkErrorMessage(),
 		Tasks:                tasks,
-	}, nil
+	}
 }
 
-func toTaskOut(tasks []kafkarestv3.LinkTask) (string, error) {
+func toTaskOut(tasks []kafkarestv3.LinkTask) []taskOut {
 	var tasksToEncode []kafkarestv3.LinkTask
 	if tasks != nil {
 		tasksToEncode = tasks
 	} else {
-		// If nil create an empty slice so that the encoded JSON is [] instead of null.
 		tasksToEncode = make([]kafkarestv3.LinkTask, 0)
 	}
-	var b bytes.Buffer
-	err := json.NewEncoder(&b).Encode(tasksToEncode)
-	if err != nil {
-		return "", err
-	} else {
-		return b.String(), nil
+	taskOuts := make([]taskOut, 0)
+	for _, task := range tasksToEncode {
+		if len(task.Errors) == 0 {
+			taskOuts = append(taskOuts, taskOut{
+				TaskName: task.TaskName,
+				State:    task.State,
+			})
+		} else {
+			for _, err := range task.Errors {
+				taskOuts = append(taskOuts, taskOut{
+					TaskName:     task.TaskName,
+					State:        task.State,
+					ErrorCode:    err.ErrorCode,
+					ErrorMessage: err.ErrorMessage,
+				})
+			}
+		}
 	}
+	return taskOuts
 }
 
-func getDescribeClusterLinksFields() []string {
-	x := []string{"Name", "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage", "Tasks"}
+func getDescribeClusterLinksFields(includeTasks bool) []string {
+	x := []string{"Name", "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage"}
+	if includeTasks {
+		x = append(x, "Tasks")
+	}
 	return x
 }

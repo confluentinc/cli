@@ -721,7 +721,10 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 				if includeTasks == "true" {
 					tasks = []cckafkarestv3.LinkTask{
 						*cckafkarestv3.NewLinkTask("ConsumerOffsetSync", "ACTIVE", []cckafkarestv3.LinkTaskError{}),
-						*cckafkarestv3.NewLinkTask("AclSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue.")}),
+						*cckafkarestv3.NewLinkTask("AclSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{
+							*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
+							*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
+						}),
 					}
 				}
 				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
@@ -1480,7 +1483,10 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 			includeStateTransitionErrors := r.URL.Query().Get("include_state_transition_errors")
 			var mirrorStateTransitionErrors []cckafkarestv3.LinkTaskError
 			if includeStateTransitionErrors == "true" {
-				mirrorStateTransitionErrors = []cckafkarestv3.LinkTaskError{*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue.")}
+				mirrorStateTransitionErrors = []cckafkarestv3.LinkTaskError{
+					*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
+					*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
+				}
 			}
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
