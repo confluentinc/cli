@@ -4,5 +4,5 @@
   "destination_cluster_id": "",
   "remote_cluster_id": "",
   "state": "AVAILABLE",
-  "tasks": "[]\n"
+  "tasks": []
 }

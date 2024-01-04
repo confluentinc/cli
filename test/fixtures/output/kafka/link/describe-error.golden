@@ -1,3 +1,4 @@
+Link:
 +---------------------+--------------------------------+
 | Name                | link-3                         |
 | Source Cluster      | lkc-describe-topic             |
@@ -7,6 +8,6 @@
 | Error               | AUTHENTICATION_ERROR           |
 | Error Message       | Please check your API key and  |
 |                     | secret.                        |
-| Tasks               | []                             |
-|                     |                                |
 +---------------------+--------------------------------+
+Link tasks:
+None found.
