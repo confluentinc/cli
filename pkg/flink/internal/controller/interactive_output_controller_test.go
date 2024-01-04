@@ -227,42 +227,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMo
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() {
-	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatementName: "test-statement"})
-
-	actual := s.interactiveOutputController.getTableTitle()
-
-	cupaloy.SnapshotT(s.T(), actual)
-}
-
-func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
-	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatementName: "test-statement"})
-
-	actual := s.interactiveOutputController.getTableTitle()
-
-	cupaloy.SnapshotT(s.T(), actual)
-}
-
-func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
-	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatementName: "test-statement"})
-
-	actual := s.interactiveOutputController.getTableTitle()
-
-	cupaloy.SnapshotT(s.T(), actual)
-}
-
-func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysRunning() {
-	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatementName: "test-statement"})
-
-	actual := s.interactiveOutputController.getTableTitle()
-
-	cupaloy.SnapshotT(s.T(), actual)
-}
-
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAndCacheSizeWithUnsafeTrace() {
 	executedStatementWithResults := getStatementWithResultsExample()
 	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
