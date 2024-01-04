@@ -5,11 +5,11 @@ Usage:
 Examples:
 Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package.
 
-  $ confluent schema-registry cluster enable --cloud gcp --geo us --package advanced
+  $ confluent schema-registry cluster enable --cloud gcp --region us-central1 --package advanced
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --geo string           REQUIRED: Specify the geo as "us", "eu", or "apac".
+      --region string        REQUIRED: Cloud region for Kafka (use "confluent kafka region list" to see all).
       --package string       Specify the type of Stream Governance package as "essentials" or "advanced". (default "essentials")
       --context string       CLI context name.
       --environment string   Environment ID.
