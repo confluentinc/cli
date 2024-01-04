@@ -1,0 +1,18 @@
+Link
++---------------------+-----------+
+| Name                | link-5    |
+| Source Cluster      |           |
+| Destination Cluster |           |
+| Remote Cluster      | cluster-2 |
+| State               | AVAILABLE |
++---------------------+-----------+
+Link tasks
+      Task name      |     state      |             errors              
+---------------------+----------------+---------------------------------
+  AclSync            | IN_ERROR       | Error code:                     
+                     |                | AUTHENTICATION_ERROR Error      
+                     |                | message: Auth issue.,Error      
+                     |                | code: MISCONFIGURATION_ERROR    
+                     |                | Error message: Wrong config.    
+  AutoCreateMirror   | NOT_CONFIGURED |                                 
+  ConsumerOffsetSync | ACTIVE         |                                 
