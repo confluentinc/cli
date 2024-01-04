@@ -1,9 +1,10 @@
+Link:
 +---------------------+-----------+
 | Name                | link-4    |
 | Source Cluster      |           |
 | Destination Cluster |           |
 | Remote Cluster      | cluster-2 |
 | State               | AVAILABLE |
-| Tasks               | []        |
-|                     |           |
 +---------------------+-----------+
+Link tasks:
+None found.

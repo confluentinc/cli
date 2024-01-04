@@ -1,9 +1,7 @@
 package kafka
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 
 	"github.com/spf13/cobra"
 
@@ -67,15 +65,11 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	list := output.NewList(cmd)
+	mirrorOuts := make([]mirrorOut, 0)
 
-	mirrorStateTransitionErrors, err := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
-	if err != nil {
-		return err
-	}
 	for _, partitionLag := range mirror.GetMirrorLags().Items {
-		mirror.GetMirrorStateTransitionErrors()
-		list.Add(&mirrorOut{
+		mirrorStateTransitionErrors := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
+		mirrorOuts = append(mirrorOuts, mirrorOut{
 			LinkName:                    mirror.GetLinkName(),
 			MirrorTopicName:             mirror.GetMirrorTopicName(),
 			SourceTopicName:             mirror.GetSourceTopicName(),
@@ -87,28 +81,83 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			MirrorStateTransitionErrors: mirrorStateTransitionErrors,
 		})
 	}
-	list.Filter(getDescribeMirrorsFields())
-	return list.Print()
+	isSerialized := output.GetFormat(cmd).IsSerialized()
+	if isSerialized {
+		list := output.NewList(cmd)
+		for _, mi := range mirrorOuts {
+			list.Add(&mirrorOut{
+				LinkName:                    mi.LinkName,
+				MirrorTopicName:             mi.MirrorTopicName,
+				SourceTopicName:             mi.SourceTopicName,
+				MirrorStatus:                mi.MirrorStatus,
+				StatusTimeMs:                mi.StatusTimeMs,
+				Partition:                   mi.Partition,
+				PartitionMirrorLag:          mi.PartitionMirrorLag,
+				LastSourceFetchOffset:       mi.LastSourceFetchOffset,
+				MirrorStateTransitionErrors: mi.MirrorStateTransitionErrors,
+			})
+		}
+		list.Filter(getDescribeMirrorsFields(true))
+		return list.Print()
+	} else {
+		list := output.NewList(cmd)
+		errsList := output.NewList(cmd)
+		for _, mi := range mirrorOuts {
+			list.Add(&mirrorOut{
+				LinkName:              mi.LinkName,
+				MirrorTopicName:       mi.MirrorTopicName,
+				SourceTopicName:       mi.SourceTopicName,
+				MirrorStatus:          mi.MirrorStatus,
+				StatusTimeMs:          mi.StatusTimeMs,
+				Partition:             mi.Partition,
+				PartitionMirrorLag:    mi.PartitionMirrorLag,
+				LastSourceFetchOffset: mi.LastSourceFetchOffset,
+			})
+		}
+		list.Filter(getDescribeMirrorsFields(false))
+		output.Println(false, "Mirrors:")
+		err = list.Print()
+		if err != nil {
+			return err
+		}
+		mirrorStateTransitionErrors := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
+		for _, transitionErr := range mirrorStateTransitionErrors {
+			errsList.Add(&mirrorTransitionErrorOut{
+				ErrorCode:    transitionErr.ErrorCode,
+				ErrorMessage: transitionErr.ErrorMessage,
+			})
+		}
+		output.Println(false, "Mirror transition errors:")
+		return errsList.Print()
+	}
 }
 
-func getDescribeMirrorsFields() []string {
-	x := []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset", "MirrorStateTransitionErrors"}
+type mirrorTransitionErrorOut struct {
+	ErrorCode    string `human:"Error code" serialized:"error_code"`
+	ErrorMessage string `human:"Error message" serialized:"error_message"`
+}
+
+func getDescribeMirrorsFields(includeTransitionErrors bool) []string {
+	x := []string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"}
+	if includeTransitionErrors {
+		x = append(x, "MirrorStateTransitionErrors", "ErrorCode", "ErrorMessage")
+	}
 	return x
 }
 
-func toMirrorStateTransitionError(errs []v3.LinkTaskError) (string, error) {
+func toMirrorStateTransitionError(errs []v3.LinkTaskError) []mirrorTransitionErrorOut {
 	var errsToEncode []kafkarestv3.LinkTaskError
 	if errs != nil {
 		errsToEncode = errs
 	} else {
-		// If nil create an empty slice so that the encoded JSON is [] instead of null.
 		errsToEncode = make([]kafkarestv3.LinkTaskError, 0)
 	}
-	var b bytes.Buffer
-	err := json.NewEncoder(&b).Encode(errsToEncode)
-	if err != nil {
-		return "", err
-	} else {
-		return b.String(), nil
+	transitionErrorOuts := make([]mirrorTransitionErrorOut, 0)
+	for _, errToEncode := range errsToEncode {
+		transitionErrorOuts = append(transitionErrorOuts, mirrorTransitionErrorOut{
+			ErrorCode:    errToEncode.ErrorCode,
+			ErrorMessage: errToEncode.ErrorMessage,
+		})
 	}
+	return transitionErrorOuts
 }
