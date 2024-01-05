@@ -193,16 +193,16 @@ func (t *InteractiveOutputController) handleKeyUpOrDownPress(event *tcell.EventK
 }
 
 func (t *InteractiveOutputController) getTableTitle() string {
-	mode := "changelog mode"
+	mode := "Changelog mode"
 	if t.resultFetcher.IsTableMode() {
-		mode = "table mode"
+		mode = "Table mode"
 	}
 
 	if t.debug {
 		return fmt.Sprintf(
-			" Statement: %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
-			t.resultFetcher.GetStatement().StatementName,
+			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
 			mode,
+			t.resultFetcher.GetStatement().StatementName,
 			t.resultFetcher.GetStatement().GetPageSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetChangelogSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetMaxResults(),
@@ -210,5 +210,5 @@ func (t *InteractiveOutputController) getTableTitle() string {
 		)
 	}
 
-	return fmt.Sprintf(" Statement: %s (%s) ", t.resultFetcher.GetStatement().StatementName, mode)
+	return fmt.Sprintf(" %s (%s) ", mode, t.resultFetcher.GetStatement().StatementName)
 }
