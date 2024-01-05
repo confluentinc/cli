@@ -40,6 +40,10 @@ else
 fi
 docker container create --name cli-linux-arm64-builder cli-linux-arm64-builder-image
 docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/
+docker container rm cli-linux-arm64-builder
+
+# Build APT/YUM repos
+docker build . --file ./docker/Dockerfile_linux_repos --tag cli-linux-repo-update-image --secret id=deb_gpg_secret_key,src=deb-secret.gpg --secret id=deb_gpg_passphrase,src=deb-passphrase \
+  --secret id=rpm_gpg_secret_key,src=rpm-secret.gpg --secret id=rpm_gpg_passphrase,src=rpm-passphrase
 docker container cp cli-linux-arm64-builder:/cli/deb/. ./deb/
 docker container cp cli-linux-arm64-builder:/cli/rpm/. ./rpm/
-docker container rm cli-linux-arm64-builder
