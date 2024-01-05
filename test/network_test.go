@@ -101,6 +101,8 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 		{args: `__complete network delete ""`, login: "cloud", fixture: "network/delete-autocomplete.golden"},
 		{args: `__complete network create new-network --connection-types ""`, login: "cloud", fixture: "network/create-autocomplete-connection-types.golden"},
 		{args: `__complete network create new-network --dns-resolution ""`, login: "cloud", fixture: "network/create-autocomplete-dns-resolution.golden"},
+		{args: `__complete network create new-network --region ""`, login: "cloud", fixture: "network/create-autocomplete-region.golden"},
+		{args: `__complete network create new-network --cloud aws --region ""`, login: "cloud", fixture: "network/create-autocomplete-region-with-cloud.golden"},
 	}
 
 	for _, test := range tests {
@@ -730,6 +732,19 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpoint_Autocomplete() {
 		{args: `__complete network network-link endpoint delete ""`, login: "cloud", fixture: "network/network-link/endpoint/delete-autocomplete.golden"},
 		{args: `__complete network network-link endpoint create my-network-link-endpoint --network ""`, login: "cloud", fixture: "network/network-link/endpoint/create-autocomplete.golden"},
 		{args: `__complete network network-link endpoint update ""`, login: "cloud", fixture: "network/network-link/endpoint/update-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkRegionList() {
+	tests := []CLITest{
+		{args: "network region list", fixture: "network/region/list.golden"},
+		{args: "network region list --output json", fixture: "network/region/list-json.golden"},
+		{args: "network region list --cloud aws", fixture: "network/region/list-cloud.golden"},
 	}
 
 	for _, test := range tests {
