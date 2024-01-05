@@ -1,16 +1,6 @@
 FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:latest
 
-SHELL ["/bin/bash", "-c"]
-
 COPY . /cli/
-
-RUN apt-get update && \
-    apt-get install -y aptly createrepo
-
-RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
-    aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=main confluent-cli && \
-    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb && \
-    if [[ -d /cli/deb/pool/main/c/confluent ]] && [[ $(ls /cli/deb/pool/main/c/confluent/*.deb 2>/dev/null) ]]; then aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/deb/pool/main/c/confluent/*.deb; fi
 
 RUN export GO_VERSION=$(cat /cli/.go-version) && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
@@ -23,34 +13,3 @@ RUN --mount=type=secret,id=deb_gpg_secret_key --mount=type=secret,id=deb_gpg_pas
     export NFPM_DEFAULT_RPM_PASSPHRASE=$(cat /run/secrets/rpm_gpg_passphrase) && \
     cd /cli && \
     make gorelease-linux-arm64
-
-RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
-    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb
-
-RUN mkdir /metadata-temp && \
-    createrepo --update -o /metadata-temp /cli/rpm && \
-    rm -rf /cli/rpm/repodata && \
-    cp -r /metadata-temp/. /cli/rpm
-
-RUN --mount=type=secret,id=rpm_gpg_secret_key --mount=type=secret,id=rpm_gpg_passphrase \
-    gpg --batch --import /run/secrets/rpm_gpg_secret_key && \
-    echo allow-preset-passphrase > ~/.gnupg/gpg-agent.conf && \
-    gpg-connect-agent reloadagent /bye && \
-    export KEY_GRIP=$(gpg --with-keygrip -K --with-colons | grep '^grp' | head -1 | cut -d: -f10) && \
-    /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $(cat /run/secrets/rpm_gpg_passphrase) $KEY_GRIP && \
-    gpg --yes --batch --detach-sign --armor --output /cli/rpm/repodata/repomd.xml.asc /cli/rpm/repodata/repomd.xml && \
-    gpg --yes --batch --armor --export --output /cli/rpm/archive.key && \
-    cp /cli/confluent-cli.repo /cli/rpm && \
-    gpg --yes --batch --delete-secret-keys $(gpg --with-keygrip -K --with-colons | grep '^fpr' | head -1 | cut -d: -f10) && \
-    gpg --batch --delete-keys $(gpg --with-keygrip -k --with-colons | grep '^fpr' | head -1 | cut -d: -f10)
-
-RUN --mount=type=secret,id=deb_gpg_secret_key --mount=type=secret,id=deb_gpg_passphrase \
-    gpg --batch --import /run/secrets/deb_gpg_secret_key && \
-    export KEY_GRIP=$(gpg --with-keygrip -K --with-colons | grep '^grp' | head -1 | cut -d: -f10) && \
-    /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $(cat /run/secrets/deb_gpg_passphrase) $KEY_GRIP && \
-    aptly -config=/cli/.aptly.conf snapshot create confluent-cli-snapshot from repo confluent-cli && \
-    aptly -config=/cli/.aptly.conf publish snapshot -distribution=stable -component=main confluent-cli-snapshot "filesystem:deploy:" && \
-    cp -r /deb/. /cli/deb && \
-    gpg --yes --batch --armor --export --output /cli/deb/archive.key && \
-    gpg --yes --batch --delete-secret-keys $(gpg --with-keygrip -K --with-colons | grep '^fpr' | head -1 | cut -d: -f10) && \
-    gpg --batch --delete-keys $(gpg --with-keygrip -k --with-colons | grep '^fpr' | head -1 | cut -d: -f10)
