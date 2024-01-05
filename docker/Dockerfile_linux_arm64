@@ -24,9 +24,6 @@ RUN --mount=type=secret,id=deb_gpg_secret_key --mount=type=secret,id=deb_gpg_pas
     cd /cli && \
     make gorelease-linux-arm64
 
-RUN cd /cli && \
-    rename 's/checksums/checksums_linux_arm64/' prebuilt/*.txt
-
 RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
     aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb
 
