@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64/v8 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-linux-repo-base-amd64:latest
+FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-linux-repo-base-amd64:latest
 
 SHELL ["/bin/bash", "-c"]
 
@@ -10,10 +10,10 @@ RUN aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=m
 
 RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
     mkdir /rpm-temp && \
-    cp -r /rpm/* /rpm-temp && \
+    cp -r /cli/rpm/* /rpm-temp && \
     createrepo_c --update --skip-stat /rpm-temp && \
-    rm -rf /cli/rpm/repodata/* && \
-    cp -r /rpm-temp/repodata/* /cli/rpm/
+    rm -rf /cli/rpm/repodata && \
+    cp -r /rpm-temp/repodata /cli/rpm/
 
 RUN --mount=type=secret,id=rpm_gpg_secret_key --mount=type=secret,id=rpm_gpg_passphrase \
     gpg --batch --import /run/secrets/rpm_gpg_secret_key && \
