@@ -132,10 +132,10 @@ func toMirrorStateTransitionError(errs []v3.LinkTaskError) []mirrorTransitionErr
 		return make([]mirrorTransitionErrorOut, 0)
 	}
 	transitionErrorOuts := make([]mirrorTransitionErrorOut, 0)
-	for _, errToEncode := range errs {
+	for _, err := range errs {
 		transitionErrorOuts = append(transitionErrorOuts, mirrorTransitionErrorOut{
-			ErrorCode:    errToEncode.ErrorCode,
-			ErrorMessage: errToEncode.ErrorMessage,
+			ErrorCode:    err.ErrorCode,
+			ErrorMessage: err.ErrorMessage,
 		})
 	}
 	return transitionErrorOuts

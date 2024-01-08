@@ -3,6 +3,7 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -110,22 +111,22 @@ func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error 
 	list := output.NewList(cmd)
 	for i := range taskOuts {
 		t := taskOuts[i]
-		var errsStr bytes.Buffer
+		errs := make([]string, 0)
 		for i := range t.Errors {
 			eo := t.Errors[i]
-			errsStr.WriteString("Error Code: ")
-			errsStr.WriteString(eo.ErrorCode)
-			errsStr.WriteString(" ")
-			errsStr.WriteString("Error Message: ")
-			errsStr.WriteString(eo.ErrorMessage)
-			if i < len(t.Errors)-1 {
-				errsStr.WriteString(",")
-			}
+			var errStr bytes.Buffer
+			errStr.WriteString("Error Code: ")
+			errStr.WriteString(eo.ErrorCode)
+			errStr.WriteString(" ")
+			errStr.WriteString("Error Message: ")
+			errStr.WriteString(eo.ErrorMessage)
+			errs = append(errs, errStr.String())
 		}
+		errsStr := strings.Join(errs, ",")
 		list.Add(&humanTaskOut{
 			TaskName: t.TaskName,
 			State:    t.State,
-			Errors:   errsStr.String(),
+			Errors:   errsStr,
 		})
 	}
 	return list.Print()
