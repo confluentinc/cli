@@ -8,12 +8,18 @@ RUN aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=m
     aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb && \
     if [[ -d /cli/deb/pool/main/c/confluent ]] && [[ $(ls /cli/deb/pool/main/c/confluent/*.deb 2>/dev/null) ]]; then aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/deb/pool/main/c/confluent/*.deb; fi
 
-RUN mv /cli/prebuilt/*.rpm /cli/rpm/ && \
-    mkdir /rpm-temp && \
-    cp -r /cli/rpm/* /rpm-temp && \
+RUN mkdir /rpm-temp && \
+    if [[ -d /cli/rpm/repodata ]]; then \
+        cp -r /cli/rpm/repodata /rpm-temp/ && \
+        gzip -k -c -d /rpm-temp/$(xmllint --xpath "string(//*[local-name()='data'][@type='primary']/*[local-name()='location']/@href)" /rpm-temp/repodata/repomd.xml) > /primary.xml && \
+        for ((i=1; i<=$(xmllint --xpath "string(//*[local-name()='metadata']/@packages)" /primary.xml); i++)); do \
+            touch /rpm-temp/$(xmllint --xpath "string((//*[local-name()='location'])[$i]/@href)" /primary.xml); \
+        done; \
+    fi && \
+    cp /cli/prebuilt/*.rpm /rpm-temp/ && \
     createrepo_c --update --skip-stat /rpm-temp && \
-    rm -rf /cli/rpm/repodata && \
-    cp -r /rpm-temp/repodata /cli/rpm/
+    mv /cli/prebuilt/*.rpm /cli/rpm/ && \
+    cp -r /rpm-temp/repodata /cli/rpm
 
 RUN --mount=type=secret,id=rpm_gpg_secret_key --mount=type=secret,id=rpm_gpg_passphrase \
     gpg --batch --import /run/secrets/rpm_gpg_secret_key && \

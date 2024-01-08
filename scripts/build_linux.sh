@@ -9,7 +9,7 @@ trap cleanup EXIT
 trap "exit 1" ERR
 
 aws s3 sync s3://confluent-cli-release/confluent-cli/deb deb --exclude '*index.html' --exclude '' --exclude '*/'
-aws s3 sync s3://confluent-cli-release/confluent-cli/rpm rpm --exclude '*index.html' --exclude '' --exclude '*/'
+aws s3 sync s3://confluent-cli-release/confluent-cli/rpm rpm --exclude '*index.html' --exclude '' --exclude '*/' --exclude '*.rpm'
 
 aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
 
