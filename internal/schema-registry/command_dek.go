@@ -13,7 +13,7 @@ import (
 func (c *command) newDekCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "dek",
-		Short:       "Manage the Schema Registry Data Encryption Keys (DEKs).",
+		Short:       "Manage Schema Registry Data Encryption Keys (DEKs).",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 

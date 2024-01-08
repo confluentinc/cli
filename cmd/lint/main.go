@@ -24,7 +24,7 @@ var commandRules = []linter.CommandRule{
 
 	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.Filter(linter.RequireNotTitleCase("Short", properNouns)),
+	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommand("schema-registry kek"), linter.ExcludeCommand("schema-registry dek")),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
@@ -254,6 +254,7 @@ var vocabWords = []string{
 	"transactional",
 	"transitgateway",
 	"txt",
+	"undelete",
 	"unregister",
 	"uri",
 	"url",
