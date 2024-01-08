@@ -24,7 +24,7 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all mirror topics in the cluster:",
+				Text: "List all mirror topics in the cluster :",
 				Code: "confluent kafka mirror list --cluster lkc-1234",
 			},
 			examples.Example{
