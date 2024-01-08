@@ -3,8 +3,8 @@
   link-1    | dest-topic-1      | src-topic-1       | ACTIVE        |        111111111 |         0 |               142857 |                  1293009  
   link-1    | dest-topic-1      | src-topic-1       | ACTIVE        |        111111111 |         1 |               285714 |                 28340404  
   link-1    | dest-topic-1      | src-topic-1       | ACTIVE        |        111111111 |         2 |               571428 |                  5739304  
-  Mirror state transition error  | Mirror state transition error   
-               code              |            message              
+  Mirror State Transition Error  | Mirror State Transition Error   
+               Code              |            Message              
 ---------------------------------+---------------------------------
   AUTHENTICATION_ERROR           | Auth issue.                     
   MISCONFIGURATION_ERROR         | Wrong config.                   

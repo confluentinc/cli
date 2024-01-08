@@ -53,14 +53,13 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cloudClient := kafkaREST.CloudClient
-	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, cloudClient.AuthToken)
+	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, kafkaREST.CloudClient.AuthToken)
 
-	req := cloudClient.ClusterLinkingV3Api.ReadKafkaMirrorTopic(apiContext, cloudClient.ClusterId, link, mirrorTopicName)
+	req := kafkaREST.CloudClient.ClusterLinkingV3Api.ReadKafkaMirrorTopic(apiContext, kafkaREST.CloudClient.ClusterId, link, mirrorTopicName)
 	req = req.IncludeStateTransitionErrors(true)
 
 	res, httpResp, err := req.Execute()
-	mirror, err := res, kafkarest.NewError(cloudClient.GetUrl(), err, httpResp)
+	mirror, err := res, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	if err != nil {
 		return err
 	}
@@ -116,8 +115,8 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 type mirrorTransitionErrorOut struct {
-	ErrorCode    string `human:"Mirror state transition error code" serialized:"error_code"`
-	ErrorMessage string `human:"Mirror state transition error message" serialized:"error_message"`
+	ErrorCode    string `human:"Mirror State Transition Error Code" serialized:"error_code"`
+	ErrorMessage string `human:"Mirror State Transition Error Message" serialized:"error_message"`
 }
 
 func getDescribeMirrorsFields(includeTransitionErrors bool) []string {
@@ -129,14 +128,11 @@ func getDescribeMirrorsFields(includeTransitionErrors bool) []string {
 }
 
 func toMirrorStateTransitionError(errs []v3.LinkTaskError) []mirrorTransitionErrorOut {
-	var errsToEncode []kafkarestv3.LinkTaskError
-	if errs != nil {
-		errsToEncode = errs
-	} else {
-		errsToEncode = make([]kafkarestv3.LinkTaskError, 0)
+	if errs == nil {
+		return make([]mirrorTransitionErrorOut, 0)
 	}
 	transitionErrorOuts := make([]mirrorTransitionErrorOut, 0)
-	for _, errToEncode := range errsToEncode {
+	for _, errToEncode := range errs {
 		transitionErrorOuts = append(transitionErrorOuts, mirrorTransitionErrorOut{
 			ErrorCode:    errToEncode.ErrorCode,
 			ErrorMessage: errToEncode.ErrorMessage,

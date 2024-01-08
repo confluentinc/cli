@@ -32,14 +32,14 @@ type serializedTaskOut struct {
 }
 
 type humanTaskOut struct {
-	TaskName string `human:"Task name"`
-	State    string `human:"state"`
-	Errors   string `human:"errors"`
+	TaskName string `human:"Task Name"`
+	State    string `human:"State"`
+	Errors   string `human:"Errors"`
 }
 
 type taskErrorOut struct {
-	ErrorCode    string `human:"Error code" serialized:"error_code"`
-	ErrorMessage string `human:"Error message" serialized:"error_message"`
+	ErrorCode    string `human:"Error Code" serialized:"error_code"`
+	ErrorMessage string `human:"Error Message" serialized:"error_message"`
 }
 
 func (c *linkCommand) newDescribeCommand() *cobra.Command {
@@ -67,12 +67,11 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cloudClient := kafkaREST.CloudClient
-	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, cloudClient.AuthToken)
-	req := cloudClient.ClusterLinkingV3Api.GetKafkaLink(apiContext, cloudClient.ClusterId, linkName)
+	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, kafkaREST.CloudClient.AuthToken)
+	req := kafkaREST.CloudClient.ClusterLinkingV3Api.GetKafkaLink(apiContext, kafkaREST.CloudClient.ClusterId, linkName)
 	req = req.IncludeTasks(true)
 	res, httpResp, err := req.Execute()
-	link, err := res, kafkarest.NewError(cloudClient.GetUrl(), err, httpResp)
+	link, err := res, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	if err != nil {
 		return err
 	}
@@ -97,38 +96,39 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		err = table.Print()
-		if err != nil {
+		if err := table.Print(); err != nil {
 			return err
 		}
-		taskOuts := describeOut.Tasks
-		if len(taskOuts) > 1 {
-			list := output.NewList(cmd)
-			for i := range taskOuts {
-				t := taskOuts[i]
-				var errsStr bytes.Buffer
-				for i := range t.Errors {
-					eo := t.Errors[i]
-					errsStr.WriteString("Error code: ")
-					errsStr.WriteString(eo.ErrorCode)
-					errsStr.WriteString(" ")
-					errsStr.WriteString("Error message: ")
-					errsStr.WriteString(eo.ErrorMessage)
-					if i < len(t.Errors)-1 {
-						errsStr.WriteString(",")
-					}
-				}
-				list.Add(&humanTaskOut{
-					TaskName: t.TaskName,
-					State:    t.State,
-					Errors:   errsStr.String(),
-				})
-			}
-			return list.Print()
-		} else {
-			return nil
-		}
+		return printHumanTaskOuts(cmd, describeOut.Tasks)
 	}
+}
+
+func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error {
+	if len(taskOuts) == 0 {
+		return nil
+	}
+	list := output.NewList(cmd)
+	for i := range taskOuts {
+		t := taskOuts[i]
+		var errsStr bytes.Buffer
+		for i := range t.Errors {
+			eo := t.Errors[i]
+			errsStr.WriteString("Error Code: ")
+			errsStr.WriteString(eo.ErrorCode)
+			errsStr.WriteString(" ")
+			errsStr.WriteString("Error Message: ")
+			errsStr.WriteString(eo.ErrorMessage)
+			if i < len(t.Errors)-1 {
+				errsStr.WriteString(",")
+			}
+		}
+		list.Add(&humanTaskOut{
+			TaskName: t.TaskName,
+			State:    t.State,
+			Errors:   errsStr.String(),
+		})
+	}
+	return list.Print()
 }
 
 func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
@@ -151,14 +151,11 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *desc
 }
 
 func toTaskOut(tasks []kafkarestv3.LinkTask) []serializedTaskOut {
-	var tasksToEncode []kafkarestv3.LinkTask
-	if tasks != nil {
-		tasksToEncode = tasks
-	} else {
-		tasksToEncode = make([]kafkarestv3.LinkTask, 0)
+	if tasks == nil {
+		return make([]serializedTaskOut, 0)
 	}
 	taskOuts := make([]serializedTaskOut, 0)
-	for _, task := range tasksToEncode {
+	for _, task := range tasks {
 		taskErrorOuts := make([]taskErrorOut, 0)
 		for _, err := range task.Errors {
 			taskErrorOuts = append(taskErrorOuts, taskErrorOut{

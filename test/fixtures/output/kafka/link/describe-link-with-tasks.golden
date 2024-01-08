@@ -5,12 +5,12 @@
 | Remote Cluster      | cluster-2 |
 | State               | AVAILABLE |
 +---------------------+-----------+
-      Task name      |     state      |             errors              
+      Task Name      |     State      |             Errors              
 ---------------------+----------------+---------------------------------
-  AclSync            | IN_ERROR       | Error code:                     
+  AclSync            | IN_ERROR       | Error Code:                     
                      |                | AUTHENTICATION_ERROR Error      
-                     |                | message: Auth issue.,Error      
-                     |                | code: MISCONFIGURATION_ERROR    
-                     |                | Error message: Wrong config.    
+                     |                | Message: Auth issue.,Error      
+                     |                | Code: MISCONFIGURATION_ERROR    
+                     |                | Error Message: Wrong config.    
   AutoCreateMirror   | NOT_CONFIGURED |                                 
   ConsumerOffsetSync | ACTIVE         |                                 
