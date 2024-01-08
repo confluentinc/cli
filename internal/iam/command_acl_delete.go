@@ -53,7 +53,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	if len(bindings) > 1 {
 		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.Plural(resource.ACL))
 	}
-	if err := deletion.ConfirmPromptYesOrNo(cmd, promptMsg); err != nil {
+	if err := deletion.PromptYesOrNo(cmd, promptMsg); err != nil {
 		return err
 	}
 

@@ -1,0 +1,12 @@
+name: go-editor
+lang: go
+lang_version: 1.19.4
+git:
+  enable: true
+  hooks:
+    enable: true
+github:
+  enable: true
+  repo_name: confluentinc/go-editor
+gitignore:
+  enable: true
