@@ -12,18 +12,18 @@ import (
 func (c *command) newDekSubjectListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Schema Registry DEK subjects.",
+		Short: "List Schema Registry Data Encryption Key (DEK) subjects.",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekSubjectList,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List subjects for DEK created with a KEK named test:`,
+				Text: `List subjects for the Data Encryption Key (DEK) created with a KEK named test:`,
 				Code: "confluent schema-registry dek subject list --name test",
 			},
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the KEK.")
+	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

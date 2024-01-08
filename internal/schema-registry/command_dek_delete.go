@@ -15,16 +15,16 @@ import (
 func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a DEK.",
+		Short: "Delete a Data Encryption Key (DEK).",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekDelete,
 	}
 
-	cmd.Flags().String("name", "", "Name of the KEK.")
-	cmd.Flags().String("subject", "", "Subject of the DEK.")
+	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
-	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of the DEK will be deleted.")
-	cmd.Flags().Bool("permanent", false, "Delete the DEK permanently.")
+	cmd.Flags().String("version", "", "Version of the Data Encryption Key (DEK). When not specified, all versions of the Data Encryption Key (DEK) will be deleted.")
+	cmd.Flags().Bool("permanent", false, "Delete the Data Encryption Key (DEK) permanently.")
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -73,7 +73,7 @@ func (c *command) dekDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	promptMsg := fmt.Sprintf("Are you sure you want to delete the %s corresponding to these parameters?", resource.Dek)
-	if err := deletion.ConfirmPromptYesNo(cmd, promptMsg); err != nil {
+	if err := deletion.ConfirmPromptYesOrNo(cmd, promptMsg); err != nil {
 		return err
 	}
 

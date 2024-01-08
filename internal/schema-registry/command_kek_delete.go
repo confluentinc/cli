@@ -12,12 +12,12 @@ import (
 func (c *command) newKekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
-		Short: "Delete one or more KEKs.",
+		Short: "Delete one or more Key Encryption Keys (KEKs).",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.kekDelete,
 	}
 
-	cmd.Flags().Bool("permanent", false, "Delete the KEK permanently.")
+	cmd.Flags().Bool("permanent", false, "Delete the Key Encryption Key (KEK) permanently.")
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {

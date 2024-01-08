@@ -10,7 +10,7 @@ import (
 func (c *command) newDekVersionCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "version",
-		Short:       "Manage Schema Registry DEK versions.",
+		Short:       "Manage Schema Registry Data Encryption Key (DEK) versions.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 

@@ -23,7 +23,7 @@ func ValidateAndConfirmDeletionYesNo(cmd *cobra.Command, args []string, checkExi
 		return err
 	}
 
-	return ConfirmPromptYesNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
+	return ConfirmPromptYesOrNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
 }
 
 func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
@@ -36,7 +36,7 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 	}
 
 	if len(args) > 1 {
-		return ConfirmPromptYesNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
+		return ConfirmPromptYesOrNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
 	}
 
 	promptString := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, args[0], name)
@@ -47,7 +47,7 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 	return nil
 }
 
-func ConfirmPromptYesNo(cmd *cobra.Command, promptMsg string) error {
+func ConfirmPromptYesOrNo(cmd *cobra.Command, promptMsg string) error {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return err
 	} else if force {
@@ -138,7 +138,7 @@ func ValidateAndConfirmUndeletion(cmd *cobra.Command, args []string, checkExiste
 	}
 
 	if len(args) > 1 {
-		return ConfirmPromptYesNo(cmd, DefaultYesNoUndeletePromptString(resourceType, args))
+		return ConfirmPromptYesOrNo(cmd, DefaultYesNoUndeletePromptString(resourceType, args))
 	}
 
 	promptString := fmt.Sprintf(errors.UndeleteResourceConfirmMsg, resourceType, args[0], name)

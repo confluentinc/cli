@@ -10,7 +10,7 @@ import (
 func (c *command) newDekSubjectCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "subject",
-		Short:       "Manage Schema Registry DEK subjects.",
+		Short:       "Manage Schema Registry Data Encryption Key (DEK) subjects.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 

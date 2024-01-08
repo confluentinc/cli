@@ -13,7 +13,7 @@ import (
 func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a KEK.",
+		Short: "Create a Key Encryption Key (KEK).",
 		Args:  cobra.NoArgs,
 		RunE:  c.kekCreate,
 		Example: examples.BuildExampleString(
@@ -24,11 +24,11 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the KEK.")
+	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
 	pcmd.AddKmsTypeFlag(cmd)
-	cmd.Flags().String("kms-key-id", "", "The key ID of Key Management Service (KMS).")
+	cmd.Flags().String("kms-key-id", "", "The key ID of the Key Management Service (KMS).")
 	cmd.Flags().StringSlice("kms-properties", nil, "A comma-separated list of additional properties (key=value) used to access the Key Management Service (KMS).")
-	cmd.Flags().String("doc", "", "An optional user-friendly description for the KEK.")
+	cmd.Flags().String("doc", "", "An optional user-friendly description for the Key Encryption Key (KEK).")
 	cmd.Flags().Bool("shared", false, "If the DEK Registry has shared access to the Key Management Service (KMS).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {

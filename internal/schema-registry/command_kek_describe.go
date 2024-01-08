@@ -10,12 +10,12 @@ import (
 func (c *command) newKekDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe a KEK.",
+		Short: "Describe a Key Encryption Key (KEK).",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.kekDescribe,
 	}
 
-	cmd.Flags().Bool("all", false, "Include soft-deleted KEKs.")
+	cmd.Flags().Bool("all", false, "Include soft-deleted Key Encryption Keys (KEKs).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

@@ -11,12 +11,12 @@ import (
 func (c *command) newKekListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List KEKs.",
+		Short: "List Key Encryption Keys (KEKs).",
 		Args:  cobra.NoArgs,
 		RunE:  c.kekList,
 	}
 
-	cmd.Flags().Bool("all", false, "Include soft-deleted KEKs.")
+	cmd.Flags().Bool("all", false, "Include soft-deleted Key Encryption Keys (KEKs).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

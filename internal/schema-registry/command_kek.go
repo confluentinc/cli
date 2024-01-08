@@ -21,7 +21,7 @@ const (
 func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "kek",
-		Short:       "Manage Schema Registry Key Encryption Keys (KEKs).",
+		Short:       "Manage the Schema Registry Key Encryption Keys (KEKs).",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 

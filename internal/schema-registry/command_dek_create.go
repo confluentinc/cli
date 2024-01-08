@@ -13,7 +13,7 @@ import (
 func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a DEK.",
+		Short: "Create a Data Encryption Key (DEK).",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekCreate,
 		Example: examples.BuildExampleString(
@@ -25,10 +25,10 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the KEK.")
-	cmd.Flags().String("subject", "", "Subject of the DEK.")
+	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
-	cmd.Flags().Int32("version", 1, "Version of the DEK.")
-	cmd.Flags().String("encrypted-key-material", "", "The encrypted key material for the DEK.")
+	cmd.Flags().Int32("version", 0, "Version of the Data Encryption Key (DEK).")
+	cmd.Flags().String("encrypted-key-material", "", "The encrypted key material for the Data Encryption Key (DEK).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

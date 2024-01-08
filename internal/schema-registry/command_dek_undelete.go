@@ -14,15 +14,15 @@ import (
 func (c *command) newDekUndeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "undelete",
-		Short: "Undelete a DEK.",
+		Short: "Undelete a Data Encryption Key (DEK).",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekUndelete,
 	}
 
-	cmd.Flags().String("name", "", "Name of the KEK.")
-	cmd.Flags().String("subject", "", "Subject of the DEK.")
+	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
-	cmd.Flags().String("version", "", "Version of the DEK. When not specified, all versions of the DEK will be undeleted.")
+	cmd.Flags().String("version", "", "Version of the Data Encryption Key (DEK). When not specified, all versions of the Data Encryption Key (DEK) will be undeleted.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

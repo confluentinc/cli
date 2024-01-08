@@ -11,15 +11,15 @@ import (
 func (c *command) newDekVersionListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Schema Registry DEK versions.",
+		Short: "List Schema Registry Data Encryption Key (DEK) versions.",
 		Args:  cobra.NoArgs,
 		RunE:  c.dekVersionList,
 	}
 
-	cmd.Flags().String("name", "", "Name of the KEK.")
-	cmd.Flags().String("subject", "", "Subject of the DEK.")
+	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
-	cmd.Flags().Bool("all", false, "Include soft-deleted DEK.")
+	cmd.Flags().Bool("all", false, "Include soft-deleted Data Encryption Key (DEK).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
