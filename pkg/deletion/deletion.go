@@ -23,7 +23,7 @@ func ValidateAndConfirmDeletionYesNo(cmd *cobra.Command, args []string, checkExi
 		return err
 	}
 
-	return ConfirmDeletionYesNo(cmd, DefaultYesNoPromptString(resourceType, args))
+	return ConfirmPromptYesOrNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
 }
 
 func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
@@ -36,7 +36,7 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 	}
 
 	if len(args) > 1 {
-		return ConfirmDeletionYesNo(cmd, DefaultYesNoPromptString(resourceType, args))
+		return ConfirmPromptYesOrNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
 	}
 
 	promptString := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, args[0], name)
@@ -47,7 +47,7 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 	return nil
 }
 
-func ConfirmDeletionYesNo(cmd *cobra.Command, promptMsg string) error {
+func ConfirmPromptYesOrNo(cmd *cobra.Command, promptMsg string) error {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return err
 	} else if force {
@@ -117,12 +117,71 @@ func Delete(args []string, callDeleteEndpoint func(string) error, resourceType s
 	return deletedIds, err
 }
 
-func DefaultYesNoPromptString(resourceType string, idList []string) string {
+func DefaultYesNoDeletePromptString(resourceType string, idList []string) string {
 	var promptMsg string
 	if len(idList) == 1 {
 		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
 	} else {
 		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
+	}
+
+	return promptMsg
+}
+
+func ValidateAndConfirmUndeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
+	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
+		return err
+	}
+
+	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
+		return err
+	}
+
+	if len(args) > 1 {
+		return ConfirmPromptYesOrNo(cmd, DefaultYesNoUndeletePromptString(resourceType, args))
+	}
+
+	promptString := fmt.Sprintf(errors.UndeleteResourceConfirmMsg, resourceType, args[0], name)
+	if err := ConfirmDeletionWithString(cmd, promptString, name); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UndeleteWithoutMessage(args []string, callUndeleteEndpoint func(string) error) ([]string, error) {
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	var undeletedIds []string
+	for _, id := range args {
+		if err := callUndeleteEndpoint(id); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("failed to undelete %s: %w", id, err))
+		} else {
+			undeletedIds = append(undeletedIds, id)
+		}
+	}
+
+	return undeletedIds, errs.ErrorOrNil()
+}
+
+func Undelete(args []string, callUndeleteEndpoint func(string) error, resourceType string) ([]string, error) {
+	undeletedIds, err := UndeleteWithoutMessage(args, callUndeleteEndpoint)
+
+	UndeletedResourceMsg := "Undeleted %s %s.\n"
+	if len(undeletedIds) == 1 {
+		output.Printf(false, UndeletedResourceMsg, resourceType, fmt.Sprintf(`"%s"`, undeletedIds[0]))
+	} else if len(undeletedIds) > 1 {
+		output.Printf(false, UndeletedResourceMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(undeletedIds, "and"))
+	}
+
+	return undeletedIds, err
+}
+
+func DefaultYesNoUndeletePromptString(resourceType string, idList []string) string {
+	var promptMsg string
+	if len(idList) == 1 {
+		promptMsg = fmt.Sprintf(`Are you sure you want to undelete %s "%s"?`, resourceType, idList[0])
+	} else {
+		promptMsg = fmt.Sprintf("Are you sure you want to undelete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
 	}
 
 	return promptMsg
