@@ -26,8 +26,8 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
 	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
-	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().Int32("version", 0, "Version of the Data Encryption Key (DEK).")
+	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().String("encrypted-key-material", "", "The encrypted key material for the Data Encryption Key (DEK).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {

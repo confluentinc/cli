@@ -24,7 +24,7 @@ var commandRules = []linter.CommandRule{
 
 	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommand("schema-registry kek"), linter.ExcludeCommand("schema-registry dek")),
+	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("schema-registry kek"), linter.ExcludeCommandContains("schema-registry dek")),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
@@ -95,6 +95,7 @@ var flagRules = []linter.FlagRule{
 			"remote-bootstrap-server",
 			"remote-cluster",
 			"enable-systest-events",
+			"encrypted-key-material",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
 			"request-required-acks",
