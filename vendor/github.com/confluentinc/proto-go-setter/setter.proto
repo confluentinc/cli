@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package setter;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FileOptions {
+    bool all_messages = 90010;
+}
+
+extend google.protobuf.MessageOptions {
+    bool all_fields = 90020;
+}
+
+extend google.protobuf.FieldOptions {
+    bool include = 90030;
+    bool exclude = 90031;
+}
