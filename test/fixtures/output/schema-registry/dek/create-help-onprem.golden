@@ -1,4 +1,4 @@
-Create a DEK.
+Create a Data Encryption Key (DEK).
 
 Usage:
   confluent schema-registry dek create [flags]
@@ -9,11 +9,11 @@ Create a DEK with KEK "test", and subject "test-value":
   $ confluent schema-registry dek create --name test --subject test-value --version 1
 
 Flags:
-      --name string                       REQUIRED: Name of the KEK.
-      --subject string                    REQUIRED: Subject of the DEK.
-      --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the DEK.
-      --version int32                     REQUIRED: Version of the DEK. (default 1)
-      --encrypted-key-material string     The encrypted key material for the DEK.
+      --name string                       REQUIRED: Name of the Key Encryption Key (KEK).
+      --subject string                    REQUIRED: Subject of the Data Encryption Key (DEK).
+      --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the Data Encryption Key (DEK).
+      --version int32                     REQUIRED: Version of the Data Encryption Key (DEK).
+      --encrypted-key-material string     The encrypted key material for the Data Encryption Key (DEK).
       --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.

@@ -1,13 +1,13 @@
-List Schema Registry DEK versions.
+List Schema Registry Data Encryption Key (DEK) versions.
 
 Usage:
   confluent schema-registry dek version list [flags]
 
 Flags:
-      --name string                       Name of the KEK.
-      --subject string                    Subject of the DEK.
-      --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the DEK.
-      --all                               Include soft-deleted DEK.
+      --name string                       Name of the Key Encryption Key (KEK).
+      --subject string                    Subject of the Data Encryption Key (DEK).
+      --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the Data Encryption Key (DEK).
+      --all                               Include soft-deleted Data Encryption Key (DEK).
       --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.

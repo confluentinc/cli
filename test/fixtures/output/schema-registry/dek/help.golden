@@ -4,12 +4,12 @@ Usage:
   confluent schema-registry dek [command]
 
 Available Commands:
-  create      Create a DEK.
-  delete      Delete a DEK.
-  describe    Describe a DEK.
-  subject     Manage Schema Registry DEK subjects.
-  undelete    Undelete a DEK.
-  version     Manage Schema Registry DEK versions.
+  create      Create a Data Encryption Key (DEK).
+  delete      Delete a Data Encryption Key (DEK).
+  describe    Describe a Data Encryption Key (DEK).
+  subject     Manage Schema Registry Data Encryption Key (DEK) subjects.
+  undelete    Undelete a Data Encryption Key (DEK).
+  version     Manage Schema Registry Data Encryption Key (DEK) versions.
 
 Global Flags:
   -h, --help            Show help for this command.

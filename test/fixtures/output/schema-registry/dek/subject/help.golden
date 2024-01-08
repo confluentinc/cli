@@ -1,10 +1,10 @@
-Manage Schema Registry DEK subjects.
+Manage Schema Registry Data Encryption Key (DEK) subjects.
 
 Usage:
   confluent schema-registry dek subject [command]
 
 Available Commands:
-  list        List Schema Registry DEK subjects.
+  list        List Schema Registry Data Encryption Key (DEK) subjects.
 
 Global Flags:
   -h, --help            Show help for this command.

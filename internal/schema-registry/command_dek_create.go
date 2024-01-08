@@ -24,7 +24,7 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the KEK.")
+	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
 	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().Int32("version", 0, "Version of the Data Encryption Key (DEK).")

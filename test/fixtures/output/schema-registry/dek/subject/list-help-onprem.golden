@@ -1,15 +1,15 @@
-List Schema Registry DEK subjects.
+List Schema Registry Data Encryption Key (DEK) subjects.
 
 Usage:
   confluent schema-registry dek subject list [flags]
 
 Examples:
-List subjects for DEK created with a KEK named test:
+List subjects for the Data Encryption Key (DEK) created with a KEK named test:
 
   $ confluent schema-registry dek subject list --name test
 
 Flags:
-      --name string                       REQUIRED: Name of the KEK.
+      --name string                       REQUIRED: Name of the Key Encryption Key (KEK).
       --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.

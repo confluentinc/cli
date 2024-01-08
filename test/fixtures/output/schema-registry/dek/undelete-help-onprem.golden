@@ -1,13 +1,13 @@
-Undelete a DEK.
+Undelete a Data Encryption Key (DEK).
 
 Usage:
   confluent schema-registry dek undelete [flags]
 
 Flags:
-      --name string                       REQUIRED: Name of the KEK.
-      --subject string                    REQUIRED: Subject of the DEK.
-      --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the DEK.
-      --version string                    Version of the DEK. When not specified, all versions of the DEK will be undeleted.
+      --name string                       REQUIRED: Name of the Key Encryption Key (KEK).
+      --subject string                    REQUIRED: Subject of the Data Encryption Key (DEK).
+      --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the Data Encryption Key (DEK).
+      --version string                    Version of the Data Encryption Key (DEK). When not specified, all versions of the Data Encryption Key (DEK) will be undeleted.
       --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.

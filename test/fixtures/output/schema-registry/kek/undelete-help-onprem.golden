@@ -1,4 +1,4 @@
-Undelete one or more KEKs.
+Undelete one or more Key Encryption Keys (KEKs).
 
 Usage:
   confluent schema-registry kek undelete <name-1> [name-2] ... [name-n] [flags]

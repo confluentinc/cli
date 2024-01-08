@@ -4,12 +4,12 @@ Usage:
   confluent schema-registry kek [command]
 
 Available Commands:
-  create      Create a KEK.
-  delete      Delete one or more KEKs.
-  describe    Describe a KEK.
-  list        List KEKs.
-  undelete    Undelete one or more KEKs.
-  update      Update a KEK.
+  create      Create a Key Encryption Key (KEK).
+  delete      Delete one or more Key Encryption Keys (KEKs).
+  describe    Describe a Key Encryption Key (KEK).
+  list        List Key Encryption Keys (KEKs).
+  undelete    Undelete one or more Key Encryption Keys (KEKs).
+  update      Update a Key Encryption Key (KEK).
 
 Global Flags:
   -h, --help            Show help for this command.

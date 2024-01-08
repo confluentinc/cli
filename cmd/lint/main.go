@@ -255,6 +255,7 @@ var vocabWords = []string{
 	"transitgateway",
 	"txt",
 	"undelete",
+	"undeleted",
 	"unregister",
 	"uri",
 	"url",
