@@ -4,12 +4,12 @@ Usage:
   confluent schema-registry dek subject list [flags]
 
 Examples:
-List subjects for the Data Encryption Key (DEK) created with a KEK named test:
+List subjects for the Data Encryption Key (DEK) created with a KEK named "test":
 
-  $ confluent schema-registry dek subject list --name test
+  $ confluent schema-registry dek subject list --kek-name test
 
 Flags:
-      --name string          REQUIRED: Name of the Key Encryption Key (KEK).
+      --kek-name string      REQUIRED: Name of the Key Encryption Key (KEK).
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

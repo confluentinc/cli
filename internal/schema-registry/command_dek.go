@@ -32,8 +32,8 @@ type dekOut struct {
 	Subject              string `human:"Subject" json:"subject"`
 	Version              int32  `human:"Version" json:"version"`
 	Algorithm            string `human:"Algorithm" json:"algorithm"`
-	EncryptedKeyMaterial string `human:"Encrypted Key Material" json:"encrypted_key_material"`
 	KeyMaterial          string `human:"Key Material" json:"key_material"`
+	EncryptedKeyMaterial string `human:"Encrypted Key Material" json:"encrypted_key_material"`
 	Timestamp            int64  `human:"Timestamp" json:"timestamp"`
 }
 
@@ -44,8 +44,8 @@ func printDek(cmd *cobra.Command, dek srsdk.Dek) error {
 		Subject:              dek.GetSubject(),
 		Version:              dek.GetVersion(),
 		Algorithm:            dek.GetAlgorithm(),
-		EncryptedKeyMaterial: dek.GetEncryptedKeyMaterial(),
 		KeyMaterial:          dek.GetKeyMaterial(),
+		EncryptedKeyMaterial: dek.GetEncryptedKeyMaterial(),
 		Timestamp:            dek.GetTs(),
 	})
 	return table.Print()

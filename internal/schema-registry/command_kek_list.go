@@ -40,13 +40,13 @@ func (c *command) kekList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	keks, err := client.ListKeks(all)
+	kekNames, err := client.ListKeks(all)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, kekName := range keks {
+	for _, kekName := range kekNames {
 		kek, err := client.DescribeKek(kekName, all)
 		if err != nil {
 			return err

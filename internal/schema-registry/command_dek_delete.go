@@ -20,7 +20,7 @@ func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.dekDelete,
 	}
 
-	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("kek-name", "", "Name of the Key Encryption Key (KEK).")
 	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().String("version", "", "Version of the Data Encryption Key (DEK). When not specified, all versions of the Data Encryption Key (DEK) will be deleted.")
@@ -35,7 +35,7 @@ func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 
 	return cmd
@@ -47,7 +47,7 @@ func (c *command) dekDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}

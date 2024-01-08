@@ -19,15 +19,15 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a DEK with KEK "test", and subject "test-value":`,
-				Code: "confluent schema-registry dek create --name test --subject test-value --version 1",
+				Code: "confluent schema-registry dek create --kek-name test --subject test-value --version 1",
 			},
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("kek-name", "", "Name of the Key Encryption Key (KEK).")
 	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
-	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().Int32("version", 0, "Version of the Data Encryption Key (DEK).")
+	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().String("encrypted-key-material", "", "The encrypted key material for the Data Encryption Key (DEK).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -38,7 +38,7 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 
@@ -51,7 +51,7 @@ func (c *command) dekCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}

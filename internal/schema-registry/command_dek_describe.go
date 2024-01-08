@@ -15,7 +15,7 @@ func (c *command) newDekDescribeCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.dekDescribe,
 	}
 
-	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("kek-name", "", "Name of the Key Encryption Key (KEK).")
 	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().String("version", "1", "Version of the Data Encryption Key (DEK).")
@@ -29,7 +29,7 @@ func (c *command) newDekDescribeCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 
 	return cmd
@@ -41,7 +41,7 @@ func (c *command) dekDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}

@@ -180,12 +180,12 @@ func (s *CLITestSuite) TestSchemaRegistryKek() {
 
 func (s *CLITestSuite) TestSchemaRegistryDek() {
 	tests := []CLITest{
-		{args: "schema-registry dek create --name kek-name --subject payments --algorithm AES256_GCM --version 1 --encrypted-key-material encrypted-key-material", fixture: "schema-registry/dek/create.golden"},
-		{args: "schema-registry dek subject list --name kek-name", fixture: "schema-registry/dek/list-subject.golden"},
-		{args: "schema-registry dek version list --name kek-name --subject payments", fixture: "schema-registry/dek/list-version.golden"},
-		{args: "schema-registry dek describe --name kek-name --subject payments", fixture: "schema-registry/dek/describe.golden"},
-		{args: "schema-registry dek delete --name kek-name --subject payments --force", fixture: "schema-registry/dek/delete.golden"},
-		{args: "schema-registry dek undelete --name kek-name --subject payments --version 2", fixture: "schema-registry/dek/undelete.golden"},
+		{args: "schema-registry dek create --kek-name kek-name --subject payments --algorithm AES256_GCM --version 1 --encrypted-key-material encrypted-key-material", fixture: "schema-registry/dek/create.golden"},
+		{args: "schema-registry dek subject list --kek-name kek-name", fixture: "schema-registry/dek/list-subject.golden"},
+		{args: "schema-registry dek version list --kek-name kek-name --subject payments", fixture: "schema-registry/dek/list-version.golden"},
+		{args: "schema-registry dek describe --kek-name kek-name --subject payments", fixture: "schema-registry/dek/describe.golden"},
+		{args: "schema-registry dek delete --kek-name kek-name --subject payments --force", fixture: "schema-registry/dek/delete.golden"},
+		{args: "schema-registry dek undelete --kek-name kek-name --subject payments --version 2", fixture: "schema-registry/dek/undelete.golden"},
 	}
 
 	for _, test := range tests {

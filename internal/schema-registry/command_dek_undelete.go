@@ -1,8 +1,6 @@
 package schemaregistry
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -19,7 +17,7 @@ func (c *command) newDekUndeleteCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.dekUndelete,
 	}
 
-	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("kek-name", "", "Name of the Key Encryption Key (KEK).")
 	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().String("version", "", "Version of the Data Encryption Key (DEK). When not specified, all versions of the Data Encryption Key (DEK) will be undeleted.")
@@ -32,7 +30,7 @@ func (c *command) newDekUndeleteCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 
 	return cmd
@@ -44,7 +42,7 @@ func (c *command) dekUndelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}
@@ -64,16 +62,15 @@ func (c *command) dekUndelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var undeleteErr error
 	if version == "" {
-		undeleteErr = client.UndeleteDekVersions(name, subject, algorithm)
+		err = client.UndeleteDekVersions(name, subject, algorithm)
 	} else {
-		undeleteErr = client.UndeleteDekVersion(name, subject, version, algorithm)
+		err = client.UndeleteDekVersion(name, subject, version, algorithm)
 	}
-	if undeleteErr != nil {
-		return undeleteErr
+	if err != nil {
+		return err
 	}
 
-	output.ErrPrintf(c.Config.EnableColor, fmt.Sprintf("Undeleted the %s corresponding to the parameters.", resource.Dek))
+	output.ErrPrintf(c.Config.EnableColor, "Undeleted the %s corresponding to the parameters.\n", resource.Dek)
 	return nil
 }

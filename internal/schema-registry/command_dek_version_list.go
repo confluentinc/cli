@@ -16,7 +16,7 @@ func (c *command) newDekVersionListCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.dekVersionList,
 	}
 
-	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("kek-name", "", "Name of the Key Encryption Key (KEK).")
 	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
 	cmd.Flags().Bool("all", false, "Include soft-deleted Data Encryption Key (DEK).")
@@ -37,7 +37,7 @@ func (c *command) dekVersionList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}
