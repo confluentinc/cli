@@ -49,7 +49,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.1
 	github.com/docker/docker v24.0.7+incompatible
-	github.com/docker/go-connections v0.4.0
+	github.com/docker/go-connections v0.5.0
 	github.com/fatih/color v1.16.0
 	github.com/gdamore/tcell/v2 v2.7.0
 	github.com/go-git/go-git/v5 v5.11.0
