@@ -1,0 +1,19 @@
+Undelete a DEK.
+
+Usage:
+  confluent schema-registry dek undelete [flags]
+
+Flags:
+      --name string                       REQUIRED: Name of the KEK.
+      --subject string                    REQUIRED: Subject of the DEK.
+      --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the DEK.
+      --version string                    Version of the DEK. When not specified, all versions of the DEK will be undeleted.
+      --context string                    CLI context name.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
