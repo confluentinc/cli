@@ -726,6 +726,10 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 							*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
 							*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
 						}),
+						*cckafkarestv3.NewLinkTask("TopicConfigsSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{
+							*cckafkarestv3.NewLinkTaskError("INTERNAL_ERROR", "Internal error."),
+							*cckafkarestv3.NewLinkTaskError("REMOTE_LINK_NOT_FOUND_ERROR", "Remote link not found."),
+						}),
 					}
 				}
 				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{

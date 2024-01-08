@@ -109,11 +109,9 @@ func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error 
 		return nil
 	}
 	list := output.NewList(cmd)
-	for i := range taskOuts {
-		t := taskOuts[i]
+	for _, t := range taskOuts {
 		errs := make([]string, 0)
-		for i := range t.Errors {
-			eo := t.Errors[i]
+		for _, eo := range t.Errors {
 			var errStr bytes.Buffer
 			errStr.WriteString("Error Code: ")
 			errStr.WriteString(eo.ErrorCode)

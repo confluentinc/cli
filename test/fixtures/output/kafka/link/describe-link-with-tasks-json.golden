@@ -28,6 +28,20 @@
           "error_message": "Wrong config."
         }
       ]
+    },
+    {
+      "task_name": "TopicConfigsSync",
+      "state": "IN_ERROR",
+      "errors": [
+        {
+          "error_code": "INTERNAL_ERROR",
+          "error_message": "Internal error."
+        },
+        {
+          "error_code": "REMOTE_LINK_NOT_FOUND_ERROR",
+          "error_message": "Remote link not found."
+        }
+      ]
     }
   ]
 }
