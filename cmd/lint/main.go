@@ -24,7 +24,7 @@ var commandRules = []linter.CommandRule{
 
 	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("schema-registry kek"), linter.ExcludeCommandContains("schema-registry dek")),
+	linter.Filter(linter.RequireNotTitleCase("Short", properNouns)),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
@@ -143,11 +143,13 @@ var properNouns = []string{
 	"Confluent",
 	"Connect",
 	"Control Center",
+	"Data Encryption Key",
 	"Flink",
 	"Go",
 	"Groovy",
 	"Java",
 	"Kafka",
+	"Key Encryption Key",
 	"Kotlin",
 	"Ktor",
 	"Node.js",
