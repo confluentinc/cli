@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder/v1"
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
@@ -185,29 +184,6 @@ func handleNetworkingIpAddresses(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingIpAddressList(t)(w, r)
-		}
-	}
-}
-
-// Handler for: "/networking/v1/dns-forwarder/{id}"
-func handleNetworkingDnsForwarder(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
-		switch r.Method {
-		case http.MethodGet:
-			handleNetworkingDnsForwarderGet(t, id)(w, r)
-		case http.MethodDelete:
-			handleNetworkingDnsForwarderDelete(t, id)(w, r)
-		}
-	}
-}
-
-// Handler for: "/networking/v1/dns-forwarders"
-func handleNetworkingDnsForwarders(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			handleNetworkingDnsForwarderList(t)(w, r)
 		}
 	}
 }
@@ -1421,96 +1397,5 @@ func getIpAddress(ipPrefix, cloud, region string, services []string) networkingi
 		Cloud:       networkingipv1.PtrString(cloud),
 		Region:      networkingipv1.PtrString(region),
 		Services:    &networkingipv1.NetworkingV1Services{Items: services},
-	}
-}
-
-func handleNetworkingDnsForwarderGet(t *testing.T, id string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch id {
-		case "dnsf-invalid":
-			w.WriteHeader(http.StatusNotFound)
-			err := writeErrorJson(w, "The dns forwarder dnsf-invalid was not found.")
-			require.NoError(t, err)
-		case "dnsf-abcde1":
-			dnsf := getDnsForwarder("dnsf-abcde1", "my-dns-forwarder")
-			err := json.NewEncoder(w).Encode(dnsf)
-			require.NoError(t, err)
-		}
-	}
-}
-
-func getDnsForwarder(id, name string) networkingdnsforwarderv1.NetworkingV1DnsForwarder {
-	forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
-		Id: networkingdnsforwarderv1.PtrString(id),
-		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
-			DisplayName: networkingdnsforwarderv1.PtrString(name),
-			Domains:     &[]string{"abc.com", "def.com"},
-			Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
-				NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
-					Kind:         "ForwardViaIp",
-					DnsServerIps: []string{"10.200.0.0"},
-				},
-			},
-			Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
-			Gateway:     &networkingdnsforwarderv1.ObjectReference{Id: "gw-111111"},
-		},
-		Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
-	}
-
-	switch id {
-	case "dnsf-abcde2":
-		forwarder.Spec.SetDomains([]string{"xyz.com"})
-		forwarder.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps = []string{"10.201.0.0", "10.202.0.0"}
-		forwarder.Spec.Gateway.SetId("gw-222222")
-	case "dnsf-abcde3":
-		forwarder.Spec.SetDomains([]string{"ghi.com"})
-		forwarder.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps = []string{"10.203.0.0", "10.204.0.0", "10.205.0.0"}
-		forwarder.Spec.Gateway.SetId("gw-333333")
-	}
-
-	return forwarder
-}
-
-func handleNetworkingDnsForwarderDelete(t *testing.T, id string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch id {
-		case "dnsf-invalid":
-			w.WriteHeader(http.StatusNotFound)
-			err := writeErrorJson(w, "The dns forwarder dnsf-invalid was not found.")
-			require.NoError(t, err)
-		default:
-			w.WriteHeader(http.StatusNoContent)
-		}
-	}
-}
-
-func handleNetworkingDnsForwarderList(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		forwarder1 := getDnsForwarder("dnsf-abcde1", "my-dns-forwarder-1")
-		forwarder2 := getDnsForwarder("dnsf-abcde2", "my-dns-forwarder-2")
-		forwarder3 := getDnsForwarder("dnsf-abcde3", "my-dns-forwarder-3")
-
-		pageToken := r.URL.Query().Get("page_token")
-		var dnsForwarderList networkingdnsforwarderv1.NetworkingV1DnsForwarderList
-		switch pageToken {
-		case "my-dns-forwarder-3":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder3},
-				Metadata: networkingdnsforwarderv1.ListMeta{},
-			}
-		case "my-dns-forwarder-2":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder2},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarder?environment=a-595&page_size=1&page_token=my-dns-forwarder-3"))},
-			}
-		default:
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder1},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarders?environment=a-595&page_size=1&page_token=my-dns-forwarder-2"))},
-			}
-		}
-
-		err := json.NewEncoder(w).Encode(dnsForwarderList)
-		require.NoError(t, err)
 	}
 }

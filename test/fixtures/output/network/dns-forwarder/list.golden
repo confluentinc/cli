@@ -1,6 +1,0 @@
-      ID      |    Display Name    |     Domains      |         DNS Server IPs         | Environment |  Gateway  | Phase  
---------------+--------------------+------------------+--------------------------------+-------------+-----------+--------
-  dnsf-abcde1 | my-dns-forwarder-1 | abc.com, def.com | 10.200.0.0                     | env-00000   | gw-111111 | READY  
-  dnsf-abcde2 | my-dns-forwarder-2 | xyz.com          | 10.201.0.0, 10.202.0.0         | env-00000   | gw-222222 | READY  
-  dnsf-abcde3 | my-dns-forwarder-3 | ghi.com          | 10.203.0.0, 10.204.0.0,        | env-00000   | gw-333333 | READY  
-              |                    |                  | 10.205.0.0                     |             |           |        
