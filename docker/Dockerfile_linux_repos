@@ -31,7 +31,7 @@ RUN --mount=type=secret,id=rpm_gpg_secret_key --mount=type=secret,id=rpm_gpg_pas
 
 RUN aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=main confluent-cli && \
     aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb && \
-    if [[ -d /cli/deb/pool/main/c/confluent ]] && [[ $(ls /cli/deb/pool/main/c/confluent/*.deb 2>/dev/null) ]]; then aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/deb/pool/main/c/confluent/*.deb; fi
+    if [[ -d /cli/deb/pool/main/c/confluent-cli ]] && [[ $(ls /cli/deb/pool/main/c/confluent-cli/*.deb 2>/dev/null) ]]; then aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/deb/pool/main/c/confluent-cli/*.deb; fi
 
 RUN --mount=type=secret,id=deb_gpg_secret_key --mount=type=secret,id=deb_gpg_passphrase \
     gpg --batch --import /run/secrets/deb_gpg_secret_key && \
