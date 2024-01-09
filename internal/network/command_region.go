@@ -7,7 +7,7 @@ import (
 func (c *command) newRegionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "region",
-		Short: "Manage Confluent Cloud regions.",
+		Short: "Manage Confluent Cloud network regions.",
 		Args:  cobra.NoArgs,
 	}
 

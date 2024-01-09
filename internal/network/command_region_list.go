@@ -11,7 +11,7 @@ import (
 func (c *command) newRegionListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List cloud provider regions.",
+		Short: "List cloud provider regions for networking.",
 		Args:  cobra.NoArgs,
 		RunE:  c.regionList,
 	}

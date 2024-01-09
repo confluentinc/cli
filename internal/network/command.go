@@ -385,7 +385,7 @@ func (c *command) addNetworkLinkServiceFlag(cmd *cobra.Command) {
 }
 
 func (c *command) addRegionFlagNetwork(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
-	cmd.Flags().String("region", "", `Cloud region ID for this network.`)
+	cmd.Flags().String("region", "", "Cloud region ID for this network.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
