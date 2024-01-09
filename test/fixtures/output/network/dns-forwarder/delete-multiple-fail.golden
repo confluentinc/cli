@@ -1,0 +1,4 @@
+Error: dns forwarder "dnsf-invalid" not found
+
+Suggestions:
+    List available dns forwarders with `confluent network dns-forwarder list`.
