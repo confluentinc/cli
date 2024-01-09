@@ -7,6 +7,7 @@ Available Commands:
   create                     Create a network.
   delete                     Delete one or more networks.
   describe                   Describe a network.
+  dns-forwarder              Manage DNS forwarders.
   ip-address                 List Confluent Cloud egress public IP addresses.
   list                       List networks.
   peering                    Manage peerings.
