@@ -1,0 +1,22 @@
++---------------------+-----------+
+| Name                | link-5    |
+| Source Cluster      |           |
+| Destination Cluster |           |
+| Remote Cluster      | cluster-2 |
+| State               | AVAILABLE |
++---------------------+-----------+
+      Task Name      |     State      |             Errors              
+---------------------+----------------+---------------------------------
+  AclSync            | IN_ERROR       | Error Code:                     
+                     |                | AUTHENTICATION_ERROR Error      
+                     |                | Message: Auth issue.,Error      
+                     |                | Code: MISCONFIGURATION_ERROR    
+                     |                | Error Message: Wrong config.    
+  AutoCreateMirror   | NOT_CONFIGURED |                                 
+  ConsumerOffsetSync | ACTIVE         |                                 
+  TopicConfigsSync   | IN_ERROR       | Error Code: INTERNAL_ERROR      
+                     |                | Error Message: Internal         
+                     |                | error.,Error Code:              
+                     |                | REMOTE_LINK_NOT_FOUND_ERROR     
+                     |                | Error Message: Remote link not  
+                     |                | found.                          
