@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	kmsPropsFormatErrorMsg    = "incorrect --kms-properties format specified"
-	kmsPropsFormatSuggestions = `--kms-properties must be formatted as "<key>=<value>".`
+	kmsPropsFormatErrorMsg    = "incorrect `--kms-properties` format specified"
+	kmsPropsFormatSuggestions = "`--kms-properties` must be formatted as \"<key>=<value>\"."
 )
 
 func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
@@ -41,7 +41,7 @@ type kekOut struct {
 	KmsKeyId      string `human:"KMS Key ID,omitempty" serialized:"kms_key_id,omitempty"`
 	KmsProperties string `human:"KMS Properties,omitempty" serialized:"kms_properties,omitempty"`
 	Doc           string `human:"Doc,omitempty" serialized:"doc,omitempty"`
-	IsShared      bool   `human:"Is Shared,omitempty" serialized:"is_shared,omitempty"`
+	IsShared      bool   `human:"Shared,omitempty" serialized:"is_shared,omitempty"`
 	Timestamp     int64  `human:"Timestamp,omitempty" serialized:"timestamp,omitempty"`
 	IsDeleted     bool   `human:"Deleted,omitempty" serialized:"is_deleted,omitempty"`
 }

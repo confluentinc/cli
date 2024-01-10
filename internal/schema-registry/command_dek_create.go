@@ -24,7 +24,7 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("kek-name", "", "Name of the Key Encryption Key (KEK).")
 	cmd.Flags().String("subject", "", "Subject of the Data Encryption Key (DEK).")
 	cmd.Flags().Int32("version", 0, "Version of the Data Encryption Key (DEK).")
 	pcmd.AddAlgorithmFlag(cmd)
@@ -38,7 +38,7 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 
@@ -51,7 +51,7 @@ func (c *command) dekCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,7 @@ Create a DEK with KEK "test", and subject "test-value":
   $ confluent schema-registry dek create --name test --subject test-value --version 1
 
 Flags:
-      --name string                       REQUIRED: Name of the Key Encryption Key (KEK).
+      --kek-name string                   REQUIRED: Name of the Key Encryption Key (KEK).
       --subject string                    REQUIRED: Subject of the Data Encryption Key (DEK).
       --version int32                     REQUIRED: Version of the Data Encryption Key (DEK).
       --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the Data Encryption Key (DEK).

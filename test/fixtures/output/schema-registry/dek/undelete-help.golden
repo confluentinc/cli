@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry dek undelete [flags]
 
 Flags:
-      --name string          REQUIRED: Name of the Key Encryption Key (KEK).
+      --kek-name string      REQUIRED: Name of the Key Encryption Key (KEK).
       --subject string       REQUIRED: Subject of the Data Encryption Key (DEK).
       --algorithm string     Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the Data Encryption Key (DEK).
       --version string       Version of the Data Encryption Key (DEK). When not specified, all versions of the Data Encryption Key (DEK) will be undeleted.

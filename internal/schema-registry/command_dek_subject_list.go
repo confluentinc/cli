@@ -17,13 +17,13 @@ func (c *command) newDekSubjectListCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.dekSubjectList,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List subjects for the Data Encryption Key (DEK) created with a KEK named test:`,
+				Text: `List subjects for the Data Encryption Key (DEK) created with a KEK named "test":`,
 				Code: "confluent schema-registry dek subject list --name test",
 			},
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the Key Encryption Key (KEK).")
+	cmd.Flags().String("kek-name", "", "Name of the Key Encryption Key (KEK).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -33,7 +33,7 @@ func (c *command) newDekSubjectListCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 
 	return cmd
 }
@@ -43,7 +43,7 @@ func (c *command) dekSubjectList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}
