@@ -14,7 +14,7 @@ import (
 
 type dnsForwarderHumanOut struct {
 	Id           string `human:"ID"`
-	Name         string `human:"Display Name,omitempty"`
+	Name         string `human:"Name,omitempty"`
 	Domains      string `human:"Domains,omitempty"`
 	DnsServerIps string `human:"DNS Server IPs"`
 	Environment  string `human:"Environment"`
@@ -24,7 +24,7 @@ type dnsForwarderHumanOut struct {
 
 type dnsForwarderSerializedOut struct {
 	Id           string   `serialized:"id"`
-	Name         string   `serialized:"display_name,omitempty"`
+	Name         string   `serialized:"name,omitempty"`
 	Domains      []string `serialized:"domains,omitempty"`
 	DnsServerIps []string `serialized:"dns_server_ips"`
 	Environment  string   `serialized:"environment"`
@@ -34,9 +34,8 @@ type dnsForwarderSerializedOut struct {
 
 func (c *command) newDnsForwarderCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "dns-forwarder",
-		Short:   "Manage DNS forwarders.",
-		Aliases: []string{"dnsf"},
+		Use:   "forwarder",
+		Short: "Manage DNS forwarders.",
 	}
 
 	cmd.AddCommand(c.newDnsForwarderDeleteCommand())
@@ -115,5 +114,5 @@ func printDnsForwarderTable(cmd *cobra.Command, forwarder networkingdnsforwarder
 		})
 	}
 
-	return table.PrintWithAutoWrap(false)
+	return table.PrintWithAutoWrap(true)
 }

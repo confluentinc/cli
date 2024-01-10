@@ -1,12 +1,12 @@
 Describe a DNS forwarder.
 
 Usage:
-  confluent network dns-forwarder describe <id> [flags]
+  confluent network dns forwarder describe <id> [flags]
 
 Examples:
 Describe DNS forwarder "dnsf-123456".
 
-  $ confluent network dns-forwarder describe dnsf-123456
+  $ confluent network dns forwarder describe dnsf-123456
 
 Flags:
       --context string       CLI context name.

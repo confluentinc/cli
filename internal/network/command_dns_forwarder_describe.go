@@ -14,11 +14,10 @@ func (c *command) newDnsForwarderDescribeCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validDnsForwarderArgs),
 		RunE:              c.dnsForwarderDescribe,
-
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe DNS forwarder "dnsf-123456".`,
-				Code: "confluent network dns-forwarder describe dnsf-123456",
+				Code: "confluent network dns forwarder describe dnsf-123456",
 			},
 		),
 	}

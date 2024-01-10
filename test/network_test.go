@@ -575,11 +575,10 @@ func (s *CLITestSuite) TestNetworkIpAddressList() {
 
 func (s *CLITestSuite) TestNetworkDnsForwarderDescribe() {
 	tests := []CLITest{
-		{args: "network dnsf describe dnsf-abcde1", fixture: "network/dns-forwarder/describe.golden"},
-		{args: "network dns-forwarder describe dnsf-abcde1", fixture: "network/dns-forwarder/describe.golden"},
-		{args: "network dns-forwarder describe dnsf-abcde1 --output json", fixture: "network/dns-forwarder/describe-json.golden"},
-		{args: "network dns-forwarder describe", fixture: "network/dns-forwarder/describe-missing-id.golden", exitCode: 1},
-		{args: "network dns-forwarder describe dnsf-invalid", fixture: "network/dns-forwarder/describe-invalid.golden", exitCode: 1},
+		{args: "network dns forwarder describe dnsf-abcde1", fixture: "network/dns/forwarder/describe.golden"},
+		{args: "network dns forwarder describe dnsf-abcde1 --output json", fixture: "network/dns/forwarder/describe-json.golden"},
+		{args: "network dns forwarder describe", fixture: "network/dns/forwarder/describe-missing-id.golden", exitCode: 1},
+		{args: "network dns forwarder describe dnsf-invalid", fixture: "network/dns/forwarder/describe-invalid.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -590,9 +589,8 @@ func (s *CLITestSuite) TestNetworkDnsForwarderDescribe() {
 
 func (s *CLITestSuite) TestNetworkDnsForwarderList() {
 	tests := []CLITest{
-		{args: "network dnsf list", fixture: "network/dns-forwarder/list.golden"},
-		{args: "network dns-forwarder list", fixture: "network/dns-forwarder/list.golden"},
-		{args: "network dns-forwarder list --output json", fixture: "network/dns-forwarder/list-json.golden"},
+		{args: "network dns forwarder list", fixture: "network/dns/forwarder/list.golden"},
+		{args: "network dns forwarder list --output json", fixture: "network/dns/forwarder/list-json.golden"},
 	}
 
 	for _, test := range tests {
@@ -603,12 +601,11 @@ func (s *CLITestSuite) TestNetworkDnsForwarderList() {
 
 func (s *CLITestSuite) TestNetworkDnsForwarderDelete() {
 	tests := []CLITest{
-		{args: "network dnsf delete dnsf-111111 --force", fixture: "network/dns-forwarder/delete.golden"},
-		{args: "network dns-forwarder delete dnsf-111111", input: "y\n", fixture: "network/dns-forwarder/delete-prompt.golden"},
-		{args: "network dns-forwarder delete dnsf-111111 dnsf-222222", input: "n\n", fixture: "network/dns-forwarder/delete-multiple-refuse.golden"},
-		{args: "network dns-forwarder delete dnsf-111111 dnsf-222222", input: "y\n", fixture: "network/dns-forwarder/delete-multiple-success.golden"},
-		{args: "network dns-forwarder delete dnsf-111111 dnsf-invalid", fixture: "network/dns-forwarder/delete-multiple-fail.golden", exitCode: 1},
-		{args: "network dns-forwarder delete dnsf-invalid --force", fixture: "network/dns-forwarder/delete-dnsf-not-exist.golden", exitCode: 1},
+		{args: "network dns forwarder delete dnsf-111111", input: "y\n", fixture: "network/dns/forwarder/delete-prompt.golden"},
+		{args: "network dns forwarder delete dnsf-111111 dnsf-222222", input: "n\n", fixture: "network/dns/forwarder/delete-multiple-refuse.golden"},
+		{args: "network dns forwarder delete dnsf-111111 dnsf-222222", input: "y\n", fixture: "network/dns/forwarder/delete-multiple-success.golden"},
+		{args: "network dns forwarder delete dnsf-111111 dnsf-invalid", fixture: "network/dns/forwarder/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network dns forwarder delete dnsf-invalid --force", fixture: "network/dns/forwarder/delete-dnsf-not-exist.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -619,8 +616,8 @@ func (s *CLITestSuite) TestNetworkDnsForwarderDelete() {
 
 func (s *CLITestSuite) TestNetworkDnsForwarder_Autocomplete() {
 	tests := []CLITest{
-		{args: `__complete network dns-forwarder describe ""`, login: "cloud", fixture: "network/dns-forwarder/describe-autocomplete.golden"},
-		{args: `__complete network dns-forwarder delete ""`, login: "cloud", fixture: "network/dns-forwarder/delete-autocomplete.golden"},
+		{args: `__complete network dns forwarder describe ""`, login: "cloud", fixture: "network/dns/forwarder/describe-autocomplete.golden"},
+		{args: `__complete network dns forwarder delete ""`, login: "cloud", fixture: "network/dns/forwarder/delete-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

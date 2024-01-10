@@ -1,9 +1,0 @@
-{
-  "id": "dnsf-abcde1",
-  "display_name": "my-dns-forwarder",
-  "domains": ["abc.com", "def.com"],
-  "dns_server_ips": ["10.200.0.0"],
-  "environment": "env-00000",
-  "gateway": "gw-111111",
-  "phase": "READY"
-}

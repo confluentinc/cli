@@ -1444,7 +1444,7 @@ func getDnsForwarder(id, name string) networkingdnsforwarderv1.NetworkingV1DnsFo
 		Id: networkingdnsforwarderv1.PtrString(id),
 		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
 			DisplayName: networkingdnsforwarderv1.PtrString(name),
-			Domains:     &[]string{"abc.com", "def.com"},
+			Domains:     &[]string{"abc.com", "def.com", "example.domain", "xyz.com", "my.dns.forwarder.example.domain"},
 			Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
 				NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
 					Kind:         "ForwardViaIp",
