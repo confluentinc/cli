@@ -2,7 +2,6 @@ package ksql
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -98,16 +97,14 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (string, error) {
-	users, err := c.Client.User.GetServiceAccounts()
+	serviceAccounts, err := c.Client.User.GetServiceAccounts()
 	if err != nil {
 		return "", err
 	}
 
-	credentialIdentity := cluster.Spec.CredentialIdentity.GetId()
-
-	for _, user := range users {
-		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.GetId()) || user.ResourceId == credentialIdentity {
-			return strconv.Itoa(int(user.Id)), nil
+	for _, serviceAccount := range serviceAccounts {
+		if serviceAccount.GetServiceName() == fmt.Sprintf("KSQL.%s", cluster.GetId()) || serviceAccount.ResourceId == cluster.Spec.CredentialIdentity.GetId() {
+			return serviceAccount.GetResourceId(), nil
 		}
 	}
 	return "", fmt.Errorf(errors.KsqldbNoServiceAccountErrorMsg, cluster.GetId())
