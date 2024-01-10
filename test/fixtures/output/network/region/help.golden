@@ -1,10 +1,10 @@
-Manage Confluent Cloud regions.
+Manage Confluent Cloud network regions.
 
 Usage:
   confluent network region [command]
 
 Available Commands:
-  list        List cloud provider regions.
+  list        List cloud provider regions for networking.
 
 Global Flags:
   -h, --help            Show help for this command.

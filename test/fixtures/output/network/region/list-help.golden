@@ -1,4 +1,4 @@
-List cloud provider regions.
+List cloud provider regions for networking.
 
 Usage:
   confluent network region list [flags]
