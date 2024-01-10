@@ -47,7 +47,7 @@ func (c *command) newStoreCommand() *cobra.Command {
 		),
 	}
 
-	c.addResourceFlag(cmd, false)
+	c.addResourceFlag(cmd, true)
 	cmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

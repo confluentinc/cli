@@ -251,14 +251,12 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Google Cloud Platform",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "asia-southeast1",
-						Name:          "asia-southeast1 (Singapore)",
-						IsSchedulable: true,
+						Id:   "asia-southeast1",
+						Name: "asia-southeast1 (Singapore)",
 					},
 					{
-						Id:            "asia-east2",
-						Name:          "asia-east2 (Hong Kong)",
-						IsSchedulable: true,
+						Id:   "asia-east2",
+						Name: "asia-east2 (Hong Kong)",
 					},
 				},
 			},
@@ -267,14 +265,12 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Amazon Web Services",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "ap-northeast-1",
-						Name:          "ap-northeast-1 (Tokyo)",
-						IsSchedulable: false,
+						Id:   "ap-northeast-1",
+						Name: "ap-northeast-1 (Tokyo)",
 					},
 					{
-						Id:            "us-east-1",
-						Name:          "us-east-1 (N. Virginia)",
-						IsSchedulable: true,
+						Id:   "us-east-1",
+						Name: "us-east-1 (N. Virginia)",
 					},
 				},
 			},
@@ -283,9 +279,8 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Azure",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "southeastasia",
-						Name:          "southeastasia (Singapore)",
-						IsSchedulable: false,
+						Id:   "southeastasia",
+						Name: "southeastasia (Singapore)",
 					},
 				},
 			},

@@ -1,0 +1,31 @@
+[
+  {
+    "id": "peer-111111",
+    "name": "aws-peering",
+    "network": "n-abcde1",
+    "cloud": "AWS",
+    "custom_region": "us-east-1",
+    "virtual_network": "vpc-00000000000000000",
+    "cloud_account": "000000000000",
+    "phase": "READY"
+  },
+  {
+    "id": "peer-111112",
+    "name": "gcp-peering",
+    "network": "n-abcde1",
+    "cloud": "GCP",
+    "virtual_network": "v-1",
+    "cloud_account": "p-1",
+    "phase": "READY"
+  },
+  {
+    "id": "peer-111113",
+    "name": "azure-peering",
+    "network": "n-abcde1",
+    "cloud": "AZURE",
+    "custom_region": "centralus",
+    "virtual_network": "/subscriptions/s-1/resourceGroups/group-1/providers/Microsoft.Network/virtualNetworks/vnet-1",
+    "cloud_account": "t-1",
+    "phase": "READY"
+  }
+]

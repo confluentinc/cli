@@ -26,6 +26,14 @@ type Store struct {
 	tokenRefreshFunc func() error
 }
 
+func (s *Store) GetCurrentCatalog() string {
+	return s.Properties.Get(config.KeyCatalog)
+}
+
+func (s *Store) GetCurrentDatabase() string {
+	return s.Properties.Get(config.KeyDatabase)
+}
+
 func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
 	if authErr := s.tokenRefreshFunc(); authErr != nil {
 		log.CliLogger.Warnf("Failed to refresh token: %v", authErr)

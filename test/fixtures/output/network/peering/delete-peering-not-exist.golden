@@ -1,0 +1,4 @@
+Error: peering "peer-invalid" not found
+
+Suggestions:
+    List available peerings with `confluent network peering list`.

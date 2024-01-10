@@ -21,18 +21,19 @@ const (
 
 // Custom Internal type that shall be used internally by the client
 type ProcessedStatement struct {
-	Statement         string `json:"statement"`
-	StatementName     string `json:"statement_name"`
-	Kind              string `json:"kind"`
-	ComputePool       string `json:"compute_pool"`
-	Principal         string `json:"principal"`
-	Status            PHASE  `json:"status"`
-	StatusDetail      string `json:"status_detail,omitempty"` // Shown at the top before the table
-	IsLocalStatement  bool
-	IsSelectStatement bool
-	PageToken         string
-	ResultSchema      flinkgatewayv1beta1.SqlV1beta1ResultSchema
-	StatementResults  *StatementResults
+	Statement            string `json:"statement"`
+	StatementName        string `json:"statement_name"`
+	Kind                 string `json:"kind"`
+	ComputePool          string `json:"compute_pool"`
+	Principal            string `json:"principal"`
+	Status               PHASE  `json:"status"`
+	StatusDetail         string `json:"status_detail,omitempty"` // Shown at the top before the table
+	IsLocalStatement     bool
+	IsSelectStatement    bool
+	IsSensitiveStatement bool
+	PageToken            string
+	ResultSchema         flinkgatewayv1beta1.SqlV1beta1ResultSchema
+	StatementResults     *StatementResults
 }
 
 func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) *ProcessedStatement {
