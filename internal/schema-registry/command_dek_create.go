@@ -19,7 +19,7 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a DEK with KEK "test", and subject "test-value":`,
-				Code: "confluent schema-registry dek create --name test --subject test-value --version 1",
+				Code: "confluent schema-registry dek create --kek-name test --subject test-value --version 1",
 			},
 		),
 	}

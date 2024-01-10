@@ -18,7 +18,7 @@ func (c *command) newDekSubjectListCommand(cfg *config.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List subjects for the Data Encryption Key (DEK) created with a KEK named "test":`,
-				Code: "confluent schema-registry dek subject list --name test",
+				Code: "confluent schema-registry dek subject list --kek-name test",
 			},
 		),
 	}
