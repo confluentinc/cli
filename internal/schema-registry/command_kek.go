@@ -1,8 +1,6 @@
 package schemaregistry
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -11,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/properties"
 )
 
 const (
-	kmsPropsFormatErrorMsg    = "incorrect `--kms-properties` format specified"
 	kmsPropsFormatSuggestions = "`--kms-properties` must be formatted as \"<key>=<value>\"."
 )
 
@@ -67,14 +65,9 @@ func constructKmsProps(cmd *cobra.Command) (map[string]string, error) {
 		return nil, err
 	}
 
-	kmsPropertiesMap := make(map[string]string)
-	for _, item := range kmsProperties {
-		pair := strings.Split(item, "=")
-		if len(pair) != 2 {
-			return nil, errors.NewErrorWithSuggestions(kmsPropsFormatErrorMsg, kmsPropsFormatSuggestions)
-		}
-		kmsPropertiesMap[pair[0]] = pair[1]
+	kmsPropertiesMap, err := properties.SlicesToMap(kmsProperties)
+	if err != nil {
+		return nil, errors.NewErrorWithSuggestions(err.Error(), kmsPropsFormatSuggestions)
 	}
-
 	return kmsPropertiesMap, nil
 }
