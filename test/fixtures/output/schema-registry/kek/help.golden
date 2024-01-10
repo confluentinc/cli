@@ -1,0 +1,19 @@
+Manage Schema Registry Key Encryption Keys (KEKs).
+
+Usage:
+  confluent schema-registry kek [command]
+
+Available Commands:
+  create      Create a Key Encryption Key (KEK).
+  delete      Delete one or more Key Encryption Keys (KEKs).
+  describe    Describe a Key Encryption Key (KEK).
+  list        List Key Encryption Keys (KEKs).
+  undelete    Undelete one or more Key Encryption Keys (KEKs).
+  update      Update a Key Encryption Key (KEK).
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent schema-registry kek [command] --help" for more information about a command.
