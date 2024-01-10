@@ -399,7 +399,7 @@ func (c *command) addRegionFlagNetwork(cmd *cobra.Command, command *pcmd.Authent
 
 		suggestions := make([]string, len(regions))
 		for i, region := range regions {
-			suggestions[i] = region.RegionId
+			suggestions[i] = region.GetRegionId()
 		}
 		return suggestions
 	})
