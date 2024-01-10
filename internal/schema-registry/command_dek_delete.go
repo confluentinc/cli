@@ -33,7 +33,6 @@ func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 		addCaLocationFlag(cmd)
 		addSchemaRegistryEndpointFlag(cmd)
 	}
-	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))

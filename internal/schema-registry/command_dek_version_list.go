@@ -31,6 +31,7 @@ func (c *command) newDekVersionListCommand(cfg *config.Config) *cobra.Command {
 
 	return cmd
 }
+
 func (c *command) dekVersionList(cmd *cobra.Command, args []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {

@@ -10,7 +10,6 @@ Flags:
       --version string       Version of the Data Encryption Key (DEK). When not specified, all versions of the Data Encryption Key (DEK) will be undeleted.
       --context string       CLI context name.
       --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
