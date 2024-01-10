@@ -1,0 +1,25 @@
+Create a Key Encryption Key (KEK).
+
+Usage:
+  confluent schema-registry kek create [flags]
+
+Examples:
+Create a KEK with a AWS KMS key:
+
+  $ confluent schema-registry kek create --name test --kms-type AWS_KMS --kms-key-id arn:aws:kms:us-west-2:037502941121:key/a1231e22-1n78-4l0d-9d50-9pww5faedb54 --kms-properties KeyUsage=ENCRYPT_DECRYPT,KeyState=Enabled
+
+Flags:
+      --kek-name string          REQUIRED: Name of the Key Encryption Key (KEK).
+      --kms-type string          REQUIRED: The type of Key Management Service (KMS), typically one of "AES128_GCM", "AES256_GCM", or "AES256_SIV". (default "aws-kms")
+      --kms-key-id string        REQUIRED: The key ID of the Key Management Service (KMS).
+      --kms-properties strings   A comma-separated list of additional properties (key=value) used to access the Key Management Service (KMS).
+      --doc string               An optional user-friendly description for the Key Encryption Key (KEK).
+      --shared                   If the DEK Registry has shared access to the Key Management Service (KMS).
+      --context string           CLI context name.
+      --environment string       Environment ID.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
