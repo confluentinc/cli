@@ -12,7 +12,7 @@ import (
 func (c *command) newKekDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
-		Short: "Delete one or more Key Encryption Key (KEK).",
+		Short: "Delete one or more Key Encryption Keys (KEKs).",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.kekDelete,
 	}

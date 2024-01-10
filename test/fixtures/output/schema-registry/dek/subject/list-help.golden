@@ -6,7 +6,7 @@ Usage:
 Examples:
 List subjects for the Data Encryption Key (DEK) created with a KEK named "test":
 
-  $ confluent schema-registry dek subject list --name test
+  $ confluent schema-registry dek subject list --kek-name test
 
 Flags:
       --kek-name string      REQUIRED: Name of the Key Encryption Key (KEK).

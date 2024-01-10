@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create a DEK with KEK "test", and subject "test-value":
 
-  $ confluent schema-registry dek create --name test --subject test-value --version 1
+  $ confluent schema-registry dek create --kek-name test --subject test-value --version 1
 
 Flags:
       --kek-name string                 REQUIRED: Name of the Key Encryption Key (KEK).
