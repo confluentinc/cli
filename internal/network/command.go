@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/network"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -101,6 +102,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newNetworkLinkCommand())
 	cmd.AddCommand(c.newPeeringCommand())
 	cmd.AddCommand(c.newPrivateLinkCommand())
+	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newTransitGatewayAttachmentCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 
@@ -380,4 +382,25 @@ func addAcceptedEnvironmentsFlag(cmd *cobra.Command, command *pcmd.Authenticated
 func (c *command) addNetworkLinkServiceFlag(cmd *cobra.Command) {
 	cmd.Flags().String("network-link-service", "", "Network link service ID.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
+}
+
+func (c *command) addRegionFlagNetwork(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().String("region", "", "Cloud region ID for this network.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		cloud, _ := cmd.Flags().GetString("cloud")
+		regions, err := network.ListRegions(command.Client, cloud)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.GetRegionId()
+		}
+		return suggestions
+	})
 }
