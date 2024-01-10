@@ -12,6 +12,7 @@ Available Commands:
   network-link               Manage network links.
   peering                    Manage peerings.
   private-link               Manage private links.
+  region                     Manage Confluent Cloud network regions.
   transit-gateway-attachment Manage transit gateway attachments.
   update                     Update an existing network.
 
