@@ -57,7 +57,7 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	}
 
 	if len(clusterListData.Data) < 1 {
-		return nil, "", errors.New("failed to obtain local cluster information")
+		return nil, "", fmt.Errorf("failed to obtain local cluster information")
 	}
 
 	return kafkaRestClient, clusterListData.Data[0].ClusterId, nil

@@ -100,16 +100,17 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 	var out *enableOut
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(clusterConfig)
 	if err != nil {
-		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+		existingClusters, getExistingErr := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 		if getExistingErr != nil {
-			// Propagate CreateSchemaRegistryCluster error.
+			return err
+		}
+		if len(existingClusters) == 0 {
 			return err
 		}
 
 		out = &enableOut{
-			Id:          existingCluster.GetId(),
-			EndpointUrl: existingCluster.Spec.GetHttpEndpoint(),
+			Id:          existingClusters[0].GetId(),
+			EndpointUrl: existingClusters[0].Spec.GetHttpEndpoint(),
 		}
 	} else {
 		out = &enableOut{
@@ -125,8 +126,10 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 
 func (c *command) validateLocation(location ccloudv1.GlobalSchemaRegistryLocation) error {
 	if location == ccloudv1.GlobalSchemaRegistryLocation_NONE {
-		return errors.NewErrorWithSuggestions(errors.InvalidSchemaRegistryLocationErrorMsg,
-			errors.InvalidSchemaRegistryLocationSuggestions)
+		return errors.NewErrorWithSuggestions(
+			"invalid input for flag `--geo`",
+			`Geo must be either "us", "eu", or "apac".`,
+		)
 	}
 	return nil
 }

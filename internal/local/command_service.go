@@ -82,7 +82,7 @@ func (c *command) runServiceLogCommand(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if !exists {
-		return errors.Errorf(errors.NoLogFoundErrorMsg, writeOfficialServiceName(service), service)
+		return fmt.Errorf("no log found: to run %s, use `confluent local services %s start`", writeOfficialServiceName(service), service)
 	}
 
 	log, err := c.cc.GetLogFile(service)
@@ -247,11 +247,15 @@ func (c *command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 		return err
 	}
 
-	output.Println(ver)
+	output.Println(c.Config.EnableColor, ver)
 	return nil
 }
 
 func (c *command) startService(service, configFile string) error {
+	if err := c.checkJavaVersion(service); err != nil {
+		return err
+	}
+
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -260,7 +264,7 @@ func (c *command) startService(service, configFile string) error {
 		return c.printStatus(service)
 	}
 
-	if err := c.checkService(service); err != nil {
+	if err := c.checkOSVersion(); err != nil {
 		return err
 	}
 
@@ -268,7 +272,7 @@ func (c *command) startService(service, configFile string) error {
 		return err
 	}
 
-	output.Printf(errors.StartingServiceMsg, writeServiceName(service))
+	output.Printf(c.Config.EnableColor, "Starting %s\n", writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -279,18 +283,6 @@ func (c *command) startService(service, configFile string) error {
 	}
 
 	return c.printStatus(service)
-}
-
-func (c *command) checkService(service string) error {
-	if err := c.checkOSVersion(); err != nil {
-		return err
-	}
-
-	if err := c.checkJavaVersion(service); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *command) configService(service, configFile string) error {
@@ -420,7 +412,7 @@ func (c *command) startProcess(service string) error {
 	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
+		return fmt.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
 	open := make(chan bool)
@@ -436,7 +428,7 @@ func (c *command) startProcess(service string) error {
 	case <-open:
 		break
 	case <-time.After(90 * time.Second):
-		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
+		return fmt.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
 
 	return nil
@@ -451,7 +443,7 @@ func (c *command) stopService(service string) error {
 		return c.printStatus(service)
 	}
 
-	output.Printf(errors.StoppingServiceMsg, writeServiceName(service))
+	output.Printf(c.Config.EnableColor, "Stopping %s\n", writeServiceName(service))
 
 	spin := spinner.New()
 	spin.Start()
@@ -556,7 +548,7 @@ func (c *command) killProcess(service string) error {
 	case err := <-errorsChan:
 		return err
 	case <-time.After(time.Second):
-		return errors.Errorf(errors.FailedToStopErrorMsg, writeServiceName(service))
+		return fmt.Errorf("%s failed to stop", writeServiceName(service))
 	}
 }
 
@@ -571,7 +563,7 @@ func (c *command) printStatus(service string) error {
 		status = color.GreenString("UP")
 	}
 
-	output.Printf(errors.ServiceStatusMsg, writeServiceName(service), status)
+	output.Printf(c.Config.EnableColor, "%s is [%s]\n", writeServiceName(service), status)
 	return nil
 }
 
@@ -677,7 +669,7 @@ func (c *command) checkOSVersion() error {
 		}
 
 		if v.Compare(required) < 0 {
-			return fmt.Errorf(errors.MacVersionErrorMsg, required.String(), osVersion)
+			return fmt.Errorf("macOS version >= %s is required (detected: %s)", required.String(), osVersion)
 		}
 	}
 	return nil
@@ -692,7 +684,7 @@ func (c *command) checkJavaVersion(service string) error {
 		}
 		java = strings.TrimSuffix(string(out), "\n")
 		if java == "java not found" {
-			return errors.New(errors.JavaExecNotFondErrorMsg)
+			return fmt.Errorf("could not find java executable, please install java or set JAVA_HOME")
 		}
 	}
 
@@ -709,7 +701,9 @@ func (c *command) checkJavaVersion(service string) error {
 		return err
 	}
 	if !isValid {
-		return errors.New(errors.JavaRequirementErrorMsg)
+		return fmt.Errorf("the Confluent CLI requires Java version 1.8 or 1.11.\n" +
+			"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
+			"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use.")
 	}
 
 	return nil

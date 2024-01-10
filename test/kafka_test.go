@@ -13,7 +13,7 @@ func (s *CLITestSuite) TestKafka() {
 	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
 	defer os.Remove(createBidirectionalLinkConfigFile)
 	tests := []CLITest{
-		{args: "environment use a-595", fixture: "kafka/0.golden"},
+		{args: "environment use env-596", fixture: "kafka/0.golden"},
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
 		{args: "kafka cluster list -o json", fixture: "kafka/7.golden"},
 		{args: "kafka cluster list -o yaml", fixture: "kafka/8.golden"},
@@ -23,7 +23,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
 		{args: "kafka cluster list --all", fixture: "kafka/47.golden"},
 
-		{args: "environment use a-595", fixture: "kafka/0.golden"},
+		{args: "environment use env-596", fixture: "kafka/0.golden"},
 		{args: "kafka cluster create", fixture: "kafka/1.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone", fixture: "kafka/2.golden"},
 		{args: "kafka cluster create my-failed-cluster --cloud oops --region us-east1 --availability single-zone", fixture: "kafka/cluster/create-cloud-provider-error.golden", exitCode: 1},
@@ -129,43 +129,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
 		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
-
-		// Cluster linking
-		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete link-1", input: "link-1\n", fixture: "kafka/link/delete-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete myLink_1", input: "myLink_1\n", fixture: "kafka/link/delete-link-no-prefix.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete link-1 link-2", input: "n\n", fixture: "kafka/link/delete-link-multiple-refuse.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete link-1 link-2", input: "y\n", fixture: "kafka/link/delete-link-multiple.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link delete link-1 link-2 link-dne", fixture: "kafka/link/delete-link-multiple-fail.golden", useKafka: "lkc-describe-topic", exitCode: 1},
-		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration-list-plain.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/configuration-list-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration-list-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-4", fixture: "kafka/link/configuration-list-plain-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o json", fixture: "kafka/link/configuration-list-bidirectional-link-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o yaml", fixture: "kafka/link/configuration-list-bidirectional-link-yaml.golden", useKafka: "lkc-describe-topic"},
-
-		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/list-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic", fixture: "kafka/mirror/list-all-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/list-all-mirror-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror list --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/list-all-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic", fixture: "kafka/mirror/describe-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/describe-mirror-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/describe-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror failover topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/failover-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror pause topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/pause-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/promote-mirror.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/promote-mirror-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/promote-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka mirror resume topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/resume-mirror.golden", useKafka: "lkc-describe-topic"},
 	}
 
 	if runtime.GOOS != "windows" {
@@ -196,17 +159,6 @@ func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 		login:   "cloud",
 		args:    "kafka cluster create cck-byok-test --cloud aws --region us-east-1 --type dedicated --cku 1 --byok cck-001",
 		fixture: "kafka/cluster/cck-byok.golden",
-	}
-
-	s.runIntegrationTest(test)
-}
-
-func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
-	test := CLITest{
-		login:   "cloud",
-		args:    "kafka cluster create gcp-byok-test --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --encryption-key xyz",
-		input:   "y\n",
-		fixture: "kafka/cluster/gcp-byok.golden",
 	}
 
 	s.runIntegrationTest(test)
@@ -309,15 +261,81 @@ func (s *CLITestSuite) TestKafkaBroker() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaPartition() {
-	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+func (s *CLITestSuite) TestKafkaLink() {
 	tests := []CLITest{
-		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list.golden"},
-		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partition/list-json.golden"},
-		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partition/list-yaml.golden"},
-		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partition/describe.golden"},
-		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partition/describe-json.golden"},
-		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partition/describe-yaml.golden"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration/list-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration/list.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o yaml", fixture: "kafka/link/configuration/list-bidirectional-link-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4", fixture: "kafka/link/configuration/list-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete link-1 link-2 link-dne", fixture: "kafka/link/delete-link-multiple-fail.golden", useKafka: "lkc-describe-topic", exitCode: 1},
+		{args: "kafka link delete link-1 link-2", input: "n\n", fixture: "kafka/link/delete-link-multiple-refuse.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete link-1 link-2", input: "y\n", fixture: "kafka/link/delete-link-multiple.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete link-1", input: "link-1\n", fixture: "kafka/link/delete-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete myLink_1", input: "myLink_1\n", fixture: "kafka/link/delete-link-no-prefix.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/link/describe-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaMirror() {
+	tests := []CLITest{
+		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/describe-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/describe-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic", fixture: "kafka/mirror/describe-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror failover topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/failover-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/list-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/list-all-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/list-all-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror list --cluster lkc-describe-topic", fixture: "kafka/mirror/list-all-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror pause topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/pause-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/promote-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/promote-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/promote-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror resume topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/resume-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror reverse-and-start topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/reverse-and-start-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror reverse-and-pause topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/reverse-and-pause-mirror.golden", useKafka: "lkc-describe-topic"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaPartition() {
+	tests := []CLITest{
+		{args: "kafka partition describe 0 --topic topic1 --cluster lkc-12345", fixture: "kafka/partition/describe.golden"},
+		{args: "kafka partition describe 0 --topic topic1 --cluster lkc-12345 -o json", fixture: "kafka/partition/describe-json.golden"},
+		{args: "kafka partition list --topic topic1 --cluster lkc-12345", fixture: "kafka/partition/list.golden"},
+		{args: "kafka partition list --topic topic1 --cluster lkc-12345 -o json", fixture: "kafka/partition/list-json.golden"},
+	}
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list-onprem.golden"},
+		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partition/list-json-onprem.golden"},
+		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partition/list-yaml-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partition/describe-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partition/describe-json-onprem.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partition/describe-yaml-onprem.golden"},
 		{args: "kafka partition reassignment list", fixture: "kafka/partition/reassignment/list.golden"},
 		{args: "kafka partition reassignment list -o json", fixture: "kafka/partition/reassignment/list-json.golden"},
 		{args: "kafka partition reassignment list --topic topic1", fixture: "kafka/partition/reassignment/list-by-topic.golden"},
@@ -381,11 +399,11 @@ func (s *CLITestSuite) TestKafkaTopicCreate() {
 		// --partitions errors
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions -2 --no-authentication", kafkaRestURL), exitCode: 1, name: "creating topic with negative partitions name should fail", fixture: "kafka/topic/create-negative-partitions.golden"},
 		// --replication-factor errors
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor 4 --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Replication factor: 4 larger than available brokers: 3. (40002)\n", exitCode: 1, name: "creating topic with larger replication factor than num. brokers should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor 4 --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Replication factor: 4 larger than available brokers: 3.\n", exitCode: 1, name: "creating topic with larger replication factor than num. brokers should fail"},
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor -2 --no-authentication", kafkaRestURL), exitCode: 1, name: "creating topic with negative replication factor should fail", fixture: "kafka/topic/create-negative-replication-factor.golden"},
 		// --config errors
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config asdf=1 --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Unknown topic config name: asdf (40002)\n", exitCode: 1, name: "creating topic with incorrect config name should fail"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=as --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Invalid value as for configuration retention.ms: Not a number of type LONG (40002)\n", exitCode: 1, name: "creating topic with correct key incorrect config value should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config asdf=1 --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Unknown topic config name: asdf\n", exitCode: 1, name: "creating topic with incorrect config name should fail"},
+		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=as --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Invalid value as for configuration retention.ms: Not a number of type LONG\n", exitCode: 1, name: "creating topic with correct key incorrect config value should fail"},
 		// Success
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/create-topic-success.golden", name: "correct URL with default params (part 6, repl 3, no configs) should create successfully"},
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions 7 --replication-factor 2 --config retention.ms=100000,compression.type=gzip --no-authentication", kafkaRestURL), fixture: "kafka/topic/create-topic-success.golden", name: "correct URL with valid optional params should create successfully"},
@@ -420,10 +438,10 @@ func (s *CLITestSuite) TestKafkaTopicUpdate() {
 	tests := []CLITest{
 		// Topic name errors
 		{args: fmt.Sprintf("kafka topic update --url %s --no-authentication", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", exitCode: 1, name: "missing topic-name should return error"},
-		{args: fmt.Sprintf("kafka topic update topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition. (40403)\n", exitCode: 1, name: "update config of a non-existent topic should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition.\n", exitCode: 1, name: "update config of a non-existent topic should fail"},
 		// --config errors
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config asdf=1 --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Config asdf cannot be found for TOPIC topic-exist in cluster cluster-1. (404)\n", exitCode: 1, name: "incorrect config name should fail"},
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=as --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Invalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value as for configuration retention.ms: Not a number of type LONG (40002)\n", exitCode: 1, name: "correct key incorrect config value should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config asdf=1 --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Config asdf cannot be found for TOPIC topic-exist in cluster cluster-1.\n", exitCode: 1, name: "incorrect config name should fail"},
+		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=as --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Invalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value as for configuration retention.ms: Not a number of type LONG\n", exitCode: 1, name: "correct key incorrect config value should fail"},
 		// Success cases
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-authentication", kafkaRestURL), fixture: "kafka/topic/update-topic-config-success", name: "valid config updates should succeed with configs printed sorted"},
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1000,retention.ms=1 --no-authentication", kafkaRestURL), fixture: "kafka/topic/update-topic-config-duplicate-success", name: "valid duplicate config should succeed with the later config value kept"},
@@ -441,7 +459,7 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 	tests := []CLITest{
 		// Topic name errors
 		{args: fmt.Sprintf("kafka topic describe --url %s --no-authentication", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", exitCode: 1, name: "<topic> arg missing should lead to error"},
-		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition. (40403)\n", exitCode: 1, name: "describing a non-existent topic should lead to error"},
+		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition.\n", exitCode: 1, name: "describing a non-existent topic should lead to error"},
 		// Success cases
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exists & correct format arg should lead to success"},
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o human --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exist & human arg should lead to success"},
@@ -511,8 +529,91 @@ func (s *CLITestSuite) TestKafkaQuota() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaConsumer() {
+	tests := []CLITest{
+		{args: "kafka consumer list --group consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/list.golden"},
+		{args: "kafka consumer list --group consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	test := CLITest{
+		login:   "onprem",
+		env:     []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()},
+		args:    "kafka consumer list --group consumer-group-1",
+		fixture: "kafka/consumer/list-onprem.golden",
+	}
+
+	s.runIntegrationTest(test)
+}
+
+func (s *CLITestSuite) TestKafkaConsumerGroup() {
+	tests := []CLITest{
+		{args: "kafka consumer group list --cluster lkc-1234", fixture: "kafka/consumer/group/list.golden"},
+		{args: "kafka consumer group list --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/list-json.golden"},
+		{args: "kafka consumer group describe consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/describe.golden"},
+		{args: "kafka consumer group describe consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/describe-json.golden"},
+		{args: "kafka consumer group describe consumer-group-1234 --cluster lkc-1234", fixture: "kafka/consumer/group/describe-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka consumer group list", fixture: "kafka/consumer/group/list-onprem.golden"},
+		{args: "kafka consumer group describe consumer-group-1", fixture: "kafka/consumer/group/describe-onprem.golden"},
+		{args: "kafka consumer group describe consumer-group-1234", fixture: "kafka/consumer/group/describe-onprem-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaConsumerGroupLag() {
+	tests := []CLITest{
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe.golden"},
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer/group/lag/describe-json.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/list.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/list-json.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/summarize.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/summarize-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka consumer group lag describe consumer-group-1 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe-onprem.golden"},
+		{args: "kafka consumer group lag list consumer-group-1", fixture: "kafka/consumer/group/lag/list-onprem.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1", fixture: "kafka/consumer/group/lag/summarize-onprem.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
+		{args: `__complete kafka consumer list --cluster lkc-1234 --group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
+		{args: `__complete kafka consumer group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/autocomplete.golden"},
+		{args: `__complete kafka consumer group lag describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/describe-autocomplete.golden"},
+		{args: `__complete kafka consumer group lag list --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/list-autocomplete.golden"},
+		{args: `__complete kafka consumer group lag summarize --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/summarize-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
@@ -526,4 +627,14 @@ func (s *CLITestSuite) TestKafka_Autocomplete() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
+
+func (s *CLITestSuite) TestKafkaClusterCreate_Network() {
+	test := CLITest{
+		login:   "cloud",
+		args:    "kafka cluster create cck-network-test --cloud aws --region us-east-1 --type dedicated --cku 1 --network n-abcde1",
+		fixture: "kafka/cluster/cck-network.golden",
+	}
+
+	s.runIntegrationTest(test)
 }

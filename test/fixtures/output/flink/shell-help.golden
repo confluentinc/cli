@@ -5,13 +5,11 @@ Usage:
 
 Flags:
       --compute-pool string      Flink compute pool ID.
-      --identity-pool string     Identity pool ID (deprecated).
       --service-account string   Service account ID.
+      --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
       --environment string       Environment ID.
-      --database string          The database which will be used as default database. When using Kafka, this is the cluster display name.
       --context string           CLI context name.
-  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
-      --fake-gateway             Test the SQL client with fake gateway data.
+      --language-service         Enables the Flink language service integration (experimental).
 
 Global Flags:
   -h, --help            Show help for this command.

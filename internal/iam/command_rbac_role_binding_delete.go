@@ -29,7 +29,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka cluster "lkc-123456":`,
-				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster lkc-123456 --resource Topic:my-topic",
+				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-123456 --kafka-cluster lkc-123456 --resource Topic:my-topic",
 			},
 		)
 	}
@@ -37,7 +37,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	pcmd.AddForceFlag(cmd)
-	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+	addClusterFlags(cmd, c.cfg, c.CLICommand)
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
@@ -73,7 +73,10 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		}
 
 		if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(httpStatusCodeErrorMsg, httpResp.StatusCode),
+				httpStatusCodeSuggestions,
+			)
 		}
 
 		return displayCreateAndDeleteOutput(cmd, options)
@@ -90,14 +93,20 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern()
 	})
 	if idx == -1 {
-		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(
+			"failed to look up matching role binding",
+			"To list role bindings, use `confluent iam rbac role-binding list`.",
+		)
 	}
 
 	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
 		return err
 	}
 
-	_, err = c.V2Client.DeleteIamRoleBinding(roleBindings[idx].GetId())
+	id := roleBindings[idx].GetId()
+	deleteRoleBinding.SetId(id)
+
+	_, err = c.V2Client.DeleteIamRoleBinding(id)
 	return err
 }
 

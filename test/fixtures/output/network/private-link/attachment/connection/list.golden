@@ -1,0 +1,5 @@
+       ID       |     Name     | Cloud | Private Link Attachment ID |    Phase     |  AWS VPC Endpoint ID   |              AWS VPC Endpoint Service Name               
+----------------+--------------+-------+----------------------------+--------------+------------------------+----------------------------------------------------------
+  plattc-111111 | aws-plattc-1 | AWS   | platt-111111               | PROVISIONING | vpce-01234567890abcdef |                                                          
+  plattc-111112 | aws-plattc-2 | AWS   | platt-111111               | READY        | vpce-01234567890abcdef | com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef  
+  plattc-111113 | aws-plattc-3 | AWS   | platt-111111               | READY        | vpce-01234567890abcdef | com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef  

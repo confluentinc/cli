@@ -34,18 +34,16 @@ type errorMessage struct {
 	Message   string `json:"message" yaml:"message"`
 }
 
-func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Response) error {
+func HandleMdsAuditLogApiError(err error, response *http.Response) error {
 	if response != nil {
 		switch status := response.StatusCode; status {
 		case http.StatusNotFound:
-			cmd.SilenceUsage = true
-			return errors.NewWrapErrorWithSuggestions(err, errors.UnableToAccessEndpointErrorMsg, errors.UnableToAccessEndpointSuggestions)
+			return errors.NewWrapErrorWithSuggestions(err, "unable to access endpoint", errors.EnsureCpSixPlusSuggestions)
 		case http.StatusForbidden:
 			switch e := err.(type) {
 			case mdsv1.GenericOpenAPIError:
-				cmd.SilenceUsage = true
-				em := errorMessage{}
-				if err = json.Unmarshal(e.Body(), &em); err != nil {
+				em := &errorMessage{}
+				if err := json.Unmarshal(e.Body(), em); err != nil {
 					return err
 				}
 				return fmt.Errorf("%s\n%s", e.Error(), em.Message)

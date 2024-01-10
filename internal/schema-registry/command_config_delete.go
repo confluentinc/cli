@@ -50,7 +50,7 @@ func (c *command) newConfigDeleteCommand(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func (c *command) configDelete(cmd *cobra.Command, args []string) error {
+func (c *command) configDelete(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output.Printf("Deleted %s.\n", resource.SchemaRegistryConfiguration)
+	output.Printf(c.Config.EnableColor, "Deleted %s.\n", resource.SchemaRegistryConfiguration)
 	out := &configOut{}
 	if err := json.Unmarshal([]byte(outStr), out); err != nil {
 		return err

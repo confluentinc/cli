@@ -19,8 +19,12 @@ import (
 // This code is adapted from https://github.com/spf13/cobra/blob/master/doc/rest_docs.md
 
 func main() {
-	// Prevent printing the user's HOME in docs when generating confluent local services kafka
-	currentHOME := os.Getenv("HOME")
+	// Prevent printing the user's $HOME in docs when generating confluent local services kafka
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+
 	if err := os.Setenv("HOME", "$HOME"); err != nil {
 		panic(err)
 	}
@@ -50,19 +54,12 @@ func main() {
 		panic(err)
 	}
 
-	removeUnreleasedDocs()
-
-	if err := os.Setenv("HOME", currentHOME); err != nil {
+	if err := os.Setenv("HOME", home); err != nil {
 		panic(err)
 	}
 }
 
-// removeUnreleasedDocs hides documentation for unreleased features
-func removeUnreleasedDocs() {
-	removeUnreleasedCommands("iam group-mapping")
-}
-
-func removeUnreleasedCommands(command string) {
+func removeUnreleasedCommands(command string) { //nolint:unused
 	subcommands := strings.Split(command, " ")
 
 	line := fmt.Sprintf(`\s{3}%s/index\n`, subcommands[len(subcommands)-1])
@@ -89,7 +86,7 @@ func removeUnreleasedCommands(command string) {
 	}
 }
 
-func removeLineFromFile(line, file string) error {
+func removeLineFromFile(line, file string) error { //nolint:unused
 	out, err := os.ReadFile(file)
 	if err != nil {
 		return err

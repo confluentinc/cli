@@ -12,7 +12,7 @@ import (
 const (
 	dockerImageName             = "confluentinc/confluent-local:latest"
 	localhostPrefix             = "http://localhost:%s"
-	localhost                   = "localhost"
+	localhost                   = "0.0.0.0"
 	kafkaRestNotReadySuggestion = "Kafka REST connection is not ready. Re-running the command may solve the issue."
 )
 
@@ -37,9 +37,11 @@ func getShortenedContainerId(id string) string {
 }
 
 func checkIsDockerRunning(dockerClient *client.Client) error {
-	_, err := dockerClient.Info(context.Background())
-	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.InstallAndStartDockerSuggestion)
+	if _, err := dockerClient.Info(context.Background()); err != nil {
+		return errors.NewErrorWithSuggestions(
+			err.Error(),
+			"Make sure Docker has been installed following the guide at https://docs.docker.com/engine/install/ and is running.",
+		)
 	}
 
 	return nil

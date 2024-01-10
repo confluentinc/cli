@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -74,7 +75,7 @@ func (c *command) clusterUpdate(cmd *cobra.Command, _ []string) error {
 		return c.updateTopLevelMode(cmd, mode)
 	}
 
-	return errors.New(errors.CompatibilityOrModeErrorMsg)
+	return fmt.Errorf(errors.CompatibilityOrModeErrorMsg)
 }
 
 func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
@@ -93,7 +94,7 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf("Successfully updated top-level compatibility to \"%s\".\n", req.Compatibility)
+	output.Printf(c.Config.EnableColor, "Successfully updated top-level compatibility to \"%s\".\n", req.GetCompatibility())
 	return nil
 }
 
@@ -109,8 +110,8 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 	}
 
 	req := srsdk.ConfigUpdateRequest{
-		Compatibility:      strings.ToUpper(compatibility),
-		CompatibilityGroup: compatibilityGroup,
+		Compatibility:      srsdk.PtrString(strings.ToUpper(compatibility)),
+		CompatibilityGroup: srsdk.PtrString(compatibilityGroup),
 	}
 
 	metadataDefaults, err := cmd.Flags().GetString("metadata-defaults")
@@ -118,8 +119,7 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if metadataDefaults != "" {
-		req.DefaultMetadata = new(srsdk.Metadata)
-		if err := read(metadataDefaults, req.DefaultMetadata); err != nil {
+		if err := read(metadataDefaults, &req.DefaultMetadata); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
 	}
@@ -129,8 +129,7 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if metadataOverrides != "" {
-		req.OverrideMetadata = new(srsdk.Metadata)
-		if err := read(metadataOverrides, req.OverrideMetadata); err != nil {
+		if err := read(metadataOverrides, &req.OverrideMetadata); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
 	}
@@ -140,8 +139,7 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if rulesetDefaults != "" {
-		req.DefaultRuleSet = new(srsdk.RuleSet)
-		if err := read(rulesetDefaults, req.DefaultRuleSet); err != nil {
+		if err := read(rulesetDefaults, &req.DefaultRuleSet); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
 	}
@@ -151,8 +149,7 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if rulesetOverrides != "" {
-		req.OverrideRuleSet = new(srsdk.RuleSet)
-		if err := read(rulesetOverrides, req.OverrideRuleSet); err != nil {
+		if err := read(rulesetOverrides, &req.OverrideRuleSet); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
 	}
@@ -166,13 +163,13 @@ func (c *command) updateTopLevelMode(cmd *cobra.Command, mode string) error {
 		return err
 	}
 
-	req := srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)}
+	req := srsdk.ModeUpdateRequest{Mode: srsdk.PtrString(strings.ToUpper(mode))}
 
 	req, err = client.UpdateTopLevelMode(req)
 	if err != nil {
 		return err
 	}
 
-	output.Printf("Successfully updated top-level mode to \"%s\".\n", req.Mode)
+	output.Printf(c.Config.EnableColor, "Successfully updated top-level mode to \"%s\".\n", req.GetMode())
 	return nil
 }

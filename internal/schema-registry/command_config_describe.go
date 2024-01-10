@@ -58,7 +58,7 @@ func (c *command) newConfigDescribeCommand(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) configDescribe(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
@@ -83,11 +83,11 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	out := &configOut{
-		CompatibilityLevel: config.CompatibilityLevel,
-		CompatibilityGroup: config.CompatibilityGroup,
+		CompatibilityLevel: config.GetCompatibilityLevel(),
+		CompatibilityGroup: config.GetCompatibilityGroup(),
 	}
 
-	if config.DefaultMetadata != nil {
+	if config.DefaultMetadata.IsSet() {
 		defaultMetadata, err := json.Marshal(config.DefaultMetadata)
 		if err != nil {
 			return err
@@ -95,7 +95,7 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 		out.MetadataDefaults = prettyJson(defaultMetadata)
 	}
 
-	if config.OverrideMetadata != nil {
+	if config.OverrideMetadata.IsSet() {
 		overrideMetadata, err := json.Marshal(config.OverrideMetadata)
 		if err != nil {
 			return err
@@ -103,7 +103,7 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 		out.MetadataOverrides = prettyJson(overrideMetadata)
 	}
 
-	if config.DefaultRuleSet != nil {
+	if config.DefaultRuleSet.IsSet() {
 		defaultRuleset, err := json.Marshal(config.DefaultRuleSet)
 		if err != nil {
 			return err
@@ -111,7 +111,7 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 		out.RulesetDefaults = prettyJson(defaultRuleset)
 	}
 
-	if config.OverrideRuleSet != nil {
+	if config.OverrideRuleSet.IsSet() {
 		overrideRuleset, err := json.Marshal(config.OverrideRuleSet)
 		if err != nil {
 			return err

@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -175,7 +174,8 @@ func (c *command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 		serviceNames[i] = writeServiceName(service)
 	}
 
-	output.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+	output.Println(c.Config.EnableColor, "Available Services:")
+	output.Println(c.Config.EnableColor, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -235,7 +235,7 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *command) runServicesStatusCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServicesStatusCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -278,7 +278,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *command) runServicesStopCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServicesStopCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -335,7 +335,7 @@ func (c *command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	}
 
 	if len(pids) == 0 {
-		return errors.New(errors.NoServicesRunningErrorMsg)
+		return fmt.Errorf("no services running")
 	}
 
 	return top(pids)
@@ -441,7 +441,7 @@ func top(pids []int) error {
 		}
 		top = exec.Command("top", "-p", strings.Join(args, ","))
 	default:
-		return errors.Errorf(errors.TopNotAvailableErrorMsg, runtime.GOOS)
+		return fmt.Errorf("`top` command not available on platform: %s", runtime.GOOS)
 	}
 
 	top.Stdin = os.Stdin
@@ -470,6 +470,6 @@ func (c *command) notifyConfluentCurrent() error {
 		return err
 	}
 
-	output.Printf(errors.UsingConfluentCurrentMsg, dir)
+	output.Printf(c.Config.EnableColor, "Using CONFLUENT_CURRENT: %s\n", dir)
 	return nil
 }

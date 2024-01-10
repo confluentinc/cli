@@ -1,7 +1,8 @@
 package kafka
 
 import (
-	_nethttp "net/http"
+	"fmt"
+	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 )
 
@@ -41,21 +41,21 @@ func toCreateTopicConfigsOnPrem(topicConfigsMap map[string]string) []cpkafkarest
 	return topicConfigs
 }
 
-func toAlterConfigBatchRequestData(configsMap map[string]string) cckafkarestv3.AlterConfigBatchRequestData {
-	kafkaRestConfigs := make([]cckafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
+func toAlterConfigBatchRequestData(configsMap map[string]string) []cckafkarestv3.AlterConfigBatchRequestDataData {
+	configs := make([]cckafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
 	for key, val := range configsMap {
-		v := val
-		kafkaRestConfigs[i] = cckafkarestv3.AlterConfigBatchRequestDataData{
+		val := val
+		configs[i] = cckafkarestv3.AlterConfigBatchRequestDataData{
 			Name:  key,
-			Value: *cckafkarestv3.NewNullableString(&v),
+			Value: *cckafkarestv3.NewNullableString(&val),
 		}
 		i++
 	}
-	return cckafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
+	return configs
 }
 
-func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
+func handleOpenApiError(httpResp *http.Response, err error, client *cpkafkarestv3.APIClient) error {
 	if err == nil {
 		return nil
 	}
@@ -69,13 +69,13 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 
 func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
-		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
+		return fmt.Errorf("your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes")
 	}
 	if isExpanding(currentCluster) {
-		return errors.New(errors.KafkaClusterExpandingErrorMsg)
+		return fmt.Errorf("your cluster is expanding; please wait for that operation to complete before updating again")
 	}
 	if isShrinking(currentCluster) {
-		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
+		return fmt.Errorf("your cluster is shrinking; please wait for that operation to complete before updating again")
 	}
 	return nil
 }
@@ -168,6 +168,6 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 	return cluster.Status.Phase
 }
 
-func topicNameStrategy(topic string) string {
-	return topic + "-value"
+func topicNameStrategy(topic, mode string) string {
+	return fmt.Sprintf("%s-%s", topic, mode)
 }

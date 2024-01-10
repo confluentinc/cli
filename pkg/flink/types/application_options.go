@@ -1,7 +1,7 @@
 package types
 
 import (
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
 type ApplicationOptions struct {
@@ -9,13 +9,14 @@ type ApplicationOptions struct {
 	UserAgent        string
 	EnvironmentId    string
 	EnvironmentName  string
-	OrgResourceId    string
+	OrganizationId   string
 	Database         string
 	ComputePoolId    string
-	IdentityPoolId   string
 	ServiceAccountId string
 	Verbose          bool
-	Context          *dynamicconfig.DynamicContext
+	LSPBaseUrl       string
+	LSPEnabled       bool
+	Context          *config.Context
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
@@ -46,9 +47,9 @@ func (a *ApplicationOptions) GetEnvironmentName() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetOrgResourceId() string {
+func (a *ApplicationOptions) GetOrganizationId() string {
 	if a != nil {
-		return a.OrgResourceId
+		return a.OrganizationId
 	}
 	return ""
 }
@@ -67,13 +68,6 @@ func (a *ApplicationOptions) GetComputePoolId() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetIdentityPoolId() string {
-	if a != nil {
-		return a.IdentityPoolId
-	}
-	return ""
-}
-
 func (a *ApplicationOptions) GetServiceAccountId() string {
 	if a != nil {
 		return a.ServiceAccountId
@@ -88,9 +82,16 @@ func (a *ApplicationOptions) GetVerbose() bool {
 	return false
 }
 
-func (a *ApplicationOptions) GetContext() *dynamicconfig.DynamicContext {
+func (a *ApplicationOptions) GetContext() *config.Context {
 	if a != nil {
 		return a.Context
 	}
 	return nil
+}
+
+func (a *ApplicationOptions) GetLSPBaseUrl() string {
+	if a != nil {
+		return a.LSPBaseUrl
+	}
+	return ""
 }

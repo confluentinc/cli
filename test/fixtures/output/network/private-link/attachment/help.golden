@@ -1,0 +1,19 @@
+Manage private link attachments.
+
+Usage:
+  confluent network private-link attachment [command]
+
+Available Commands:
+  connection  Manage private link attachment connections.
+  create      Create a private link attachment.
+  delete      Delete one or more private link attachments.
+  describe    Describe a private link attachment.
+  list        List private link attachments.
+  update      Update an existing private link attachment.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network private-link attachment [command] --help" for more information about a command.

@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-GORELEASER_VERSION := v1.17.2
+GORELEASER_VERSION := v1.21.2
 
 # Compile natively based on the current system
 .PHONY: build 
@@ -67,7 +67,7 @@ lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.1 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2 && \
 	golangci-lint run --timeout 10m
 	@echo "✅  golangci-lint"
 
@@ -86,9 +86,9 @@ cmd/lint/en_US.dic:
 unit-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
-	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
+	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
 else
-	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
+	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: build-for-integration-test
@@ -99,17 +99,24 @@ else
 	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
 
+.PHONY: build-for-integration-test-windows
+build-for-integration-test-windows:
+ifdef CI
+	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+else
+	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+endif
+
 .PHONY: integration-test
 integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
 	export GOCOVERDIR=test/coverage && \
-	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
-	mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
+	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
+	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
-	go test -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
+	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
 endif
 
 .PHONY: test

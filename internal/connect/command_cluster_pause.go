@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
@@ -8,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -34,8 +37,8 @@ func (c *clusterCommand) newPauseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+func (c *clusterCommand) pause(_ *cobra.Command, args []string) error {
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -58,14 +61,14 @@ func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 	for _, id := range args {
 		connector, ok := connectorsById[id]
 		if !ok {
-			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
+			return fmt.Errorf(errors.UnknownConnectorIdErrorMsg, id)
 		}
 
 		if err := c.V2Client.PauseConnector(connector.Info.GetName(), environmentId, kafkaCluster.ID); err != nil {
 			return err
 		}
 
-		output.Printf(errors.PausedConnectorMsg, id)
+		output.Printf(c.Config.EnableColor, "Paused connector \"%s\".\n", id)
 	}
 
 	return nil

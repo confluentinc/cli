@@ -8,11 +8,11 @@ Ruleset:
 {
   "domainRules": [
     {
-      "name": "checkSsnLen",
+      "expr": "size(message.ssn) == 9",
       "kind": "CONDITION",
       "mode": "WRITE",
-      "type": "CEL",
-      "expr": "size(message.ssn) == 9"
+      "name": "checkSsnLen",
+      "type": "CEL"
     }
   ]
 }

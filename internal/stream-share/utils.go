@@ -54,7 +54,7 @@ func confirmOptOut() (bool, error) {
 		},
 	)
 	if err := f.Prompt(form.NewPrompt()); err != nil {
-		return false, errors.New(errors.FailedToReadInputErrorMsg)
+		return false, fmt.Errorf(errors.FailedToReadInputErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
 }

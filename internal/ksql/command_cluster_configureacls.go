@@ -13,6 +13,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
@@ -24,6 +26,12 @@ func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.configureACLs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Configure ACLs for ksqlDB cluster "lksqlc-12345" for topics "topic_1" and "topic_2":`,
+				Code: "confluent ksql cluster configure-acls lksqlc-12345 topic_1 topic_2",
+			},
+		),
 	}
 
 	pcmd.AddDryRunFlag(cmd)
@@ -47,18 +55,19 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
 
 	if ksqlCluster.Spec.KafkaCluster.GetId() != kafkaCluster.ID {
-		output.ErrPrintf(errors.KsqlDBNotBackedByKafkaMsg, args[0], ksqlCluster.Spec.KafkaCluster.GetId(), kafkaCluster.ID, ksqlCluster.Spec.KafkaCluster.GetId())
+		output.ErrPrintf(c.Config.EnableColor, "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\n", args[0], ksqlCluster.Spec.KafkaCluster.GetId(), kafkaCluster.ID)
+		output.ErrPrintf(c.Config.EnableColor, "To switch to the correct cluster, use `confluent kafka cluster use %s`.\n", ksqlCluster.Spec.KafkaCluster.GetId())
 	}
 
 	credentialIdentity := ksqlCluster.Spec.CredentialIdentity.GetId()
 	if resource.LookupType(credentialIdentity) != resource.ServiceAccount {
-		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, args[0])
+		return fmt.Errorf(errors.KsqldbNoServiceAccountErrorMsg, args[0])
 	}
 
 	serviceAccountId, err := c.getServiceAccount(&ksqlCluster)
@@ -101,7 +110,7 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (stri
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.GetId())
+	return "", fmt.Errorf(errors.KsqldbNoServiceAccountErrorMsg, cluster.GetId())
 }
 
 func buildACLBindings(serviceAccountId string, cluster *ksqlv2.KsqldbcmV2Cluster, topics []string) []*ccstructs.ACLBinding {

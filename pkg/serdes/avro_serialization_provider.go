@@ -1,6 +1,7 @@
 package serdes
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/linkedin/goavro/v2"
@@ -14,7 +15,7 @@ type AvroSerializationProvider struct {
 
 func (a *AvroSerializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
 	if len(referencePathMap) > 0 {
-		return errors.New(errors.AvroReferenceNotSupportedErrorMsg)
+		return fmt.Errorf(errors.AvroReferenceNotSupportedErrorMsg)
 	}
 
 	schema, err := os.ReadFile(schemaPath)
@@ -31,7 +32,7 @@ func (a *AvroSerializationProvider) LoadSchema(schemaPath string, referencePathM
 }
 
 func (a *AvroSerializationProvider) GetSchemaName() string {
-	return AvroSchemaBackendName
+	return avroSchemaBackendName
 }
 
 func (a *AvroSerializationProvider) Serialize(str string) ([]byte, error) {

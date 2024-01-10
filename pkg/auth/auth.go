@@ -43,7 +43,7 @@ func GetEnvWithFallback(current, deprecated string) string {
 	}
 
 	if val := os.Getenv(deprecated); val != "" {
-		output.ErrPrintf(errors.DeprecatedEnvVarWarningMsg, deprecated, current)
+		output.ErrPrintf(false, errors.DeprecatedEnvVarWarningMsg, deprecated, current)
 		return val
 	}
 
@@ -107,9 +107,9 @@ func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Cl
 	return ctx.CurrentEnvironment, user.GetOrganization(), nil
 }
 
-func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, orgResourceId string, save bool) error {
+func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, organizationId string, save bool) error {
 	platform := &config.Platform{
-		Name:       strings.TrimPrefix(url, "https://"),
+		Name:       strings.TrimSuffix(strings.TrimPrefix(url, "https://"), "/"),
 		Server:     url,
 		CaCertPath: caCertPath,
 	}
@@ -165,9 +165,9 @@ func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentia
 
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
-		ctx.LastOrgId = orgResourceId
+		ctx.LastOrgId = organizationId
 	} else {
-		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, orgResourceId, ""); err != nil {
+		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, organizationId, ""); err != nil {
 			return err
 		}
 	}
@@ -203,19 +203,19 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-func GetDataplaneToken(authenticatedState *config.ContextState, server string) (string, error) {
-	endpoint := strings.Trim(server, "/") + "/api/access_tokens"
+func GetDataplaneToken(ctx *config.Context) (string, error) {
+	endpoint := strings.Trim(ctx.GetPlatformServer(), "/") + "/api/access_tokens"
 
 	res := &struct {
 		Token string `json:"token"`
 		Error string `json:"error"`
 	}{}
 
-	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+authenticatedState.AuthToken).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
+	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
 		return "", err
 	}
 	if res.Error != "" {
-		return "", errors.New(res.Error)
+		return "", fmt.Errorf(res.Error)
 	}
 	return res.Token, nil
 }

@@ -3,6 +3,7 @@ package serdes
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/xeipuuv/gojsonschema"
@@ -24,7 +25,7 @@ func (j *JsonSerializationProvider) LoadSchema(schemaPath string, referencePathM
 }
 
 func (j *JsonSerializationProvider) GetSchemaName() string {
-	return JsonSchemaBackendName
+	return jsonSchemaBackendName
 }
 
 func (j *JsonSerializationProvider) Serialize(str string) ([]byte, error) {
@@ -37,7 +38,7 @@ func (j *JsonSerializationProvider) Serialize(str string) ([]byte, error) {
 	}
 
 	if !result.Valid() {
-		return nil, errors.New(errors.JsonDocumentInvalidErrorMsg)
+		return nil, fmt.Errorf(errors.JsonDocumentInvalidErrorMsg)
 	}
 
 	data := []byte(str)
@@ -65,7 +66,7 @@ func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojson
 
 	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
-		return nil, errors.New(errors.JsonSchemaInvalidErrorMsg)
+		return nil, fmt.Errorf("the JSON schema is invalid")
 	}
 
 	return sl.Compile(gojsonschema.NewStringLoader(string(schema)))

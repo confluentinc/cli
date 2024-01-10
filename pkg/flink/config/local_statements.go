@@ -2,21 +2,24 @@ package config
 
 const (
 	// ops
-	ConfigOpSet               = "SET"
-	ConfigOpUse               = "USE"
-	ConfigOpReset             = "RESET"
-	ConfigOpExit              = "EXIT"
-	ConfigOpUseCatalog        = "CATALOG"
-	ConfigStatementTerminator = ";"
+	OpSet               = "SET"
+	OpUse               = "USE"
+	OpReset             = "RESET"
+	OpExit              = "EXIT"
+	OpUseCatalog        = "CATALOG"
+	StatementTerminator = ";"
 
 	// config namespaces
-	ConfigNamespaceSql    = "sql."
-	ConfigNamespaceClient = "client."
+	NamespaceClient = "client."
 
 	// keys
-	ConfigKeyCatalog        = "sql.current-catalog"
-	ConfigKeyDatabase       = "sql.current-database"
-	ConfigKeyLocalTimeZone  = "sql.local-time-zone"
-	ConfigKeyResultsTimeout = "client.results-timeout"
-	ConfigKeyServiceAcount  = "client.service-account"
+	KeyCatalog        = "sql.current-catalog"
+	KeyDatabase       = "sql.current-database"
+	KeyLocalTimeZone  = "sql.local-time-zone"
+	KeyOpenaiSecret   = "sql.secrets.openai"
+	KeyResultsTimeout = "client.results-timeout"
+	KeyServiceAccount = "client.service-account"
+	KeyStatementName  = "client.statement-name"
 )
+
+var SensitiveKeys = []string{KeyOpenaiSecret}

@@ -177,7 +177,7 @@ update-muckrake:
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-ubuntu.sh && \
 	git commit -am "bump cli to v$${version}" && \
 	$(call dry-run,git push -u origin $$branch) && \
-	if ! gh pr view $$branch; then \
+	if gh pr view $$branch --json state --jq .state | grep "no pull requests found|MERGED"; then \
 		$(call dry-run,gh pr create --base $${base} --title "Bump CLI to v$${version}" --body "") && \
 		$(call dry-run,gh pr merge --squash --auto); \
 	fi
@@ -204,7 +204,7 @@ update-packaging:
 	$(SED) -i "s|CLI_VERSION=.*|CLI_VERSION=$${version}|" release_testing/bin/smoke_test.sh && \
 	git commit -am "bump cli to v$${version}" && \
 	$(call dry-run,git push -u origin $$branch) && \
-	if ! gh pr view $$branch; then \
+	if gh pr view $$branch --json state --jq .state | grep "no pull requests found|MERGED"; then \
 		$(call dry-run,gh pr create --base $${base} --title "Bump CLI to v$${version}" --body "") && \
 		$(call dry-run,gh pr merge --squash --auto); \
 	fi

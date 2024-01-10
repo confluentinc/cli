@@ -55,7 +55,7 @@ There are four ways to create errors for the CLI.
 
 1. All basic errors will fall under this category. Use one of the error intializing functions in the errors package (errors.New, errors.Errorf, errors.Wrap, errors.Wrapf), with an error message defined in [error_message.go](error_message.go). The name of the variable must end with *ErrorMsg*.
 ```
-errors.Errorf(errors.AuthorizeAccountsErrorMsg, accountsStr)
+fmt.Errorf(errors.AuthorizeAccountsErrorMsg, accountsStr)
 ```
 2. For errors with suggestions, define the error message, and suggestions message next to each other in [error_message.go](error_message.go). The messages must have the same name with different ending following the naming convention (i.e. *ErrorMsg* and *Suggestions*). Then either `errors.NewErrorWithSuggestion` or `errors.NewWrapErrorWithSuggestion` is used to initialize the error.
 

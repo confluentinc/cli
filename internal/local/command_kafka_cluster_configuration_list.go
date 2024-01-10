@@ -18,7 +18,7 @@ func (c *command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List local Kafka cluster configurations.",
 		Args:  cobra.NoArgs,
-		RunE:  c.configurationDescribe,
+		RunE:  c.configurationList,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List configuration values for the Kafka cluster.",
@@ -33,7 +33,7 @@ func (c *command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) configurationDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) configurationList(cmd *cobra.Command, _ []string) error {
 	configName, err := cmd.Flags().GetString("config-name")
 	if err != nil {
 		return err
@@ -48,15 +48,15 @@ func (c *command) configurationDescribe(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	data := broker.ParseClusterConfigData(clusterConfig)
+	configs := broker.ParseClusterConfigData(clusterConfig)
 
 	list := output.NewList(cmd)
-	for _, entry := range data {
+	for _, config := range configs {
 		if output.GetFormat(cmd) == output.Human {
-			entry.Name = utils.Abbreviate(entry.Name, broker.AbbreviationLength)
-			entry.Value = utils.Abbreviate(entry.Value, broker.AbbreviationLength)
+			config.Name = utils.Abbreviate(config.Name, broker.AbbreviationLength)
+			config.Value = utils.Abbreviate(config.Value, broker.AbbreviationLength)
 		}
-		list.Add(entry)
+		list.Add(config)
 	}
 	return list.Print()
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-const ValidACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
+const validACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -77,7 +77,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 		if len(aclDataList.Data) == 0 {
-			return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", ValidACLSuggestion)
+			return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", validACLSuggestion)
 		}
 		count += len(aclDataList.Data)
 	}
@@ -95,7 +95,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(filter)
 		if err != nil {
 			if i > 0 {
-				output.ErrPrintln(printAclsDeleted(count))
+				output.ErrPrintln(c.Config.EnableColor, printAclsDeleted(count))
 			}
 			return err
 		}
@@ -103,7 +103,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(deleteResp.Data)
 	}
 
-	output.ErrPrintln(printAclsDeleted(count))
+	output.ErrPrintln(c.Config.EnableColor, printAclsDeleted(count))
 	return nil
 }
 

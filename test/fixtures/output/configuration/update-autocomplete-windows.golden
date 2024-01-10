@@ -3,6 +3,6 @@ disable_plugins
 disable_plugins_once
 disable_update_check
 disable_updates
-no_browser
+enable_color
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

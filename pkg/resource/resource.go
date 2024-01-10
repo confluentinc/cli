@@ -12,43 +12,54 @@ import (
 )
 
 const (
-	Unknown                     = "unknown"
-	ACL                         = "ACL"
-	ApiKey                      = "API key"
-	Broker                      = "broker"
-	ByokKey                     = "self-managed key"
-	ClientQuota                 = "client quota"
-	Cloud                       = "cloud"
-	ClusterLink                 = "cluster link"
-	Connector                   = "connector"
-	ConsumerShare               = "consumer share"
-	Context                     = "context"
-	Environment                 = "environment"
-	FlinkComputePool            = "Flink compute pool"
-	FlinkRegion                 = "Flink region"
-	FlinkIamBinding             = "Flink IAM binding"
-	FlinkStatement              = "Flink SQL statement"
-	IdentityPool                = "identity pool"
-	IdentityProvider            = "identity provider"
-	KafkaCluster                = "Kafka cluster"
-	KsqlCluster                 = "KSQL cluster"
-	MirrorTopic                 = "mirror topic"
-	Organization                = "organization"
-	ProviderShare               = "provider share"
-	Pipeline                    = "pipeline"
-	SchemaExporter              = "schema exporter"
-	SchemaRegistryCluster       = "Schema Registry cluster"
-	SchemaRegistryConfiguration = "Schema Registry configuration"
-	ServiceAccount              = "service account"
-	SsoGroupMapping             = "SSO group mapping"
-	Topic                       = "topic"
-	User                        = "user"
+	Unknown                         = "unknown"
+	ACL                             = "ACL"
+	ApiKey                          = "API key"
+	Broker                          = "broker"
+	ByokKey                         = "self-managed key"
+	ClientQuota                     = "client quota"
+	Cloud                           = "cloud"
+	ClusterLink                     = "cluster link"
+	Connector                       = "connector"
+	CustomConnectorPlugin           = "custom connector plugin"
+	ConsumerShare                   = "consumer share"
+	Context                         = "context"
+	Environment                     = "environment"
+	Flink                           = "flink"
+	FlinkComputePool                = "Flink compute pool"
+	FlinkRegion                     = "Flink region"
+	FlinkStatement                  = "Flink SQL statement"
+	IdentityPool                    = "identity pool"
+	IdentityProvider                = "identity provider"
+	IpGroup                         = "IP group"
+	IpFilter                        = "IP filter"
+	KafkaCluster                    = "Kafka cluster"
+	KsqlCluster                     = "KSQL cluster"
+	MirrorTopic                     = "mirror topic"
+	Network                         = "network"
+	Organization                    = "organization"
+	Peering                         = "peering"
+	PrivateLinkAccess               = "private link access"
+	PrivateLinkAttachment           = "private link attachment"
+	PrivateLinkAttachmentConnection = "private link attachment connection"
+	ProviderShare                   = "provider share"
+	Pipeline                        = "pipeline"
+	SchemaExporter                  = "schema exporter"
+	SchemaRegistryCluster           = "Schema Registry cluster"
+	SchemaRegistryConfiguration     = "Schema Registry configuration"
+	ServiceAccount                  = "service account"
+	SsoGroupMapping                 = "SSO group mapping"
+	Topic                           = "topic"
+	TransitGatewayAttachment        = "transit gateway attachment"
+	User                            = "user"
 )
 
 const (
+	ConnectorPrefix             = "lcc"
 	EnvironmentPrefix           = "env"
 	IdentityPoolPrefix          = "pool"
 	IdentityProviderPrefix      = "op"
+	FlinkComputePoolPrefix      = "lfcp"
 	KafkaClusterPrefix          = "lkc"
 	KsqlClusterPrefix           = "lksqlc"
 	SchemaRegistryClusterPrefix = "lsrc"
@@ -57,9 +68,11 @@ const (
 )
 
 var prefixToResource = map[string]string{
+	ConnectorPrefix:             Connector,
 	EnvironmentPrefix:           Environment,
 	IdentityPoolPrefix:          IdentityPool,
 	IdentityProviderPrefix:      IdentityProvider,
+	FlinkComputePoolPrefix:      FlinkComputePool,
 	KafkaClusterPrefix:          KafkaCluster,
 	KsqlClusterPrefix:           KsqlCluster,
 	SchemaRegistryClusterPrefix: SchemaRegistryCluster,
@@ -78,12 +91,12 @@ var resourceToPrefix = map[string]string{
 	User:                  UserPrefix,
 }
 
-func LookupType(resourceId string) string {
-	if resourceId == Cloud {
-		return Cloud
+func LookupType(id string) string {
+	if id == Cloud || id == Flink {
+		return id
 	}
 
-	if x := strings.SplitN(resourceId, "-", 2); len(x) == 2 {
+	if x := strings.SplitN(id, "-", 2); len(x) == 2 {
 		prefix := x[0]
 		if resource, ok := prefixToResource[prefix]; ok {
 			return resource
@@ -100,16 +113,16 @@ func ValidatePrefixes(resourceType string, args []string) error {
 	}
 
 	var malformed []string
-	for _, resourceId := range args {
-		if LookupType(resourceId) != resourceType {
-			malformed = append(malformed, resourceId)
+	for _, id := range args {
+		if LookupType(id) != resourceType {
+			malformed = append(malformed, id)
 		}
 	}
 
 	if len(malformed) == 1 {
-		return errors.Errorf(`failed parsing resource ID %s: missing prefix "%s-"`, malformed[0], prefix)
+		return fmt.Errorf(`failed parsing resource ID %s: missing prefix "%s-"`, malformed[0], prefix)
 	} else if len(malformed) > 1 {
-		return errors.Errorf(`failed parsing resource IDs %s: missing prefix "%s-"`, utils.ArrayToCommaDelimitedString(malformed, "and"), prefix)
+		return fmt.Errorf(`failed parsing resource IDs %s: missing prefix "%s-"`, utils.ArrayToCommaDelimitedString(malformed, "and"), prefix)
 	}
 
 	return nil

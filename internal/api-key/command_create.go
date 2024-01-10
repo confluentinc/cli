@@ -21,13 +21,6 @@ type createOut struct {
 	ApiSecret string `human:"API Secret" serialized:"api_secret"`
 }
 
-var resourceTypeToKind = map[string]string{
-	resource.KafkaCluster:          "Cluster",
-	resource.KsqlCluster:           "ksqlDB",
-	resource.SchemaRegistryCluster: "SchemaRegistry",
-	resource.Cloud:                 "Cloud",
-}
-
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -37,7 +30,15 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an API key with full access to cluster "lkc-123456":`,
+				Text: "Create a Cloud API key:",
+				Code: "confluent api-key create --resource cloud",
+			},
+			examples.Example{
+				Text: `Create a Flink API key for region "N. Virginia (us-east-1)":`,
+				Code: "confluent api-key create --resource flink --cloud aws --region us-east-1",
+			},
+			examples.Example{
+				Text: `Create an API key with full access to Kafka cluster "lkc-123456":`,
 				Code: "confluent api-key create --resource lkc-123456",
 			},
 			examples.Example{
@@ -52,15 +53,13 @@ func (c *command) newCreateCommand() *cobra.Command {
 				Text: `Create an API key for KSQL cluster "lksqlc-123456":`,
 				Code: "confluent api-key create --resource lksqlc-123456",
 			},
-			examples.Example{
-				Text: "Create a Cloud API key:",
-				Code: "confluent api-key create --resource cloud",
-			},
 		),
 	}
 
-	c.addResourceFlag(cmd, true)
+	c.addResourceFlag(cmd, false)
 	cmd.Flags().String("description", "", "Description of API key.")
+	pcmd.AddCloudFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -68,6 +67,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("resource"))
+	cmd.MarkFlagsRequiredTogether("cloud", "region")
 
 	return cmd
 }
@@ -88,35 +88,55 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		serviceAccount = c.Context.GetCurrentServiceAccount()
 	}
 
-	owner := serviceAccount
-	if owner == "" {
+	ownerId := serviceAccount
+	if ownerId == "" {
 		userId, err := c.getCurrentUserId()
 		if err != nil {
 			return err
 		}
-		owner = userId
+		ownerId = userId
 	}
 
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
+	resourceType, resourceId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
 
 	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
 		Description: apikeysv2.PtrString(description),
-		Owner:       &apikeysv2.ObjectReference{Id: owner},
-		Resource: &apikeysv2.ObjectReference{
-			Id:   clusterId,
-			Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
-		},
+		Owner:       &apikeysv2.ObjectReference{Id: ownerId},
+		Resource:    &apikeysv2.ObjectReference{Id: resourceId},
 	}}
-	if resourceType == resource.Cloud {
-		key.Spec.Resource.Id = "cloud"
+
+	switch resourceType {
+	case resource.Cloud:
+		key.Spec.Resource.Id = resource.Cloud
+	case resource.Flink:
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		cloud, err := cmd.Flags().GetString("cloud")
+		if err != nil {
+			return err
+		}
+
+		region, err := cmd.Flags().GetString("region")
+		if err != nil {
+			return err
+		}
+
+		if cloud == "" || region == "" {
+			return fmt.Errorf("must provide both `--cloud` and `--region`")
+		}
+
+		key.Spec.Resource.Id = fmt.Sprintf("%s.%s.%s", environmentId, cloud, region)
 	}
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
 	if err != nil {
-		return c.catchServiceAccountNotValidError(err, httpResp, clusterId, serviceAccount)
+		return c.catchServiceAccountNotValidError(err, httpResp, resourceId, serviceAccount)
 	}
 
 	userKey := &config.APIKeyPair{
@@ -125,8 +145,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln(errors.APIKeyTime)
-		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
+		output.ErrPrintln(c.Config.EnableColor, "It may take a couple of minutes for the API key to be ready.")
+		output.ErrPrintln(c.Config.EnableColor, "Save the API key and secret. The secret is not retrievable later.")
 	}
 
 	table := output.NewTable(cmd)
@@ -139,8 +159,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if resourceType == resource.KafkaCluster {
-		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
-			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
+		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, resourceId); err != nil {
+			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 		}
 	}
 
@@ -150,12 +170,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 	if use {
 		if resourceType != resource.KafkaCluster {
-			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), "`--use` set but ineffective")
+			return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
 		}
-		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
-			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
+		if err := c.useAPIKey(userKey.Key, resourceId); err != nil {
+			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(errors.UseAPIKeyMsg, userKey.Key)
+		output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

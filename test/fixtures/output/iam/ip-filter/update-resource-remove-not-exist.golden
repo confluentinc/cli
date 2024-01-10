@@ -1,0 +1,8 @@
+[WARN] ipg-fedbc is marked for deletion but does not exist
++----------------+--------------------------------+
+| ID             | ipf-34dq3                      |
+| Name           | demo-ip-filter                 |
+| Resource group | management                     |
+| IP groups      | ipg-12345, ipg-abcde,          |
+|                | ipg-hjkil                      |
++----------------+--------------------------------+

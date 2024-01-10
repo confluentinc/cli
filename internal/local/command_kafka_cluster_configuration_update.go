@@ -37,7 +37,7 @@ func (c *command) newKafkaClusterConfigurationUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) configurationUpdate(cmd *cobra.Command, args []string) error {
+func (c *command) configurationUpdate(cmd *cobra.Command, _ []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
@@ -51,22 +51,19 @@ func (c *command) configurationUpdate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	data := broker.ToAlterConfigBatchRequestDataOnPrem(configMap)
+	configs := broker.ToAlterConfigBatchRequestDataOnPrem(configMap)
 
-	resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(context.Background(), clusterId,
-		&kafkarestv3.UpdateKafkaClusterConfigsOpts{
-			AlterConfigBatchRequestData: optional.NewInterface(data),
-		})
-	if err != nil {
+	opts := &kafkarestv3.UpdateKafkaClusterConfigsOpts{AlterConfigBatchRequestData: optional.NewInterface(configs)}
+	if resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(context.Background(), clusterId, opts); err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.Printf("Updated the following broker configurations for the Kafka cluster:\n")
+		output.Printf(c.Config.EnableColor, "Updated the following broker configurations for the Kafka cluster:\n")
 	}
 
 	list := output.NewList(cmd)
-	for _, config := range data.Data {
+	for _, config := range configs.Data {
 		list.Add(&broker.ConfigOut{
 			Name:  config.Name,
 			Value: *config.Value,

@@ -2,57 +2,80 @@ package flink
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newRegionUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "use <id>",
-		Short:             "Use a Flink region in subsequent commands.",
-		Long:              "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
-		RunE:              c.regionUse,
+		Use:   "use",
+		Short: "Use a Flink region in subsequent commands.",
+		Long:  "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
+		Args:  cobra.NoArgs,
+		RunE:  c.regionUse,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Select region "N. Virginia (us-east-1)" for use in subsequent Flink commands.`,
+				Code: "confluent flink region use --cloud aws --region us-east-1",
+			},
+		),
 	}
 
+	pcmd.AddCloudFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddOutputFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	return cmd
 }
 
-func (c *command) regionUse(cmd *cobra.Command, args []string) error {
-	split := strings.Split(args[0], ".")
-	if len(split) != 2 || split[0] == "" || split[1] == "" {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf("Flink region %s is invalid", args[0]), "run `confluent flink region list` to see available regions")
-	}
-
-	regions, err := c.V2Client.ListFlinkRegions(split[0])
+func (c *command) regionUse(cmd *cobra.Command, _ []string) error {
+	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
 	}
 
-	reg, found := lo.Find(regions, func(r flinkv2.FcpmV2Region) bool {
-		return strings.EqualFold(r.GetId(), args[0])
-	})
-	if !found {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf("Flink region %s is not available", args[0]), "run `confluent flink region list` to see available regions")
-	}
-
-	if err := c.Context.SetCurrentFlinkRegion(reg.GetRegionName()); err != nil {
+	region, err := cmd.Flags().GetString("region")
+	if err != nil {
 		return err
 	}
-	if err := c.Context.SetCurrentFlinkCloudProvider(reg.GetCloud()); err != nil {
+
+	regions, err := c.V2Client.ListFlinkRegions(cloud)
+	if err != nil {
+		return err
+	}
+
+	var currentRegion *flinkv2.FcpmV2Region
+	for _, r := range regions {
+		r := r
+		if r.GetRegionName() == region {
+			currentRegion = &r
+			break
+		}
+	}
+	if currentRegion == nil {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`Flink region "%s" is not available for cloud provider "%s"`, region, cloud),
+			"Run `confluent flink region list` to see available regions.",
+		)
+	}
+
+	if err := c.Context.SetCurrentFlinkCloudProvider(cloud); err != nil {
+		return err
+	}
+
+	if err := c.Context.SetCurrentFlinkRegion(region); err != nil {
 		return err
 	}
 
@@ -60,6 +83,6 @@ func (c *command) regionUse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UsingResourceMsg, resource.FlinkRegion, reg.GetId())
+	output.Printf(c.Config.EnableColor, errors.UsingResourceMsg, resource.FlinkRegion, currentRegion.GetDisplayName())
 	return nil
 }

@@ -12,24 +12,24 @@ import (
 )
 
 func List(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
-	brokersGetResp, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersGet(restContext, clusterId)
+	brokers, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersGet(restContext, clusterId)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, data := range brokersGetResp.Data {
-		broker := &out{
-			ClusterId: data.ClusterId,
-			BrokerId:  data.BrokerId,
+	for _, broker := range brokers.Data {
+		out := &out{
+			ClusterId: broker.ClusterId,
+			BrokerId:  broker.BrokerId,
 		}
-		if data.Host != nil {
-			broker.Host = *(data.Host)
+		if broker.Host != nil {
+			out.Host = *broker.Host
 		}
-		if data.Port != nil {
-			broker.Port = *(data.Port)
+		if broker.Port != nil {
+			out.Port = *broker.Port
 		}
-		list.Add(broker)
+		list.Add(out)
 	}
 	return list.Print()
 }
