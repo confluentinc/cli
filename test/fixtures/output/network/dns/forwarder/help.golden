@@ -1,0 +1,16 @@
+Manage DNS forwarders.
+
+Usage:
+  confluent network dns forwarder [command]
+
+Available Commands:
+  delete      Delete one or more DNS forwarders.
+  describe    Describe a DNS forwarder.
+  list        List DNS forwarders.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network dns forwarder [command] --help" for more information about a command.
