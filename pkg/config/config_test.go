@@ -988,20 +988,15 @@ func TestConfig_IsCloud_False(t *testing.T) {
 	}
 }
 
-func TestConfig_GovHostname(t *testing.T) {
+func TestHasGovHostname(t *testing.T) {
 	cfg := &Config{
-		Contexts: map[string]*Context{"context": {
-			PlatformName: "https://confluentgov-internal.com",
-		}},
+		Contexts:       map[string]*Context{"context": {PlatformName: "https://confluentgov-internal.com"}},
 		CurrentContext: "context",
 	}
-
 	require.True(t, cfg.HasGovHostname())
 
 	cfg = &Config{
-		Contexts: map[string]*Context{"context": {
-			PlatformName: "https://confluent.cloud",
-		}},
+		Contexts:       map[string]*Context{"context": {PlatformName: "https://confluent.cloud"}},
 		CurrentContext: "context",
 	}
 	require.False(t, cfg.HasGovHostname())
