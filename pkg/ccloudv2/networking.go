@@ -73,13 +73,13 @@ func (c *Client) executeListNetworks(environment, pageToken string) (networkingv
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListPeerings(environment string) ([]networkingv1.NetworkingV1Peering, error) {
+func (c *Client) ListPeerings(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1Peering, error) {
 	var list []networkingv1.NetworkingV1Peering
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListPeerings(environment, pageToken)
+		page, err := c.executeListPeerings(environment, pageToken, name, network, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -93,8 +93,8 @@ func (c *Client) ListPeerings(environment string) ([]networkingv1.NetworkingV1Pe
 	return list, nil
 }
 
-func (c *Client) executeListPeerings(environment, pageToken string) (networkingv1.NetworkingV1PeeringList, error) {
-	req := c.NetworkingClient.PeeringsNetworkingV1Api.ListNetworkingV1Peerings(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListPeerings(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1PeeringList, error) {
+	req := c.NetworkingClient.PeeringsNetworkingV1Api.ListNetworkingV1Peerings(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecNetwork(network).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
@@ -173,13 +173,13 @@ func (c *Client) CreateTransitGatewayAttachment(attachment networkingv1.Networki
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListPrivateLinkAccesses(environment string) ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
+func (c *Client) ListPrivateLinkAccesses(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
 	var list []networkingv1.NetworkingV1PrivateLinkAccess
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListPrivateLinkAccesses(environment, pageToken)
+		page, err := c.executeListPrivateLinkAccesses(environment, pageToken, name, network, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -193,8 +193,8 @@ func (c *Client) ListPrivateLinkAccesses(environment string) ([]networkingv1.Net
 	return list, nil
 }
 
-func (c *Client) executeListPrivateLinkAccesses(environment, pageToken string) (networkingv1.NetworkingV1PrivateLinkAccessList, error) {
-	req := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.ListNetworkingV1PrivateLinkAccesses(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListPrivateLinkAccesses(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1PrivateLinkAccessList, error) {
+	req := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.ListNetworkingV1PrivateLinkAccesses(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecNetwork(network).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

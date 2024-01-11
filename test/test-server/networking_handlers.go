@@ -616,33 +616,40 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 
 func handleNetworkingPeeringList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		awsPeering := getPeering("peer-111111", "aws-peering", "AWS")
-		gcpPeering := getPeering("peer-111112", "gcp-peering", "GCP")
-		azurePeering := getPeering("peer-111113", "azure-peering", "AZURE")
+		q := r.URL.Query()
+		name := q["spec.display_name"]
+		network := q["spec.network"]
+		phase := q["status.phase"]
 
-		pageToken := r.URL.Query().Get("page_token")
-		var peeringList networkingv1.NetworkingV1PeeringList
-		switch pageToken {
-		case "azure":
-			peeringList = networkingv1.NetworkingV1PeeringList{
-				Data:     []networkingv1.NetworkingV1Peering{azurePeering},
-				Metadata: networkingv1.ListMeta{},
-			}
-		case "gcp":
-			peeringList = networkingv1.NetworkingV1PeeringList{
-				Data:     []networkingv1.NetworkingV1Peering{gcpPeering},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/peerings?environment=env-00000&page_size=1&page_token=azure"))},
-			}
-		default:
-			peeringList = networkingv1.NetworkingV1PeeringList{
-				Data:     []networkingv1.NetworkingV1Peering{awsPeering},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/peerings?environment=env-00000&page_size=1&page_token=gcp"))},
-			}
-		}
-
+		peeringList := getPeeringList(name, network, phase)
 		err := json.NewEncoder(w).Encode(peeringList)
 		require.NoError(t, err)
 	}
+}
+
+func getPeeringList(filterName, filterNetwork, filterPhase []string) networkingv1.NetworkingV1PeeringList {
+	peeringList := networkingv1.NetworkingV1PeeringList{
+		Data: []networkingv1.NetworkingV1Peering{
+			getPeering("peer-111111", "aws-peering", "AWS"),
+			getPeering("peer-111112", "gcp-peering", "GCP"),
+			getPeering("peer-111113", "azure-peering", "AZURE"),
+		},
+	}
+	peeringList.Data = filterPeeringList(peeringList.Data, filterName, filterNetwork, filterPhase)
+
+	return peeringList
+}
+
+func filterPeeringList(peeringList []networkingv1.NetworkingV1Peering, name, network, phase []string) []networkingv1.NetworkingV1Peering {
+	var filteredPeeringList []networkingv1.NetworkingV1Peering
+	for _, peeringSpec := range peeringList {
+		if (slices.Contains(name, peeringSpec.Spec.GetDisplayName()) || name == nil) &&
+			(slices.Contains(network, peeringSpec.Spec.Network.GetId()) || network == nil) &&
+			(slices.Contains(phase, peeringSpec.Status.GetPhase()) || phase == nil) {
+			filteredPeeringList = append(filteredPeeringList, peeringSpec)
+		}
+	}
+	return filteredPeeringList
 }
 
 func getPeering(id, name, cloud string) networkingv1.NetworkingV1Peering {
@@ -979,33 +986,40 @@ func getPrivateLinkAccess(id, name, cloud string) networkingv1.NetworkingV1Priva
 
 func handleNetworkingPrivateLinkAccessList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		awsAccess := getPrivateLinkAccess("pla-111111", "aws-pla", "AWS")
-		gcpAccess := getPrivateLinkAccess("pla-111112", "gcp-pla", "GCP")
-		azureAccess := getPrivateLinkAccess("pla-111113", "azure-pla", "AZURE")
+		q := r.URL.Query()
+		name := q["spec.display_name"]
+		network := q["spec.network"]
+		phase := q["status.phase"]
 
-		pageToken := r.URL.Query().Get("page_token")
-		var peeringList networkingv1.NetworkingV1PrivateLinkAccessList
-		switch pageToken {
-		case "azure":
-			peeringList = networkingv1.NetworkingV1PrivateLinkAccessList{
-				Data:     []networkingv1.NetworkingV1PrivateLinkAccess{azureAccess},
-				Metadata: networkingv1.ListMeta{},
-			}
-		case "gcp":
-			peeringList = networkingv1.NetworkingV1PrivateLinkAccessList{
-				Data:     []networkingv1.NetworkingV1PrivateLinkAccess{gcpAccess},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/private-link-accesses?environment=env-00000&page_size=1&page_token=azure"))},
-			}
-		default:
-			peeringList = networkingv1.NetworkingV1PrivateLinkAccessList{
-				Data:     []networkingv1.NetworkingV1PrivateLinkAccess{awsAccess},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/private-link-accesses?environment=env-00000&page_size=1&page_token=gcp"))},
-			}
-		}
-
-		err := json.NewEncoder(w).Encode(peeringList)
+		plaList := getPrivateLinkAccessList(name, network, phase)
+		err := json.NewEncoder(w).Encode(plaList)
 		require.NoError(t, err)
 	}
+}
+
+func getPrivateLinkAccessList(filterName, filterNetwork, filterPhase []string) networkingv1.NetworkingV1PrivateLinkAccessList {
+	plaList := networkingv1.NetworkingV1PrivateLinkAccessList{
+		Data: []networkingv1.NetworkingV1PrivateLinkAccess{
+			getPrivateLinkAccess("pla-111111", "aws-pla", "AWS"),
+			getPrivateLinkAccess("pla-111112", "gcp-pla", "GCP"),
+			getPrivateLinkAccess("pla-111113", "azure-pla", "AZURE"),
+		},
+	}
+	plaList.Data = filterAccessList(plaList.Data, filterName, filterNetwork, filterPhase)
+
+	return plaList
+}
+
+func filterAccessList(accessList []networkingv1.NetworkingV1PrivateLinkAccess, name, network, phase []string) []networkingv1.NetworkingV1PrivateLinkAccess {
+	var filteredAccessList []networkingv1.NetworkingV1PrivateLinkAccess
+	for _, accessSpec := range accessList {
+		if (slices.Contains(name, accessSpec.Spec.GetDisplayName()) || name == nil) &&
+			(slices.Contains(network, accessSpec.Spec.Network.GetId()) || network == nil) &&
+			(slices.Contains(phase, accessSpec.Status.GetPhase()) || phase == nil) {
+			filteredAccessList = append(filteredAccessList, accessSpec)
+		}
+	}
+	return filteredAccessList
 }
 
 func handleNetworkingPrivateLinkAccessUpdate(t *testing.T, id string) http.HandlerFunc {

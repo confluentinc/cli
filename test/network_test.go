@@ -113,6 +113,8 @@ func (s *CLITestSuite) TestNetworkPeeringList() {
 	tests := []CLITest{
 		{args: "network peering list", fixture: "network/peering/list.golden"},
 		{args: "network peering list --output json", fixture: "network/peering/list-json.golden"},
+		{args: "network peering list --network n-abcde1 --name aws-peering", fixture: "network/peering/list-network-name.golden"},
+		{args: "network peering list --phase READY --name gcp-peering,azure-peering", fixture: "network/peering/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -295,6 +297,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAccessList() {
 		{args: "network pl access list", fixture: "network/private-link/access/list.golden"},
 		{args: "network private-link access list", fixture: "network/private-link/access/list.golden"},
 		{args: "network private-link access list --output json", fixture: "network/private-link/access/list-json.golden"},
+		{args: "network private-link access list --network n-abcde1 --name aws-pla", fixture: "network/private-link/access/list-network-name.golden"},
+		{args: "network private-link access list --phase READY --name gcp-pla,azure-pla", fixture: "network/private-link/access/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {

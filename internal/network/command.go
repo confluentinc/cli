@@ -84,6 +84,8 @@ var (
 	DnsResolutions           = []string{"private", "chased-private"}
 	NetworkLinkEndpointPhase = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "EXPIRED", "DISCONNECTED", "DISCONNECTING", "INACTIVE"}
 	NetworkLinkServicePhase  = []string{"READY"}
+	PeeringPhase             = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "DISCONNECTED"}
+	PrivateLinkAccessPhase   = []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
@@ -413,4 +415,14 @@ func addNetworkLinkEndpointPhaseFlag(cmd *cobra.Command) {
 func (c *command) addListNetworkLinkServiceFlag(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("network-link-service", nil, "A comma-separated list of network link service IDs.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
+}
+
+func addPrivateLinkAccessPhaseFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of private link access phases.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return PrivateLinkAccessPhase })
+}
+
+func addPeeringPhaseFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of peering phases.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return PeeringPhase })
 }

@@ -27,6 +27,9 @@ func (c *command) newPrivateLinkAccessListCommand() *cobra.Command {
 		RunE:  c.privateLinkAccessList,
 	}
 
+	cmd.Flags().StringSlice("name", nil, "A comma-separated list of private link access names.")
+	addListNetworkFlag(cmd, c.AuthenticatedCLICommand)
+	addPrivateLinkAccessPhaseFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -35,7 +38,22 @@ func (c *command) newPrivateLinkAccessListCommand() *cobra.Command {
 }
 
 func (c *command) privateLinkAccessList(cmd *cobra.Command, _ []string) error {
-	accesses, err := c.getPrivateLinkAccesses()
+	name, err := cmd.Flags().GetStringSlice("name")
+	if err != nil {
+		return err
+	}
+
+	network, err := cmd.Flags().GetStringSlice("network")
+	if err != nil {
+		return err
+	}
+
+	phase, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
+	accesses, err := c.getPrivateLinkAccesses(name, network, phase)
 	if err != nil {
 		return err
 	}
