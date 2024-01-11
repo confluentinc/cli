@@ -4,6 +4,7 @@ SHELL ["/bin/bash", "-c"]
 
 COPY . /cli/
 
+# Create rpm repo
 RUN mkdir /rpm-temp && \
     if [[ -d /cli/rpm/repodata ]]; then \
         cp -r /cli/rpm/repodata /rpm-temp/ && \
@@ -17,6 +18,7 @@ RUN mkdir /rpm-temp && \
     mv /cli/prebuilt/*.rpm /cli/rpm/ && \
     cp -r /rpm-temp/repodata /cli/rpm
 
+# Sign rpm repo
 RUN --mount=type=secret,id=rpm_gpg_secret_key --mount=type=secret,id=rpm_gpg_passphrase \
     gpg --batch --import /run/secrets/rpm_gpg_secret_key && \
     echo allow-preset-passphrase > ~/.gnupg/gpg-agent.conf && \
@@ -29,31 +31,18 @@ RUN --mount=type=secret,id=rpm_gpg_secret_key --mount=type=secret,id=rpm_gpg_pas
     gpg --yes --batch --delete-secret-keys $(gpg --with-keygrip -K --with-colons | grep '^fpr' | head -1 | cut -d: -f10) && \
     gpg --batch --delete-keys $(gpg --with-keygrip -k --with-colons | grep '^fpr' | head -1 | cut -d: -f10)
 
+# Create deb repo
 RUN aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=main confluent-cli && \
-    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb
+    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb && \
+    aptly -config=/cli/.aptly.conf snapshot create confluent-cli-snapshot from repo confluent-cli && \
+    aptly -config=/cli/.aptly.conf publish snapshot -distribution=stable -component=main confluent-cli-snapshot "filesystem:deploy:" && \
+    /cli/scripts/update_deb_repo_metadata.sh /cli/deb /deb
 
+# Sign deb repo
 RUN --mount=type=secret,id=deb_gpg_secret_key --mount=type=secret,id=deb_gpg_passphrase \
     gpg --batch --import /run/secrets/deb_gpg_secret_key && \
     export KEY_GRIP=$(gpg --with-keygrip -K --with-colons | grep '^grp' | head -1 | cut -d: -f10) && \
     /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $(cat /run/secrets/deb_gpg_passphrase) $KEY_GRIP && \
-    aptly -config=/cli/.aptly.conf snapshot create confluent-cli-snapshot from repo confluent-cli && \
-    aptly -config=/cli/.aptly.conf publish snapshot -distribution=stable -component=main confluent-cli-snapshot "filesystem:deploy:" && \
-    for arch in amd64 arm64; do \
-        if [[ -f /cli/deb/dists/stable/main/binary-$arch/Packages ]]; then \
-            cat /cli/deb/dists/stable/main/binary-$arch/Packages >> /deb/dists/stable/main/binary-$arch/Packages && \
-            rm -f /deb/dists/stable/main/binary-$arch/Packages.gz /deb/dists/stable/main/binary-$arch/Packages.bz2 && \
-            gzip -k -n /deb/dists/stable/main/binary-$arch/Packages && \
-            bzip2 -k /deb/dists/stable/main/binary-$arch/Packages && \
-            for file in Packages Packages.gz Packages.bz2; do \
-                for algo in md5sum sha1sum sha256sum sha512sum; do \
-                    checksum=$($algo /deb/dists/stable/main/binary-$arch/$file | cut -d ' ' -f 1) && \
-                    filesize=$(stat -c %s /deb/dists/stable/main/binary-$arch/$file) && \
-                    sed -i.bak "s|^\s\+[a-z0-9]\{${#checksum}\}\s\+[0-9]\+\s\+main/binary-$arch/$file$|$(printf ' %s %8s %s' $checksum $filesize main/binary-$arch/$file)|g" /deb/dists/stable/Release && \
-                    rm -f /deb/dists/stable/Release.bak; \
-                done; \
-            done; \
-        fi; \
-    done && \
     gpg --yes --batch --clear-sign --digest-algo SHA256 --output /deb/dists/stable/InRelease /deb/dists/stable/Release && \
     gpg --yes --batch --detach-sign --armor --digest-algo SHA256 --output /deb/dists/stable/Release.gpg /deb/dists/stable/Release && \
     gpg --yes --batch --armor --export --output /deb/archive.key && \
