@@ -47,7 +47,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("region", "", "Cloud region ID for this network.")
+	c.addRegionFlagNetwork(cmd, c.AuthenticatedCLICommand)
 	addConnectionTypesFlag(cmd)
 	cmd.Flags().String("cidr", "", `A /16 IPv4 CIDR block. Required for networks of connection type "peering" and "transitgateway".`)
 	cmd.Flags().StringSlice("zones", nil, `A comma-separated list of availability zones for this network.`)
