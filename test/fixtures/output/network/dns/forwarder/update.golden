@@ -1,0 +1,9 @@
++----------------+---------------------------+
+| ID             | dns-111111                |
+| Name           | my-new-dns-forwarder      |
+| Domains        | ghi.com, jkl.com, xyz.com |
+| DNS Server IPs | 10.200.0.0                |
+| Environment    | env-00000                 |
+| Gateway        | gw-111111                 |
+| Phase          | READY                     |
++----------------+---------------------------+

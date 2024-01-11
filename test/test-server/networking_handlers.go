@@ -198,6 +198,8 @@ func handleNetworkingDnsForwarder(t *testing.T) http.HandlerFunc {
 			handleNetworkingDnsForwarderGet(t, id)(w, r)
 		case http.MethodDelete:
 			handleNetworkingDnsForwarderDelete(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingDnsForwarderUpdate(t, id)(w, r)
 		}
 	}
 }
@@ -208,6 +210,8 @@ func handleNetworkingDnsForwarders(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingDnsForwarderList(t)(w, r)
+		case http.MethodPost:
+			handleNetworkingDnsForwarderCreate(t)(w, r)
 		}
 	}
 }
@@ -1431,8 +1435,8 @@ func handleNetworkingDnsForwarderGet(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The dns forwarder dnsf-invalid was not found.")
 			require.NoError(t, err)
-		case "dnsf-abcde1":
-			dnsf := getDnsForwarder("dnsf-abcde1", "my-dns-forwarder")
+		default:
+			dnsf := getDnsForwarder(id, "my-dns-forwarder")
 			err := json.NewEncoder(w).Encode(dnsf)
 			require.NoError(t, err)
 		}
@@ -1512,5 +1516,80 @@ func handleNetworkingDnsForwarderList(t *testing.T) http.HandlerFunc {
 
 		err := json.NewEncoder(w).Encode(dnsForwarderList)
 		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingDnsForwarderUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "dnsf-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The dns forwarder dnsf-invalid was not found.")
+			require.NoError(t, err)
+		default:
+			body := &networkingdnsforwarderv1.NetworkingV1DnsForwarder{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			forwarder := getDnsForwarder("dns-111111", "my-dns-forwarder")
+			if body.Spec.DisplayName != nil {
+				forwarder.Spec.SetDisplayName(body.Spec.GetDisplayName())
+			}
+			if body.Spec.Domains != nil {
+				forwarder.Spec.SetDomains(body.Spec.GetDomains())
+			}
+			if body.Spec.Gateway != nil {
+				forwarder.Spec.Gateway.SetId(body.Spec.Gateway.GetId())
+			}
+			err = json.NewEncoder(w).Encode(forwarder)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingDnsForwarderCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkingdnsforwarderv1.NetworkingV1DnsForwarder{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		name := body.Spec.GetDisplayName()
+		numDnsServerIps := len(body.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps())
+		dnsServerIpsLimit := 3 // DefaultMaxDnsServerIpsPerDnsf
+
+		switch name {
+		case "dnsf-invalid-gateway":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The provided gateway doesn't exist.")
+			require.NoError(t, err)
+		case "dnsf-duplicate":
+			w.WriteHeader(http.StatusConflict)
+			err := writeErrorJson(w, "DNS Forwarder already exists for gateway.")
+			require.NoError(t, err)
+		case "dnsf-exceed-quota":
+			w.WriteHeader(http.StatusConflict)
+			message := fmt.Sprintf("Provided number of dns server ips '%d' exceeds quota '%d'", numDnsServerIps, dnsServerIpsLimit)
+			err := writeErrorJson(w, message)
+			require.NoError(t, err)
+		default:
+			forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+				Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
+				Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+					DisplayName: networkingdnsforwarderv1.PtrString(name),
+					Domains:     body.Spec.Domains,
+					Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+						NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
+							Kind:         "ForwardViaIp",
+							DnsServerIps: body.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps,
+						},
+					},
+					Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
+					Gateway:     body.Spec.Gateway,
+				},
+				Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+			}
+			err = json.NewEncoder(w).Encode(forwarder)
+			require.NoError(t, err)
+		}
 	}
 }
