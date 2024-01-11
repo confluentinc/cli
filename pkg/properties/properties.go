@@ -26,11 +26,11 @@ func fileToMap(filename string) (map[string]string, error) {
 		return nil, err
 	}
 
-	return SlicesToMap(parseLines(string(buf)))
+	return ConfigSliceToMap(parseLines(string(buf)))
 }
 
-// toMap converts a list of key=value strings into a map.
-func SlicesToMap(configs []string) (map[string]string, error) {
+// ConfigSliceToMap converts a list of key=value strings into a map.
+func ConfigSliceToMap(configs []string) (map[string]string, error) {
 	m := make(map[string]string)
 
 	for _, config := range configs {

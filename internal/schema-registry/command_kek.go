@@ -65,7 +65,7 @@ func constructKmsProps(cmd *cobra.Command) (map[string]string, error) {
 		return nil, err
 	}
 
-	kmsPropertiesMap, err := properties.SlicesToMap(kmsProperties)
+	kmsPropertiesMap, err := properties.ConfigSliceToMap(kmsProperties)
 	if err != nil {
 		return nil, errors.NewErrorWithSuggestions(err.Error(), kmsPropsFormatSuggestions)
 	}
