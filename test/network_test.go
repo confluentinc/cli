@@ -581,6 +581,8 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
 		{args: "network nl service list", fixture: "network/network-link/service/list.golden"},
 		{args: "network network-link service list", fixture: "network/network-link/service/list.golden"},
 		{args: "network network-link service list --output json", fixture: "network/network-link/service/list-json.golden"},
+		{args: "network network-link service list --network n-abcde1 --name my-network-link-service-1", fixture: "network/network-link/service/list-network-name.golden"},
+		{args: "network network-link service list --phase READY --name my-network-link-service-2,my-network-link-service-3", fixture: "network/network-link/service/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -670,6 +672,9 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointList() {
 		{args: "network nl endpoint list", fixture: "network/network-link/endpoint/list.golden"},
 		{args: "network network-link endpoint list", fixture: "network/network-link/endpoint/list.golden"},
 		{args: "network network-link endpoint list --output json", fixture: "network/network-link/endpoint/list-json.golden"},
+		{args: "network network-link endpoint list --network n-abcde1 --name my-network-link-endpoint-1", fixture: "network/network-link/endpoint/list-network-name.golden"},
+		{args: "network network-link endpoint list --phase READY --name my-network-link-endpoint-2,my-network-link-endpoint-3", fixture: "network/network-link/endpoint/list-phase-name.golden"},
+		{args: "network network-link endpoint list --network-link-service nls-123456", fixture: "network/network-link/endpoint/list-service.golden"},
 	}
 
 	for _, test := range tests {

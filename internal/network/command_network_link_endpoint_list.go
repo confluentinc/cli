@@ -18,6 +18,10 @@ func (c *command) newNetworkLinkEndpointListCommand() *cobra.Command {
 		RunE:  c.networkLinkEndpointList,
 	}
 
+	cmd.Flags().StringSlice("name", nil, "A comma-separated list of network link endpoint names.")
+	addListNetworkFlag(cmd, c.AuthenticatedCLICommand)
+	addNetworkLinkEndpointPhaseFlag(cmd)
+	c.addListNetworkLinkServiceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -26,7 +30,27 @@ func (c *command) newNetworkLinkEndpointListCommand() *cobra.Command {
 }
 
 func (c *command) networkLinkEndpointList(cmd *cobra.Command, _ []string) error {
-	endpoints, err := c.getNetworkLinkEndpoints()
+	name, err := cmd.Flags().GetStringSlice("name")
+	if err != nil {
+		return err
+	}
+
+	network, err := cmd.Flags().GetStringSlice("network")
+	if err != nil {
+		return err
+	}
+
+	phase, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
+	service, err := cmd.Flags().GetStringSlice("network-link-service")
+	if err != nil {
+		return err
+	}
+
+	endpoints, err := c.getNetworkLinkEndpoints(name, network, phase, service)
 	if err != nil {
 		return err
 	}

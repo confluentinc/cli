@@ -80,8 +80,10 @@ const (
 )
 
 var (
-	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
-	DnsResolutions  = []string{"private", "chased-private"}
+	ConnectionTypes          = []string{"privatelink", "peering", "transitgateway"}
+	DnsResolutions           = []string{"private", "chased-private"}
+	NetworkLinkEndpointPhase = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "EXPIRED", "DISCONNECTED", "DISCONNECTING", "INACTIVE"}
+	NetworkLinkServicePhase  = []string{"READY"}
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
@@ -379,5 +381,36 @@ func addAcceptedEnvironmentsFlag(cmd *cobra.Command, command *pcmd.Authenticated
 
 func (c *command) addNetworkLinkServiceFlag(cmd *cobra.Command) {
 	cmd.Flags().String("network-link-service", "", "Network link service ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
+}
+
+func addNetworkLinkServicePhaseFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of network link service phases.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return NetworkLinkServicePhase })
+}
+
+func addListNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("network", nil, "A comma-separated list of Network IDs.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteNetworks(c.V2Client, environmentId)
+	})
+}
+
+func addNetworkLinkEndpointPhaseFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of network link endpoint phases.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return NetworkLinkEndpointPhase })
+}
+
+func (c *command) addListNetworkLinkServiceFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("network-link-service", nil, "A comma-separated list of network link service IDs.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
 }
