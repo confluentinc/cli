@@ -200,6 +200,10 @@ func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewa
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func() {
+	if cfg.HasGovHostname() {
+		return func() {}
+	}
+
 	return func() {
 		u := ppanic.CollectPanic(cmd, nil, cfg)
 		u.Report(ccloudv2.NewClient(cfg, unsafeTrace))
