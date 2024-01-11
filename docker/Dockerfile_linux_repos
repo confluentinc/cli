@@ -42,13 +42,14 @@ RUN --mount=type=secret,id=deb_gpg_secret_key --mount=type=secret,id=deb_gpg_pas
         if [[ -f /cli/deb/dists/stable/main/binary-$arch/Packages ]]; then \
             cat /cli/deb/dists/stable/main/binary-$arch/Packages >> /deb/dists/stable/main/binary-$arch/Packages && \
             rm -f /deb/dists/stable/main/binary-$arch/Packages.gz /deb/dists/stable/main/binary-$arch/Packages.bz2 && \
-            gzip -k /deb/dists/stable/main/binary-$arch/Packages && \
+            gzip -k -n /deb/dists/stable/main/binary-$arch/Packages && \
             bzip2 -k /deb/dists/stable/main/binary-$arch/Packages && \
             for file in Packages Packages.gz Packages.bz2; do \
                 for algo in md5sum sha1sum sha256sum sha512sum; do \
-                    checksum=$($algo /cli/deb/dists/stable/main/binary-$arch/$file | cut -d ' ' -f 1) && \
-                    filesize=$(stat -c %s /cli/deb/dists/stable/main/binary-$arch/$file) && \
-                    sed -in "s|^\s\+[a-z0-9]\{${#checksum}\}\s\+[0-9]\+\s\+main/binary-$arch/$file$|$(printf ' %s %8s %s' $checksum $filesize main/binary-$arch/$file)|g" /deb/dists/stable/Release; \
+                    checksum=$($algo /deb/dists/stable/main/binary-$arch/$file | cut -d ' ' -f 1) && \
+                    filesize=$(stat -c %s /deb/dists/stable/main/binary-$arch/$file) && \
+                    sed -i.bak "s|^\s\+[a-z0-9]\{${#checksum}\}\s\+[0-9]\+\s\+main/binary-$arch/$file$|$(printf ' %s %8s %s' $checksum $filesize main/binary-$arch/$file)|g" /deb/dists/stable/Release && \
+                    rm -f /deb/dists/stable/Release.bak; \
                 done; \
             done; \
         fi; \
