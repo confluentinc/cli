@@ -38,9 +38,11 @@ func (c *command) newDnsForwarderCommand() *cobra.Command {
 		Short: "Manage DNS forwarders.",
 	}
 
+	cmd.AddCommand(c.newDnsForwarderCreateCommand())
 	cmd.AddCommand(c.newDnsForwarderDeleteCommand())
 	cmd.AddCommand(c.newDnsForwarderDescribeCommand())
 	cmd.AddCommand(c.newDnsForwarderListCommand())
+	cmd.AddCommand(c.newDnsForwarderUpdateCommand())
 
 	return cmd
 }
