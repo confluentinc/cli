@@ -36,7 +36,7 @@ publish-docs:
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	git checkout -b publish-docs-v$(CLEAN_VERSION) && \
-	$(SED) -i "10r $(DIR)/release-notes.rst" $(DOCS_CONFLUENT_CLI)/release-notes.rst && \
+	$(SED) -i "10r $(DIR)/release-notes.rst" release-notes.rst && \
 	rm -rf command-reference && \
 	cp -R $(CLI)/docs command-reference && \
 	git add . && \
