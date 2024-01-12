@@ -21,21 +21,24 @@ docs:
 	go run cmd/docs/main.go
 
 .PHONY: publish-docs
-publish-docs: docs
+publish-docs:
 	$(eval DIR=$(shell mktemp -d))
+	$(eval CLI=$(DIR)/cli)
 	$(eval CLI_RELEASE=$(DIR)/cli-release)
 	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
 
+	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(CLEAN_VERSION).json docs > $(DIR)/release-notes.rst && \
+	git clone git@github.com:confluentinc/cli.git $(CLI) && \
+    cd $(CLI) && \
+	go run cmd/docs/main.go && \
+    cd - && \
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	git checkout -b publish-docs-v$(CLEAN_VERSION) && \
-	cd - && \
-	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
-	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(CLEAN_VERSION).json docs > $(DIR)/release-notes.rst && \
 	$(SED) -i "10r $(DIR)/release-notes.rst" $(DOCS_CONFLUENT_CLI)/release-notes.rst && \
-	cd $(DOCS_CONFLUENT_CLI) && \
 	rm -rf command-reference && \
-	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference && \
+	cp -R $(CLI)/docs command-reference && \
 	git add . && \
 	git commit --allow-empty -m "[ci skip] chore: update CLI docs for v$(CLEAN_VERSION)" && \
 	$(call dry-run,git push origin publish-docs-v$(CLEAN_VERSION)) && \
