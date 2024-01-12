@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -90,6 +91,7 @@ func printDnsForwarderTable(cmd *cobra.Command, forwarder networkingdnsforwarder
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 	}
 
+	sort.Strings(forwarder.Spec.GetDomains())
 	table := output.NewTable(cmd)
 
 	if output.GetFormat(cmd) == output.Human {
@@ -114,5 +116,5 @@ func printDnsForwarderTable(cmd *cobra.Command, forwarder networkingdnsforwarder
 		})
 	}
 
-	return table.PrintWithAutoWrap(true)
+	return table.Print()
 }
