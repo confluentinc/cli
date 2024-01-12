@@ -2,6 +2,10 @@ project_name: confluent
 
 dist: prebuilt
 
+env:
+  - CGO_ENABLED=1
+  - GOEXPERIMENT=boringcrypto
+
 builds:
   - id: confluent-linux-arm64
     binary: confluent
