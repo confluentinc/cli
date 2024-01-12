@@ -37,9 +37,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			environment := &orgv2.OrgV2Environment{
 				Id:          orgv2.PtrString(id),
 				DisplayName: orgv2.PtrString("default"),
-				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{
-					Package: orgv2.PtrString("ESSENTIALS"),
-				},
+				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")},
 			}
 			err := json.NewEncoder(w).Encode(environment)
 			require.NoError(t, err)
