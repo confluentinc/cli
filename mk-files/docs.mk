@@ -30,9 +30,9 @@ publish-docs:
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(CLEAN_VERSION).json docs > $(DIR)/release-notes.rst && \
 	git clone git@github.com:confluentinc/cli.git $(CLI) && \
-    cd $(CLI) && \
+	cd $(CLI) && \
 	go run cmd/docs/main.go && \
-    cd - && \
+	cd - && \
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	git checkout -b publish-docs-v$(CLEAN_VERSION) && \
