@@ -1,0 +1,21 @@
+{
+  "id": "n-abcde7",
+  "environment_id": "env-00000",
+  "name": "prod-aws-us-east1",
+  "cloud": "AWS",
+  "region": "us-east-1",
+  "zones": ["use1-az1", "use1-az2", "use1-az3"],
+  "phase": "READY",
+  "supported_connection_types": ["PRIVATELINK"],
+  "active_connection_types": ["PRIVATELINK"],
+  "aws_vpc": "vpc-00000000000000000",
+  "aws_account": "000000000000",
+  "aws_private_link_endpoint_service": "com.amazonaws.vpce.us-east-2.vpce-svc-01234567890abcdef",
+  "dns_resolution": "PRIVATE",
+  "dns_domain": "abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud",
+  "zonal_subdomains": {
+    "use1-az1": "use1-az1.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud",
+    "use1-az2": "use1-az2.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud",
+    "use1-az3": "use1-az3.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud"
+  }
+}

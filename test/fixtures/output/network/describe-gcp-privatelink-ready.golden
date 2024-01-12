@@ -1,0 +1,22 @@
++--------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| ID                             | n-abcde8                                                                                                            |
+| Environment                    | env-00000                                                                                                           |
+| Name                           | prod-gcp-us-central1                                                                                                |
+| Cloud                          | GCP                                                                                                                 |
+| Region                         | us-central1                                                                                                         |
+| Zones                          | us-central1-a, us-central1-b,                                                                                       |
+|                                | us-central1-c                                                                                                       |
+| Phase                          | READY                                                                                                               |
+| Supported Connection Types     | PRIVATELINK                                                                                                         |
+| Active Connection Types        | PRIVATELINK                                                                                                         |
+| GCP Project                    | gcp-project                                                                                                         |
+| GCP VPC Network                | gcp-vpc                                                                                                             |
+| GCP Private Service Connect    | us-central1-a=projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-a, |
+| Service Attachments            | us-central1-b=projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-b, |
+|                                | us-central1-c=projects/gcp-project/regions/us-central1/serviceAttachments/gcp-vpc-service-attachment-us-central1-c  |
+| DNS Resolution                 | PRIVATE                                                                                                             |
+| DNS Domain                     | 0123456789abcdef.us-central1.gcp.devel.cpdev.cloud                                                                  |
+| Zonal Subdomains               | us-central1-a=us-central1-a.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud,                                     |
+|                                | us-central1-b=us-central1-b.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud,                                     |
+|                                | us-central1-c=us-central1-c.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud                                      |
++--------------------------------+---------------------------------------------------------------------------------------------------------------------+

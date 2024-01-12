@@ -15,6 +15,8 @@ Flags:
       --description string             Description of custom plugin.
       --documentation-link string      Document link of custom plugin.
       --sensitive-properties strings   A comma-separated list of sensitive property names.
+      --context string                 CLI context name.
+  -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

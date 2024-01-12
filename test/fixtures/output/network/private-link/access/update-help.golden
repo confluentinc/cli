@@ -1,0 +1,20 @@
+Update an existing private link access.
+
+Usage:
+  confluent network private-link access update <id> [flags]
+
+Examples:
+Update the name of private link access "pla-123456".
+
+  $ confluent network private-link access update pla-123456 --name "new name"
+
+Flags:
+      --name string          REQUIRED: Name of the private link access.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

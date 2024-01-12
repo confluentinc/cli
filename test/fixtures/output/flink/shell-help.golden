@@ -9,6 +9,7 @@ Flags:
       --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
       --environment string       Environment ID.
       --context string           CLI context name.
+      --language-service         Enables the Flink language service integration (experimental).
 
 Global Flags:
   -h, --help            Show help for this command.

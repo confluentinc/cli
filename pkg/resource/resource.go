@@ -12,39 +12,48 @@ import (
 )
 
 const (
-	Unknown                     = "unknown"
-	ACL                         = "ACL"
-	ApiKey                      = "API key"
-	Broker                      = "broker"
-	ByokKey                     = "self-managed key"
-	ClientQuota                 = "client quota"
-	Cloud                       = "cloud"
-	ClusterLink                 = "cluster link"
-	Connector                   = "connector"
-	CustomConnectorPlugin       = "custom connector plugin"
-	ConsumerShare               = "consumer share"
-	Context                     = "context"
-	Environment                 = "environment"
-	FlinkComputePool            = "Flink compute pool"
-	FlinkRegion                 = "Flink region"
-	FlinkStatement              = "Flink SQL statement"
-	IdentityPool                = "identity pool"
-	IdentityProvider            = "identity provider"
-	IpGroup                     = "IP group"
-	IpFilter                    = "IP filter"
-	KafkaCluster                = "Kafka cluster"
-	KsqlCluster                 = "KSQL cluster"
-	MirrorTopic                 = "mirror topic"
-	Organization                = "organization"
-	ProviderShare               = "provider share"
-	Pipeline                    = "pipeline"
-	SchemaExporter              = "schema exporter"
-	SchemaRegistryCluster       = "Schema Registry cluster"
-	SchemaRegistryConfiguration = "Schema Registry configuration"
-	ServiceAccount              = "service account"
-	SsoGroupMapping             = "SSO group mapping"
-	Topic                       = "topic"
-	User                        = "user"
+	Unknown                         = "unknown"
+	ACL                             = "ACL"
+	ApiKey                          = "API key"
+	Broker                          = "broker"
+	ByokKey                         = "self-managed key"
+	ClientQuota                     = "client quota"
+	Cloud                           = "cloud"
+	ClusterLink                     = "cluster link"
+	Connector                       = "connector"
+	CustomConnectorPlugin           = "custom connector plugin"
+	ConsumerShare                   = "consumer share"
+	Context                         = "context"
+	Dek                             = "DEK"
+	Environment                     = "environment"
+	Flink                           = "flink"
+	FlinkComputePool                = "Flink compute pool"
+	FlinkRegion                     = "Flink region"
+	FlinkStatement                  = "Flink SQL statement"
+	IdentityPool                    = "identity pool"
+	IdentityProvider                = "identity provider"
+	IpGroup                         = "IP group"
+	IpFilter                        = "IP filter"
+	KafkaCluster                    = "Kafka cluster"
+	Kek                             = "KEK"
+	KsqlCluster                     = "KSQL cluster"
+	MirrorTopic                     = "mirror topic"
+	Network                         = "network"
+	Organization                    = "organization"
+	Peering                         = "peering"
+	PrivateLinkAccess               = "private link access"
+	PrivateLinkAttachment           = "private link attachment"
+	PrivateLinkAttachmentConnection = "private link attachment connection"
+	ProviderShare                   = "provider share"
+	Pipeline                        = "pipeline"
+	SchemaExporter                  = "schema exporter"
+	SchemaRegistryCluster           = "Schema Registry cluster"
+	SchemaRegistryConfiguration     = "Schema Registry configuration"
+	ServiceAccount                  = "service account"
+	SsoGroupMapping                 = "SSO group mapping"
+	Topic                           = "topic"
+	TransitGatewayAttachment        = "transit gateway attachment"
+	User                            = "user"
 )
 
 const (
@@ -85,8 +94,8 @@ var resourceToPrefix = map[string]string{
 }
 
 func LookupType(id string) string {
-	if id == Cloud {
-		return Cloud
+	if id == Cloud || id == Flink {
+		return id
 	}
 
 	if x := strings.SplitN(id, "-", 2); len(x) == 2 {

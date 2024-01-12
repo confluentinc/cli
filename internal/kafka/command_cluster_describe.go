@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Provider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Provider", "Availability", "Region", "Network", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
@@ -32,6 +32,7 @@ type describeStruct struct {
 	Provider           string `human:"Provider" serialized:"provider"`
 	Region             string `human:"Region" serialized:"region"`
 	Availability       string `human:"Availability" serialized:"availability"`
+	Network            string `human:"Network,omitempty" serialized:"network,omitempty"`
 	Status             string `human:"Status" serialized:"status"`
 	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
@@ -132,6 +133,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		Provider:           strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
+		Network:            cluster.Spec.Network.GetId(),
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),

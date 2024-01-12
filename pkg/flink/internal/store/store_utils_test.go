@@ -142,6 +142,16 @@ func TestProcessSetStatement(t *testing.T) {
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
 		}, err)
 	})
+
+	t.Run("should parse and identify sensitive set statement", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'sql.secrets.openai' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+
+		result, err = s.processSetStatement("set 'sql.secrets.opeenaai' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+	})
 }
 
 func TestProcessResetStatement(t *testing.T) {
@@ -304,6 +314,67 @@ func TestParseStatementType(t *testing.T) {
 
 func hoursToSeconds(hours float32) int {
 	return int(hours * 60 * 60)
+}
+
+func TestIsUserSecretKey(t *testing.T) {
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.penaik"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.oopenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.oenaik"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.oppenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opnai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opeenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opeai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opennai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openi"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openaai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opena"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openaii"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openaiii"))
+
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.penaik"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.oopenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.oenaik"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.oppenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opnai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opeenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opeai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opennai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openi"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openaai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opena"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openaii"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openaiii"))
+
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.PENAIK"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OOPENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OENAIK"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPPENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPNAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPEENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPEAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENNAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENA"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAII"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAIII"))
+
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, ""))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "gustavo"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.current-catalog"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "client.results-timeout"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "OPENAPI.KEY"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.NAME"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.SCERECETASDT"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.SECCCCCCCCRET"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SEEEEECRET.OPENAPI.KEY"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SECRET.OPENAPI.KEY"))
 }
 
 func TestFormatUTCOffsetToTimezone(t *testing.T) {

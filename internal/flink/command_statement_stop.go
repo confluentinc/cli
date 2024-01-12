@@ -20,7 +20,7 @@ func (c *command) newStatementStopCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	c.addRegionFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 

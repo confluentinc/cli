@@ -306,6 +306,8 @@ func (s *CLITestSuite) TestKafkaMirror() {
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/promote-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/promote-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror resume topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/resume-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror reverse-and-start topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/reverse-and-start-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror reverse-and-pause topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/reverse-and-pause-mirror.golden", useKafka: "lkc-describe-topic"},
 	}
 
 	for _, test := range tests {
@@ -625,4 +627,14 @@ func (s *CLITestSuite) TestKafka_Autocomplete() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
+
+func (s *CLITestSuite) TestKafkaClusterCreate_Network() {
+	test := CLITest{
+		login:   "cloud",
+		args:    "kafka cluster create cck-network-test --cloud aws --region us-east-1 --type dedicated --cku 1 --network n-abcde1",
+		fixture: "kafka/cluster/cck-network.golden",
+	}
+
+	s.runIntegrationTest(test)
 }

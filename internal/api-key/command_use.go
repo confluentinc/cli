@@ -25,7 +25,7 @@ func (c *command) newUseCommand() *cobra.Command {
 	}
 
 	// Deprecated
-	c.addResourceFlag(cmd, true)
+	c.addResourceFlag(cmd, false)
 	cobra.CheckErr(cmd.Flags().MarkHidden("resource"))
 
 	return cmd
