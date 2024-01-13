@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newNetworkLinkEndpointListCommand() *cobra.Command {
@@ -20,7 +21,7 @@ func (c *command) newNetworkLinkEndpointListCommand() *cobra.Command {
 
 	cmd.Flags().StringSlice("name", nil, "A comma-separated list of network link endpoint names.")
 	addListNetworkFlag(cmd, c.AuthenticatedCLICommand)
-	addNetworkLinkEndpointPhaseFlag(cmd)
+	addPhaseFlag(cmd, resource.NetworkLinkEndpoint)
 	c.addListNetworkLinkServiceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

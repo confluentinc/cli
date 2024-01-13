@@ -148,6 +148,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		createNetwork.Spec.SetZones(zones)
 	}
 
+	// TODO: update once SDK is patched with zonesInfo struct
 	if len(zoneInfoItems) != 0 {
 		createNetwork.Spec.SetZonesInfo(networkingv1.Set{Items: zoneInfo})
 	}

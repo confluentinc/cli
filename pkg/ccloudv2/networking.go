@@ -43,13 +43,13 @@ func (c *Client) CreateNetwork(network networkingv1.NetworkingV1Network) (networ
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListNetworks(environment string) ([]networkingv1.NetworkingV1Network, error) {
+func (c *Client) ListNetworks(environment string, name, cloud, region, cidr, phase, connectionType []string) ([]networkingv1.NetworkingV1Network, error) {
 	var list []networkingv1.NetworkingV1Network
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListNetworks(environment, pageToken)
+		page, err := c.executeListNetworks(environment, pageToken, name, cloud, region, cidr, phase, connectionType)
 		if err != nil {
 			return nil, err
 		}
@@ -63,8 +63,9 @@ func (c *Client) ListNetworks(environment string) ([]networkingv1.NetworkingV1Ne
 	return list, nil
 }
 
-func (c *Client) executeListNetworks(environment, pageToken string) (networkingv1.NetworkingV1NetworkList, error) {
-	req := c.NetworkingClient.NetworksNetworkingV1Api.ListNetworkingV1Networks(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListNetworks(environment, pageToken string, name, cloud, region, cidr, phase, connectionType []string) (networkingv1.NetworkingV1NetworkList, error) {
+	// TODO: connection_type should be spec.connection_types pending minispec review
+	req := c.NetworkingClient.NetworksNetworkingV1Api.ListNetworkingV1Networks(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecCloud(cloud).SpecRegion(region).SpecCidr(cidr).ConnectionType(connectionType).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
@@ -123,13 +124,13 @@ func (c *Client) CreatePeering(peering networkingv1.NetworkingV1Peering) (networ
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListTransitGatewayAttachments(environment string) ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+func (c *Client) ListTransitGatewayAttachments(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
 	var list []networkingv1.NetworkingV1TransitGatewayAttachment
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListTransitGatewayAttachments(environment, pageToken)
+		page, err := c.executeListTransitGatewayAttachments(environment, pageToken, name, network, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -143,8 +144,8 @@ func (c *Client) ListTransitGatewayAttachments(environment string) ([]networking
 	return list, nil
 }
 
-func (c *Client) executeListTransitGatewayAttachments(environment, pageToken string) (networkingv1.NetworkingV1TransitGatewayAttachmentList, error) {
-	req := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.ListNetworkingV1TransitGatewayAttachments(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListTransitGatewayAttachments(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1TransitGatewayAttachmentList, error) {
+	req := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.ListNetworkingV1TransitGatewayAttachments(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecNetwork(network).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

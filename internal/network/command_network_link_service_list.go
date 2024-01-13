@@ -9,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type listNetworkLinkServiceHumanOut struct {
@@ -41,7 +42,7 @@ func (c *command) newNetworkLinkServiceListCommand() *cobra.Command {
 
 	cmd.Flags().StringSlice("name", nil, "A comma-separated list of network link service names.")
 	addListNetworkFlag(cmd, c.AuthenticatedCLICommand)
-	addNetworkLinkServicePhaseFlag(cmd)
+	addPhaseFlag(cmd, resource.NetworkLinkService)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)

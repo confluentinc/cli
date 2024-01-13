@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type listPrivateLinkAccessOut struct {
@@ -29,7 +30,7 @@ func (c *command) newPrivateLinkAccessListCommand() *cobra.Command {
 
 	cmd.Flags().StringSlice("name", nil, "A comma-separated list of private link access names.")
 	addListNetworkFlag(cmd, c.AuthenticatedCLICommand)
-	addPrivateLinkAccessPhaseFlag(cmd)
+	addPhaseFlag(cmd, resource.PrivateLinkAccess)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)

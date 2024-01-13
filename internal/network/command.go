@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/network"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -81,12 +82,15 @@ const (
 )
 
 var (
-	ConnectionTypes          = []string{"privatelink", "peering", "transitgateway"}
-	DnsResolutions           = []string{"private", "chased-private"}
-	NetworkLinkEndpointPhase = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "EXPIRED", "DISCONNECTED", "DISCONNECTING", "INACTIVE"}
-	NetworkLinkServicePhase  = []string{"READY"}
-	PeeringPhase             = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "DISCONNECTED"}
-	PrivateLinkAccessPhase   = []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
+	ConnectionTypes               = []string{"privatelink", "peering", "transitgateway"}
+	DnsResolutions                = []string{"private", "chased-private"}
+	NetworkLinkEndpointPhase      = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "EXPIRED", "DISCONNECTED", "DISCONNECTING", "INACTIVE"}
+	NetworkLinkServicePhase       = []string{"READY"}
+	NetworkPhase                  = []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
+	PeeringPhase                  = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "DISCONNECTED"}
+	PrivateLinkAccessPhase        = []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
+	PrivateLinkAttachmentPhase    = []string{"PROVISIONING", "WAITING_FOR_CONNECTIONS", "READY", "FAILED", "EXPIRED", "DEPROVISIONING"}
+	TransitGatewayAttachmentPhase = []string{"PROVISIONING", "READY", "PENDING_ACCEPT", "FAILED", "DEPROVISIONING", "DISCONNECTED", "ERROR"}
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
@@ -296,7 +300,7 @@ func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string 
 }
 
 func autocompleteNetworks(client *ccloudv2.Client, environmentId string) []string {
-	networks, err := getNetworks(client, environmentId)
+	networks, err := getNetworks(client, environmentId, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		return nil
 	}
@@ -308,8 +312,8 @@ func autocompleteNetworks(client *ccloudv2.Client, environmentId string) []strin
 	return suggestions
 }
 
-func getNetworks(client *ccloudv2.Client, environmentId string) ([]networkingv1.NetworkingV1Network, error) {
-	return client.ListNetworks(environmentId)
+func getNetworks(client *ccloudv2.Client, environmentId string, name, cloud, region, cidr, phase, connectionType []string) ([]networkingv1.NetworkingV1Network, error) {
+	return client.ListNetworks(environmentId, name, cloud, region, cidr, phase, connectionType)
 }
 
 func addConnectionTypesFlag(cmd *cobra.Command) {
@@ -324,6 +328,22 @@ func addDnsResolutionFlag(cmd *cobra.Command) {
 
 func addNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
 	cmd.Flags().String("network", "", "Network ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteNetworks(c.V2Client, environmentId)
+	})
+}
+
+func addListNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("network", nil, "A comma-separated list of Network IDs.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
@@ -388,6 +408,11 @@ func (c *command) addNetworkLinkServiceFlag(cmd *cobra.Command) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
 }
 
+func (c *command) addListNetworkLinkServiceFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("network-link-service", nil, "A comma-separated list of network link service IDs.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
+}
+
 func (c *command) addRegionFlagNetwork(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
 	cmd.Flags().String("region", "", "Cloud region ID for this network.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
@@ -409,43 +434,47 @@ func (c *command) addRegionFlagNetwork(cmd *cobra.Command, command *pcmd.Authent
 	})
 }
 
-func addNetworkLinkServicePhaseFlag(cmd *cobra.Command) {
-	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of network link service phases.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return NetworkLinkServicePhase })
-}
-
-func addListNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
-	cmd.Flags().StringSlice("network", nil, "A comma-separated list of Network IDs.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+func (c *command) addListRegionFlagNetwork(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("region", nil, "A comma-separated list of cloud region IDs.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
 
-		environmentId, err := c.Context.EnvironmentId()
+		cloud, _ := cmd.Flags().GetString("cloud")
+		regions, err := network.ListRegions(command.Client, cloud)
 		if err != nil {
 			return nil
 		}
 
-		return autocompleteNetworks(c.V2Client, environmentId)
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.RegionId
+		}
+		return suggestions
 	})
 }
 
-func addNetworkLinkEndpointPhaseFlag(cmd *cobra.Command) {
-	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of network link endpoint phases.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return NetworkLinkEndpointPhase })
-}
-
-func (c *command) addListNetworkLinkServiceFlag(cmd *cobra.Command) {
-	cmd.Flags().StringSlice("network-link-service", nil, "A comma-separated list of network link service IDs.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
-}
-
-func addPrivateLinkAccessPhaseFlag(cmd *cobra.Command) {
-	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of private link access phases.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return PrivateLinkAccessPhase })
-}
-
-func addPeeringPhaseFlag(cmd *cobra.Command) {
-	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of peering phases.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string { return PeeringPhase })
+func addPhaseFlag(cmd *cobra.Command, resourceType string) {
+	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of phases.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string {
+		switch resourceType {
+		case resource.NetworkLinkService:
+			return NetworkLinkServicePhase
+		case resource.NetworkLinkEndpoint:
+			return NetworkLinkEndpointPhase
+		case resource.PrivateLinkAccess:
+			return PrivateLinkAccessPhase
+		case resource.Peering:
+			return PeeringPhase
+		case resource.PrivateLinkAttachment:
+			return PrivateLinkAttachmentPhase
+		case resource.TransitGatewayAttachment:
+			return TransitGatewayAttachmentPhase
+		case resource.Network:
+			return NetworkPhase
+		default:
+			return nil
+		}
+	})
 }

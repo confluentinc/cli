@@ -67,6 +67,9 @@ func (s *CLITestSuite) TestNetworkList() {
 	tests := []CLITest{
 		{args: "network list", fixture: "network/list.golden"},
 		{args: "network list --output json", fixture: "network/list-json.golden"},
+		{args: "network list --name prod-gcp-us-central1,prod-aws-us-east1 --cloud aws", fixture: "network/list-name-cloud.golden"},
+		{args: "network list --region eastus2 --cidr 10.0.0.0/16", fixture: "network/list-region-cidr.golden"},
+		{args: "network list --phase READY --connection-types transitgateway,peering", fixture: "network/list-phase-connection.golden"},
 	}
 
 	for _, test := range tests {
@@ -210,6 +213,8 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentList() {
 		{args: "network tgwa list", fixture: "network/transit-gateway-attachment/list.golden"},
 		{args: "network transit-gateway-attachment list", fixture: "network/transit-gateway-attachment/list.golden"},
 		{args: "network transit-gateway-attachment list --output json", fixture: "network/transit-gateway-attachment/list-json.golden"},
+		{args: "network transit-gateway-attachment list --network n-abcde1 --name aws-tgwa1,aws-tgwa2", fixture: "network/transit-gateway-attachment/list-network-name.golden"},
+		{args: "network transit-gateway-attachment list --phase READY --name aws-tgwa3", fixture: "network/transit-gateway-attachment/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -393,6 +398,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentList() {
 		{args: "network pl attachment list", fixture: "network/private-link/attachment/list.golden"},
 		{args: "network private-link attachment list", fixture: "network/private-link/attachment/list.golden"},
 		{args: "network private-link attachment list --output json", fixture: "network/private-link/attachment/list-json.golden"},
+		{args: "network private-link attachment list --name aws-platt-1,aws-platt-2 --cloud AWS", fixture: "network/private-link/attachment/list-name-cloud.golden"},
+		{args: "network private-link attachment list --region us-west-2 --phase PROVISIONING ", fixture: "network/private-link/attachment/list-region-phase.golden"},
 	}
 
 	for _, test := range tests {
@@ -772,4 +779,59 @@ func (s *CLITestSuite) TestNetworkIpAddressList() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
+
+func (s *CLITestSuite) Test() {
+	s.TestNetworkDescribe()
+	s.TestNetworkDelete()
+	s.TestNetworkUpdate()
+	s.TestNetworkList()
+	s.TestNetworkCreate()
+	s.TestNetwork_Autocomplete()
+	s.TestNetworkPeeringDescribe()
+	s.TestNetworkPeeringDelete()
+	s.TestNetworkPeeringUpdate()
+	s.TestNetworkPeeringList()
+	s.TestNetworkPeeringCreate()
+	s.TestNetworkPeering_Autocomplete()
+	s.TestNetworkTransitGatewayAttachmentDescribe()
+	s.TestNetworkTransitGatewayAttachmentDelete()
+	s.TestNetworkTransitGatewayAttachmentUpdate()
+	s.TestNetworkTransitGatewayAttachmentList()
+	s.TestNetworkTransitGatewayAttachmentCreate()
+	s.TestNetworkTransitGatewayAttachment_Autocomplete()
+	s.TestNetworkPrivateLinkAccessDescribe()
+	s.TestNetworkPrivateLinkAccessDelete()
+	s.TestNetworkPrivateLinkAccessUpdate()
+	s.TestNetworkPrivateLinkAccessList()
+	s.TestNetworkPrivateLinkAccessCreate()
+	s.TestNetworkPrivateLinkAccess_Autocomplete()
+	s.TestNetworkPrivateLinkAttachmentDescribe()
+	s.TestNetworkPrivateLinkAttachmentDelete()
+	s.TestNetworkPrivateLinkAttachmentUpdate()
+	s.TestNetworkPrivateLinkAttachmentList()
+	s.TestNetworkPrivateLinkAttachmentCreate()
+	s.TestNetworkPrivateLinkAttachment_Autocomplete()
+	s.TestNetworkPrivateLinkAttachmentConnectionDescribe()
+	s.TestNetworkPrivateLinkAttachmentConnectionDelete()
+	s.TestNetworkPrivateLinkAttachmentConnectionUpdate()
+	s.TestNetworkPrivateLinkAttachmentConnectionList()
+	s.TestNetworkPrivateLinkAttachmentConnectionCreate()
+	s.TestNetworkPrivateLinkAttachmentConnection_Autocomplete()
+	s.TestNetworkNetworkLinkServiceDescribe()
+	s.TestNetworkNetworkLinkServiceDelete()
+	s.TestNetworkNetworkLinkServiceUpdate()
+	s.TestNetworkNetworkLinkServiceList()
+	s.TestNetworkNetworkLinkServiceCreate()
+	s.TestNetworkNetworkLinkService_Autocomplete()
+	s.TestNetworkNetworkLinkEndpointDescribe()
+	s.TestNetworkNetworkLinkEndpointDelete()
+	s.TestNetworkNetworkLinkEndpointUpdate()
+	s.TestNetworkNetworkLinkEndpointList()
+	s.TestNetworkNetworkLinkEndpointCreate()
+	s.TestNetworkNetworkLinkEndpoint_Autocomplete()
+	//s.TestNetworkDnsForwarderDescribe()
+	//s.TestNetworkDnsForwarderDelete()
+	//s.TestNetworkDnsForwarderList()
+	//s.TestNetworkDnsForwarder_Autocomplete()
 }

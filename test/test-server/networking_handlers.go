@@ -336,52 +336,73 @@ func handleNetworkingNetworkUpdate(t *testing.T, id string) http.HandlerFunc {
 
 func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		gcpNetwork := getGcpNetwork("n-abcde1", "prod-gcp-us-central1", "READY", []string{"PEERING"})
-		azureNetwork := getAzureNetwork("n-abcde2", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
+		q := r.URL.Query()
+		name := q["spec.display_name"]
+		cloud := q["spec.network"]
+		region := q["spec.region"]
+		cidr := q["spec.cidr"]
+		phase := q["status.phase"]
+		connection := q["connection_type"]
 
-		// Same cloud, sort by region
-		awsNetwork := getAwsNetwork("n-abcde3", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
-		awsNetwork2 := getAwsNetwork("n-abcde4", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
-		awsNetwork2.Spec.SetRegion("us-west-2")
-
-		// Same cloud, region, sort by created_at
-		awsNetwork3 := getAwsNetwork("n-abcde5", "", "READY", []string{"TRANSITGATEWAY", "PEERING"})
-		awsNetwork.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
-		awsNetwork3.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 1, time.UTC))}
-
-		pageToken := r.URL.Query().Get("page_token")
-		var networkList networkingv1.NetworkingV1NetworkList
-		switch pageToken {
-		case "aws3":
-			networkList = networkingv1.NetworkingV1NetworkList{
-				Data:     []networkingv1.NetworkingV1Network{awsNetwork3},
-				Metadata: networkingv1.ListMeta{},
-			}
-		case "aws2":
-			networkList = networkingv1.NetworkingV1NetworkList{
-				Data:     []networkingv1.NetworkingV1Network{awsNetwork2},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=aws3"))},
-			}
-		case "aws":
-			networkList = networkingv1.NetworkingV1NetworkList{
-				Data:     []networkingv1.NetworkingV1Network{awsNetwork},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=aws2"))},
-			}
-		case "azure":
-			networkList = networkingv1.NetworkingV1NetworkList{
-				Data:     []networkingv1.NetworkingV1Network{azureNetwork},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=aws"))},
-			}
-		default:
-			networkList = networkingv1.NetworkingV1NetworkList{
-				Data:     []networkingv1.NetworkingV1Network{gcpNetwork},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=azure"))},
-			}
-		}
-
+		networkList := getNetworkList(name, cloud, region, cidr, phase, connection)
 		err := json.NewEncoder(w).Encode(networkList)
 		require.NoError(t, err)
 	}
+}
+
+func getNetworkList(filterName, filterCloud, filterRegion, filterCidr, filterPhase, filterConnection []string) networkingv1.NetworkingV1NetworkList {
+	gcpNetwork := getGcpNetwork("n-abcde1", "prod-gcp-us-central1", "READY", []string{"PEERING"})
+	azureNetwork := getAzureNetwork("n-abcde2", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
+
+	// Same cloud, sort by region
+	awsNetwork := getAwsNetwork("n-abcde3", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+	awsNetwork2 := getAwsNetwork("n-abcde4", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+	awsNetwork2.Spec.SetRegion("us-west-2")
+
+	// Same cloud, region, sort by created_at
+	awsNetwork3 := getAwsNetwork("n-abcde5", "", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+	awsNetwork.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+	awsNetwork3.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 1, time.UTC))}
+
+	networkList := networkingv1.NetworkingV1NetworkList{
+		Data: []networkingv1.NetworkingV1Network{
+			gcpNetwork, azureNetwork, awsNetwork, awsNetwork2, awsNetwork3,
+		},
+	}
+	networkList.Data = filterNetworkList(networkList.Data, filterName, filterCloud, filterRegion, filterCidr, filterPhase, filterConnection)
+
+	return networkList
+}
+
+func filterNetworkList(networkList []networkingv1.NetworkingV1Network, name, cloud, region, cidr, phase, connection []string) []networkingv1.NetworkingV1Network {
+	var filteredNetworkList []networkingv1.NetworkingV1Network
+	for _, networkSpec := range networkList {
+		if (slices.Contains(name, networkSpec.Spec.GetDisplayName()) || name == nil) &&
+			(slices.Contains(cloud, networkSpec.Spec.GetCloud()) || cloud == nil) &&
+			(slices.Contains(region, networkSpec.Spec.GetRegion()) || region == nil) &&
+			(slices.Contains(cidr, networkSpec.Spec.GetCidr()) || cidr == nil) &&
+			(slices.Contains(phase, networkSpec.Status.GetPhase()) || phase == nil) &&
+			(containsConnection(connection, networkSpec.Status.GetActiveConnectionTypes().Items) || connection == nil) {
+			filteredNetworkList = append(filteredNetworkList, networkSpec)
+		}
+	}
+	return filteredNetworkList
+}
+
+func containsConnection(filterConnection, connectionTypes []string) bool {
+	overlap := make(map[string]bool)
+
+	for _, val := range filterConnection {
+		overlap[strings.ToUpper(val)] = true
+	}
+
+	for _, val := range connectionTypes {
+		if overlap[val] {
+			return true
+		}
+	}
+
+	return false
 }
 
 func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
@@ -787,33 +808,40 @@ func handleNetworkingTransitGatewayAttachmentGet(t *testing.T, id string) http.H
 
 func handleNetworkingTransitGatewayAttachmentList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		attachment1 := getTransitGatewayAttachment("tgwa-111111", "aws-tgwa1")
-		attachment2 := getTransitGatewayAttachment("tgwa-222222", "aws-tgwa2")
-		attachment3 := getTransitGatewayAttachment("tgwa-333333", "aws-tgwa3")
+		q := r.URL.Query()
+		name := q["spec.display_name"]
+		network := q["spec.network"]
+		phase := q["status.phase"]
 
-		pageToken := r.URL.Query().Get("page_token")
-		var transitGatewayAttachmentList networkingv1.NetworkingV1TransitGatewayAttachmentList
-		switch pageToken {
-		case "aws-tgwa3":
-			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
-				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment3},
-				Metadata: networkingv1.ListMeta{},
-			}
-		case "aws-tgwa2":
-			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
-				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment2},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/transit-gateway-attachments?environment=env-00000&page_size=1&page_token=aws-tgwa3"))},
-			}
-		default:
-			transitGatewayAttachmentList = networkingv1.NetworkingV1TransitGatewayAttachmentList{
-				Data:     []networkingv1.NetworkingV1TransitGatewayAttachment{attachment1},
-				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/transit-gateway-attachments?environment=env-00000&page_size=1&page_token=aws-tgwa2"))},
-			}
-		}
-
-		err := json.NewEncoder(w).Encode(transitGatewayAttachmentList)
+		tgwaList := getTransitGatewayAttachmentList(name, network, phase)
+		err := json.NewEncoder(w).Encode(tgwaList)
 		require.NoError(t, err)
 	}
+}
+
+func getTransitGatewayAttachmentList(filterName, filterNetwork, filterPhase []string) networkingv1.NetworkingV1TransitGatewayAttachmentList {
+	tgwaList := networkingv1.NetworkingV1TransitGatewayAttachmentList{
+		Data: []networkingv1.NetworkingV1TransitGatewayAttachment{
+			getTransitGatewayAttachment("tgwa-111111", "aws-tgwa1"),
+			getTransitGatewayAttachment("tgwa-222222", "aws-tgwa2"),
+			getTransitGatewayAttachment("tgwa-333333", "aws-tgwa3"),
+		},
+	}
+	tgwaList.Data = filterTransitGatwayAttachmentList(tgwaList.Data, filterName, filterNetwork, filterPhase)
+
+	return tgwaList
+}
+
+func filterTransitGatwayAttachmentList(tgwaList []networkingv1.NetworkingV1TransitGatewayAttachment, name, network, phase []string) []networkingv1.NetworkingV1TransitGatewayAttachment {
+	var filteredAttachmentList []networkingv1.NetworkingV1TransitGatewayAttachment
+	for _, attachmentSpec := range tgwaList {
+		if (slices.Contains(name, attachmentSpec.Spec.GetDisplayName()) || name == nil) &&
+			(slices.Contains(network, attachmentSpec.Spec.Network.GetId()) || network == nil) &&
+			(slices.Contains(phase, attachmentSpec.Status.GetPhase()) || phase == nil) {
+			filteredAttachmentList = append(filteredAttachmentList, attachmentSpec)
+		}
+	}
+	return filteredAttachmentList
 }
 
 func getTransitGatewayAttachment(id, name string) networkingv1.NetworkingV1TransitGatewayAttachment {
@@ -1139,33 +1167,42 @@ func getPrivateLinkAttachment(id, name, phase string) networkingprivatelinkv1.Ne
 
 func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		attachment1 := getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING")
-		attachment2 := getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS")
-		attachment3 := getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS")
+		q := r.URL.Query()
+		name := q["spec.display_name"]
+		cloud := q["spec.cloud"]
+		region := q["spec.region"]
+		phase := q["status.phase"]
 
-		pageToken := r.URL.Query().Get("page_token")
-		var attachmentList networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList
-		switch pageToken {
-		case "aws-platt-3":
-			attachmentList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{
-				Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{attachment3},
-				Metadata: networkingprivatelinkv1.ListMeta{},
-			}
-		case "aws-platt-2":
-			attachmentList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{
-				Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{attachment2},
-				Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-platt-3"))},
-			}
-		default:
-			attachmentList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{
-				Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{attachment1},
-				Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-platt-2"))},
-			}
-		}
-
-		err := json.NewEncoder(w).Encode(attachmentList)
+		plattList := getPrivateLinkAttachmentList(name, cloud, region, phase)
+		err := json.NewEncoder(w).Encode(plattList)
 		require.NoError(t, err)
 	}
+}
+
+func getPrivateLinkAttachmentList(filterName, filterCloud, filterRegion, filterPhase []string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList {
+	plattList := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{
+		Data: []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
+			getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING"),
+			getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS"),
+			getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS"),
+		},
+	}
+	plattList.Data = filterAttachmentList(plattList.Data, filterName, filterCloud, filterRegion, filterPhase)
+
+	return plattList
+}
+
+func filterAttachmentList(attachmentList []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, name, cloud, region, phase []string) []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
+	var filteredAttachmentList []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment
+	for _, attachmentSpec := range attachmentList {
+		if (slices.Contains(name, attachmentSpec.Spec.GetDisplayName()) || name == nil) &&
+			(slices.Contains(cloud, attachmentSpec.Spec.GetCloud()) || cloud == nil) &&
+			(slices.Contains(region, attachmentSpec.Spec.GetRegion()) || region == nil) &&
+			(slices.Contains(phase, attachmentSpec.Status.GetPhase()) || phase == nil) {
+			filteredAttachmentList = append(filteredAttachmentList, attachmentSpec)
+		}
+	}
+	return filteredAttachmentList
 }
 
 func handleNetworkingPrivateLinkAttachmentUpdate(t *testing.T, id string) http.HandlerFunc {

@@ -23,13 +23,13 @@ func (c *Client) networkingPrivateLinkApiContext() context.Context {
 	return context.WithValue(context.Background(), networkingprivatelinkv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-func (c *Client) ListPrivateLinkAttachments(environment string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
+func (c *Client) ListPrivateLinkAttachments(environment string, name, cloud, region, phase []string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
 	var list []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListPrivateLinkAttachments(environment, pageToken)
+		page, err := c.executeListPrivateLinkAttachments(environment, pageToken, name, cloud, region, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -43,8 +43,8 @@ func (c *Client) ListPrivateLinkAttachments(environment string) ([]networkingpri
 	return list, nil
 }
 
-func (c *Client) executeListPrivateLinkAttachments(environment, pageToken string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList, error) {
-	req := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentsNetworkingV1Api.ListNetworkingV1PrivateLinkAttachments(c.networkingPrivateLinkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListPrivateLinkAttachments(environment, pageToken string, name, cloud, region, phase []string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList, error) {
+	req := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentsNetworkingV1Api.ListNetworkingV1PrivateLinkAttachments(c.networkingPrivateLinkApiContext()).Environment(environment).SpecDisplayName(name).SpecCloud(cloud).SpecRegion(region).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
