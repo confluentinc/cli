@@ -50,6 +50,10 @@ nfpms:
     contents:
       - src: LICENSE
         dst: /usr/share/doc/cli/COPYRIGHT
+    overrides:
+      rpm:
+        dependencies:
+          - libc.so.6(GLIBC_2.27)(64bit)
     deb:
       signature:
         key_file: /run/secrets/deb_gpg_secret_key
