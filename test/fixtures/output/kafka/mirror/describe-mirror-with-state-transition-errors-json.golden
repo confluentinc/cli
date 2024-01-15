@@ -1,0 +1,10 @@
+[
+  {
+    "error_code": "MISCONFIGURATION_ERROR",
+    "error_message": "Wrong config."
+  },
+  {
+    "error_code": "MISCONFIGURATION_ERROR",
+    "error_message": "Wrong config."
+  }
+]
