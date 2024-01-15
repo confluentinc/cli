@@ -15,7 +15,6 @@ import (
 )
 
 type describeTasksOut struct {
-	Name  string              `human:"Name" serialized:"link_name"`
 	Tasks []serializedTaskOut `serialized:"tasks"`
 }
 
@@ -75,7 +74,6 @@ func (c *linkCommand) describeTasks(cmd *cobra.Command, args []string) error {
 	table.Add(describeTasksOut)
 	isSerialized := output.GetFormat(cmd).IsSerialized()
 	if isSerialized {
-		table.Filter(getDescribeClusterLinksTasksFields())
 		return table.Print()
 	} else {
 		return printHumanTaskOuts(cmd, describeTasksOut.Tasks)
@@ -102,7 +100,6 @@ func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error 
 func newDescribeTasksLink(link kafkarestv3.ListLinksResponseData) *describeTasksOut {
 	tasks := toTaskOut(link.GetTasks())
 	return &describeTasksOut{
-		Name:  link.GetLinkName(),
 		Tasks: tasks,
 	}
 }
@@ -127,8 +124,4 @@ func toTaskOut(tasks []kafkarestv3.LinkTask) []serializedTaskOut {
 		})
 	}
 	return taskOuts
-}
-
-func getDescribeClusterLinksTasksFields() []string {
-	return []string{"Name", "Tasks", "TaskName", "State", "Errors", "ErrorCode", "ErrorMessage"}
 }

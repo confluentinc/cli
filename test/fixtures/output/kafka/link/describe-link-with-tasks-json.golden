@@ -1,5 +1,4 @@
 {
-  "link_name": "link-5",
   "tasks": [
     {
       "task_name": "ConsumerOffsetSync",

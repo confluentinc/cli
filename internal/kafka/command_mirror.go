@@ -7,19 +7,18 @@ import (
 )
 
 type mirrorOut struct {
-	LinkName                    string                     `human:"Link Name" serialized:"link_name"`
-	MirrorTopicName             string                     `human:"Mirror Topic Name" serialized:"mirror_topic_name"`
-	SourceTopicName             string                     `human:"Source Topic Name" serialized:"source_topic_name"`
-	MirrorStatus                string                     `human:"Mirror Status" serialized:"mirror_status"`
-	StatusTimeMs                int64                      `human:"Status Time (ms)" serialized:"status_time_ms"`
-	Partition                   int32                      `human:"Partition" serialized:"partition"`
-	NumPartition                int32                      `human:"Num Partition" serialized:"num_partition"`
-	PartitionMirrorLag          int64                      `human:"Partition Mirror Lag" serialized:"partition_mirror_lag"`
-	MaxPerPartitionMirrorLag    int64                      `human:"Max Per Partition Mirror Lag" serialized:"max_per_partition_mirror_lag"`
-	LastSourceFetchOffset       int64                      `human:"Last Source Fetch Offset" serialized:"last_source_fetch_offset"`
-	ErrorMessage                string                     `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
-	ErrorCode                   string                     `human:"Error Code,omitempty" serialized:"error_code,omitempty"`
-	MirrorStateTransitionErrors []mirrorTransitionErrorOut `serialized:"mirror_state_transition_errors"`
+	LinkName                 string `human:"Link Name" serialized:"link_name"`
+	MirrorTopicName          string `human:"Mirror Topic Name" serialized:"mirror_topic_name"`
+	SourceTopicName          string `human:"Source Topic Name" serialized:"source_topic_name"`
+	MirrorStatus             string `human:"Mirror Status" serialized:"mirror_status"`
+	StatusTimeMs             int64  `human:"Status Time (ms)" serialized:"status_time_ms"`
+	Partition                int32  `human:"Partition" serialized:"partition"`
+	NumPartition             int32  `human:"Num Partition" serialized:"num_partition"`
+	PartitionMirrorLag       int64  `human:"Partition Mirror Lag" serialized:"partition_mirror_lag"`
+	MaxPerPartitionMirrorLag int64  `human:"Max Per Partition Mirror Lag" serialized:"max_per_partition_mirror_lag"`
+	LastSourceFetchOffset    int64  `human:"Last Source Fetch Offset" serialized:"last_source_fetch_offset"`
+	ErrorMessage             string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	ErrorCode                string `human:"Error Code,omitempty" serialized:"error_code,omitempty"`
 }
 
 type mirrorCommand struct {
@@ -37,6 +36,7 @@ func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newDescribeStateTransitionErrorsCommand())
 	cmd.AddCommand(c.newFailoverCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newPauseCommand())
