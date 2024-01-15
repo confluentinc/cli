@@ -1,0 +1,7 @@
+[
+  {
+    "task_name": "ConsumerOffsetSync",
+    "state": "ACTIVE",
+    "errors": []
+  }
+]
