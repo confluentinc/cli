@@ -14,10 +14,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type describeTasksOut struct {
-	Tasks []serializedTaskOut `serialized:"tasks"`
-}
-
 type serializedTaskOut struct {
 	TaskName string         `serialized:"task_name"`
 	State    string         `serialized:"state"`
@@ -69,14 +65,14 @@ func (c *linkCommand) describeTasks(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
 	describeTasksOut := newDescribeTasksLink(link)
-	table.Add(describeTasksOut)
 	isSerialized := output.GetFormat(cmd).IsSerialized()
 	if isSerialized {
-		return table.Print()
+		list := output.NewList(cmd)
+		list.Add(describeTasksOut)
+		return list.Print()
 	} else {
-		return printHumanTaskOuts(cmd, describeTasksOut.Tasks)
+		return printHumanTaskOuts(cmd, describeTasksOut)
 	}
 }
 
@@ -97,14 +93,8 @@ func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error 
 	return list.Print()
 }
 
-func newDescribeTasksLink(link kafkarestv3.ListLinksResponseData) *describeTasksOut {
-	tasks := toTaskOut(link.GetTasks())
-	return &describeTasksOut{
-		Tasks: tasks,
-	}
-}
-
-func toTaskOut(tasks []kafkarestv3.LinkTask) []serializedTaskOut {
+func newDescribeTasksLink(link kafkarestv3.ListLinksResponseData) []serializedTaskOut {
+	tasks := link.GetTasks()
 	if tasks == nil {
 		return make([]serializedTaskOut, 0)
 	}
