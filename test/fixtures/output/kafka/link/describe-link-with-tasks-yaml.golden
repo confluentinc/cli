@@ -1,8 +1,4 @@
 link_name: link-5
-source_cluster_id: ""
-destination_cluster_id: ""
-remote_cluster_id: cluster-2
-state: AVAILABLE
 tasks:
     - task_name: ConsumerOffsetSync
       state: ACTIVE
