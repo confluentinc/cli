@@ -17,8 +17,8 @@ type mirrorOut struct {
 	PartitionMirrorLag       int64  `human:"Partition Mirror Lag" serialized:"partition_mirror_lag"`
 	MaxPerPartitionMirrorLag int64  `human:"Max Per Partition Mirror Lag" serialized:"max_per_partition_mirror_lag"`
 	LastSourceFetchOffset    int64  `human:"Last Source Fetch Offset" serialized:"last_source_fetch_offset"`
-	ErrorMessage             string `human:"Error Message" serialized:"error_message"`
-	ErrorCode                string `human:"Error Code" serialized:"error_code"`
+	ErrorMessage             string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	ErrorCode                string `human:"Error Code,omitempty" serialized:"error_code,omitempty"`
 }
 
 type mirrorCommand struct {
@@ -36,6 +36,7 @@ func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newDescribeStateTransitionErrorsCommand())
 	cmd.AddCommand(c.newFailoverCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newPauseCommand())
