@@ -1,5 +1,5 @@
   Mirror State Transition Error  | Mirror State Transition Error   
                Code              |            Message              
 ---------------------------------+---------------------------------
-  AUTHENTICATION_ERROR           | Auth issue.                     
+  MISCONFIGURATION_ERROR         | Wrong config.                   
   MISCONFIGURATION_ERROR         | Wrong config.                   

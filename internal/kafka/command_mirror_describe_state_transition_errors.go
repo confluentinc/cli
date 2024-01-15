@@ -66,8 +66,8 @@ func (c *mirrorCommand) describeStateTransitionErrors(cmd *cobra.Command, args [
 
 	mirrorStateTransitionErrors := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
 	list := output.NewList(cmd)
-	for _, transitionErr := range mirrorStateTransitionErrors {
-		list.Add(&transitionErr)
+	for i := range mirrorStateTransitionErrors {
+		list.Add(&mirrorStateTransitionErrors[i])
 	}
 	return list.Print()
 }
