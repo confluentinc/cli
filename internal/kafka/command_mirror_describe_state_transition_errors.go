@@ -72,18 +72,18 @@ func (c *mirrorCommand) describeStateTransitionErrors(cmd *cobra.Command, args [
 	return list.Print()
 }
 
-type mirrorTransitionErrorOut struct {
+type mirrorStateTransitionErrorOut struct {
 	ErrorCode    string `human:"Mirror State Transition Error Code" serialized:"error_code"`
 	ErrorMessage string `human:"Mirror State Transition Error Message" serialized:"error_message"`
 }
 
-func toMirrorStateTransitionError(errs []v3.LinkTaskError) []mirrorTransitionErrorOut {
+func toMirrorStateTransitionError(errs []v3.LinkTaskError) []mirrorStateTransitionErrorOut {
 	if errs == nil {
-		return make([]mirrorTransitionErrorOut, 0)
+		return make([]mirrorStateTransitionErrorOut, 0)
 	}
-	transitionErrorOuts := make([]mirrorTransitionErrorOut, 0)
+	transitionErrorOuts := make([]mirrorStateTransitionErrorOut, 0)
 	for _, err := range errs {
-		transitionErrorOuts = append(transitionErrorOuts, mirrorTransitionErrorOut{
+		transitionErrorOuts = append(transitionErrorOuts, mirrorStateTransitionErrorOut{
 			ErrorCode:    err.ErrorCode,
 			ErrorMessage: err.ErrorMessage,
 		})
