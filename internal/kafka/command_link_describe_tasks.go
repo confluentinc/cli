@@ -15,9 +15,9 @@ import (
 )
 
 type serializedTaskOut struct {
-	TaskName string         `serialized:"task_name"`
-	State    string         `serialized:"state"`
-	Errors   []taskErrorOut `serialized:"errors"`
+	TaskName string                   `serialized:"task_name"`
+	State    string                   `serialized:"state"`
+	Errors   []serializedTaskErrorOut `serialized:"errors"`
 }
 
 type humanTaskOut struct {
@@ -26,9 +26,9 @@ type humanTaskOut struct {
 	Errors   string `human:"Errors"`
 }
 
-type taskErrorOut struct {
-	ErrorCode    string `human:"Error Code" serialized:"error_code"`
-	ErrorMessage string `human:"Error Message" serialized:"error_message"`
+type serializedTaskErrorOut struct {
+	ErrorCode    string `serialized:"error_code"`
+	ErrorMessage string `serialized:"error_message"`
 }
 
 func (c *linkCommand) newDescribeLinkTasksCommand() *cobra.Command {
@@ -104,9 +104,9 @@ func newDescribeTasksLink(link kafkarestv3.ListLinksResponseData) []serializedTa
 	}
 	taskOuts := make([]serializedTaskOut, 0)
 	for _, task := range tasks {
-		taskErrorOuts := make([]taskErrorOut, 0)
+		taskErrorOuts := make([]serializedTaskErrorOut, 0)
 		for _, err := range task.Errors {
-			taskErrorOuts = append(taskErrorOuts, taskErrorOut{
+			taskErrorOuts = append(taskErrorOuts, serializedTaskErrorOut{
 				ErrorCode:    err.ErrorCode,
 				ErrorMessage: err.ErrorMessage,
 			})
