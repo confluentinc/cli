@@ -69,8 +69,8 @@ func (c *linkCommand) describeTasks(cmd *cobra.Command, args []string) error {
 	isSerialized := output.GetFormat(cmd).IsSerialized()
 	if isSerialized {
 		list := output.NewList(cmd)
-		for _, taskOut := range describeTasksOut {
-			list.Add(&taskOut)
+		for i := range describeTasksOut {
+			list.Add(&describeTasksOut[i])
 		}
 		return list.Print()
 	} else {

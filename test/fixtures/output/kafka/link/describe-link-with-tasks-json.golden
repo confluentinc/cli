@@ -1,45 +1,27 @@
 [
   {
-    "task_name": "TopicConfigsSync",
+    "task_name": "AclSync",
     "state": "IN_ERROR",
     "errors": [
       {
-        "error_code": "INTERNAL_ERROR",
-        "error_message": "Internal error."
+        "error_code": "AUTHENTICATION_ERROR",
+        "error_message": "Auth issue."
       },
       {
-        "error_code": "REMOTE_LINK_NOT_FOUND_ERROR",
-        "error_message": "Remote link not found."
+        "error_code": "MISCONFIGURATION_ERROR",
+        "error_message": "Wrong config."
       }
     ]
   },
   {
-    "task_name": "TopicConfigsSync",
-    "state": "IN_ERROR",
-    "errors": [
-      {
-        "error_code": "INTERNAL_ERROR",
-        "error_message": "Internal error."
-      },
-      {
-        "error_code": "REMOTE_LINK_NOT_FOUND_ERROR",
-        "error_message": "Remote link not found."
-      }
-    ]
+    "task_name": "AutoCreateMirror",
+    "state": "NOT_CONFIGURED",
+    "errors": []
   },
   {
-    "task_name": "TopicConfigsSync",
-    "state": "IN_ERROR",
-    "errors": [
-      {
-        "error_code": "INTERNAL_ERROR",
-        "error_message": "Internal error."
-      },
-      {
-        "error_code": "REMOTE_LINK_NOT_FOUND_ERROR",
-        "error_message": "Remote link not found."
-      }
-    ]
+    "task_name": "ConsumerOffsetSync",
+    "state": "ACTIVE",
+    "errors": []
   },
   {
     "task_name": "TopicConfigsSync",
