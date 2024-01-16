@@ -1,4 +1,4 @@
-Lists a cluster link's tasks.
+List a cluster link's tasks.
 
 Usage:
   confluent kafka link task list <link> [flags]

@@ -94,11 +94,11 @@ func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error 
 	for _, taskOut := range taskOuts {
 		errs := make([]string, 0)
 		for _, err := range taskOut.Errors {
-			errs = append(errs, fmt.Sprintf("Error Code: %s Error Message: %s", err.ErrorCode, err.ErrorMessage))
+			errs = append(errs, fmt.Sprintf("(%s) Error Message: %s", err.ErrorCode, err.ErrorMessage))
 		}
 		// Encode the list of errors into a single, comma separated String so that the errors take up a single column
 		// in the outputted table.
-		errsStr := strings.Join(errs, ",")
+		errsStr := strings.Join(errs, ", ")
 		list.Add(&humanTaskOut{
 			TaskName: taskOut.TaskName,
 			State:    taskOut.State,
