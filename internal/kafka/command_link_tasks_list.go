@@ -45,7 +45,7 @@ func (c *linkCommand) newTaskCommand() *cobra.Command {
 func (c *linkCommand) newLinkTaskListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "list <link>",
-		Short:             "Lists a cluster link's tasks.",
+		Short:             "List a cluster link's tasks.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.listTasks,
