@@ -14,21 +14,21 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *mirrorCommand) newStateTransitionErrorsCommand() *cobra.Command {
+func (c *mirrorCommand) newStateTransitionErrorCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "state-transition-errors",
+		Use:   "state-transition-error",
 		Short: "Manages state transition errors.",
 	}
 
-	cmd.AddCommand(c.newListStateTransitionErrorsCommand())
+	cmd.AddCommand(c.newMirrorStateTransitionErrorListCommand())
 
 	return cmd
 }
 
-func (c *mirrorCommand) newListStateTransitionErrorsCommand() *cobra.Command {
+func (c *mirrorCommand) newMirrorStateTransitionErrorListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "list <destination-topic-name>",
-		Short:             "Lists the mirror topics state transition errors.",
+		Short:             "Lists the mirror topic's state transition errors.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.listStateTransitionErrors,

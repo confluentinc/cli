@@ -35,7 +35,7 @@ func newLinkCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(c.newTasksCommand())
+		cmd.AddCommand(c.newTaskCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)

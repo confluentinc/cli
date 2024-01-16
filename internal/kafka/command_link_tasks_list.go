@@ -31,21 +31,21 @@ type serializedTaskErrorOut struct {
 	ErrorMessage string `serialized:"error_message"`
 }
 
-func (c *linkCommand) newTasksCommand() *cobra.Command {
+func (c *linkCommand) newTaskCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tasks",
-		Short: "Manager a cluster links tasks.",
+		Use:   "task",
+		Short: "Manager a cluster link's tasks.",
 	}
 
-	cmd.AddCommand(c.newListTasksCommand())
+	cmd.AddCommand(c.newLinkTaskListCommand())
 
 	return cmd
 }
 
-func (c *linkCommand) newListTasksCommand() *cobra.Command {
+func (c *linkCommand) newLinkTaskListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "list <link>",
-		Short:             "Lists a cluster links tasks.",
+		Short:             "Lists a cluster link's tasks.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.listTasks,
