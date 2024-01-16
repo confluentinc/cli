@@ -2,5 +2,5 @@
 ----------+--------------+----------+----------------------------
           | env-123      | env123   | ESSENTIALS                 
           | env-595      | other    | ESSENTIALS                 
-  *       | env-596      | default  | ESSENTIALS                 
+  *       | env-596      | default  | ADVANCED                   
           | env-srUpdate | srUpdate | ESSENTIALS                 
