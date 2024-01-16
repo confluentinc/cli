@@ -19,6 +19,7 @@ func (c *mirrorCommand) newStateTransitionErrorsCommand() *cobra.Command {
 		Use:   "state-transition-errors",
 		Short: "Manages state transition errors.",
 	}
+
 	cmd.AddCommand(c.newListStateTransitionErrorsCommand())
 
 	return cmd
