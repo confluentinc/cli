@@ -23,7 +23,7 @@ func (c *mirrorCommand) newDescribeStateTransitionErrorsCommand() *cobra.Command
 		RunE:              c.describeStateTransitionErrors,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe mirror topic state transition errors "my-topic" under the link "my-link":`,
+				Text: `Describe mirror topic "my-topic" state transition errors under the link "my-link":`,
 				Code: "confluent kafka mirror describe-state-transition-errors my-topic --link my-link",
 			},
 		),

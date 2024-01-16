@@ -65,7 +65,7 @@ func (c *linkCommand) describeTasks(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	describeTasksOut := newDescribeTasksLink(link)
+	describeTasksOut := newTaskOuts(link)
 	isSerialized := output.GetFormat(cmd).IsSerialized()
 	if isSerialized {
 		list := output.NewList(cmd)
@@ -97,7 +97,7 @@ func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error 
 	return list.Print()
 }
 
-func newDescribeTasksLink(link kafkarestv3.ListLinksResponseData) []serializedTaskOut {
+func newTaskOuts(link kafkarestv3.ListLinksResponseData) []serializedTaskOut {
 	tasks := link.GetTasks()
 	if tasks == nil {
 		return make([]serializedTaskOut, 0)
