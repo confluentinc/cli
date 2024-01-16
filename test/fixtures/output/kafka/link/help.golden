@@ -4,12 +4,12 @@ Usage:
   confluent kafka link [command]
 
 Available Commands:
-  configuration  Manage cluster link configurations.
-  create         Create a new cluster link.
-  delete         Delete one or more cluster links.
-  describe       Describe a cluster link.
-  describe-tasks Describe a cluster links tasks.
-  list           List cluster links.
+  configuration Manage cluster link configurations.
+  create        Create a new cluster link.
+  delete        Delete one or more cluster links.
+  describe      Describe a cluster link.
+  list          List cluster links.
+  tasks         Manager a cluster links tasks.
 
 Global Flags:
   -h, --help            Show help for this command.

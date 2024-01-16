@@ -31,9 +31,19 @@ type serializedTaskErrorOut struct {
 	ErrorMessage string `serialized:"error_message"`
 }
 
+func (c *linkCommand) newTasksCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "tasks",
+		Short: "Manager a cluster links tasks.",
+	}
+	cmd.AddCommand(c.newDescribeTasksCommand())
+
+	return cmd
+}
+
 func (c *linkCommand) newDescribeTasksCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe-tasks <link>",
+		Use:               "describe <link>",
 		Short:             "Describe a cluster links tasks.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

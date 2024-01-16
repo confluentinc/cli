@@ -14,9 +14,19 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
+func (c *mirrorCommand) newStateTransitionErrorsCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "state-transition-errors",
+		Short: "Manages state transition errors.",
+	}
+	cmd.AddCommand(c.newDescribeStateTransitionErrorsCommand())
+
+	return cmd
+}
+
 func (c *mirrorCommand) newDescribeStateTransitionErrorsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe-state-transition-errors <destination-topic-name>",
+		Use:               "describe <destination-topic-name>",
 		Short:             "Describe a mirror topics state transition errors.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -24,7 +34,7 @@ func (c *mirrorCommand) newDescribeStateTransitionErrorsCommand() *cobra.Command
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe mirror topic "my-topic" state transition errors under the link "my-link":`,
-				Code: "confluent kafka mirror describe-state-transition-errors my-topic --link my-link",
+				Code: "confluent kafka mirror state-transition-errors describe my-topic --link my-link",
 			},
 		),
 	}
