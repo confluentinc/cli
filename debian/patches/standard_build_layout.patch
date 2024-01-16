@@ -1,12 +1,12 @@
---- cli/Makefile	2023-12-14 11:01:54.000000000 -0800
-+++ debian/Makefile	2023-12-14 18:41:42.000000000 -0800
+--- cli/Makefile	2024-01-16 15:39:47.422369888 -0800
++++ debian/Makefile	2024-01-12 08:35:04.157968782 -0800
 @@ -1,127 +1,144 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
  
 -# Compile natively based on the current system
--.PHONY: build 
+-.PHONY: build
 -build:
 -ifneq "" "$(findstring NT,$(shell uname))" # windows
 -	CC=gcc CXX=g++ $(MAKE) cli-builder
@@ -25,24 +25,24 @@
 -cross-build:
 -ifeq ($(GOARCH),arm64)
 -    ifeq ($(GOOS),linux) # linux/arm64
--		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+-		CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
 -    else # darwin/arm64
--		CGO_ENABLED=1 $(MAKE) cli-builder
+-		$(MAKE) cli-builder
 -    endif
 -else
 -    ifeq ($(GOOS),windows) # windows/amd64
--		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
+-		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
 -    else ifeq ($(GOOS),linux) # linux/amd64
--		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+-		CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
 -    else # darwin/amd64
--		CGO_ENABLED=1 $(MAKE) cli-builder
+-		$(MAKE) cli-builder
 -    endif
 -endif
 -
 -.PHONY: cli-builder
 -cli-builder:
 -	GOOS="" GOARCH="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
--	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+-	TAGS=$(TAGS) CGO_ENABLED=1 CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 -
 -include ./mk-files/semver.mk
 -include ./mk-files/docs.mk
