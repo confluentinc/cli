@@ -31,7 +31,7 @@ type serializedTaskErrorOut struct {
 	ErrorMessage string `serialized:"error_message"`
 }
 
-func (c *linkCommand) newDescribeLinkTasksCommand() *cobra.Command {
+func (c *linkCommand) newDescribeTasksCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe-tasks <link>",
 		Short:             "Describe a cluster links tasks.",

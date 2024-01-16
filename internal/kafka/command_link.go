@@ -34,7 +34,7 @@ func newLinkCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
-		cmd.AddCommand(c.newDescribeLinkTasksCommand())
+		cmd.AddCommand(c.newDescribeTasksCommand())
 		cmd.AddCommand(c.newListCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
