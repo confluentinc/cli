@@ -1,0 +1,93 @@
+package network
+
+import (
+	"github.com/spf13/cobra"
+
+	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder/v1"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/examples"
+)
+
+func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create [name]",
+		Short: "Create a DNS forwarder.",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  c.dnsForwarderCreate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a DNS forwarder.",
+				Code: "confluent network dns forwarder create --domains abc.com,def.com --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456",
+			},
+			examples.Example{
+				Text: "Create a named DNS forwarder.",
+				Code: "confluent network dns forwarder create my-dns-forwarder --domains abc.com,def.com --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456",
+			},
+		),
+	}
+
+	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
+	cmd.Flags().String("gateway", "", "Gateway ID.")
+	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("dns-server-ips"))
+	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
+
+	return cmd
+}
+
+func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	}
+
+	domains, err := cmd.Flags().GetStringSlice("domains")
+	if err != nil {
+		return err
+	}
+
+	gatewayId, err := cmd.Flags().GetString("gateway")
+	if err != nil {
+		return err
+	}
+
+	dnsServerIps, err := cmd.Flags().GetStringSlice("dns-server-ips")
+	if err != nil {
+		return err
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	createDnsForwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+			Domains: &domains,
+			Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+				NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
+					Kind:         "ForwardViaIp",
+					DnsServerIps: dnsServerIps,
+				},
+			},
+			Environment: &networkingdnsforwarderv1.ObjectReference{Id: environmentId},
+			Gateway:     &networkingdnsforwarderv1.ObjectReference{Id: gatewayId},
+		},
+	}
+
+	if name != "" {
+		createDnsForwarder.Spec.SetDisplayName(name)
+	}
+
+	forwarder, err := c.V2Client.CreateDnsForwarder(createDnsForwarder)
+	if err != nil {
+		return err
+	}
+
+	return printDnsForwarderTable(cmd, forwarder)
+}

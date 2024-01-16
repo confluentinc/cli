@@ -1,0 +1,26 @@
+Error: at least one of the flags in the group [name domains dns-server-ips] is required
+Usage:
+  confluent network dns forwarder update <id> [flags]
+
+Examples:
+Update the name of DNS forwarder "dnsf-123456".
+
+  $ confluent network dns forwarder update dnsf-123456 --name my-new-dns-forwarder
+
+Update the DNS server IPs and domains of DNS forwarder "dnsf-123456".
+
+  $ confluent network dns forwarder update dnsf-123456 --dns-server-ips 10.200.0.0,10.201.0.0 --domains abc.com,def.com
+
+Flags:
+      --dns-server-ips strings   A comma-separated list of IP addresses for the DNS server.
+      --name string              Name of the DNS forwarder.
+      --domains strings          A comma-separated list of domains for the DNS forwarder to use.
+      --context string           CLI context name.
+      --environment string       Environment ID.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

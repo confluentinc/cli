@@ -1,0 +1,11 @@
++----------------+---------------------------------+
+| ID             | dns-111111                      |
+| Name           | my-dns-forwarder                |
+| Domains        | abc.com, def.com,               |
+|                | example.domain, xyz.com,        |
+|                | my.dns.forwarder.example.domain |
+| DNS Server IPs | 10.208.0.0, 10.209.0.0          |
+| Environment    | env-00000                       |
+| Gateway        | gw-111111                       |
+| Phase          | READY                           |
++----------------+---------------------------------+
