@@ -22,7 +22,7 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create a named DNS forwarder.",
-				Code: "confluent network dns forwarder my-dns-forwarder create --domains abc.com,def.com --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456",
+				Code: "confluent network dns forwarder create my-dns-forwarder --domains abc.com,def.com --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456",
 			},
 		),
 	}

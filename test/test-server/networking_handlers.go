@@ -1538,8 +1538,8 @@ func handleNetworkingDnsForwarderUpdate(t *testing.T, id string) http.HandlerFun
 			if body.Spec.Domains != nil {
 				forwarder.Spec.SetDomains(body.Spec.GetDomains())
 			}
-			if body.Spec.Gateway != nil {
-				forwarder.Spec.Gateway.SetId(body.Spec.Gateway.GetId())
+			if body.Spec.Config != nil {
+				forwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(body.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps())
 			}
 			err = json.NewEncoder(w).Encode(forwarder)
 			require.NoError(t, err)

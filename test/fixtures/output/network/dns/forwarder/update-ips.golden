@@ -4,8 +4,8 @@
 | Domains        | abc.com, def.com,               |
 |                | example.domain, xyz.com,        |
 |                | my.dns.forwarder.example.domain |
-| DNS Server IPs | 10.200.0.0                      |
+| DNS Server IPs | 10.208.0.0, 10.209.0.0          |
 | Environment    | env-00000                       |
-| Gateway        | gw-222222                       |
+| Gateway        | gw-111111                       |
 | Phase          | READY                           |
 +----------------+---------------------------------+

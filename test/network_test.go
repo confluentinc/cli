@@ -619,7 +619,7 @@ func (s *CLITestSuite) TestNetworkDnsForwarderUpdate() {
 		{args: "network dns forwarder update", fixture: "network/dns/forwarder/update-missing-args.golden", exitCode: 1},
 		{args: "network dns forwarder update dnsf-111111", fixture: "network/dns/forwarder/update-missing-flags.golden", exitCode: 1},
 		{args: "network dns forwarder update dnsf-111111 --name my-new-dns-forwarder --domains ghi.com,jkl.com,xyz.com", fixture: "network/dns/forwarder/update.golden"},
-		{args: "network dns forwarder update dnsf-111111 --gateway gw-222222", fixture: "network/dns/forwarder/update-gateway.golden"},
+		{args: "network dns forwarder update dnsf-111111 --dns-server-ips 10.208.0.0,10.209.0.0", fixture: "network/dns/forwarder/update-ips.golden"},
 		{args: "network dns forwarder update dnsf-invalid --name my-new-dns-forwarder", fixture: "network/dns/forwarder/update-dnsf-not-exist.golden", exitCode: 1},
 	}
 
