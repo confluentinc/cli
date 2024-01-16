@@ -4,9 +4,10 @@ Usage:
   confluent environment update <id> [flags]
 
 Flags:
-      --name string      REQUIRED: New name for Confluent Cloud environment.
-      --context string   CLI context name.
-  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+      --name string                 New name for Confluent Cloud environment.
+      --governance-package string   Specify the Stream Governance package as "essentials" or "advanced".
+      --context string              CLI context name.
+  -o, --output string               Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
