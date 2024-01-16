@@ -4,7 +4,7 @@ Usage:
   confluent kafka mirror describe-state-transition-errors <destination-topic-name> [flags]
 
 Examples:
-Describe mirror topic state transition errors "my-topic" under the link "my-link":
+Describe mirror topic "my-topic" state transition errors under the link "my-link":
 
   $ confluent kafka mirror describe-state-transition-errors my-topic --link my-link
 
