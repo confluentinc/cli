@@ -4,7 +4,7 @@ Usage:
   confluent kafka link tasks [command]
 
 Available Commands:
-  describe    Describe a cluster links tasks.
+  list        Lists a cluster links tasks.
 
 Global Flags:
   -h, --help            Show help for this command.

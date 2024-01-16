@@ -19,22 +19,22 @@ func (c *mirrorCommand) newStateTransitionErrorsCommand() *cobra.Command {
 		Use:   "state-transition-errors",
 		Short: "Manages state transition errors.",
 	}
-	cmd.AddCommand(c.newDescribeStateTransitionErrorsCommand())
+	cmd.AddCommand(c.newListStateTransitionErrorsCommand())
 
 	return cmd
 }
 
-func (c *mirrorCommand) newDescribeStateTransitionErrorsCommand() *cobra.Command {
+func (c *mirrorCommand) newListStateTransitionErrorsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <destination-topic-name>",
-		Short:             "Describe a mirror topics state transition errors.",
+		Use:               "list <destination-topic-name>",
+		Short:             "Lists the mirror topics state transition errors.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.describeStateTransitionErrors,
+		RunE:              c.listStateTransitionErrors,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe mirror topic "my-topic" state transition errors under the link "my-link":`,
-				Code: "confluent kafka mirror state-transition-errors describe my-topic --link my-link",
+				Text: `Lists mirror topic "my-topic" state transition errors under the link "my-link":`,
+				Code: "confluent kafka mirror state-transition-errors list my-topic --link my-link",
 			},
 		),
 	}
@@ -50,7 +50,7 @@ func (c *mirrorCommand) newDescribeStateTransitionErrorsCommand() *cobra.Command
 	return cmd
 }
 
-func (c *mirrorCommand) describeStateTransitionErrors(cmd *cobra.Command, args []string) error {
+func (c *mirrorCommand) listStateTransitionErrors(cmd *cobra.Command, args []string) error {
 	mirrorTopicName := args[0]
 
 	link, err := cmd.Flags().GetString("link")

@@ -36,18 +36,19 @@ func (c *linkCommand) newTasksCommand() *cobra.Command {
 		Use:   "tasks",
 		Short: "Manager a cluster links tasks.",
 	}
-	cmd.AddCommand(c.newDescribeTasksCommand())
+
+	cmd.AddCommand(c.newListTasksCommand())
 
 	return cmd
 }
 
-func (c *linkCommand) newDescribeTasksCommand() *cobra.Command {
+func (c *linkCommand) newListTasksCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <link>",
-		Short:             "Describe a cluster links tasks.",
+		Use:               "list <link>",
+		Short:             "Lists a cluster links tasks.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.describeTasks,
+		RunE:              c.listTasks,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -58,7 +59,7 @@ func (c *linkCommand) newDescribeTasksCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *linkCommand) describeTasks(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) listTasks(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	kafkaREST, err := c.GetKafkaREST()
@@ -75,16 +76,16 @@ func (c *linkCommand) describeTasks(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	describeTasksOut := newTaskOuts(link)
+	tasksOut := newTaskOuts(link)
 	isSerialized := output.GetFormat(cmd).IsSerialized()
 	if isSerialized {
 		list := output.NewList(cmd)
-		for i := range describeTasksOut {
-			list.Add(&describeTasksOut[i])
+		for i := range tasksOut {
+			list.Add(&tasksOut[i])
 		}
 		return list.Print()
 	} else {
-		return printHumanTaskOuts(cmd, describeTasksOut)
+		return printHumanTaskOuts(cmd, tasksOut)
 	}
 }
 

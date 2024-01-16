@@ -4,7 +4,7 @@ Usage:
   confluent kafka mirror state-transition-errors [command]
 
 Available Commands:
-  describe    Describe a mirror topics state transition errors.
+  list        Lists the mirror topics state transition errors.
 
 Global Flags:
   -h, --help            Show help for this command.
