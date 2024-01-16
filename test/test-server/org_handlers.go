@@ -50,9 +50,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodPatch:
 			req := &orgv2.OrgV2Environment{
-				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{
-					Package: orgv2.PtrString("ESSENTIALS"),
-				}}
+				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 			req.Id = orgv2.PtrString(id)
@@ -73,9 +71,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodPost:
 			req := &orgv2.OrgV2Environment{
-				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{
-					Package: orgv2.PtrString("ESSENTIALS"),
-				}}
+				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 
