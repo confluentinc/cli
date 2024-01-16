@@ -773,65 +773,12 @@ func (s *CLITestSuite) TestNetworkIpAddressList() {
 	tests := []CLITest{
 		{args: "network ip-address list", fixture: "network/ip-address/list.golden"},
 		{args: "network ip-address list --output json", fixture: "network/ip-address/list-json.golden"},
+		{args: "network ip-address list --cloud aws --region us-east-1", fixture: "network/ip-address/list-cloud-region.golden"},
+		{args: "network ip-address list --services kafka --address-type egress", fixture: "network/ip-address/list-services-address.golden"},
 	}
 
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
-}
-
-func (s *CLITestSuite) Test() {
-	s.TestNetworkDescribe()
-	s.TestNetworkDelete()
-	s.TestNetworkUpdate()
-	s.TestNetworkList()
-	s.TestNetworkCreate()
-	s.TestNetwork_Autocomplete()
-	s.TestNetworkPeeringDescribe()
-	s.TestNetworkPeeringDelete()
-	s.TestNetworkPeeringUpdate()
-	s.TestNetworkPeeringList()
-	s.TestNetworkPeeringCreate()
-	s.TestNetworkPeering_Autocomplete()
-	s.TestNetworkTransitGatewayAttachmentDescribe()
-	s.TestNetworkTransitGatewayAttachmentDelete()
-	s.TestNetworkTransitGatewayAttachmentUpdate()
-	s.TestNetworkTransitGatewayAttachmentList()
-	s.TestNetworkTransitGatewayAttachmentCreate()
-	s.TestNetworkTransitGatewayAttachment_Autocomplete()
-	s.TestNetworkPrivateLinkAccessDescribe()
-	s.TestNetworkPrivateLinkAccessDelete()
-	s.TestNetworkPrivateLinkAccessUpdate()
-	s.TestNetworkPrivateLinkAccessList()
-	s.TestNetworkPrivateLinkAccessCreate()
-	s.TestNetworkPrivateLinkAccess_Autocomplete()
-	s.TestNetworkPrivateLinkAttachmentDescribe()
-	s.TestNetworkPrivateLinkAttachmentDelete()
-	s.TestNetworkPrivateLinkAttachmentUpdate()
-	s.TestNetworkPrivateLinkAttachmentList()
-	s.TestNetworkPrivateLinkAttachmentCreate()
-	s.TestNetworkPrivateLinkAttachment_Autocomplete()
-	s.TestNetworkPrivateLinkAttachmentConnectionDescribe()
-	s.TestNetworkPrivateLinkAttachmentConnectionDelete()
-	s.TestNetworkPrivateLinkAttachmentConnectionUpdate()
-	s.TestNetworkPrivateLinkAttachmentConnectionList()
-	s.TestNetworkPrivateLinkAttachmentConnectionCreate()
-	s.TestNetworkPrivateLinkAttachmentConnection_Autocomplete()
-	s.TestNetworkNetworkLinkServiceDescribe()
-	s.TestNetworkNetworkLinkServiceDelete()
-	s.TestNetworkNetworkLinkServiceUpdate()
-	s.TestNetworkNetworkLinkServiceList()
-	s.TestNetworkNetworkLinkServiceCreate()
-	s.TestNetworkNetworkLinkService_Autocomplete()
-	s.TestNetworkNetworkLinkEndpointDescribe()
-	s.TestNetworkNetworkLinkEndpointDelete()
-	s.TestNetworkNetworkLinkEndpointUpdate()
-	s.TestNetworkNetworkLinkEndpointList()
-	s.TestNetworkNetworkLinkEndpointCreate()
-	s.TestNetworkNetworkLinkEndpoint_Autocomplete()
-	//s.TestNetworkDnsForwarderDescribe()
-	//s.TestNetworkDnsForwarderDelete()
-	//s.TestNetworkDnsForwarderList()
-	//s.TestNetworkDnsForwarder_Autocomplete()
 }

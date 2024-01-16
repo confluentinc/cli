@@ -338,7 +338,7 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		name := q["spec.display_name"]
-		cloud := q["spec.network"]
+		cloud := q["spec.cloud"]
 		region := q["spec.region"]
 		cidr := q["spec.cidr"]
 		phase := q["status.phase"]
@@ -378,25 +378,25 @@ func filterNetworkList(networkList []networkingv1.NetworkingV1Network, name, clo
 	var filteredNetworkList []networkingv1.NetworkingV1Network
 	for _, networkSpec := range networkList {
 		if (slices.Contains(name, networkSpec.Spec.GetDisplayName()) || name == nil) &&
-			(slices.Contains(cloud, networkSpec.Spec.GetCloud()) || cloud == nil) &&
+			(slices.Contains(cloud, strings.ToLower(networkSpec.Spec.GetCloud())) || cloud == nil) &&
 			(slices.Contains(region, networkSpec.Spec.GetRegion()) || region == nil) &&
 			(slices.Contains(cidr, networkSpec.Spec.GetCidr()) || cidr == nil) &&
 			(slices.Contains(phase, networkSpec.Status.GetPhase()) || phase == nil) &&
-			(containsConnection(connection, networkSpec.Status.GetActiveConnectionTypes().Items) || connection == nil) {
+			(containsFilter(connection, networkSpec.Status.GetActiveConnectionTypes().Items) || connection == nil) {
 			filteredNetworkList = append(filteredNetworkList, networkSpec)
 		}
 	}
 	return filteredNetworkList
 }
 
-func containsConnection(filterConnection, connectionTypes []string) bool {
+func containsFilter(filter, resource []string) bool {
 	overlap := make(map[string]bool)
 
-	for _, val := range filterConnection {
+	for _, val := range filter {
 		overlap[strings.ToUpper(val)] = true
 	}
 
-	for _, val := range connectionTypes {
+	for _, val := range resource {
 		if overlap[val] {
 			return true
 		}
@@ -1769,51 +1769,45 @@ func handleNetworkingNetworkLinkEndpointUpdate(t *testing.T, id string) http.Han
 
 func handleNetworkingIpAddressList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		anyIpAddress := getIpAddress("10.200.0.0/28", "ANY", "global", []string{"EXTERNAL_OAUTH"})
-		awsWestIpAddress := getIpAddress("10.201.0.0/28", "AWS", "us-west-2", []string{"CONNECT"})
-		awsEastIpAddress := getIpAddress("10.201.0.0/28", "AWS", "us-east-1", []string{"CONNECT"})
-		awsEastIpAddress2 := getIpAddress("10.202.0.0/28", "AWS", "us-east-1", []string{"CONNECT"})
-		gcpIpAddress := getIpAddress("10.202.0.0/28", "GCP", "us-central1", []string{"KAFKA"})
-		azureIpAddress := getIpAddress("10.203.0.0/28", "AZURE", "centralus", []string{"KAFKA", "CONNECT"})
+		q := r.URL.Query()
+		cloud := q["cloud"]
+		region := q["region"]
+		services := q["services"]
+		addressType := q["address_type"]
 
-		pageToken := r.URL.Query().Get("page_token")
-		var ipAddressList networkingipv1.NetworkingV1IpAddressList
-		switch pageToken {
-		case "awse1-2":
-			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
-				Data:     []networkingipv1.NetworkingV1IpAddress{awsEastIpAddress2},
-				Metadata: networkingipv1.ListMeta{},
-			}
-		case "awse1":
-			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
-				Data:     []networkingipv1.NetworkingV1IpAddress{awsEastIpAddress},
-				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=awse1-2"))},
-			}
-		case "azure":
-			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
-				Data:     []networkingipv1.NetworkingV1IpAddress{azureIpAddress},
-				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=awse1"))},
-			}
-		case "gcp":
-			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
-				Data:     []networkingipv1.NetworkingV1IpAddress{gcpIpAddress},
-				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=azure"))},
-			}
-		case "awsw2":
-			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
-				Data:     []networkingipv1.NetworkingV1IpAddress{awsWestIpAddress},
-				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=gcp"))},
-			}
-		default:
-			ipAddressList = networkingipv1.NetworkingV1IpAddressList{
-				Data:     []networkingipv1.NetworkingV1IpAddress{anyIpAddress},
-				Metadata: networkingipv1.ListMeta{Next: *networkingipv1.NewNullableString(networkingipv1.PtrString("/networking/v1/ip-addresses?page_size=1&page_token=awsw2"))},
-			}
-		}
-
-		err := json.NewEncoder(w).Encode(ipAddressList)
+		ipList := getIpAddressList(cloud, region, services, addressType)
+		err := json.NewEncoder(w).Encode(ipList)
 		require.NoError(t, err)
 	}
+}
+
+func getIpAddressList(filterCloud, filterRegion, filterServices, filterAddressType []string) networkingipv1.NetworkingV1IpAddressList {
+	ipList := networkingipv1.NetworkingV1IpAddressList{
+		Data: []networkingipv1.NetworkingV1IpAddress{
+			getIpAddress("10.200.0.0/28", "ANY", "global", []string{"EXTERNAL_OAUTH"}),
+			getIpAddress("10.201.0.0/28", "AWS", "us-west-2", []string{"CONNECT"}),
+			getIpAddress("10.201.0.0/28", "AWS", "us-east-1", []string{"CONNECT"}),
+			getIpAddress("10.202.0.0/28", "AWS", "us-east-1", []string{"CONNECT"}),
+			getIpAddress("10.202.0.0/28", "GCP", "us-central1", []string{"KAFKA"}),
+			getIpAddress("10.203.0.0/28", "AZURE", "centralus", []string{"KAFKA", "CONNECT"}),
+		},
+	}
+	ipList.Data = filterIpAddressList(ipList.Data, filterCloud, filterRegion, filterServices, filterAddressType)
+
+	return ipList
+}
+
+func filterIpAddressList(ipList []networkingipv1.NetworkingV1IpAddress, cloud, region, services, addressType []string) []networkingipv1.NetworkingV1IpAddress {
+	var filteredIpAddressList []networkingipv1.NetworkingV1IpAddress
+	for _, ipSpec := range ipList {
+		if (slices.Contains(cloud, strings.ToLower(ipSpec.GetCloud())) || cloud == nil) &&
+			(slices.Contains(region, ipSpec.GetRegion()) || region == nil) &&
+			(slices.Contains(addressType, strings.ToLower(ipSpec.GetAddressType())) || addressType == nil) &&
+			(containsFilter(services, ipSpec.GetServices().Items) || services == nil) {
+			filteredIpAddressList = append(filteredIpAddressList, ipSpec)
+		}
+	}
+	return filteredIpAddressList
 }
 
 func getIpAddress(ipPrefix, cloud, region string, services []string) networkingipv1.NetworkingV1IpAddress {
@@ -1823,6 +1817,6 @@ func getIpAddress(ipPrefix, cloud, region string, services []string) networkingi
 		IpPrefix:    networkingipv1.PtrString(ipPrefix),
 		Cloud:       networkingipv1.PtrString(cloud),
 		Region:      networkingipv1.PtrString(region),
-		Services:    &networkingipv1.NetworkingV1Services{Items: services},
+		Services:    &networkingipv1.Set{Items: services},
 	}
 }
