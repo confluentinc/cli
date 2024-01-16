@@ -1,0 +1,13 @@
+      Task Name      |     State      |             Errors              
+---------------------+----------------+---------------------------------
+  AclSync            | IN_ERROR       | (AUTHENTICATION_ERROR)          
+                     |                | Error Message: Auth issue.,     
+                     |                | (MISCONFIGURATION_ERROR) Error  
+                     |                | Message: Wrong config.          
+  AutoCreateMirror   | NOT_CONFIGURED |                                 
+  ConsumerOffsetSync | ACTIVE         |                                 
+  TopicConfigsSync   | IN_ERROR       | (INTERNAL_ERROR) Error          
+                     |                | Message: Internal error.,       
+                     |                | (REMOTE_LINK_NOT_FOUND_ERROR)   
+                     |                | Error Message: Remote link not  
+                     |                | found.                          
