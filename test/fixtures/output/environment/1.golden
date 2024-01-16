@@ -1,6 +1,6 @@
-  Current |      ID      |   Name    
-----------+--------------+-----------
-          | env-123      | env123    
-          | env-595      | other     
-  *       | env-596      | default   
-          | env-srUpdate | srUpdate  
+  Current |      ID      |   Name   | Stream Governance Package  
+----------+--------------+----------+----------------------------
+          | env-123      | env123   | ESSENTIALS                 
+          | env-595      | other    | ESSENTIALS                 
+  *       | env-596      | default  | ADVANCED                   
+          | env-srUpdate | srUpdate | ESSENTIALS                 
