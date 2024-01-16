@@ -94,6 +94,11 @@ func AddCloudFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
 
+func AddListCloudFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("cloud", nil, "A comma-separated list of cloud providers.")
+	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
+}
+
 func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {
@@ -542,7 +547,7 @@ func AddNetworkFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 }
 
 func AutocompleteNetworks(environmentId string, client *ccloudv2.Client) []string {
-	networks, err := client.ListNetworks(environmentId)
+	networks, err := client.ListNetworks(environmentId, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		return nil
 	}

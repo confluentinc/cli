@@ -37,13 +37,13 @@ func (c *command) newNetworkLinkEndpointCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) getNetworkLinkEndpoints() ([]networkingv1.NetworkingV1NetworkLinkEndpoint, error) {
+func (c *command) getNetworkLinkEndpoints(name, network, phase, service []string) ([]networkingv1.NetworkingV1NetworkLinkEndpoint, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.V2Client.ListNetworkLinkEndpoints(environmentId)
+	return c.V2Client.ListNetworkLinkEndpoints(environmentId, name, network, phase, service)
 }
 
 func (c *command) validNetworkLinkEndpointArgs(cmd *cobra.Command, args []string) []string {
@@ -62,7 +62,7 @@ func (c *command) validNetworkLinkEndpointsArgsMultiple(cmd *cobra.Command, args
 }
 
 func (c *command) autocompleteNetworkLinkEndpoints() []string {
-	endpoints, err := c.getNetworkLinkEndpoints()
+	endpoints, err := c.getNetworkLinkEndpoints(nil, nil, nil, nil)
 	if err != nil {
 		return nil
 	}

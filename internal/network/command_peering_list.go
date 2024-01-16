@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type listPeeringOut struct {
@@ -29,6 +30,9 @@ func (c *command) newPeeringListCommand() *cobra.Command {
 		RunE:  c.peeringList,
 	}
 
+	cmd.Flags().StringSlice("name", nil, "A comma-separated list of peering names.")
+	addListNetworkFlag(cmd, c.AuthenticatedCLICommand)
+	addPhaseFlag(cmd, resource.Peering)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -37,7 +41,22 @@ func (c *command) newPeeringListCommand() *cobra.Command {
 }
 
 func (c *command) peeringList(cmd *cobra.Command, _ []string) error {
-	peerings, err := c.getPeerings()
+	name, err := cmd.Flags().GetStringSlice("name")
+	if err != nil {
+		return err
+	}
+
+	network, err := cmd.Flags().GetStringSlice("network")
+	if err != nil {
+		return err
+	}
+
+	phase, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
+	peerings, err := c.getPeerings(name, network, phase)
 	if err != nil {
 		return err
 	}
