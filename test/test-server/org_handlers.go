@@ -16,7 +16,7 @@ var OrgEnvironments = []*orgv2.OrgV2Environment{
 	{Id: orgv2.PtrString("env-596"), DisplayName: orgv2.PtrString("default"),
 		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}},
 	{Id: orgv2.PtrString("env-595"), DisplayName: orgv2.PtrString("other"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}},
+		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ADVANCED")}},
 	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123"),
 		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}},
 	{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate"),
@@ -35,9 +35,12 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 				return
 			}
 			environment := &orgv2.OrgV2Environment{
-				Id:          orgv2.PtrString(id),
-				DisplayName: orgv2.PtrString("default"),
+				Id:                     orgv2.PtrString(id),
+				DisplayName:            orgv2.PtrString("default"),
 				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")},
+			}
+			if id == "env-595" {
+				environment.StreamGovernanceConfig.Package = orgv2.PtrString("ADVANCED")
 			}
 			err := json.NewEncoder(w).Encode(environment)
 			require.NoError(t, err)

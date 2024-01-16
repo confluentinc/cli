@@ -1,7 +1,7 @@
 - is_current: false
   id: env-123
   name: env123
-  stream_governance_package: ESSENTIALS
+  stream_governance_package: ADVANCED
 - is_current: true
   id: env-595
   name: other
