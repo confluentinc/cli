@@ -94,7 +94,7 @@ func writeSerialized(cmd *cobra.Command, link kafkarestv3.ListLinksResponseData)
 				ErrorMessage: err.ErrorMessage,
 			}
 		}
-		list.Add(serializedTaskOut{
+		list.Add(&serializedTaskOut{
 			TaskName: task.TaskName,
 			State:    task.State,
 			Errors:   errs,
