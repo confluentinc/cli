@@ -488,9 +488,6 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	if err != nil {
 		return nil, nil, err
 	}
-	defer func() {
-		_ = os.RemoveAll(schemaDir)
-	}()
 
 	subject := topicNameStrategy(topic, mode)
 
