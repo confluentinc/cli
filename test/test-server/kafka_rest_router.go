@@ -1489,8 +1489,8 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 			var mirrorStateTransitionErrors []cckafkarestv3.LinkTaskError
 			if includeStateTransitionErrors == "true" {
 				mirrorStateTransitionErrors = []cckafkarestv3.LinkTaskError{
-					*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
-					*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
+					{ErrorCode: "AUTHENTICATION_ERROR", ErrorMessage: "Auth issue."},
+					{ErrorCode: "MISCONFIGURATION_ERROR", ErrorMessage: "Wrong config."},
 				}
 			}
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseData{
