@@ -720,16 +720,16 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 				var tasks []cckafkarestv3.LinkTask
 				if includeTasks == "true" {
 					tasks = []cckafkarestv3.LinkTask{
-						*cckafkarestv3.NewLinkTask("ConsumerOffsetSync", "ACTIVE", []cckafkarestv3.LinkTaskError{}),
-						*cckafkarestv3.NewLinkTask("AutoCreateMirror", "NOT_CONFIGURED", []cckafkarestv3.LinkTaskError{}),
-						*cckafkarestv3.NewLinkTask("AclSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{
-							*cckafkarestv3.NewLinkTaskError("AUTHENTICATION_ERROR", "Auth issue."),
-							*cckafkarestv3.NewLinkTaskError("MISCONFIGURATION_ERROR", "Wrong config."),
-						}),
-						*cckafkarestv3.NewLinkTask("TopicConfigsSync", "IN_ERROR", []cckafkarestv3.LinkTaskError{
-							*cckafkarestv3.NewLinkTaskError("INTERNAL_ERROR", "Internal error."),
-							*cckafkarestv3.NewLinkTaskError("REMOTE_LINK_NOT_FOUND_ERROR", "Remote link not found."),
-						}),
+						{TaskName: "ConsumerOffsetSync", State: "ACTIVE", Errors: []cckafkarestv3.LinkTaskError{}},
+						{TaskName: "AutoCreateMirror", State: "NOT_CONFIGURED", Errors: []cckafkarestv3.LinkTaskError{}},
+						{TaskName: "AclSync", State: "IN_ERROR", Errors: []cckafkarestv3.LinkTaskError{
+							{ErrorCode: "AUTHENTICATION_ERROR", ErrorMessage: "Auth issue."},
+							{ErrorCode: "MISCONFIGURATION_ERROR", ErrorMessage: "Wrong config."},
+						}},
+						{TaskName: "TopicConfigsSync", State: "IN_ERROR", Errors: []cckafkarestv3.LinkTaskError{
+							{ErrorCode: "INTERNAL_ERROR", ErrorMessage: "Internal error."},
+							{ErrorCode: "REMOTE_LINK_NOT_FOUND_ERROR", ErrorMessage: "Remote link not found."},
+						}},
 					}
 				}
 				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{

@@ -89,15 +89,12 @@ type mirrorStateTransitionErrorOut struct {
 }
 
 func toMirrorStateTransitionError(errs []v3.LinkTaskError) []mirrorStateTransitionErrorOut {
-	if errs == nil {
-		return make([]mirrorStateTransitionErrorOut, 0)
-	}
-	transitionErrorOuts := make([]mirrorStateTransitionErrorOut, 0)
-	for _, err := range errs {
-		transitionErrorOuts = append(transitionErrorOuts, mirrorStateTransitionErrorOut{
+	transitionErrorOuts := make([]mirrorStateTransitionErrorOut, len(errs))
+	for i, err := range errs {
+		transitionErrorOuts[i] = mirrorStateTransitionErrorOut{
 			ErrorCode:    err.ErrorCode,
 			ErrorMessage: err.ErrorMessage,
-		})
+		}
 	}
 	return transitionErrorOuts
 }
