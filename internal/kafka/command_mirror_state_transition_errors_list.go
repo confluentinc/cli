@@ -6,9 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	v3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+		pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -75,10 +73,12 @@ func (c *mirrorCommand) listStateTransitionErrors(cmd *cobra.Command, args []str
 		return err
 	}
 
-	mirrorStateTransitionErrors := toMirrorStateTransitionError(mirror.GetMirrorStateTransitionErrors())
 	list := output.NewList(cmd)
-	for i := range mirrorStateTransitionErrors {
-		list.Add(&mirrorStateTransitionErrors[i])
+	for _, err := range mirror.GetMirrorStateTransitionErrors() {
+		list.Add(&mirrorStateTransitionErrorOut{
+			ErrorCode: err.ErrorCode,
+			ErrorMessage: err.ErrorMessage,
+		})
 	}
 	return list.Print()
 }
@@ -86,15 +86,4 @@ func (c *mirrorCommand) listStateTransitionErrors(cmd *cobra.Command, args []str
 type mirrorStateTransitionErrorOut struct {
 	ErrorCode    string `human:"Mirror State Transition Error Code" serialized:"error_code"`
 	ErrorMessage string `human:"Mirror State Transition Error Message" serialized:"error_message"`
-}
-
-func toMirrorStateTransitionError(errs []v3.LinkTaskError) []mirrorStateTransitionErrorOut {
-	transitionErrorOuts := make([]mirrorStateTransitionErrorOut, len(errs))
-	for i, err := range errs {
-		transitionErrorOuts[i] = mirrorStateTransitionErrorOut{
-			ErrorCode:    err.ErrorCode,
-			ErrorMessage: err.ErrorMessage,
-		}
-	}
-	return transitionErrorOuts
 }
