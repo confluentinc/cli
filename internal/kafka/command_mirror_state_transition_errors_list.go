@@ -30,7 +30,7 @@ func (c *mirrorCommand) newMirrorStateTransitionErrorListCommand() *cobra.Comman
 		Short:             "Lists the mirror topic's state transition errors.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.listStateTransitionErrors,
+		RunE:              c.stateTransitionErrorList,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Lists mirror topic "my-topic" state transition errors under the link "my-link":`,
@@ -50,7 +50,7 @@ func (c *mirrorCommand) newMirrorStateTransitionErrorListCommand() *cobra.Comman
 	return cmd
 }
 
-func (c *mirrorCommand) listStateTransitionErrors(cmd *cobra.Command, args []string) error {
+func (c *mirrorCommand) stateTransitionErrorList(cmd *cobra.Command, args []string) error {
 	mirrorTopicName := args[0]
 
 	link, err := cmd.Flags().GetString("link")
