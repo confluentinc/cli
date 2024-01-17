@@ -34,6 +34,33 @@ builds:
     goarch:
       - amd64
 
+nfpms:
+  - package_name: confluent-cli
+    file_name_template: "{{ .ConventionalFileName }}"
+    builds:
+      - confluent-linux-amd64-disableupdates
+    vendor: Confluent Inc.
+    homepage: https://docs.confluent.io/confluent-cli/current/overview.html
+    maintainer: Confluent Inc.
+    description: CLI for Confluent Cloud and Confluent Platform
+    license: Confluent Community License Agreement
+    formats:
+      - deb
+      - rpm
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/cli/COPYRIGHT
+    overrides:
+      rpm:
+        dependencies:
+          - libc.so.6(GLIBC_2.17)(64bit)
+    deb:
+      signature:
+        key_file: /run/secrets/deb_gpg_secret_key
+    rpm:
+      signature:
+        key_file: /run/secrets/rpm_gpg_secret_key
+
 release:
   disable: true
 
