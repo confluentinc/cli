@@ -9,6 +9,7 @@ Available Commands:
   delete        Delete one or more cluster links.
   describe      Describe a cluster link.
   list          List cluster links.
+  task          Manager a cluster link's tasks.
 
 Global Flags:
   -h, --help            Show help for this command.
