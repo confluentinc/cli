@@ -34,7 +34,7 @@ func (c *mirrorCommand) newMirrorStateTransitionErrorListCommand() *cobra.Comman
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Lists mirror topic "my-topic" state transition errors under the link "my-link":`,
-				Code: "confluent kafka mirror state-transition-errors list my-topic --link my-link",
+				Code: "confluent kafka mirror state-transition-error list my-topic --link my-link",
 			},
 		),
 	}
