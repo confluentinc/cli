@@ -109,24 +109,20 @@ func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error 
 }
 
 func newTaskOuts(link kafkarestv3.ListLinksResponseData) []serializedTaskOut {
-	tasks := link.GetTasks()
-	if tasks == nil {
-		return make([]serializedTaskOut, 0)
-	}
-	taskOuts := make([]serializedTaskOut, 0)
-	for _, task := range tasks {
-		taskErrorOuts := make([]serializedTaskErrorOut, 0)
-		for _, err := range task.Errors {
-			taskErrorOuts = append(taskErrorOuts, serializedTaskErrorOut{
+	taskOuts := make([]serializedTaskOut, len(link.GetTasks()))
+	for i, task := range link.GetTasks() {
+		taskErrorOuts := make([]serializedTaskErrorOut, len(task.Errors))
+		for j, err := range task.Errors {
+			taskErrorOuts[j] = serializedTaskErrorOut{
 				ErrorCode:    err.ErrorCode,
 				ErrorMessage: err.ErrorMessage,
-			})
+			}
 		}
-		taskOuts = append(taskOuts, serializedTaskOut{
+		taskOuts[i] = serializedTaskOut{
 			TaskName: task.TaskName,
 			State:    task.State,
 			Errors:   taskErrorOuts,
-		})
+		}
 	}
 	return taskOuts
 }
