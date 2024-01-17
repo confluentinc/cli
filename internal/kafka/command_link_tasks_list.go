@@ -92,9 +92,9 @@ func (c *linkCommand) listTasks(cmd *cobra.Command, args []string) error {
 func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error {
 	list := output.NewList(cmd)
 	for _, taskOut := range taskOuts {
-		errs := make([]string, 0)
-		for _, err := range taskOut.Errors {
-			errs = append(errs, fmt.Sprintf(`%s: "%s"`, err.ErrorCode, err.ErrorMessage))
+		errs := make([]string, len(taskOut.Errors))
+		for i, err := range taskOut.Errors {
+			errs[i] = fmt.Sprintf(`%s: "%s"`, err.ErrorCode, err.ErrorMessage)
 		}
 		// Encode the list of errors into a single, comma separated String so that the errors take up a single column
 		// in the outputted table.
