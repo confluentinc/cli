@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.49.16
+	github.com/aws/aws-sdk-go v1.49.21
 	github.com/billgraziano/dpapi v0.5.0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/brianstrauch/cobra-shell v0.5.0
@@ -30,7 +30,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.1.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.1.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.0
@@ -88,16 +88,16 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/stripe/stripe-go/v76 v76.11.0
+	github.com/stripe/stripe-go/v76 v76.12.0
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.uber.org/mock v0.4.0
-	golang.org/x/crypto v0.17.0
+	golang.org/x/crypto v0.18.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	golang.org/x/oauth2 v0.15.0
+	golang.org/x/oauth2 v0.16.0
 	golang.org/x/term v0.16.0
 	golang.org/x/text v0.14.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
@@ -181,7 +181,7 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
