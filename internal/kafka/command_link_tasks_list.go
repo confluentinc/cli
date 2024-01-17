@@ -76,53 +76,48 @@ func (c *linkCommand) listTasks(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tasksOut := newTaskOuts(link)
 	isSerialized := output.GetFormat(cmd).IsSerialized()
 	if isSerialized {
-		list := output.NewList(cmd)
-		for i := range tasksOut {
-			list.Add(&tasksOut[i])
-		}
-		return list.Print()
+		return writeSerialized(cmd, link)
 	} else {
-		return printHumanTaskOuts(cmd, tasksOut)
+		return writeHuman(cmd, link)
 	}
 }
 
-func printHumanTaskOuts(cmd *cobra.Command, taskOuts []serializedTaskOut) error {
+func writeSerialized(cmd *cobra.Command, link kafkarestv3.ListLinksResponseData) error {
 	list := output.NewList(cmd)
-	for _, taskOut := range taskOuts {
-		errs := make([]string, len(taskOut.Errors))
-		for i, err := range taskOut.Errors {
+	for _, task := range link.GetTasks() {
+		errs := make([]serializedTaskErrorOut, len(task.Errors))
+		for i, err := range task.Errors {
+			errs[i] = serializedTaskErrorOut{
+				ErrorCode:    err.ErrorCode,
+				ErrorMessage: err.ErrorMessage,
+			}
+		}
+		list.Add(serializedTaskOut{
+			TaskName: task.TaskName,
+			State:    task.State,
+			Errors:   errs,
+		})
+	}
+	return list.Print()
+}
+
+func writeHuman(cmd *cobra.Command, link kafkarestv3.ListLinksResponseData) error {
+	list := output.NewList(cmd)
+	for _, task := range link.GetTasks() {
+		errs := make([]string, len(task.Errors))
+		for i, err := range task.Errors {
 			errs[i] = fmt.Sprintf(`%s: "%s"`, err.ErrorCode, err.ErrorMessage)
 		}
 		// Encode the list of errors into a single, comma separated String so that the errors take up a single column
 		// in the outputted table.
 		errsStr := strings.Join(errs, ", ")
 		list.Add(&humanTaskOut{
-			TaskName: taskOut.TaskName,
-			State:    taskOut.State,
+			TaskName: task.TaskName,
+			State:    task.State,
 			Errors:   errsStr,
 		})
 	}
 	return list.Print()
-}
-
-func newTaskOuts(link kafkarestv3.ListLinksResponseData) []serializedTaskOut {
-	taskOuts := make([]serializedTaskOut, len(link.GetTasks()))
-	for i, task := range link.GetTasks() {
-		taskErrorOuts := make([]serializedTaskErrorOut, len(task.Errors))
-		for j, err := range task.Errors {
-			taskErrorOuts[j] = serializedTaskErrorOut{
-				ErrorCode:    err.ErrorCode,
-				ErrorMessage: err.ErrorMessage,
-			}
-		}
-		taskOuts[i] = serializedTaskOut{
-			TaskName: task.TaskName,
-			State:    task.State,
-			Errors:   taskErrorOuts,
-		}
-	}
-	return taskOuts
 }
