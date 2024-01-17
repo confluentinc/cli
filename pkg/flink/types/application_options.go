@@ -15,7 +15,6 @@ type ApplicationOptions struct {
 	ServiceAccountId string
 	Verbose          bool
 	LSPBaseUrl       string
-	LSPEnabled       bool
 	Context          *config.Context
 }
 
