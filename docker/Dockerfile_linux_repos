@@ -5,6 +5,13 @@ SHELL ["/bin/bash", "-c"]
 COPY . /cli/
 
 # Create rpm repo
+# To update the repo without syncing all prior rpm packages, we use --update and --skip-stat.
+# The --update flag leaves package metadata alone if the file exists and has the same size and mtime.
+# The --skip-stat flag tells createrepo to not check the size or mtime.
+# We use this to trick createrepo by creating empty files with the correct file names so that it thinks the other packages are there:
+# 1. Use xmllint to parse repomd.xml and get the filename of the current <hash>-primary.xml.gz, and then unzip this file with gzip,
+# 2. Use xmllint to parse primary.xml to get the package names,
+# 3. Create empty text files sharing these package names.
 RUN mkdir /rpm-temp && \
     if [[ -d /cli/rpm/repodata ]]; then \
         cp -r /cli/rpm/repodata /rpm-temp/ && \
