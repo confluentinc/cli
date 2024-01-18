@@ -39,7 +39,7 @@ nfpms:
     file_name_template: "{{ .ConventionalFileName }}"
     builds:
       - confluent-linux-amd64-disableupdates
-    vendor: Confluent Inc.
+    vendor: Confluent, Inc.
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     maintainer: Confluent Inc.
     description: CLI for Confluent Cloud and Confluent Platform
