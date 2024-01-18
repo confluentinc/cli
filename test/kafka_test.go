@@ -146,6 +146,7 @@ func (s *CLITestSuite) TestKafka() {
 
 	tests = []CLITest{
 		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
+		{args: fmt.Sprintf("kafka link task list link-5 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem.golden"},
 	}
 
 	for _, test := range tests {
