@@ -32,6 +32,12 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# RPM/DEB
+/rpm/
+/deb/
+*.gpg
+*passphrase
+
 # Go workspace file
 go.work
 
