@@ -1,5 +1,9 @@
 project_name: confluent
 
+env:
+  - CGO_ENABLED=1
+  - GOEXPERIMENT=boringcrypto
+
 builds:
   - id: confluent-alpine-amd64
     binary: confluent
@@ -13,7 +17,6 @@ builds:
     asmflags:
       - all=-trimpath={{.Env.HOME}}/git
     env:
-      - CGO_ENABLED=1
       - CC=x86_64-linux-musl-gcc
       - CXX=x86_64-linux-musl-g++
       - CGO_LDFLAGS=${CGO_LDFLAGS} -static
@@ -33,7 +36,6 @@ builds:
     asmflags:
       - all=-trimpath={{.Env.HOME}}/git
     env:
-      - CGO_ENABLED=1
       - CC=aarch64-linux-musl-gcc
       - CXX=aarch64-linux-musl-g++
       - CGO_LDFLAGS=${CGO_LDFLAGS} -static
@@ -87,8 +89,6 @@ builds:
   - id: confluent-darwin-arm64
     binary: confluent
     main: cmd/confluent/main.go
-    env:
-      - CGO_ENABLED=1
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
@@ -111,8 +111,6 @@ builds:
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
-    env:
-      - CGO_ENABLED=1
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
     gcflags:
@@ -156,13 +154,12 @@ builds:
     binary: confluent
     main: cmd/confluent/main.go
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe  
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
       - all=-trimpath={{.Env.HOME}}/git
     env:
-      - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
       - CXX=x86_64-w64-mingw32-g++
       - CGO_LDFLAGS=${CGO_LDFLAGS} -static
@@ -275,17 +272,17 @@ release:
 
 blobs:
   - ids:
-    - binary
-    - binary-alpine
+      - binary
+      - binary-alpine
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
     folder: "{{ .Env.S3FOLDER }}/binaries/{{ .Version }}"
     disable: "{{ .Env.DRY_RUN }}"
   - ids:
-    - archive
-    - archive-alpine
-    - archive-disableupdates
+      - archive
+      - archive-alpine
+      - archive-disableupdates
     provider: s3
     bucket: confluent.cloud
     region: us-west-2

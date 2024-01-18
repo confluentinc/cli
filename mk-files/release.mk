@@ -62,16 +62,16 @@ endef
 .PHONY: gorelease-linux-amd64
 gorelease-linux-amd64:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-amd64.yml
+	goreleaser release --clean --config .goreleaser-linux-amd64.yml
 
 .PHONY: gorelease-linux-arm64
 gorelease-linux-arm64:
 ifneq (,$(findstring x86_64,$(shell uname -m)))
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
+	CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ goreleaser release --clean --config .goreleaser-linux-arm64.yml
 else
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
+	goreleaser release --clean --config .goreleaser-linux-arm64.yml
 endif
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
@@ -89,7 +89,7 @@ gorelease:
 	$(call dry-run,aws s3 sync rpm $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/rpm) && \
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
-	GORELEASER_KEY=$(GORELEASER_KEY) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m && \
+	GORELEASER_KEY=$(GORELEASER_KEY) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m && \
 	$(call dry-run,gh release upload $(VERSION) prebuilt/*.deb prebuilt/*.rpm)
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
