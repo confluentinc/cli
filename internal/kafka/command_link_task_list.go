@@ -14,6 +14,17 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
+type task struct {
+	TaskName string
+	State    string
+	Errors   []taskErr
+}
+
+type taskErr struct {
+	ErrorCode    string
+	ErrorMessage string
+}
+
 type serializedTaskOut struct {
 	TaskName string                   `serialized:"task_name"`
 	State    string                   `serialized:"state"`
@@ -75,24 +86,35 @@ func (c *linkCommand) taskList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	tasks := make([]task, len(link.GetTasks()))
+	for i, t := range link.GetTasks() {
+		errors := make([]taskErr, len(t.Errors))
+		for j, e := range t.Errors {
+			errors[j] = taskErr{
+				ErrorCode:    e.ErrorCode,
+				ErrorMessage: e.ErrorMessage,
+			}
+		}
+		tasks[i] = task{
+			TaskName: t.TaskName,
+			State:    t.State,
+			Errors:   errors,
+		}
+	}
 
-	isSerialized := output.GetFormat(cmd).IsSerialized()
-	if isSerialized {
-		return writeSerialized(cmd, link)
+	if output.GetFormat(cmd).IsSerialized() {
+		return writeSerialized(cmd, tasks)
 	} else {
-		return writeHuman(cmd, link)
+		return writeHuman(cmd, tasks)
 	}
 }
 
-func writeSerialized(cmd *cobra.Command, link kafkarestv3.ListLinksResponseData) error {
+func writeSerialized(cmd *cobra.Command, tasks []task) error {
 	list := output.NewList(cmd)
-	for _, task := range link.GetTasks() {
+	for _, task := range tasks {
 		errs := make([]serializedTaskErrorOut, len(task.Errors))
 		for i, err := range task.Errors {
-			errs[i] = serializedTaskErrorOut{
-				ErrorCode:    err.ErrorCode,
-				ErrorMessage: err.ErrorMessage,
-			}
+			errs[i] = serializedTaskErrorOut(err)
 		}
 		list.Add(&serializedTaskOut{
 			TaskName: task.TaskName,
@@ -103,9 +125,9 @@ func writeSerialized(cmd *cobra.Command, link kafkarestv3.ListLinksResponseData)
 	return list.Print()
 }
 
-func writeHuman(cmd *cobra.Command, link kafkarestv3.ListLinksResponseData) error {
+func writeHuman(cmd *cobra.Command, tasks []task) error {
 	list := output.NewList(cmd)
-	for _, task := range link.GetTasks() {
+	for _, task := range tasks {
 		errs := make([]string, len(task.Errors))
 		for i, err := range task.Errors {
 			errs[i] = fmt.Sprintf(`%s: "%s"`, err.ErrorCode, err.ErrorMessage)
