@@ -3,6 +3,7 @@
 /legal/
 /prebuilt/
 /test/bin/
+/vendor/
 
 #
 # BEGIN managed content - any manual changes below this block will be discarded
@@ -29,7 +30,13 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-vendor/
+# vendor/
+
+# RPM/DEB
+/rpm/
+/deb/
+*.gpg
+*passphrase
 
 # Go workspace file
 go.work
