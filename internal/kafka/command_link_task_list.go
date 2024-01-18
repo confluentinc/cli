@@ -88,9 +88,9 @@ func (c *linkCommand) taskList(cmd *cobra.Command, args []string) error {
 	}
 	tasks := make([]task, len(link.GetTasks()))
 	for i, t := range link.GetTasks() {
-		errs := make([]taskErr, len(t.Errors))
+		errors := make([]taskErr, len(t.Errors))
 		for j, e := range t.Errors {
-			errs[j] = taskErr{
+			errors[j] = taskErr{
 				ErrorCode:    e.ErrorCode,
 				ErrorMessage: e.ErrorMessage,
 			}
@@ -98,12 +98,11 @@ func (c *linkCommand) taskList(cmd *cobra.Command, args []string) error {
 		tasks[i] = task{
 			TaskName: t.TaskName,
 			State:    t.State,
-			Errors:   errs,
+			Errors:   errors,
 		}
 	}
 
-	isSerialized := output.GetFormat(cmd).IsSerialized()
-	if isSerialized {
+	if output.GetFormat(cmd).IsSerialized() {
 		return writeSerialized(cmd, tasks)
 	} else {
 		return writeHuman(cmd, tasks)

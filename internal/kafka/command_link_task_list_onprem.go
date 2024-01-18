@@ -45,9 +45,7 @@ func (c *linkCommand) taskListOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	linkOpts := kafkarestv3.GetKafkaLinkOpts{
-		IncludeTasks: optional.NewBool(true),
-	}
+	linkOpts := kafkarestv3.GetKafkaLinkOpts{IncludeTasks: optional.NewBool(true)}
 	link, httpResp, err := client.ClusterLinkingV3Api.GetKafkaLink(ctx, clusterId, linkName, &linkOpts)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, client)
@@ -55,9 +53,9 @@ func (c *linkCommand) taskListOnPrem(cmd *cobra.Command, args []string) error {
 
 	tasks := make([]task, len(*link.Tasks))
 	for i, t := range *link.Tasks {
-		errs := make([]taskErr, len(t.Errors))
+		errors := make([]taskErr, len(t.Errors))
 		for j, e := range t.Errors {
-			errs[j] = taskErr{
+			errors[j] = taskErr{
 				ErrorCode:    e.ErrorCode,
 				ErrorMessage: e.ErrorMessage,
 			}
@@ -65,11 +63,10 @@ func (c *linkCommand) taskListOnPrem(cmd *cobra.Command, args []string) error {
 		tasks[i] = task{
 			TaskName: t.TaskName,
 			State:    t.State,
-			Errors:   errs,
+			Errors:   errors,
 		}
 	}
-	isSerialized := output.GetFormat(cmd).IsSerialized()
-	if isSerialized {
+	if output.GetFormat(cmd).IsSerialized() {
 		return writeSerialized(cmd, tasks)
 	} else {
 		return writeHuman(cmd, tasks)

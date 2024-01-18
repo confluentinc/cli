@@ -34,9 +34,7 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	linkOpts := kafkarestv3.GetKafkaLinkOpts{
-		IncludeTasks: optional.NewBool(false),
-	}
+	linkOpts := kafkarestv3.GetKafkaLinkOpts{IncludeTasks: optional.NewBool(false)}
 	data, httpResp, err := client.ClusterLinkingV3Api.GetKafkaLink(ctx, clusterId, linkName, &linkOpts)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, client)
