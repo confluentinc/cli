@@ -1,0 +1,84 @@
+project_name: confluent
+
+dist: prebuilt
+
+builds:
+  - id: confluent-windows-amd64
+    binary: confluent
+    main: cmd/confluent/main.go
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - windows
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - cmd: osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 /run/secrets/CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out /sign-temp/confluent.exe
+        - cmd: rm -f {{ .Path }}
+        - cmd: mv /sign-temp/confluent.exe {{ .Path }}
+  - id: confluent-windows-amd64-disableupdates
+    binary: confluent
+    main: cmd/confluent/main.go
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true -buildmode=exe
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - windows
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - cmd: osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 /run/secrets/CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out /sign-temp-disableupdates/confluent.exe
+        - cmd: rm -f {{ .Path }}
+        - cmd: mv /sign-temp-disableupdates/confluent.exe {{ .Path }}
+
+release:
+  disable: true
+
+archives:
+  - id: archive-disableupdates
+    format: zip
+    builds:
+      - confluent-windows-amd64-disableupdates
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_disableupdates"
+    wrap_in_directory: "{{ .ProjectName }}"
+    files:
+      - LICENSE
+      - legal/**/*
+
+chocolateys:
+  - name: confluent
+    ids:
+      - archive-disableupdates
+    owners: confluentinc
+    title: Confluent CLI
+    authors: Confluent Inc.
+    project_url: https://docs.confluent.io/confluent-cli/current/overview.html
+    url_template: "https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/{{ .Version }}/{{ .ArtifactName }}"
+    copyright: 2023 Confluent Inc.
+    license_url: https://github.com/confluentinc/cli/blob/main/LICENSE
+    require_license_acceptance: false
+    project_source_url: https://github.com/confluentinc/cli
+    bug_tracker_url: https://github.com/confluentinc/cli/issues
+    summary: CLI for Confluent Cloud and Confluent Platform
+    description: CLI for Confluent Cloud and Confluent Platform
+    release_notes: https://docs.confluent.io/confluent-cli/current/release-notes.html
+    skip_publish: true

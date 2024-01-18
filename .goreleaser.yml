@@ -153,31 +153,15 @@ builds:
     prebuilt:
       path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-disableupdates_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
   - id: confluent-windows-amd64
-    binary: confluent
-    main: cmd/confluent/main.go
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe  
-    gcflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    asmflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    env:
-      - CGO_ENABLED=1
-      - CC=x86_64-w64-mingw32-gcc
-      - CXX=x86_64-w64-mingw32-g++
-      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    builder: prebuilt
     goos:
       - windows
     goarch:
       - amd64
-    hooks:
-      pre:
-        - cmd: az login
-        - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
-        - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
-      post:
-        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
-        - cmd: rm CLIEVCodeSigningCertificate2.pfx
+    goamd64:
+      - v1
+    prebuilt:
+      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent.exe"
 
 archives:
   - id: archive
