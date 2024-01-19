@@ -5,6 +5,12 @@
 /test/bin/
 /vendor/
 
+# RPM/DEB
+/rpm/
+/deb/
+*.gpg
+*passphrase
+
 #
 # BEGIN managed content - any manual changes below this block will be discarded
 #
@@ -32,12 +38,6 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-# RPM/DEB
-/rpm/
-/deb/
-*.gpg
-*passphrase
-
 # Go workspace file
 go.work
 
@@ -51,7 +51,8 @@ go.work
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
