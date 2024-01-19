@@ -36,6 +36,7 @@ Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` o
     sudo apt install confluent-cli
 
 The `add-apt-repository` utility can be installed with `sudo apt install software-properties-common`.
+
 To update an existing APT installation of the CLI:
 
     sudo apt update && sudo apt install confluent-cli
@@ -49,6 +50,7 @@ Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` o
     sudo yum install confluent-cli
 
 The `yum-config-manager` utility can be installed with `sudo yum install yum-utils`.
+
 To update an existing YUM installation of the CLI:
 
     sudo yum clean all && sudo yum install confluent-cli
