@@ -33,13 +33,9 @@ Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` o
 
     wget -qO - https://packages.confluent.io/confluent-cli/deb/archive.key | sudo apt-key add -
     sudo add-apt-repository "deb https://packages.confluent.io/confluent-cli/deb stable main"
-    sudo apt install confluent-cli
+    sudo apt update && sudo apt install confluent-cli
 
 The `add-apt-repository` utility can be installed with `sudo apt install software-properties-common`.
-
-To update an existing APT installation of the CLI:
-
-    sudo apt update && sudo apt install confluent-cli
 
 #### YUM (RHEL and CentOS)
 
@@ -47,13 +43,9 @@ Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` o
 
     sudo rpm --import https://packages.confluent.io/confluent-cli/rpm/archive.key
     sudo yum-config-manager --add-repo https://packages.confluent.io/confluent-cli/rpm/confluent-cli.repo
-    sudo yum install confluent-cli
+    sudo yum clean all && sudo yum install confluent-cli
 
 The `yum-config-manager` utility can be installed with `sudo yum install yum-utils`.
-
-To update an existing YUM installation of the CLI:
-
-    sudo yum clean all && sudo yum install confluent-cli
 
 #### Scripted installation
 
