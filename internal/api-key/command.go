@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -60,10 +61,10 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	return cmd
 }
 
-func (c *command) addResourceFlag(cmd *cobra.Command, addCloud bool) {
+func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
 	description := "The ID of the resource the API key is for."
-	if addCloud {
-		description += ` Use "cloud" for a Cloud API key.`
+	if !isStore {
+		description += ` Use "cloud" for a Cloud API key, or "flink" for a Flink API key.`
 	}
 
 	cmd.Flags().String("resource", "", description)
@@ -111,8 +112,9 @@ func (c *command) addResourceFlag(cmd *cobra.Command, addCloud bool) {
 			i++
 		}
 
-		if addCloud {
+		if !isStore {
 			suggestions = append(suggestions, "cloud")
+			suggestions = append(suggestions, "flink")
 		}
 
 		return suggestions
@@ -200,7 +202,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	var apiKey string
 
 	switch resourceType {
-	case presource.Cloud:
+	case presource.Cloud, presource.Flink:
 		break
 	case presource.KafkaCluster:
 		cluster, err := kafka.FindCluster(c.V2Client, c.Context, resource)
@@ -234,4 +236,29 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	}
 
 	return resourceType, clusterId, apiKey, nil
+}
+
+func getResourceType(resource apikeysv2.ObjectReference) string {
+	switch resource.GetKind() {
+	case "Cloud":
+		return "cloud"
+	case "Cluster":
+		if getResourceApi(resource) == "cmk" {
+			return "kafka"
+		}
+	case "ksqlDB":
+		return "ksql"
+	case "Region":
+		if getResourceApi(resource) == "fcpm" {
+			return "flink-region"
+		}
+	case "SchemaRegistry":
+		return "schema-registry"
+	}
+
+	return ""
+}
+
+func getResourceApi(resource apikeysv2.ObjectReference) string {
+	return strings.Split(resource.GetApiVersion(), "/")[0]
 }

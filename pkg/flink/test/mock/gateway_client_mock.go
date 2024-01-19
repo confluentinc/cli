@@ -67,6 +67,20 @@ func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(arg0, arg1, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteStatement), arg0, arg1, arg2)
 }
 
+// GetAuthToken mocks base method.
+func (m *MockGatewayClientInterface) GetAuthToken() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthToken")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetAuthToken indicates an expected call of GetAuthToken.
+func (mr *MockGatewayClientInterfaceMockRecorder) GetAuthToken() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthToken", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetAuthToken))
+}
+
 // GetExceptions mocks base method.
 func (m *MockGatewayClientInterface) GetExceptions(arg0, arg1, arg2 string) ([]v1beta1.SqlV1beta1StatementException, error) {
 	m.ctrl.T.Helper()

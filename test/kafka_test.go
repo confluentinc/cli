@@ -146,6 +146,9 @@ func (s *CLITestSuite) TestKafka() {
 
 	tests = []CLITest{
 		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
+		{args: fmt.Sprintf("kafka link task list link-5 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem.golden"},
+		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-yaml.golden"},
+		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
 	}
 
 	for _, test := range tests {
@@ -278,6 +281,9 @@ func (s *CLITestSuite) TestKafkaLink() {
 		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link task list link-5 --cluster lkc-describe-topic", fixture: "kafka/link/list-link-with-tasks.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link task list link-5 --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-with-tasks-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link task list link-5 --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-with-tasks-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
@@ -294,6 +300,9 @@ func (s *CLITestSuite) TestKafkaMirror() {
 		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/describe-mirror-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/describe-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic", fixture: "kafka/mirror/describe-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror state-transition-error list topic-1 --link link-1 --cluster lkc-describe-topic", fixture: "kafka/mirror/list-mirror-with-state-transition-errors.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror state-transition-error list topic-1 --link link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/list-mirror-with-state-transition-errors-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror state-transition-error list topic-1 --link link-1 --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/list-mirror-with-state-transition-errors-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror failover topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/failover-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/list-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
@@ -306,6 +315,8 @@ func (s *CLITestSuite) TestKafkaMirror() {
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/promote-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/promote-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror resume topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/resume-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror reverse-and-start topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/reverse-and-start-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror reverse-and-pause topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/reverse-and-pause-mirror.golden", useKafka: "lkc-describe-topic"},
 	}
 
 	for _, test := range tests {
@@ -625,4 +636,14 @@ func (s *CLITestSuite) TestKafka_Autocomplete() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
+
+func (s *CLITestSuite) TestKafkaClusterCreate_Network() {
+	test := CLITest{
+		login:   "cloud",
+		args:    "kafka cluster create cck-network-test --cloud aws --region us-east-1 --type dedicated --cku 1 --network n-abcde1",
+		fixture: "kafka/cluster/cck-network.golden",
+	}
+
+	s.runIntegrationTest(test)
 }

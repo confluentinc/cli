@@ -45,7 +45,10 @@ release-to-prod:
 	$(aws-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
-	$(call copy-stag-content-to-prod,archives,latest)
+	$(call copy-stag-content-to-prod,archives,latest); \
+	$(call dry-run, aws s3 sync $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/deb $(S3_DEB_RPM_PROD_PATH)/deb); \
+	$(call dry-run, aws s3 sync $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/rpm $(S3_DEB_RPM_PROD_PATH)/rpm); \
+	$(call dry-run, s3-repo-utils -v website index --fake-index --prefix $(S3_DEB_RPM_PROD_PREFIX)/ $(S3_DEB_RPM_BUCKET_NAME))
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
 	$(MAKE) verify-prod
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
@@ -59,16 +62,16 @@ endef
 .PHONY: gorelease-linux-amd64
 gorelease-linux-amd64:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-amd64.yml
+	goreleaser release --clean --config .goreleaser-linux-amd64.yml
 
 .PHONY: gorelease-linux-arm64
 gorelease-linux-arm64:
 ifneq (,$(findstring x86_64,$(shell uname -m)))
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
+	CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ goreleaser release --clean --config .goreleaser-linux-arm64.yml
 else
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
+	goreleaser release --clean --config .goreleaser-linux-arm64.yml
 endif
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
@@ -79,12 +82,15 @@ gorelease:
 
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
-	rm -rf prebuilt/ && \
-	mkdir prebuilt/ && \
+	rm -rf prebuilt/ deb/ rpm/ && \
+	mkdir prebuilt/ deb/ rpm/ && \
 	scripts/build_linux.sh && \
+	$(call dry-run,aws s3 sync deb $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/deb) && \
+	$(call dry-run,aws s3 sync rpm $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/rpm) && \
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
-	GORELEASER_KEY=$(GORELEASER_KEY) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
+	GORELEASER_KEY=$(GORELEASER_KEY) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m && \
+	$(call dry-run,gh release upload $(VERSION) prebuilt/*.deb prebuilt/*.rpm)
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
@@ -177,7 +183,7 @@ update-muckrake:
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-ubuntu.sh && \
 	git commit -am "bump cli to v$${version}" && \
 	$(call dry-run,git push -u origin $$branch) && \
-	if ! gh pr view $$branch; then \
+	if gh pr view $$branch --json state --jq .state | grep "no pull requests found|MERGED"; then \
 		$(call dry-run,gh pr create --base $${base} --title "Bump CLI to v$${version}" --body "") && \
 		$(call dry-run,gh pr merge --squash --auto); \
 	fi
@@ -204,7 +210,7 @@ update-packaging:
 	$(SED) -i "s|CLI_VERSION=.*|CLI_VERSION=$${version}|" release_testing/bin/smoke_test.sh && \
 	git commit -am "bump cli to v$${version}" && \
 	$(call dry-run,git push -u origin $$branch) && \
-	if ! gh pr view $$branch; then \
+	if gh pr view $$branch --json state --jq .state | grep "no pull requests found|MERGED"; then \
 		$(call dry-run,gh pr create --base $${base} --title "Bump CLI to v$${version}" --body "") && \
 		$(call dry-run,gh pr merge --squash --auto); \
 	fi

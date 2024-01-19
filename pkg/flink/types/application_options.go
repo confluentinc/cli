@@ -14,6 +14,7 @@ type ApplicationOptions struct {
 	ComputePoolId    string
 	ServiceAccountId string
 	Verbose          bool
+	LSPBaseUrl       string
 	Context          *config.Context
 }
 
@@ -85,4 +86,11 @@ func (a *ApplicationOptions) GetContext() *config.Context {
 		return a.Context
 	}
 	return nil
+}
+
+func (a *ApplicationOptions) GetLSPBaseUrl() string {
+	if a != nil {
+		return a.LSPBaseUrl
+	}
+	return ""
 }

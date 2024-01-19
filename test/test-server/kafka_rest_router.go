@@ -57,6 +57,8 @@ var kafkaRestRoutes = []route{
 	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:pause", handleKafkaRestMirrorsPause},
 	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote", handleKafkaRestMirrorsPromote},
 	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:resume", handleKafkaRestMirrorsResume},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:reverse-and-start-mirror", handleKafkaRestMirrorsReverseAndStart},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:reverse-and-pause-mirror", handleKafkaRestMirrorsReverseAndPause},
 	{"/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status", handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus},
 	{"/kafka/v3/clusters/{cluster}/topics", handleKafkaRestTopics},
 	{"/kafka/v3/clusters/{cluster}/topics/{topic}", handleKafkaRestTopic},
@@ -600,6 +602,13 @@ func handleKafkaRestLinks(t *testing.T) http.HandlerFunc {
 					TopicNames:      topics,
 					LinkError:       noErrorErr,
 				},
+				{
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cluster2),
+					LinkName:        "link-5",
+					ClusterLinkId:   "LINKID5",
+					TopicNames:      topics,
+					LinkError:       noErrorErr,
+				},
 			}})
 			require.NoError(t, err)
 		}
@@ -704,6 +713,34 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 					ClusterLinkId:   "LINKID4",
 					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
 					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+				})
+				require.NoError(t, err)
+			} else if link == "link-5" {
+				includeTasks := r.URL.Query().Get("include_tasks")
+				var tasks []cckafkarestv3.LinkTask
+				if includeTasks == "true" {
+					tasks = []cckafkarestv3.LinkTask{
+						{TaskName: "ConsumerOffsetSync", State: "ACTIVE", Errors: []cckafkarestv3.LinkTaskError{}},
+						{TaskName: "AutoCreateMirror", State: "NOT_CONFIGURED", Errors: []cckafkarestv3.LinkTaskError{}},
+						{TaskName: "AclSync", State: "IN_ERROR", Errors: []cckafkarestv3.LinkTaskError{
+							{ErrorCode: "AUTHENTICATION_ERROR", ErrorMessage: "Auth issue."},
+							{ErrorCode: "MISCONFIGURATION_ERROR", ErrorMessage: "Wrong config."},
+						}},
+						{TaskName: "TopicConfigsSync", State: "IN_ERROR", Errors: []cckafkarestv3.LinkTaskError{
+							{ErrorCode: "INTERNAL_ERROR", ErrorMessage: "Internal error."},
+							{ErrorCode: "REMOTE_LINK_NOT_FOUND_ERROR", ErrorMessage: "Remote link not found."},
+						}},
+					}
+				}
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+					Kind:            "",
+					Metadata:        cckafkarestv3.ResourceMetadata{},
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+					LinkName:        link,
+					ClusterLinkId:   "LINKID5",
+					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+					Tasks:           tasks,
 				})
 				require.NoError(t, err)
 			}
@@ -993,6 +1030,122 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 				// group not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
 			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:reverse-and-start-mirror"
+func handleKafkaRestMirrorsReverseAndStart(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
+				{
+					MirrorTopicName: "topic-1",
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1000,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 10000,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 100000,
+							},
+						},
+					},
+				},
+				{
+					MirrorTopicName: "topic 2",
+					ErrorMessage:    *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Not authorized")),
+					ErrorCode:       *cckafkarestv3.NewNullableInt32(cckafkarestv3.PtrInt32(401)),
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
+						},
+					},
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:reverse-and-pause-mirror"
+func handleKafkaRestMirrorsReverseAndPause(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
+				{
+					MirrorTopicName: "topic-1",
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1000,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 10000,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 100000,
+							},
+						},
+					},
+				},
+				{
+					MirrorTopicName: "topic 2",
+					ErrorMessage:    *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Not authorized")),
+					ErrorCode:       *cckafkarestv3.NewNullableInt32(cckafkarestv3.PtrInt32(401)),
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
+						},
+					},
+				},
+			}})
+			require.NoError(t, err)
 		}
 	}
 }
@@ -1332,6 +1485,14 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
+			includeStateTransitionErrors := r.URL.Query().Get("include_state_transition_errors")
+			var mirrorStateTransitionErrors []cckafkarestv3.LinkTaskError
+			if includeStateTransitionErrors == "true" {
+				mirrorStateTransitionErrors = []cckafkarestv3.LinkTaskError{
+					{ErrorCode: "AUTHENTICATION_ERROR", ErrorMessage: "Auth issue."},
+					{ErrorCode: "MISCONFIGURATION_ERROR", ErrorMessage: "Wrong config."},
+				}
+			}
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
 				Metadata:        cckafkarestv3.ResourceMetadata{},
@@ -1358,8 +1519,9 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 						},
 					},
 				},
-				MirrorStatus: cckafkarestv3.ACTIVE,
-				StateTimeMs:  111111111,
+				MirrorStatus:                cckafkarestv3.ACTIVE,
+				StateTimeMs:                 111111111,
+				MirrorStateTransitionErrors: &mirrorStateTransitionErrors,
 			})
 			require.NoError(t, err)
 		}

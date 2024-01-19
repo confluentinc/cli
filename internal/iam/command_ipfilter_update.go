@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
@@ -84,47 +85,9 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		updateIpFilter.ResourceGroup = &resourceGroup
 	}
 
-	// Create a set of the current IP group IDs
-	currentIpGroupIdsSet := make(types.Set[string])
-	for _, ipGroupId := range currentIpGroupIds {
-		currentIpGroupIdsSet.Add(ipGroupId)
-	}
-
-	// Create a set of the new IP group ID values to add
-	addIpGroupIdsSet := make(types.Set[string])
-	// Add each new IP Group ID to the set
-	for _, ipGroupId := range addIpGroups {
-		if currentIpGroupIdsSet.Contains(ipGroupId) {
-			WarnAddDuplicateResource(ipGroupId, c.Config.EnableColor)
-		}
-		addIpGroupIdsSet.Add(ipGroupId)
-	}
-
-	// Create a set of the new IP group ID values to remove
-	removeIpGroupIdsSet := make(types.Set[string])
-	for _, ipGroupId := range removeIpGroups {
-		if addIpGroupIdsSet[ipGroupId] {
-			delete(addIpGroupIdsSet, ipGroupId)
-			WarnAddAndDeleteResource(ipGroupId, c.Config.EnableColor)
-		}
-		if !currentIpGroupIdsSet.Contains(ipGroupId) {
-			WarnDeleteNonExistentResource(ipGroupId, c.Config.EnableColor)
-		}
-		removeIpGroupIdsSet[ipGroupId] = true
-	}
-
-	// Combine the map of the current IP group IDs and the IP group IDs to add
-	for ipGroupId := range currentIpGroupIdsSet {
-		// Ensure the IP group ID isn't being removed
-		if !removeIpGroupIdsSet.Contains(ipGroupId) {
-			addIpGroupIdsSet.Add(ipGroupId)
-		}
-	}
-
-	// Convert the map of IP group IDs being added into an array to make the update request
-	newIpGroupIds := make([]string, 0, len(addIpGroupIdsSet))
-	for ipGroupId := range addIpGroupIdsSet {
-		newIpGroupIds = append(newIpGroupIds, ipGroupId)
+	newIpGroupIds, warnings := types.AddAndRemove(currentIpGroupIds, addIpGroups, removeIpGroups)
+	for _, warning := range warnings {
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] %s\n", warning)
 	}
 
 	// Convert the IP group IDs into IP group objects

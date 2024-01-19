@@ -24,17 +24,19 @@ type InputController struct {
 	prompt                prompt.IPrompt
 	shouldExit            bool
 	reverseISearch        reverseisearch.ReverseISearch
+	lspCompleter          prompt.Completer
 }
 
 const defaultWindowSize = 100
 
-func NewInputController(history *history.History) types.InputControllerInterface {
+func NewInputController(history *history.History, lspCompleter prompt.Completer) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
 		smartCompletion: true,
 		shouldExit:      false,
 		reverseISearch:  reverseisearch.NewReverseISearch(),
+		lspCompleter:    lspCompleter,
 	}
 	inputController.prompt = inputController.Prompt()
 	return inputController
@@ -112,16 +114,9 @@ func (c *InputController) getMaxCol() (int, error) {
 }
 
 func (c *InputController) Prompt() prompt.IPrompt {
-	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
-		AddCompleter(autocomplete.ExamplesCompleter).
-		AddCompleter(autocomplete.SetCompleter).
-		AddCompleter(autocomplete.ShowCompleter).
-		AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data)).
-		BuildCompleter()
-
 	return prompt.New(
 		nil,
-		completer,
+		c.promptCompleter(),
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
@@ -154,12 +149,19 @@ func (c *InputController) Prompt() prompt.IPrompt {
 			},
 		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			// Alt/Option + Arrow Left
 			ASCIICode: []byte{0x1b, 0x62},
 			Fn:        prompt.GoLeftWord,
 		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			// Alt/Option + Arrow Right
 			ASCIICode: []byte{0x1b, 0x66},
 			Fn:        prompt.GoRightWord,
+		}),
+		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			// Alt/Option + Backspace
+			ASCIICode: []byte{0x1b, 0x7F},
+			Fn:        prompt.DeleteWord,
 		}),
 		prompt.OptionPrefixTextColor(prompt.Yellow),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
@@ -169,16 +171,29 @@ func (c *InputController) Prompt() prompt.IPrompt {
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)
-			// We add exit here because we also want to exit without the need of adding semicolon, which is the default flow for all statements
-			if text == "exit" {
-				return true
-			}
-			if text == "" || !strings.HasSuffix(text, ";") {
+			if text == "" {
 				return false
 			}
-			return true
+			return text == "exit" || strings.HasSuffix(text, ";") || lastKeyStroke == prompt.AltEnter
 		}),
 	)
+}
+
+func (c *InputController) promptCompleter() prompt.Completer {
+	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion)
+
+	if c.lspCompleter == nil {
+		completer.
+			AddCompleter(autocomplete.ExamplesCompleter).
+			AddCompleter(autocomplete.SetCompleter).
+			AddCompleter(autocomplete.ShowCompleter)
+	} else {
+		completer.AddCompleter(c.lspCompleter)
+	}
+
+	completer.AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data))
+
+	return completer.BuildCompleter()
 }
 
 func (c *InputController) getSmartCompletion() bool {

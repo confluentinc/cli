@@ -29,7 +29,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-123456" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --kafka-cluster lkc-123456",
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --cloud-cluster lkc-123456 --kafka-cluster lkc-123456",
 			},
 			examples.Example{
 				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,

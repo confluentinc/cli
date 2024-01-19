@@ -13,13 +13,16 @@ func RunAndCaptureSTDOUT(t require.TestingT, test func()) string {
 	require.NoError(t, err)
 	os.Stdout = w
 
+	defer func() {
+		// Close the writer and restore the original STDOUT
+		os.Stdout = old
+		require.NoError(t, err)
+	}()
+
 	// Run the test
 	test()
 
-	// Close the writer and restore the original STDOUT
 	err = w.Close()
-	require.NoError(t, err)
-	os.Stdout = old
 
 	// Read the output from the buffer
 	output := make(chan string)

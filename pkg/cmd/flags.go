@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -54,7 +55,7 @@ func AddAvailabilityFlag(cmd *cobra.Command) {
 }
 
 func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("byok", "", `Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use "confluent byok create" to register a key).`)
+	cmd.Flags().String("byok", "", `Confluent Cloud Key ID of a registered encryption key (use "confluent byok create" to register a key).`)
 
 	RegisterFlagCompletionFunc(cmd, "byok", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
@@ -368,29 +369,48 @@ func AutocompleteIpGroups(client *ccloudv2.Client) []string {
 	return suggestions
 }
 
-func AddRegionFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
+func AddRegionFlagKafka(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("region", "", `Cloud region for Kafka (use "confluent kafka region list" to see all).`)
 	RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
 
 		cloud, _ := cmd.Flags().GetString("cloud")
-		return autocompleteRegions(command.Client, cloud)
+
+		regions, err := kafka.ListRegions(command.Client, cloud)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.RegionId
+		}
+		return suggestions
 	})
 }
 
-func autocompleteRegions(client *ccloudv1.Client, cloud string) []string {
-	regions, err := kafka.ListRegions(client, cloud)
-	if err != nil {
-		return nil
-	}
+func AddRegionFlagFlink(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("region", "", `Cloud region for Flink (use "confluent flink region list" to see all).`)
+	RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
 
-	suggestions := make([]string, len(regions))
-	for i, region := range regions {
-		suggestions[i] = region.RegionId
-	}
-	return suggestions
+		cloud, _ := cmd.Flags().GetString("cloud")
+
+		regions, err := command.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.GetRegionName()
+		}
+		return suggestions
+	})
 }
 
 func AddSchemaTypeFlag(cmd *cobra.Command) {
@@ -470,6 +490,16 @@ func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
+func AddAlgorithmFlag(cmd *cobra.Command) {
+	cmd.Flags().String("algorithm", "", fmt.Sprintf("Use algorithm %s for the Data Encryption Key (DEK).", utils.ArrayToCommaDelimitedString(serdes.DekAlgorithms, "or")))
+	RegisterFlagCompletionFunc(cmd, "algorithm", func(_ *cobra.Command, _ []string) []string { return serdes.DekAlgorithms })
+}
+
+func AddKmsTypeFlag(cmd *cobra.Command) {
+	cmd.Flags().String("kms-type", "aws-kms", fmt.Sprintf("The type of Key Management Service (KMS), typically one of %s.", utils.ArrayToCommaDelimitedString(serdes.DekAlgorithms, "or")))
+	RegisterFlagCompletionFunc(cmd, "kms-type", func(_ *cobra.Command, _ []string) []string { return serdes.KmsTypes })
+}
+
 func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 	kafkaREST, err := command.GetKafkaREST()
 	if err != nil {
@@ -502,6 +532,34 @@ func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
 	suggestions := make([]string, len(consumerGroups))
 	for i, consumerGroup := range consumerGroups {
 		suggestions[i] = consumerGroup.GetConsumerGroupId()
+	}
+	return suggestions
+}
+
+func AddNetworkFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("network", "", "Network ID.")
+	RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteNetworks(environmentId, c.V2Client)
+	})
+}
+
+func AutocompleteNetworks(environmentId string, client *ccloudv2.Client) []string {
+	networks, err := client.ListNetworks(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(networks))
+	for i, network := range networks {
+		suggestions[i] = fmt.Sprintf("%s\t%s", network.GetId(), network.Spec.GetDisplayName())
 	}
 	return suggestions
 }

@@ -6,6 +6,18 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
+var DekAlgorithms = []string{
+	"AES128_GCM",
+	"AES256_GCM",
+	"AES256_SIV",
+}
+
+var KmsTypes = []string{
+	"aws-kms",
+	"azure-kms",
+	"gcp-kms",
+}
+
 const (
 	avroSchemaName     = "avro"
 	doubleSchemaName   = "double"

@@ -20,10 +20,7 @@ import (
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
-const (
-	defaultConfigFileFmt = "%s/.confluent/config.json"
-	emptyFieldIndicator  = "EMPTY"
-)
+const emptyFieldIndicator = "EMPTY"
 
 const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
@@ -65,15 +62,6 @@ var (
 		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Use the "--help" flag to see available commands.`,
 	)
 )
-
-// Whitelist is the configuration fields that are visible by the `config` subcommands.
-var Whitelist = []string{
-	"disable_feature_flags",
-	"disable_plugins",
-	"disable_update_check",
-	"disable_updates",
-	"enable_color",
-}
 
 // Config represents the CLI configuration.
 type Config struct {
@@ -626,10 +614,14 @@ func (c *Config) HasBasicLogin() bool {
 
 func (c *Config) GetFilename() string {
 	if c.Filename == "" {
-		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir))
+		c.Filename = GetDefaultFilename()
 	}
 	return c.Filename
+}
+
+func GetDefaultFilename() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".confluent", "config.json")
 }
 
 func (c *Config) CheckIsOnPremLogin() error {
@@ -725,6 +717,21 @@ func (c *Config) CheckIsNonCloudLogin() error {
 
 func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
+}
+
+func (c *Config) HasGovHostname() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+
+	for _, hostname := range []string{"confluentgov-internal.com", "confluentgov.com"} {
+		if strings.Contains(ctx.PlatformName, hostname) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Config) IsOnPremLogin() bool {

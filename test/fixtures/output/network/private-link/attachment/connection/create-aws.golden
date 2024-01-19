@@ -1,0 +1,8 @@
++----------------------------+------------------------+
+| ID                         | plattc-123456          |
+| Name                       | aws-plattc             |
+| Cloud                      | AWS                    |
+| Private Link Attachment ID | platt-123456           |
+| Phase                      | PROVISIONING           |
+| AWS VPC Endpoint ID        | vpce-1234567890abcdef0 |
++----------------------------+------------------------+
