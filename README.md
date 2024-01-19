@@ -45,20 +45,6 @@ Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` o
     sudo yum-config-manager --add-repo https://packages.confluent.io/confluent-cli/rpm/confluent-cli.repo
     sudo yum clean all && sudo yum install confluent-cli
 
-#### Scripted installation
-
-Install the latest version of `confluent` to `/usr/local/bin`:
-
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin
-
-Print a complete list of versions available for download:
-
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -l
-
-Install `confluent` v3.6.0 to `/usr/local/bin`:
-
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin 3.6.0
-
 #### Windows
 
 1. Download the latest Windows ZIP file from https://github.com/confluentinc/cli/releases/latest
