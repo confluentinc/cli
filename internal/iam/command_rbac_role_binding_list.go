@@ -90,7 +90,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().String("principal", "", "Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.")
 	cmd.Flags().Bool("current-user", false, "List role bindings assigned to the current user.")
-	cmd.Flags().String("role", "", "Predefined role assigned to `--principal`. If `--principal` is unspecified, list all principals assigned the role.")
+	cmd.Flags().String("role", "", "Predefined role assigned to '--principal'. If '--principal' is unspecified, list all principals assigned the role.")
 
 	if c.cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID, which specifies the environment scope.")
