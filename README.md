@@ -42,10 +42,10 @@ The `add-apt-repository` utility can be installed with `sudo apt install softwar
 Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
     sudo rpm --import https://packages.confluent.io/confluent-cli/rpm/archive.key
+    sudo yum install yum-utils
     sudo yum-config-manager --add-repo https://packages.confluent.io/confluent-cli/rpm/confluent-cli.repo
     sudo yum clean all && sudo yum install confluent-cli
 
-The `yum-config-manager` utility can be installed with `sudo yum install yum-utils`.
 
 #### Scripted installation
 
