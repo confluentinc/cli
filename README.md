@@ -29,7 +29,7 @@ Install the latest version of `confluent` to `/usr/local/bin`:
 
 #### YUM (RHEL and CentOS)
 
-Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `2.27` or above for `arm64`):
+Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
     sudo rpm --import https://packages.confluent.io/confluent-cli/rpm/archive.key
     sudo yum-config-manager --add-repo https://packages.confluent.io/confluent-cli/rpm/confluent-cli.repo
@@ -37,7 +37,7 @@ Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` o
 
 #### APT (Ubuntu and Debian)
 
-Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `2.27` or above for `arm64`):
+Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
     wget -qO - https://packages.confluent.io/confluent-cli/deb/archive.key | sudo apt-key add -
     sudo add-apt-repository "deb https://packages.confluent.io/confluent-cli/deb stable main"
