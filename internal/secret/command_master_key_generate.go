@@ -32,6 +32,7 @@ func (c *command) newGenerateFunction() *cobra.Command {
 
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
 	cmd.Flags().String("passphrase", "", "The key passphrase.")
+	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
 

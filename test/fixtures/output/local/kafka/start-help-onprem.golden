@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --kafka-rest-port string    Kafka REST port number. (default "8082")
-      --plaintext-ports strings   A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.
+      --plaintext-ports strings   A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, a random free port is used.
       --brokers int32             Number of brokers (between 1 and 4, inclusive) in the Confluent Local Kafka cluster. (default 1)
 
 Global Flags:

@@ -2,7 +2,7 @@ SHELL := /bin/bash
 GORELEASER_VERSION := v1.21.2
 
 # Compile natively based on the current system
-.PHONY: build 
+.PHONY: build
 build:
 ifneq "" "$(findstring NT,$(shell uname))" # windows
 	CC=gcc CXX=g++ $(MAKE) cli-builder
@@ -21,24 +21,24 @@ endif
 cross-build:
 ifeq ($(GOARCH),arm64)
     ifeq ($(GOOS),linux) # linux/arm64
-		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+		CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
     else # darwin/arm64
-		CGO_ENABLED=1 $(MAKE) cli-builder
+		$(MAKE) cli-builder
     endif
 else
     ifeq ($(GOOS),windows) # windows/amd64
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
+		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
     else ifeq ($(GOOS),linux) # linux/amd64
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+		CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
     else # darwin/amd64
-		CGO_ENABLED=1 $(MAKE) cli-builder
+		$(MAKE) cli-builder
     endif
 endif
 
 .PHONY: cli-builder
 cli-builder:
 	GOOS="" GOARCH="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
@@ -55,6 +55,11 @@ DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
 S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
+
+S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
+S3_DEB_RPM_PROD_PREFIX=confluent-cli
+S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
+S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
 
 .PHONY: clean
 clean:

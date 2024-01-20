@@ -719,6 +719,21 @@ func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
 }
 
+func (c *Config) HasGovHostname() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+
+	for _, hostname := range []string{"confluentgov-internal.com", "confluentgov.com"} {
+		if strings.Contains(ctx.PlatformName, hostname) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (c *Config) IsOnPremLogin() bool {
 	return c.CheckIsOnPremLogin() == nil
 }
