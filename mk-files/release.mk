@@ -90,7 +90,8 @@ gorelease:
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
 	GORELEASER_KEY=$(GORELEASER_KEY) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m && \
-	$(call dry-run,gh release upload $(VERSION) prebuilt/*.deb prebuilt/*.rpm)
+	sha256sum prebuilt/confluent-cli_$(VERSION_NO_V)*.deb prebuilt/confluent-cli-$(VERSION_NO_V)*.rpm >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
+	$(call dry-run,gh release upload $(VERSION) prebuilt/*.deb prebuilt/*.rpm dist/confluent_$(VERSION_NO_V)_checksums.txt --clobber)
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
