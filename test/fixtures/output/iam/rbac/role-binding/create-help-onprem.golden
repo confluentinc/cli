@@ -1,12 +1,16 @@
-Delete a role binding.
+Create a role binding.
 
 Usage:
-  confluent iam rbac role-binding delete [flags]
+  confluent iam rbac role-binding create [flags]
+
+Examples:
+Create a role binding for the principal permitting it produce to topic "my-topic":
+
+  $ confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster 0000000000000000000000
 
 Flags:
-      --role string                      REQUIRED: Role name of the existing role binding.
+      --role string                      REQUIRED: Role name of the new role binding.
       --principal string                 REQUIRED: Principal type and identifier using "<Prefix>:<ID>" format.
-      --force                            Skip the deletion confirmation prompt.
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster ID for the role binding.

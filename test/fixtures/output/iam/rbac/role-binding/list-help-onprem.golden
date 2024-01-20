@@ -1,42 +1,39 @@
-Error: unknown flag: --cluster
+List role bindings assigned to a principal based on scopes.
+
 Usage:
   confluent iam rbac role-binding list [flags]
 
 Examples:
-List the role bindings for the current user:
+Only use the "--resource" flag when specifying a "--role" with no "--principal" specified. If specifying a "--principal", then the "--resource" flag is ignored. To list role bindings for a specific role on an identified resource:
 
-  $ confluent iam rbac role-binding list --current-user
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperRead --resource Topic:my-topic
 
-List the role bindings for user "u-123456":
+List the role bindings for a specific principal:
 
-  $ confluent iam rbac role-binding list --principal User:u-123456
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --principal User:my-user
 
-List the role bindings for principals with role "CloudClusterAdmin":
+List the role bindings for a specific principal, filtered to a specific role:
 
-  $ confluent iam rbac role-binding list --role CloudClusterAdmin --current-environment --cloud-cluster lkc-123456
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --principal User:my-user --role DeveloperRead
 
-List the role bindings for user "u-123456" with role "CloudClusterAdmin":
+List the principals bound to a specific role:
 
-  $ confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperWrite
 
-List the role bindings for user "u-123456" for all scopes:
+List the principals bound to a specific resource with a specific role:
 
-  $ confluent iam rbac role-binding list --principal User:u-123456 --inclusive
-
-List the role bindings for the current user with the environment scope and subscopes:
-
-  $ confluent iam rbac role-binding list --current-user --environment env-123456 --inclusive
+  $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperWrite --resource Topic:my-topic
 
 Flags:
       --principal string                 Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.
       --current-user                     List role bindings assigned to the current user.
       --role string                      Predefined role assigned to '--principal'. If '--principal' is unspecified, list all principals assigned the role.
-      --environment string               Environment ID, which specifies the environment scope.
-      --current-environment              Use current environment ID for the environment scope.
-      --cloud-cluster string             Cloud cluster ID, which specifies the cloud cluster scope.
       --kafka-cluster string             Kafka cluster ID, which specifies the Kafka cluster scope.
       --schema-registry-cluster string   Schema Registry cluster ID, which specifies the Schema Registry cluster scope.
-      --ksql-cluster string              ksqlDB cluster name, which specifies the ksqlDB cluster scope.
+      --ksql-cluster string              ksqlDB cluster ID, which specifies the ksqlDB cluster scope.
+      --connect-cluster string           Kafka Connect cluster ID, which specifies the Connect cluster scope.
+      --cluster-name string              Cluster name, which specifies the cluster scope.
+      --context string                   CLI context name.
       --resource --role                  Resource type and identifier using "<Prefix>:<ID>" format. If specified with --role and no principals, list all principals and role bindings.
       --inclusive                        List role bindings for specified scopes and subscopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
@@ -45,4 +42,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
