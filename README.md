@@ -27,19 +27,23 @@ Install the latest version of `confluent` to `/usr/local/bin`:
 
     brew install confluentinc/tap/cli
 
-#### Scripted installation
+#### APT (Ubuntu and Debian)
 
-Install the latest version of `confluent` to `/usr/local/bin`:
+Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin
+    wget -qO - https://packages.confluent.io/confluent-cli/deb/archive.key | sudo apt-key add -
+    sudo apt -y install software-properties-common
+    sudo add-apt-repository "deb https://packages.confluent.io/confluent-cli/deb stable main"
+    sudo apt update && sudo apt install confluent-cli
 
-Print a complete list of versions available for download:
+#### YUM (RHEL and CentOS)
 
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -l
+Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
-Install `confluent` v3.6.0 to `/usr/local/bin`:
-
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin 3.6.0
+    sudo rpm --import https://packages.confluent.io/confluent-cli/rpm/archive.key
+    sudo yum -y install yum-utils
+    sudo yum-config-manager --add-repo https://packages.confluent.io/confluent-cli/rpm/confluent-cli.repo
+    sudo yum clean all && sudo yum install confluent-cli
 
 #### Windows
 
