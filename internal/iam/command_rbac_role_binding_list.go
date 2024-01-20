@@ -59,7 +59,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding list --principal User:u-123456 --inclusive",
 			},
 			examples.Example{
-				Text: "List the role bindings for the current user with the environment scope and subscopes:",
+				Text: "List the role bindings for the current user with the environment scope and nested scopes:",
 				Code: "confluent iam rbac role-binding list --current-user --environment env-123456 --inclusive",
 			},
 		)
@@ -109,7 +109,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "Resource type and identifier using \"<Prefix>:<ID>\" format. If specified with `--role` and no principals, list all principals and role bindings.")
-	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scopes and subscopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.")
+	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
