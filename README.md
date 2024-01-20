@@ -43,7 +43,7 @@ Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` o
     sudo rpm --import https://packages.confluent.io/confluent-cli/rpm/archive.key
     sudo yum -y install yum-utils
     sudo yum-config-manager --add-repo https://packages.confluent.io/confluent-cli/rpm/confluent-cli.repo
-    sudo yum clean all && sudo yum install confluent-cli
+    sudo yum clean all && sudo yum -y install confluent-cli
 
 #### Windows
 
