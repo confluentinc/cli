@@ -1,6 +1,6 @@
 # Errors
 
-First, read the [pkg/output/README.md](Output) guide for instructions on formatting user-facing strings
+First, read the [pkg/output/README.md](Output) guide for instructions on formatting user-facing strings.
 
 ## Creating an Error
 ### Message Format
