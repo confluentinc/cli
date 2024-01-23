@@ -315,13 +315,6 @@ type KafkaCluster struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *KafkaCluster) GetId() string {
-	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
 type Durability int32
 
 type ClusterStatus int32

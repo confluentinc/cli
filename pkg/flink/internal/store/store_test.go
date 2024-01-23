@@ -1,12 +1,8 @@
 package store
 
 import (
-	"bufio"
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -698,78 +694,6 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 		Usage:      []string{"RESET 'key'"},
 		Suggestion: `please escape all single quotes with another single quote "''key''"`,
 	}, err)
-}
-
-func (s *StoreTestSuite) TestProcessHttpErrors() {
-	// given
-	res := &http.Response{
-		StatusCode: http.StatusUnauthorized,
-		Body:       generateCloserFromObject(flinkgatewayv1beta1.NewError()),
-	}
-
-	// when
-	err := processHttpErrors(res, nil)
-
-	// expect
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: unauthorized\nSuggestion: Please run \"confluent login\"", err.Error())
-
-	// given
-	title := "invalid syntax"
-	detail := "you should provide a table for select"
-	statementErr := &flinkgatewayv1beta1.Error{Title: &title, Detail: &detail}
-	res = &http.Response{
-		StatusCode: http.StatusBadRequest,
-		Body:       generateCloserFromObject(statementErr),
-	}
-
-	// when
-	err = processHttpErrors(res, nil)
-
-	// expect
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax: you should provide a table for select", err.Error())
-
-	// given
-	res = &http.Response{
-		StatusCode: http.StatusInternalServerError,
-		Body:       generateCloserFromObject(nil),
-	}
-
-	// when
-	err = processHttpErrors(res, nil)
-
-	// expect
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: received error with code \"500\" from server but could not parse it. This is not expected. Please contact support", err.Error())
-
-	// given
-	res = &http.Response{
-		StatusCode: http.StatusCreated,
-		Body:       generateCloserFromObject(nil),
-	}
-
-	// when
-	err = processHttpErrors(res, nil)
-
-	// expect
-	assert.Nil(s.T(), err)
-
-	// given
-	err = fmt.Errorf("some error")
-
-	// when
-	err = processHttpErrors(nil, err)
-
-	// expect
-	assert.Equal(s.T(), "Error: some error", err.Error())
-}
-
-func generateCloserFromObject(obj interface{}) io.ReadCloser {
-	bts, _ := json.Marshal(obj)
-	buf := bytes.NewReader(bts)
-	reader := bufio.NewReader(buf)
-	return io.NopCloser(reader)
 }
 
 func (s *StoreTestSuite) TestStopStatement() {
