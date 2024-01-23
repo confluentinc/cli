@@ -36,17 +36,12 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	computePool, err := c.V2Client.DescribeFlinkComputePool(args[0], environmentId)
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.FlinkComputePool, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.DescribeFlinkComputePool(id, environmentId)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.FlinkComputePool, computePool.Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
 		return err
 	}
 

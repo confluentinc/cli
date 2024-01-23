@@ -47,7 +47,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.KsqlCluster, idToCluster[args[0]].Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.KsqlCluster); err != nil {
 		return err
 	}
 

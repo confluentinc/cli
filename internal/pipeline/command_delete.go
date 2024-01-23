@@ -47,17 +47,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.Pipeline, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, id)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Pipeline, pipeline.Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Pipeline); err != nil {
 		return err
 	}
 

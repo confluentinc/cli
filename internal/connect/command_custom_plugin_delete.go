@@ -33,7 +33,7 @@ func (c *customPluginCommand) delete(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.CustomConnectorPlugin, pluginIdToName[args[0]]); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.CustomConnectorPlugin); err != nil {
 		return err
 	}
 
