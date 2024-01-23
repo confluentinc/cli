@@ -35,7 +35,7 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.ConsumerShare); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.ConsumerShare); err != nil {
 		return err
 	}
 
