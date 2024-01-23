@@ -24,7 +24,7 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name and add a CIDR block to IP group "ipg-12345":`,
+				Text: "Update the name and add a CIDR block to IP group `ipg-12345`:",
 				Code: `confluent iam ip-group update ipg-12345 --name "New Group Name" --add-cidr-blocks 123.234.0.0/16`,
 			},
 		),

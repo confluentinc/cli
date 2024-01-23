@@ -24,7 +24,7 @@ func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name and add an IP group to IP filter "ipf-abcde":`,
+				Text: "Update the name and add an IP group to IP filter `ipf-abcde`:",
 				Code: `confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345`,
 			},
 		),

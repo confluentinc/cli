@@ -18,7 +18,7 @@ func (c *groupMappingCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete group mapping "group-123456":`,
+				Text: "Delete group mapping `group-123456`:",
 				Code: "confluent iam group-mapping delete group-123456",
 			},
 		),
