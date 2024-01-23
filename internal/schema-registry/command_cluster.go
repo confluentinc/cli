@@ -20,12 +20,9 @@ func (c *command) newClusterCommand(cfg *config.Config) *cobra.Command {
 		cmd.Short = "Manage Schema Registry clusters."
 	}
 
-	cmd.AddCommand(c.newClusterDeleteCommand())
 	cmd.AddCommand(c.newClusterDescribeCommand())
-	cmd.AddCommand(c.newClusterEnableCommand())
 	cmd.AddCommand(c.newClusterListCommandOnPrem())
 	cmd.AddCommand(c.newClusterUpdateCommand())
-	cmd.AddCommand(c.newClusterUpgradeCommand())
 
 	return cmd
 }

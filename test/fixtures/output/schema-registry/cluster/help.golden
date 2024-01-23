@@ -4,11 +4,8 @@ Usage:
   confluent schema-registry cluster [command]
 
 Available Commands:
-  delete      Delete the Schema Registry cluster for this environment.
   describe    Describe the Schema Registry cluster for this environment.
-  enable      Enable Schema Registry for this environment.
   update      Update global mode or compatibility of Schema Registry.
-  upgrade     Upgrade the Schema Registry package for this environment.
 
 Global Flags:
   -h, --help            Show help for this command.

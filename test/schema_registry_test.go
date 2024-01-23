@@ -14,19 +14,6 @@ var (
 
 func (s *CLITestSuite) TestSchemaRegistryCluster() {
 	tests := []CLITest{
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced -o json", fixture: "schema-registry/cluster/enable-json.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package essentials -o yaml", fixture: "schema-registry/cluster/enable-yaml.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced", fixture: "schema-registry/cluster/enable.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo somethingwrong --package advanced", fixture: "schema-registry/cluster/enable-invalid-geo.golden", exitCode: 1},
-		{args: "schema-registry cluster enable --cloud aws --geo us --package invalid-package", fixture: "schema-registry/cluster/enable-invalid-package.golden", exitCode: 1},
-		{args: "schema-registry cluster enable --geo us --package essentials", fixture: "schema-registry/cluster/enable-missing-flag.golden", exitCode: 1},
-		{args: fmt.Sprintf("schema-registry cluster delete --environment %s", testserver.SRApiEnvId), input: "y\n", fixture: "schema-registry/cluster/delete.golden"},
-		{args: fmt.Sprintf("schema-registry cluster delete --environment %s", testserver.SRApiEnvId), input: "n\n", fixture: "schema-registry/cluster/delete-terminated.golden"},
-		{args: fmt.Sprintf("schema-registry cluster delete --environment %s", testserver.SRApiEnvId), input: "invalid_confirmation\n", fixture: "schema-registry/cluster/delete-invalid-confirmation.golden", exitCode: 1},
-		{args: "schema-registry cluster upgrade", fixture: "schema-registry/cluster/upgrade-missing-flag.golden", exitCode: 1},
-		{args: "schema-registry cluster upgrade --package invalid-package", fixture: "schema-registry/cluster/upgrade-invalid-package.golden", exitCode: 1},
-		{args: fmt.Sprintf("schema-registry cluster upgrade --package essentials --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/cluster/upgrade-current-package.golden"},
-		{args: fmt.Sprintf("schema-registry cluster upgrade --package advanced --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/cluster/upgrade.golden"},
 		{args: "schema-registry cluster describe", fixture: "schema-registry/cluster/describe.golden"},
 		{args: fmt.Sprintf("schema-registry cluster update --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/cluster/update-missing-flags.golden", exitCode: 1},
 		{args: fmt.Sprintf("schema-registry cluster update --compatibility backward --environment %s", testserver.SRApiEnvId), input: "key\nsecret\n", fixture: "schema-registry/cluster/update-compatibility.golden"},
@@ -89,7 +76,7 @@ func (s *CLITestSuite) TestSchemaRegistryExporter() {
 		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete.golden"},
 		{args: fmt.Sprintf(`schema-registry exporter delete myexporter myexporter2 --environment %s`, testserver.SRApiEnvId), input: "n\n", fixture: "schema-registry/exporter/delete-multiple-refuse.golden"},
 		{args: fmt.Sprintf(`schema-registry exporter delete myexporter myexporter2 --environment %s --force`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete-multiple-success.golden"},
-		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s", testserver.SRApiEnvId), input: "myexporter\n", fixture: "schema-registry/exporter/delete-prompt.golden"},
+		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s", testserver.SRApiEnvId), input: "y\n", fixture: "schema-registry/exporter/delete-prompt.golden"},
 		{args: fmt.Sprintf("schema-registry exporter get-status myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-status.golden"},
 		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output json --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-json.golden"},
 		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output yaml --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-yaml.golden"},
@@ -140,20 +127,6 @@ func (s *CLITestSuite) TestSchemaRegistrySubject() {
 		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility backward --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
 		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility backward --compatibility-group application.version --metadata-defaults %s --ruleset-defaults %s --environment %s", metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
 		{args: fmt.Sprintf("schema-registry subject update testSubject --mode readonly --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-mode.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestSchemaRegistryRegionList() {
-	tests := []CLITest{
-		{args: "schema-registry region list", fixture: "schema-registry/region/list-all.golden"},
-		{args: "schema-registry region list -o json", fixture: "schema-registry/region/list-all-json.golden"},
-		{args: "schema-registry region list --cloud aws", fixture: "schema-registry/region/list-filter-cloud.golden"},
-		{args: "schema-registry region list --package advanced", fixture: "schema-registry/region/list-filter-package.golden"},
 	}
 
 	for _, test := range tests {
