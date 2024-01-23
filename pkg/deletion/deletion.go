@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
+func ValidateAndConfirm(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
 	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
 		return err
 	}

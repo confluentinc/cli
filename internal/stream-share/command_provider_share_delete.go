@@ -35,7 +35,7 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ProviderShare); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.ProviderShare); err != nil {
 		return err
 	}
 

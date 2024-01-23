@@ -47,7 +47,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Broker); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.Broker); err != nil {
 		return err
 	}
 

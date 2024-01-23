@@ -41,7 +41,7 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
 		return err
 	}
 

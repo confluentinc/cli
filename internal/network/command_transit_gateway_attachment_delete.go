@@ -40,7 +40,7 @@ func (c *command) transitGatewayAttachmentDelete(cmd *cobra.Command, args []stri
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.TransitGatewayAttachment); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.TransitGatewayAttachment); err != nil {
 		return err
 	}
 

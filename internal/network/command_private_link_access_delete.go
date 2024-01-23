@@ -40,7 +40,7 @@ func (c *command) privateLinkAccessDelete(cmd *cobra.Command, args []string) err
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.PrivateLinkAccess); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.PrivateLinkAccess); err != nil {
 		return err
 	}
 
