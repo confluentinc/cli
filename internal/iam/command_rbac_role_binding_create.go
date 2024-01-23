@@ -24,47 +24,47 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	if c.cfg.IsCloudLogin() {
 		exs = append(exs,
 			examples.Example{
-				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-123456" for the cloud cluster "lkc-123456":`,
+				Text: "Grant the role `CloudClusterAdmin` to the principal `User:u-123456` in the environment `env-123456` for the cloud cluster `lkc-123456`:",
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456",
 			},
 			examples.Example{
-				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-123456" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
+				Text: "Grant the role `ResourceOwner` to the principal `User:u-123456`, in the environment `env-123456` for the Kafka cluster `lkc-123456` on the resource `Topic:my-topic`:`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --cloud-cluster lkc-123456 --kafka-cluster lkc-123456",
 			},
 			examples.Example{
-				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
+				Text: "Grant the role `MetricsViewer` to service account `sa-123456`:",
 				Code: "confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer",
 			},
 			examples.Example{
-				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects for Schema Registry cluster "lsrc-123456" in environment "env-123456":`,
+				Text: "Grant the `ResourceOwner` role to principal `User:u-123456` and all subjects for Schema Registry cluster `lsrc-123456` in environment `env-123456`:`,
 				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject:*"`,
 			},
 			examples.Example{
-				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" for the Schema Registry cluster "lsrc-123456" in the environment "env-123456":`,
+				Text: "Grant the `ResourceOwner` role to principal `User:u-123456` and subject `test` for the Schema Registry cluster `lsrc-123456` in the environment `env-123456`:",
 				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject:test"`,
 			},
 			examples.Example{
-				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects in schema context "schema_context" for Schema Registry cluster "lsrc-123456" in the environment "env-123456":`,
+				Text: "Grant the `ResourceOwner` role to principal `User:u-123456` and all subjects in schema context `schema_context` for Schema Registry cluster `lsrc-123456` in the environment `env-123456`:",
 				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:*"`,
 			},
 			examples.Example{
-				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-123456":`,
+				Text: "Grant the `ResourceOwner` role to principal `User:u-123456` and subject `test` in schema context `schema_context` for Schema Registry `lsrc-123456` in the environment `env-123456`:",
 				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-123456 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"`,
 			},
 			examples.Example{
-				Text: `Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-123456":`,
+				Text: "Grant the `FlinkDeveloper` role to principal `User:u-123456` in environment `env-123456``:",
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456",
 			},
 			examples.Example{
-				Text: `Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-123456" for compute pool "lfcp-123456" in Flink region "us-east-2":`,
+				Text: "Grant the `FlinkDeveloper` role to principal `User:u-123456` in environment `env-123456` for compute pool `lfcp-123456` in Flink region `us-east-2`:",
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456 --flink-region aws.us-east-2 --resource ComputePool:lfcp-123456",
 			},
 		)
 	} else {
 		exs = append(exs,
 			examples.Example{
-				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster $KAFKA_CLUSTER_ID",
+				Text: "Create a role binding for the principal permitting it produce to topic `my-topic`:",
+				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster 0000000000000000000000",
 			},
 		)
 	}
@@ -72,9 +72,9 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	cmd.Example = examples.BuildExampleString(exs...)
 
 	cmd.Flags().String("role", "", "Role name of the new role binding.")
-	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
+	cmd.Flags().String("principal", "", `Principal type and identifier using "<Prefix>:<ID>" format.`)
 	addClusterFlags(cmd, c.cfg, c.CLICommand)
-	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	cmd.Flags().String("resource", "", `Resource type and identifier using "<Prefix>:<ID>" format.`)
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
 
