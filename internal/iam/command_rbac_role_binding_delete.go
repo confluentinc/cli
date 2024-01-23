@@ -28,7 +28,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	if c.cfg.IsCloudLogin() {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka cluster "lkc-123456":`,
+				Text: "Delete the role `ResourceOwner` for the resource `Topic:my-topic` on the Kafka cluster `lkc-123456`:",
 				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-123456 --kafka-cluster lkc-123456 --resource Topic:my-topic",
 			},
 		)
