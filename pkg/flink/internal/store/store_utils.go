@@ -1,10 +1,7 @@
 package store
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,8 +9,6 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/texttheater/golang-levenshtein/levenshtein"
-
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -352,51 +347,6 @@ func parseResetStatement(statement string) (string, error) {
 	return key, nil
 }
 
-func processHttpErrors(resp *http.Response, err error) error {
-	if err != nil {
-		return &types.StatementError{Message: err.Error()}
-	}
-
-	if resp != nil && resp.StatusCode >= 400 {
-		if resp.StatusCode == http.StatusUnauthorized {
-			return &types.StatementError{
-				Message:    "unauthorized",
-				Suggestion: `Please run "confluent login"`,
-				StatusCode: resp.StatusCode,
-			}
-		}
-
-		statementErr := flinkgatewayv1beta1.NewError()
-		body, err := io.ReadAll(resp.Body)
-
-		if err != nil {
-			return &types.StatementError{Message: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
-		}
-
-		err = json.Unmarshal(body, &statementErr)
-
-		if err != nil || statementErr == nil || statementErr.Title == nil || statementErr.Detail == nil {
-			return &types.StatementError{Message: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
-		}
-
-		return &types.StatementError{Message: fmt.Sprintf("%s: %s", statementErr.GetTitle(), statementErr.GetDetail())}
-	}
-
-	return nil
-}
-
-// Used to help mocking answers for now - will be removed in the future
-//  Or replaced with a call to a /validate endpoint
-func startsWithValidSQL(statement string) bool {
-	if statement == "" {
-		return false
-	}
-
-	words := strings.Fields(statement)
-	firstWord := strings.ToUpper(words[0])
-	return config.SQLKeywords.Contains(firstWord)
-}
-
 func isKeySimilarToSensitiveKey(sensitiveKeyName string, key string) bool {
 	key = strings.ToLower(key)
 	distance := levenshtein.DistanceForStrings([]rune(sensitiveKeyName), []rune(key), levenshtein.DefaultOptions)
@@ -410,12 +360,6 @@ func removeStatementTerminator(s string) string {
 		s = strings.TrimSuffix(s, config.StatementTerminator)
 	}
 	return s
-}
-
-// Removes spaces, tabs and newlines
-func removeTabNewLineAndWhitesSpaces(str string) string {
-	replacer := strings.NewReplacer(" ", "", "\t", "", "\n", "", "\r\n", "")
-	return replacer.Replace(str)
 }
 
 func statementStartsWithOp(statement, op string) bool {
