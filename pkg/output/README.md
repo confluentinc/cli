@@ -2,7 +2,7 @@
 
 ## User-Facing Strings
 
-User-facing strings appear in command and flag descriptions, examples, and error messages and should be formatted consistently.
+User-facing strings appear in command descriptions, flag descriptions, examples, and error messages. They should be formatted consistently throughout the CLI.
 
 1. If the string contains a CLI command or flag, it must be formatted with backticks.
 ```
