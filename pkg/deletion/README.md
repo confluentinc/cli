@@ -31,11 +31,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 ### Validating Resource Existence
 
 Next, we will validate the existence of all resources corresponding to the input argument IDs and prompt the user to confirm the delete operation.
-The confirmation prompt is yes/no. Call it with `deletion.ValidateAndConfirmDeletionYesNo`.
+The confirmation prompt is yes/no. Call it with `deletion.ValidateAndConfirmDeletion`.
 The function signature is:
 
 ```go
-func ValidateAndConfirmDeletionYesNo(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType) error
+func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType) error
 ```
 
 The function parameter takes in the resource ID string and returns a boolean value signifying whether or not the resource actually exists.
@@ -47,7 +47,7 @@ existenceFunc := func(id string) bool {
     return err == nil
 }
 
-if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.ApiKey); err != nil {
+if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ApiKey); err != nil {
     return err
 }
 ```
@@ -65,7 +65,7 @@ existenceFunc := func(id string) bool {
     return ok
 }
 
-if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.Connector); err != nil {
+if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Connector); err != nil {
     return err
 }
 ```

@@ -40,7 +40,7 @@ func (c *command) privateLinkAttachmentDelete(cmd *cobra.Command, args []string)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.PrivateLinkAttachment); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.PrivateLinkAttachment); err != nil {
 		return err
 	}
 
