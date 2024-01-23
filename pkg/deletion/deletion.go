@@ -46,29 +46,6 @@ func ConfirmPromptYesOrNo(cmd *cobra.Command, promptMsg string) error {
 	return nil
 }
 
-func ConfirmDeletionWithString(cmd *cobra.Command, promptMsg, stringToType string) error {
-	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return err
-	} else if force {
-		return nil
-	}
-
-	prompt := form.NewPrompt()
-	f := form.New(form.Field{ID: "confirm", Prompt: promptMsg})
-	if err := f.Prompt(prompt); err != nil {
-		return err
-	}
-
-	if f.Responses["confirm"].(string) == stringToType || f.Responses["confirm"].(string) == fmt.Sprintf(`"%s"`, stringToType) {
-		return nil
-	}
-
-	return errors.NewErrorWithSuggestions(
-		fmt.Sprintf(`input does not match "%s"`, stringToType),
-		"Use the `--force` flag to delete without a confirmation prompt.",
-	)
-}
-
 func DeleteWithoutMessage(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deletedIds []string
@@ -116,16 +93,7 @@ func ValidateAndConfirmUndeletion(cmd *cobra.Command, args []string, checkExiste
 		return err
 	}
 
-	if len(args) > 1 {
-		return ConfirmPromptYesOrNo(cmd, DefaultYesNoUndeletePromptString(resourceType, args))
-	}
-
-	promptString := fmt.Sprintf(errors.UndeleteResourceConfirmMsg, resourceType, args[0], name)
-	if err := ConfirmDeletionWithString(cmd, promptString, name); err != nil {
-		return err
-	}
-
-	return nil
+	return ConfirmPromptYesOrNo(cmd, DefaultYesNoUndeletePromptString(resourceType, args))
 }
 
 func UndeleteWithoutMessage(args []string, callUndeleteEndpoint func(string) error) ([]string, error) {
