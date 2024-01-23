@@ -31,11 +31,6 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
-	provider, err := c.V2Client.GetIdentityProvider(args[0])
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.IdentityProvider, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.GetIdentityProvider(id)
 		return err == nil
@@ -49,6 +44,6 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		return c.V2Client.DeleteIdentityProvider(id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.IdentityProvider)
+	_, err := deletion.Delete(args, deleteFunc, resource.IdentityProvider)
 	return err
 }

@@ -27,11 +27,6 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	environment, err := c.V2Client.GetOrgEnvironment(args[0])
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.Environment, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.GetOrgEnvironment(id)
 		return err == nil
