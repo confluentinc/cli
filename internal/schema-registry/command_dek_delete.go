@@ -72,7 +72,7 @@ func (c *command) dekDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	promptMsg := fmt.Sprintf("Are you sure you want to delete the %s corresponding to these parameters?", resource.Dek)
-	if err := deletion.ConfirmPromptYesOrNo(cmd, promptMsg); err != nil {
+	if err := deletion.ConfirmPrompt(cmd, promptMsg); err != nil {
 		return err
 	}
 

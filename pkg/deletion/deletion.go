@@ -23,10 +23,10 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 		return err
 	}
 
-	return ConfirmPromptYesOrNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
+	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(resourceType, args))
 }
 
-func ConfirmPromptYesOrNo(cmd *cobra.Command, promptMsg string) error {
+func ConfirmPrompt(cmd *cobra.Command, promptMsg string) error {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return err
 	} else if force {
@@ -93,7 +93,7 @@ func ValidateAndConfirmUndeletion(cmd *cobra.Command, args []string, checkExiste
 		return err
 	}
 
-	return ConfirmPromptYesOrNo(cmd, DefaultYesNoUndeletePromptString(resourceType, args))
+	return ConfirmPrompt(cmd, DefaultYesNoUndeletePromptString(resourceType, args))
 }
 
 func UndeleteWithoutMessage(args []string, callUndeleteEndpoint func(string) error) ([]string, error) {

@@ -101,7 +101,7 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 	if permanent {
 		promptMsg = fmt.Sprintf("Are you sure you want to permanently delete schema \"%s\"?", subjectWithVersion)
 	}
-	if err := deletion.ConfirmPromptYesOrNo(cmd, promptMsg); err != nil {
+	if err := deletion.ConfirmPrompt(cmd, promptMsg); err != nil {
 		return err
 	}
 
