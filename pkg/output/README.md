@@ -11,7 +11,7 @@ suggestion := "Run `confluent kafka cluster list` to list the Kafka clusters in 
 
 2. If the string contains a resource (anything that a user might type that is not a CLI command or flag), it must be formatted with quotes.
 ```
-suggestion := `Update Kafka cluster "lkc-123456" to continue.`
+suggestion := `Update Kafka cluster "lkc-123456".`
 ```
 
 3. If the string contains both (1) and (2), format it in the following way.
