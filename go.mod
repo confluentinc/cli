@@ -28,6 +28,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.0
@@ -104,8 +105,6 @@ require (
 	k8s.io/apimachinery v0.28.4
 	pgregory.net/rapid v1.1.0
 )
-
-require github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.34-0.20240123051024-c43d40a150b5 // indirect
 
 require (
 	dario.cat/mergo v1.0.0 // indirect

@@ -1,7 +1,0 @@
-name: schema-registry-sdk-go
-lang: unknown
-lang_version: unknown
-git:
-  enable: true
-github:
-  enable: true
