@@ -1,2 +1,1 @@
-Are you sure you want to delete custom connector plugin "ccp-123456"?
-To confirm, type "CliPluginTest1". To cancel, press Ctrl-C: Deleted custom connector plugin "ccp-123456".
+Are you sure you want to delete custom connector plugin "ccp-123456"? (y/n): Deleted custom connector plugin "ccp-123456".
