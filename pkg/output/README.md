@@ -1,6 +1,6 @@
 # Output
 
-## User-facing strings
+## User-Facing Strings
 
 User-facing strings appear in command and flag descriptions, examples, and error messages and should be formatted consistently.
 
