@@ -1,2 +1,1 @@
-Are you sure you want to delete Kafka cluster "lkc-def973"?
-To confirm, type "kafka-cluster". To cancel, press Ctrl-C: Deleted Kafka cluster "lkc-def973".
+Are you sure you want to delete Kafka cluster "lkc-def973"? (y/n): Deleted Kafka cluster "lkc-def973".
