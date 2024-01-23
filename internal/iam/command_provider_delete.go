@@ -41,7 +41,7 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.IdentityProvider, provider.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.IdentityProvider); err != nil {
 		return err
 	}
 

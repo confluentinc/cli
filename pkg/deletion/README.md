@@ -31,15 +31,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 ### Validating Resource Existence
 
 Next, we will validate the existence of all resources corresponding to the input argument IDs and prompt the user to confirm the delete operation.
-The confirmation prompt can take two forms: typing a resource name, or answering yes/no. Call `deletion.ValidateAndConfirmDeletion` for the resource name prompt, and `deletion.ValidateAndConfirmDeletionYesNo` for the yes/no prompt.
-However, note that this distinction only matters when the user is deleting a single resource; both versions of this function will show the user a yes/no prompt if they provide more than one argument.
-The function signatures are:
-
-```go
-func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error
-```
-
-and
+The confirmation prompt is yes/no. Call it with `deletion.ValidateAndConfirmDeletionYesNo`.
+The function signature is:
 
 ```go
 func ValidateAndConfirmDeletionYesNo(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType) error
@@ -59,27 +52,6 @@ if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, res
 }
 ```
 
-For `deletion.ValidateAndConfirmDeletion`, the `name` parameter is the string that you want the user to type. Note that this must be the name of the *first* resource.
-For some resources, like Kafka topics, this is simply the first input argument. For most other resources, you'll need to make a GET request to obtain the name:
-
-```go
-user, err := c.V2Client.GetIamUserById(args[0])
-if err != nil {
-    // In order to match the error message returned by ValidateAndConfirmDeletion,
-    // replace the error with `resource.ResourcesNotFoundError`
-    return resource.ResourcesNotFoundError(cmd, resource.User, args[0])
-}
-
-existenceFunc := func(id string) bool {
-    _, err := c.V2Client.GetIamUserById(id)
-    return err == nil
-}
-
-if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.User, user.GetFullName()); err != nil {
-    return err
-}
-```
-
 If you need to call the `describe` or `list` SDK functions for any other reason, store the results in a `map` or a `set` and use that inside the existenceFunc:
 
 ```go
@@ -93,7 +65,7 @@ existenceFunc := func(id string) bool {
     return ok
 }
 
-if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Connector, connectorIdToName[args[0]]); err != nil {
+if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.Connector); err != nil {
     return err
 }
 ```

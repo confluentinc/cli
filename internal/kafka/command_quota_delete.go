@@ -34,7 +34,7 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ClientQuota, quota.Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.ClientQuota); err != nil {
 		return err
 	}
 

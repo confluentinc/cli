@@ -26,27 +26,6 @@ func ValidateAndConfirmDeletionYesNo(cmd *cobra.Command, args []string, checkExi
 	return ConfirmPromptYesOrNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
 }
 
-func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
-	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
-		return err
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
-		return err
-	}
-
-	if len(args) > 1 {
-		return ConfirmPromptYesOrNo(cmd, DefaultYesNoDeletePromptString(resourceType, args))
-	}
-
-	promptString := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, args[0], name)
-	if err := ConfirmDeletionWithString(cmd, promptString, name); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func ConfirmPromptYesOrNo(cmd *cobra.Command, promptMsg string) error {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return err

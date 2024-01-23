@@ -49,7 +49,7 @@ func (c *poolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.IdentityPool, pool.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.IdentityPool); err != nil {
 		return err
 	}
 

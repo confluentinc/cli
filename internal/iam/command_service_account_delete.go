@@ -44,7 +44,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ServiceAccount, serviceAccount.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.ServiceAccount); err != nil {
 		return err
 	}
 

@@ -51,7 +51,7 @@ func (c *command) kekDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Kek, kek.GetName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.Kek); err != nil {
 		return err
 	}
 

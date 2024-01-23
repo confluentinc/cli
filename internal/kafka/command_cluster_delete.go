@@ -44,7 +44,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.KafkaCluster, cluster.Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.KafkaCluster); err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
 	}
 

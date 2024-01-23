@@ -41,7 +41,7 @@ func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.SsoGroupMapping, groupMapping.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.SsoGroupMapping); err != nil {
 		return err
 	}
 
