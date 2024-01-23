@@ -41,17 +41,12 @@ func (c *command) kekDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kek, err := client.DescribeKek(args[0], true)
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.Kek, args[0])
-	}
-
 	existenceFunc := func(name string) bool {
 		_, err := client.DescribeKek(name, true)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Kek, kek.GetName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.Kek); err != nil {
 		return err
 	}
 

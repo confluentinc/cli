@@ -34,17 +34,12 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	serviceAccount, _, err := c.V2Client.GetIamServiceAccount(args[0])
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.ServiceAccount, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, _, err := c.V2Client.GetIamServiceAccount(id)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ServiceAccount, serviceAccount.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ServiceAccount); err != nil {
 		return err
 	}
 
@@ -55,6 +50,6 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return nil
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.ServiceAccount)
+	_, err := deletion.Delete(args, deleteFunc, resource.ServiceAccount)
 	return err
 }
