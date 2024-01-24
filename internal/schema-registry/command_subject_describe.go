@@ -30,7 +30,7 @@ func (c *command) newSubjectDescribeCommand(cfg *config.Config) *cobra.Command {
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
-	cmd.Flags().Bool("all", false, "Include deleted schemas.")
+	cmd.Flags().Bool("all", false, "Include deleted versions.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -59,12 +59,12 @@ func (c *command) subjectDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := cmd.Flags().GetBool("all")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
 
-	versions, err := client.ListVersions(args[0], deleted)
+	versions, err := client.ListVersions(args[0], all)
 	if err != nil {
 		return catchSchemaNotFoundError(err, args[0], "")
 	}

@@ -50,7 +50,7 @@ func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	deleted, err := cmd.Flags().GetBool("all")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	subjects, err := client.List(prefix, deleted)
+	subjects, err := client.List(prefix, all)
 	if err != nil {
 		return err
 	}
