@@ -14,26 +14,26 @@ type model struct {
 }
 
 func (m *model) Init() tea.Cmd {
+	m.spinner = spinner.New(spinner.WithSpinner(spinner.Ellipsis))
 	return m.spinner.Tick
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-
 	if m.out != "" {
 		m.isQuitting = true
-		cmd = tea.Quit
-	} else {
-		switch msg := msg.(type) {
-		case tea.KeyMsg:
-			switch msg.String() {
-			case "esc", "ctrl+c":
-				m.isQuitting = true
-				cmd = tea.Quit
-			}
-		case spinner.TickMsg:
-			m.spinner, cmd = m.spinner.Update(msg)
+		return m, tea.Quit
+	}
+
+	var cmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc", "ctrl+c":
+			m.isQuitting = true
+			cmd = tea.Quit
 		}
+	case spinner.TickMsg:
+		m.spinner, cmd = m.spinner.Update(msg)
 	}
 
 	return m, cmd

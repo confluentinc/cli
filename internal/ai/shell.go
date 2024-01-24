@@ -4,7 +4,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 
@@ -17,7 +16,7 @@ import (
 
 type shell struct {
 	client  *ccloudv2.Client
-	history []aiv1.AiV1ChatCompletionsHistory
+	session *session
 }
 
 func (s *shell) executor(question string) {
@@ -25,20 +24,25 @@ func (s *shell) executor(question string) {
 		os.Exit(0)
 	}
 
-	m := &model{spinner: spinner.New()}
-	m.spinner.Spinner = spinner.Ellipsis
+	m := &model{}
+
+	if s.session.isExpired() {
+		s.session = NewSession()
+	}
 
 	go func() {
 		req := aiv1.AiV1ChatCompletionsRequest{
-			Question: aiv1.PtrString(question),
-			History:  &s.history,
+			AiSessionId: &s.session.id,
+			Question:    &question,
+			History:     &s.session.history,
 		}
+
 		res, err := s.client.QueryChatCompletion(req)
 		if err != nil {
 			exitWithErr(err)
 		}
 
-		s.history = append(s.history, aiv1.AiV1ChatCompletionsHistory{
+		s.session.history = append(s.session.history, aiv1.AiV1ChatCompletionsHistory{
 			Question: aiv1.PtrString(question),
 			Answer:   aiv1.PtrString(res.GetAnswer()),
 		})
