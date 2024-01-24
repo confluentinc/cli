@@ -25,7 +25,7 @@ Flags:
       --transactional-id string   Set the TransactionalID resource.
       --topic string              Set the topic resource. With this option the ACL grants the provided
                                   operations on the topics that start with that prefix, depending on whether
-                                  the --prefix option was also passed.
+                                  the "--prefix" option was also passed.
       --prefix                    Set to match all resource names prefixed with this value.
       --context string            CLI context name.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
