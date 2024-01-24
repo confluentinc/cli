@@ -9,7 +9,7 @@ Retrieve all versions registered under subject "payments" and its compatibility 
   $ confluent schema-registry subject describe payments
 
 Flags:
-      --deleted              Include deleted schemas.
+      --all                  Include deleted schemas.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
