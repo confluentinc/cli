@@ -18,7 +18,7 @@ func (c *poolCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the description of identity pool "pool-123456":,
+				Text: `Update the description of identity pool "pool-123456":`,
 				Code: `confluent iam pool update pool-123456 --provider op-12345 --description "updated description"`,
 			},
 		),
