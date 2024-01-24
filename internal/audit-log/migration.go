@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
-func AuditLogConfigTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mdsv1.AuditLogConfigSpec, []string, error) {
+func configTranslation(clusterConfigs map[string]string, bootstrapServers []string, crnAuthority string) (mdsv1.AuditLogConfigSpec, []string, error) {
 	var newSpec mdsv1.AuditLogConfigSpec
 	const defaultTopicName = "confluent-audit-log-events"
 	var warnings []string
@@ -189,7 +189,7 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 	for clusterId, auditConfig := range clusterConfigs {
 		var spec mdsv1.AuditLogConfigSpec
 		if err := json.Unmarshal([]byte(auditConfig), &spec); err != nil {
-			return nil, fmt.Errorf(errors.MalformedConfigErrorMsg, clusterId, err.Error())
+			return nil, fmt.Errorf(`bad input file: the audit log configuration for cluster "%s" uses invalid JSON: %w`, clusterId, err)
 		}
 		clusterAuditLogConfigSpecs[clusterId] = &spec
 	}

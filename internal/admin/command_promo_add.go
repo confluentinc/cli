@@ -25,6 +25,6 @@ func (c *command) add(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Println("Your promo code was successfully added.")
+	output.Println(c.Config.EnableColor, "Your promo code was successfully added.")
 	return nil
 }

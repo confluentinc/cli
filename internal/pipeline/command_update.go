@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -53,29 +54,17 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to activate this pipeline.")
 	cmd.Flags().Bool("update-schema-registry", false, "Update the pipeline with the latest Schema Registry cluster.")
-	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+	cmd.MarkFlagsOneRequired("name", "description", "ksql-cluster", "sql-file", "secret", "activation-privilege", "update-schema-registry")
 
 	return cmd
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"activation-privilege",
-		"description",
-		"ksql-cluster",
-		"name",
-		"secret",
-		"sql-file",
-		"update-schema-registry",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
-
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
@@ -106,7 +95,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -156,11 +145,14 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if updateSchemaRegistry {
-			srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 			if err != nil {
 				return err
 			}
-			pipeline.Spec.SetStreamGovernanceCluster(streamdesignerv1.ObjectReference{Id: srCluster.GetId()})
+			if len(clusters) == 0 {
+				return errors.NewSRNotEnabledError()
+			}
+			pipeline.Spec.SetStreamGovernanceCluster(streamdesignerv1.ObjectReference{Id: clusters[0].GetId()})
 		}
 	}
 

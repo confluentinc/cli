@@ -3,7 +3,7 @@
     (string) (len=3) "Key",
     (string) (len=5) "Value"
   },
-  Rows: ([]types.StatementResultRow) (len=5) {
+  Rows: ([]types.StatementResultRow) (len=4) {
     (types.StatementResultRow) {
       Operation: (types.StatementResultOperation) +I,
       Fields: ([]types.StatementResultField) (len=2) {
@@ -39,20 +39,7 @@
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=17) "<unset> (default)"
-        }
-      }
-    },
-    (types.StatementResultRow) {
-      Operation: (types.StatementResultOperation) +I,
-      Fields: ([]types.StatementResultField) (len=2) {
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=20) "sql.current-database"
-        },
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=17) "<unset> (default)"
+          Value: (string) (len=7) "env-123"
         }
       }
     },

@@ -6,8 +6,28 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
+const byokUnknownKeyTypeErrorMsg = "unknown byok key type"
+
 type command struct {
 	*pcmd.AuthenticatedCLICommand
+}
+
+type humanOut struct {
+	Id        string `human:"ID"`
+	Key       string `human:"Key"`
+	Roles     string `human:"Roles"`
+	Provider  string `human:"Provider"`
+	State     string `human:"State"`
+	CreatedAt string `human:"Created At"`
+}
+
+type serializedOut struct {
+	Id        string   `serialized:"id"`
+	Key       string   `serialized:"key"`
+	Roles     []string `serialized:"roles"`
+	Provider  string   `serialized:"provider"`
+	State     string   `serialized:"state"`
+	CreatedAt string   `serialized:"created_at"`
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {

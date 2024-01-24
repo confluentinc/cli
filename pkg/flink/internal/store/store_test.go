@@ -1,30 +1,29 @@
 package store
 
 import (
-	"bufio"
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors/flink"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	flinkconfig "github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 type StoreTestSuite struct {
@@ -44,7 +43,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentName: "envName",
 		Database:        "database",
 	}
@@ -60,7 +59,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.True(t, result.IsLocalStatement)
 
-	result, err = s.ProcessLocalStatement("USE my_database;")
+	result, err = s.ProcessLocalStatement("USE CATALOG my_catalog;")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.True(t, result.IsLocalStatement)
@@ -80,8 +79,8 @@ func TestWaitForPendingStatement3(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -90,10 +89,10 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	}
 
 	// Test case 1: Statement is not pending
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
@@ -110,8 +109,8 @@ func TestWaitForPendingTimesout(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -120,15 +119,15 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	}
 
 	statusDetailMessage := "test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
 	}
 	expectedError := &types.StatementError{
 		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
-			timeout.Seconds(), config.ConfigKeyResultsTimeout),
+			timeout.Seconds(), flinkconfig.KeyResultsTimeout),
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
@@ -144,8 +143,8 @@ func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -154,8 +153,8 @@ func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 	}
 
 	statusDetailMessage := "test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
@@ -176,8 +175,8 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -186,16 +185,16 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	}
 
 	transientStatusDetailMessage := "Transient status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &transientStatusDetailMessage,
 		},
 	}
 
 	finalStatusDetailMessage := "Final status detail message"
-	statementObjCompleted := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObjCompleted := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
 			Detail: &finalStatusDetailMessage,
 		},
@@ -214,8 +213,8 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	waitTime := time.Millisecond * 1
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -223,14 +222,14 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
 			Detail: &statusDetailMessage,
 		},
 	}
 
-	returnedError := flink.NewFlinkError("couldn't get statement", "", http.StatusInternalServerError)
+	returnedError := flink.NewError("couldn't get statement", "", http.StatusInternalServerError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
@@ -248,8 +247,8 @@ func TestCancelPendingStatement(t *testing.T) {
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -257,18 +256,18 @@ func TestCancelPendingStatement(t *testing.T) {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase: "PENDING",
 		},
 	}
 
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: http.StatusInternalServerError}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return([]flinkgatewayv1beta1.SqlV1beta1StatementException{}, flinkError).AnyTimes()
 
 	// Schedule routine to cancel context
 	go func() {
@@ -283,67 +282,67 @@ func TestCancelPendingStatement(t *testing.T) {
 }
 
 func (s *StoreTestSuite) TestIsSetStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("SET", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("SET key", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("SET key=value", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET   ", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    set   ", config.ConfigOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", config.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key=value", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET   ", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    set   ", flinkconfig.OpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", flinkconfig.OpSet))
 
-	assert.False(s.T(), false, statementStartsWithOp("SETting", config.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("USE", config.ConfigOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("SETTING", config.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETting", flinkconfig.OpSet))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.OpSet))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.OpSet))
+	assert.False(s.T(), false, statementStartsWithOp("USE", flinkconfig.OpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETTING", flinkconfig.OpSet))
 }
 
 func (s *StoreTestSuite) TestIsUseStatement() {
-	assert.True(s.T(), statementStartsWithOp("USE", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE catalog", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE   ", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("use   ", config.ConfigOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("USE catalog", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("USE   ", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("use   ", flinkconfig.OpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", flinkconfig.OpUse))
 
-	assert.False(s.T(), statementStartsWithOp("SET", config.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("USES", config.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("", config.ConfigOpUse))
-	assert.False(s.T(), statementStartsWithOp("should be false", config.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("SET", flinkconfig.OpUse))
+	assert.False(s.T(), statementStartsWithOp("USES", flinkconfig.OpUse))
+	assert.False(s.T(), statementStartsWithOp("", flinkconfig.OpUse))
+	assert.False(s.T(), statementStartsWithOp("should be false", flinkconfig.OpUse))
 }
 
 func (s *StoreTestSuite) TestIsResetStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("RESET", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET   ", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("reset   ", config.ConfigOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET   ", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("reset   ", flinkconfig.OpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", flinkconfig.OpReset))
 
-	assert.False(s.T(), false, statementStartsWithOp("RESETting", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("USE", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("RESETTING", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETting", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("USE", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETTING", flinkconfig.OpReset))
 }
 
 func (s *StoreTestSuite) TestIsExitStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("EXIT", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit   ;", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exiT   ", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("Exit   ", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("eXit   ", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit", config.ConfigOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit ", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit   ;", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exiT   ", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("Exit   ", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("eXit   ", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit", flinkconfig.OpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit ", flinkconfig.OpExit))
 
-	assert.False(s.T(), false, statementStartsWithOp("exits", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("exitt;", config.ConfigOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("exi", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exits", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exitt;", flinkconfig.OpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exi", flinkconfig.OpReset))
 }
 
 func (s *StoreTestSuite) TestParseSetStatement() {
@@ -517,11 +516,11 @@ func (s *StoreTestSuite) TestParseSetStatementError() {
 
 func (s *StoreTestSuite) TestParseUseStatement() {
 	key, value, _ := parseUseStatement("USE CATALOG c;")
-	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
+	assert.Equal(s.T(), flinkconfig.KeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
 	key, value, _ = parseUseStatement("use   catalog   \nc   ")
-	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
+	assert.Equal(s.T(), flinkconfig.KeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
 	key, value, _ = parseUseStatement("use   catalog     ")
@@ -533,7 +532,7 @@ func (s *StoreTestSuite) TestParseUseStatement() {
 	assert.Equal(s.T(), "", value)
 
 	key, value, _ = parseUseStatement("use     db   ")
-	assert.Equal(s.T(), config.ConfigKeyDatabase, key)
+	assert.Equal(s.T(), flinkconfig.KeyDatabase, key)
 	assert.Equal(s.T(), "db", value)
 
 	key, value, _ = parseUseStatement("dAtaBaSe  db   ")
@@ -541,7 +540,7 @@ func (s *StoreTestSuite) TestParseUseStatement() {
 	assert.Equal(s.T(), "", value)
 
 	key, value, _ = parseUseStatement("use     \ndatabase_name   ")
-	assert.Equal(s.T(), config.ConfigKeyDatabase, key)
+	assert.Equal(s.T(), flinkconfig.KeyDatabase, key)
 	assert.Equal(s.T(), "database_name", value)
 }
 
@@ -697,76 +696,111 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 	}, err)
 }
 
-func (s *StoreTestSuite) TestProcessHttpErrors() {
-	// given
-	res := &http.Response{
-		StatusCode: http.StatusUnauthorized,
-		Body:       generateCloserFromObject(flinkgatewayv1alpha1.NewError()),
+func (s *StoreTestSuite) TestStopStatement() {
+	ctrl := gomock.NewController(s.T())
+	statementName := "TEST_STATEMENT"
+	statementObj := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	spec := flinkgatewayv1beta1.NewSqlV1beta1StatementSpecWithDefaults()
+	statementObj.SetName(statementName)
+	statementObj.SetSpec(*spec)
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	appOptions := types.ApplicationOptions{
+		OrganizationId:  "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
-	// when
-	err := processHttpErrors(res, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
 
-	// expect
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: unauthorized\nSuggestion: Please run \"confluent login\"", err.Error())
+	statementUpdated := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	specUpdated := flinkgatewayv1beta1.NewSqlV1beta1StatementSpecWithDefaults()
+	statementUpdated.SetName(statementName)
+	specUpdated.SetStopped(true)
+	statementUpdated.SetSpec(*specUpdated)
 
-	// given
-	title := "invalid syntax"
-	detail := "you should provide a table for select"
-	statementErr := &flinkgatewayv1alpha1.Error{Title: &title, Detail: &detail}
-	res = &http.Response{
-		StatusCode: http.StatusBadRequest,
-		Body:       generateCloserFromObject(statementErr),
-	}
+	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementUpdated).Return(nil)
 
-	// when
-	err = processHttpErrors(res, nil)
-
-	// expect
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax: you should provide a table for select", err.Error())
-
-	// given
-	res = &http.Response{
-		StatusCode: http.StatusInternalServerError,
-		Body:       generateCloserFromObject(nil),
-	}
-
-	// when
-	err = processHttpErrors(res, nil)
-
-	// expect
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: received error with code \"500\" from server but could not parse it. This is not expected. Please contact support", err.Error())
-
-	// given
-	res = &http.Response{
-		StatusCode: http.StatusCreated,
-		Body:       generateCloserFromObject(nil),
-	}
-
-	// when
-	err = processHttpErrors(res, nil)
-
-	// expect
-	assert.Nil(s.T(), err)
-
-	// given
-	err = errors.New("some error")
-
-	// when
-	err = processHttpErrors(nil, err)
-
-	// expect
-	assert.Equal(s.T(), "Error: some error", err.Error())
+	wasStatementDeleted := store.StopStatement(statementName)
+	require.True(s.T(), wasStatementDeleted)
 }
 
-func generateCloserFromObject(obj interface{}) io.ReadCloser {
-	bts, _ := json.Marshal(obj)
-	buf := bytes.NewReader(bts)
-	reader := bufio.NewReader(buf)
-	return io.NopCloser(reader)
+func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
+	ctrl := gomock.NewController(s.T())
+	statementName := "TEST_STATEMENT"
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	appOptions := types.ApplicationOptions{
+		OrganizationId:  "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
+
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1beta1.SqlV1beta1Statement{}, flinkError)
+
+	wasStatementDeleted := store.StopStatement(statementName)
+	require.False(s.T(), wasStatementDeleted)
+}
+
+func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
+	ctrl := gomock.NewController(s.T())
+	statementName := "TEST_STATEMENT"
+	statementObj := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	statementObj.SetName(statementName)
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	appOptions := types.ApplicationOptions{
+		OrganizationId:  "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
+
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1beta1.SqlV1beta1Statement{}, flinkError)
+
+	wasStatementDeleted := store.StopStatement(statementName)
+	require.False(s.T(), wasStatementDeleted)
+}
+
+func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
+	ctrl := gomock.NewController(s.T())
+	statementName := "TEST_STATEMENT"
+	statementObj := flinkgatewayv1beta1.NewSqlV1beta1StatementWithDefaults()
+	spec := flinkgatewayv1beta1.NewSqlV1beta1StatementSpecWithDefaults()
+	statementObj.SetName(statementName)
+	statementObj.SetSpec(*spec)
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	appOptions := types.ApplicationOptions{
+		OrganizationId:  "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
+
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
+	statementObj.Spec.SetStopped(true)
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementObj).Return(flinkError)
+
+	wasStatementDeleted := store.StopStatement(statementName)
+	require.False(s.T(), wasStatementDeleted)
 }
 
 func (s *StoreTestSuite) TestDeleteStatement() {
@@ -776,7 +810,7 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -797,7 +831,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -806,7 +840,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 
 	statementName := "TEST_STATEMENT"
 
-	flinkError := flink.NewFlinkError("error", "", http.StatusInternalServerError)
+	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(flinkError)
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)
@@ -819,7 +853,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -830,9 +864,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.COMPLETED,
 	}
-	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
@@ -848,7 +882,7 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -859,9 +893,9 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
@@ -877,7 +911,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -889,9 +923,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		Status:        types.RUNNING,
 	}
 	nextPage := "https://devel.cpdev.cloud/some/results?page_token=eyJWZX"
-	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{Next: &nextPage},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{Next: &nextPage},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
@@ -907,7 +941,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId:   "orgId",
+		OrganizationId:  "orgId",
 		EnvironmentId:   "envId",
 		EnvironmentName: "envName",
 		Database:        "database",
@@ -918,9 +952,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
-		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
+	statementResultObj := flinkgatewayv1beta1.SqlV1beta1StatementResult{
+		Metadata: flinkgatewayv1beta1.ResultListMeta{},
+		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
 	}
 	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
@@ -941,12 +975,12 @@ func TestCalcWaitTime(t *testing.T) {
 		retries          int
 		expectedWaitTime time.Duration
 	}{
-		{0, config.InitialWaitTime},
-		{3, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*0)*time.Millisecond},
-		{7, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*0)*time.Millisecond},
-		{10, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*1)*time.Millisecond},
-		{15, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*1)*time.Millisecond},
-		{32, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*3)*time.Millisecond},
+		{0, flinkconfig.InitialWaitTime},
+		{3, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*0)*time.Millisecond},
+		{7, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*0)*time.Millisecond},
+		{10, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*1)*time.Millisecond},
+		{15, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*1)*time.Millisecond},
+		{32, flinkconfig.InitialWaitTime + time.Duration(flinkconfig.WaitTimeIncrease*3)*time.Millisecond},
 	}
 
 	for _, testCase := range testCases {
@@ -965,57 +999,64 @@ func TestTimeout(t *testing.T) {
 		{
 			name: "results-timeout property set",
 			properties: map[string]string{
-				config.ConfigKeyResultsTimeout: "10000", // timeout in milliseconds
+				flinkconfig.KeyResultsTimeout: "10000", // timeout in milliseconds
 			},
 			expected: 10 * time.Second,
 		},
 		{
 			name:       "results-timeout property not set",
 			properties: map[string]string{},
-			expected:   config.DefaultTimeoutDuration,
+			expected:   flinkconfig.DefaultTimeoutDuration,
 		},
 		{
 			name: "invalid results-timeout property",
 			properties: map[string]string{
-				config.ConfigKeyResultsTimeout: "abc", // invalid duration
+				flinkconfig.KeyResultsTimeout: "abc", // invalid duration
 			},
-			expected: config.DefaultTimeoutDuration,
+			expected: flinkconfig.DefaultTimeoutDuration,
 		},
 	}
 
 	// Iterate over test cases and run the function for each input, comparing output to expected value
 	for _, tc := range testCases {
-		store := Store{Properties: NewUserProperties(tc.properties)}
+		store := Store{Properties: NewUserProperties(tc.properties, map[string]string{})}
 		result := store.getTimeout()
 		require.Equal(t, tc.expected, result, tc.name)
 	}
 }
 
-func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
+func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId:  "orgId",
+		OrganizationId: "orgId",
 		EnvironmentId:  "envId",
 		ComputePoolId:  "computePoolId",
-		IdentityPoolId: "identityPoolId",
 	}
+	serviceAccountId := "sa-123"
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
 	}
 
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1023,64 +1064,50 @@ func (s *StoreTestSuite) TestProcessStatementWithIdentityPool() {
 	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
 }
 
-func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
+func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
-	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-		ComputePoolId: "computePoolId",
+
+	user := "u-1234"
+	contextState := &config.ContextState{
+		Auth: &config.AuthConfig{
+			User: &ccloudv1.User{
+				ResourceId: user,
+				Email:      "test-user@email",
+			},
+			Organization: testserver.RegularOrg,
+		},
+		AuthToken:        "eyJ.eyJ.abc",
+		AuthRefreshToken: "v1.abc",
 	}
-	serviceAccountId := "sa-123"
+	appOptions := &types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+		ComputePoolId:  "computePoolId",
+		Context:        &config.Context{State: contextState, Config: &config.Config{}},
+	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"client.service-account": serviceAccountId, "TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "PENDING",
 			Detail: &statusDetailMessage,
 		},
-	}
-
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), serviceAccountId, "", "envId", "orgId").
-		Return(statementObj, nil)
-
-	processedStatement, err := store.ProcessStatement(statement)
-	require.Nil(s.T(), err)
-	expectedStatement := types.NewProcessedStatement(statementObj)
-	expectedStatement.ServiceAccount = serviceAccountId
-	require.Equal(s.T(), expectedStatement, processedStatement)
-}
-
-func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAccount() {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
-	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-		ComputePoolId: "computePoolId",
-	}
-	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
-		client:           client,
-		appOptions:       appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
 		},
 	}
 
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "", "envId", "orgId").
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, user, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1090,30 +1117,37 @@ func (s *StoreTestSuite) TestProcessStatementWithNeitherIdentityPoolNorServiceAc
 
 func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	serviceAccountId := "serviceAccountId"
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId:  "orgId",
+		OrganizationId: "orgId",
 		EnvironmentId:  "envId",
 		ComputePoolId:  "computePoolId",
-		IdentityPoolId: "identityPoolId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
+	statement := "SELECT * FROM table"
 	statusDetailMessage := "test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Detail: &statusDetailMessage,
 		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
 	}
-	returnedError := errors.New("test error")
+	returnedError := fmt.Errorf("test error")
 
-	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", store.Properties.GetSqlProperties(), "", "identityPoolId", "envId", "orgId").
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, returnedError)
+
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
@@ -1124,14 +1158,56 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	require.Equal(s.T(), expectedError, err)
 }
 
+func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+		ComputePoolId:  "computePoolId",
+	}
+	serviceAccountId := "sa-123"
+	statementName := "test-statement"
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId}, map[string]string{flinkconfig.KeyStatementName: statementName}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statement := "SELECT * FROM table"
+	statusDetailMessage := "Test status detail message"
+
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
+			ComputePoolId: &appOptions.ComputePoolId,
+			Statement:     &statement,
+		},
+	}
+
+	client.EXPECT().CreateStatement(SqlV1beta1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrganizationId).
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+	// statement name should be cleared after submission
+	require.False(s.T(), store.Properties.HasKey(flinkconfig.KeyStatementName))
+}
+
 func (s *StoreTestSuite) TestWaitPendingStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1139,11 +1215,9 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 
 	statementName := "Test Statement"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
 			Detail: &statusDetailMessage,
 		},
@@ -1161,7 +1235,7 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:     client,
 	}
 
@@ -1177,7 +1251,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:     client,
 	}
 
@@ -1191,11 +1265,11 @@ func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1203,15 +1277,13 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 
 	statementName := "Test Statement"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Detail: &statusDetailMessage,
 		},
 	}
-	returnedErr := errors.New("test error")
+	returnedErr := fmt.Errorf("test error")
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedErr)
 	expectedError := &types.StatementError{
 		Message:        returnedErr.Error(),
@@ -1229,11 +1301,11 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningStatementPhase() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	store := Store{
-		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1241,11 +1313,9 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 
 	statementName := "Test Statement"
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "FAILED",
 			Detail: &statusDetailMessage,
 		},
@@ -1265,62 +1335,219 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 	require.Equal(s.T(), expectedError, err)
 }
 
+func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStatementWithEmptyStatusDetail() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statementName := "Test Statement"
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
+			Phase: "FAILED",
+		},
+	}
+	exception1 := "Exception 1"
+	exception2 := "Exception 2"
+	exceptionsResponse := []flinkgatewayv1beta1.SqlV1beta1StatementException{
+		{Stacktrace: &exception1},
+		{Stacktrace: &exception2},
+	}
+	expectedError := &types.StatementError{
+		Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
+		FailureMessage: exception1,
+	}
+
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
+
+	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
+		StatementName: statementName,
+		Status:        types.PENDING,
+	})
+	require.Nil(s.T(), processedStatement)
+	require.Equal(s.T(), expectedError, err)
+}
+
+func (s *StoreTestSuite) TestGetStatusDetail() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statementName := "Test Statement"
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
+			Phase: "FAILED",
+		},
+	}
+	exception1 := "Exception 1"
+	exception2 := "Exception 2"
+	exceptionsResponse := []flinkgatewayv1beta1.SqlV1beta1StatementException{
+		{Stacktrace: &exception1},
+		{Stacktrace: &exception2},
+	}
+
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil).Times(2)
+
+	require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
+	statementObj.Status.Phase = "FAILING"
+	require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
+}
+
+func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	testStatusDetailMessage := "Test Status Detail Message"
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("Test Statement"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &testStatusDetailMessage,
+		},
+	}
+
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+	statementObj.Status.Phase = "COMPLETED"
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+	statementObj.Status.Phase = "RUNNING"
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+	statementObj.Status.Phase = "DELETED"
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+}
+
+func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	testStatusDetailMessage := "Test Status Detail Message"
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("Test Statement"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
+			Phase:  "FAILED",
+			Detail: &testStatusDetailMessage,
+		},
+	}
+
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+}
+
+func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailable() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
+	}
+	store := Store{
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statementName := "Test Statement"
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name:   &statementName,
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{Phase: "FAILED"},
+	}
+	exceptionsResponse := []flinkgatewayv1beta1.SqlV1beta1StatementException{}
+
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
+
+	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
+}
+
 func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
 	tests := []struct {
 		name              string
-		statement         flinkgatewayv1alpha1.SqlV1alpha1Statement
+		statement         flinkgatewayv1beta1.SqlV1beta1Statement
 		isSelectStatement bool
 	}{
 		{
 			name: "select lowercase",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("select * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("select * FROM table"),
 				},
 			},
 			isSelectStatement: true,
 		},
 		{
 			name: "select uppercase",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("SELECT * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("SELECT * FROM table"),
 				},
 			},
 			isSelectStatement: true,
 		},
 		{
 			name: "select random case",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("SeLeCt * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("SeLeCt * FROM table"),
 				},
 			},
 			isSelectStatement: true,
 		},
 		{
 			name: "leading white space",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("   select * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("   select * FROM table"),
 				},
 			},
 			isSelectStatement: true,
 		},
 		{
 			name: "missing last char",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("selec * FROM table"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("selec * FROM table"),
 				},
 			},
 			isSelectStatement: false,
 		},
 		{
 			name: "missing last char",
-			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
-				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					Statement: flinkgatewayv1alpha1.PtrString("insert into table values (1, 2)"),
+			statement: flinkgatewayv1beta1.SqlV1beta1Statement{
+				Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+					Statement: flinkgatewayv1beta1.PtrString("insert into table values (1, 2)"),
 				},
 			},
 			isSelectStatement: false,
@@ -1338,8 +1565,8 @@ func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
 func TestWaitForTerminalStateDoesNotStartWhenAlreadyInTerminalState(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -1357,8 +1584,8 @@ func TestWaitForTerminalStateDoesNotStartWhenAlreadyInTerminalState(t *testing.T
 func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
@@ -1366,16 +1593,14 @@ func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("statement-name"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "COMPLETED",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil)
+	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, nil)
 	processedStatement := types.NewProcessedStatement(statementObj)
 	processedStatement.Status = types.RUNNING
 
@@ -1388,24 +1613,22 @@ func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
 		appOptions:       &appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("statement-name"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "RUNNING",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, nil).AnyTimes()
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go func() {
 		time.Sleep(2 * time.Second)
@@ -1422,26 +1645,46 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrganizationId: "orgId",
+		EnvironmentId:  "envId",
 	}
 	s := &Store{
 		client:           client,
 		appOptions:       &appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1beta1.SqlV1beta1Statement{
+		Name: flinkgatewayv1beta1.PtrString("statement-name"),
+		Status: &flinkgatewayv1beta1.SqlV1beta1StatementStatus{
 			Phase:  "RUNNING",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+			Detail: flinkgatewayv1beta1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, errors.New("error"))
+	client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, fmt.Errorf("error"))
 
 	_, err := s.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatement(statementObj))
 
 	assert.NotNil(t, err)
+}
+
+type SqlV1beta1StatementMatcher struct {
+	Expected flinkgatewayv1beta1.SqlV1beta1Statement
+}
+
+func (p SqlV1beta1StatementMatcher) Matches(x interface{}) bool {
+	actual, ok := x.(flinkgatewayv1beta1.SqlV1beta1Statement)
+	if !ok {
+		return false
+	}
+	statementMatches := *actual.Spec.ComputePoolId == *p.Expected.Spec.ComputePoolId &&
+		reflect.DeepEqual(actual.Spec.Properties, p.Expected.Spec.Properties) &&
+		*actual.Spec.Statement == *p.Expected.Spec.Statement
+	if p.Expected.Name == nil {
+		return statementMatches
+	}
+	return statementMatches && *actual.Name == *p.Expected.Name
+}
+
+func (p SqlV1beta1StatementMatcher) String() string {
+	return fmt.Sprintf("%v", p.Expected)
 }

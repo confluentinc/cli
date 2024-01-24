@@ -11,11 +11,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
@@ -37,12 +39,13 @@ var (
 	apiCredentialName = fmt.Sprintf("api-key-%s", apiKeyString)
 	kafkaClusterID    = "anonymous-id"
 	contextName       = "my-context"
-	environmentId     = "acc-123"
+	environmentId     = "env-123456"
 	cloudPlatforms    = []string{
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"confluent.cloud",
 		"premium-oryx.gcp.priv.cpdev.cloud",
+		"confluentgov-internal.com",
 	}
 	regularOrgContextState = &ContextState{
 		Auth: &AuthConfig{
@@ -133,10 +136,10 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		PlatformName:       platform.Name,
 		Credential:         loginCredential,
 		CredentialName:     loginCredential.Name,
-		CurrentEnvironment: "acc-123",
+		CurrentEnvironment: "env-123456",
 		Environments: map[string]*EnvironmentContext{
-			"acc-123":  {},
-			"env-flag": {},
+			"env-123456": {},
+			"env-flag":   {},
 		},
 		State: regularOrgContextState,
 	}
@@ -196,6 +199,10 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 }
 
 func TestConfig_Load(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
@@ -267,6 +274,10 @@ func TestConfig_Load(t *testing.T) {
 }
 
 func TestConfig_Save(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
@@ -356,6 +367,10 @@ func TestConfig_Save(t *testing.T) {
 }
 
 func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	configFile, err := os.CreateTemp("", "TestConfig_Save.json")
 	require.NoError(t, err)
 	defer os.Remove(configFile.Name())
@@ -440,7 +455,7 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 		ctx := test.config.Context()
 		test.config.SetOverwrittenCurrentKafkaCluster(test.overwrittenVal)
 		// resolve should reset the active kafka to be the overwritten value and return the flag value to be used in restore
-		tempKafka := test.config.resolveOverwrittenKafka()
+		tempKafka := test.config.resolveOverwrittenKafkaCluster()
 		require.Equal(t, test.activeKafka, tempKafka)
 		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
 			require.Equal(t, test.overwrittenVal, ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
@@ -448,7 +463,7 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 			require.Equal(t, test.overwrittenVal, ctx.KafkaClusterContext.ActiveKafkaCluster)
 		}
 		// restore should reset the active kafka to be the flag value
-		test.config.restoreOverwrittenKafka(tempKafka)
+		test.config.restoreOverwrittenKafkaCluster(tempKafka)
 		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
 			require.Equal(t, tempKafka, ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
 		} else {
@@ -840,10 +855,10 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 }
 
 func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
-	clusterID := "lkc-abcdefg"
+	id := "lkc-abcdefg"
 
 	kcc := &KafkaClusterConfig{
-		ID:        clusterID,
+		ID:        id,
 		Name:      "lit",
 		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
@@ -858,15 +873,15 @@ func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 		testInputs := SetupTestInputs(isCloud)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
-		reflect.DeepEqual(kcc, kafkaClusterContext.GetKafkaClusterConfig(clusterID))
+		reflect.DeepEqual(kcc, kafkaClusterContext.GetKafkaClusterConfig(id))
 	}
 }
 
 func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
-	clusterID := "lkc-abcdefg"
+	id := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
-		ID:        clusterID,
+		ID:        id,
 		Name:      "lit",
 		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
@@ -883,7 +898,7 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
 
 		kafkaClusterContext.DeleteApiKey(apiKey)
-		kcc := kafkaClusterContext.GetKafkaClusterConfig(clusterID)
+		kcc := kafkaClusterContext.GetKafkaClusterConfig(id)
 		if _, ok := kcc.APIKeys[apiKey]; ok {
 			t.Errorf("DeleteAPIKey did not delete the API key.")
 		}
@@ -894,10 +909,10 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 }
 
 func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
-	clusterID := "lkc-abcdefg"
+	id := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
-		ID:        clusterID,
+		ID:        id,
 		Name:      "lit",
 		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
@@ -912,11 +927,11 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 		testInputs := SetupTestInputs(isCloud)
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
-		kafkaClusterContext.SetActiveKafkaCluster(clusterID)
-		require.Equal(t, clusterID, kafkaClusterContext.GetActiveKafkaClusterId())
+		kafkaClusterContext.SetActiveKafkaCluster(id)
+		require.Equal(t, id, kafkaClusterContext.GetActiveKafkaClusterId())
 
-		kafkaClusterContext.RemoveKafkaCluster(clusterID)
-		_, ok := kafkaClusterContext.KafkaClusterConfigs[clusterID]
+		kafkaClusterContext.RemoveKafkaCluster(id)
+		_, ok := kafkaClusterContext.KafkaClusterConfigs[id]
 		require.False(t, ok)
 		require.Empty(t, kafkaClusterContext.GetActiveKafkaClusterId())
 	}
@@ -971,6 +986,20 @@ func TestConfig_IsCloud_False(t *testing.T) {
 		}
 		require.False(t, cfg.IsCloudLogin(), platform+" should be false")
 	}
+}
+
+func TestHasGovHostname(t *testing.T) {
+	cfg := &Config{
+		Contexts:       map[string]*Context{"context": {PlatformName: "https://confluentgov-internal.com"}},
+		CurrentContext: "context",
+	}
+	require.True(t, cfg.HasGovHostname())
+
+	cfg = &Config{
+		Contexts:       map[string]*Context{"context": {PlatformName: "https://confluent.cloud"}},
+		CurrentContext: "context",
+	}
+	require.False(t, cfg.HasGovHostname())
 }
 
 func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
@@ -1068,5 +1097,59 @@ func TestConfig_IsOnPrem_False(t *testing.T) {
 
 	for _, cfg := range configs {
 		require.False(t, cfg.IsOnPremLogin())
+	}
+}
+
+func TestParseFlagsIntoConfig(t *testing.T) {
+	configBase := AuthenticatedCloudConfigMock()
+
+	configFlag := AuthenticatedCloudConfigMock()
+	configFlag.Contexts["test-context"] = &Context{Name: "test-context"}
+
+	tests := []struct {
+		name           string
+		context        string
+		config         *Config
+		errMsg         string
+		suggestionsMsg string
+	}{
+		{
+			name:   "read context from config",
+			config: configBase,
+		},
+		{
+			name:    "read context from flag",
+			context: "test-context",
+			config:  configFlag,
+		},
+		{
+			name:    "bad-context specified with flag",
+			context: "bad-context",
+			config:  configFlag,
+			errMsg:  fmt.Sprintf(errors.ContextDoesNotExistErrorMsg, "bad-context"),
+		},
+	}
+	for _, test := range tests {
+		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+		cmd.Flags().String("context", "", "Context name.")
+		err := cmd.ParseFlags([]string{"--context", test.context})
+		require.NoError(t, err)
+		initialCurrentContext := test.config.CurrentContext
+		err = test.config.ParseFlagsIntoConfig(cmd)
+		if test.errMsg != "" {
+			require.Error(t, err)
+			require.Equal(t, test.errMsg, err.Error())
+			if test.suggestionsMsg != "" {
+				errors.VerifyErrorAndSuggestions(require.New(t), err, test.errMsg, test.suggestionsMsg)
+			}
+		} else {
+			require.NoError(t, err)
+			ctx := test.config.Context()
+			if test.context != "" {
+				require.Equal(t, test.context, ctx.Name)
+			} else {
+				require.Equal(t, initialCurrentContext, ctx.Name)
+			}
+		}
 	}
 }

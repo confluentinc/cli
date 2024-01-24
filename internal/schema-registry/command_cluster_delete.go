@@ -22,8 +22,8 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete the Schema Registry cluster for environment "env-12345".`,
-				Code: "confluent schema-registry cluster delete --environment env-12345",
+				Text: `Delete the Schema Registry cluster for environment "env-123456".`,
+				Code: "confluent schema-registry cluster delete --environment env-123456",
 			},
 		),
 	}
@@ -53,7 +53,7 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, clusters[0].GetId(), resource.Environment, environmentId)
-	if err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil {
+	if err := deletion.ConfirmPromptYesOrNo(cmd, promptMsg); err != nil {
 		return err
 	}
 
@@ -61,6 +61,6 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf("Deleted Schema Registry cluster for environment \"%s\".\n", environmentId)
+	output.Printf(c.Config.EnableColor, "Deleted Schema Registry cluster for environment \"%s\".\n", environmentId)
 	return nil
 }

@@ -50,7 +50,7 @@ func (t *InteractiveOutputController) startTView() {
 
 func (t *InteractiveOutputController) close() {
 	t.resultFetcher.Close()
-	output.Println("Result retrieval aborted.")
+	output.Println(false, "Result retrieval aborted.")
 }
 
 func (t *InteractiveOutputController) init() {
@@ -200,8 +200,9 @@ func (t *InteractiveOutputController) getTableTitle() string {
 
 	if t.debug {
 		return fmt.Sprintf(
-			" %s | last page size: %d | current cache size: %d/%d | table size: %d ",
+			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
 			mode,
+			t.resultFetcher.GetStatement().StatementName,
 			t.resultFetcher.GetStatement().GetPageSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetChangelogSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetMaxResults(),
@@ -209,5 +210,5 @@ func (t *InteractiveOutputController) getTableTitle() string {
 		)
 	}
 
-	return fmt.Sprintf(" %s ", mode)
+	return fmt.Sprintf(" %s (%s) ", mode, t.resultFetcher.GetStatement().StatementName)
 }

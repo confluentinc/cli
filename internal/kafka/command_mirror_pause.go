@@ -25,19 +25,19 @@ func (c *mirrorCommand) newPauseCommand() *cobra.Command {
 	}
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
+	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually pause the mirror topic, but simply validates it.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
+	cobra.CheckErr(cmd.MarkFlagRequired("link"))
 
 	return cmd
 }
 
 func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
-	linkName, err := cmd.Flags().GetString(linkFlagName)
+	link, err := cmd.Flags().GetString("link")
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 
 	alterMirrorsRequestData := kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: &args}
 
-	results, err := kafkaREST.CloudClient.UpdateKafkaMirrorTopicsPause(linkName, dryRun, alterMirrorsRequestData)
+	results, err := kafkaREST.CloudClient.UpdateKafkaMirrorTopicsPause(link, dryRun, alterMirrorsRequestData)
 	if err != nil {
 		return err
 	}

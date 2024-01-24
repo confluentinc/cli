@@ -41,7 +41,7 @@ func (c *routeCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	result, response, err := c.MDSClient.AuditLogConfigurationApi.ListRoutes(c.createContext(), opts)
 	if err != nil {
-		return HandleMdsAuditLogApiError(cmd, err, response)
+		return HandleMdsAuditLogApiError(err, response)
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")

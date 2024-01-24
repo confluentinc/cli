@@ -64,7 +64,7 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 		if force {
 			gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 			if err != nil {
-				return HandleMdsAuditLogApiError(cmd, err, response)
+				return HandleMdsAuditLogApiError(err, response)
 			}
 			putSpec = &mdsv1.AuditLogConfigSpec{
 				Destinations:       fileSpec.Destinations,
@@ -90,7 +90,7 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 				// That's OK though, we'll still handle and show the API error message.
 			}
 		}
-		return HandleMdsAuditLogApiError(cmd, err, httpResp)
+		return HandleMdsAuditLogApiError(err, httpResp)
 	}
 
 	return enc.Encode(result)

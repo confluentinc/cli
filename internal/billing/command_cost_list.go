@@ -62,7 +62,7 @@ func (c *command) checkDateFormat(date string) error {
 	return nil
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	startDate, err := cmd.Flags().GetString("start-date")
 	if err != nil {
 		return err
@@ -73,12 +73,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err = c.checkDateFormat(startDate); err != nil {
-		return fmt.Errorf("invalid start date: %v", err)
+	if err := c.checkDateFormat(startDate); err != nil {
+		return fmt.Errorf("invalid start date: %w", err)
 	}
 
-	if err = c.checkDateFormat(startDate); err != nil {
-		return fmt.Errorf("invalid end date: %v", err)
+	if err := c.checkDateFormat(startDate); err != nil {
+		return fmt.Errorf("invalid end date: %w", err)
 	}
 
 	costs, err := c.V2Client.ListBillingCosts(startDate, endDate)

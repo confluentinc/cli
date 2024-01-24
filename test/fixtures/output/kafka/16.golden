@@ -2,8 +2,20 @@
   {
     "cloud_id": "aws",
     "cloud_name": "Amazon Web Services",
+    "region_id": "ap-northeast-1",
+    "region_name": "ap-northeast-1 (Tokyo)"
+  },
+  {
+    "cloud_id": "aws",
+    "cloud_name": "Amazon Web Services",
     "region_id": "us-east-1",
     "region_name": "us-east-1 (N. Virginia)"
+  },
+  {
+    "cloud_id": "azure",
+    "cloud_name": "Azure",
+    "region_id": "southeastasia",
+    "region_name": "southeastasia (Singapore)"
   },
   {
     "cloud_id": "gcp",

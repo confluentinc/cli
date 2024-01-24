@@ -2,14 +2,12 @@ package context
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/mock"
 )
 
@@ -54,5 +52,5 @@ func TestParseStringFlag_ErrEmpty(t *testing.T) {
 
 	_, err := c.parseStringFlag(cmd, "flag", "Flag: ", false)
 	require.Error(t, err)
-	require.Equal(t, fmt.Sprintf(errors.CannotBeEmptyErrorMsg, "flag"), err.Error())
+	require.Equal(t, "flag cannot be empty", err.Error())
 }

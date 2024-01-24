@@ -1,0 +1,22 @@
+Error: required flag(s) "cloud", "endpoint", "attachment" not set
+Usage:
+  confluent network private-link attachment connection create [name] [flags]
+
+Examples:
+Create a named AWS PrivateLink attachment connection.
+
+  $ confluent network private-link attachment connection create aws-private-link-attachment-connection --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456
+
+Flags:
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --endpoint string      REQUIRED: ID of an AWS VPC endpoint that is connected to the AWS VPC endpoint service.
+      --attachment string    REQUIRED: Private link attachment ID.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

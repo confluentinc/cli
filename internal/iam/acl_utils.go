@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/v3/pkg/acl"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -25,7 +26,7 @@ func aclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("kafka-cluster", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", acl.ConvertToLower(acl.AclOperations)))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", acl.ConvertToLower(acl.Operations)))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -90,8 +91,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "host":
 			conf.AclBinding.Entry.Host = v
 		case "operation":
-			v = strings.ToUpper(v)
-			v = strings.ReplaceAll(v, "-", "_")
+			v = ccloudv2.ToUpper(v)
 			enumUtils := utils.EnumUtils{}
 			enumUtils.Init(
 				mdsv1.ACLOPERATION_UNKNOWN,
@@ -127,8 +127,7 @@ func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	}
 
 	// Normalize the resource pattern name
-	n = strings.ToUpper(n)
-	n = strings.ReplaceAll(n, "-", "_")
+	n = ccloudv2.ToUpper(n)
 
 	enumUtils := utils.EnumUtils{}
 	enumUtils.Init(mdsv1.ACLRESOURCETYPE_TOPIC, mdsv1.ACLRESOURCETYPE_GROUP,
@@ -151,8 +150,7 @@ func convertToFlags(operations ...any) string {
 		if v == mdsv1.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
-		ops[i] = fmt.Sprintf("`--%s`", s)
+		ops[i] = fmt.Sprintf("`--%s`", ccloudv2.ToLower(fmt.Sprint(v)))
 	}
 
 	sort.Strings(ops)

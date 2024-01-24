@@ -19,13 +19,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-var resourceKindToType = map[string]string{
-	"Cluster":        "kafka",
-	"ksqlDB":         "ksql",
-	"SchemaRegistry": "schema-registry",
-	"Cloud":          "cloud",
-}
-
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -40,7 +33,7 @@ func (c *command) newListCommand() *cobra.Command {
 		),
 	}
 
-	c.addResourceFlag(cmd, true)
+	c.addResourceFlag(cmd, false)
 	cmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
@@ -59,7 +52,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if resourceType == resource.Cloud {
-		clusterId = resource.Cloud
+		clusterId = resourceType
 	}
 
 	serviceAccount, err := cmd.Flags().GetString("service-account")
@@ -82,10 +75,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	if serviceAccount != "" {
 		if resource.LookupType(serviceAccount) != resource.ServiceAccount {
-			return errors.New(errors.BadServiceAccountIDErrorMsg)
+			return fmt.Errorf(errors.BadServiceAccountIdErrorMsg)
 		}
 		if _, ok := resourceIdToUserIdMap[serviceAccount]; !ok {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccount), errors.ServiceAccountNotFoundSuggestions)
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccount),
+				errors.ServiceAccountNotFoundSuggestions,
+			)
 		}
 	}
 
@@ -128,15 +124,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
-		for _, res := range resources {
+		for _, resource := range resources {
 			list.Add(&out{
 				IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
 				Key:          apiKey.GetId(),
 				Description:  apiKey.Spec.GetDescription(),
 				OwnerId:      ownerId,
 				OwnerEmail:   email,
-				ResourceType: resourceKindToType[res.GetKind()],
-				ResourceId:   getApiKeyResourceId(res.GetId()),
+				ResourceType: getResourceType(resource),
+				ResourceId:   getResourceId(resource.GetId()),
 				Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}
@@ -147,7 +143,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[string]bool {
 	saMap := make(map[string]bool)
 	for _, sa := range serviceAccounts {
-		saMap[*sa.Id] = true
+		saMap[sa.GetId()] = true
 	}
 	return saMap
 }
@@ -186,8 +182,8 @@ func (c *command) getEmail(resourceId string, auditLogServiceAccountId int32, re
 	return "<deactivated user>"
 }
 
-func getApiKeyResourceId(id string) string {
-	if id == "cloud" {
+func getResourceId(id string) string {
+	if id == resource.Cloud {
 		return ""
 	}
 	return id

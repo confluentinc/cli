@@ -3,13 +3,19 @@ List Flink SQL statements.
 Usage:
   confluent flink statement list [flags]
 
+Examples:
+List running statements.
+
+  $ confluent flink statement list --status running
+
 Flags:
       --cloud string          Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string         Cloud region for compute pool (use "confluent flink region list" to see all).
+      --region string         Cloud region for Flink (use "confluent flink region list" to see all).
       --compute-pool string   Flink compute pool ID.
       --environment string    Environment ID.
       --context string        CLI context name.
   -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+      --status string         Filter the results by statement status.
 
 Global Flags:
   -h, --help            Show help for this command.

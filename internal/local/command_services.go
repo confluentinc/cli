@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -162,7 +161,7 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesListCommand(_ *cobra.Command, _ []string) error {
+func (c *command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 	services, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -175,7 +174,8 @@ func (c *Command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 		serviceNames[i] = writeServiceName(service)
 	}
 
-	output.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+	output.Println(c.Config.EnableColor, "Available Services:")
+	output.Println(c.Config.EnableColor, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -202,7 +202,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesStartCommand(_ *cobra.Command, _ []string) error {
+func (c *command) runServicesStartCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -235,7 +235,7 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesStatusCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServicesStatusCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -278,7 +278,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesStopCommand(cmd *cobra.Command, _ []string) error {
+func (c *command) runServicesStopCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -312,7 +312,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
+func (c *command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -335,13 +335,13 @@ func (c *Command) runServicesTopCommand(_ *cobra.Command, _ []string) error {
 	}
 
 	if len(pids) == 0 {
-		return errors.New(errors.NoServicesRunningErrorMsg)
+		return fmt.Errorf("no services running")
 	}
 
 	return top(pids)
 }
 
-func (c *Command) getConfig(service string) (map[string]string, error) {
+func (c *command) getConfig(service string) (map[string]string, error) {
 	data, err := c.cc.GetDataDir(service)
 	if err != nil {
 		return map[string]string{}, err
@@ -441,7 +441,7 @@ func top(pids []int) error {
 		}
 		top = exec.Command("top", "-p", strings.Join(args, ","))
 	default:
-		return errors.Errorf(errors.TopNotAvailableErrorMsg, runtime.GOOS)
+		return fmt.Errorf("`top` command not available on platform: %s", runtime.GOOS)
 	}
 
 	top.Stdin = os.Stdin
@@ -451,7 +451,7 @@ func top(pids []int) error {
 	return top.Run()
 }
 
-func (c *Command) getAvailableServices() ([]string, error) {
+func (c *command) getAvailableServices() ([]string, error) {
 	isCP, err := c.ch.IsConfluentPlatform()
 
 	var available []string
@@ -464,12 +464,12 @@ func (c *Command) getAvailableServices() ([]string, error) {
 	return available, err
 }
 
-func (c *Command) notifyConfluentCurrent() error {
+func (c *command) notifyConfluentCurrent() error {
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err
 	}
 
-	output.Printf(errors.UsingConfluentCurrentMsg, dir)
+	output.Printf(c.Config.EnableColor, "Using CONFLUENT_CURRENT: %s\n", dir)
 	return nil
 }

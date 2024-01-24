@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
-const HISTORY_FILE_NAME = "flink_statements_history.json"
+const filename = "flink_statements_history.json"
 
 type History struct {
 	Data          []string `json:"data"`
@@ -55,7 +55,7 @@ func initPath() *History {
 		confluentDir = config.HomeConfluentPathDefault
 	}
 	confluentPath := filepath.Join(home, confluentDir)
-	historyPath := filepath.Join(confluentPath, HISTORY_FILE_NAME)
+	historyPath := filepath.Join(confluentPath, filename)
 
 	return &History{
 		Data:          nil,

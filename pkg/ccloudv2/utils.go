@@ -10,6 +10,10 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/log"
 	plog "github.com/confluentinc/cli/v3/pkg/log"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
@@ -43,22 +47,39 @@ func IsCCloudURL(url string, isTest bool) bool {
 	return false
 }
 
-func NewRetryableHttpClient(unsafeTrace bool) *http.Client {
+func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
-	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err
 		}
+
+		if resp.StatusCode == http.StatusUnauthorized && cfg.Context().GetState().IsExpired() {
+			params := &ccloudv1.Params{
+				BaseURL:    cfg.Context().GetPlatformServer(),
+				HttpClient: ccloudv1.BaseClient,
+				Logger:     log.CliLogger,
+				UserAgent:  cfg.Version.UserAgent,
+			}
+			v1Client := ccloudv1.NewClient(params)
+
+			_ = cfg.Context().RefreshSession(v1Client)
+			_ = cfg.Save()
+
+			return true, err
+		}
+
 		return resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500, err
 	}
+
 	return client.StandardClient()
 }
 
-func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(req *http.Request, via []*http.Request) error) *http.Client {
+func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(*http.Request, []*http.Request) error) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
-	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err
 		}
@@ -66,6 +87,14 @@ func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(req
 	}
 	client.HTTPClient.CheckRedirect = checkRedirect
 	return client.StandardClient()
+}
+
+func ToLower(s string) string {
+	return strings.ReplaceAll(strings.ToLower(s), "_", "-")
+}
+
+func ToUpper(s string) string {
+	return strings.ReplaceAll(strings.ToUpper(s), "-", "_")
 }
 
 func getServerUrl(baseURL string) string {

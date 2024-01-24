@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -19,23 +20,16 @@ var (
 	mockEmail              = "cli-mock-email@confluent.io"
 	mockURL                = "http://test"
 	usernameCredentialName = fmt.Sprintf("username-%s-%s", mockEmail, mockURL)
-	apiKeyCredentialName   = fmt.Sprintf("api-key-%s", kafkaAPIKey)
 	mockContextName        = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 	mockAuthToken          = "some.token.here"
 
 	// kafka cluster
-	kafkaClusterId     = "lkc-12345"
-	anonymousKafkaId   = "anonymous-id"
-	anonymousKafkaName = "anonymous-cluster"
-	kafkaClusterName   = "toby-flenderson"
-	bootstrapServer    = "SASL_SSL://pkc-abc123.us-west2.gcp.confluent.cloud:9092"
-	kafkaAPIKey        = "costa"
-	kafkaAPISecret     = "rica"
+	kafkaClusterId   = "lkc-12345"
+	kafkaClusterName = "toby-flenderson"
+	bootstrapServer  = "SASL_SSL://pkc-abc123.us-west2.gcp.confluent.cloud:9092"
+	kafkaAPIKey      = "costa"
+	kafkaAPISecret   = "rica"
 )
-
-func MockKafkaClusterId() string {
-	return kafkaClusterId
-}
 
 func AuthenticatedCloudConfigMock() *Config {
 	return AuthenticatedToOrgCloudConfigMock(mockOrganizationId, MockOrgResourceId)
@@ -86,33 +80,6 @@ func AuthenticatedConfigMockWithContextName(contextName string) *Config {
 	return AuthenticatedConfigMock(params)
 }
 
-func APICredentialConfigMock() *Config {
-	kafkaAPIKeyPair := createAPIKeyPair(kafkaAPIKey, kafkaAPISecret)
-
-	credential := createAPIKeyCredential(apiKeyCredentialName, kafkaAPIKeyPair)
-	contextState := createContextState(nil, "")
-
-	platform := createPlatform(bootstrapServer, bootstrapServer)
-
-	kafkaCluster := createKafkaCluster(anonymousKafkaId, anonymousKafkaName, kafkaAPIKeyPair)
-	kafkaClusters := map[string]*KafkaClusterConfig{kafkaCluster.ID: kafkaCluster}
-
-	cfg := New()
-
-	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, contextState, cfg, "", "")
-	if err != nil {
-		panic(err)
-	}
-	setUpConfig(cfg, ctx, platform, credential, contextState)
-	return cfg
-}
-
-func UnauthenticatedCloudConfigMock() *Config {
-	c := AuthenticatedCloudConfigMock()
-	c.CurrentContext = ""
-	return c
-}
-
 type mockConfigParams struct {
 	contextName    string
 	userId         int32
@@ -156,14 +123,6 @@ func createUsernameCredential(credentialName string, auth *AuthConfig) *Credenti
 	}
 }
 
-func createAPIKeyCredential(credentialName string, apiKeyPair *APIKeyPair) *Credential {
-	return &Credential{
-		Name:           credentialName,
-		APIKeyPair:     apiKeyPair,
-		CredentialType: APIKey,
-	}
-}
-
 func createPlatform(name, server string) *Platform {
 	return &Platform{
 		Name:   name,
@@ -199,10 +158,10 @@ func createAPIKeyPair(apiKey, apiSecret string) *APIKeyPair {
 	}
 }
 
-func createKafkaCluster(clusterID, clusterName string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
+func createKafkaCluster(id, name string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
 	return &KafkaClusterConfig{
-		ID:         clusterID,
-		Name:       clusterName,
+		ID:         id,
+		Name:       name,
 		Bootstrap:  bootstrapServer,
 		APIKeys:    map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
 		APIKey:     apiKeyPair.Key,
@@ -223,10 +182,14 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	}
 }
 
+// SetTempHomeDir temporarily changes the path of the home directory so the current configuration file isn't altered.
 func SetTempHomeDir() {
-	// Temporarily change $HOME, so the current configuration file isn't altered.
-	err := os.Setenv("HOME", os.TempDir())
-	if err != nil {
+	key := "HOME"
+	if runtime.GOOS == "windows" {
+		key = "USERPROFILE"
+	}
+
+	if err := os.Setenv(key, os.TempDir()); err != nil {
 		panic(err)
 	}
 }

@@ -92,7 +92,7 @@ func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if contextType != "" {
-		updateRequest.ContextType = strings.ToUpper(contextType)
+		updateRequest.ContextType = srsdk.PtrString(strings.ToUpper(contextType))
 	}
 
 	contextName, err := cmd.Flags().GetString("context-name")
@@ -100,7 +100,7 @@ func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if contextName != "" {
-		updateRequest.Context = contextName
+		updateRequest.Context = srsdk.PtrString(contextName)
 	}
 
 	subjects, err := cmd.Flags().GetStringSlice("subjects")
@@ -108,7 +108,7 @@ func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(subjects) > 0 {
-		updateRequest.Subjects = subjects
+		updateRequest.Subjects = &subjects
 	}
 
 	subjectFormat, err := cmd.Flags().GetString("subject-format")
@@ -116,7 +116,7 @@ func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if subjectFormat != "" {
-		updateRequest.SubjectRenameFormat = subjectFormat
+		updateRequest.SubjectRenameFormat = srsdk.PtrString(subjectFormat)
 	}
 
 	config, err := cmd.Flags().GetStringSlice("config")
@@ -137,13 +137,13 @@ func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(configMap) > 0 {
-		updateRequest.Config = configMap
+		updateRequest.Config = &configMap
 	}
 
 	if _, err := client.PutExporter(args[0], updateRequest); err != nil {
 		return err
 	}
 
-	output.Printf(errors.UpdatedResourceMsg, resource.SchemaExporter, args[0])
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.SchemaExporter, args[0])
 	return nil
 }

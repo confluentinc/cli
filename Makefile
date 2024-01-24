@@ -1,8 +1,8 @@
 SHELL := /bin/bash
-GORELEASER_VERSION := v1.17.2
+GORELEASER_VERSION := v1.21.2
 
 # Compile natively based on the current system
-.PHONY: build 
+.PHONY: build
 build:
 ifneq "" "$(findstring NT,$(shell uname))" # windows
 	CC=gcc CXX=g++ $(MAKE) cli-builder
@@ -21,24 +21,24 @@ endif
 cross-build:
 ifeq ($(GOARCH),arm64)
     ifeq ($(GOOS),linux) # linux/arm64
-		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+		CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
     else # darwin/arm64
-		CGO_ENABLED=1 $(MAKE) cli-builder
+		$(MAKE) cli-builder
     endif
 else
     ifeq ($(GOOS),windows) # windows/amd64
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
+		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
     else ifeq ($(GOOS),linux) # linux/amd64
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+		CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
     else # darwin/amd64
-		CGO_ENABLED=1 $(MAKE) cli-builder
+		$(MAKE) cli-builder
     endif
 endif
 
 .PHONY: cli-builder
 cli-builder:
 	GOOS="" GOARCH="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
@@ -56,6 +56,11 @@ S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
 S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
+S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
+S3_DEB_RPM_PROD_PREFIX=confluent-cli
+S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
+S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
+
 .PHONY: clean
 clean:
 	for dir in bin dist docs legal prebuilt release-notes; do \
@@ -67,7 +72,7 @@ lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.1 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.55.2 && \
 	golangci-lint run --timeout 10m
 	@echo "✅  golangci-lint"
 
@@ -86,9 +91,9 @@ cmd/lint/en_US.dic:
 unit-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
-	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
+	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
 else
-	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
+	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: build-for-integration-test
@@ -99,17 +104,24 @@ else
 	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
 
+.PHONY: build-for-integration-test-windows
+build-for-integration-test-windows:
+ifdef CI
+	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+else
+	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+endif
+
 .PHONY: integration-test
 integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
 	export GOCOVERDIR=test/coverage && \
-	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
-	mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
+	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
+	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
-	go test -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
+	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
 endif
 
 .PHONY: test

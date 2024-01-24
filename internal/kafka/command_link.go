@@ -12,6 +12,8 @@ const (
 	dryrunFlagName     = "dry-run"
 )
 
+const createdLinkResourceMsg = `Created %s "%s" with configs:`
+
 type linkCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
@@ -33,6 +35,7 @@ func newLinkCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
+		cmd.AddCommand(c.newTaskCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
@@ -42,6 +45,7 @@ func newLinkCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command
 		cmd.AddCommand(c.newDeleteCommandOnPrem())
 		cmd.AddCommand(c.newDescribeCommandOnPrem())
 		cmd.AddCommand(c.newListCommandOnPrem())
+		cmd.AddCommand(c.newTaskCommandOnPrem())
 	}
 
 	return cmd

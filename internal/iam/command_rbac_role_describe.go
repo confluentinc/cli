@@ -14,6 +14,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/utils"
+)
+
+const (
+	unknownRoleErrorMsg    = `unknown role "%s"`
+	unknownRoleSuggestions = "The available roles are %s."
 )
 
 func (c *roleCommand) newDescribeCommand() *cobra.Command {
@@ -24,10 +30,10 @@ func (c *roleCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 	}
 
-	pcmd.AddOutputFlag(cmd)
 	if c.cfg.IsOnPremLogin() {
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -55,7 +61,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	if featureflags.Manager.BoolVariation("flink.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
-		namespacesList = append(namespacesList, flinkNamespace.Value())
+		namespacesList = append(namespacesList, flinkNamespace.Value(), workloadNamespace.Value())
 	}
 
 	namespaces := optional.NewString(strings.Join(namespacesList, ","))
@@ -70,8 +76,10 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 			return err
 		}
 
-		suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(roleNames, ", "))
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(unknownRoleErrorMsg, role),
+			fmt.Sprintf(unknownRoleSuggestions, utils.ArrayToCommaDelimitedString(roleNames, "and")),
+		)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
@@ -96,8 +104,10 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 			if err != nil {
 				return err
 			}
-			suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(availableRoleNames, ","))
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(unknownRoleErrorMsg, role),
+				fmt.Sprintf(unknownRoleSuggestions, utils.ArrayToCommaDelimitedString(availableRoleNames, "and")),
+			)
 		}
 
 		return err

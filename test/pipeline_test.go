@@ -17,7 +17,8 @@ func (s *CLITestSuite) TestPipeline() {
 
 	tests := []CLITest{
 		{args: "pipeline list", fixture: "pipeline/list.golden"},
-		{args: "pipeline describe pipe-12345", fixture: "pipeline/describe-pass.golden"},
+		{args: "pipeline describe pipe-12345", fixture: "pipeline/describe.golden"},
+		{args: "pipeline describe pipe-12345 -o yaml", fixture: "pipeline/describe-yaml.golden"},
 		{args: fmt.Sprintf("pipeline save pipe-12345 --sql-file %s", testOutputFile.Name()), fixture: "pipeline/save.golden", regex: true},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --use-schema-registry", fixture: "pipeline/create-with-ksql-sr-cluster.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345", fixture: "pipeline/create.golden"},

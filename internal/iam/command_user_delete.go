@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -40,7 +42,7 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 
 	deleteFunc := func(id string) error {
 		if err := c.V2Client.DeleteIamUser(id); err != nil {
-			return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err)
+			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err)
 		}
 		return nil
 	}

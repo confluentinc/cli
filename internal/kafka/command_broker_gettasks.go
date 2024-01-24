@@ -2,13 +2,13 @@ package kafka
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -56,7 +56,7 @@ func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 }
 
 func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
-	brokerId, all, err := checkAllOrBrokerIdSpecified(cmd, args)
+	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args, true)
 	if err != nil {
 		return err
 	}
@@ -76,21 +76,21 @@ func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var taskData kafkarestv3.BrokerTaskDataList
+	var tasks []kafkarestv3.BrokerTaskData
 	if all { // get BrokerTasks for the cluster
-		taskData, err = getBrokerTasksForCluster(restClient, restContext, clusterId, brokerTaskType)
+		tasks, err = getBrokerTasksForCluster(restClient, restContext, clusterId, brokerTaskType)
 		if err != nil {
 			return err
 		}
 	} else { // fetch individual broker configs
-		taskData, err = getBrokerTasksForBroker(restClient, restContext, clusterId, brokerId, brokerTaskType)
+		tasks, err = getBrokerTasksForBroker(restClient, restContext, clusterId, brokerId, brokerTaskType)
 		if err != nil {
 			return err
 		}
 	}
 
 	list := output.NewList(cmd)
-	for _, entry := range taskData.Data {
+	for _, entry := range tasks {
 		list.Add(parseBrokerTaskData(entry))
 	}
 	return list.Print()
@@ -130,36 +130,36 @@ func mapToKeyValueString(values map[string]string) string {
 	return kvString
 }
 
-func getBrokerTasksForCluster(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, taskType kafkarestv3.BrokerTaskType) (kafkarestv3.BrokerTaskDataList, error) {
-	var taskData kafkarestv3.BrokerTaskDataList
-	var resp *http.Response
-	var err error
+func getBrokerTasksForCluster(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, taskType kafkarestv3.BrokerTaskType) ([]kafkarestv3.BrokerTaskData, error) {
 	if taskType != "" {
-		taskData, resp, err = restClient.BrokerTaskApi.ClustersClusterIdBrokersTasksTaskTypeGet(restContext, clusterId, taskType)
+		taskData, resp, err := restClient.BrokerTaskApi.ClustersClusterIdBrokersTasksTaskTypeGet(restContext, clusterId, taskType)
+		if err != nil {
+			return nil, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+		}
+		return taskData.Data, nil
 	} else {
-		taskData, resp, err = restClient.BrokerTaskApi.ClustersClusterIdBrokersTasksGet(restContext, clusterId)
+		taskData, resp, err := restClient.BrokerTaskApi.ClustersClusterIdBrokersTasksGet(restContext, clusterId)
+		if err != nil {
+			return nil, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+		}
+		return taskData.Data, nil
 	}
-	if err != nil {
-		return taskData, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-	}
-	return taskData, nil
 }
 
-func getBrokerTasksForBroker(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, brokerId int32, taskType kafkarestv3.BrokerTaskType) (kafkarestv3.BrokerTaskDataList, error) {
-	var taskData kafkarestv3.BrokerTaskDataList
-	var resp *http.Response
-	var err error
+func getBrokerTasksForBroker(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, brokerId int32, taskType kafkarestv3.BrokerTaskType) ([]kafkarestv3.BrokerTaskData, error) {
 	if taskType != "" {
-		var brokerTaskData kafkarestv3.BrokerTaskData
-		brokerTaskData, resp, err = restClient.BrokerTaskApi.ClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(restContext, clusterId, brokerId, taskType)
-		taskData.Data = []kafkarestv3.BrokerTaskData{brokerTaskData}
+		tasks, resp, err := restClient.BrokerTaskApi.ClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(restContext, clusterId, brokerId, taskType)
+		if err != nil {
+			return nil, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+		}
+		return []kafkarestv3.BrokerTaskData{tasks}, nil
 	} else {
-		taskData, resp, err = restClient.BrokerTaskApi.ClustersClusterIdBrokersBrokerIdTasksGet(restContext, clusterId, brokerId)
+		tasks, resp, err := restClient.BrokerTaskApi.ClustersClusterIdBrokersBrokerIdTasksGet(restContext, clusterId, brokerId)
+		if err != nil {
+			return nil, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+		}
+		return tasks.Data, nil
 	}
-	if err != nil {
-		return taskData, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-	}
-	return taskData, nil
 }
 
 func getBrokerTaskType(taskName string) (kafkarestv3.BrokerTaskType, error) {
@@ -171,5 +171,8 @@ func getBrokerTaskType(taskName string) (kafkarestv3.BrokerTaskType, error) {
 			return taskType, nil
 		}
 	}
-	return "", errors.NewErrorWithSuggestions(errors.InvalidBrokerTaskTypeErrorMsg, errors.InvalidBrokerTaskTypeSuggestions)
+	return "", errors.NewErrorWithSuggestions(
+		"invalid broker task type",
+		`Valid broker task types are "remove-broker" and "add-broker".`,
+	)
 }

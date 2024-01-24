@@ -37,6 +37,6 @@ func (c *completerBuilder) AddCompleter(completer prompt.Completer) *completerBu
 	return c
 }
 
-func (a *completerBuilder) BuildCompleter() prompt.Completer {
-	return a.completer
+func (c *completerBuilder) BuildCompleter() prompt.Completer {
+	return c.completer
 }

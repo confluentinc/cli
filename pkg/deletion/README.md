@@ -117,7 +117,7 @@ For most resources, this is the last step and you can simply return the error to
 deleteFunc := func(id string) error {
     if err := c.V2Client.DeleteIamUser(id); err != nil {
         // You can wrap this error or process it further as needed
-        return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err)
+        return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err)
     }
     return nil
 }

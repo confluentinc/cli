@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 )
 
 func (c *command) newDeactivateCommand() *cobra.Command {
@@ -25,9 +26,9 @@ func (c *command) newDeactivateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("retained-topics", []string{}, "A comma-separated list of topics to be retained after deactivation.")
-	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -43,7 +44,7 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}

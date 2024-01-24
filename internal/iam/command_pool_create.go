@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
+func (c *poolCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create an identity pool.",
@@ -26,18 +26,26 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("identity-claim"))
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
+	cobra.CheckErr(cmd.MarkFlagRequired("identity-claim"))
 
 	return cmd
 }
 
-func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
-	name := args[0]
+func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
+	provider, err := cmd.Flags().GetString("provider")
+	if err != nil {
+		return err
+	}
+
+	identityClaim, err := cmd.Flags().GetString("identity-claim")
+	if err != nil {
+		return err
+	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
@@ -49,18 +57,8 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	identityClaim, err := cmd.Flags().GetString("identity-claim")
-	if err != nil {
-		return err
-	}
-
-	provider, err := cmd.Flags().GetString("provider")
-	if err != nil {
-		return err
-	}
-
 	createIdentityPool := identityproviderv2.IamV2IdentityPool{
-		DisplayName:   identityproviderv2.PtrString(name),
+		DisplayName:   identityproviderv2.PtrString(args[0]),
 		Description:   identityproviderv2.PtrString(description),
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),

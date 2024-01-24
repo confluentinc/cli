@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/auth_mds_client.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 mds_client.go MDSClientManager
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/auth_mds_client.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 mds_client.go MDSClientManager
 package auth
 
 import (

@@ -25,7 +25,7 @@ type Client interface {
 	CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error)
 	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool
-	UpdateBinary(cliName, version, path string, noVerify bool) error
+	UpdateBinary(cliName, version string, noVerify bool) error
 }
 
 type client struct {
@@ -84,7 +84,8 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
-		return "", "", errors.Wrapf(err, errors.ParseVersionErrorMsg, cliName, currentVersion)
+		message := fmt.Sprintf(errors.ParseVersionErrorMsg, cliName, currentVersion)
+		return "", "", fmt.Errorf("%s: %w", message, err)
 	}
 
 	latestMajorVersion, latestMinorVersion, err := c.Repository.GetLatestMajorAndMinorVersion(cliName, currVersion)
@@ -102,7 +103,7 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 
 	// After fetching the latest version, we touch the file so that we don't make the request again for 24hrs.
 	if err := c.touchCheckFile(); err != nil {
-		return "", "", errors.Wrap(err, errors.TouchLastCheckFileErrorMsg)
+		return "", "", fmt.Errorf("unable to touch last check file: %w", err)
 	}
 
 	var major, minor string
@@ -166,7 +167,11 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 		confirm = false
 	}
 
-	fmt.Fprintf(c.Out, errors.PromptToDownloadDescriptionMsg, cliName, currVersion, latestVersion, releaseNotes)
+	fmt.Fprintf(c.Out, "New version of %s is available\n", cliName)
+	fmt.Fprintf(c.Out, "Current Version: %s\n", currVersion)
+	fmt.Fprintf(c.Out, "Latest Version:  %s\n", latestVersion)
+	fmt.Fprintln(c.Out)
+	fmt.Fprint(c.Out, releaseNotes)
 
 	if !confirm {
 		return true
@@ -193,10 +198,10 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 }
 
 // UpdateBinary replaces the named binary at path with the desired version
-func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) error {
+func (c *client) UpdateBinary(cliName, version string, noVerify bool) error {
 	downloadDir, err := c.fs.MkdirTemp("", cliName)
 	if err != nil {
-		return errors.Wrapf(err, errors.GetTempDirErrorMsg, cliName)
+		return fmt.Errorf("unable to get temporary directory for %s: %w", cliName, err)
 	}
 	defer func() {
 		if err := c.fs.RemoveAll(downloadDir); err != nil {
@@ -207,9 +212,9 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	fmt.Fprintf(c.Out, "Downloading %s version %s...\n", cliName, version)
 	startTime := c.clock.Now()
 
-	payload, err := c.Repository.DownloadVersion(cliName, version, downloadDir)
+	payload, err := c.Repository.DownloadVersion(cliName, version)
 	if err != nil {
-		return errors.Wrapf(err, errors.DownloadVersionErrorMsg, cliName, version, downloadDir)
+		return fmt.Errorf("unable to download %s version %s to %s: %w", cliName, version, downloadDir, err)
 	}
 
 	mb := float64(len(payload)) / 1024.0 / 1024.0
@@ -220,7 +225,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	if !noVerify {
 		content, err := c.Repository.DownloadChecksums(cliName, version)
 		if err != nil {
-			return errors.Wrapf(err, "failed to download checksums file")
+			return fmt.Errorf("failed to download checksums file: %w", err)
 		}
 
 		binary := getBinaryName(version, c.OS, runtime.GOARCH)

@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -41,25 +43,24 @@ func newTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comman
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-		cmd.AddCommand(c.newConsumeCommand())
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(c.newProduceCommand())
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
-		cmd.AddCommand(c.newConsumeCommandOnPrem())
 		cmd.AddCommand(c.newCreateCommandOnPrem())
 		cmd.AddCommand(c.newDeleteCommandOnPrem())
 		cmd.AddCommand(c.newDescribeCommandOnPrem())
 		cmd.AddCommand(c.newListCommandOnPrem())
-		cmd.AddCommand(c.newProduceCommandOnPrem())
 		cmd.AddCommand(c.newUpdateCommandOnPrem())
 	}
+
+	cmd.AddCommand(c.newConsumeCommand())
+	cmd.AddCommand(c.newProduceCommand())
 
 	return cmd
 }
@@ -103,9 +104,9 @@ func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluste
 	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
 		if err.Error() == ckafka.ErrTransport.String() {
-			err = errors.New("API key may not be provisioned yet")
+			err = fmt.Errorf("API key may not be provisioned yet")
 		}
-		return fmt.Errorf("failed to obtain topics from client: %v", err)
+		return fmt.Errorf("failed to obtain topics from client: %w", err)
 	}
 
 	foundTopic := false
@@ -117,7 +118,10 @@ func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluste
 	}
 	if !foundTopic {
 		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID, cluster.ID, cluster.ID))
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic),
+			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID),
+		)
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")
@@ -134,8 +138,37 @@ func (c *command) provisioningClusterCheck(lkc string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
-		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+		return fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 	}
+	return nil
+}
+
+func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
+	bootstrap, err := cmd.Flags().GetString("bootstrap")
+	if err != nil {
+		return err
+	}
+
+	platform := &config.Platform{
+		Server: bootstrap,
+		Name:   strings.TrimPrefix(bootstrap, "https://"),
+	}
+
+	kafkaClusterCfg := &config.KafkaClusterConfig{
+		ID:        "anonymous-id",
+		Bootstrap: bootstrap,
+		APIKeys:   map[string]*config.APIKeyPair{},
+	}
+	kafkaClusters := map[string]*config.KafkaClusterConfig{kafkaClusterCfg.ID: kafkaClusterCfg}
+
+	c.Context = &config.Context{Platform: platform}
+	c.Context.KafkaClusterContext = &config.KafkaClusterContext{
+		EnvContext:          false,
+		ActiveKafkaCluster:  kafkaClusterCfg.ID,
+		KafkaClusterConfigs: kafkaClusters,
+		Context:             c.Context,
+	}
+
 	return nil
 }
 
@@ -164,19 +197,20 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 
 	if pair, ok := cluster.APIKeys[cluster.APIKey]; !ok || pair.Secret == "" {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, apiKey, cluster.ID),
-			fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, apiKey, cluster.ID))
+			fmt.Sprintf(`no secret for API key "%s" of resource "%s" passed via flag or stored in local CLI state`, apiKey, cluster.ID),
+			fmt.Sprintf("Pass the API secret with flag `--api-secret` or store with `confluent api-key store %s --resource %s`.", apiKey, cluster.ID),
+		)
 	}
 
 	return nil
 }
 
 func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckafka.Producer) error {
+	keys := "Ctrl-C or Ctrl-D"
 	if runtime.GOOS == "windows" {
-		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C")
-	} else {
-		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
+		keys = "Ctrl-C"
 	}
+	output.ErrPrintf(false, "Starting Kafka Producer. Use %s to exit.\n", keys)
 
 	var scanErr error
 	input, scan := PrepareInputChannel(&scanErr)
@@ -213,15 +247,21 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 				scanErr = err
 				break
 			}
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
+			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
 		}
 
 		e := <-deliveryChan                // read a ckafka event from the channel
 		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
 		go scan()
 	}
 	return scanErr
+}
+
+func createTempDir() (string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	err := os.MkdirAll(dir, 0755)
+	return dir, err
 }
