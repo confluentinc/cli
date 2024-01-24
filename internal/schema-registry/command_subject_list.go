@@ -20,7 +20,7 @@ func (c *command) newSubjectListCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.subjectList,
 	}
 
-	cmd.Flags().Bool("deleted", false, "Include deleted subjects.")
+	cmd.Flags().Bool("all", false, "Include deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -50,7 +50,7 @@ func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	deleted, err := cmd.Flags().GetBool("deleted")
+	deleted, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}

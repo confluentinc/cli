@@ -3,7 +3,7 @@
 | ID                      | lksqlc-woooo             |
 | Name                    | kay cee queue elle       |
 | Topic Prefix            | pksqlc-ghjkl             |
-| Kafka                   | lkc-zxcvb                |
+| Kafka Cluster           | lkc-zxcvb                |
 | Storage                 | 123                      |
 | Endpoint                | SASL_SSL://ksql-endpoint |
 | Status                  | PROVISIONING             |

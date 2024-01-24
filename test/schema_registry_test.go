@@ -137,7 +137,7 @@ func (s *CLITestSuite) TestSchemaRegistrySubject() {
 
 func (s *CLITestSuite) TestSchemaRegistryKek() {
 	tests := []CLITest{
-		{args: "schema-registry kek create --name kek-name --kms-type AWS_KMS --kms-key-id arn:aws:kms:us-west-2:9979:key/abcd --kms-properties KeyState=Enabled --doc description", fixture: "schema-registry/kek/create.golden"},
+		{args: "schema-registry kek create --name kek-name --kms-type AWS_KMS --kms-key arn:aws:kms:us-west-2:9979:key/abcd --kms-properties KeyState=Enabled --doc description", fixture: "schema-registry/kek/create.golden"},
 		{args: "schema-registry kek list -o json", fixture: "schema-registry/kek/list-all-json.golden"},
 		{args: "schema-registry kek describe kek-name", fixture: "schema-registry/kek/describe.golden"},
 		{args: "schema-registry kek update kek-name --doc new-description", fixture: "schema-registry/kek/update.golden"},
