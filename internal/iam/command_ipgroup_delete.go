@@ -21,7 +21,7 @@ func (c *ipGroupCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete IP group `ipg-12345`:",
+				Text: `Delete IP group "ipg-12345":`,
 				Code: "confluent iam ip-group delete ipg-12345",
 			},
 		),

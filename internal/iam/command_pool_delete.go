@@ -18,7 +18,7 @@ func (c *poolCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete identity pool `pool-12345`:",
+				Text: `Delete identity pool "pool-12345":`,
 				Code: "confluent iam pool delete pool-12345 --provider op-12345",
 			},
 		),

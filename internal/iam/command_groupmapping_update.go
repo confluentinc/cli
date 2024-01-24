@@ -18,7 +18,7 @@ func (c *groupMappingCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update the description of group mapping `group-123456`.",
+				Text: `Update the description of group mapping "group-123456".`,
 				Code: `confluent iam group-mapping update group-123456 --description "updated description"`,
 			},
 		),

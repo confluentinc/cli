@@ -17,7 +17,7 @@ func (c *poolCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an identity pool named `demo-identity-pool` with identity provider `op-12345`:",
+				Text: `Create an identity pool named "demo-identity-pool" with identity provider "op-12345":`,
 				Code: `confluent iam pool create demo-identity-pool --provider op-12345 --description "new description" --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'`,
 			},
 		),

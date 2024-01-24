@@ -21,7 +21,7 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete service account `sa-123456`.",
+				Text: `Delete service account "sa-123456".`,
 				Code: "confluent iam service-account delete sa-123456",
 			},
 		),

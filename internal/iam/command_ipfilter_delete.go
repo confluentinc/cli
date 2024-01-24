@@ -21,7 +21,7 @@ func (c *ipFilterCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete IP filter `ipf-12345`:",
+				Text: `Delete IP filter "ipf-12345":`,
 				Code: "confluent iam ip-filter delete ipf-12345",
 			},
 		),

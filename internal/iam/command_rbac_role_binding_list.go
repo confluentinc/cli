@@ -43,19 +43,19 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding list --current-user",
 			},
 			examples.Example{
-				Text: "List the role bindings for user `u-123456`:",
+				Text: `List the role bindings for user "u-123456":`,
 				Code: "confluent iam rbac role-binding list --principal User:u-123456",
 			},
 			examples.Example{
-				Text: "List the role bindings for principals with role `CloudClusterAdmin`:",
+				Text: `List the role bindings for principals with role "CloudClusterAdmin":`,
 				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-environment --cloud-cluster lkc-123456",
 			},
 			examples.Example{
-				Text: "List the role bindings for user `u-123456` with role `CloudClusterAdmin`:",
+				Text: `List the role bindings for user "u-123456" with role "CloudClusterAdmin":`,
 				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456",
 			},
 			examples.Example{
-				Text: "List the role bindings for user `u-123456` for all scopes:",
+				Text: `List the role bindings for user "u-123456" for all scopes:`,
 				Code: "confluent iam rbac role-binding list --principal User:u-123456 --inclusive",
 			},
 			examples.Example{
@@ -90,7 +90,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().String("principal", "", "Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.")
 	cmd.Flags().Bool("current-user", false, "List role bindings assigned to the current user.")
-	cmd.Flags().String("role", "", "Predefined role assigned to '--principal'. If '--principal' is unspecified, list all principals assigned the role.")
+	cmd.Flags().String("role", "", "Predefined role assigned to `--principal`. If `--principal` is unspecified, list all principals assigned the role.")
 
 	if c.cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID, which specifies the environment scope.")

@@ -18,7 +18,7 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update the description of identity provider `op-123456`.",
+				Text: `Update the description of identity provider "op-123456".`,
 				Code: `confluent iam provider update op-123456 --description "updated description"`,
 			},
 		),
