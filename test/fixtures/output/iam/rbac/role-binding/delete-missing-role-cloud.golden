@@ -9,7 +9,7 @@ Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka c
 
 Flags:
       --role string                      REQUIRED: Role name of the existing role binding.
-      --principal string                 REQUIRED: Qualified principal name associated with the role binding.
+      --principal string                 REQUIRED: Principal type and identifier using "Prefix:ID" format.
       --force                            Skip the deletion confirmation prompt.
       --environment string               Environment ID for scope of role-binding operation.
       --current-environment              Use current environment ID for scope.
@@ -18,7 +18,7 @@ Flags:
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster name for the role binding.
-      --resource string                  Qualified resource name for the role binding.
+      --resource string                  Resource type and identifier using "Prefix:ID" format.
       --prefix                           Whether the provided resource name is treated as a prefix pattern.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
@@ -26,4 +26,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
