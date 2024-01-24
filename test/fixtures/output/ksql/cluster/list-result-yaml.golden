@@ -1,7 +1,7 @@
 - id: lksqlc-ksql5
   name: account ksql
   topic_prefix: pksqlc-abcde
-  kafka: lkc-qwert
+  kafka_cluster: lkc-qwert
   storage: 101
   endpoint: SASL_SSL://ksql-endpoint
   status: PROVISIONING
@@ -9,7 +9,7 @@
 - id: lksqlc-woooo
   name: kay cee queue elle
   topic_prefix: pksqlc-ghjkl
-  kafka: lkc-zxcvb
+  kafka_cluster: lkc-zxcvb
   storage: 123
   endpoint: SASL_SSL://ksql-endpoint
   status: PROVISIONING
