@@ -19,7 +19,7 @@ type redeemHumanOut struct {
 	ApiSecret                  string `human:"API Secret"`
 	KafkaBootstrapUrl          string `human:"Kafka Bootstrap URL"`
 	SchemaRegistryApiKey       string `human:"Schema Registry API Key"`
-	SchemaRegistrySecret       string `human:"Schema Registry Secret"`
+	SchemaRegistryAPISecret    string `human:"Schema Registry API Secret"`
 	SchemaRegistryUrl          string `human:"Schema Registry URL"`
 	Resources                  string `human:"Resources"`
 	NetworkDnsDomain           string `human:"Network DNS Domain"`
@@ -36,7 +36,7 @@ type redeemSerializedOut struct {
 	ApiSecret                  string   `serialized:"api_secret"`
 	KafkaBootstrapUrl          string   `serialized:"kafka_bootstrap_url"`
 	SchemaRegistryApiKey       string   `serialized:"schema_registry_api_key"`
-	SchemaRegistrySecret       string   `serialized:"schema_registry_secret"`
+	SchemaRegistryAPISecret    string   `serialized:"schema_registry_api_secret"`
 	SchemaRegistryUrl          string   `serialized:"schema_registry_url"`
 	Resources                  []string `serialized:"resources"`
 	NetworkDnsDomain           string   `serialized:"network_dns_domain"`
@@ -126,7 +126,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 				ApiSecret:                  redeemResponse.GetSecret(),
 				KafkaBootstrapUrl:          redeemResponse.GetKafkaBootstrapUrl(),
 				SchemaRegistryApiKey:       redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistrySecret:       redeemResponse.GetSchemaRegistrySecret(),
+				SchemaRegistryAPISecret:    redeemResponse.GetSchemaRegistrySecret(),
 				SchemaRegistryUrl:          redeemResponse.GetSchemaRegistryUrl(),
 				Resources:                  strings.Join(resources, ", "),
 				NetworkDnsDomain:           network.GetDnsDomain(),
@@ -138,15 +138,15 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 			})
 		} else {
 			table.Add(&redeemSerializedOut{
-				Id:                   redeemResponse.GetId(),
-				ApiKey:               redeemResponse.GetApiKey(),
-				ApiSecret:            redeemResponse.GetSecret(),
-				KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
-				SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
-				SchemaRegistryUrl:    redeemResponse.GetSchemaRegistryUrl(),
-				Resources:            resources,
-				NetworkDnsDomain:     network.GetDnsDomain(),
+				Id:                      redeemResponse.GetId(),
+				ApiKey:                  redeemResponse.GetApiKey(),
+				ApiSecret:               redeemResponse.GetSecret(),
+				KafkaBootstrapUrl:       redeemResponse.GetKafkaBootstrapUrl(),
+				SchemaRegistryApiKey:    redeemResponse.GetSchemaRegistryApiKey(),
+				SchemaRegistryAPISecret: redeemResponse.GetSchemaRegistrySecret(),
+				SchemaRegistryUrl:       redeemResponse.GetSchemaRegistryUrl(),
+				Resources:               resources,
+				NetworkDnsDomain:        network.GetDnsDomain(),
 				// TODO: Serialize array instead of string in next major version
 				NetworkZones:               strings.Join(network.GetZones(), ","),
 				NetworkZonalSubdomains:     mapSubdomainsToList(network.GetZonalSubdomains()),
@@ -158,29 +158,29 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	} else {
 		if output.GetFormat(cmd) == output.Human {
 			table.Add(&redeemHumanOut{
-				Id:                   redeemResponse.GetId(),
-				ApiKey:               redeemResponse.GetApiKey(),
-				ApiSecret:            redeemResponse.GetSecret(),
-				KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
-				SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
-				SchemaRegistryUrl:    redeemResponse.GetSchemaRegistryUrl(),
-				Resources:            strings.Join(resources, ", "),
+				Id:                      redeemResponse.GetId(),
+				ApiKey:                  redeemResponse.GetApiKey(),
+				ApiSecret:               redeemResponse.GetSecret(),
+				KafkaBootstrapUrl:       redeemResponse.GetKafkaBootstrapUrl(),
+				SchemaRegistryApiKey:    redeemResponse.GetSchemaRegistryApiKey(),
+				SchemaRegistryAPISecret: redeemResponse.GetSchemaRegistrySecret(),
+				SchemaRegistryUrl:       redeemResponse.GetSchemaRegistryUrl(),
+				Resources:               strings.Join(resources, ", "),
 			})
 		} else {
 			table.Add(&redeemSerializedOut{
-				Id:                   redeemResponse.GetId(),
-				ApiKey:               redeemResponse.GetApiKey(),
-				ApiSecret:            redeemResponse.GetSecret(),
-				KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
-				SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
-				SchemaRegistryUrl:    redeemResponse.GetSchemaRegistryUrl(),
-				Resources:            resources,
+				Id:                      redeemResponse.GetId(),
+				ApiKey:                  redeemResponse.GetApiKey(),
+				ApiSecret:               redeemResponse.GetSecret(),
+				KafkaBootstrapUrl:       redeemResponse.GetKafkaBootstrapUrl(),
+				SchemaRegistryApiKey:    redeemResponse.GetSchemaRegistryApiKey(),
+				SchemaRegistryAPISecret: redeemResponse.GetSchemaRegistrySecret(),
+				SchemaRegistryUrl:       redeemResponse.GetSchemaRegistryUrl(),
+				Resources:               resources,
 			})
 		}
 
-		table.Filter([]string{"Id", "ApiKey", "ApiSecret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"})
+		table.Filter([]string{"Id", "ApiKey", "ApiSecret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistryAPISecret", "SchemaRegistryUrl", "Resources"})
 	}
 
 	return table.Print()
