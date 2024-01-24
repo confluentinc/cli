@@ -33,7 +33,7 @@ Flags:
       --connect-cluster string           Kafka Connect cluster ID, which specifies the Connect cluster scope.
       --cluster-name string              Cluster name, which specifies the cluster scope.
       --context string                   CLI context name.
-      --resource string                  Resource type and identifier using Prefix:ID format. If specified with "--role" and no principals, list all principals and role bindings.
+      --resource string                  Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.
       --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
@@ -41,4 +41,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
