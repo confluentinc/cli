@@ -10,14 +10,14 @@ Create a role binding for the principal permitting it produce to topic "my-topic
 
 Flags:
       --role string                      REQUIRED: Role name of the new role binding.
-      --principal string                 REQUIRED: Principal type and identifier using "<Prefix>:<ID>" format.
+      --principal string                 REQUIRED: Principal type and identifier using Prefix:ID format.
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster ID for the role binding.
       --connect-cluster string           Kafka Connect cluster ID for the role binding.
       --cluster-name string              Cluster name to uniquely identify the cluster for role binding listings.
       --context string                   CLI context name.
-      --resource string                  Resource type and identifier using "<Prefix>:<ID>" format.
+      --resource string                  Resource type and identifier using Prefix:ID format.
       --prefix                           Whether the provided resource name is treated as a prefix pattern.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 

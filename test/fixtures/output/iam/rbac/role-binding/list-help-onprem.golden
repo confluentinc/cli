@@ -4,7 +4,7 @@ Usage:
   confluent iam rbac role-binding list [flags]
 
 Examples:
-Only use the "--resource" flag when specifying a "--role" with no "--principal" specified. If specifying a "--principal", then the "--resource" flag is ignored. To list role bindings for a specific role on an identified resource:
+Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:
 
   $ confluent iam rbac role-binding list --kafka-cluster 0000000000000000000000 --role DeveloperRead --resource Topic:my-topic
 
@@ -27,15 +27,15 @@ List the principals bound to a specific resource with a specific role:
 Flags:
       --principal string                 Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.
       --current-user                     List role bindings assigned to the current user.
-      --role string                      Predefined role assigned to '--principal'. If '--principal' is unspecified, list all principals assigned the role.
+      --role string                      Predefined role assigned to "--principal". If "--principal" is unspecified, list all principals assigned the role.
       --kafka-cluster string             Kafka cluster ID, which specifies the Kafka cluster scope.
       --schema-registry-cluster string   Schema Registry cluster ID, which specifies the Schema Registry cluster scope.
       --ksql-cluster string              ksqlDB cluster ID, which specifies the ksqlDB cluster scope.
       --connect-cluster string           Kafka Connect cluster ID, which specifies the Connect cluster scope.
       --cluster-name string              Cluster name, which specifies the cluster scope.
       --context string                   CLI context name.
-      --resource --role                  Resource type and identifier using "<Prefix>:<ID>" format. If specified with --role and no principals, list all principals and role bindings.
-      --inclusive                        List role bindings for specified scopes and subscopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
+      --resource string                  Resource type and identifier using Prefix:ID format. If specified with "--role" and no principals, list all principals and role bindings.
+      --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
