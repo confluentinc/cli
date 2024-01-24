@@ -13,7 +13,7 @@ type session struct {
 	expiresAt time.Time
 }
 
-func NewSession() *session {
+func newSession() *session {
 	return &session{
 		id:        uuid.New().String(),
 		history:   []aiv1.AiV1ChatCompletionsHistory{},

@@ -32,7 +32,7 @@ func (c *command) ai(cmd *cobra.Command, _ []string) error {
 
 	s := &shell{
 		client:  c.V2Client,
-		session: NewSession(),
+		session: newSession(),
 	}
 
 	prompt.New(s.executor, s.completer, prompt.OptionPrefix("> ")).Run()

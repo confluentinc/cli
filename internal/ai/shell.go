@@ -27,7 +27,7 @@ func (s *shell) executor(question string) {
 	m := &model{}
 
 	if s.session.isExpired() {
-		s.session = NewSession()
+		s.session = newSession()
 	}
 
 	go func() {
@@ -64,13 +64,12 @@ func (s *shell) executor(question string) {
 	}
 }
 
-func (s *shell) completer(d prompt.Document) []prompt.Suggest {
+func (s *shell) completer(_ prompt.Document) []prompt.Suggest {
 	return nil
 }
 
 func (s *shell) isExit(in string) bool {
-	in = strings.ToLower(strings.TrimSpace(in))
-	return in == "exit" || in == "quit"
+	return strings.TrimSpace(in) == "exit"
 }
 
 func exitWithErr(err error) {
