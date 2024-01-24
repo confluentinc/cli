@@ -62,7 +62,7 @@ func (c *command) kekCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	kmsId, err := cmd.Flags().GetString("kms-key")
+	kmsKey, err := cmd.Flags().GetString("kms-key")
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (c *command) kekCreate(cmd *cobra.Command, _ []string) error {
 	createReq := srsdk.CreateKekRequest{
 		Name:     srsdk.PtrString(name),
 		KmsType:  srsdk.PtrString(kmsType),
-		KmsKeyId: srsdk.PtrString(kmsId),
+		KmsKeyId: srsdk.PtrString(kmsKey),
 		KmsProps: &kmsProps,
 		Doc:      srsdk.PtrString(doc),
 		Shared:   srsdk.PtrBool(shared),

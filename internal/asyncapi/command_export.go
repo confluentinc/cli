@@ -51,7 +51,7 @@ type bindings struct {
 
 type flags struct {
 	file            string
-	groupId         string
+	group           string
 	consumeExamples bool
 	specVersion     string
 	kafkaApiKey     string
@@ -227,7 +227,7 @@ func (c *command) getAccountDetails(cmd *cobra.Command, flags *flags) (*accountD
 
 	// Create Consumer
 	if flags.consumeExamples {
-		details.consumer, err = createConsumer(details.kafkaUrl, details.clusterCreds, flags.groupId)
+		details.consumer, err = createConsumer(details.kafkaUrl, details.clusterCreds, flags.group)
 		if err != nil {
 			return nil, err
 		}
@@ -446,7 +446,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
-	groupId, err := cmd.Flags().GetString("group")
+	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err
 	}
@@ -476,7 +476,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	}
 	return &flags{
 		file:            file,
-		groupId:         groupId,
+		group:           group,
 		consumeExamples: consumeExamples,
 		specVersion:     specVersion,
 		kafkaApiKey:     kafkaApiKey,
@@ -592,14 +592,14 @@ func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 	return reflector
 }
 
-func createConsumer(broker string, clusterCreds *config.APIKeyPair, groupId string) (*ckgo.Consumer, error) {
+func createConsumer(broker string, clusterCreds *config.APIKeyPair, group string) (*ckgo.Consumer, error) {
 	consumer, err := ckgo.NewConsumer(&ckgo.ConfigMap{
 		"bootstrap.servers":  broker,
 		"sasl.mechanisms":    "PLAIN",
 		"security.protocol":  "SASL_SSL",
 		"sasl.username":      clusterCreds.Key,
 		"sasl.password":      clusterCreds.Secret,
-		"group.id":           groupId,
+		"group.id":           group,
 		"auto.offset.reset":  "earliest",
 		"enable.auto.commit": "false",
 	})

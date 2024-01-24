@@ -70,22 +70,22 @@ func (c *command) newRedeemCommand() *cobra.Command {
 }
 
 func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
-	awsAccountId, err := cmd.Flags().GetString("aws-account")
+	awsAccount, err := cmd.Flags().GetString("aws-account")
 	if err != nil {
 		return err
 	}
 
-	azureSubscriptionId, err := cmd.Flags().GetString("azure-subscription")
+	azureSubscription, err := cmd.Flags().GetString("azure-subscription")
 	if err != nil {
 		return err
 	}
 
-	gcpProjectId, err := cmd.Flags().GetString("gcp-project")
+	gcpProject, err := cmd.Flags().GetString("gcp-project")
 	if err != nil {
 		return err
 	}
 
-	redeemResponse, err := c.V2Client.RedeemSharedToken(args[0], awsAccountId, azureSubscriptionId, gcpProjectId)
+	redeemResponse, err := c.V2Client.RedeemSharedToken(args[0], awsAccount, azureSubscription, gcpProject)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	isPrivateLink := awsAccountId != "" || azureSubscriptionId != "" || gcpProjectId != ""
+	isPrivateLink := awsAccount != "" || azureSubscription != "" || gcpProject != ""
 
 	table := output.NewTable(cmd)
 	if isPrivateLink {
