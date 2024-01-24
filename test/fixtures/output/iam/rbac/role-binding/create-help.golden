@@ -42,7 +42,7 @@ Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env
 
 Flags:
       --role string                      REQUIRED: Role name of the new role binding.
-      --principal string                 REQUIRED: Qualified principal name for the role binding.
+      --principal string                 REQUIRED: Principal type and identifier using "Prefix:ID" format.
       --environment string               Environment ID for scope of role-binding operation.
       --current-environment              Use current environment ID for scope.
       --cloud-cluster string             Cloud cluster ID for the role binding.
@@ -50,7 +50,7 @@ Flags:
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster name for the role binding.
-      --resource string                  Qualified resource name for the role binding.
+      --resource string                  Resource type and identifier using Prefix:ID format.
       --prefix                           Whether the provided resource name is treated as a prefix pattern.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
