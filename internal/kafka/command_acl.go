@@ -110,7 +110,7 @@ func (c *aclCommand) provisioningClusterCheck(lkc string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
-		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+		return fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 	}
 	return nil
 }

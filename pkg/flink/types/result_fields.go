@@ -4,88 +4,88 @@ import (
 	"fmt"
 	"strings"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 )
 
 const (
-	CHAR                           StatementResultFieldType = "CHAR"
-	VARCHAR                        StatementResultFieldType = "VARCHAR"
-	BOOLEAN                        StatementResultFieldType = "BOOLEAN"
-	BINARY                         StatementResultFieldType = "BINARY"
-	VARBINARY                      StatementResultFieldType = "VARBINARY"
-	DECIMAL                        StatementResultFieldType = "DECIMAL"
-	TINYINT                        StatementResultFieldType = "TINYINT"
-	SMALLINT                       StatementResultFieldType = "SMALLINT"
-	INTEGER                        StatementResultFieldType = "INTEGER"
-	BIGINT                         StatementResultFieldType = "BIGINT"
-	FLOAT                          StatementResultFieldType = "FLOAT"
-	DOUBLE                         StatementResultFieldType = "DOUBLE"
-	DATE                           StatementResultFieldType = "DATE"
-	TIME_WITHOUT_TIME_ZONE         StatementResultFieldType = "TIME_WITHOUT_TIME_ZONE"
-	TIMESTAMP_WITHOUT_TIME_ZONE    StatementResultFieldType = "TIMESTAMP_WITHOUT_TIME_ZONE"
-	TIMESTAMP_WITH_TIME_ZONE       StatementResultFieldType = "TIMESTAMP_WITH_TIME_ZONE"
-	TIMESTAMP_WITH_LOCAL_TIME_ZONE StatementResultFieldType = "TIMESTAMP_WITH_LOCAL_TIME_ZONE"
-	INTERVAL_YEAR_MONTH            StatementResultFieldType = "INTERVAL_YEAR_MONTH"
-	INTERVAL_DAY_TIME              StatementResultFieldType = "INTERVAL_DAY_TIME"
-	ARRAY                          StatementResultFieldType = "ARRAY"
-	MULTISET                       StatementResultFieldType = "MULTISET"
-	MAP                            StatementResultFieldType = "MAP"
-	ROW                            StatementResultFieldType = "ROW"
-	NULL                           StatementResultFieldType = "NULL"
+	Char                       StatementResultFieldType = "CHAR"
+	Varchar                    StatementResultFieldType = "VARCHAR"
+	Boolean                    StatementResultFieldType = "BOOLEAN"
+	Binary                     StatementResultFieldType = "BINARY"
+	Varbinary                  StatementResultFieldType = "VARBINARY"
+	Decimal                    StatementResultFieldType = "DECIMAL"
+	Tinyint                    StatementResultFieldType = "TINYINT"
+	Smallint                   StatementResultFieldType = "SMALLINT"
+	Integer                    StatementResultFieldType = "INTEGER"
+	Bigint                     StatementResultFieldType = "BIGINT"
+	Float                      StatementResultFieldType = "FLOAT"
+	Double                     StatementResultFieldType = "DOUBLE"
+	Date                       StatementResultFieldType = "DATE"
+	TimeWithoutTimeZone        StatementResultFieldType = "TIME_WITHOUT_TIME_ZONE"
+	TimestampWithoutTimeZone   StatementResultFieldType = "TIMESTAMP_WITHOUT_TIME_ZONE"
+	TimestampWithTimeZone      StatementResultFieldType = "TIMESTAMP_WITH_TIME_ZONE"
+	TimestampWithLocalTimeZone StatementResultFieldType = "TIMESTAMP_WITH_LOCAL_TIME_ZONE"
+	IntervalYearMonth          StatementResultFieldType = "INTERVAL_YEAR_MONTH"
+	IntervalDayTime            StatementResultFieldType = "INTERVAL_DAY_TIME"
+	Array                      StatementResultFieldType = "ARRAY"
+	Multiset                   StatementResultFieldType = "MULTISET"
+	Map                        StatementResultFieldType = "MAP"
+	Row                        StatementResultFieldType = "ROW"
+	Null                       StatementResultFieldType = "NULL"
 )
 
 type StatementResultFieldType string
 
-func NewResultFieldType(obj flinkgatewayv1alpha1.DataType) StatementResultFieldType {
+func NewResultFieldType(obj flinkgatewayv1beta1.DataType) StatementResultFieldType {
 	switch obj.Type {
 	case "CHAR":
-		return CHAR
+		return Char
 	case "VARCHAR":
-		return VARCHAR
+		return Varchar
 	case "BOOLEAN":
-		return BOOLEAN
+		return Boolean
 	case "BINARY":
-		return BINARY
+		return Binary
 	case "VARBINARY":
-		return VARBINARY
+		return Varbinary
 	case "DECIMAL":
-		return DECIMAL
+		return Decimal
 	case "TINYINT":
-		return TINYINT
+		return Tinyint
 	case "SMALLINT":
-		return SMALLINT
+		return Smallint
 	case "INTEGER":
-		return INTEGER
+		return Integer
 	case "BIGINT":
-		return BIGINT
+		return Bigint
 	case "FLOAT":
-		return FLOAT
+		return Float
 	case "DOUBLE":
-		return DOUBLE
+		return Double
 	case "DATE":
-		return DATE
+		return Date
 	case "TIME_WITHOUT_TIME_ZONE":
-		return TIME_WITHOUT_TIME_ZONE
+		return TimeWithoutTimeZone
 	case "TIMESTAMP_WITHOUT_TIME_ZONE":
-		return TIMESTAMP_WITHOUT_TIME_ZONE
+		return TimestampWithoutTimeZone
 	case "TIMESTAMP_WITH_TIME_ZONE":
-		return TIMESTAMP_WITH_TIME_ZONE
+		return TimestampWithTimeZone
 	case "TIMESTAMP_WITH_LOCAL_TIME_ZONE":
-		return TIMESTAMP_WITH_LOCAL_TIME_ZONE
+		return TimestampWithLocalTimeZone
 	case "INTERVAL_YEAR_MONTH":
-		return INTERVAL_YEAR_MONTH
+		return IntervalYearMonth
 	case "INTERVAL_DAY_TIME":
-		return INTERVAL_DAY_TIME
+		return IntervalDayTime
 	case "ARRAY":
-		return ARRAY
+		return Array
 	case "MULTISET":
-		return MULTISET
+		return Multiset
 	case "MAP":
-		return MAP
+		return Map
 	case "ROW":
-		return ROW
+		return Row
 	default:
-		return NULL
+		return Null
 	}
 }
 
@@ -109,7 +109,7 @@ func (f AtomicStatementResultField) ToString() string {
 }
 
 func (f AtomicStatementResultField) ToSDKType() any {
-	if f.Type == NULL {
+	if f.Type == Null {
 		return nil
 	}
 	return f.Value

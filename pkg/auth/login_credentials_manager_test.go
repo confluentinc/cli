@@ -286,7 +286,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	suite.setCPEnvVars()
 	creds, err = suite.loginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar()()
 	suite.require.Error(err)
-	suite.require.Equal(errors.NoURLEnvVarErrorMsg, err.Error())
+	suite.require.Equal(errors.NoUrlEnvVarErrorMsg, err.Error())
 	suite.require.Nil(creds)
 
 	// Set URL
@@ -315,7 +315,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 		},
 	}
 	loginCredentialsManager := NewLoginCredentialsManager(netrcHandler, suite.prompt, suite.ccloudClient)
-	creds, err := loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(&cobra.Command{}, params)()
+	creds, err := loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(params)()
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcPrerunCredentials, creds)
 
@@ -329,7 +329,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 		},
 	}
 	loginCredentialsManager = NewLoginCredentialsManager(netrcHandler, suite.prompt, suite.ccloudClient)
-	creds, err = loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(&cobra.Command{}, params)()
+	creds, err = loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(params)()
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcPrerunCredentialsWithCaCertPath, creds)
 }

@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/jonboulle/clockwork"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
@@ -29,26 +32,23 @@ func NewJWTValidator() *JWTValidatorImpl {
 // Validate returns an error if the JWT in the specified context is invalid.
 // The JWT is invalid if it's not parsable or expired.
 func (v *JWTValidatorImpl) Validate(context *config.Context) error {
-	var authToken string
-	if context != nil {
-		authToken = context.State.AuthToken
-	}
-
-	var claims map[string]any
-	token, err := jwt.ParseSigned(authToken)
+	token, err := jwt.ParseSigned(context.GetAuthToken())
 	if err != nil {
 		return new(ccloudv1.InvalidTokenError)
 	}
+
+	var claims map[string]any
 	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 		return err
 	}
 
 	exp, ok := claims["exp"].(float64)
 	if !ok {
-		return errors.New("malformed token: no expiration")
+		return fmt.Errorf("malformed token: no expiration")
 	}
 
-	if float64(v.Clock.Now().Unix()) > exp {
+	// Add a time buffer of 1 minute to the token validator
+	if float64(v.Clock.Now().Add(time.Minute).Unix()) > exp {
 		return errors.NewErrorWithSuggestions(errors.ExpiredTokenErrorMsg, errors.ExpiredTokenSuggestions)
 	}
 

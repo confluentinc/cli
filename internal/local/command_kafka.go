@@ -11,18 +11,19 @@ import (
 
 const (
 	dockerImageName             = "confluentinc/confluent-local:latest"
-	confluentLocalContainerName = "confluent-local"
 	localhostPrefix             = "http://localhost:%s"
-	localhost                   = "localhost"
+	localhost                   = "0.0.0.0"
 	kafkaRestNotReadySuggestion = "Kafka REST connection is not ready. Re-running the command may solve the issue."
 )
 
-func (c *Command) newKafkaCommand() *cobra.Command {
+func (c *command) newKafkaCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kafka",
-		Short: "Manage a single-node instance of Apache Kafka.",
+		Short: "Manage a local instance of Apache Kafka.",
 	}
 
+	cmd.AddCommand(c.newKafkaBrokerCommand())
+	cmd.AddCommand(c.newKafkaClusterCommand())
 	cmd.AddCommand(c.newKafkaStartCommand())
 	cmd.AddCommand(c.newKafkaStopCommand())
 	cmd.AddCommand(c.newKafkaTopicCommand())
@@ -36,9 +37,11 @@ func getShortenedContainerId(id string) string {
 }
 
 func checkIsDockerRunning(dockerClient *client.Client) error {
-	_, err := dockerClient.Info(context.Background())
-	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.InstallAndStartDockerSuggestion)
+	if _, err := dockerClient.Info(context.Background()); err != nil {
+		return errors.NewErrorWithSuggestions(
+			err.Error(),
+			"Make sure Docker has been installed following the guide at https://docs.docker.com/engine/install/ and is running.",
+		)
 	}
 
 	return nil

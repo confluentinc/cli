@@ -6,6 +6,8 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
+const badResourceIdErrorMsg = `failed parsing resource ID: missing prefix "%s-" is required`
+
 var authMethodFormats = map[string]string{
 	"AUTH_TYPE_LOCAL":   "Username/Password",
 	"AUTH_TYPE_SSO":     "SSO",

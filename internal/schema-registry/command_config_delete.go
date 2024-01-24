@@ -50,7 +50,7 @@ func (c *command) newConfigDeleteCommand(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func (c *command) configDelete(cmd *cobra.Command, args []string) error {
+func (c *command) configDelete(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 	var outStr string
 	if subject != "" {
 		promptMsg := fmt.Sprintf(`Are you sure you want to delete the subject-level compatibility level config and revert it to the global default for "%s"?`, subject)
-		if err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil {
+		if err := deletion.ConfirmPromptYesOrNo(cmd, promptMsg); err != nil {
 			return err
 		}
 		outStr, err = client.DeleteSubjectLevelConfig(subject)
@@ -73,7 +73,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		promptMsg := `Are you sure you want to delete the global compatibility level config and revert it to the default?`
-		if err := deletion.ConfirmDeletionYesNo(cmd, promptMsg); err != nil {
+		if err := deletion.ConfirmPromptYesOrNo(cmd, promptMsg); err != nil {
 			return err
 		}
 		outStr, err = client.DeleteTopLevelConfig()
@@ -82,7 +82,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output.Printf("Deleted %s.\n", resource.SchemaRegistryConfiguration)
+	output.Printf(c.Config.EnableColor, "Deleted %s.\n", resource.SchemaRegistryConfiguration)
 	out := &configOut{}
 	if err := json.Unmarshal([]byte(outStr), out); err != nil {
 		return err

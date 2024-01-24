@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
@@ -87,7 +87,7 @@ func (t *ResultFetcher) GetRefreshState() types.RefreshState {
 func (t *ResultFetcher) startRefresh(refreshInterval uint) {
 	if t.isRefreshStartAllowed() {
 		t.refreshState.setState(types.Running)
-		go func() {
+		go utils.WithPanicRecovery(func() {
 			for t.IsRefreshRunning() {
 				t.fetchNextPageAndUpdateState()
 				// break here to avoid rendering and messing with the view if pause was initiated
@@ -97,7 +97,7 @@ func (t *ResultFetcher) startRefresh(refreshInterval uint) {
 				t.refreshCallback()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
-		}()
+		})()
 	}
 }
 
@@ -185,12 +185,11 @@ func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema(statement types
 
 func (t *ResultFetcher) Close() {
 	t.refreshState.setState(types.Paused)
-	// This was used to delete statements after their execution to save system resources, which should not be
-	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
-	// TODO: remove this completely once we are sure we won't need it in the future
 	statement := t.GetStatement()
-	if config.ShouldCleanupStatements || statement.Status == types.RUNNING {
-		go t.store.DeleteStatement(statement.StatementName)
+	if statement.Status == types.RUNNING {
+		go utils.WithPanicRecovery(func() {
+			t.store.StopStatement(statement.StatementName)
+		})()
 	}
 }
 

@@ -13,9 +13,8 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	schemaregistry "github.com/confluentinc/cli/v3/pkg/schema-registry"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 )
 
 type channelDetails struct {
@@ -53,43 +52,42 @@ func (d *accountDetails) getTags() error {
 		return catchOpenAPIError(err)
 	}
 	for _, topicLevelTag := range topicLevelTags {
-		d.channelDetails.topicLevelTags = append(d.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.TypeName})
+		d.channelDetails.topicLevelTags = append(d.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.GetTypeName()})
 	}
 
 	// Get schema level tags
 	d.channelDetails.schemaLevelTags = nil
-	schemaLevelTags, err := d.srClient.GetTags("sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
+	schemaLevelTags, err := d.srClient.GetTags("sr_schema", strconv.Itoa(int(d.channelDetails.schema.GetId())))
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
 	for _, schemaLevelTag := range schemaLevelTags {
-		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
+		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.GetTypeName()})
 	}
 	return nil
 }
 
 func (d *accountDetails) getSchemaDetails() error {
-	schema, err := d.srClient.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", nil)
+	schema, err := d.srClient.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", false)
 	if err != nil {
 		return err
 	}
 	d.channelDetails.schema = &schema
 
+	if schema.GetSchemaType() == "" {
+		schema.SchemaType = srsdk.PtrString("AVRO")
+	}
+
 	// The backend considers "AVRO" to be the default schema type.
-	if schema.SchemaType == "" {
-		schema.SchemaType = "AVRO"
-	}
-
-	if schema.SchemaType == "PROTOBUF" {
+	switch schema.GetSchemaType() {
+	case "PROTOBUF":
 		return fmt.Errorf("protobuf is not supported")
+	case "AVRO", "JSON":
+		d.channelDetails.contentType = fmt.Sprintf("application/%s", strings.ToLower(schema.GetSchemaType()))
 	}
 
-	if schema.SchemaType == "AVRO" || schema.SchemaType == "JSON" {
-		d.channelDetails.contentType = fmt.Sprintf("application/%s", strings.ToLower(schema.SchemaType))
-	}
-
-	if err := json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema); err != nil {
-		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.Schema, err)
+	if err := json.Unmarshal([]byte(schema.GetSchema()), &d.channelDetails.unmarshalledSchema); err != nil {
+		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.GetSchema(), err)
 		log.CliLogger.Warn(err)
 	}
 
@@ -105,7 +103,7 @@ func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
 			return unmarshalledSchema, nil
 		}
 	}
-	return nil, fmt.Errorf("failed to unmarshal schema: %v", err)
+	return nil, fmt.Errorf("failed to unmarshal schema: %w", err)
 }
 
 func (d *accountDetails) getTopicDescription() error {
@@ -114,15 +112,9 @@ func (d *accountDetails) getTopicDescription() error {
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
-	if atlasEntityWithExtInfo.Entity.Attributes["description"] != nil {
-		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", atlasEntityWithExtInfo.Entity.Attributes["description"])
-	}
-	return nil
-}
-
-func (c *command) countAsyncApiUsage(details *accountDetails) error {
-	if err := details.srClient.AsyncapiPut(); err != nil {
-		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %v", err)
+	attributes := atlasEntityWithExtInfo.Entity.GetAttributes()
+	if _, ok := attributes["description"]; ok {
+		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", attributes["description"])
 	}
 	return nil
 }
@@ -153,7 +145,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 
 func catchOpenAPIError(err error) error {
 	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
-		return errors.New(string(openAPIError.Body()))
+		return fmt.Errorf(string(openAPIError.Body()))
 	}
 	return err
 }

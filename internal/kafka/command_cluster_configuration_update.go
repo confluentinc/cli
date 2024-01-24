@@ -69,7 +69,7 @@ func (c *clusterCommand) configurationUpdate(cmd *cobra.Command, _ []string) err
 		return err
 	}
 
-	output.Println(formatUpdateOutput(configMap))
+	output.Println(c.Config.EnableColor, formatUpdateOutput(configMap))
 
 	return nil
 }

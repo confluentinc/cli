@@ -1,10 +1,7 @@
 package schemaregistry
 
 import (
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
-
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
@@ -33,7 +30,7 @@ func (c *command) newSubjectDescribeCommand(cfg *config.Config) *cobra.Command {
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
-	cmd.Flags().Bool("deleted", false, "View the deleted schemas.")
+	cmd.Flags().Bool("deleted", false, "Include deleted schemas.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -67,8 +64,7 @@ func (c *command) subjectDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts := &srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
-	versions, err := client.ListVersions(args[0], opts)
+	versions, err := client.ListVersions(args[0], deleted)
 	if err != nil {
 		return catchSchemaNotFoundError(err, args[0], "")
 	}

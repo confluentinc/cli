@@ -36,7 +36,7 @@ type pluginWalkInfo struct {
 	name     string
 }
 
-func TestPluginFromEntry(t *testing.T) {
+func TestNameFromEntry(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		tests := []pluginWalkInfo{
 			{"confluent-plugin1.exe", fs.ModePerm, "confluent-plugin1"},
@@ -45,7 +45,7 @@ func TestPluginFromEntry(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			name := PluginFromEntry(&mock.FileInfo{
+			name := nameFromEntry(&mock.FileInfo{
 				NameVal: test.path,
 				ModeVal: test.fileMode,
 			})
@@ -62,7 +62,7 @@ func TestPluginFromEntry(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			name := PluginFromEntry(&mock.FileInfo{
+			name := nameFromEntry(&mock.FileInfo{
 				NameVal: test.path,
 				ModeVal: test.fileMode,
 			})
@@ -125,4 +125,8 @@ func TestVersionRegex(t *testing.T) {
 	require.False(t, bashInstaller.IsVersion("3.2.57"))
 	require.False(t, bashInstaller.IsVersion("bash"))
 	require.False(t, bashInstaller.IsVersion("Inc."))
+}
+
+func TestToCommandName(t *testing.T) {
+	require.Equal(t, "confluent login headless-sso", ToCommandName("confluent-login-headless_sso"))
 }

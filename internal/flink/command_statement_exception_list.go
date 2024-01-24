@@ -17,9 +17,10 @@ func (c *command) newStatementExceptionListCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	c.addRegionFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -30,27 +31,23 @@ func (c *command) statementExceptionList(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
 
-	orgId := c.Context.GetCurrentOrganization()
-
-	exceptions, err := client.GetExceptions(environmentId, args[0], orgId)
+	exceptions, err := client.GetExceptions(environmentId, args[0], c.Context.GetCurrentOrganization())
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-
-	for _, exception := range exceptions.Data {
+	for _, exception := range exceptions {
 		list.Add(&exceptionOut{
 			Name:       exception.GetName(),
 			Timestamp:  exception.GetTimestamp(),
 			StackTrace: exception.GetStacktrace(),
 		})
 	}
-
 	return list.Print()
 }

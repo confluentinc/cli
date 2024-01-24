@@ -73,7 +73,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("plugin-directory") && cmd.Flags().Changed("worker-configurations") && cmd.Flags().Changed("confluent-platform") {
-		return errors.New("at most two of `--plugin-directory`, `--worker-configurations`, and `--confluent-platform` may be set")
+		return fmt.Errorf("at most two of `--plugin-directory`, `--worker-configurations`, and `--confluent-platform` may be set")
 	}
 
 	client, err := c.GetHubClient()
@@ -150,13 +150,18 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		successStr = utils.AddDryRunPrefix(successStr)
 	}
-	output.Printf("\n%s", successStr)
+
+	output.Println(c.Config.EnableColor, "")
+	output.Printf(c.Config.EnableColor, successStr)
 
 	return nil
 }
 
 func parsePluginId(plugin string) (string, string, string, error) {
-	err := errors.NewErrorWithSuggestions("plugin not found", "Provide a path to a local file or provide a plugin ID from Confluent Hub with the format: `<owner>/<name>:<version>`.")
+	err := errors.NewErrorWithSuggestions(
+		"plugin not found",
+		"Provide a path to a local file or provide a plugin ID from Confluent Hub with the format: `<owner>/<name>:<version>`.",
+	)
 
 	ownerNameSplit := strings.Split(plugin, "/")
 	if len(ownerNameSplit) != 2 || ownerNameSplit[0] == "" {
@@ -188,20 +193,20 @@ func (c *pluginCommand) getManifest(client *hub.Client, id string) (*cpstructs.M
 func getLocalManifest(archivePath string) (*cpstructs.Manifest, error) {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open local archive file %s", archivePath)
+		return nil, fmt.Errorf("failed to open local archive file %s: %w", archivePath, err)
 	}
 	defer zipReader.Close()
 
 	for _, zipFile := range zipReader.File {
 		isManifest, err := filepath.Match("*/manifest.json", filepath.ToSlash(zipFile.Name))
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to examine file %s inside local archive file %s", zipFile.Name, archivePath)
+			return nil, fmt.Errorf("failed to examine file %s inside local archive file %s: %w", zipFile.Name, archivePath, err)
 		}
 
 		if isManifest {
 			manifestFile, err := zipFile.Open()
 			if err != nil {
-				return nil, errors.Wrapf(err, "failed to open manifest file %s inside local archive file %s", zipFile.Name, archivePath)
+				return nil, fmt.Errorf("failed to open manifest file %s inside local archive file %s: %w", zipFile.Name, archivePath, err)
 			}
 			defer manifestFile.Close()
 
@@ -214,7 +219,7 @@ func getLocalManifest(archivePath string) (*cpstructs.Manifest, error) {
 		}
 	}
 
-	return nil, errors.Errorf(`failed to find manifest file inside local archive file "%s"`, archivePath)
+	return nil, fmt.Errorf(`failed to find manifest file inside local archive file "%s"`, archivePath)
 }
 
 func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
@@ -232,7 +237,7 @@ func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
 	}
 
 	if !utils.DoesPathExist(pluginDir) {
-		return "", errors.Errorf(invalidDirectoryErrorMsg, pluginDir)
+		return "", fmt.Errorf(invalidDirectoryErrorMsg, pluginDir)
 	}
 
 	return pluginDir, nil
@@ -251,7 +256,7 @@ func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
 		}
 
 		if !utils.DoesPathExist(workerConfig) {
-			errs = multierror.Append(errs, errors.Errorf(`worker config file "%s" does not exist`, workerConfig))
+			errs = multierror.Append(errs, fmt.Errorf(`worker config file "%s" does not exist`, workerConfig))
 		}
 	}
 
@@ -261,7 +266,7 @@ func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
 func existingPluginInstallation(pluginDir string, pluginManifest *cpstructs.Manifest) ([]string, error) {
 	// Bundled installations
 	if utils.DoesPathExist(filepath.Join(pluginDir, pluginManifest.Name)) {
-		return nil, errors.New("unable to install plugin because it is already bundled")
+		return nil, fmt.Errorf("unable to install plugin because it is already bundled")
 	}
 
 	// Other previous installations
@@ -281,12 +286,12 @@ func existingPluginInstallation(pluginDir string, pluginManifest *cpstructs.Mani
 
 func removePluginInstallations(previousInstallations []string, prompt form.Prompt, dryRun, force bool) error {
 	if len(previousInstallations) > 0 {
-		output.Println("A version of this plugin is already installed and must be removed to continue.")
+		output.Println(false, "A version of this plugin is already installed and must be removed to continue.")
 	}
 
 	for _, previousInstallation := range previousInstallations {
 		if force {
-			output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", previousInstallation)
+			output.Printf(false, "Uninstalling the existing version of the plugin located at \"%s\".\n", previousInstallation)
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",
@@ -297,13 +302,13 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 				return err
 			}
 			if !f.Responses["confirm"].(bool) {
-				return errors.New("previous versions must be uninstalled to continue")
+				return fmt.Errorf("previous versions must be uninstalled to continue")
 			}
 		}
 
 		uninstallStr := "Successfully removed existing version.\n"
 		if dryRun {
-			output.Println(utils.AddDryRunPrefix(uninstallStr))
+			output.Println(false, utils.AddDryRunPrefix(uninstallStr))
 			return nil
 		}
 
@@ -311,11 +316,11 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 			return err
 		}
 
-		output.Println(uninstallStr)
+		output.Println(false, uninstallStr)
 	}
 
 	if len(previousInstallations) > 0 {
-		output.Print("\n")
+		output.Println(false, "")
 	}
 	return nil
 }
@@ -323,10 +328,10 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstructs.Manifest, archivePath, pluginDir string, dryRun bool) error {
 	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
-		output.Printf(utils.AddDryRunPrefix(installStr))
+		output.Printf(c.Config.EnableColor, utils.AddDryRunPrefix(installStr))
 		return nil
 	}
-	output.Print(installStr)
+	output.Print(c.Config.EnableColor, installStr)
 
 	if utils.DoesPathExist(archivePath) {
 		return installFromLocal(pluginManifest, archivePath, pluginDir)
@@ -338,7 +343,7 @@ func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstru
 func installFromLocal(pluginManifest *cpstructs.Manifest, archivePath, pluginDir string) error {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to open local archive file %s", archivePath)
+		return fmt.Errorf("failed to open local archive file %s: %w", archivePath, err)
 	}
 	defer zipReader.Close()
 
@@ -354,16 +359,16 @@ func (c *pluginCommand) installFromRemote(client *hub.Client, pluginManifest *cp
 	checksumErrorMsg := `%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for plugin "%s"`
 	calculatedMd5Checksum := fmt.Sprintf("%x", md5.Sum(archive))
 	if calculatedMd5Checksum != pluginManifest.Archive.Md5 {
-		return errors.Errorf(checksumErrorMsg, "MD5", calculatedMd5Checksum, pluginManifest.Archive.Md5, pluginManifest.Name)
+		return fmt.Errorf(checksumErrorMsg, "MD5", calculatedMd5Checksum, pluginManifest.Archive.Md5, pluginManifest.Name)
 	}
 	calculatedSha1Checksum := fmt.Sprintf("%x", sha1.Sum(archive))
 	if calculatedSha1Checksum != pluginManifest.Archive.Sha1 {
-		return errors.Errorf(checksumErrorMsg, "SHA1", calculatedSha1Checksum, pluginManifest.Archive.Sha1, pluginManifest.Name)
+		return fmt.Errorf(checksumErrorMsg, "SHA1", calculatedSha1Checksum, pluginManifest.Archive.Sha1, pluginManifest.Name)
 	}
 
 	zipReader, err := zip.NewReader(bytes.NewReader(archive), int64(len(archive)))
 	if err != nil {
-		return errors.Wrapf(err, "failed to open remote archive file %s", archive)
+		return fmt.Errorf("failed to open remote archive file %s: %w", archive, err)
 	}
 
 	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
@@ -373,28 +378,28 @@ func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, plugi
 	relativeInstallationDir := filepath.Join(pluginDir, fmt.Sprintf("%s-%s", pluginManifest.Owner.Username, pluginManifest.Name))
 	installationDir, err := filepath.Abs(relativeInstallationDir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to resolve absolute path for directory %s", relativeInstallationDir)
+		return fmt.Errorf("failed to resolve absolute path for directory %s: %w", relativeInstallationDir, err)
 	}
 
 	for _, zipFile := range zipFiles {
 		versionPrefix := fmt.Sprintf("%s-%s-%s", pluginManifest.Owner.Username, pluginManifest.Name, pluginManifest.Version)
 		destFilePath := filepath.Join(installationDir, strings.TrimPrefix(zipFile.Name, versionPrefix))
 
-		createDirectoryErrorMsg := "failed to create directory %s on local storage"
+		createDirectoryErrorMsg := "failed to create directory %s on local storage: %w"
 		if zipFile.FileInfo().IsDir() {
 			if err := os.MkdirAll(destFilePath, 0755); err != nil {
-				return errors.Wrapf(err, createDirectoryErrorMsg, destFilePath)
+				return fmt.Errorf(createDirectoryErrorMsg, destFilePath, err)
 			}
 			continue
-		} else {
-			if err := os.MkdirAll(filepath.Dir(destFilePath), 0755); err != nil {
-				return errors.Wrapf(err, createDirectoryErrorMsg, filepath.Dir(destFilePath))
-			}
+		}
+
+		if err := os.MkdirAll(filepath.Dir(destFilePath), 0755); err != nil {
+			return fmt.Errorf(createDirectoryErrorMsg, filepath.Dir(destFilePath), err)
 		}
 
 		zipFileReader, err := zipFile.Open()
 		if err != nil {
-			return errors.Wrapf(err, "failed to read file %s from archive", zipFile.Name)
+			return fmt.Errorf("failed to read file %s from archive: %w", zipFile.Name, err)
 		}
 		defer zipFileReader.Close()
 
@@ -405,7 +410,7 @@ func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, plugi
 		defer destFile.Close()
 
 		if _, err := io.Copy(destFile, zipFileReader); err != nil {
-			return errors.Wrapf(err, "failed to copy file %s from archive to local file %s", zipFile.Name, destFilePath)
+			return fmt.Errorf("failed to copy file %s from archive to local file %s: %w", zipFile.Name, destFilePath, err)
 		}
 	}
 
@@ -415,7 +420,7 @@ func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, plugi
 func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prompt, force bool) error {
 	for _, license := range pluginManifest.Licenses {
 		if force {
-			output.Printf("Implicitly agreeing to the following license: %s (%s)\n", license.Name, license.Url)
+			output.Printf(false, "Implicitly agreeing to the following license: %s (%s)\n", license.Name, license.Url)
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",
@@ -426,11 +431,11 @@ func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prom
 				return err
 			}
 			if !f.Responses["confirm"].(bool) {
-				return errors.New("you must accept all license agreements to install this plugin")
+				return fmt.Errorf("you must accept all license agreements to install this plugin")
 			}
 		}
 	}
-	output.Print("\n")
+	output.Println(false, "")
 
 	return nil
 }
@@ -444,7 +449,7 @@ func updateWorkerConfigs(pluginDir string, workerConfigs []string, dryRun bool) 
 		for _, workerConfig := range workerConfigs {
 			updateWorkerMsg = fmt.Sprintf("%s\n\t* %v", updateWorkerMsg, workerConfig)
 		}
-		output.Println(updateWorkerMsg)
+		output.Println(false, updateWorkerMsg)
 	}
 
 	for _, workerConfig := range workerConfigs {

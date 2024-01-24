@@ -17,10 +17,11 @@ type UserProperties struct {
 	properties        map[string]string
 }
 
-func NewUserProperties(defaultProperties map[string]string) UserProperties {
+// add initial props
+func NewUserProperties(defaultProperties map[string]string, initialProperties map[string]string) UserProperties {
 	userProperties := UserProperties{
 		defaultProperties: defaultProperties,
-		properties:        map[string]string{},
+		properties:        initialProperties,
 	}
 	userProperties.addDefaultProperties()
 	return userProperties
@@ -58,15 +59,15 @@ func (p *UserProperties) GetProperties() map[string]string {
 	return p.properties
 }
 
-// GetSqlProperties returns only the properties that should be sent when creating a statement (identified by the 'sql.' prefix)
-func (p *UserProperties) GetSqlProperties() map[string]string {
-	sqlProperties := map[string]string{}
+// GetNonLocalProperties returns only the properties that should be sent when creating a statement (identified by not having the 'client.' prefix)
+func (p *UserProperties) GetNonLocalProperties() map[string]string {
+	nonLocalProperties := map[string]string{}
 	for key, value := range p.properties {
-		if strings.HasPrefix(key, config.ConfigNamespaceSql) {
-			sqlProperties[key] = value
+		if !strings.HasPrefix(key, config.NamespaceClient) {
+			nonLocalProperties[key] = value
 		}
 	}
-	return sqlProperties
+	return nonLocalProperties
 }
 
 func (p *UserProperties) Delete(key string) {

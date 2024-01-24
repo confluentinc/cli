@@ -9,7 +9,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 type configOut struct {
@@ -36,7 +35,7 @@ func (c *command) newConfigCommand(cfg *config.Config) *cobra.Command {
 
 func catchSubjectLevelConfigNotFoundError(err error, subject string) error {
 	if err != nil && strings.Contains(err.Error(), "Not Found") {
-		return errors.New(fmt.Sprintf(`subject "%s" does not have subject-level compatibility configured`, subject))
+		return fmt.Errorf(`subject "%s" does not have subject-level compatibility configured`, subject)
 	}
 
 	return err

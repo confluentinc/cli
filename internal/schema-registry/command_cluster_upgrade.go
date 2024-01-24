@@ -22,8 +22,8 @@ func (c *command) newClusterUpgradeCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Upgrade Schema Registry to the "advanced" package for environment "env-12345".`,
-				Code: "confluent schema-registry cluster upgrade --package advanced --environment env-12345",
+				Text: `Upgrade Schema Registry to the "advanced" package for environment "env-123456".`,
+				Code: "confluent schema-registry cluster upgrade --package advanced --environment env-123456",
 			},
 		),
 	}
@@ -66,7 +66,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	if strings.ToLower(clusterSpec.GetPackage()) == packageDisplayName {
-		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
+		output.ErrPrintf(c.Config.EnableColor, "Environment \"%s\" is already using the Stream Governance \"%s\" package.\n", environmentId, packageDisplayName)
 		return nil
 	}
 
@@ -81,6 +81,6 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf("The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n", environmentId, packageDisplayName)
+	output.Printf(c.Config.EnableColor, "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n", environmentId, packageDisplayName)
 	return nil
 }

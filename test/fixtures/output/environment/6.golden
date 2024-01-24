@@ -1,12 +1,16 @@
 - is_current: false
-  id: a-595
-  name: default
-- is_current: false
   id: env-123
   name: env123
+  stream_governance_package: ESSENTIALS
 - is_current: true
   id: env-595
   name: other
+  stream_governance_package: ADVANCED
+- is_current: false
+  id: env-596
+  name: default
+  stream_governance_package: ESSENTIALS
 - is_current: false
   id: env-srUpdate
   name: srUpdate
+  stream_governance_package: ESSENTIALS

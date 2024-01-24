@@ -9,8 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
@@ -30,7 +31,7 @@ func NewACLConfig() *ACLConfiguration {
 }
 
 // parse returns ACLConfiguration from the contents of cmd
-func parse(context *dynamicconfig.DynamicContext, cmd *cobra.Command) ([]*ACLConfiguration, error) {
+func parse(context *config.Context, cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return nil, err
@@ -63,7 +64,7 @@ func parse(context *dynamicconfig.DynamicContext, cmd *cobra.Command) ([]*ACLCon
 	aclConfigs := make([]*ACLConfiguration, len(operations))
 	for i, operation := range operations {
 		aclConfig := NewACLConfig()
-		op, err := getACLOperation(operation)
+		op, err := getAclOperation(operation)
 		if err != nil {
 			return nil, err
 		}
@@ -128,8 +129,7 @@ func setResourcePattern(conf *ACLConfiguration, n, v string) {
 		return
 	}
 
-	n = strings.ToUpper(n)
-	n = strings.ReplaceAll(n, "-", "_")
+	n = ccloudv2.ToUpper(n)
 
 	conf.Pattern.ResourceType = ccstructs.ResourceTypes_ResourceType(ccstructs.ResourceTypes_ResourceType_value[n])
 
@@ -155,19 +155,17 @@ OUTER:
 		if v == "CLUSTER" {
 			v = "cluster-scope"
 		}
-		v = strings.ReplaceAll(v, "_", "-")
-		ops = append(ops, strings.ToLower(v))
+		ops = append(ops, ccloudv2.ToLower(v))
 	}
 
 	sort.Strings(ops)
 	return strings.Join(ops, ", ")
 }
 
-func getACLOperation(operation string) (ccstructs.ACLOperations_ACLOperation, error) {
-	op := strings.ToUpper(operation)
-	op = strings.ReplaceAll(op, "-", "_")
+func getAclOperation(operation string) (ccstructs.ACLOperations_ACLOperation, error) {
+	op := ccloudv2.ToUpper(operation)
 	if operation, ok := ccstructs.ACLOperations_ACLOperation_value[op]; ok {
 		return ccstructs.ACLOperations_ACLOperation(operation), nil
 	}
-	return ccstructs.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
+	return ccstructs.ACLOperations_UNKNOWN, fmt.Errorf("invalid operation value: %s", op)
 }

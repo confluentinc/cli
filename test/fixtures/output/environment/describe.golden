@@ -1,5 +1,6 @@
-+---------+-----------+
-| Current | false     |
-| ID      | env-12345 |
-| Name    | default   |
-+---------+-----------+
++---------------------------+------------+
+| Current                   | false      |
+| ID                        | env-123456 |
+| Name                      | default    |
+| Stream Governance Package | ESSENTIALS |
++---------------------------+------------+

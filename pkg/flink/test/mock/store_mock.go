@@ -9,7 +9,7 @@ import (
 	reflect "reflect"
 
 	types "github.com/confluentinc/cli/v3/pkg/flink/types"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockStoreInterface is a mock of StoreInterface interface.
@@ -64,6 +64,90 @@ func (mr *MockStoreInterfaceMockRecorder) FetchStatementResults(arg0 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchStatementResults", reflect.TypeOf((*MockStoreInterface)(nil).FetchStatementResults), arg0)
 }
 
+// GetAuthToken mocks base method.
+func (m *MockStoreInterface) GetAuthToken() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuthToken")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetAuthToken indicates an expected call of GetAuthToken.
+func (mr *MockStoreInterfaceMockRecorder) GetAuthToken() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthToken", reflect.TypeOf((*MockStoreInterface)(nil).GetAuthToken))
+}
+
+// GetComputePool mocks base method.
+func (m *MockStoreInterface) GetComputePool() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetComputePool")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetComputePool indicates an expected call of GetComputePool.
+func (mr *MockStoreInterfaceMockRecorder) GetComputePool() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComputePool", reflect.TypeOf((*MockStoreInterface)(nil).GetComputePool))
+}
+
+// GetCurrentCatalog mocks base method.
+func (m *MockStoreInterface) GetCurrentCatalog() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrentCatalog")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetCurrentCatalog indicates an expected call of GetCurrentCatalog.
+func (mr *MockStoreInterfaceMockRecorder) GetCurrentCatalog() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentCatalog", reflect.TypeOf((*MockStoreInterface)(nil).GetCurrentCatalog))
+}
+
+// GetCurrentDatabase mocks base method.
+func (m *MockStoreInterface) GetCurrentDatabase() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrentDatabase")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetCurrentDatabase indicates an expected call of GetCurrentDatabase.
+func (mr *MockStoreInterfaceMockRecorder) GetCurrentDatabase() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentDatabase", reflect.TypeOf((*MockStoreInterface)(nil).GetCurrentDatabase))
+}
+
+// GetEnvironmentId mocks base method.
+func (m *MockStoreInterface) GetEnvironmentId() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEnvironmentId")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetEnvironmentId indicates an expected call of GetEnvironmentId.
+func (mr *MockStoreInterfaceMockRecorder) GetEnvironmentId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironmentId", reflect.TypeOf((*MockStoreInterface)(nil).GetEnvironmentId))
+}
+
+// GetOrganizationId mocks base method.
+func (m *MockStoreInterface) GetOrganizationId() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrganizationId")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetOrganizationId indicates an expected call of GetOrganizationId.
+func (mr *MockStoreInterfaceMockRecorder) GetOrganizationId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganizationId", reflect.TypeOf((*MockStoreInterface)(nil).GetOrganizationId))
+}
+
 // ProcessStatement mocks base method.
 func (m *MockStoreInterface) ProcessStatement(arg0 string) (*types.ProcessedStatement, *types.StatementError) {
 	m.ctrl.T.Helper()
@@ -77,6 +161,20 @@ func (m *MockStoreInterface) ProcessStatement(arg0 string) (*types.ProcessedStat
 func (mr *MockStoreInterfaceMockRecorder) ProcessStatement(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessStatement", reflect.TypeOf((*MockStoreInterface)(nil).ProcessStatement), arg0)
+}
+
+// StopStatement mocks base method.
+func (m *MockStoreInterface) StopStatement(arg0 string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StopStatement", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// StopStatement indicates an expected call of StopStatement.
+func (mr *MockStoreInterfaceMockRecorder) StopStatement(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopStatement", reflect.TypeOf((*MockStoreInterface)(nil).StopStatement), arg0)
 }
 
 // WaitForTerminalStatementState mocks base method.

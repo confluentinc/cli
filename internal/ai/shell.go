@@ -65,7 +65,7 @@ func (s *shell) executor(question string) {
 
 	// Print outside of bubbletea to avoid text cropping
 	if m.out != "" {
-		output.Print(m.out)
+		output.Print(false, m.out)
 	}
 }
 
@@ -79,6 +79,6 @@ func (s *shell) isExit(in string) bool {
 }
 
 func exitWithErr(err error) {
-	output.Printf("Error: %v\n", err)
+	output.Printf(false, "Error: %v\n", err)
 	os.Exit(0)
 }

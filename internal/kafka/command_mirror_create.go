@@ -37,9 +37,9 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Int32(replicationFactorFlagName, 3, "Replication factor.")
+	cmd.Flags().Int32("replication-factor", 3, "Replication factor.")
 	pcmd.AddConfigFlag(cmd)
-	cmd.Flags().String(sourceTopicFlagName, "", "Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.")
+	cmd.Flags().String("source-topic", "", "Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -49,7 +49,7 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.Flags().MarkHidden(configFileFlagName))
 	cmd.MarkFlagsMutuallyExclusive("config", configFileFlagName)
 
-	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
+	cobra.CheckErr(cmd.MarkFlagRequired("link"))
 
 	return cmd
 }
@@ -57,20 +57,20 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 	mirrorTopicName := args[0]
 
-	sourceTopicName, err := cmd.Flags().GetString(sourceTopicFlagName)
+	sourceTopic, err := cmd.Flags().GetString("source-topic")
 	if err != nil {
 		return err
 	}
-	if sourceTopicName == "" {
-		sourceTopicName = mirrorTopicName
+	if sourceTopic == "" {
+		sourceTopic = mirrorTopicName
 	}
 
-	linkName, err := cmd.Flags().GetString(linkFlagName)
+	link, err := cmd.Flags().GetString("link")
 	if err != nil {
 		return err
 	}
 
-	replicationFactor, err := cmd.Flags().GetInt32(replicationFactorFlagName)
+	replicationFactor, err := cmd.Flags().GetInt32("replication-factor")
 	if err != nil {
 		return err
 	}
@@ -100,21 +100,21 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	configs := toCreateTopicConfigs(configMap)
-	createMirrorTopicRequestData := kafkarestv3.CreateMirrorTopicRequestData{
-		SourceTopicName:   sourceTopicName,
-		ReplicationFactor: &replicationFactor,
+	data := kafkarestv3.CreateMirrorTopicRequestData{
+		SourceTopicName:   sourceTopic,
+		ReplicationFactor: kafkarestv3.PtrInt32(replicationFactor),
 		Configs:           &configs,
 	}
 	// Only set the mirror topic if it differs from the source topic. This is for backwards compatibility: old versions
 	// of ce-kafka-rest don't know about MirrorTopicName.
-	if sourceTopicName != mirrorTopicName {
-		createMirrorTopicRequestData.MirrorTopicName = &mirrorTopicName
+	if sourceTopic != mirrorTopicName {
+		data.MirrorTopicName = kafkarestv3.PtrString(mirrorTopicName)
 	}
 
-	if err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(linkName, createMirrorTopicRequestData); err != nil {
+	if err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(link, data); err != nil {
 		return err
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
 	return nil
 }

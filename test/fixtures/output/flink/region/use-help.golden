@@ -1,11 +1,18 @@
 Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.
 
 Usage:
-  confluent flink region use <id> [flags]
+  confluent flink region use [flags]
+
+Examples:
+Select region "N. Virginia (us-east-1)" for use in subsequent Flink commands.
+
+  $ confluent flink region use --cloud aws --region us-east-1
 
 Flags:
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

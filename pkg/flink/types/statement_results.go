@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
 )
 
 type StatementResults struct {
@@ -50,33 +50,33 @@ func (r *StatementResultRow) GetFields() []StatementResultField {
 }
 
 const (
-	INSERT        StatementResultOperation = 0
-	UPDATE_BEFORE StatementResultOperation = 1
-	UPDATE_AFTER  StatementResultOperation = 2
-	DELETE        StatementResultOperation = 3
+	Insert       StatementResultOperation = 0
+	UpdateBefore StatementResultOperation = 1
+	UpdateAfter  StatementResultOperation = 2
+	Delete       StatementResultOperation = 3
 )
 
 type StatementResultOperation float64
 
 func (s StatementResultOperation) IsInsertOperation() bool {
-	return s == INSERT || s == UPDATE_AFTER
+	return s == Insert || s == UpdateAfter
 }
 
 func (s StatementResultOperation) String() string {
 	switch s {
-	case INSERT:
+	case Insert:
 		return "+I"
-	case UPDATE_BEFORE:
+	case UpdateBefore:
 		return "-U"
-	case UPDATE_AFTER:
+	case UpdateAfter:
 		return "+U"
-	case DELETE:
+	case Delete:
 		return "-D"
 	}
 	return ""
 }
 
 type MockStatementResult struct {
-	ResultSchema     flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
-	StatementResults flinkgatewayv1alpha1.SqlV1alpha1StatementResult
+	ResultSchema     flinkgatewayv1beta1.SqlV1beta1ResultSchema
+	StatementResults flinkgatewayv1beta1.SqlV1beta1StatementResult
 }

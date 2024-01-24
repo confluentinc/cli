@@ -17,7 +17,7 @@ List the role bindings for principals with role "CloudClusterAdmin":
 
 List the role bindings for user "u-123456" with role "CloudClusterAdmin":
 
-  $ confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456
+  $ confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456
 
 List the role bindings for user "u-123456" for all scopes:
 
@@ -25,7 +25,7 @@ List the role bindings for user "u-123456" for all scopes:
 
 List the role bindings for the current user at the environment scope and its nested scopes:
 
-  $ confluent iam rbac role-binding list --current-user --environment env-12345 --inclusive
+  $ confluent iam rbac role-binding list --current-user --environment env-123456 --inclusive
 
 Flags:
       --principal string                 Principal whose role bindings should be listed.
