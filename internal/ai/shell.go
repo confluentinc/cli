@@ -29,18 +29,9 @@ func (s *shell) executor(question string) {
 	m.spinner.Spinner = spinner.Ellipsis
 
 	go func() {
-		// Send only the last question and answer to provide extra context to the backend model.
-		// We may choose to send more context in the future, but it is more expensive.
-		const recentHistoryLen = 1
-		recentHistory := s.history
-
-		if len(s.history) > recentHistoryLen {
-			recentHistory = s.history[:len(s.history)-recentHistoryLen]
-		}
-
 		req := aiv1.AiV1ChatCompletionsRequest{
 			Question: aiv1.PtrString(question),
-			History:  &recentHistory,
+			History:  &s.history,
 		}
 		res, err := s.client.QueryChatCompletion(req)
 		if err != nil {
