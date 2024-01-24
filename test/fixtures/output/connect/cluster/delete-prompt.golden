@@ -1,2 +1,1 @@
-Are you sure you want to delete connector "lcc-123"?
-To confirm, type "az-connector". To cancel, press Ctrl-C: Deleted connector "lcc-123".
+Are you sure you want to delete connector "lcc-123"? (y/n): Deleted connector "lcc-123".

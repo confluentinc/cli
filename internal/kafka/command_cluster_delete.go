@@ -33,18 +33,13 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	PluralClusterEnvironmentSuggestions := "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-	cluster, _, err := c.V2Client.DescribeKafkaCluster(args[0], environmentId)
-	if err != nil {
-		return errors.NewErrorWithSuggestions(resource.ResourcesNotFoundError(cmd, resource.KafkaCluster, args[0]).Error(), PluralClusterEnvironmentSuggestions)
-	}
-
 	existenceFunc := func(id string) bool {
 		_, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.KafkaCluster, cluster.Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.KafkaCluster); err != nil {
+		PluralClusterEnvironmentSuggestions := "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 		return errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
 	}
 
