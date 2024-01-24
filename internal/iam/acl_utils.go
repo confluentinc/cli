@@ -36,7 +36,7 @@ access to the provided operations on the Kafka cluster itself.`)
 	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
 	flgSet.String("topic", "", `Set the topic resource. With this option the ACL grants the provided
 operations on the topics that start with that prefix, depending on whether
-the --prefix option was also passed.`)
+the "--prefix" option was also passed.`)
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
 	flgSet.SortFlags = false
 	return flgSet
