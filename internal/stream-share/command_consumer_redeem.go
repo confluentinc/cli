@@ -61,26 +61,26 @@ func (c *command) newRedeemCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("aws-account-id", "", "Consumer's AWS account ID for PrivateLink access.")
-	cmd.Flags().String("azure-subscription-id", "", "Consumer's Azure subscription ID for PrivateLink access.")
-	cmd.Flags().String("gcp-project-id", "", "Consumer's GCP project ID for Private Service Connect access.")
+	cmd.Flags().String("aws-account", "", "Consumer's AWS account ID for PrivateLink access.")
+	cmd.Flags().String("azure-subscription", "", "Consumer's Azure subscription ID for PrivateLink access.")
+	cmd.Flags().String("gcp-project", "", "Consumer's GCP project ID for Private Service Connect access.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
-	awsAccountId, err := cmd.Flags().GetString("aws-account-id")
+	awsAccountId, err := cmd.Flags().GetString("aws-account")
 	if err != nil {
 		return err
 	}
 
-	azureSubscriptionId, err := cmd.Flags().GetString("azure-subscription-id")
+	azureSubscriptionId, err := cmd.Flags().GetString("azure-subscription")
 	if err != nil {
 		return err
 	}
 
-	gcpProjectId, err := cmd.Flags().GetString("gcp-project-id")
+	gcpProjectId, err := cmd.Flags().GetString("gcp-project")
 	if err != nil {
 		return err
 	}

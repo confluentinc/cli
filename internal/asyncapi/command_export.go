@@ -80,7 +80,7 @@ func (c *command) newExportCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
-	cmd.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
+	cmd.Flags().String("group", "consumerApplication", "Consumer Group ID for getting messages.")
 	cmd.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	cmd.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
@@ -446,7 +446,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
-	groupId, err := cmd.Flags().GetString("group-id")
+	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err
 	}
