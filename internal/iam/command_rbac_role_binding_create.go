@@ -64,7 +64,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		exs = append(exs,
 			examples.Example{
 				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster $KAFKA_CLUSTER_ID",
+				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster 0000000000000000000000",
 			},
 		)
 	}
@@ -72,9 +72,9 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	cmd.Example = examples.BuildExampleString(exs...)
 
 	cmd.Flags().String("role", "", "Role name of the new role binding.")
-	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
+	cmd.Flags().String("principal", "", `Principal type and identifier using "Prefix:ID" format.`)
 	addClusterFlags(cmd, c.cfg, c.CLICommand)
-	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	cmd.Flags().String("resource", "", `Resource type and identifier using Prefix:ID format.`)
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
 
