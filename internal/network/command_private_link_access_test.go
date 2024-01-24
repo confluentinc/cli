@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking/v1"
 )
 
 func TestGetPrivateLinkAccessCloudWithAws(t *testing.T) {
