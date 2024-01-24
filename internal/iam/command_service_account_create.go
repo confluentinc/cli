@@ -23,7 +23,7 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create a service account named "my-service-account".`,
+				"Create a service account named `my-service-account`.",
 				Code: `confluent iam service-account create my-service-account --description "new description"`,
 			},
 		),
