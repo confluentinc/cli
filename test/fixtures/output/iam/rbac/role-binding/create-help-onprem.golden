@@ -10,7 +10,7 @@ Create a role binding for the principal permitting it produce to topic "my-topic
 
 Flags:
       --role string                      REQUIRED: Role name of the new role binding.
-      --principal string                 REQUIRED: Principal type and identifier using Prefix:ID format.
+      --principal string                 REQUIRED: Principal type and identifier using "Prefix:ID" format.
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster ID for the role binding.
