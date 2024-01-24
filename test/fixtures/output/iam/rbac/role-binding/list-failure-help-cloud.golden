@@ -37,7 +37,7 @@ Flags:
       --kafka-cluster string             Kafka cluster ID, which specifies the Kafka cluster scope.
       --schema-registry-cluster string   Schema Registry cluster ID, which specifies the Schema Registry cluster scope.
       --ksql-cluster string              ksqlDB cluster name, which specifies the ksqlDB cluster scope.
-      --resource string                  Resource type and identifier using Prefix:ID format. If specified with "--role" and no principals, list all principals and role bindings.
+      --resource string                  Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.
       --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
