@@ -35,7 +35,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")
-	cmd.Flags().String("principal", "", "Principal type and identifier using Prefix:ID format.")
+	cmd.Flags().String("principal", "", `Principal type and identifier using "Prefix:ID" format.`)
 	pcmd.AddForceFlag(cmd)
 	addClusterFlags(cmd, c.cfg, c.CLICommand)
 	cmd.Flags().String("resource", "", "Resource type and identifier using Prefix:ID format.")
