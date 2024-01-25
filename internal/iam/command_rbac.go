@@ -18,9 +18,10 @@ var (
 	streamCatalogNamespace  = optional.NewString("streamcatalog")
 	identityNamespace       = optional.NewString("identity")
 	flinkNamespace          = optional.NewString("flink")
+	workloadNamespace       = optional.NewString("workload")
 )
 
-func newRBACCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newRbacCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rbac",
 		Short: "Manage RBAC permissions.",

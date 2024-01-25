@@ -1,5 +1,9 @@
 project_name: confluent
 
+env:
+  - CGO_ENABLED=1
+  - GOEXPERIMENT=boringcrypto
+
 builds:
   - id: confluent-alpine-amd64
     binary: confluent
@@ -13,7 +17,6 @@ builds:
     asmflags:
       - all=-trimpath={{.Env.HOME}}/git
     env:
-      - CGO_ENABLED=1
       - CC=x86_64-linux-musl-gcc
       - CXX=x86_64-linux-musl-g++
       - CGO_LDFLAGS=${CGO_LDFLAGS} -static
@@ -33,7 +36,6 @@ builds:
     asmflags:
       - all=-trimpath={{.Env.HOME}}/git
     env:
-      - CGO_ENABLED=1
       - CC=aarch64-linux-musl-gcc
       - CXX=aarch64-linux-musl-g++
       - CGO_LDFLAGS=${CGO_LDFLAGS} -static
@@ -57,10 +59,12 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} amd64
-        - cmd: gon dist/gon_confluent_darwin_amd64.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
           output: true
-  - id: confluent-darwin-amd64-homebrew
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
+          output: true
+  - id: confluent-darwin-amd64-disableupdates
     binary: confluent
     main: cmd/confluent/main.go
     flags:
@@ -77,14 +81,14 @@ builds:
       - amd64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} amd64_homebrew
-        - cmd: gon dist/gon_confluent_darwin_amd64_homebrew.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-darwin-arm64
     binary: confluent
     main: cmd/confluent/main.go
-    env:
-      - CGO_ENABLED=1
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
@@ -97,16 +101,16 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} arm64
-        - cmd: gon dist/gon_confluent_darwin_arm64.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
           output: true
-  - id: confluent-darwin-arm64-homebrew
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
+          output: true
+  - id: confluent-darwin-arm64-disableupdates
     binary: confluent
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
-    env:
-      - CGO_ENABLED=1
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
     gcflags:
@@ -119,8 +123,10 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} arm64_homebrew
-        - cmd: gon dist/gon_confluent_darwin_arm64_homebrew.hcl
+        - cmd: 'codesign -s "Developer ID Application: Confluent, Inc." -v {{ .Path }} --options=runtime'
+          output: true
+        - cmd: zip "{{ .Path }}_signed.zip" {{ .Path }}
+        - cmd: xcrun notarytool submit "{{ .Path }}_signed.zip" --apple-id {{ .Env.AC_USERNAME }} --password {{ .Env.AC_PASSWORD }} --team-id RTSX8FNWR2 --wait
           output: true
   - id: confluent-linux
     builder: prebuilt
@@ -133,7 +139,7 @@ builds:
       - v1
     prebuilt:
       path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
-  - id: confluent-linux-homebrew
+  - id: confluent-linux-disableupdates
     builder: prebuilt
     goos:
       - linux
@@ -143,18 +149,17 @@ builds:
     goamd64:
       - v1
     prebuilt:
-      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-homebrew_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
+      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}-disableupdates_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
   - id: confluent-windows-amd64
     binary: confluent
     main: cmd/confluent/main.go
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe  
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
       - all=-trimpath={{.Env.HOME}}/git
     env:
-      - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
       - CXX=x86_64-w64-mingw32-g++
       - CGO_LDFLAGS=${CGO_LDFLAGS} -static
@@ -197,13 +202,13 @@ archives:
     files:
       - LICENSE
       - legal/**/*
-  - id: archive-homebrew
+  - id: archive-disableupdates
     format: tar.gz
     builds:
-      - confluent-darwin-amd64-homebrew
-      - confluent-darwin-arm64-homebrew
-      - confluent-linux-homebrew
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_homebrew"
+      - confluent-darwin-amd64-disableupdates
+      - confluent-darwin-arm64-disableupdates
+      - confluent-linux-disableupdates
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_disableupdates"
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE
@@ -222,7 +227,7 @@ archives:
       - confluent-alpine-amd64
       - confluent-alpine-arm64
     name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
-    
+
 dockers:
   - ids:
       - confluent-alpine-amd64
@@ -233,6 +238,7 @@ dockers:
     dockerfile: "docker/Dockerfile"
     build_flag_templates:
       - --platform=linux/amd64
+    skip_push: "{{ .Env.DRY_RUN }}"
   - ids:
       - confluent-alpine-arm64
     goarch: arm64
@@ -242,6 +248,7 @@ dockers:
     dockerfile: "docker/Dockerfile"
     build_flag_templates:
       - --platform=linux/arm64
+    skip_push: "{{ .Env.DRY_RUN }}"
 
 docker_manifests:
   - name_template: "confluentinc/confluent-cli:{{ .Version }}"
@@ -265,17 +272,17 @@ release:
 
 blobs:
   - ids:
-    - binary
-    - binary-alpine
+      - binary
+      - binary-alpine
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
     folder: "{{ .Env.S3FOLDER }}/binaries/{{ .Version }}"
     disable: "{{ .Env.DRY_RUN }}"
   - ids:
-    - archive
-    - archive-alpine
-    - archive-homebrew
+      - archive
+      - archive-alpine
+      - archive-disableupdates
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
@@ -285,7 +292,7 @@ blobs:
 brews:
   - name: cli
     ids:
-      - archive-homebrew
+      - archive-disableupdates
     repository:
       owner: confluentinc
       name: homebrew-tap

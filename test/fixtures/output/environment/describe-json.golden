@@ -1,5 +1,6 @@
 {
   "is_current": false,
-  "id": "env-12345",
-  "name": "default"
+  "id": "env-123456",
+  "name": "default",
+  "stream_governance_package": "ESSENTIALS"
 }

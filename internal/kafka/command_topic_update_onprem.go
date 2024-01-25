@@ -9,8 +9,8 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -66,19 +66,16 @@ func UpdateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 	data := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configMap))
 	i := 0
 	for key, val := range configMap {
-		v := val
+		val := val
 		data[i] = kafkarestv3.AlterConfigBatchRequestDataData{
 			Name:  key,
-			Value: &v,
+			Value: &val,
 		}
 		i++
 	}
 
-	opts := &kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
-		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
-	}
-	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName, opts)
-	if err != nil {
+	opts := &kafkarestv3.UpdateKafkaTopicConfigBatchOpts{AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data})}
+	if resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName, opts); err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
@@ -89,11 +86,11 @@ func UpdateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return output.SerializedOutput(cmd, data)
 	}
 
-	output.Printf(errors.UpdateTopicConfigMsg, topicName)
+	output.Printf(false, "Updated the following configuration values for topic \"%s\":\n", topicName)
 
 	list := output.NewList(cmd)
 	for _, config := range data {
-		list.Add(&configOut{
+		list.Add(&broker.ConfigOut{
 			Name:  config.Name,
 			Value: *config.Value,
 		})

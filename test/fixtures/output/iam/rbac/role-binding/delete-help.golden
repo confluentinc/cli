@@ -6,7 +6,7 @@ Usage:
 Examples:
 Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka cluster "lkc-123456":
 
-  $ confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster lkc-123456 --resource Topic:my-topic
+  $ confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-123456 --kafka-cluster lkc-123456 --resource Topic:my-topic
 
 Flags:
       --role string                      REQUIRED: Role name of the existing role binding.
@@ -15,6 +15,7 @@ Flags:
       --environment string               Environment ID for scope of role-binding operation.
       --current-environment              Use current environment ID for scope.
       --cloud-cluster string             Cloud cluster ID for the role binding.
+      --flink-region string              Flink region ID for the role binding.
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster name for the role binding.

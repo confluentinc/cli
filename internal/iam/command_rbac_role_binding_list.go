@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -14,10 +15,11 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
+
+const principalOrRoleRequiredErrorMsg = "must specify either principal or role"
 
 type roleBindingListOut struct {
 	Principal string `human:"Principal" serialized:"principal"`
@@ -50,7 +52,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `List the role bindings for user "u-123456" with role "CloudClusterAdmin":`,
-				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
+				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456",
 			},
 			examples.Example{
 				Text: `List the role bindings for user "u-123456" for all scopes:`,
@@ -58,7 +60,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "List the role bindings for the current user at the environment scope and its nested scopes:",
-				Code: "confluent iam rbac role-binding list --current-user --environment env-12345 --inclusive",
+				Code: "confluent iam rbac role-binding list --current-user --environment env-123456 --inclusive",
 			},
 		)
 	} else {
@@ -178,7 +180,7 @@ func (c *roleBindingCommand) confluentList(cmd *cobra.Command, options *roleBind
 	} else if cmd.Flags().Changed("role") {
 		return c.confluentListRolePrincipals(cmd, options)
 	}
-	return errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
+	return fmt.Errorf(principalOrRoleRequiredErrorMsg)
 }
 
 func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -321,7 +323,7 @@ func (c *roleBindingCommand) ccloudList(cmd *cobra.Command, listRoleBinding *mds
 	} else if cmd.Flags().Changed("role") {
 		return c.ccloudListRolePrincipals(cmd, listRoleBinding)
 	}
-	return errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
+	return fmt.Errorf(principalOrRoleRequiredErrorMsg)
 }
 
 func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
@@ -333,7 +335,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 	}
 
 	if currentUser {
-		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.Context.State.Auth.GetUser().GetResourceId())
+		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.Context.GetAuth().GetUser().GetResourceId())
 	}
 
 	inclusive, err := cmd.Flags().GetBool("inclusive")
@@ -363,6 +365,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 	}
 
 	for _, rolebinding := range roleBindings {
+		id := rolebinding.GetId()
 		roleName := rolebinding.GetRoleName()
 		if role != "" && role != roleName {
 			continue
@@ -413,6 +416,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 			patternType = prefixedPatternType
 		}
 		list.Add(&roleBindingOut{
+			Id:             id,
 			Principal:      principalName,
 			Email:          principalEmail,
 			Role:           roleName,

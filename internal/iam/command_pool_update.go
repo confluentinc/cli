@@ -6,11 +6,10 @@ import (
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
+func (c *poolCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update an identity pool.",
@@ -26,44 +25,20 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("name", "", "Name of the identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
-	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
+	cmd.MarkFlagsOneRequired("identity-claim", "name", "description", "filter")
 
 	return cmd
 }
 
-func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
-	flags := []string{
-		"description",
-		"filter",
-		"identity-claim",
-		"name",
-	}
-	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
-		return err
-	}
-
-	description, err := cmd.Flags().GetString("description")
-	if err != nil {
-		return err
-	}
-
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
-	}
-
-	filter, err := cmd.Flags().GetString("filter")
-	if err != nil {
-		return err
-	}
-
+func (c *poolCommand) update(cmd *cobra.Command, args []string) error {
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
@@ -74,19 +49,33 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	identityPoolId := args[0]
-	updateIdentityPool := identityproviderv2.IamV2IdentityPool{Id: &identityPoolId}
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
+		return err
+	}
+
+	filter, err := cmd.Flags().GetString("filter")
+	if err != nil {
+		return err
+	}
+
+	updateIdentityPool := identityproviderv2.IamV2IdentityPool{Id: identityproviderv2.PtrString(args[0])}
 	if name != "" {
-		updateIdentityPool.DisplayName = &name
+		updateIdentityPool.DisplayName = identityproviderv2.PtrString(name)
 	}
 	if description != "" {
-		updateIdentityPool.Description = &description
+		updateIdentityPool.Description = identityproviderv2.PtrString(description)
 	}
 	if identityClaim != "" {
-		updateIdentityPool.IdentityClaim = &identityClaim
+		updateIdentityPool.IdentityClaim = identityproviderv2.PtrString(identityClaim)
 	}
 	if filter != "" {
-		updateIdentityPool.Filter = &filter
+		updateIdentityPool.Filter = identityproviderv2.PtrString(filter)
 	}
 
 	pool, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)

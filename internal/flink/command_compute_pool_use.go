@@ -10,7 +10,7 @@ import (
 )
 
 func (c *command) newComputePoolUseCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:               "use <id>",
 		Short:             "Use a Flink compute pool in subsequent commands.",
 		Long:              "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
@@ -18,14 +18,9 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
 		RunE:              c.computePoolUse,
 	}
-
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddOutputFlag(cmd)
-
-	return cmd
 }
 
-func (c *command) computePoolUse(cmd *cobra.Command, args []string) error {
+func (c *command) computePoolUse(_ *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -42,6 +37,6 @@ func (c *command) computePoolUse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UsingResourceMsg, resource.FlinkComputePool, args[0])
+	output.Printf(c.Config.EnableColor, errors.UsingResourceMsg, resource.FlinkComputePool, args[0])
 	return nil
 }

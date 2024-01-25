@@ -1,12 +1,6 @@
-# Errors And Messages Handling
+# Errors
 
-The CLI codebase stores the strings of all messages in the `errors` package. This encompasses all kinds of communication with the users, whether it be error messages, or message indicating success (e.g. successfully deleting a Kafka cluster). The goal is to ease the verification of consistency and correctness of messages, and to simplify future work in internationalizing the CLI.
-
-## General Message Format
-- `""` surrounding names and ID’s
-    - e.g. `Check that the resource "lkc-abc" exists.`, `Error: topic "bob" does not exist`
-- ```` `` ```` surrounding commands or flags
-    - e.g. ``You must pass `--cluster` flag with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`.``
+First, read the [pkg/output/README.md](Output) guide for instructions on formatting user-facing strings.
 
 ## Creating an Error
 ### Message Format
@@ -21,7 +15,7 @@ Suggestion message is not required.
 Suggestions format
 - full sentence
 - capitalize first letter
-- end with a full stop 
+- end with a full stop
 - separate suggestions using a newline; do not add a newline at the end of the last sentence
 - for sentences ending in a url, put a space between the url and the fullstop
 - the variable name must end with *Suggestions*
@@ -55,7 +49,7 @@ There are four ways to create errors for the CLI.
 
 1. All basic errors will fall under this category. Use one of the error intializing functions in the errors package (errors.New, errors.Errorf, errors.Wrap, errors.Wrapf), with an error message defined in [error_message.go](error_message.go). The name of the variable must end with *ErrorMsg*.
 ```
-errors.Errorf(errors.AuthorizeAccountsErrorMsg, accountsStr)
+fmt.Errorf(errors.AuthorizeAccountsErrorMsg, accountsStr)
 ```
 2. For errors with suggestions, define the error message, and suggestions message next to each other in [error_message.go](error_message.go). The messages must have the same name with different ending following the naming convention (i.e. *ErrorMsg* and *Suggestions*). Then either `errors.NewErrorWithSuggestion` or `errors.NewWrapErrorWithSuggestion` is used to initialize the error.
 

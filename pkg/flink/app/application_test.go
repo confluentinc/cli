@@ -1,17 +1,20 @@
 package app
 
 import (
+	"fmt"
 	"sync"
 	"testing"
+	"time"
 
-	"github.com/bradleyjkemp/cupaloy"
-	"github.com/golang/mock/gomock"
+	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -63,14 +66,17 @@ func authenticated() error {
 }
 
 func unauthenticated() error {
-	return errors.New("401 unauthorized")
+	return fmt.Errorf("401 unauthorized")
 }
 
 func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {
 	s.app.refreshToken = unauthenticated
 	s.appController.EXPECT().ExitApplication()
 
-	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrintLoop)
+	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
+		err := s.app.readEvalPrintLoop()
+		require.NoError(s.T(), err)
+	})
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -98,8 +104,25 @@ func (s *ApplicationTestSuite) TestReplExitsAppWhenUserInitiatedExit() {
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecuteStatementError() {
+func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryIfNoErrorAndNotSensistiveStatement() {
 	userInput := "test-input"
+	statement := types.ProcessedStatement{PageToken: "not-empty"}
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
+	s.resultFetcher.EXPECT().Init(statement)
+	s.interactiveOutputController.EXPECT().VisualizeResults()
+
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), []string{userInput}, s.history.Data)
+}
+
+func (s *ApplicationTestSuite) TestReplDoesntAppendStatementToHistoryIfError() {
+	userInput := "test-input"
+
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
 	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
@@ -107,8 +130,24 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecut
 
 	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
-	cupaloy.SnapshotT(s.T(), actual)
-	require.Equal(s.T(), []string{userInput}, s.history.Data)
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), []string{}, s.history.Data)
+}
+
+func (s *ApplicationTestSuite) TestReplDoesntAppendStatementToHistoryIfSensistiveStatement() {
+	userInput := "test-input"
+	statement := types.ProcessedStatement{PageToken: "not-empty", IsSensitiveStatement: true}
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
+	s.resultFetcher.EXPECT().Init(statement)
+	s.interactiveOutputController.EXPECT().VisualizeResults()
+
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), []string{}, s.history.Data)
 }
 
 func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {
@@ -271,9 +310,77 @@ func (s *ApplicationTestSuite) TestPanicRecovery() {
 	s.statementController.EXPECT().CleanupStatement()
 
 	// When
-	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+	actual := test.RunAndCaptureSTDOUT(s.T(), utils.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery))
 
 	// Then
 	cupaloy.SnapshotT(s.T(), actual)
 	require.Equal(s.T(), 1, callCount)
+}
+
+func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitExceeded() {
+	// Given
+	recoverCount := 5
+	s.inputController.EXPECT().GetUserInput().Times(recoverCount).Do(func() {
+		panic("err in repl")
+	})
+	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
+
+	// When
+	run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
+	for i := 0; i < recoverCount; i++ {
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		require.NoError(s.T(), err)
+	}
+	err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+
+	// Then
+	require.Error(s.T(), err)
+	require.Equal(s.T(), err, errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, "Run `confluent flink shell -vvv` to enable debug logs when starting the flink shell and report the output to the CLI team. Kindly share steps reproduce, if possible.\nPlease, restart the CLI."))
+}
+
+func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitNotExceeded() {
+	// Given
+	recoverCount := 5
+	callCount := 0
+	s.app.reportUsage = func() {
+		callCount++
+	}
+	s.inputController.EXPECT().GetUserInput().Times(recoverCount).Do(func() {
+		panic("err in repl")
+	})
+	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
+
+	// When
+	run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
+	for i := 0; i < recoverCount; i++ {
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		require.NoError(s.T(), err)
+	}
+
+	// Then
+	require.Equal(s.T(), recoverCount, callCount)
+}
+
+func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenSparsePannics() {
+	// Given
+	recoverCount := 15
+	callCount := 0
+	s.app.reportUsage = func() {
+		callCount++
+	}
+	s.inputController.EXPECT().GetUserInput().Times(recoverCount).Do(func() {
+		panic("err in repl")
+	})
+	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
+
+	// When
+	run := utils.NewPanicRecovererWithLimit(recoverCount/3, 0)
+	for i := 0; i < recoverCount; i++ {
+		time.Sleep(time.Millisecond * 10)
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		require.NoError(s.T(), err)
+	}
+
+	// Then
+	require.Equal(s.T(), recoverCount, callCount)
 }

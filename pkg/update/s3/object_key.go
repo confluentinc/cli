@@ -41,7 +41,7 @@ type PrefixedKey struct {
 // Prefix may be an empty string. An error will be returned if sep is empty or a space.
 func NewPrefixedKey(prefix, sep string, prefixVersion bool) (*PrefixedKey, error) {
 	if sep == "" || sep == " " {
-		return nil, errors.New(errors.SepNonEmptyErrorMsg)
+		return nil, fmt.Errorf("sep must be a non-empty string")
 	}
 	return &PrefixedKey{
 		Prefix:        prefix,
@@ -119,7 +119,7 @@ func (p *PrefixedKey) ParseVersion(key, name string) (bool, *version.Version, er
 
 	ver, err := version.NewSemver(split[1])
 	if err != nil {
-		return false, nil, errors.Errorf(errors.ParseVersionErrorMsg, name, split[1])
+		return false, nil, fmt.Errorf(errors.ParseVersionErrorMsg, name, split[1])
 	}
 	return true, ver, nil
 }

@@ -1,12 +1,14 @@
 package ksql
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -17,9 +19,15 @@ func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a ksqlDB cluster.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Create ksqlDB cluster "my-cluster" associated with user "u-123456".`,
+				Code: "confluent ksql cluster create my-cluster --credential-identity u-123456",
+			},
+		),
 	}
 
-	cmd.Flags().String("credential-identity", "", `User account ID or service account ID to be associated with this cluster. An API key associated with this identity will be created and used to authenticate the ksqlDB cluster with Kafka.`)
+	c.addCredentialIdentityFlag(cmd)
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -32,8 +40,40 @@ func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
+func (c *ksqlCommand) addCredentialIdentityFlag(cmd *cobra.Command) {
+	cmd.Flags().String("credential-identity", "", "User account ID or service account ID to be associated with this cluster. An API key associated with this identity will be created and used to authenticate the ksqlDB cluster with Kafka.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "credential-identity", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		users, err := c.V2Client.ListIamUsers()
+		if err != nil {
+			return nil
+		}
+
+		serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(users)+len(serviceAccounts))
+
+		for i, user := range users {
+			suggestions[i] = fmt.Sprintf("%s\t%s", user.GetId(), user.GetFullName())
+		}
+
+		for i, serviceAccount := range serviceAccounts {
+			description := fmt.Sprintf("%s: %s", serviceAccount.GetDisplayName(), serviceAccount.GetDescription())
+			suggestions[len(users)+i] = fmt.Sprintf("%s\t%s", serviceAccount.GetId(), description)
+		}
+
+		return suggestions
+	})
+}
+
 func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -82,12 +122,13 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	ticker.Stop()
 	if endpoint == "" {
-		output.ErrPrintln(errors.EndPointNotPopulatedMsg)
+		output.ErrPrintln(c.Config.EnableColor, "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`.")
 	}
 
-	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
-	if _, ok := srCluster.GetIdOk(); ok {
-		output.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
+	if clusters, _ := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId); len(clusters) > 0 {
+		if _, ok := clusters[0].GetIdOk(); ok {
+			output.ErrPrintln(c.Config.EnableColor, "[WARN] Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
+		}
 	}
 
 	table := output.NewTable(cmd)

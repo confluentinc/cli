@@ -4,22 +4,34 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
 
-type consumerShareOut struct {
-	Id                         string    `human:"ID" serialized:"id"`
-	ProviderName               string    `human:"Provider Name" serialized:"provider_name"`
-	ProviderOrganizationName   string    `human:"Provider Organization Name" serialized:"provider_organization_name"`
-	Status                     string    `human:"Status" serialized:"status"`
-	InviteExpiresAt            time.Time `human:"Invite Expires At" serialized:"invite_expires_at"`
-	NetworkDnsDomain           string    `human:"Network DNS Domain" serialized:"network_dns_domain"`
-	NetworkZones               string    `human:"Network Zones" serialized:"network_zones"`
-	NetworkZonalSubdomains     []string  `human:"Network Zonal Subdomains" serialized:"network_zonal_subdomains"`
-	NetworkKind                string    `human:"Network Kind" serialized:"network_kind"`
-	NetworkPrivateLinkDataType string    `human:"Network Private Link Data Type" serialized:"network_private_link_data_type"`
-	NetworkPrivateLinkData     string    `human:"Network Private Link Data" serialized:"network_private_link_data"`
+type consumerShareHumanOut struct {
+	Id                         string    `human:"ID"`
+	ProviderName               string    `human:"Provider Name"`
+	ProviderOrganizationName   string    `human:"Provider Organization Name"`
+	Status                     string    `human:"Status"`
+	InviteExpiresAt            time.Time `human:"Invite Expires At"`
+	NetworkDnsDomain           string    `human:"Network DNS Domain"`
+	NetworkZones               string    `human:"Network Zones"`
+	NetworkZonalSubdomains     string    `human:"Network Zonal Subdomains"`
+	NetworkKind                string    `human:"Network Kind"`
+	NetworkPrivateLinkDataType string    `human:"Network Private Link Data Type"`
+	NetworkPrivateLinkData     string    `human:"Network Private Link Data"`
+}
+
+type consumerShareSerializedOut struct {
+	Id                         string    `serialized:"id"`
+	ProviderName               string    `serialized:"provider_name"`
+	ProviderOrganizationName   string    `serialized:"provider_organization_name"`
+	Status                     string    `serialized:"status"`
+	InviteExpiresAt            time.Time `serialized:"invite_expires_at"`
+	NetworkDnsDomain           string    `serialized:"network_dns_domain"`
+	NetworkZones               string    `serialized:"network_zones"`
+	NetworkZonalSubdomains     []string  `serialized:"network_zonal_subdomains"`
+	NetworkKind                string    `serialized:"network_kind"`
+	NetworkPrivateLinkDataType string    `serialized:"network_private_link_data_type"`
+	NetworkPrivateLinkData     string    `serialized:"network_private_link_data"`
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {
@@ -62,15 +74,4 @@ func (c *command) autocompleteConsumerShares() []string {
 		suggestions[i] = *share.Id
 	}
 	return suggestions
-}
-
-func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShareOut {
-	status := share.GetStatus()
-	return &consumerShareOut{
-		Id:                       share.GetId(),
-		ProviderName:             share.GetProviderUserName(),
-		ProviderOrganizationName: share.GetProviderOrganizationName(),
-		Status:                   status.GetPhase(),
-		InviteExpiresAt:          share.GetInviteExpiresAt(),
-	}
 }

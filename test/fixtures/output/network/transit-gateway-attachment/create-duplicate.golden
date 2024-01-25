@@ -1,0 +1,1 @@
+Error: The provided network n-azure resides in AZURE which differs from AWS, the cloud specified for this resource.: 400 Bad Request

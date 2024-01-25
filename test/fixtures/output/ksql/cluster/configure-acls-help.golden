@@ -3,6 +3,11 @@ Configure ACLs for a ksqlDB cluster.
 Usage:
   confluent ksql cluster configure-acls <id> [topic-1] [topic-2] ... [topic-N] [flags]
 
+Examples:
+Configure ACLs for ksqlDB cluster "lksqlc-12345" for topics "topic_1" and "topic_2":
+
+  $ confluent ksql cluster configure-acls lksqlc-12345 topic_1 topic_2
+
 Flags:
       --dry-run              Run the command without committing changes.
       --cluster string       Kafka cluster ID.

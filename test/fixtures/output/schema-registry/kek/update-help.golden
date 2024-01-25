@@ -1,0 +1,17 @@
+Update a Key Encryption Key (KEK).
+
+Usage:
+  confluent schema-registry kek update <name> [flags]
+
+Flags:
+      --kms-properties strings   A comma-separated list of additional properties (key=value) used to access the Key Management Service (KMS).
+      --doc string               An optional user-friendly description for the Key Encryption Key (KEK).
+      --shared                   If the DEK Registry has shared access to the Key Management Service (KMS).
+      --context string           CLI context name.
+      --environment string       Environment ID.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

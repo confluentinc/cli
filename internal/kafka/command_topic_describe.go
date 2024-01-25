@@ -28,6 +28,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -48,7 +49,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
+	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
 	if err != nil {
 		return err
 	}
@@ -62,7 +63,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, config := range configsResp.Data {
+	for _, config := range configs {
 		list.Add(&topicConfigurationOut{
 			Name:     config.GetName(),
 			Value:    config.GetValue(),

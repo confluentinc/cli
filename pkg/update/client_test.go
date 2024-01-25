@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	pio "github.com/confluentinc/cli/v3/pkg/io"
 	"github.com/confluentinc/cli/v3/pkg/mock"
 	updateMock "github.com/confluentinc/cli/v3/pkg/update/mock"
@@ -100,7 +99,7 @@ func TestCheckForUpdates(t *testing.T) {
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
-						return nil, nil, errors.New("zap")
+						return nil, nil, fmt.Errorf("zap")
 					},
 				},
 			}),
@@ -148,7 +147,7 @@ func TestCheckForUpdates(t *testing.T) {
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						require.Fail(t, "Shouldn't be called")
-						return nil, nil, errors.New("whoops")
+						return nil, nil, fmt.Errorf("whoops")
 					},
 				},
 				// This check file was created by the TmpFile process, modtime is current, so should skip check
@@ -220,7 +219,7 @@ func TestCheckForUpdates(t *testing.T) {
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
 						require.Fail(t, "Shouldn't be called")
-						return nil, nil, errors.New("whoops")
+						return nil, nil, fmt.Errorf("whoops")
 					},
 				},
 				DisableCheck: true,
@@ -235,7 +234,7 @@ func TestCheckForUpdates(t *testing.T) {
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestMajorAndMinorVersionFunc: func(name string, current *version.Version) (*version.Version, *version.Version, error) {
-						return nil, nil, errors.New("whoops")
+						return nil, nil, fmt.Errorf("whoops")
 					},
 				},
 			}),
@@ -457,7 +456,7 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 	}
 }
 
-func TestVerifyChecksum(t *testing.T) {
+func TestDownloadChecksum(t *testing.T) {
 	checksums := test.LoadFixture(t, "../input/update/checksums.golden")
 
 	mockRepository := &updateMock.Repository{
@@ -465,60 +464,36 @@ func TestVerifyChecksum(t *testing.T) {
 			if version == "2.5.1" {
 				return checksums, nil
 			} else {
-				return "", errors.New("No checksums for given version")
+				return "", fmt.Errorf("no checksums for given version")
 			}
-		},
-	}
-
-	mockClient := &updateMock.Client{
-		VerifyChecksumFunc: func(newBin, cliName, version string) error {
-			if strings.Contains(checksums, newBin) {
-				return nil
-			}
-			return errors.New("checksum verification failed")
 		},
 	}
 
 	tests := []struct {
 		name            string
-		checksum        string
 		version         string
 		wantDownloadErr bool
-		wantVerifyErr   bool
 	}{
 		{
 			name:            "valid checksum for valid version verifies successfully",
-			checksum:        "cc066356f5a36c532b88651e31450dffa008f2626119c94e2ef808ddbe4da48a",
 			version:         "2.5.1",
 			wantDownloadErr: false,
-			wantVerifyErr:   false,
 		},
 		{
 			name:            "invalid checksum for valid version fails",
-			checksum:        "cc066356f5a008f2626119c94e2ef808ddbe4da48a",
 			version:         "2.5.1",
 			wantDownloadErr: false,
-			wantVerifyErr:   true,
 		},
 		{
 			name:            "checksum for invalid version fails",
-			checksum:        "cc066356f5a008f2626119c94e2ef808ddbe4da48a",
 			version:         "0.1234.0",
 			wantDownloadErr: true,
-			wantVerifyErr:   true,
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := mockRepository.DownloadChecksums("confluent", test.version)
 			if test.wantDownloadErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-
-			err = mockClient.VerifyChecksum(test.checksum, "confluent", test.version)
-			if test.wantVerifyErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
@@ -561,7 +536,7 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{
 					GetLatestReleaseNotesVersionsFunc: func(_, _ string) (version.Collection, error) {
-						return nil, errors.New("whoops")
+						return nil, fmt.Errorf("whoops")
 					},
 					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
 						return "", nil
@@ -579,7 +554,7 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 						return version.Collection{v1}, nil
 					},
 					DownloadReleaseNotesFunc: func(_, _ string) (string, error) {
-						return "", errors.New("whoops")
+						return "", fmt.Errorf("whoops")
 					},
 				},
 			}),
@@ -609,15 +584,15 @@ func TestUpdateBinary(t *testing.T) {
 	installDir, err := os.MkdirTemp("", "cli-test4-")
 	require.NoError(t, err)
 	defer os.Remove(installDir)
-	installedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", installDir, binName))
-	_ = os.WriteFile(installedBin, []byte("old version"), os.ModePerm)
+
+	err = os.WriteFile(filepath.Join(installDir, binName), []byte("old version"), os.ModePerm)
+	require.NoError(t, err)
 
 	clock := clockwork.NewFakeClockAt(time.Now())
 
 	type args struct {
 		name    string
 		version string
-		path    string
 	}
 	tests := []struct {
 		name    string
@@ -630,10 +605,9 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
 							req.Equal(binName, name)
 							req.Equal("v123.456.789", version)
-							req.Contains(downloadDir, binName)
 							clock.Advance(23 * time.Second)
 							return []byte("new version"), nil
 						},
@@ -645,7 +619,6 @@ func TestUpdateBinary(t *testing.T) {
 			args: args{
 				name:    binName,
 				version: "v123.456.789",
-				path:    installedBin,
 			},
 		},
 		{
@@ -653,8 +626,8 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
-							return nil, errors.New("out of disk!")
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
+							return nil, fmt.Errorf("out of disk")
 						},
 					},
 				},
@@ -664,7 +637,6 @@ func TestUpdateBinary(t *testing.T) {
 			args: args{
 				name:    binName,
 				version: "v1",
-				path:    installedBin,
 			},
 			wantErr: true,
 		},
@@ -673,10 +645,9 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
+						DownloadVersionFunc: func(name, version string) ([]byte, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
-							req.Contains(downloadDir, binName)
 							clock.Advance(23 * time.Second)
 							return []byte("new version"), nil
 						},
@@ -687,7 +658,7 @@ func TestUpdateBinary(t *testing.T) {
 				fs: &mock.PassThroughFileSystem{
 					Mock: &mock.FileSystem{
 						MoveFunc: func(src, dst string) error {
-							return errors.New("move func intentionally failed")
+							return fmt.Errorf("move func intentionally failed")
 						},
 					},
 					FS: &pio.RealFileSystem{},
@@ -696,7 +667,6 @@ func TestUpdateBinary(t *testing.T) {
 			args: args{
 				name:    binName,
 				version: "v1",
-				path:    installedBin,
 			},
 			wantErr: false,
 		},
@@ -707,7 +677,7 @@ func TestUpdateBinary(t *testing.T) {
 		}
 		t.Run(test.name, func(t *testing.T) {
 			test.client.Out = os.Stdout
-			if err := test.client.UpdateBinary(test.args.name, test.args.version, test.args.path, true); (err != nil) != test.wantErr {
+			if err := test.client.UpdateBinary(test.args.name, test.args.version, true); (err != nil) != test.wantErr {
 				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, test.wantErr)
 			}
 		})

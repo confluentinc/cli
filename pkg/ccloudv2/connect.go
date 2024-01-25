@@ -2,16 +2,18 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newConnectClient(url, userAgent string, unsafeTrace bool) *connectv1.APIClient {
+func newConnectClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *connectv1.APIClient {
 	cfg := connectv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = connectv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -19,7 +21,7 @@ func newConnectClient(url, userAgent string, unsafeTrace bool) *connectv1.APICli
 }
 
 func (c *Client) connectApiContext() context.Context {
-	return context.WithValue(context.Background(), connectv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), connectv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateConnector(environmentId, kafkaClusterId string, connect connectv1.InlineObject) (connectv1.ConnectV1Connector, error) {
@@ -54,7 +56,7 @@ func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClus
 		}
 	}
 
-	return nil, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorId)
+	return nil, fmt.Errorf(errors.UnknownConnectorIdErrorMsg, connectorId)
 }
 
 func (c *Client) GetConnectorExpansionByName(connectorName, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {
@@ -69,7 +71,7 @@ func (c *Client) GetConnectorExpansionByName(connectorName, environmentId, kafka
 		}
 	}
 
-	return nil, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorName)
+	return nil, fmt.Errorf(errors.UnknownConnectorIdErrorMsg, connectorName)
 }
 
 func (c *Client) PauseConnector(connectorName, environmentId, kafkaClusterId string) error {

@@ -37,19 +37,19 @@ func TestParseLines_MultipleLines(t *testing.T) {
 }
 
 func TestToMap_Basic(t *testing.T) {
-	m, err := toMap([]string{"key=val"})
+	m, err := ConfigSliceToMap([]string{"key=val"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]string{"key": "val"}, m)
 }
 
 func TestToMap_Override(t *testing.T) {
-	m, err := toMap([]string{"key=val1", "key=val2"})
+	m, err := ConfigSliceToMap([]string{"key=val1", "key=val2"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]string{"key": "val2"}, m)
 }
 
 func TestToMap_Error(t *testing.T) {
-	_, err := toMap([]string{"string without equal sign"})
+	_, err := ConfigSliceToMap([]string{"string without equal sign"})
 	require.Error(t, err)
 }
 

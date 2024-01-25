@@ -1,0 +1,24 @@
+Create a custom connector plugin.
+
+Usage:
+  confluent connect custom-plugin create <name> [flags]
+
+Examples:
+Create custom connector plugin "my-plugin".
+
+  $ confluent connect custom-plugin create my-plugin --plugin-file datagen.zip --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector
+
+Flags:
+      --plugin-file string             REQUIRED: ZIP/JAR custom plugin file.
+      --connector-class string         REQUIRED: Connector class of custom plugin.
+      --connector-type string          REQUIRED: Connector type of custom plugin.
+      --description string             Description of custom plugin.
+      --documentation-link string      Document link of custom plugin.
+      --sensitive-properties strings   A comma-separated list of sensitive property names.
+      --context string                 CLI context name.
+  -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

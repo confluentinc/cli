@@ -2,6 +2,7 @@ package ksql
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -14,7 +15,6 @@ import (
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -70,13 +70,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
-	ctx := c.Config.Context()
-	state, err := ctx.AuthenticatedState()
-	if err != nil {
-		return err
-	}
-
-	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+	dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 	if err != nil {
 		return err
 	}
@@ -95,7 +89,7 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 		if err != nil {
 			return err
 		}
-		return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, clusterId, string(body))
+		return fmt.Errorf(`failed to terminate ksqlDB cluster "%s" due to "%s"`, clusterId, string(body))
 	}
 	return nil
 }

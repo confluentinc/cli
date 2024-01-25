@@ -1,4 +1,0 @@
-Error: Flink region aws is invalid
-
-Suggestions:
-    run `confluent flink region list` to see available regions

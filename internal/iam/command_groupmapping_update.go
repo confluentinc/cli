@@ -6,7 +6,6 @@ import (
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
@@ -19,26 +18,24 @@ func (c *groupMappingCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the description of group mapping "pool-123456".`,
-				Code: `confluent iam group-mapping update pool-123456 --description "updated description"`,
+				Text: `Update the description of group mapping "group-123456".`,
+				Code: `confluent iam group-mapping update group-123456 --description "updated description"`,
 			},
 		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the group mapping.")
 	cmd.Flags().String("description", "", "Description of the group mapping.")
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsOneRequired("name", "description", "filter")
 
 	return cmd
 }
 
 func (c *groupMappingCommand) update(cmd *cobra.Command, args []string) error {
-	if err := errors.CheckNoUpdate(cmd.Flags(), "description", "name", "filter"); err != nil {
-		return err
-	}
-
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
