@@ -1,4 +1,4 @@
-Describe the schema exporter status.
+Manage the schema exporter status.
 
 Usage:
   confluent schema-registry exporter status [command]

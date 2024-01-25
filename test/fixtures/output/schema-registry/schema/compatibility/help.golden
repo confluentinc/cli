@@ -1,4 +1,4 @@
-Validate schema compatibility.
+Manage schema compatibility.
 
 Usage:
   confluent schema-registry schema compatibility [command]

@@ -9,7 +9,7 @@ import (
 func (c *command) newSchemaCompatibilityCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "compatibility",
-		Short: "Validate schema compatibility.",
+		Short: "Manage schema compatibility.",
 	}
 
 	cmd.AddCommand(c.newSchemaCompatibilityValidateCommand(cfg))

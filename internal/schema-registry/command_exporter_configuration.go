@@ -9,7 +9,7 @@ import (
 func (c *command) newExporterConfigurationCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configuration",
-		Short: "Describe the schema exporter configuration.",
+		Short: "Manage the schema exporter configuration.",
 	}
 
 	cmd.AddCommand(c.newExporterConfigurationDescribeCommand(cfg))

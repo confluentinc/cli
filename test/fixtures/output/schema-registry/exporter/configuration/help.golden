@@ -1,4 +1,4 @@
-Describe the schema exporter configuration.
+Manage the schema exporter configuration.
 
 Usage:
   confluent schema-registry exporter configuration [command]

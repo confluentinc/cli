@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry schema [command]
 
 Available Commands:
-  compatibility Validate schema compatibility.
+  compatibility Manage schema compatibility.
   create        Create a schema.
   delete        Delete one or more schema versions.
   describe      Get schema by ID, or by subject and version.

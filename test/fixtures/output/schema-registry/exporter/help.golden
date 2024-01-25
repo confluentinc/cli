@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry exporter [command]
 
 Available Commands:
-  configuration Describe the schema exporter configuration.
+  configuration Manage the schema exporter configuration.
   create        Create a new schema exporter.
   delete        Delete one or more schema exporters.
   describe      Describe a schema exporter.
@@ -12,7 +12,7 @@ Available Commands:
   pause         Pause schema exporter.
   reset         Reset schema exporter.
   resume        Resume schema exporter.
-  status        Describe the schema exporter status.
+  status        Manage the schema exporter status.
   update        Update schema exporter.
 
 Global Flags:

@@ -9,7 +9,7 @@ import (
 func (c *command) newExporterStatusCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Describe the schema exporter status.",
+		Short: "Manage the schema exporter status.",
 	}
 
 	cmd.AddCommand(c.newExporterStatusDescribeCommand(cfg))
