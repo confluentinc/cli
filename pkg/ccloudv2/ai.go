@@ -27,3 +27,8 @@ func (c *Client) QueryChatCompletion(req aiv1.AiV1ChatCompletionsRequest) (aiv1.
 	res, httpResp, err := c.AiClient.ChatCompletionsAiV1Api.QueryAiV1ChatCompletion(c.aiApiContext()).AiV1ChatCompletionsRequest(req).Execute()
 	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) CreateChatCompletionFeedback(chatCompletionId string, feedback aiv1.AiV1Feedback) error {
+	_, httpResp, err := c.AiClient.FeedbacksAiV1Api.CreateAiV1ChatCompletionFeedback(c.aiApiContext(), chatCompletionId).AiV1Feedback(feedback).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}

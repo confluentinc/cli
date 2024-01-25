@@ -15,13 +15,33 @@ import (
 )
 
 type shell struct {
-	client  *ccloudv2.Client
-	session *session
+	client   *ccloudv2.Client
+	session  *session
+	feedback *feedback
 }
 
-func (s *shell) executor(question string) {
-	if s.isExit(question) {
+func (s *shell) executor(input string) {
+	input = strings.TrimSpace(input)
+
+	if input == "exit" {
 		os.Exit(0)
+	}
+
+	if s.feedback != nil && (s.feedback.reaction != "" || input == "+1" || input == "-1") {
+		if s.feedback.reaction != "" {
+			s.feedback.comment = input
+
+			if err := s.feedback.create(s.client, s.session.id); err != nil {
+				exitWithErr(err)
+			}
+
+			s.feedback = nil
+			return
+		}
+
+		s.feedback.setReaction(input)
+		output.Println(false, "Thanks for your feedback! Provide more details below or press enter to skip.")
+		return
 	}
 
 	m := &model{}
@@ -33,21 +53,22 @@ func (s *shell) executor(question string) {
 	go func() {
 		req := aiv1.AiV1ChatCompletionsRequest{
 			AiSessionId: &s.session.id,
-			Question:    &question,
+			Question:    &input,
 			History:     &s.session.history,
 		}
 
-		res, err := s.client.QueryChatCompletion(req)
+		reply, err := s.client.QueryChatCompletion(req)
 		if err != nil {
 			exitWithErr(err)
 		}
 
+		s.feedback = newFeedback(reply.GetId())
 		s.session.history = append(s.session.history, aiv1.AiV1ChatCompletionsHistory{
-			Question: aiv1.PtrString(question),
-			Answer:   aiv1.PtrString(res.GetAnswer()),
+			Question: aiv1.PtrString(input),
+			Answer:   aiv1.PtrString(reply.GetAnswer()),
 		})
 
-		out, err := glamour.Render(res.GetAnswer(), "auto")
+		out, err := glamour.Render(reply.GetAnswer(), "auto")
 		if err != nil {
 			exitWithErr(err)
 		}
@@ -68,11 +89,7 @@ func (s *shell) completer(_ prompt.Document) []prompt.Suggest {
 	return nil
 }
 
-func (s *shell) isExit(in string) bool {
-	return strings.TrimSpace(in) == "exit"
-}
-
 func exitWithErr(err error) {
 	output.Printf(false, "Error: %v\n", err)
-	os.Exit(0)
+	os.Exit(1)
 }
