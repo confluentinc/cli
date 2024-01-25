@@ -19,7 +19,7 @@ type validateOut struct {
 	IsCompatible bool `human:"Compatible" serialized:"is_compatible"`
 }
 
-func (c *command) newCompatibilityValidateCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate a schema with a subject version.",
@@ -30,7 +30,7 @@ func (c *command) newCompatibilityValidateCommand(cfg *config.Config) *cobra.Com
 
 	example := examples.Example{
 		Text: `Validate the compatibility of schema "payments" against the latest version of subject "records".`,
-		Code: "confluent schema-registry compatibility validate --schema payments.avsc --type avro --subject records --version latest",
+		Code: "confluent schema-registry schema compatibility validate --schema payments.avsc --type avro --subject records --version latest",
 	}
 	if cfg.IsOnPremLogin() {
 		example.Code += " " + onPremAuthenticationMsg
@@ -50,16 +50,6 @@ func (c *command) newCompatibilityValidateCommand(cfg *config.Config) *cobra.Com
 		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
-
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
