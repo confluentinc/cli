@@ -41,10 +41,10 @@ func (s *CLITestSuite) TestSchemaRegistryCompatibilityValidate() {
 
 func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry config describe --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --environment %s -o json", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-json.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-yaml.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-subject.golden"},
+		{args: fmt.Sprintf("schema-registry configuration describe --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/configuration/describe-global.golden"},
+		{args: fmt.Sprintf("schema-registry configuration describe --environment %s -o json", testserver.SRApiEnvId), fixture: "schema-registry/configuration/describe-global-json.golden"},
+		{args: fmt.Sprintf("schema-registry configuration describe --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/configuration/describe-global-yaml.golden"},
+		{args: fmt.Sprintf("schema-registry configuration describe --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/configuration/describe-subject.golden"},
 	}
 
 	for _, test := range tests {
@@ -55,8 +55,8 @@ func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 
 func (s *CLITestSuite) TestSchemaRegistryConfigDelete() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry config delete --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
-		{args: fmt.Sprintf("schema-registry config delete --subject payments --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
+		{args: fmt.Sprintf("schema-registry configuration delete --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/configuration/delete.golden"},
+		{args: fmt.Sprintf("schema-registry configuration delete --subject payments --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/configuration/delete.golden"},
 	}
 
 	for _, test := range tests {
