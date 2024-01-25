@@ -7,14 +7,13 @@ Aliases:
   schema-registry, sr
 
 Available Commands:
-  cluster       Manage Schema Registry clusters.
-  compatibility Validate schema compatibility.
-  config        Manage Schema Registry configuration.
-  dek           Manage Schema Registry Data Encryption Keys (DEKs).
-  exporter      Manage Schema Registry exporters.
-  kek           Manage Schema Registry Key Encryption Keys (KEKs).
-  schema        Manage Schema Registry schemas.
-  subject       Manage Schema Registry subjects.
+  cluster     Manage Schema Registry clusters.
+  config      Manage Schema Registry configuration.
+  dek         Manage Schema Registry Data Encryption Keys (DEKs).
+  exporter    Manage Schema Registry exporters.
+  kek         Manage Schema Registry Key Encryption Keys (KEKs).
+  schema      Manage Schema Registry schemas.
+  subject     Manage Schema Registry subjects.
 
 Global Flags:
   -h, --help            Show help for this command.

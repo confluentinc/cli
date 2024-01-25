@@ -1,14 +1,14 @@
-Get the status of the schema exporter.
+Manage the schema exporter status.
 
 Usage:
-  confluent schema-registry exporter get-status <name> [flags]
+  confluent schema-registry exporter status [command]
 
-Flags:
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+Available Commands:
+  describe    Describe the schema exporter status.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent schema-registry exporter status [command] --help" for more information about a command.
