@@ -1,7 +1,7 @@
-Get the schema exporter configuration.
+Describe the schema exporter configuration.
 
 Usage:
-  confluent schema-registry exporter get-config <name> [flags]
+  confluent schema-registry exporter configuration describe <name> [flags]
 
 Flags:
       --context string       CLI context name.
