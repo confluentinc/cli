@@ -64,8 +64,7 @@ func (c *Client) ListNetworks(environment string, name, cloud, region, cidr, pha
 }
 
 func (c *Client) executeListNetworks(environment, pageToken string, name, cloud, region, cidr, phase, connectionType []string) (networkingv1.NetworkingV1NetworkList, error) {
-	// TODO: connection_type should be spec.connection_types pending minispec review
-	req := c.NetworkingClient.NetworksNetworkingV1Api.ListNetworkingV1Networks(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecCloud(cloud).SpecRegion(region).SpecCidr(cidr).ConnectionType(connectionType).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
+	req := c.NetworkingClient.NetworksNetworkingV1Api.ListNetworkingV1Networks(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecCloud(cloud).SpecRegion(region).SpecCidr(cidr).SpecConnectionTypes(connectionType).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

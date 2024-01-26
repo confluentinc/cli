@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --name strings                   A comma-separated list of network link endpoint names.
-      --network strings                A comma-separated list of Network IDs.
+      --network strings                A comma-separated list of network IDs.
       --phase strings                  A comma-separated list of phases.
       --network-link-service strings   A comma-separated list of network link service IDs.
       --context string                 CLI context name.

@@ -82,15 +82,8 @@ const (
 )
 
 var (
-	ConnectionTypes               = []string{"privatelink", "peering", "transitgateway"}
-	DnsResolutions                = []string{"private", "chased-private"}
-	NetworkLinkEndpointPhase      = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "EXPIRED", "DISCONNECTED", "DISCONNECTING", "INACTIVE"}
-	NetworkLinkServicePhase       = []string{"READY"}
-	NetworkPhase                  = []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
-	PeeringPhase                  = []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "DISCONNECTED"}
-	PrivateLinkAccessPhase        = []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
-	PrivateLinkAttachmentPhase    = []string{"PROVISIONING", "WAITING_FOR_CONNECTIONS", "READY", "FAILED", "EXPIRED", "DEPROVISIONING"}
-	TransitGatewayAttachmentPhase = []string{"PROVISIONING", "READY", "PENDING_ACCEPT", "FAILED", "DEPROVISIONING", "DISCONNECTED", "ERROR"}
+	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
+	DnsResolutions  = []string{"private", "chased-private"}
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
@@ -343,7 +336,7 @@ func addNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
 }
 
 func addListNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
-	cmd.Flags().StringSlice("network", nil, "A comma-separated list of Network IDs.")
+	cmd.Flags().StringSlice("network", nil, "A comma-separated list of network IDs.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
@@ -460,19 +453,19 @@ func addPhaseFlag(cmd *cobra.Command, resourceType string) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string {
 		switch resourceType {
 		case resource.NetworkLinkService:
-			return NetworkLinkServicePhase
+			return []string{"READY"}
 		case resource.NetworkLinkEndpoint:
-			return NetworkLinkEndpointPhase
+			return []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "EXPIRED", "DISCONNECTED", "DISCONNECTING", "INACTIVE"}
 		case resource.PrivateLinkAccess:
-			return PrivateLinkAccessPhase
+			return []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
 		case resource.Peering:
-			return PeeringPhase
+			return []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "DISCONNECTED"}
 		case resource.PrivateLinkAttachment:
-			return PrivateLinkAttachmentPhase
+			return []string{"PROVISIONING", "WAITING_FOR_CONNECTIONS", "READY", "FAILED", "EXPIRED", "DEPROVISIONING"}
 		case resource.TransitGatewayAttachment:
-			return TransitGatewayAttachmentPhase
+			return []string{"PROVISIONING", "READY", "PENDING_ACCEPT", "FAILED", "DEPROVISIONING", "DISCONNECTED", "ERROR"}
 		case resource.Network:
-			return NetworkPhase
+			return []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
 		default:
 			return nil
 		}
