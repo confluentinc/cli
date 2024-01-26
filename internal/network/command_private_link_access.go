@@ -38,13 +38,13 @@ func (c *command) newPrivateLinkAccessCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) getPrivateLinkAccesses() ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
+func (c *command) getPrivateLinkAccesses(name, network, phase []string) ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.V2Client.ListPrivateLinkAccesses(environmentId)
+	return c.V2Client.ListPrivateLinkAccesses(environmentId, name, network, phase)
 }
 
 func (c *command) validPrivateLinkAccessArgs(cmd *cobra.Command, args []string) []string {
@@ -63,7 +63,7 @@ func (c *command) validPrivateLinkAccessArgsMultiple(cmd *cobra.Command, args []
 }
 
 func (c *command) autocompletePrivateLinkAccesses() []string {
-	accesses, err := c.getPrivateLinkAccesses()
+	accesses, err := c.getPrivateLinkAccesses(nil, nil, nil)
 	if err != nil {
 		return nil
 	}

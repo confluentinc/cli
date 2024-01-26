@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/network"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -292,7 +293,7 @@ func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string 
 }
 
 func autocompleteNetworks(client *ccloudv2.Client, environmentId string) []string {
-	networks, err := getNetworks(client, environmentId)
+	networks, err := getNetworks(client, environmentId, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		return nil
 	}
@@ -304,8 +305,8 @@ func autocompleteNetworks(client *ccloudv2.Client, environmentId string) []strin
 	return suggestions
 }
 
-func getNetworks(client *ccloudv2.Client, environmentId string) ([]networkingv1.NetworkingV1Network, error) {
-	return client.ListNetworks(environmentId)
+func getNetworks(client *ccloudv2.Client, environmentId string, name, cloud, region, cidr, phase, connectionType []string) ([]networkingv1.NetworkingV1Network, error) {
+	return client.ListNetworks(environmentId, name, cloud, region, cidr, phase, connectionType)
 }
 
 func addConnectionTypesFlag(cmd *cobra.Command) {
@@ -320,6 +321,22 @@ func addDnsResolutionFlag(cmd *cobra.Command) {
 
 func addNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
 	cmd.Flags().String("network", "", "Network ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteNetworks(c.V2Client, environmentId)
+	})
+}
+
+func addListNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("network", nil, "A comma-separated list of network IDs.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
@@ -384,6 +401,11 @@ func (c *command) addNetworkLinkServiceFlag(cmd *cobra.Command) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
 }
 
+func (c *command) addListNetworkLinkServiceFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("network-link-service", nil, "A comma-separated list of network link service IDs.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
+}
+
 func (c *command) addRegionFlagNetwork(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
 	cmd.Flags().String("region", "", "Cloud region ID for this network.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
@@ -403,4 +425,56 @@ func (c *command) addRegionFlagNetwork(cmd *cobra.Command, command *pcmd.Authent
 		}
 		return suggestions
 	})
+}
+
+func (c *command) addListRegionFlagNetwork(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("region", nil, "A comma-separated list of cloud region IDs.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		cloud, _ := cmd.Flags().GetString("cloud")
+		regions, err := network.ListRegions(command.Client, cloud)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.RegionId
+		}
+		return suggestions
+	})
+}
+
+func addPhaseFlag(cmd *cobra.Command, resourceType string) {
+	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of phases.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string {
+		switch resourceType {
+		case resource.NetworkLinkService:
+			return []string{"ready"}
+		case resource.NetworkLinkEndpoint:
+			return []string{"provisioning", "pending_accept", "ready", "failed", "deprovisioning", "expired", "disconnected", "disconnecting", "inactive"}
+		case resource.PrivateLinkAccess:
+			return []string{"provisioning", "ready", "failed", "deprovisioning"}
+		case resource.Peering:
+			return []string{"provisioning", "pending_accept", "ready", "failed", "deprovisioning", "disconnected"}
+		case resource.PrivateLinkAttachment:
+			return []string{"provisioning", "waiting_for_connections", "ready", "failed", "expired", "deprovisioning"}
+		case resource.TransitGatewayAttachment:
+			return []string{"provisioning", "ready", "pending_accept", "failed", "deprovisioning", "disconnected", "error"}
+		case resource.Network:
+			return []string{"provisioning", "ready", "failed", "deprovisioning"}
+		default:
+			return nil
+		}
+	})
+}
+
+func toUpper(strSlice []string) []string {
+	for i, str := range strSlice {
+		strSlice[i] = strings.ToUpper(str)
+	}
+	return strSlice
 }

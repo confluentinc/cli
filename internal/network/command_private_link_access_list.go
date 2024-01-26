@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type listPrivateLinkAccessOut struct {
@@ -27,6 +28,9 @@ func (c *command) newPrivateLinkAccessListCommand() *cobra.Command {
 		RunE:  c.privateLinkAccessList,
 	}
 
+	cmd.Flags().StringSlice("name", nil, "A comma-separated list of private link access names.")
+	addListNetworkFlag(cmd, c.AuthenticatedCLICommand)
+	addPhaseFlag(cmd, resource.PrivateLinkAccess)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -35,7 +39,24 @@ func (c *command) newPrivateLinkAccessListCommand() *cobra.Command {
 }
 
 func (c *command) privateLinkAccessList(cmd *cobra.Command, _ []string) error {
-	accesses, err := c.getPrivateLinkAccesses()
+	name, err := cmd.Flags().GetStringSlice("name")
+	if err != nil {
+		return err
+	}
+
+	network, err := cmd.Flags().GetStringSlice("network")
+	if err != nil {
+		return err
+	}
+
+	phase, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
+	phase = toUpper(phase)
+
+	accesses, err := c.getPrivateLinkAccesses(name, network, phase)
 	if err != nil {
 		return err
 	}
