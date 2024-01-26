@@ -69,9 +69,15 @@ release-docs:
 		git checkout -b $(STAGING_BRANCH) && \
 		$(call dry-run,git push -u origin $(STAGING_BRANCH)); \
 	fi && \
-	git checkout -B $(CURRENT_SHORT_MINOR_VERSION)-post origin/$(STAGING_BRANCH) && \
-	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
+	if [[ $(CLEAN_VERSION) != *.0 ]]; then \
+		git checkout -b release-docs-$(CURRENT_SHORT_MINOR_VERSION_DASH) origin/$(CURRENT_SHORT_MINOR_VERSION)-post && \
+		git checkout origin/$(STAGING_BRANCH) -- command-reference release-notes.rst && \
+		git commit -am "Pull updated command-reference and release-notes.rst from $(STAGING_BRANCH)" && \
+		$(call dry-run,gh pr create --base $(CURRENT_SHORT_MINOR_VERSION)-post --title "Release docs for v$(CLEAN_VERSION)" --body ""); \
+	fi && \
 	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
+		git checkout -B $(CURRENT_SHORT_MINOR_VERSION)-post origin/$(STAGING_BRANCH) && \
+		$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
 		git checkout master && \
 		git checkout -b release-docs-$(CLEAN_VERSION) && \
 		$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
