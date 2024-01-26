@@ -783,12 +783,12 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationDescribe() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationList() {
 	tests := []CLITest{
-		{args: "network nl service association list --network-link-service nls-abcde1", fixture: "network/network-link/service/association/list.golden"},
-		{args: "network network-link service association list --network-link-service nls-abcde1", fixture: "network/network-link/service/association/list.golden"},
-		{args: "network network-link service association list --network-link-service nls-abcde1 --output json", fixture: "network/network-link/service/association/list-json.golden"},
+		{args: "network nl service association list --network-link-service nls-123456", fixture: "network/network-link/service/association/list.golden"},
+		{args: "network network-link service association list --network-link-service nls-123456", fixture: "network/network-link/service/association/list.golden"},
+		{args: "network network-link service association list --network-link-service nls-123456 --output json", fixture: "network/network-link/service/association/list-json.golden"},
 		{args: "network network-link service association list --network-link-service nls-invalid", fixture: "network/network-link/service/association/list-nls-invalid.golden", exitCode: 1},
 		{args: "network network-link service association list --network-link-service nls-no-endpoints", fixture: "network/network-link/service/association/list-no-endpoints.golden", exitCode: 1},
-		{args: "network nl service association list ", fixture: "network/network-link/service/association/list-missing-id.golden", exitCode: 1},
+		{args: "network nl service association list ", fixture: "network/network-link/service/association/list-missing-flag.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

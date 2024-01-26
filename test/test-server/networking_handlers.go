@@ -1827,7 +1827,7 @@ func handleNetworkingNetworkLinkServiceAssociationList(t *testing.T) http.Handle
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "NetworkLinkEndpoints are not found")
 			require.NoError(t, err)
-		case "nls-abcde1":
+		default:
 			pageToken := r.URL.Query().Get("page_token")
 			var associationList networkingv1.NetworkingV1NetworkLinkServiceAssociationList
 			switch pageToken {
