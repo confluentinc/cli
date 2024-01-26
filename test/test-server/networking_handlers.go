@@ -342,7 +342,7 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 		region := q["spec.region"]
 		cidr := q["spec.cidr"]
 		phase := q["status.phase"]
-		connection := q["connection_type"]
+		connection := q["spec.connection_types"]
 
 		networkList := getNetworkList(name, cloud, region, cidr, phase, connection)
 		err := json.NewEncoder(w).Encode(networkList)
