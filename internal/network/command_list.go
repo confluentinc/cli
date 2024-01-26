@@ -70,6 +70,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cloud, phase, connectionType = toUpper(cloud), toUpper(phase), toUpper(connectionType)
+
 	networks, err := getNetworks(c.V2Client, environmentId, name, cloud, region, cidr, phase, connectionType)
 	if err != nil {
 		return err

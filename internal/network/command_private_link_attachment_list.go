@@ -51,6 +51,8 @@ func (c *command) privateLinkAttachmentList(cmd *cobra.Command, _ []string) erro
 		return err
 	}
 
+	cloud, phase = toUpper(cloud), toUpper(phase)
+
 	attachments, err := c.getPrivateLinkAttachments(name, cloud, region, phase)
 	if err != nil {
 		return err

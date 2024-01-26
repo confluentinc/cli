@@ -51,6 +51,8 @@ func (c *command) networkLinkEndpointList(cmd *cobra.Command, _ []string) error 
 		return err
 	}
 
+	phase = toUpper(phase)
+
 	endpoints, err := c.getNetworkLinkEndpoints(name, network, phase, service)
 	if err != nil {
 		return err

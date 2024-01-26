@@ -45,6 +45,8 @@ func (c *command) transitGatewayAttachmentList(cmd *cobra.Command, _ []string) e
 		return err
 	}
 
+	phase = toUpper(phase)
+
 	attachments, err := c.getTransitGatewayAttachments(name, network, phase)
 	if err != nil {
 		return err

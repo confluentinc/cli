@@ -54,6 +54,8 @@ func (c *command) privateLinkAccessList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	phase = toUpper(phase)
+
 	accesses, err := c.getPrivateLinkAccesses(name, network, phase)
 	if err != nil {
 		return err

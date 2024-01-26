@@ -66,6 +66,8 @@ func (c *command) networkLinkServiceList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	phase = toUpper(phase)
+
 	services, err := c.getNetworkLinkServices(name, network, phase)
 	if err != nil {
 		return err

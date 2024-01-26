@@ -56,6 +56,8 @@ func (c *command) peeringList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	phase = toUpper(phase)
+
 	peerings, err := c.getPeerings(name, network, phase)
 	if err != nil {
 		return err

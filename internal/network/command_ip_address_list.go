@@ -64,6 +64,8 @@ func (c *command) ipAddressList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cloud, services, addressType = toUpper(cloud), toUpper(services), toUpper(addressType)
+
 	ipAddresses, err := c.V2Client.ListIpAddresses(cloud, region, services, addressType)
 	if err != nil {
 		return err

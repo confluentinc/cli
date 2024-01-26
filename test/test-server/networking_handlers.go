@@ -378,7 +378,7 @@ func filterNetworkList(networkList []networkingv1.NetworkingV1Network, name, clo
 	var filteredNetworkList []networkingv1.NetworkingV1Network
 	for _, networkSpec := range networkList {
 		if (slices.Contains(name, networkSpec.Spec.GetDisplayName()) || name == nil) &&
-			(slices.Contains(cloud, strings.ToLower(networkSpec.Spec.GetCloud())) || cloud == nil) &&
+			(slices.Contains(cloud, networkSpec.Spec.GetCloud()) || cloud == nil) &&
 			(slices.Contains(region, networkSpec.Spec.GetRegion()) || region == nil) &&
 			(slices.Contains(cidr, networkSpec.Spec.GetCidr()) || cidr == nil) &&
 			(slices.Contains(phase, networkSpec.Status.GetPhase()) || phase == nil) &&
@@ -1800,9 +1800,9 @@ func getIpAddressList(filterCloud, filterRegion, filterServices, filterAddressTy
 func filterIpAddressList(ipList []networkingipv1.NetworkingV1IpAddress, cloud, region, services, addressType []string) []networkingipv1.NetworkingV1IpAddress {
 	var filteredIpAddressList []networkingipv1.NetworkingV1IpAddress
 	for _, ipSpec := range ipList {
-		if (slices.Contains(cloud, strings.ToLower(ipSpec.GetCloud())) || cloud == nil) &&
+		if (slices.Contains(cloud, ipSpec.GetCloud()) || cloud == nil) &&
 			(slices.Contains(region, ipSpec.GetRegion()) || region == nil) &&
-			(slices.Contains(addressType, strings.ToLower(ipSpec.GetAddressType())) || addressType == nil) &&
+			(slices.Contains(addressType, ipSpec.GetAddressType()) || addressType == nil) &&
 			(containsFilter(services, ipSpec.GetServices().Items) || services == nil) {
 			filteredIpAddressList = append(filteredIpAddressList, ipSpec)
 		}

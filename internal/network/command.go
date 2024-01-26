@@ -453,21 +453,28 @@ func addPhaseFlag(cmd *cobra.Command, resourceType string) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string {
 		switch resourceType {
 		case resource.NetworkLinkService:
-			return []string{"READY"}
+			return []string{"ready"}
 		case resource.NetworkLinkEndpoint:
-			return []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "EXPIRED", "DISCONNECTED", "DISCONNECTING", "INACTIVE"}
+			return []string{"provisioning", "pending_accept", "ready", "failed", "deprovisioning", "expired", "disconnected", "disconnecting", "inactive"}
 		case resource.PrivateLinkAccess:
-			return []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
+			return []string{"provisioning", "ready", "failed", "deprovisioning"}
 		case resource.Peering:
-			return []string{"PROVISIONING", "PENDING_ACCEPT", "READY", "FAILED", "DEPROVISIONING", "DISCONNECTED"}
+			return []string{"provisioning", "pending_accept", "ready", "failed", "deprovisioning", "disconnected"}
 		case resource.PrivateLinkAttachment:
-			return []string{"PROVISIONING", "WAITING_FOR_CONNECTIONS", "READY", "FAILED", "EXPIRED", "DEPROVISIONING"}
+			return []string{"provisioning", "waiting_for_connections", "ready", "failed", "expired", "deprovisioning"}
 		case resource.TransitGatewayAttachment:
-			return []string{"PROVISIONING", "READY", "PENDING_ACCEPT", "FAILED", "DEPROVISIONING", "DISCONNECTED", "ERROR"}
+			return []string{"provisioning", "ready", "pending_accept", "failed", "deprovisioning", "disconnected", "error"}
 		case resource.Network:
-			return []string{"PROVISIONING", "READY", "FAILED", "DEPROVISIONING"}
+			return []string{"provisioning", "ready", "failed", "deprovisioning"}
 		default:
 			return nil
 		}
 	})
+}
+
+func toUpper(strSlice []string) []string {
+	for i, str := range strSlice {
+		strSlice[i] = strings.ToUpper(str)
+	}
+	return strSlice
 }
