@@ -44,7 +44,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Produce to topic "my_topic" in Confluent Cloud with a Confluent Cloud API key.`,
-				Code: "confluent kafka topic consume my_topic --api-key 0000000000000000 --api-secret <API_SECRET> --bootstrap SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --value-format avro --schema test.avsc --schema-registry-endpoint https://psrc-12345.us-west-2.aws.confluent.cloud --schema-registry-api-key 0000000000000000 --schema-registry-api-secret <SCHEMA_REGISTRY_API_SECRET>",
+				Code: "confluent kafka topic produce my_topic --api-key 0000000000000000 --api-secret <API_SECRET> --bootstrap SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --value-format avro --schema test.avsc --schema-registry-endpoint https://psrc-12345.us-west-2.aws.confluent.cloud --schema-registry-api-key 0000000000000000 --schema-registry-api-secret <SCHEMA_REGISTRY_API_SECRET>",
 			},
 		),
 	}
@@ -488,9 +488,6 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	if err != nil {
 		return nil, nil, err
 	}
-	defer func() {
-		_ = os.RemoveAll(schemaDir)
-	}()
 
 	subject := topicNameStrategy(topic, mode)
 

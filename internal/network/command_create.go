@@ -131,7 +131,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Spec: &networkingv1.NetworkingV1NetworkSpec{
 			Cloud:           networkingv1.PtrString(cloud),
 			Region:          networkingv1.PtrString(region),
-			ConnectionTypes: &networkingv1.Set{Items: connectionTypes},
+			ConnectionTypes: &networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes},
 			Environment:     &networkingv1.ObjectReference{Id: environmentId},
 		},
 	}
@@ -150,7 +150,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	// TODO: update once SDK is patched with zonesInfo struct
 	if len(zoneInfoItems) != 0 {
-		createNetwork.Spec.SetZonesInfo(networkingv1.Set{Items: zoneInfo})
+		createNetwork.Spec.SetZonesInfo(networkingv1.NetworkingV1ZonesInfo{Items: zoneInfoItems})
 	}
 
 	if dnsResolution != "" {

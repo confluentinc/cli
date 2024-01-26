@@ -3,6 +3,13 @@
 /legal/
 /prebuilt/
 /test/bin/
+/vendor/
+
+# RPM/DEB
+/rpm/
+/deb/
+*.gpg
+*passphrase
 
 #
 # BEGIN managed content - any manual changes below this block will be discarded

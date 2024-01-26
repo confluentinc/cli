@@ -16,5 +16,9 @@ func (IntegerDeserializationProvider) Deserialize(data []byte) (string, error) {
 		return "", nil
 	}
 
+	if len(data) != 4 {
+		return "", fmt.Errorf("the integer key is invalid")
+	}
+
 	return fmt.Sprintf("%d", binary.LittleEndian.Uint32(data)), nil
 }

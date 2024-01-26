@@ -1,0 +1,8 @@
++----------------+-------------------------------------+
+| Name           | kek-name                            |
+| KMS Type       | AWS_KMS                             |
+| KMS Key ID     | arn:aws:kms:us-west-2:9979:key/abcd |
+| KMS Properties | KeyState="Enabled"                  |
+| Doc            | description                         |
+| Timestamp      | 1702346517344                       |
++----------------+-------------------------------------+
