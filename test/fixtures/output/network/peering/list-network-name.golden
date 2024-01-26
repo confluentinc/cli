@@ -1,0 +1,3 @@
+      ID      |    Name     | Network  | Cloud | Custom Region |    Virtual Nework     | Cloud Account | Phase  
+--------------+-------------+----------+-------+---------------+-----------------------+---------------+--------
+  peer-111111 | aws-peering | n-abcde1 | AWS   | us-east-1     | vpc-00000000000000000 | 000000000000  | READY  

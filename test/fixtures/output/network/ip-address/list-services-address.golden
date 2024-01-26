@@ -1,0 +1,4 @@
+  Cloud |   Region    |   IP Prefix   | Address Type |    Services     
+--------+-------------+---------------+--------------+-----------------
+  AZURE | centralus   | 10.203.0.0/28 | EGRESS       | KAFKA, CONNECT  
+  GCP   | us-central1 | 10.202.0.0/28 | EGRESS       | KAFKA           
