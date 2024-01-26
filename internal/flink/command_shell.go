@@ -36,7 +36,6 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().Bool("language-service", false, "Enables the Flink language service integration (experimental).")
 
 	return cmd
 }
@@ -146,18 +145,10 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	languageService, err := cmd.Flags().GetBool("language-service")
+	lspBaseUrl, err := c.getFlinkLanguageServiceUrl(flinkGatewayClient)
 	if err != nil {
+		log.CliLogger.Warnf("Flink shell failed to connect to language service: error getting language service URL: %v\n", err)
 		return err
-	}
-
-	var lspBaseUrl string
-	if languageService {
-		lspBaseUrl, err = c.getFlinkLanguageServiceUrl(flinkGatewayClient)
-		if err != nil {
-			log.CliLogger.Warnf("Flink shell failed to connect to language service: error getting language service URL: %v\n", err)
-			return err
-		}
 	}
 
 	jwtValidator := pcmd.NewJWTValidator()
@@ -175,7 +166,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		ComputePoolId:    computePool,
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
-		LSPEnabled:       languageService,
 		LSPBaseUrl:       lspBaseUrl,
 	}
 
@@ -200,6 +190,10 @@ func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewa
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func() {
+	if cfg.HasGovHostname() {
+		return func() {}
+	}
+
 	return func() {
 		u := ppanic.CollectPanic(cmd, nil, cfg)
 		u.Report(ccloudv2.NewClient(cfg, unsafeTrace))

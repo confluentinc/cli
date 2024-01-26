@@ -29,7 +29,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-123456" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --kafka-cluster lkc-123456",
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --cloud-cluster lkc-123456 --kafka-cluster lkc-123456",
 			},
 			examples.Example{
 				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
@@ -64,7 +64,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		exs = append(exs,
 			examples.Example{
 				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster $KAFKA_CLUSTER_ID",
+				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster 0000000000000000000000",
 			},
 		)
 	}
@@ -72,9 +72,9 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	cmd.Example = examples.BuildExampleString(exs...)
 
 	cmd.Flags().String("role", "", "Role name of the new role binding.")
-	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
+	cmd.Flags().String("principal", "", `Principal type and identifier using "Prefix:ID" format.`)
 	addClusterFlags(cmd, c.cfg, c.CLICommand)
-	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	cmd.Flags().String("resource", "", `Resource type and identifier using "Prefix:ID" format.`)
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
 

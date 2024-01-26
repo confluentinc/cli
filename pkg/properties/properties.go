@@ -26,7 +26,23 @@ func fileToMap(filename string) (map[string]string, error) {
 		return nil, err
 	}
 
-	return toMap(parseLines(string(buf)))
+	return ConfigSliceToMap(parseLines(string(buf)))
+}
+
+// ConfigSliceToMap converts a list of key=value strings into a map.
+func ConfigSliceToMap(configs []string) (map[string]string, error) {
+	m := make(map[string]string)
+
+	for _, config := range configs {
+		x := strings.SplitN(config, "=", 2)
+		if len(x) < 2 {
+			return nil, fmt.Errorf(`failed to parse "key=value" pattern from configuration: %s`, config)
+		}
+
+		m[x[0]] = x[1]
+	}
+
+	return m, nil
 }
 
 func parseLines(content string) []string {
@@ -43,22 +59,6 @@ func parseLines(content string) []string {
 	}
 
 	return lines
-}
-
-// toMap converts a list of key=value strings into a map.
-func toMap(configs []string) (map[string]string, error) {
-	m := make(map[string]string)
-
-	for _, config := range configs {
-		x := strings.SplitN(config, "=", 2)
-		if len(x) < 2 {
-			return nil, fmt.Errorf(`failed to parse "key=value" pattern from configuration: %s`, config)
-		}
-
-		m[x[0]] = x[1]
-	}
-
-	return m, nil
 }
 
 // ConfigFlagToMap reads key=values pairs from the --config flag and supports configuration values containing commas.

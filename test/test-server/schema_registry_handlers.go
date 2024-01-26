@@ -540,3 +540,154 @@ func handleSRUniqueAttributes(t *testing.T) http.HandlerFunc {
 		}
 	}
 }
+
+// Handler for: "/dek-registry/v1/keks"
+func handleSRKeks(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			var req srsdk.CreateKekRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := srsdk.Kek{
+				Name:     req.Name,
+				KmsType:  req.KmsType,
+				KmsKeyId: req.KmsKeyId,
+				KmsProps: req.KmsProps,
+				Doc:      req.Doc,
+				Ts:       srsdk.PtrInt64(1702346517344),
+				Deleted:  srsdk.PtrBool(false),
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodGet:
+			res := []string{"kek-name"}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/dek-registry/v1/keks/{name}"
+func handleSRKek(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		default:
+			res := srsdk.Kek{
+				Name:     srsdk.PtrString("kek-name"),
+				KmsType:  srsdk.PtrString("AWS_KMS"),
+				KmsKeyId: srsdk.PtrString("arn:aws:kms:us-west-2:9979:key/abcd"),
+				KmsProps: &map[string]string{"KeyState": "Enabled"},
+				Doc:      srsdk.PtrString("description"),
+				Ts:       srsdk.PtrInt64(1702346517344),
+				Deleted:  srsdk.PtrBool(false),
+			}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodPut:
+			var req srsdk.UpdateKekRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := srsdk.Kek{
+				Name:     srsdk.PtrString("kek-name"),
+				KmsType:  srsdk.PtrString("AWS_KMS"),
+				KmsKeyId: srsdk.PtrString("arn:aws:kms:us-west-2:9979:key/abcd"),
+				KmsProps: req.KmsProps,
+				Doc:      req.Doc,
+				Ts:       srsdk.PtrInt64(1702346517344),
+				Deleted:  srsdk.PtrBool(false),
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/dek-registry/v1/keks/{name}/undelete"
+func handleSRKekUndelete(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// Handler for: "/dek-registry/v1/keks/{name}/deks"
+func handleSRDeks(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			res := []string{"payments", "transactions"}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req srsdk.CreateDekRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := srsdk.Dek{
+				KekName:              srsdk.PtrString("kek-name"),
+				Algorithm:            req.Algorithm,
+				Subject:              req.Subject,
+				Version:              req.Version,
+				KeyMaterial:          srsdk.PtrString("key-material"),
+				EncryptedKeyMaterial: req.EncryptedKeyMaterial,
+				Ts:                   srsdk.PtrInt64(1702346517344),
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/dek-registry/v1/keks/{name}/deks/{subject}"
+func handleSRDekSubject(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
+// Handler for: "/dek-registry/v1/keks/{name}/deks/{subject}/versions"
+func handleSRDekVersions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodGet:
+			res := []int32{1, 2}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/dek-registry/v1/keks/{name}/deks/{subject}/versions/{version}"
+func handleSRDekVersion(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodGet:
+			res := srsdk.Dek{
+				KekName:              srsdk.PtrString("kek-name"),
+				Algorithm:            srsdk.PtrString("AES256_GCM"),
+				Subject:              srsdk.PtrString("payments"),
+				Version:              srsdk.PtrInt32(1),
+				KeyMaterial:          srsdk.PtrString("key-material"),
+				EncryptedKeyMaterial: srsdk.PtrString("encrypted-key-material"),
+				Ts:                   srsdk.PtrInt64(1702346517344),
+			}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/dek-registry/v1/keks/{name}/deks/{subject}/versions/{version}/undelete"
+func handleSRDekUndelete(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
