@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newPrivateLinkAttachmentListCommand() *cobra.Command {
@@ -18,6 +19,10 @@ func (c *command) newPrivateLinkAttachmentListCommand() *cobra.Command {
 		RunE:  c.privateLinkAttachmentList,
 	}
 
+	cmd.Flags().StringSlice("name", nil, "A comma-separated list of private link attachment names.")
+	pcmd.AddListCloudFlag(cmd)
+	c.addListRegionFlagNetwork(cmd, c.AuthenticatedCLICommand)
+	addPhaseFlag(cmd, resource.PrivateLinkAttachment)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -26,7 +31,27 @@ func (c *command) newPrivateLinkAttachmentListCommand() *cobra.Command {
 }
 
 func (c *command) privateLinkAttachmentList(cmd *cobra.Command, _ []string) error {
-	attachments, err := c.getPrivateLinkAttachments()
+	name, err := cmd.Flags().GetStringSlice("name")
+	if err != nil {
+		return err
+	}
+
+	cloud, err := cmd.Flags().GetStringSlice("cloud")
+	if err != nil {
+		return err
+	}
+
+	region, err := cmd.Flags().GetStringSlice("region")
+	if err != nil {
+		return err
+	}
+
+	phase, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
+	attachments, err := c.getPrivateLinkAttachments(name, cloud, region, phase)
 	if err != nil {
 		return err
 	}

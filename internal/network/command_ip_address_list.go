@@ -34,13 +34,37 @@ func (c *command) newIpAddressListCommand() *cobra.Command {
 		RunE:  c.ipAddressList,
 	}
 
+	pcmd.AddListCloudFlag(cmd)
+	c.addListRegionFlagNetwork(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().StringSlice("services", nil, "A comma-separated list of services.")
+	cmd.Flags().StringSlice("address-type", nil, "A comma-separated list of address-types.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) ipAddressList(cmd *cobra.Command, _ []string) error {
-	ipAddresses, err := c.V2Client.ListIpAddresses()
+	cloud, err := cmd.Flags().GetStringSlice("cloud")
+	if err != nil {
+		return err
+	}
+
+	region, err := cmd.Flags().GetStringSlice("region")
+	if err != nil {
+		return err
+	}
+
+	services, err := cmd.Flags().GetStringSlice("services")
+	if err != nil {
+		return err
+	}
+
+	addressType, err := cmd.Flags().GetStringSlice("address-type")
+	if err != nil {
+		return err
+	}
+
+	ipAddresses, err := c.V2Client.ListIpAddresses(cloud, region, services, addressType)
 	if err != nil {
 		return err
 	}

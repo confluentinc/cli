@@ -50,13 +50,13 @@ func (c *command) newNetworkLinkServiceCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) getNetworkLinkServices() ([]networkingv1.NetworkingV1NetworkLinkService, error) {
+func (c *command) getNetworkLinkServices(name, network, phase []string) ([]networkingv1.NetworkingV1NetworkLinkService, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.V2Client.ListNetworkLinkServices(environmentId)
+	return c.V2Client.ListNetworkLinkServices(environmentId, name, network, phase)
 }
 
 func (c *command) validNetworkLinkServiceArgs(cmd *cobra.Command, args []string) []string {
@@ -75,7 +75,7 @@ func (c *command) validNetworkLinkServicesArgsMultiple(cmd *cobra.Command, args 
 }
 
 func (c *command) autocompleteNetworkLinkServices() []string {
-	services, err := c.getNetworkLinkServices()
+	services, err := c.getNetworkLinkServices(nil, nil, nil)
 	if err != nil {
 		return nil
 	}

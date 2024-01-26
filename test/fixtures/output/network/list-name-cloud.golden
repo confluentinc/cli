@@ -1,0 +1,4 @@
+     ID    |       Name        | Cloud |  Region   |     CIDR      |            Zones             | Phase | Active Connection Types | DNS Resolution  
+-----------+-------------------+-------+-----------+---------------+------------------------------+-------+-------------------------+-----------------
+  n-abcde3 | prod-aws-us-east1 | AWS   | us-east-1 | 10.200.0.0/16 | use1-az1, use1-az2, use1-az3 | READY | TRANSITGATEWAY, PEERING |                 
+  n-abcde4 | prod-aws-us-east1 | AWS   | us-west-2 | 10.200.0.0/16 | use1-az1, use1-az2, use1-az3 | READY | TRANSITGATEWAY, PEERING |                 
