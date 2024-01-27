@@ -4,9 +4,9 @@ Usage:
   confluent kafka topic configuration list <topic> [flags]
 
 Examples:
-List configurations for topic "my_topic".
+List configurations for topic "my-topic".
 
-  $ confluent kafka topic configuration list my_topic
+  $ confluent kafka topic configuration list my-topic
 
 Flags:
       --cluster string       Kafka cluster ID.

@@ -23,13 +23,13 @@ func (c *command) newConfigurationListCommandOnPrem() *cobra.Command {
 		Short: "List Kafka topic configurations.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List configurations for topic "my_topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint).`,
-				Code: "confluent kafka topic configuration list my_topic --url http://localhost:8090/kafka",
+				Text: `List configurations for topic "my-topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint).`,
+				Code: "confluent kafka topic configuration list my-topic --url http://localhost:8090/kafka",
 			},
 
 			examples.Example{
-				Text: `List configurations for topic "my_topic" for the specified cluster (providing Kafka REST Proxy endpoint).`,
-				Code: "confluent kafka topic configuration list my_topic --url http://localhost:8082",
+				Text: `List configurations for topic "my-topic" for the specified cluster (providing Kafka REST Proxy endpoint).`,
+				Code: "confluent kafka topic configuration list my-topic --url http://localhost:8082",
 			},
 		),
 	}
@@ -61,14 +61,11 @@ func ListConfigurations(cmd *cobra.Command, restClient *kafkarestv3.APIClient, r
 
 	list := output.NewList(cmd)
 	for _, config := range configs.Data {
-		value := ""
+		out := &broker.ConfigOut{Name: config.Name}
 		if config.Value != nil {
-			value = *config.Value
+			out.Value = *config.Value
 		}
-		list.Add(&broker.ConfigOut{
-			Name:  config.Name,
-			Value: value,
-		})
+		list.Add(out)
 	}
 	list.Filter([]string{"Name", "Value"})
 	return list.Print()
