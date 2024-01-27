@@ -13,7 +13,6 @@ Available Commands:
   dek           Manage Schema Registry Data Encryption Keys (DEKs).
   exporter      Manage Schema Registry exporters.
   kek           Manage Schema Registry Key Encryption Keys (KEKs).
-  region        Manage Schema Registry cloud regions.
   schema        Manage Schema Registry schemas.
   subject       Manage Schema Registry subjects.
 
