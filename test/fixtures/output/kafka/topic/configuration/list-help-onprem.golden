@@ -4,13 +4,13 @@ Usage:
   confluent kafka topic configuration list <topic> [flags]
 
 Examples:
-List configurations for topic "my_topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint).
+List configurations for topic "my-topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint).
 
-  $ confluent kafka topic configuration list my_topic --url http://localhost:8090/kafka
+  $ confluent kafka topic configuration list my-topic --url http://localhost:8090/kafka
 
-List configurations for topic "my_topic" for the specified cluster (providing Kafka REST Proxy endpoint).
+List configurations for topic "my-topic" for the specified cluster (providing Kafka REST Proxy endpoint).
 
-  $ confluent kafka topic configuration list my_topic --url http://localhost:8082
+  $ confluent kafka topic configuration list my-topic --url http://localhost:8082
 
 Flags:
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.

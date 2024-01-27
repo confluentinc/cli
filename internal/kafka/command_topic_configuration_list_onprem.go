@@ -23,13 +23,13 @@ func (c *command) newConfigurationListCommandOnPrem() *cobra.Command {
 		Short: "List Kafka topic configurations.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List configurations for topic "my_topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint).`,
-				Code: "confluent kafka topic configuration list my_topic --url http://localhost:8090/kafka",
+				Text: `List configurations for topic "my-topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint).`,
+				Code: "confluent kafka topic configuration list my-topic --url http://localhost:8090/kafka",
 			},
 
 			examples.Example{
-				Text: `List configurations for topic "my_topic" for the specified cluster (providing Kafka REST Proxy endpoint).`,
-				Code: "confluent kafka topic configuration list my_topic --url http://localhost:8082",
+				Text: `List configurations for topic "my-topic" for the specified cluster (providing Kafka REST Proxy endpoint).`,
+				Code: "confluent kafka topic configuration list my-topic --url http://localhost:8082",
 			},
 		),
 	}

@@ -22,8 +22,8 @@ func (c *command) newConfigurationListCommand() *cobra.Command {
 		RunE:              c.configurationList,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List configurations for topic "my_topic".`,
-				Code: "confluent kafka topic configuration list my_topic",
+				Text: `List configurations for topic "my-topic".`,
+				Code: "confluent kafka topic configuration list my-topic",
 			},
 		),
 	}
