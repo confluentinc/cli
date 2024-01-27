@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type getStatusOut struct {
+type statusOut struct {
 	Name       string `human:"Name" serialized:"name"`
 	State      string `human:"State" serialized:"state"`
 	Offset     string `human:"Offset" serialized:"offset"`
@@ -18,12 +18,12 @@ type getStatusOut struct {
 	ErrorTrace string `human:"Error Trace" serialized:"error_trace"`
 }
 
-func (c *command) newExporterGetStatusCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newExporterStatusDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-status <name>",
-		Short: "Get the status of the schema exporter.",
+		Use:   "describe <name>",
+		Short: "Describe the schema exporter status.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.exporterGetStatus,
+		RunE:  c.exporterStatusDescribe,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -35,20 +35,10 @@ func (c *command) newExporterGetStatusCommand(cfg *config.Config) *cobra.Command
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	return cmd
 }
 
-func (c *command) exporterGetStatus(cmd *cobra.Command, args []string) error {
+func (c *command) exporterStatusDescribe(cmd *cobra.Command, args []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
@@ -60,7 +50,7 @@ func (c *command) exporterGetStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&getStatusOut{
+	table.Add(&statusOut{
 		Name:       status.GetName(),
 		State:      status.GetState(),
 		Offset:     strconv.FormatInt(status.GetOffset(), 10),

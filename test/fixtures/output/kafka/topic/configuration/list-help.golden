@@ -1,11 +1,12 @@
-Error: accepts 1 arg(s), received 0
+List Kafka topic configurations.
+
 Usage:
-  confluent kafka topic describe <topic> [flags]
+  confluent kafka topic configuration list <topic> [flags]
 
 Examples:
-Describe the "my_topic" topic.
+List configurations for topic "my-topic".
 
-  $ confluent kafka topic describe my_topic
+  $ confluent kafka topic configuration list my-topic
 
 Flags:
       --cluster string       Kafka cluster ID.
@@ -17,4 +18,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-

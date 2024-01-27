@@ -1,19 +1,9 @@
-Describe top-level or subject-level schema configuration.
+Describe the schema exporter status.
 
 Usage:
-  confluent schema-registry config describe [flags]
-
-Examples:
-Describe the configuration of subject "payments".
-
-  $ confluent schema-registry config describe --subject payments
-
-Describe the top-level configuration.
-
-  $ confluent schema-registry config describe
+  confluent schema-registry exporter status describe <name> [flags]
 
 Flags:
-      --subject string       Subject of the schema.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

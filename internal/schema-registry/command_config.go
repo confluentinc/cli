@@ -20,15 +20,15 @@ type configOut struct {
 	RulesetOverrides   string `human:"Ruleset Overrides,omitempty" json:"rulesetOverrides" serialized:"ruleset_overrides,omitempty"`
 }
 
-func (c *command) newConfigCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newConfigurationCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "config",
+		Use:         "configuration",
 		Short:       "Manage Schema Registry configuration.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	cmd.AddCommand(c.newConfigDeleteCommand(cfg))
-	cmd.AddCommand(c.newConfigDescribeCommand(cfg))
+	cmd.AddCommand(c.newConfigurationDeleteCommand(cfg))
+	cmd.AddCommand(c.newConfigurationDescribeCommand(cfg))
 
 	return cmd
 }
