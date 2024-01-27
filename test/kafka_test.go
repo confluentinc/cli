@@ -111,10 +111,10 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-dup-topic.golden", exitCode: 1},
 		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-limit-topic.golden", exitCode: 1},
 
-		{args: "kafka topic describe", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe.golden", exitCode: 1},
-		{args: "kafka topic describe topic-exist", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-success.golden"},
-		{args: "kafka topic describe topic-exist --output json", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-json-success.golden"},
-		{args: "kafka topic describe topic2", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-not-found-topic2.golden", exitCode: 1},
+		{args: "kafka topic configuration list", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/configuration/list.golden", exitCode: 1},
+		{args: "kafka topic configuration list topic-exist", useKafka: "lkc-describe-topic", fixture: "kafka/topic/configuration/list-success.golden"},
+		{args: "kafka topic configuration list topic-exist --output json", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/configuration/list-json-success.golden"},
+		{args: "kafka topic configuration list topic2", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/configuration/list-not-found-topic2.golden", exitCode: 1},
 
 		{args: "kafka topic delete --force", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete.golden", exitCode: 1},
 		{args: "kafka topic delete topic-exist --force", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-success.golden"},
@@ -463,17 +463,16 @@ func (s *CLITestSuite) TestKafkaTopicUpdate() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaTopicDescribe() {
+func (s *CLITestSuite) TestKafkaTopicConfigurationList() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// Topic name errors
-		{args: fmt.Sprintf("kafka topic describe --url %s --no-authentication", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", exitCode: 1, name: "<topic> arg missing should lead to error"},
-		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition.\n", exitCode: 1, name: "describing a non-existent topic should lead to error"},
+		{args: fmt.Sprintf("kafka topic configuration list --url %s --no-authentication", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", exitCode: 1, name: "<topic> arg missing should lead to error"},
+		{args: fmt.Sprintf("kafka topic configuration list topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition.\n", exitCode: 1, name: "describing a non-existent topic should lead to error"},
 		// Success cases
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exists & correct format arg should lead to success"},
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o human --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exist & human arg should lead to success"},
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o json --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success-json.golden", name: "topic that exist & json arg should lead to success"},
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o yaml --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success-yaml.golden", name: "topic that exist & yaml arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic configuration list topic-exist --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/configuration/list-topic-success.golden", name: "topic that exists & correct format arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic configuration list topic-exist --url %s -o json --no-authentication", kafkaRestURL), fixture: "kafka/topic/configuration/list-topic-success-json.golden", name: "topic that exist & json arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic configuration list topic-exist --url %s -o yaml --no-authentication", kafkaRestURL), fixture: "kafka/topic/configuration/list-topic-success-yaml.golden", name: "topic that exist & yaml arg should lead to success"},
 	}
 
 	for _, test := range tests {
@@ -629,7 +628,7 @@ func (s *CLITestSuite) TestKafka_Autocomplete() {
 		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"}, // use delete since link has no describe subcommand
 		{args: `__complete kafka mirror describe --link link-1 ""`, fixture: "kafka/mirror/describe-autocomplete.golden", useKafka: "lkc-describe-topic"},
 		{args: `__complete kafka quota describe ""`, useKafka: "lkc-1234", fixture: "kafka/quota/describe-autocomplete.golden"},
-		{args: `__complete kafka topic describe ""`, useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-autocomplete.golden"},
+		{args: `__complete kafka topic configuration list ""`, useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

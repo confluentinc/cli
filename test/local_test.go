@@ -27,6 +27,7 @@ func (s *CLITestSuite) TestLocalKafka() {
 	time.Sleep(40 * time.Second)
 
 	tests2 := []CLITest{
+		{args: "local kafka topic configuration list test", fixture: "local/kafka/topic/configuration/list.golden"},
 		{args: "local kafka topic create test", fixture: "local/kafka/topic/create.golden"},
 		{args: "local kafka topic list", fixture: "local/kafka/topic/list.golden"},
 		{args: "local kafka topic describe test", fixture: "local/kafka/topic/describe.golden"},
