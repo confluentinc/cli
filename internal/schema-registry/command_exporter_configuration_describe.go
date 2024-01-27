@@ -8,12 +8,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *command) newExporterGetConfigCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newExporterConfigurationDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-config <name>",
-		Short: "Get the schema exporter configuration.",
+		Use:   "describe <name>",
+		Short: "Describe the schema exporter configuration.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.exporterGetConfig,
+		RunE:  c.exporterConfigurationDescribe,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -25,20 +25,10 @@ func (c *command) newExporterGetConfigCommand(cfg *config.Config) *cobra.Command
 	}
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	return cmd
 }
 
-func (c *command) exporterGetConfig(cmd *cobra.Command, args []string) error {
+func (c *command) exporterConfigurationDescribe(cmd *cobra.Command, args []string) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err

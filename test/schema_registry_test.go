@@ -28,9 +28,9 @@ func (s *CLITestSuite) TestSchemaRegistryCluster() {
 
 func (s *CLITestSuite) TestSchemaRegistryCompatibilityValidate() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate.golden"},
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s -o json", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-json.golden"},
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s -o yaml", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-yaml.golden"},
+		{args: fmt.Sprintf("schema-registry schema compatibility validate --subject payments --version 1 --schema %s --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/compatibility/validate.golden"},
+		{args: fmt.Sprintf("schema-registry schema compatibility validate --subject payments --version 1 --schema %s --environment %s -o json", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/compatibility/validate-json.golden"},
+		{args: fmt.Sprintf("schema-registry schema compatibility validate --subject payments --version 1 --schema %s --environment %s -o yaml", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/compatibility/validate-yaml.golden"},
 	}
 
 	for _, test := range tests {
@@ -41,10 +41,10 @@ func (s *CLITestSuite) TestSchemaRegistryCompatibilityValidate() {
 
 func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry config describe --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --environment %s -o json", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-json.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-yaml.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-subject.golden"},
+		{args: fmt.Sprintf("schema-registry configuration describe --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/configuration/describe-global.golden"},
+		{args: fmt.Sprintf("schema-registry configuration describe --environment %s -o json", testserver.SRApiEnvId), fixture: "schema-registry/configuration/describe-global-json.golden"},
+		{args: fmt.Sprintf("schema-registry configuration describe --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/configuration/describe-global-yaml.golden"},
+		{args: fmt.Sprintf("schema-registry configuration describe --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/configuration/describe-subject.golden"},
 	}
 
 	for _, test := range tests {
@@ -55,8 +55,8 @@ func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 
 func (s *CLITestSuite) TestSchemaRegistryConfigDelete() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry config delete --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
-		{args: fmt.Sprintf("schema-registry config delete --subject payments --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
+		{args: fmt.Sprintf("schema-registry configuration delete --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/configuration/delete.golden"},
+		{args: fmt.Sprintf("schema-registry configuration delete --subject payments --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/configuration/delete.golden"},
 	}
 
 	for _, test := range tests {
@@ -77,9 +77,9 @@ func (s *CLITestSuite) TestSchemaRegistryExporter() {
 		{args: fmt.Sprintf(`schema-registry exporter delete myexporter myexporter2 --environment %s`, testserver.SRApiEnvId), input: "n\n", fixture: "schema-registry/exporter/delete-multiple-refuse.golden"},
 		{args: fmt.Sprintf(`schema-registry exporter delete myexporter myexporter2 --environment %s --force`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete-multiple-success.golden"},
 		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s", testserver.SRApiEnvId), input: "y\n", fixture: "schema-registry/exporter/delete-prompt.golden"},
-		{args: fmt.Sprintf("schema-registry exporter get-status myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-status.golden"},
-		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output json --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-json.golden"},
-		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output yaml --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-yaml.golden"},
+		{args: fmt.Sprintf("schema-registry exporter status describe myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/status/describe.golden"},
+		{args: fmt.Sprintf("schema-registry exporter configuration describe myexporter --output json --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/configuration/describe-json.golden"},
+		{args: fmt.Sprintf("schema-registry exporter configuration describe myexporter --output yaml --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/configuration/describe-yaml.golden"},
 		{args: fmt.Sprintf("schema-registry exporter pause myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/pause.golden"},
 		{args: fmt.Sprintf("schema-registry exporter resume myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/resume.golden"},
 		{args: fmt.Sprintf("schema-registry exporter reset myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/reset.golden"},
