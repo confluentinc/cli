@@ -1,16 +1,16 @@
 Describe top-level or subject-level schema configuration.
 
 Usage:
-  confluent schema-registry config describe [flags]
+  confluent schema-registry configuration describe [flags]
 
 Examples:
 Describe the configuration of subject "payments".
 
-  $ confluent schema-registry config describe --subject payments
+  $ confluent schema-registry configuration describe --subject payments
 
 Describe the top-level configuration.
 
-  $ confluent schema-registry config describe
+  $ confluent schema-registry configuration describe
 
 Flags:
       --subject string       Subject of the schema.

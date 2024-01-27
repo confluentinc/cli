@@ -1,0 +1,6 @@
+- name: cleanup.policy
+  value: delete
+- name: compression.type
+  value: producer
+- name: retention.ms
+  value: "604800000"

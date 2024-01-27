@@ -1,11 +1,11 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  confluent kafka topic describe <topic> [flags]
+  confluent kafka topic configuration list <topic> [flags]
 
 Examples:
-Describe the "my_topic" topic.
+List configurations for topic "my_topic".
 
-  $ confluent kafka topic describe my_topic
+  $ confluent kafka topic configuration list my_topic
 
 Flags:
       --cluster string       Kafka cluster ID.
