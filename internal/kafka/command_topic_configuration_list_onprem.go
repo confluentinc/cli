@@ -48,10 +48,10 @@ func (c *command) configurationListOnPrem(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	return ListConfiguration(cmd, restClient, restContext, topicName, clusterId)
+	return ListConfigurations(cmd, restClient, restContext, topicName, clusterId)
 }
 
-func ListConfiguration(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
+func ListConfigurations(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
 	configs, resp, err := restClient.ConfigsV3Api.ListKafkaTopicConfigs(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
