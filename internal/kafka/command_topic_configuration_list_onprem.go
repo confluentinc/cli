@@ -61,14 +61,11 @@ func ListConfiguration(cmd *cobra.Command, restClient *kafkarestv3.APIClient, re
 
 	list := output.NewList(cmd)
 	for _, config := range configs.Data {
-		value := ""
+		out := &broker.ConfigOut{Name: config.Name}
 		if config.Value != nil {
-			value = *config.Value
+			out.Value = *config.Value
 		}
-		list.Add(&broker.ConfigOut{
-			Name:  config.Name,
-			Value: value,
-		})
+		list.Add(out)
 	}
 	list.Filter([]string{"Name", "Value"})
 	return list.Print()
