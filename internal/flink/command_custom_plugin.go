@@ -29,7 +29,7 @@ type customPluginHumanOut struct {
 	Scope          string `human:"Scope"`
 }
 
-func (c *command) newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newCustomPluginCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "custom-plugin",
 		Short:       "Manage custom connector plugins.",
