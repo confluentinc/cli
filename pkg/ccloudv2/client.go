@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2-internal/srcmv3/v3"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
@@ -51,7 +52,8 @@ type Client struct {
 	NetworkingPrivateLinkClient *networkingprivatelinkv1.APIClient
 	OrgClient                   *orgv2.APIClient
 	ServiceQuotaClient          *servicequotav1.APIClient
-	SrcmClient                  *srcmv2.APIClient
+	SrcmV2Client                *srcmv2.APIClient
+	SrcmV3Client                *srcmv3.APIClient
 	SsoClient                   *ssov2.APIClient
 	StreamDesignerClient        *streamdesignerv1.APIClient
 }
@@ -88,7 +90,8 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		NetworkingPrivateLinkClient: newNetworkingPrivateLinkClient(httpClient, url, userAgent, unsafeTrace),
 		OrgClient:                   newOrgClient(httpClient, url, userAgent, unsafeTrace),
 		ServiceQuotaClient:          newServiceQuotaClient(httpClient, url, userAgent, unsafeTrace),
-		SrcmClient:                  newSrcmClient(httpClient, url, userAgent, unsafeTrace),
+		SrcmV2Client:                newSrcmV2Client(httpClient, url, userAgent, unsafeTrace),
+		SrcmV3Client:                newSrcmV3Client(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                   newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		StreamDesignerClient:        newStreamDesignerClient(httpClient, url, userAgent, unsafeTrace),
 	}
