@@ -1,0 +1,6 @@
+{
+  "name": "topic-exist",
+  "is_internal": false,
+  "replication_factor": 0,
+  "partition_count": 3
+}
