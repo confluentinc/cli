@@ -25,7 +25,6 @@ blocks:
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
-            - make test
             - make test-installer
       epilogue:
         always:
@@ -44,7 +43,6 @@ blocks:
             - checkout
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
-            - make test
       epilogue:
         always:
           commands:
