@@ -30,6 +30,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newShellCommand(prerunner))
 	cmd.AddCommand(c.newStatementCommand())
+	cmd.AddCommand(c.newCustomPluginCommand())
 
 	return cmd
 }
