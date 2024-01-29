@@ -69,7 +69,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/imdario/mergo v0.3.16
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
-	github.com/jhump/protoreflect v1.15.4
+	github.com/jhump/protoreflect v1.15.5
 	github.com/jonboulle/clockwork v0.4.0
 	github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100
 	github.com/linkedin/goavro/v2 v2.12.0
@@ -115,7 +115,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
-	github.com/bufbuild/protocompile v0.7.1 // indirect
+	github.com/bufbuild/protocompile v0.8.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
