@@ -782,3 +782,47 @@ func (s *CLITestSuite) TestNetworkIpAddressList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationDescribe() {
+	tests := []CLITest{
+		{args: "network nl service association describe nle-123456 --network-link-service nls-123456", fixture: "network/network-link/service/association/describe.golden"},
+		{args: "network network-link service association describe nle-123456 --network-link-service nls-123456", fixture: "network/network-link/service/association/describe.golden"},
+		{args: "network network-link service association describe nle-123456 --network-link-service nls-123456 --output json", fixture: "network/network-link/service/association/describe-json.golden"},
+		{args: "network network-link service association describe nle-123456", fixture: "network/network-link/service/association/describe-missing-flag.golden", exitCode: 1},
+		{args: "network network-link service association describe", fixture: "network/network-link/service/association/describe-missing-id.golden", exitCode: 1},
+		{args: "network network-link service association describe nle-invalid --network-link-service nls-123456", fixture: "network/network-link/service/association/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationList() {
+	tests := []CLITest{
+		{args: "network nl service association list --network-link-service nls-123456", fixture: "network/network-link/service/association/list.golden"},
+		{args: "network network-link service association list --network-link-service nls-123456", fixture: "network/network-link/service/association/list.golden"},
+		{args: "network network-link service association list --network-link-service nls-123456 --output json", fixture: "network/network-link/service/association/list-json.golden"},
+		{args: "network network-link service association list --network-link-service nls-invalid", fixture: "network/network-link/service/association/list-nls-invalid.golden", exitCode: 1},
+		{args: "network network-link service association list --network-link-service nls-no-endpoints", fixture: "network/network-link/service/association/list-no-endpoints.golden", exitCode: 1},
+		{args: "network nl service association list ", fixture: "network/network-link/service/association/list-missing-flag.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociation_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network network-link service association describe ""`, login: "cloud", fixture: "network/network-link/service/association/describe-autocomplete.golden"},
+		{args: `__complete network network-link service association list --network-link-service ""`, login: "cloud", fixture: "network/network-link/service/association/list-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

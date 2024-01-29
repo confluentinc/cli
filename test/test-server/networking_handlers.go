@@ -243,6 +243,27 @@ func handleNetworkingNetworkLinkEndpoints(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/networking/v1/network-link-service-associations"
+func handleNetworkingNetworkLinkServiceAssociations(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingNetworkLinkServiceAssociationList(t)(w, r)
+		}
+	}
+}
+
+// Handler for "/networking/v1/network-link-service-associations/{id}"
+func handleNetworkingNetworkLinkServiceAssociation(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingNetworkLinkServiceAssociationGet(t, id)(w, r)
+		}
+	}
+}
+
 func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -1818,5 +1839,74 @@ func getIpAddress(ipPrefix, cloud, region string, services []string) networkingi
 		Cloud:       networkingipv1.PtrString(cloud),
 		Region:      networkingipv1.PtrString(region),
 		Services:    &networkingipv1.Set{Items: services},
+	}
+}
+
+func handleNetworkingNetworkLinkServiceAssociationGet(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "nle-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The network link endpoint nle-invalid was not found.")
+			require.NoError(t, err)
+		default:
+			nle := getNetworkLinkEndpoint(id, "my-network-link-endpoint")
+			association := getNetworkLinkServiceAssociation(id, nle)
+			err := json.NewEncoder(w).Encode(association)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func getNetworkLinkServiceAssociation(id string, endpoint networkingv1.NetworkingV1NetworkLinkEndpoint) networkingv1.NetworkingV1NetworkLinkServiceAssociation {
+	association := networkingv1.NetworkingV1NetworkLinkServiceAssociation{
+		Id: networkingv1.PtrString(id),
+		Spec: &networkingv1.NetworkingV1NetworkLinkServiceAssociationSpec{
+			DisplayName:         endpoint.Spec.DisplayName,
+			Description:         endpoint.Spec.Description,
+			NetworkLinkEndpoint: endpoint.Id,
+			NetworkLinkService:  &networkingv1.EnvScopedObjectReference{Id: endpoint.Spec.NetworkLinkService.Id},
+			Environment:         &networkingv1.GlobalObjectReference{Id: "env-00000"},
+		},
+		Status: &networkingv1.NetworkingV1NetworkLinkServiceAssociationStatus{Phase: "READY"},
+	}
+
+	return association
+}
+
+func handleNetworkingNetworkLinkServiceAssociationList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		association1 := getNetworkLinkServiceAssociation("nle-111111", getNetworkLinkEndpoint("nle-111111", ""))
+		association2 := getNetworkLinkServiceAssociation("nle-222222", getNetworkLinkEndpoint("nle-222222", "my-network-link-endpoint-2"))
+
+		networkLinkService := r.URL.Query().Get("spec.network_link_service")
+		switch networkLinkService {
+		case "nls-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The network link service nls-invalid was not found.")
+			require.NoError(t, err)
+		case "nls-no-endpoints":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "NetworkLinkEndpoints are not found")
+			require.NoError(t, err)
+		default:
+			pageToken := r.URL.Query().Get("page_token")
+			var associationList networkingv1.NetworkingV1NetworkLinkServiceAssociationList
+			switch pageToken {
+			case "nls-association-2":
+				associationList = networkingv1.NetworkingV1NetworkLinkServiceAssociationList{
+					Data:     []networkingv1.NetworkingV1NetworkLinkServiceAssociation{association2},
+					Metadata: networkingv1.ListMeta{},
+				}
+			default:
+				associationList = networkingv1.NetworkingV1NetworkLinkServiceAssociationList{
+					Data:     []networkingv1.NetworkingV1NetworkLinkServiceAssociation{association1},
+					Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-service-associations?environment=env-00000&page_size=1&page_token=nls-association-2"))},
+				}
+			}
+
+			err := json.NewEncoder(w).Encode(associationList)
+			require.NoError(t, err)
+		}
 	}
 }

@@ -69,6 +69,8 @@ var ccloudV2Routes = []route{
 	{"/networking/v1/network-link-endpoints/{id}", handleNetworkingNetworkLinkEndpoint},
 	{"/networking/v1/network-link-services", handleNetworkingNetworkLinkServices},
 	{"/networking/v1/network-link-services/{id}", handleNetworkingNetworkLinkService},
+	{"/networking/v1/network-link-service-associations", handleNetworkingNetworkLinkServiceAssociations},
+	{"/networking/v1/network-link-service-associations/{id}", handleNetworkingNetworkLinkServiceAssociation},
 	{"/networking/v1/peerings", handleNetworkingPeerings},
 	{"/networking/v1/peerings/{id}", handleNetworkingPeering},
 	{"/networking/v1/private-link-accesses", handleNetworkingPrivateLinkAccesses},

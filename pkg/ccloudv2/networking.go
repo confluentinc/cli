@@ -323,3 +323,38 @@ func (c *Client) UpdateNetworkLinkEndpoint(id string, networkLinkEndpointUpdate 
 	resp, httpResp, err := c.NetworkingClient.NetworkLinkEndpointsNetworkingV1Api.UpdateNetworkingV1NetworkLinkEndpoint(c.networkingApiContext(), id).NetworkingV1NetworkLinkEndpointUpdate(networkLinkEndpointUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) ListNetworkLinkServiceAssociations(environment, service string) ([]networkingv1.NetworkingV1NetworkLinkServiceAssociation, error) {
+	var list []networkingv1.NetworkingV1NetworkLinkServiceAssociation
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, err := c.executeListNetworkLinkServiceAssociations(environment, service, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListNetworkLinkServiceAssociations(environment, service, pageToken string) (networkingv1.NetworkingV1NetworkLinkServiceAssociationList, error) {
+	req := c.NetworkingClient.NetworkLinkServiceAssociationsNetworkingV1Api.ListNetworkingV1NetworkLinkServiceAssociations(c.networkingApiContext()).Environment(environment).SpecNetworkLinkService(service).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetNetworkLinkServiceAssociation(environment, service, id string) (networkingv1.NetworkingV1NetworkLinkServiceAssociation, error) {
+	resp, httpResp, err := c.NetworkingClient.NetworkLinkServiceAssociationsNetworkingV1Api.GetNetworkingV1NetworkLinkServiceAssociation(c.networkingApiContext(), id).Environment(environment).SpecNetworkLinkService(service).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
