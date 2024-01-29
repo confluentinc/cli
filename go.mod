@@ -88,7 +88,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/stripe/stripe-go/v76 v76.13.0
+	github.com/stripe/stripe-go/v76 v76.14.0
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/pretty v1.2.1
