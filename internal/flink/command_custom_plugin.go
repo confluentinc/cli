@@ -9,10 +9,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type commandcustomPluginCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
 type customPluginSerializedOut struct {
 	Name           string `serialized:"name"`
 	Id             string `serialized:"id"`
