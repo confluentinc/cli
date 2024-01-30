@@ -67,6 +67,9 @@ func (s *CLITestSuite) TestNetworkList() {
 	tests := []CLITest{
 		{args: "network list", fixture: "network/list.golden"},
 		{args: "network list --output json", fixture: "network/list-json.golden"},
+		{args: "network list --name prod-gcp-us-central1,prod-aws-us-east1 --cloud aws", fixture: "network/list-name-cloud.golden"},
+		{args: "network list --region eastus2 --cidr 10.0.0.0/16", fixture: "network/list-region-cidr.golden"},
+		{args: "network list --phase ready --connection-types transitgateway,peering", fixture: "network/list-phase-connection.golden"},
 	}
 
 	for _, test := range tests {
@@ -115,6 +118,8 @@ func (s *CLITestSuite) TestNetworkPeeringList() {
 	tests := []CLITest{
 		{args: "network peering list", fixture: "network/peering/list.golden"},
 		{args: "network peering list --output json", fixture: "network/peering/list-json.golden"},
+		{args: "network peering list --network n-abcde1 --name aws-peering", fixture: "network/peering/list-network-name.golden"},
+		{args: "network peering list --phase ready --name gcp-peering,azure-peering", fixture: "network/peering/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -208,6 +213,8 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentList() {
 		{args: "network tgwa list", fixture: "network/transit-gateway-attachment/list.golden"},
 		{args: "network transit-gateway-attachment list", fixture: "network/transit-gateway-attachment/list.golden"},
 		{args: "network transit-gateway-attachment list --output json", fixture: "network/transit-gateway-attachment/list-json.golden"},
+		{args: "network transit-gateway-attachment list --network n-abcde1 --name aws-tgwa1,aws-tgwa2", fixture: "network/transit-gateway-attachment/list-network-name.golden"},
+		{args: "network transit-gateway-attachment list --phase ready --name aws-tgwa3", fixture: "network/transit-gateway-attachment/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -297,6 +304,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAccessList() {
 		{args: "network pl access list", fixture: "network/private-link/access/list.golden"},
 		{args: "network private-link access list", fixture: "network/private-link/access/list.golden"},
 		{args: "network private-link access list --output json", fixture: "network/private-link/access/list-json.golden"},
+		{args: "network private-link access list --network n-abcde1 --name aws-pla", fixture: "network/private-link/access/list-network-name.golden"},
+		{args: "network private-link access list --phase ready --name gcp-pla,azure-pla", fixture: "network/private-link/access/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -389,6 +398,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentList() {
 		{args: "network pl attachment list", fixture: "network/private-link/attachment/list.golden"},
 		{args: "network private-link attachment list", fixture: "network/private-link/attachment/list.golden"},
 		{args: "network private-link attachment list --output json", fixture: "network/private-link/attachment/list-json.golden"},
+		{args: "network private-link attachment list --name aws-platt-1,aws-platt-2 --cloud aws", fixture: "network/private-link/attachment/list-name-cloud.golden"},
+		{args: "network private-link attachment list --region us-west-2 --phase provisioning ", fixture: "network/private-link/attachment/list-region-phase.golden"},
 	}
 
 	for _, test := range tests {
@@ -583,6 +594,8 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
 		{args: "network nl service list", fixture: "network/network-link/service/list.golden"},
 		{args: "network network-link service list", fixture: "network/network-link/service/list.golden"},
 		{args: "network network-link service list --output json", fixture: "network/network-link/service/list-json.golden"},
+		{args: "network network-link service list --network n-abcde1 --name my-network-link-service-1", fixture: "network/network-link/service/list-network-name.golden"},
+		{args: "network network-link service list --phase ready --name my-network-link-service-2,my-network-link-service-3", fixture: "network/network-link/service/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -672,6 +685,9 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointList() {
 		{args: "network nl endpoint list", fixture: "network/network-link/endpoint/list.golden"},
 		{args: "network network-link endpoint list", fixture: "network/network-link/endpoint/list.golden"},
 		{args: "network network-link endpoint list --output json", fixture: "network/network-link/endpoint/list-json.golden"},
+		{args: "network network-link endpoint list --network n-abcde1 --name my-network-link-endpoint-1", fixture: "network/network-link/endpoint/list-network-name.golden"},
+		{args: "network network-link endpoint list --phase ready --name my-network-link-endpoint-2,my-network-link-endpoint-3", fixture: "network/network-link/endpoint/list-phase-name.golden"},
+		{args: "network network-link endpoint list --network-link-service nls-123456", fixture: "network/network-link/endpoint/list-service.golden"},
 	}
 
 	for _, test := range tests {
@@ -757,6 +773,8 @@ func (s *CLITestSuite) TestNetworkIpAddressList() {
 	tests := []CLITest{
 		{args: "network ip-address list", fixture: "network/ip-address/list.golden"},
 		{args: "network ip-address list --output json", fixture: "network/ip-address/list-json.golden"},
+		{args: "network ip-address list --cloud aws --region us-east-1", fixture: "network/ip-address/list-cloud-region.golden"},
+		{args: "network ip-address list --services kafka --address-type egress", fixture: "network/ip-address/list-services-address.golden"},
 	}
 
 	for _, test := range tests {
@@ -789,6 +807,7 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationList() {
 		{args: "network network-link service association list --network-link-service nls-invalid", fixture: "network/network-link/service/association/list-nls-invalid.golden", exitCode: 1},
 		{args: "network network-link service association list --network-link-service nls-no-endpoints", fixture: "network/network-link/service/association/list-no-endpoints.golden", exitCode: 1},
 		{args: "network nl service association list ", fixture: "network/network-link/service/association/list-missing-flag.golden", exitCode: 1},
+		{args: "network network-link service association list --network-link-service nls-123456 --phase pending-accept", fixture: "network/network-link/service/association/list-phase.golden"},
 	}
 
 	for _, test := range tests {

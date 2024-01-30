@@ -4,9 +4,13 @@ Usage:
   confluent network network-link endpoint list [flags]
 
 Flags:
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --name strings                   A comma-separated list of network link endpoint names.
+      --network strings                A comma-separated list of network IDs.
+      --phase strings                  A comma-separated list of phases.
+      --network-link-service strings   A comma-separated list of network link service IDs.
+      --context string                 CLI context name.
+      --environment string             Environment ID.
+  -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

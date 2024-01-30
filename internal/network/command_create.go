@@ -87,9 +87,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	for i, connectionType := range connectionTypes {
-		connectionTypes[i] = strings.ToUpper(connectionType)
-	}
+	connectionTypes = toUpper(connectionTypes)
 
 	cidr, err := cmd.Flags().GetString("cidr")
 	if err != nil {
