@@ -4,3 +4,7 @@
 | Replication Factor | 1     |
 | Partition Count    | 1     |
 +--------------------+-------+
+
+  Partition | Leader | Replicas | ISR  
+------------+--------+----------+------
+          0 |      1 | [1]      | [1]  
