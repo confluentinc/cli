@@ -8,8 +8,7 @@ Aliases:
 
 Available Commands:
   cluster       Manage Schema Registry cluster.
-  compatibility Validate schema compatibility.
-  config        Manage Schema Registry configuration.
+  configuration Manage Schema Registry configuration.
   dek           Manage Schema Registry Data Encryption Keys (DEKs).
   exporter      Manage Schema Registry exporters.
   kek           Manage Schema Registry Key Encryption Keys (KEKs).
