@@ -475,8 +475,8 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 		{args: fmt.Sprintf("kafka topic describe --url %s --no-authentication", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", exitCode: 1, name: "<topic> arg missing should lead to error"},
 		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition.\n", exitCode: 1, name: "describing a non-existent topic should lead to error"},
 		// Success cases
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-success.golden", name: "topic that exists & correct format arg should lead to success"},
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o json --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-json-success.golden", name: "topic that exist & json arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-success-onprem.golden", name: "topic that exists & correct format arg should lead to success"},
+		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o json --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-json-success-onprem.golden", name: "topic that exist & json arg should lead to success"},
 	}
 
 	for _, test := range tests {
