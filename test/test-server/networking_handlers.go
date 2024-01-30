@@ -1876,10 +1876,10 @@ func getNetworkLinkServiceAssociation(id string, endpoint networkingv1.Networkin
 
 func handleNetworkingNetworkLinkServiceAssociationList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		association1 := getNetworkLinkServiceAssociation("nle-111111", getNetworkLinkEndpoint("nle-111111", ""))
-		association2 := getNetworkLinkServiceAssociation("nle-222222", getNetworkLinkEndpoint("nle-222222", "my-network-link-endpoint-2"))
-
+		q := r.URL.Query()
 		networkLinkService := r.URL.Query().Get("spec.network_link_service")
+		phase := q["status.phase"]
+
 		switch networkLinkService {
 		case "nls-invalid":
 			w.WriteHeader(http.StatusNotFound)
@@ -1890,23 +1890,36 @@ func handleNetworkingNetworkLinkServiceAssociationList(t *testing.T) http.Handle
 			err := writeErrorJson(w, "NetworkLinkEndpoints are not found")
 			require.NoError(t, err)
 		default:
-			pageToken := r.URL.Query().Get("page_token")
-			var associationList networkingv1.NetworkingV1NetworkLinkServiceAssociationList
-			switch pageToken {
-			case "nls-association-2":
-				associationList = networkingv1.NetworkingV1NetworkLinkServiceAssociationList{
-					Data:     []networkingv1.NetworkingV1NetworkLinkServiceAssociation{association2},
-					Metadata: networkingv1.ListMeta{},
-				}
-			default:
-				associationList = networkingv1.NetworkingV1NetworkLinkServiceAssociationList{
-					Data:     []networkingv1.NetworkingV1NetworkLinkServiceAssociation{association1},
-					Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/network-link-service-associations?environment=env-00000&page_size=1&page_token=nls-association-2"))},
-				}
-			}
-
-			err := json.NewEncoder(w).Encode(associationList)
+			nlsList := getNetworkLinkServiceAssociationList(networkLinkService, phase)
+			err := json.NewEncoder(w).Encode(nlsList)
 			require.NoError(t, err)
 		}
 	}
+}
+
+func getNetworkLinkServiceAssociationList(filterNetworkLinkService string, filterPhase []string) networkingv1.NetworkingV1NetworkLinkServiceAssociationList {
+	association1 := getNetworkLinkServiceAssociation("nle-111111", getNetworkLinkEndpoint("nle-111111", ""))
+	association2 := getNetworkLinkServiceAssociation("nle-222222", getNetworkLinkEndpoint("nle-222222", "my-network-link-endpoint-2"))
+	association1.Status.SetPhase("PENDING_ACCEPT")
+
+	associationList := networkingv1.NetworkingV1NetworkLinkServiceAssociationList{
+		Data: []networkingv1.NetworkingV1NetworkLinkServiceAssociation{
+			association1, association2,
+		},
+	}
+	associationList.Data = filterAssociationList(associationList.Data, filterNetworkLinkService, filterPhase)
+
+	return associationList
+}
+
+func filterAssociationList(associationList []networkingv1.NetworkingV1NetworkLinkServiceAssociation, service string, phase []string) []networkingv1.NetworkingV1NetworkLinkServiceAssociation {
+	var filteredAssociationList []networkingv1.NetworkingV1NetworkLinkServiceAssociation
+
+	for _, associationSpec := range associationList {
+		if (service == associationSpec.Spec.NetworkLinkService.GetId() || service == "") &&
+			(slices.Contains(phase, strings.ReplaceAll(strings.ToLower(associationSpec.Status.GetPhase()), "_", "-")) || phase == nil) {
+			filteredAssociationList = append(filteredAssociationList, associationSpec)
+		}
+	}
+	return filteredAssociationList
 }

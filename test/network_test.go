@@ -807,6 +807,7 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationList() {
 		{args: "network network-link service association list --network-link-service nls-invalid", fixture: "network/network-link/service/association/list-nls-invalid.golden", exitCode: 1},
 		{args: "network network-link service association list --network-link-service nls-no-endpoints", fixture: "network/network-link/service/association/list-no-endpoints.golden", exitCode: 1},
 		{args: "network nl service association list ", fixture: "network/network-link/service/association/list-missing-flag.golden", exitCode: 1},
+		{args: "network network-link service association list --network-link-service nls-123456 --phase pending-accept", fixture: "network/network-link/service/association/list-phase.golden"},
 	}
 
 	for _, test := range tests {

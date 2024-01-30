@@ -41,6 +41,7 @@ const (
 	Network                         = "network"
 	NetworkLinkEndpoint             = "network link endpoint"
 	NetworkLinkService              = "network link service"
+	NetworkLinkServiceAssociation   = "network link service association"
 	Organization                    = "organization"
 	Peering                         = "peering"
 	PrivateLinkAccess               = "private link access"

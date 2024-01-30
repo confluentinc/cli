@@ -455,17 +455,19 @@ func addPhaseFlag(cmd *cobra.Command, resourceType string) {
 		case resource.NetworkLinkService:
 			return []string{"ready"}
 		case resource.NetworkLinkEndpoint:
-			return []string{"provisioning", "pending_accept", "ready", "failed", "deprovisioning", "expired", "disconnected", "disconnecting", "inactive"}
+			return []string{"provisioning", "pending-accept", "ready", "failed", "deprovisioning", "expired", "disconnected", "disconnecting", "inactive"}
 		case resource.PrivateLinkAccess:
 			return []string{"provisioning", "ready", "failed", "deprovisioning"}
 		case resource.Peering:
-			return []string{"provisioning", "pending_accept", "ready", "failed", "deprovisioning", "disconnected"}
+			return []string{"provisioning", "pending-accept", "ready", "failed", "deprovisioning", "disconnected"}
 		case resource.PrivateLinkAttachment:
-			return []string{"provisioning", "waiting_for_connections", "ready", "failed", "expired", "deprovisioning"}
+			return []string{"provisioning", "waiting-for-connections", "ready", "failed", "expired", "deprovisioning"}
 		case resource.TransitGatewayAttachment:
-			return []string{"provisioning", "ready", "pending_accept", "failed", "deprovisioning", "disconnected", "error"}
+			return []string{"provisioning", "ready", "pending-accept", "failed", "deprovisioning", "disconnected", "error"}
 		case resource.Network:
 			return []string{"provisioning", "ready", "failed", "deprovisioning"}
+		case resource.NetworkLinkServiceAssociation:
+			return []string{"provisioning", "pending-accept", "ready", "failed", "deprovisioning", "expired", "disconnected", "disconnecting", "inactive"}
 		default:
 			return nil
 		}
@@ -474,7 +476,7 @@ func addPhaseFlag(cmd *cobra.Command, resourceType string) {
 
 func toUpper(strSlice []string) []string {
 	for i, str := range strSlice {
-		strSlice[i] = strings.ToUpper(str)
+		strSlice[i] = ccloudv2.ToUpper(str)
 	}
 	return strSlice
 }

@@ -324,13 +324,13 @@ func (c *Client) UpdateNetworkLinkEndpoint(id string, networkLinkEndpointUpdate 
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListNetworkLinkServiceAssociations(environment, service string) ([]networkingv1.NetworkingV1NetworkLinkServiceAssociation, error) {
+func (c *Client) ListNetworkLinkServiceAssociations(environment, service string, phase []string) ([]networkingv1.NetworkingV1NetworkLinkServiceAssociation, error) {
 	var list []networkingv1.NetworkingV1NetworkLinkServiceAssociation
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListNetworkLinkServiceAssociations(environment, service, pageToken)
+		page, err := c.executeListNetworkLinkServiceAssociations(environment, service, pageToken, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -344,8 +344,8 @@ func (c *Client) ListNetworkLinkServiceAssociations(environment, service string)
 	return list, nil
 }
 
-func (c *Client) executeListNetworkLinkServiceAssociations(environment, service, pageToken string) (networkingv1.NetworkingV1NetworkLinkServiceAssociationList, error) {
-	req := c.NetworkingClient.NetworkLinkServiceAssociationsNetworkingV1Api.ListNetworkingV1NetworkLinkServiceAssociations(c.networkingApiContext()).Environment(environment).SpecNetworkLinkService(service).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListNetworkLinkServiceAssociations(environment, service, pageToken string, phase []string) (networkingv1.NetworkingV1NetworkLinkServiceAssociationList, error) {
+	req := c.NetworkingClient.NetworkLinkServiceAssociationsNetworkingV1Api.ListNetworkingV1NetworkLinkServiceAssociations(c.networkingApiContext()).Environment(environment).SpecNetworkLinkService(service).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

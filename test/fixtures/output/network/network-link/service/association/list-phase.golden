@@ -1,0 +1,3 @@
+      ID     | Name |          Description          | Network Link Endpoint | Network Link Service |     Phase       
+-------------+------+-------------------------------+-----------------------+----------------------+-----------------
+  nle-111111 |      | example network link endpoint | nle-111111            | nls-123456           | PENDING_ACCEPT  
