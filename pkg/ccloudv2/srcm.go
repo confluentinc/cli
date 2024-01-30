@@ -34,6 +34,10 @@ func (c *Client) srcmApiContext() context.Context {
 	return context.WithValue(context.Background(), srcmv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
+func (c *Client) srcmV3ApiContext() context.Context {
+	return context.WithValue(context.Background(), srcmv3.ContextAccessToken, c.cfg.Context().GetAuthToken())
+}
+
 func (c *Client) GetStreamGovernanceRegionById(regionId string) (srcmv2.SrcmV2Region, error) {
 	region, httpResp, err := c.SrcmV2Client.RegionsSrcmV2Api.GetSrcmV2Region(c.srcmApiContext(), regionId).Execute()
 	return region, errors.CatchCCloudV2Error(err, httpResp)
@@ -120,7 +124,7 @@ func (c *Client) GetSrcmV3ClustersByEnvironment(environment string) ([]srcmv3.Sr
 	done := false
 	pageToken := ""
 	for !done {
-		req := c.SrcmV3Client.ClustersSrcmV3Api.ListSrcmV3Clusters(c.srcmApiContext()).Environment(environment)
+		req := c.SrcmV3Client.ClustersSrcmV3Api.ListSrcmV3Clusters(c.srcmV3ApiContext()).Environment(environment)
 		if pageToken != "" {
 			req = req.PageToken(pageToken)
 		}
