@@ -622,11 +622,13 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceDelete() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceCreate() {
 	tests := []CLITest{
-		{args: "network network-link service create", fixture: "network/network-link/service/create-missing-args.golden", exitCode: 1},
+		{args: "network network-link service create", fixture: "network/network-link/service/create-missing-network.golden", exitCode: 1},
+		{args: "network network-link service create --network n-123456", fixture: "network/network-link/service/create-missing-flag.golden", exitCode: 1},
+		{args: "network network-link service create --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create-no-name.golden"},
 		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create-accepted-environments.golden"},
 		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222", fixture: "network/network-link/service/create-accepted-networks.golden"},
 		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222 --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create.golden"},
-		{args: "network network-link service create nls-duplicate --network n-123455", fixture: "network/network-link/service/create-duplicate.golden", exitCode: 1},
+		{args: "network network-link service create nls-duplicate --network n-123455 --accepted-networks n-111111", fixture: "network/network-link/service/create-duplicate.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
