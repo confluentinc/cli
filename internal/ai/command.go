@@ -30,12 +30,8 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) ai(cmd *cobra.Command, _ []string) error {
 	output.Println(c.Config.EnableColor, `Welcome to the Confluent AI Assistant! Exit with "exit", or rate an answer with "+1" or "-1".`)
 
-	s := &shell{
-		client:  c.V2Client,
-		session: newSession(),
-	}
-
-	prompt.New(s.executor, s.completer, prompt.OptionPrefix("> ")).Run()
+	shell := newShell(c.V2Client)
+	prompt.New(shell.executor, shell.completer, prompt.OptionPrefix("> ")).Run()
 
 	return nil
 }

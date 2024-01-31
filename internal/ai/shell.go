@@ -20,6 +20,13 @@ type shell struct {
 	feedback *feedback
 }
 
+func newShell(client *ccloudv2.Client) *shell {
+	return &shell{
+		client:  client,
+		session: newSession(),
+	}
+}
+
 func (s *shell) executor(input string) {
 	input = strings.TrimSpace(input)
 
@@ -55,9 +62,10 @@ func (s *shell) executor(input string) {
 
 	go func() {
 		req := aiv1.AiV1ChatCompletionsRequest{
-			AiSessionId: &s.session.id,
-			Question:    &input,
-			History:     &s.session.history,
+			AiSessionId:  &s.session.id,
+			Question:     &input,
+			DriftEnabled: aiv1.PtrBool(true),
+			History:      &s.session.history,
 		}
 
 		reply, err := s.client.QueryChatCompletion(req)
