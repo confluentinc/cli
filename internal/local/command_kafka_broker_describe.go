@@ -38,5 +38,5 @@ func (c *command) brokerDescribe(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
-	return broker.Describe(cmd, args, restClient, context.Background(), clusterId, false)
+	return broker.Describe(cmd, args, restClient, context.Background(), clusterId)
 }
