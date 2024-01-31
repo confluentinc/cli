@@ -15,7 +15,7 @@ import (
 )
 
 type PartitionData struct {
-	PartitionId int32   `human:"Partition" json:"partition" yaml:"partition"`
+	Partition   int32   `human:"Partition" json:"partition" yaml:"partition"`
 	Leader      int32   `human:"Leader" json:"leader" yaml:"leader"`
 	Replicas    []int32 `human:"Replicas" json:"replicas" yaml:"replicas"`
 	ISR         []int32 `human:"ISR" json:"isr" yaml:"isr"`
