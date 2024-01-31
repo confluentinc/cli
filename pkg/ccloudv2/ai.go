@@ -29,6 +29,6 @@ func (c *Client) QueryChatCompletion(req aiv1.AiV1ChatCompletionsRequest) (aiv1.
 }
 
 func (c *Client) CreateChatCompletionFeedback(chatCompletionId string, feedback aiv1.AiV1Feedback) error {
-	_, httpResp, err := c.AiClient.FeedbacksAiV1Api.CreateAiV1ChatCompletionFeedback(c.aiApiContext(), chatCompletionId).AiV1Feedback(feedback).Execute()
+	httpResp, err := c.AiClient.FeedbacksAiV1Api.CreateAiV1ChatCompletionFeedback(c.aiApiContext(), chatCompletionId).AiV1Feedback(feedback).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }

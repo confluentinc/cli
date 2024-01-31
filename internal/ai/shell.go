@@ -36,11 +36,14 @@ func (s *shell) executor(input string) {
 			}
 
 			s.feedback = nil
+			output.Println(false, "Thanks for your feedback!")
+
 			return
 		}
 
 		s.feedback.setReaction(input)
-		output.Println(false, "Thanks for your feedback! Provide more details below or press enter to skip.")
+		output.Println(false, "Provide more details below or press enter to skip.")
+
 		return
 	}
 
