@@ -13,8 +13,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/properties"
 )
 
-func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, checkAll bool) error {
-	brokerId, all, err := CheckAllOrIdSpecified(cmd, args, checkAll)
+func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
+	brokerId, err := GetId(cmd, args)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient
 	}
 	configs := ToAlterConfigBatchRequestDataOnPrem(configMap)
 
-	if all {
+	if len(args) == 0 {
 		opts := &kafkarestv3.UpdateKafkaClusterConfigsOpts{AlterConfigBatchRequestData: optional.NewInterface(configs)}
 		if resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId, opts); err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
@@ -42,7 +42,7 @@ func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		if all {
+		if len(args) == 0 {
 			output.Printf(false, "Updated the following broker configurations for cluster \"%s\":\n", clusterId)
 		} else {
 			output.Printf(false, "Updated the following configurations for broker \"%d\":\n", brokerId)
