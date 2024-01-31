@@ -42,12 +42,11 @@ func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "List broker tasks for all brokers in the cluster",
-				Code: "confluent kafka broker get-tasks --all",
+				Code: "confluent kafka broker get-tasks",
 			},
 		),
 	}
 
-	cmd.Flags().Bool("all", false, "List broker tasks for the cluster.")
 	cmd.Flags().String("task-type", "", "Search by task type (add-broker or remove-broker).")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
@@ -56,7 +55,7 @@ func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 }
 
 func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
-	brokerId, all, err := broker.CheckAllOrIdSpecified(cmd, args, true)
+	brokerId, err := broker.GetId(cmd, args)
 	if err != nil {
 		return err
 	}
@@ -77,7 +76,7 @@ func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
 	}
 
 	var tasks []kafkarestv3.BrokerTaskData
-	if all { // get BrokerTasks for the cluster
+	if len(args) == 0 { // get BrokerTasks for the cluster
 		tasks, err = getBrokerTasksForCluster(restClient, restContext, clusterId, brokerTaskType)
 		if err != nil {
 			return err
