@@ -14,7 +14,7 @@ import (
 
 type networkLinkServiceHumanOut struct {
 	Id                   string `human:"ID"`
-	Name                 string `human:"Name"`
+	Name                 string `human:"Name,omitempty"`
 	Network              string `human:"Network"`
 	Environment          string `human:"Environment"`
 	Description          string `human:"Description,omitempty"`
@@ -25,7 +25,7 @@ type networkLinkServiceHumanOut struct {
 
 type networkLinkServiceSerializedOut struct {
 	Id                   string   `serialized:"id"`
-	Name                 string   `serialized:"name"`
+	Name                 string   `serialized:"name,omitempty"`
 	Network              string   `serialized:"network"`
 	Environment          string   `serialized:"environment"`
 	Description          string   `serialized:"description,omitempty"`

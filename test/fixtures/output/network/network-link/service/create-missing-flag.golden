@@ -1,5 +1,4 @@
-Create a network link service.
-
+Error: at least one of the flags in the group [accepted-networks accepted-environments] is required
 Usage:
   confluent network network-link service create <name> [flags]
 
@@ -25,3 +24,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
