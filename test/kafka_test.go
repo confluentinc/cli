@@ -186,6 +186,17 @@ func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 		test.workflow = true
 		s.runIntegrationTest(test)
 	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka cluster configuration update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/cluster/configuration/update-onprem.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestKafkaClientConfig() {
@@ -245,7 +256,6 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker describe --config-name compression.type", fixture: "kafka/broker/describe-all-config.golden"},
 		{args: "kafka broker describe --config-name compression.type -o json", fixture: "kafka/broker/describe-all-config-json.golden"},
 
-		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/broker/update-all.golden"},
 		{args: "kafka broker update 1 --config test/fixtures/input/kafka/broker/update.properties", fixture: "kafka/broker/update-1.golden"},
 
 		{args: "kafka broker delete 1 --force", fixture: "kafka/broker/delete.golden"},

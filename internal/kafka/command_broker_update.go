@@ -10,19 +10,15 @@ import (
 
 func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update [id]",
+		Use:   "update <id>",
 		Short: "Update Kafka broker configurations.",
 		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
 				Code: "confluent kafka broker update 1 --config min.insync.replicas=2,num.partitions=2",
-			},
-			examples.Example{
-				Text: "Update configuration values for all brokers in the cluster.",
-				Code: "confluent kafka broker update --config min.insync.replicas=2,num.partitions=2",
 			},
 		),
 	}
