@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newListCommand() *cobra.Command {
@@ -20,6 +21,12 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
+	cmd.Flags().StringSlice("name", nil, "A comma-separated list of network names.")
+	pcmd.AddListCloudFlag(cmd)
+	c.addListRegionFlagNetwork(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().StringSlice("cidr", nil, "A comma-separated list of /16 IPv4 CIDR blocks.")
+	addPhaseFlag(cmd, resource.Network)
+	addConnectionTypesFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -33,7 +40,39 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	networks, err := getNetworks(c.V2Client, environmentId)
+	name, err := cmd.Flags().GetStringSlice("name")
+	if err != nil {
+		return err
+	}
+
+	cloud, err := cmd.Flags().GetStringSlice("cloud")
+	if err != nil {
+		return err
+	}
+
+	region, err := cmd.Flags().GetStringSlice("region")
+	if err != nil {
+		return err
+	}
+
+	cidr, err := cmd.Flags().GetStringSlice("cidr")
+	if err != nil {
+		return err
+	}
+
+	phase, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
+	connectionType, err := cmd.Flags().GetStringSlice("connection-types")
+	if err != nil {
+		return err
+	}
+
+	cloud, phase, connectionType = toUpper(cloud), toUpper(phase), toUpper(connectionType)
+
+	networks, err := getNetworks(c.V2Client, environmentId, name, cloud, region, cidr, phase, connectionType)
 	if err != nil {
 		return err
 	}

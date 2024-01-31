@@ -5,7 +5,7 @@
     "description": "example network link endpoint",
     "network_link_endpoint": "nle-111111",
     "network_link_service": "nls-123456",
-    "phase": "READY"
+    "phase": "PENDING_ACCEPT"
   },
   {
     "id": "nle-222222",

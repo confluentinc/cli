@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newNetworkLinkServiceAssociationListCommand() *cobra.Command {
@@ -26,6 +27,7 @@ func (c *command) newNetworkLinkServiceAssociationListCommand() *cobra.Command {
 	}
 
 	c.addNetworkLinkServiceFlag(cmd)
+	addPhaseFlag(cmd, resource.NetworkLinkServiceAssociation)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -41,12 +43,17 @@ func (c *command) networkLinkServiceAssociationList(cmd *cobra.Command, _ []stri
 		return err
 	}
 
+	phase, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	associations, err := c.V2Client.ListNetworkLinkServiceAssociations(environmentId, networkLinkService)
+	associations, err := c.V2Client.ListNetworkLinkServiceAssociations(environmentId, networkLinkService, phase)
 	if err != nil {
 		return err
 	}
