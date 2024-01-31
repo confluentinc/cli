@@ -1,12 +1,12 @@
-Update per-broker or cluster-wide Kafka broker configurations.
+Update cluster-wide Kafka broker configurations.
 
 Usage:
-  confluent kafka broker update [id] [flags]
+  confluent kafka cluster configuration update [flags]
 
 Examples:
-Update configuration values for broker 1.
+Update configuration values for all brokers in the cluster.
 
-  $ confluent kafka broker update 1 --config min.insync.replicas=2,num.partitions=2
+  $ confluent kafka broker update --config min.insync.replicas=2,num.partitions=2
 
 Flags:
       --config strings            REQUIRED: A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
