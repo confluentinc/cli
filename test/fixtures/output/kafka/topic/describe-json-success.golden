@@ -1,22 +1,6 @@
-[
-  {
-    "name": "cleanup.policy",
-    "value": "delete",
-    "read_only": false
-  },
-  {
-    "name": "compression.type",
-    "value": "producer",
-    "read_only": true
-  },
-  {
-    "name": "num.partitions",
-    "value": "3",
-    "read_only": false
-  },
-  {
-    "name": "retention.ms",
-    "value": "604800000",
-    "read_only": false
-  }
-]
+{
+  "name": "topic-exist",
+  "is_internal": false,
+  "replication_factor": 0,
+  "partition_count": 3
+}
