@@ -13,12 +13,16 @@ func (c *command) newNetworkLinkServiceCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a network link service.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.networkLinkServiceCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a network link service for network "n-123456" with accepted environments "env-111111" and "env-222222".`,
-				Code: `confluent network network-link service create my-network-link-service --network n-123456 --description "example network link service" --accepted-environments env-111111,env-222222`,
+				Code: `confluent network network-link service create --network n-123456 --description "example network link service" --accepted-environments env-111111,env-222222`,
+			},
+			examples.Example{
+				Text: `Create a named network link service for network "n-123456" with accepted networks "n-abced1" and "n-abcde2".`,
+				Code: `confluent network network-link service create my-network-link-service --network n-123456 --description "example network link service" --accepted-networks n-abcde1,n-abcde2`,
 			},
 		),
 	}
@@ -32,12 +36,16 @@ func (c *command) newNetworkLinkServiceCreateCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("network"))
+	cmd.MarkFlagsOneRequired("accepted-networks", "accepted-environments")
 
 	return cmd
 }
 
 func (c *command) networkLinkServiceCreate(cmd *cobra.Command, args []string) error {
-	name := args[0]
+	name := ""
+	if len(args) == 1 {
+		name = args[0]
+	}
 
 	networkId, err := cmd.Flags().GetString("network")
 	if err != nil {
@@ -66,12 +74,15 @@ func (c *command) networkLinkServiceCreate(cmd *cobra.Command, args []string) er
 
 	createNetworkLinkService := networkingv1.NetworkingV1NetworkLinkService{
 		Spec: &networkingv1.NetworkingV1NetworkLinkServiceSpec{
-			DisplayName: networkingv1.PtrString(name),
 			Description: networkingv1.PtrString(description),
 			Environment: &networkingv1.GlobalObjectReference{Id: environmentId},
 			Network:     &networkingv1.EnvScopedObjectReference{Id: networkId},
 			Accept:      &networkingv1.NetworkingV1NetworkLinkServiceAcceptPolicy{},
 		},
+	}
+
+	if name != "" {
+		createNetworkLinkService.Spec.SetDisplayName(name)
 	}
 
 	if len(acceptedNetworks) > 0 {
