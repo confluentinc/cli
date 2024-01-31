@@ -15,10 +15,10 @@ import (
 )
 
 type PartitionData struct {
-	Partition   int32   `human:"Partition" json:"partition" yaml:"partition"`
-	Leader      int32   `human:"Leader" json:"leader" yaml:"leader"`
-	Replicas    []int32 `human:"Replicas" json:"replicas" yaml:"replicas"`
-	Isr         []int32 `human:"ISR" json:"isr" yaml:"isr"`
+	Partition int32   `human:"Partition" json:"partition" yaml:"partition"`
+	Leader    int32   `human:"Leader" json:"leader" yaml:"leader"`
+	Replicas  []int32 `human:"Replicas" json:"replicas" yaml:"replicas"`
+	Isr       []int32 `human:"ISR" json:"isr" yaml:"isr"`
 }
 
 type describeOutOnPrem struct {
@@ -92,9 +92,9 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 		}
 		partitionList[i] = &PartitionData{
-			PartitionId: partition.PartitionId,
-			Replicas:    make([]int32, len(replicas.Data)),
-			ISR:         make([]int32, 0, len(replicas.Data)),
+			Partition: partition.PartitionId,
+			Replicas:  make([]int32, len(replicas.Data)),
+			Isr:       make([]int32, 0, len(replicas.Data)),
 		}
 		for j, replica := range replicas.Data {
 			if replica.IsLeader {
@@ -102,7 +102,7 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 			}
 			partitionList[i].Replicas[j] = replica.BrokerId
 			if replica.IsInSync {
-				partitionList[i].ISR = append(partitionList[i].ISR, replica.BrokerId)
+				partitionList[i].Isr = append(partitionList[i].Isr, replica.BrokerId)
 			}
 		}
 	}
