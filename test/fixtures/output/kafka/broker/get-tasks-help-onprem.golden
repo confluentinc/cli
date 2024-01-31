@@ -10,10 +10,9 @@ List remove-broker tasks for broker 1.
 
 List broker tasks for all brokers in the cluster
 
-  $ confluent kafka broker get-tasks --all
+  $ confluent kafka broker get-tasks
 
 Flags:
-      --all                       List broker tasks for the cluster.
       --task-type string          Search by task type (add-broker or remove-broker).
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.

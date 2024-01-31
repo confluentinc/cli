@@ -22,13 +22,12 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Update configuration values for all brokers in the cluster.",
-				Code: "confluent kafka broker update --all --config min.insync.replicas=2,num.partitions=2",
+				Code: "confluent kafka broker update --config min.insync.replicas=2,num.partitions=2",
 			},
 		),
 	}
 
 	pcmd.AddConfigFlag(cmd)
-	cmd.Flags().Bool("all", false, "Apply configuration update to all brokers in the cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
@@ -43,5 +42,5 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return broker.Update(cmd, args, restClient, restContext, clusterId, true)
+	return broker.Update(cmd, args, restClient, restContext, clusterId)
 }
