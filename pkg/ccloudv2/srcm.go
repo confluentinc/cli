@@ -49,30 +49,6 @@ func (c *Client) GetSchemaRegistryClustersByEnvironment(environment string) ([]s
 	return list, nil
 }
 
-func (c *Client) GetSrcmV3ClustersByEnvironment(environment string) ([]srcmv3.SrcmV3Cluster, error) {
-	var list []srcmv3.SrcmV3Cluster
-
-	done := false
-	pageToken := ""
-	for !done {
-		req := c.SrcmV3Client.ClustersSrcmV3Api.ListSrcmV3Clusters(c.srcmApiContext()).Environment(environment)
-		if pageToken != "" {
-			req = req.PageToken(pageToken)
-		}
-		page, httpResp, err := c.SrcmV3Client.ClustersSrcmV3Api.ListSrcmV3ClustersExecute(req)
-		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, httpResp)
-		}
-		list = append(list, page.GetData()...)
-
-		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return list, nil
-}
-
 func (c *Client) executeListSchemaRegistryClusters(environment, pageToken string) (srcmv3.SrcmV3ClusterList, *http.Response, error) {
 	req := c.SrcmV3Client.ClustersSrcmV3Api.ListSrcmV3Clusters(c.srcmApiContext()).Environment(environment)
 	if pageToken != "" {

@@ -71,7 +71,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	clusters, err := c.V2Client.GetSrcmV3ClustersByEnvironment(environmentId)
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 	if err != nil {
 		return err
 	}
