@@ -112,8 +112,6 @@ github.com/cncf/xds/go v0.0.0-20211001041855-01bcc9b48dfe/go.mod h1:eXthEFrGJvWH
 github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9 h1:SPb0hN0B/XCUvaeaxferqVb9X5xFGaMKBAlP3HVW+MQ=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9/go.mod h1:Ja+ScdwUPpLwPDi/jI4FU2hI4Ncu3o4A4nxo05ehXHQ=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/srcmv3 v0.0.1 h1:anvRv2KSsYTWXT0WCEVYk32TARbkmXSiKiVWbDzZZDE=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/srcmv3 v0.0.1/go.mod h1:T201DIBKrUhmL/LUElvwnApHsSAHhaFlvZx3gbjtIgU=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0/go.mod h1:wNa9Qg2e2v/+PQsUyKh+qB22hhLkPR6Ahy6rP+1jmGI=
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0 h1:a2EaPzwLEYkgil7rlsqRUlt994PMGubtdgRrF8Kbo10=
@@ -158,8 +156,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.0 h1:Wr/ydXUs+gfKZdvcFx7naRSkn
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.0/go.mod h1:SK4KpKKPJu55An0L2fWITUuVWxa1NZX8TpYO5x6tuqE=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
-github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.0 h1:Axck11PErBK7rNUJKf8lM3/dBVXzum4oxzl6P++IW4U=
-github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.0/go.mod h1:qY4Y/QCDKI0eR+HLVJWGFstsTAiI83+sowKOyoRFhF0=
+github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.1-0.20240130201821-ff257f548b9f h1:zPrpRTdz8R8KNq9YXQFugNPjBUHQ6gSTwEksCc5bqA4=
+github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.1-0.20240130201821-ff257f548b9f/go.mod h1:qY4Y/QCDKI0eR+HLVJWGFstsTAiI83+sowKOyoRFhF0=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1 h1:WZJYfgXJrvTIYQpCFps/qHF7T8ekgPlX/SFqx4EY2zQ=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1/go.mod h1:kB+MXWYYg9ohrTCb27LlfpTbuexAzyYAmum105ow0ho=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0 h1:zI59UpVm88hQn+dG4KO3TRxD2xdSVQbg5aqSm9/3LXo=

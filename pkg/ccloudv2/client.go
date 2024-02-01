@@ -1,7 +1,6 @@
 package ccloudv2
 
 import (
-	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2-internal/srcmv3/v3"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
@@ -22,6 +21,7 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
+	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
