@@ -42,11 +42,6 @@ func handleSchemaRegistryClusters(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		}
-		//else if r.Method == http.MethodGet {
-		//	sgClusterList := getSchemaRegistryClusterList(TestSchemaRegistryUrl.String())
-		//	err := json.NewEncoder(w).Encode(sgClusterList)
-		//	require.NoError(t, err)
-		//}
 	}
 }
 
@@ -69,10 +64,6 @@ func handleSchemaRegistryCluster(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
-			//case http.MethodGet:
-			//	sgCluster := getSchemaRegistryCluster(packageTypeRegion2, TestSchemaRegistryUrl.String())
-			//	err := json.NewEncoder(w).Encode(sgCluster)
-			//	require.NoError(t, err)
 		}
 	}
 }
@@ -116,15 +107,6 @@ func getSchemaRegistryCluster(packageType, endpoint string) srcmv2.SrcmV2Cluster
 		},
 		Status: &srcmv2.SrcmV2ClusterStatus{Phase: srClusterStatus},
 	}
-}
-
-func getSchemaRegistryClusterList(httpEndpoint string) srcmv2.SrcmV2ClusterList {
-	srcmClusterList := srcmv2.SrcmV2ClusterList{
-		Data: []srcmv2.SrcmV2Cluster{
-			getSchemaRegistryCluster(packageTypeRegion2, httpEndpoint)},
-	}
-
-	return srcmClusterList
 }
 
 func getSchemaRegistryClusterV3(packageType, endpoint string) srcmv3.SrcmV3Cluster {
