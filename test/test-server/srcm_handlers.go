@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
+	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 )
 
 const (
@@ -40,11 +41,12 @@ func handleSchemaRegistryClusters(t *testing.T) http.HandlerFunc {
 			sgCluster := getSchemaRegistryCluster(req.Spec.GetPackage(), TestSchemaRegistryUrl.String())
 			err = json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
-		} else if r.Method == http.MethodGet {
-			sgClusterList := getSchemaRegistryClusterList(TestSchemaRegistryUrl.String())
-			err := json.NewEncoder(w).Encode(sgClusterList)
-			require.NoError(t, err)
 		}
+		//else if r.Method == http.MethodGet {
+		//	sgClusterList := getSchemaRegistryClusterList(TestSchemaRegistryUrl.String())
+		//	err := json.NewEncoder(w).Encode(sgClusterList)
+		//	require.NoError(t, err)
+		//}
 	}
 }
 
@@ -67,8 +69,35 @@ func handleSchemaRegistryCluster(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
+			//case http.MethodGet:
+			//	sgCluster := getSchemaRegistryCluster(packageTypeRegion2, TestSchemaRegistryUrl.String())
+			//	err := json.NewEncoder(w).Encode(sgCluster)
+			//	require.NoError(t, err)
+		}
+	}
+}
+
+func handleSchemaRegistryClustersV3(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			sgClusterList := getSchemaRegistryClusterListV3(TestSchemaRegistryUrl.String())
+			err := json.NewEncoder(w).Encode(sgClusterList)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleSchemaRegistryClusterV3(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		if id != srClusterId {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
+		switch r.Method {
 		case http.MethodGet:
-			sgCluster := getSchemaRegistryCluster(packageTypeRegion2, TestSchemaRegistryUrl.String())
+			sgCluster := getSchemaRegistryClusterV3(packageTypeRegion2, TestSchemaRegistryUrl.String())
 			err := json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		}
@@ -93,6 +122,30 @@ func getSchemaRegistryClusterList(httpEndpoint string) srcmv2.SrcmV2ClusterList 
 	srcmClusterList := srcmv2.SrcmV2ClusterList{
 		Data: []srcmv2.SrcmV2Cluster{
 			getSchemaRegistryCluster(packageTypeRegion2, httpEndpoint)},
+	}
+
+	return srcmClusterList
+}
+
+func getSchemaRegistryClusterV3(packageType, endpoint string) srcmv3.SrcmV3Cluster {
+	return srcmv3.SrcmV3Cluster{
+		Id: srcmv3.PtrString(srClusterId),
+		Spec: &srcmv3.SrcmV3ClusterSpec{
+			DisplayName:  srcmv3.PtrString("account schema-registry"),
+			Package:      &packageType,
+			HttpEndpoint: &endpoint,
+			Environment:  &srcmv3.GlobalObjectReference{Id: SRApiEnvId},
+			Region:       srcmv3.PtrString(nameRegion1),
+			Cloud:        srcmv3.PtrString(cloudRegion1),
+		},
+		Status: &srcmv3.SrcmV3ClusterStatus{Phase: srClusterStatus},
+	}
+}
+
+func getSchemaRegistryClusterListV3(httpEndpoint string) srcmv3.SrcmV3ClusterList {
+	srcmClusterList := srcmv3.SrcmV3ClusterList{
+		Data: []srcmv3.SrcmV3Cluster{
+			getSchemaRegistryClusterV3(packageTypeRegion2, httpEndpoint)},
 	}
 
 	return srcmClusterList
