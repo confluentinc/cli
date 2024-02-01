@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -40,6 +41,7 @@ func (c *command) dnsForwarderList(cmd *cobra.Command, _ []string) error {
 		if forwarder.Status == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
+		sort.Strings(forwarder.Spec.GetDomains())
 
 		if output.GetFormat(cmd) == output.Human {
 			list.Add(&dnsForwarderHumanOut{

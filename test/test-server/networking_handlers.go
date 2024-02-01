@@ -1452,7 +1452,7 @@ func getDnsForwarder(id, name string) networkingdnsforwarderv1.NetworkingV1DnsFo
 			Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
 				NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
 					Kind:         "ForwardViaIp",
-					DnsServerIps: []string{"10.200.0.0"},
+					DnsServerIps: []string{"10.200.0.0, 10.206.0.0"},
 				},
 			},
 			Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
