@@ -87,6 +87,8 @@ var ccloudV2Routes = []route{
 	{"/srcm/v2/clusters/{id}", handleSchemaRegistryCluster},
 	{"/srcm/v2/regions", handleSchemaRegistryRegions},
 	{"/srcm/v2/regions/{id}", handleSchemaRegistryRegion},
+	{"/srcm/v3/clusters", handleSchemaRegistryClustersV3},
+	{"/srcm/v3/clusters/{id}", handleSchemaRegistryClusterV3},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 }
 
