@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -263,7 +263,7 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 	return configFile, nil
 }
 
-func (c *clientConfigCommand) getSchemaRegistryCluster() (*srcmv3.SrcmV3Cluster, error) {
+func (c *clientConfigCommand) getSchemaRegistryCluster() (*srcmv2.SrcmV2Cluster, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
