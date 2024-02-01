@@ -41,11 +41,12 @@ func handleSchemaRegistryClusters(t *testing.T) http.HandlerFunc {
 			sgCluster := getSchemaRegistryCluster(req.Spec.GetPackage(), TestSchemaRegistryUrl.String())
 			err = json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
-		} else if r.Method == http.MethodGet {
-			sgClusterList := getSchemaRegistryClusterList(TestSchemaRegistryUrl.String())
-			err := json.NewEncoder(w).Encode(sgClusterList)
-			require.NoError(t, err)
 		}
+		//else if r.Method == http.MethodGet {
+		//	sgClusterList := getSchemaRegistryClusterList(TestSchemaRegistryUrl.String())
+		//	err := json.NewEncoder(w).Encode(sgClusterList)
+		//	require.NoError(t, err)
+		//}
 	}
 }
 
@@ -68,10 +69,10 @@ func handleSchemaRegistryCluster(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
-		case http.MethodGet:
-			sgCluster := getSchemaRegistryCluster(packageTypeRegion2, TestSchemaRegistryUrl.String())
-			err := json.NewEncoder(w).Encode(sgCluster)
-			require.NoError(t, err)
+			//case http.MethodGet:
+			//	sgCluster := getSchemaRegistryCluster(packageTypeRegion2, TestSchemaRegistryUrl.String())
+			//	err := json.NewEncoder(w).Encode(sgCluster)
+			//	require.NoError(t, err)
 		}
 	}
 }
