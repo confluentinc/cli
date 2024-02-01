@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type topicOut struct {
+type TopicOut struct {
 	Name              string `human:"Name" serialized:"name"`
 	IsInternal        bool   `human:"Internal" serialized:"is_internal"`
 	ReplicationFactor int32  `human:"Replication Factor" serialized:"replication_factor"`
@@ -41,7 +41,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, topic := range topics {
-		list.Add(&topicOut{
+		list.Add(&TopicOut{
 			Name:              topic.GetTopicName(),
 			IsInternal:        topic.GetIsInternal(),
 			ReplicationFactor: topic.GetReplicationFactor(),

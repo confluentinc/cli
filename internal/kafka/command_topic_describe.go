@@ -49,11 +49,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
-	if err != nil {
-		return err
-	}
-
 	topic, httpResp, err := kafkaREST.CloudClient.GetKafkaTopic(topicName)
 	if err != nil {
 		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
@@ -62,18 +57,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	list := output.NewList(cmd)
-	for _, config := range configs {
-		list.Add(&topicConfigurationOut{
-			Name:     config.GetName(),
-			Value:    config.GetValue(),
-			ReadOnly: config.GetIsReadOnly(),
-		})
-	}
-	list.Add(&topicConfigurationOut{
-		Name:     numPartitionsKey,
-		Value:    fmt.Sprint(topic.PartitionsCount),
-		ReadOnly: false,
+	table := output.NewTable(cmd)
+	table.Add(&TopicOut{
+		Name:              topic.GetTopicName(),
+		IsInternal:        topic.GetIsInternal(),
+		ReplicationFactor: topic.GetReplicationFactor(),
+		PartitionCount:    topic.GetPartitionsCount(),
 	})
-	return list.Print()
+	return table.Print()
 }
