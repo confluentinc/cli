@@ -15,15 +15,15 @@ import (
 )
 
 type PartitionData struct {
-	Partition int32   `human:"Partition" json:"partition" yaml:"partition"`
-	Leader    int32   `human:"Leader" json:"leader" yaml:"leader"`
-	Replicas  []int32 `human:"Replicas" json:"replicas" yaml:"replicas"`
-	Isr       []int32 `human:"ISR" json:"isr" yaml:"isr"`
+	Partition int32   `human:"Partition" serialized:"partition"`
+	Leader    int32   `human:"Leader" serialized:"leader"`
+	Replicas  []int32 `human:"Replicas" serialized:"replicas"`
+	Isr       []int32 `human:"ISR" serialized:"isr"`
 }
 
 type describeOutOnPrem struct {
-	topicOut
-	Partitions []*PartitionData `json:"partitions" yaml:"partitions"`
+	TopicOut
+	Partitions []*PartitionData `serialized:"partitions"`
 }
 
 func (c *command) newDescribeCommandOnPrem() *cobra.Command {
@@ -68,7 +68,7 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	topicDescribe := &topicOut{
+	topicDescribe := &TopicOut{
 		Name:              topic.TopicName,
 		IsInternal:        topic.IsInternal,
 		ReplicationFactor: topic.ReplicationFactor,
@@ -108,10 +108,12 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutput(cmd, &describeOutOnPrem{
-			topicOut:   *topicDescribe,
+		table := output.NewTable(cmd)
+		table.Add(&describeOutOnPrem{
+			TopicOut:   *topicDescribe,
 			Partitions: partitionList,
 		})
+		return table.Print()
 	}
 
 	table := output.NewTable(cmd)

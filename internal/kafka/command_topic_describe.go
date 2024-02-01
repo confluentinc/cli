@@ -58,7 +58,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&topicOut{
+	table.Add(&TopicOut{
 		Name:              topic.GetTopicName(),
 		IsInternal:        topic.GetIsInternal(),
 		ReplicationFactor: topic.GetReplicationFactor(),
