@@ -23,34 +23,35 @@ type ReplicaOut struct {
 
 func (c *replicaCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list <topic>",
+		Use:   "list",
 		Short: "List Kafka replicas.",
 		Long:  "List partition-replicas for a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List the replicas for partition 1 of topic "my-topic".`,
-				Code: "confluent kafka replica list my-topic --partition 1",
+				Code: "confluent kafka replica list --topic my-topic --partition 1",
 			},
 			examples.Example{
-				Text: `List the replicas for topic "my-topic".`,
-				Code: "confluent kafka replica list my-topic",
+				Text: `List the replicas of topic "my-topic".`,
+				Code: "confluent kafka replica list --topic my-topic",
 			},
 		),
 	}
 
-	cmd.Flags().Int32("partition", -1, "Partition ID.")
+	cmd.Flags().String("topic", "", "Topic name.")
+	cmd.Flags().Int32("partition", 0, "Partition ID.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
 
 	return cmd
 }
 
 func (c *replicaCommand) list(cmd *cobra.Command, args []string) error {
-	topic := args[0]
-
-	partitionId, err := cmd.Flags().GetInt32("partition")
+	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err
 	}
@@ -61,7 +62,12 @@ func (c *replicaCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	var replicas []kafkarestv3.ReplicaData
-	if partitionId != -1 {
+	if cmd.Flags().Changed("partition") {
+		partitionId, err := cmd.Flags().GetInt32("partition")
+		if err != nil {
+			return err
+		}
+
 		partitionReplicas, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partitionId)
 		if err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)

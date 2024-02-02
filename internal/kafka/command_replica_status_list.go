@@ -52,7 +52,7 @@ func (c *replicaCommand) newStatusListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka replica statuses.",
-		Long:  "List partition-replicas statuses filtered by topic and partition.",
+		Long:  "List the statuses of partition replicas, filtered by topic and partition.",
 		Args:  cobra.NoArgs,
 		RunE:  c.statusList,
 		Example: examples.BuildExampleString(
@@ -68,7 +68,7 @@ func (c *replicaCommand) newStatusListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("topic", "", "Topic name.")
-	cmd.Flags().Int32("partition", -1, "Partition ID.")
+	cmd.Flags().Int32("partition", 0, "Partition ID.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
@@ -83,11 +83,6 @@ func (c *replicaCommand) statusList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	partitionId, err := cmd.Flags().GetInt32("partition")
-	if err != nil {
-		return err
-	}
-
 	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -95,7 +90,12 @@ func (c *replicaCommand) statusList(cmd *cobra.Command, _ []string) error {
 
 	var replicas kafkarestv3.ReplicaStatusDataList
 	var resp *http.Response
-	if partitionId != -1 {
+	if cmd.Flags().Changed("partition") {
+		partitionId, err := cmd.Flags().GetInt32("partition")
+		if err != nil {
+			return err
+		}
+
 		replicas, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(restContext, clusterId, topic, partitionId)
 	} else {
 		replicas, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(restContext, clusterId, topic)
