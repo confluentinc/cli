@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newSrcmV3Client(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *srcmv3.APIClient {
+func newSrcmClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *srcmv3.APIClient {
 	cfg := srcmv3.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = httpClient
@@ -24,7 +24,7 @@ func (c *Client) srcmApiContext() context.Context {
 }
 
 func (c *Client) GetSchemaRegistryClusterById(clusterId, environment string) (srcmv3.SrcmV3Cluster, error) {
-	cluster, httpResp, err := c.SrcmV3Client.ClustersSrcmV3Api.GetSrcmV3Cluster(c.srcmApiContext(), clusterId).Environment(environment).Execute()
+	cluster, httpResp, err := c.SrcmClient.ClustersSrcmV3Api.GetSrcmV3Cluster(c.srcmApiContext(), clusterId).Environment(environment).Execute()
 	return cluster, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -50,9 +50,9 @@ func (c *Client) GetSchemaRegistryClustersByEnvironment(environment string) ([]s
 }
 
 func (c *Client) executeListSchemaRegistryClusters(environment, pageToken string) (srcmv3.SrcmV3ClusterList, *http.Response, error) {
-	req := c.SrcmV3Client.ClustersSrcmV3Api.ListSrcmV3Clusters(c.srcmApiContext()).Environment(environment)
+	req := c.SrcmClient.ClustersSrcmV3Api.ListSrcmV3Clusters(c.srcmApiContext()).Environment(environment)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.SrcmV3Client.ClustersSrcmV3Api.ListSrcmV3ClustersExecute(req)
+	return c.SrcmClient.ClustersSrcmV3Api.ListSrcmV3ClustersExecute(req)
 }

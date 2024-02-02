@@ -51,7 +51,7 @@ type Client struct {
 	NetworkingPrivateLinkClient *networkingprivatelinkv1.APIClient
 	OrgClient                   *orgv2.APIClient
 	ServiceQuotaClient          *servicequotav1.APIClient
-	SrcmV3Client                *srcmv3.APIClient
+	SrcmClient                  *srcmv3.APIClient
 	SsoClient                   *ssov2.APIClient
 	StreamDesignerClient        *streamdesignerv1.APIClient
 }
@@ -88,7 +88,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		NetworkingPrivateLinkClient: newNetworkingPrivateLinkClient(httpClient, url, userAgent, unsafeTrace),
 		OrgClient:                   newOrgClient(httpClient, url, userAgent, unsafeTrace),
 		ServiceQuotaClient:          newServiceQuotaClient(httpClient, url, userAgent, unsafeTrace),
-		SrcmV3Client:                newSrcmV3Client(httpClient, url, userAgent, unsafeTrace),
+		SrcmClient:                  newSrcmClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                   newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		StreamDesignerClient:        newStreamDesignerClient(httpClient, url, userAgent, unsafeTrace),
 	}
