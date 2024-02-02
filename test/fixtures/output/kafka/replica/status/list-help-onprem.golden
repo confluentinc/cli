@@ -1,18 +1,19 @@
-List partition-replicas for a Kafka topic.
+List partition-replicas statuses filtered by topic and partition.
 
 Usage:
-  confluent kafka replica list <topic> [flags]
+  confluent kafka replica status list [flags]
 
 Examples:
-List the replicas for partition 1 of topic "my-topic".
+List the replica statuses for partition 1 of topic "my-topic".
 
-  $ confluent kafka replica list my-topic --partition 1
+  $ confluent kafka replica status list --topic my-topic --partition 1
 
-List the replicas for topic "my-topic".
+List the replica statuses for topic "my-topic".
 
-  $ confluent kafka replica list my-topic
+  $ confluent kafka replica status list --topic my-topic
 
 Flags:
+      --topic string              REQUIRED: Topic name.
       --partition int32           Partition ID. (default -1)
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.

@@ -366,11 +366,15 @@ func (s *CLITestSuite) TestKafkaPartition() {
 func (s *CLITestSuite) TestKafkaReplica() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka replica list --topic topic-exist", fixture: "kafka/replica/list-topic-replicas.golden"},
-		{args: "kafka replica list --topic topic-exist -o json", fixture: "kafka/replica/list-topic-replicas-json.golden"},
-		{args: "kafka replica list --topic topic-exist --partition 2", fixture: "kafka/replica/list-partition-replicas.golden"},
-		{args: "kafka replica list --topic topic-exist --partition 2 -o yaml", fixture: "kafka/replica/list-partition-replicas-yaml.golden"},
-		{args: "kafka replica list", fixture: "kafka/replica/no-flags-error.golden", exitCode: 1},
+		{args: "kafka replica list topic-exist", fixture: "kafka/replica/list.golden"},
+		{args: "kafka replica list topic-exist -o json", fixture: "kafka/replica/list-json.golden"},
+		{args: "kafka replica list topic-exist --partition 0", fixture: "kafka/replica/list-partition-replicas.golden"},
+
+		{args: "kafka replica status list --topic topic-exist", fixture: "kafka/replica/status/list-topic-replicas.golden"},
+		{args: "kafka replica status list --topic topic-exist -o json", fixture: "kafka/replica/status/list-topic-replicas-json.golden"},
+		{args: "kafka replica status list --topic topic-exist --partition 2", fixture: "kafka/replica/status/list-partition-replicas.golden"},
+		{args: "kafka replica status list --topic topic-exist --partition 2 -o yaml", fixture: "kafka/replica/status/list-partition-replicas-yaml.golden"},
+		{args: "kafka replica status list", fixture: "kafka/replica/status/no-flags-error.golden", exitCode: 1},
 	}
 	for _, test := range tests {
 		test.login = "onprem"

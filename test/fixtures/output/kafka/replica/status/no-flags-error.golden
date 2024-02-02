@@ -1,15 +1,15 @@
 Error: required flag(s) "topic" not set
 Usage:
-  confluent kafka replica list [flags]
+  confluent kafka replica status list [flags]
 
 Examples:
-List the replica statuses for partition 1 of topic "my_topic".
+List the replica statuses for partition 1 of topic "my-topic".
 
-  $ confluent kafka replica list --topic my_topic --partition 1
+  $ confluent kafka replica status list --topic my-topic --partition 1
 
-List the replica statuses for topic "my_topic".
+List the replica statuses for topic "my-topic".
 
-  $ confluent kafka replica list --topic my_topic
+  $ confluent kafka replica status list --topic my-topic
 
 Flags:
       --topic string              REQUIRED: Topic name.
