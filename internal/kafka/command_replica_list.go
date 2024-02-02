@@ -63,12 +63,12 @@ func (c *replicaCommand) list(cmd *cobra.Command, args []string) error {
 
 	var replicas []kafkarestv3.ReplicaData
 	if cmd.Flags().Changed("partition") {
-		partitionId, err := cmd.Flags().GetInt32("partition")
+		partition, err := cmd.Flags().GetInt32("partition")
 		if err != nil {
 			return err
 		}
 
-		partitionReplicas, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partitionId)
+		partitionReplicas, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topic, partition)
 		if err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		} else if partitionReplicas.Data == nil {

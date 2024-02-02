@@ -23,6 +23,7 @@ type configOut struct {
 func (c *command) newConfigurationCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "configuration",
+		Aliases:     []string{"config"},
 		Short:       "Manage Schema Registry configuration.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}

@@ -108,8 +108,8 @@ func (c *replicaCommand) statusList(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, replica := range replicas.Data {
-		if output.GetFormat(cmd) == output.Human {
+	if output.GetFormat(cmd) == output.Human {
+		for _, replica := range replicas.Data {
 			list.Add(&replicaHumanOut{
 				ClusterId:          replica.ClusterId,
 				TopicName:          replica.TopicName,
@@ -126,7 +126,9 @@ func (c *replicaCommand) statusList(cmd *cobra.Command, _ []string) error {
 				LastFetchTimeMs:    utils.FormatUnixTime(replica.LastFetchTimeMs),
 				LinkName:           replica.LinkName,
 			})
-		} else {
+		}
+	} else {
+		for _, replica := range replicas.Data {
 			list.Add(&replicaSerializedOut{
 				ClusterId:          replica.ClusterId,
 				TopicName:          replica.TopicName,
