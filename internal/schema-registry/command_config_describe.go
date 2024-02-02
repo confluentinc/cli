@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *command) newConfigDescribeCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newConfigurationDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe top-level or subject-level schema configuration.",
@@ -23,11 +23,11 @@ func (c *command) newConfigDescribeCommand(cfg *config.Config) *cobra.Command {
 
 	example1 := examples.Example{
 		Text: `Describe the configuration of subject "payments".`,
-		Code: "confluent schema-registry config describe --subject payments",
+		Code: "confluent schema-registry configuration describe --subject payments",
 	}
 	example2 := examples.Example{
 		Text: "Describe the top-level configuration.",
-		Code: "confluent schema-registry config describe",
+		Code: "confluent schema-registry configuration describe",
 	}
 	if cfg.IsOnPremLogin() {
 		example1.Code += " " + onPremAuthenticationMsg
