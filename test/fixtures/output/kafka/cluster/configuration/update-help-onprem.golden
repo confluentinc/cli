@@ -1,19 +1,15 @@
-List broker tasks.
+Update cluster-wide Kafka broker configurations.
 
 Usage:
-  confluent kafka broker get-tasks [id] [flags]
+  confluent kafka cluster configuration update [flags]
 
 Examples:
-List remove-broker tasks for broker 1.
+Update configuration values for all brokers in the cluster.
 
-  $ confluent kafka broker get-tasks 1 --task-type remove-broker
-
-List broker tasks for all brokers in the cluster
-
-  $ confluent kafka broker get-tasks
+  $ confluent kafka broker update --config min.insync.replicas=2,num.partitions=2
 
 Flags:
-      --task-type string          Search by task type (add-broker or remove-broker).
+      --config strings            REQUIRED: A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy. Include for mTLS authentication.
