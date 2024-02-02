@@ -57,7 +57,7 @@ func ListTopics(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restConte
 
 	list := output.NewList(cmd)
 	for _, topic := range topics.Data {
-		list.Add(&TopicOut{
+		list.Add(&topicOut{
 			Name:              topic.TopicName,
 			IsInternal:        topic.IsInternal,
 			ReplicationFactor: topic.ReplicationFactor,

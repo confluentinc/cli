@@ -2,25 +2,5 @@
   "name": "topic-exist",
   "is_internal": false,
   "replication_factor": 0,
-  "partition_count": 3,
-  "partitions": [
-    {
-      "partition": 0,
-      "leader": 1001,
-      "replicas": [1001, 1002, 1003],
-      "isr": [1001, 1002, 1003]
-    },
-    {
-      "partition": 1,
-      "leader": 1002,
-      "replicas": [1001, 1002, 1003],
-      "isr": [1002, 1003]
-    },
-    {
-      "partition": 2,
-      "leader": 1003,
-      "replicas": [1001, 1002, 1003],
-      "isr": [1003]
-    }
-  ]
+  "partition_count": 3
 }
