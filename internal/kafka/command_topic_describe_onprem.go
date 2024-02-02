@@ -8,23 +8,10 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
-
-type PartitionData struct {
-	PartitionId int32   `human:"Partition" json:"partition" yaml:"partition"`
-	Leader      int32   `human:"Leader" json:"leader" yaml:"leader"`
-	Replicas    []int32 `human:"Replicas" json:"replicas" yaml:"replicas"`
-	ISR         []int32 `human:"ISR" json:"isr" yaml:"isr"`
-}
-
-type describeOutOnPrem struct {
-	topicOut
-	Partitions []*PartitionData `json:"partitions" yaml:"partitions"`
-}
 
 func (c *command) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
@@ -68,63 +55,12 @@ func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCo
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	topicDescribe := &topicOut{
+	table := output.NewTable(cmd)
+	table.Add(&topicOut{
 		Name:              topic.TopicName,
 		IsInternal:        topic.IsInternal,
 		ReplicationFactor: topic.ReplicationFactor,
 		PartitionCount:    topic.PartitionsCount,
-	}
-
-	partitions, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
-	if err != nil {
-		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-	} else if partitions.Data == nil {
-		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
-	}
-
-	partitionList := make([]*PartitionData, len(partitions.Data))
-
-	for i, partition := range partitions.Data {
-		replicas, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partition.PartitionId)
-		if err != nil {
-			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-		} else if replicas.Data == nil {
-			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
-		}
-		partitionList[i] = &PartitionData{
-			PartitionId: partition.PartitionId,
-			Replicas:    make([]int32, len(replicas.Data)),
-			ISR:         make([]int32, 0, len(replicas.Data)),
-		}
-		for j, replica := range replicas.Data {
-			if replica.IsLeader {
-				partitionList[i].Leader = replica.BrokerId
-			}
-			partitionList[i].Replicas[j] = replica.BrokerId
-			if replica.IsInSync {
-				partitionList[i].ISR = append(partitionList[i].ISR, replica.BrokerId)
-			}
-		}
-	}
-
-	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutput(cmd, &describeOutOnPrem{
-			topicOut:   *topicDescribe,
-			Partitions: partitionList,
-		})
-	}
-
-	table := output.NewTable(cmd)
-	table.Add(topicDescribe)
-	if err := table.Print(); err != nil {
-		return err
-	}
-
-	output.Println(false, "")
-
-	list := output.NewList(cmd)
-	for _, partition := range partitionList {
-		list.Add(partition)
-	}
-	return list.Print()
+	})
+	return table.Print()
 }

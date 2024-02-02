@@ -1,19 +1,20 @@
-Error: required flag(s) "topic" not set
+List the statuses of partition replicas, filtered by topic and partition.
+
 Usage:
-  confluent kafka replica list [flags]
+  confluent kafka replica status list [flags]
 
 Examples:
-List the replica statuses for partition 1 of topic "my_topic".
+List the replica statuses for partition 1 of topic "my-topic".
 
-  $ confluent kafka replica list --topic my_topic --partition 1
+  $ confluent kafka replica status list --topic my-topic --partition 1
 
-List the replica statuses for topic "my_topic".
+List the replica statuses for topic "my-topic".
 
-  $ confluent kafka replica list --topic my_topic
+  $ confluent kafka replica status list --topic my-topic
 
 Flags:
       --topic string              REQUIRED: Topic name.
-      --partition int32           Partition ID. (default -1)
+      --partition int32           Partition ID.
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy. Include for mTLS authentication.
@@ -26,4 +27,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-

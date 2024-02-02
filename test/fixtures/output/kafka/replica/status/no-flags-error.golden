@@ -1,16 +1,15 @@
-List partition-replicas for a Kafka topic.
-
+Error: required flag(s) "topic" not set
 Usage:
-  confluent kafka replica list [flags]
+  confluent kafka replica status list [flags]
 
 Examples:
-List the replicas for partition 1 of topic "my-topic".
+List the replica statuses for partition 1 of topic "my-topic".
 
-  $ confluent kafka replica list --topic my-topic --partition 1
+  $ confluent kafka replica status list --topic my-topic --partition 1
 
-List the replicas of topic "my-topic".
+List the replica statuses for topic "my-topic".
 
-  $ confluent kafka replica list --topic my-topic
+  $ confluent kafka replica status list --topic my-topic
 
 Flags:
       --topic string              REQUIRED: Topic name.
@@ -27,3 +26,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
