@@ -8,13 +8,8 @@ Update configuration values for broker 1.
 
   $ confluent kafka broker update 1 --config min.insync.replicas=2,num.partitions=2
 
-Update configuration values for all brokers in the cluster.
-
-  $ confluent kafka broker update --all --config min.insync.replicas=2,num.partitions=2
-
 Flags:
       --config strings            REQUIRED: A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
-      --all                       Apply configuration update to all brokers in the cluster.
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy. Include for mTLS authentication.
