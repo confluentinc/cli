@@ -1,2 +1,1 @@
-Are you sure you want to delete service account "sa-12345"?
-To confirm, type "service-account". To cancel, press Ctrl-C: Deleted service account "sa-12345".
+Are you sure you want to delete service account "sa-12345"? (y/n): Deleted service account "sa-12345".
