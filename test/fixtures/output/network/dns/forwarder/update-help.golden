@@ -14,8 +14,8 @@ Update the DNS server IPs and domains of DNS forwarder "dnsf-123456".
 
 Flags:
       --dns-server-ips strings   A comma-separated list of IP addresses for the DNS server.
-      --name string              Name of the DNS forwarder.
       --domains strings          A comma-separated list of domains for the DNS forwarder to use.
+      --name string              Name of the DNS forwarder.
       --context string           CLI context name.
       --environment string       Environment ID.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
