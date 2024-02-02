@@ -97,11 +97,14 @@ func (c *replicaCommand) statusList(cmd *cobra.Command, _ []string) error {
 		}
 
 		replicas, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(restContext, clusterId, topic, partitionId)
+		if err != nil {
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+		}
 	} else {
 		replicas, resp, err = restClient.ReplicaStatusApi.ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(restContext, clusterId, topic)
-	}
-	if err != nil {
-		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+		if err != nil {
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+		}
 	}
 
 	list := output.NewList(cmd)
