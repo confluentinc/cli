@@ -59,6 +59,7 @@ func newTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comman
 		cmd.AddCommand(c.newUpdateCommandOnPrem())
 	}
 
+	cmd.AddCommand(c.newConfigurationCommand(cfg))
 	cmd.AddCommand(c.newConsumeCommand())
 	cmd.AddCommand(c.newProduceCommand())
 
