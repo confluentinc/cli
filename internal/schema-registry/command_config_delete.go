@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c *command) newConfigDeleteCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newConfigurationDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete top-level or subject-level schema configuration.",
@@ -24,11 +24,11 @@ func (c *command) newConfigDeleteCommand(cfg *config.Config) *cobra.Command {
 
 	example1 := examples.Example{
 		Text: "Delete the top-level configuration.",
-		Code: "confluent schema-registry config delete",
+		Code: "confluent schema-registry configuration delete",
 	}
 	example2 := examples.Example{
 		Text: `Delete the subject-level configuration of subject "payments".`,
-		Code: "confluent schema-registry config delete --subject payments",
+		Code: "confluent schema-registry configuration delete --subject payments",
 	}
 	if cfg.IsOnPremLogin() {
 		example1.Code += " " + onPremAuthenticationMsg
