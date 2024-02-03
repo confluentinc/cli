@@ -30,8 +30,7 @@ type out struct {
 
 func GetId(cmd *cobra.Command, args []string) (int32, error) {
 	if len(args) > 0 {
-		brokerIdStr := args[0]
-		brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
+		brokerId, err := strconv.ParseInt(args[0], 10, 32)
 		return int32(brokerId), err
 	}
 	return -1, nil

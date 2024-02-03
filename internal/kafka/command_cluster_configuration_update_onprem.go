@@ -59,7 +59,7 @@ func (c *clusterCommand) configurationUpdateOnPrem(cmd *cobra.Command, _ []strin
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.Printf(false, "Updated the following broker configurations for cluster \"%s\":\n", clusterId)
+		output.Printf(c.Config.EnableColor, "Updated the following broker configurations for cluster \"%s\":\n", clusterId)
 	}
 
 	list := output.NewList(cmd)

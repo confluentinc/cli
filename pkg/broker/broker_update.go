@@ -35,7 +35,7 @@ func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.Printf(false, "Updated the following configurations for broker \"%d\":\n", brokerId)
+		output.Printf(c.Config.EnableColor, "Updated the following configurations for broker \"%d\":\n", brokerId)
 	}
 
 	list := output.NewList(cmd)
