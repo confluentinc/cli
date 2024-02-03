@@ -60,7 +60,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
-	deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
+	deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker task list <id> --task-type remove-broker`.\n"
 	if len(deletedIds) == 1 {
 		output.Printf(c.Config.EnableColor, deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIds[0]))
 	} else if len(deletedIds) > 1 {

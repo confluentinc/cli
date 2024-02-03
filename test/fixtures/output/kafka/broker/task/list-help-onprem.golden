@@ -1,19 +1,19 @@
-Describe cluster-wide or per-broker configuration values.
+List broker tasks.
 
 Usage:
-  confluent kafka broker describe [id] [flags]
+  confluent kafka broker task list [id] [flags]
 
 Examples:
-Describe the "min.insync.replicas" configuration for broker 1.
+List remove-broker tasks for broker 1.
 
-  $ confluent kafka broker describe 1 --config-name min.insync.replicas
+  $ confluent kafka broker task list 1 --task-type remove-broker
 
-Describe the non-default cluster-wide broker configuration values.
+List broker tasks for all brokers in the cluster
 
-  $ confluent kafka broker describe
+  $ confluent kafka broker task list
 
 Flags:
-      --config-name string        Get a specific configuration value (pair with "--all" to see a cluster-wide configuration).
+      --task-type string          Search by task type (add-broker or remove-broker).
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy. Include for mTLS authentication.
