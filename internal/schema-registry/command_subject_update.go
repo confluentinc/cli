@@ -59,16 +59,6 @@ func (c *command) newSubjectUpdateCommand(cfg *config.Config) *cobra.Command {
 		addSchemaRegistryEndpointFlag(cmd)
 	}
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	return cmd
 }
 
