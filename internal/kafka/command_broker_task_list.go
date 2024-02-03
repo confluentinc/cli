@@ -29,20 +29,20 @@ type brokerTaskData struct {
 	ErrorMessage      string                     `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
 
-func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
+func (c *brokerCommand) newTaskListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-tasks [id]",
+		Use:   "list [id]",
 		Short: "List broker tasks.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.getTasks,
+		RunE:  c.taskList,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List remove-broker tasks for broker 1.",
-				Code: "confluent kafka broker get-tasks 1 --task-type remove-broker",
+				Code: "confluent kafka broker task list 1 --task-type remove-broker",
 			},
 			examples.Example{
 				Text: "List broker tasks for all brokers in the cluster",
-				Code: "confluent kafka broker get-tasks",
+				Code: "confluent kafka broker task list",
 			},
 		),
 	}
@@ -54,7 +54,7 @@ func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
+func (c *brokerCommand) taskList(cmd *cobra.Command, args []string) error {
 	brokerId, err := broker.GetId(cmd, args)
 	if err != nil {
 		return err

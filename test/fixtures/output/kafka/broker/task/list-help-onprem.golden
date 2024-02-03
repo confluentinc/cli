@@ -1,16 +1,16 @@
 List broker tasks.
 
 Usage:
-  confluent kafka broker get-tasks [id] [flags]
+  confluent kafka broker task list [id] [flags]
 
 Examples:
 List remove-broker tasks for broker 1.
 
-  $ confluent kafka broker get-tasks 1 --task-type remove-broker
+  $ confluent kafka broker task list 1 --task-type remove-broker
 
 List broker tasks for all brokers in the cluster
 
-  $ confluent kafka broker get-tasks
+  $ confluent kafka broker task list
 
 Flags:
       --task-type string          Search by task type (add-broker or remove-broker).

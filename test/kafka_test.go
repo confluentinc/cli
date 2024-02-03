@@ -263,10 +263,10 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker delete 1 2", input: "y\n", fixture: "kafka/broker/delete-multiple-prompt.golden"},
 		{args: "kafka broker delete 1 3", fixture: "kafka/broker/delete-multiple-fail.golden", exitCode: 1},
 
-		{args: "kafka broker get-tasks 1", fixture: "kafka/broker/get-tasks-1.golden"},
-		{args: "kafka broker get-tasks 1 --task-type remove-broker", fixture: "kafka/broker/get-tasks-1-remove-broker.golden"},
-		{args: "kafka broker get-tasks", fixture: "kafka/broker/get-tasks-all.golden"},
-		{args: "kafka broker get-tasks --task-type add-broker", fixture: "kafka/broker/get-tasks-all-add-broker.golden"},
+		{args: "kafka broker task list 1", fixture: "kafka/broker/task/list-1.golden"},
+		{args: "kafka broker task list 1 --task-type remove-broker", fixture: "kafka/broker/task/list-1-remove-broker.golden"},
+		{args: "kafka broker task list", fixture: "kafka/broker/task/list-all.golden"},
+		{args: "kafka broker task list --task-type add-broker", fixture: "kafka/broker/task/list-all-add-broker.golden"},
 	}
 
 	for _, test := range tests {

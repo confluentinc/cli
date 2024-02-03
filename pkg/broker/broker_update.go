@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/properties"
 )
 
-func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
+func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, enableColor bool) error {
 	brokerId, err := GetId(cmd, args)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func Update(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		output.Printf(c.Config.EnableColor, "Updated the following configurations for broker \"%d\":\n", brokerId)
+		output.Printf(enableColor, "Updated the following configurations for broker \"%d\":\n", brokerId)
 	}
 
 	list := output.NewList(cmd)
