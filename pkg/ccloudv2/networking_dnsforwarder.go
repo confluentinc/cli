@@ -62,3 +62,13 @@ func (c *Client) DeleteDnsForwarder(environment, id string) error {
 	httpResp, err := c.NetworkingDnsForwarderClient.DnsForwardersNetworkingV1Api.DeleteNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
+
+func (c *Client) CreateDnsForwarder(forwarder networkingdnsforwarderv1.NetworkingV1DnsForwarder) (networkingdnsforwarderv1.NetworkingV1DnsForwarder, error) {
+	resp, httpResp, err := c.NetworkingDnsForwarderClient.DnsForwardersNetworkingV1Api.CreateNetworkingV1DnsForwarder(c.networkingApiContext()).NetworkingV1DnsForwarder(forwarder).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) UpdateDnsForwarder(environment, id string, dnsForwarderUpdate networkingdnsforwarderv1.NetworkingV1DnsForwarder) (networkingdnsforwarderv1.NetworkingV1DnsForwarder, error) {
+	resp, httpResp, err := c.NetworkingDnsForwarderClient.DnsForwardersNetworkingV1Api.UpdateNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext(), id).NetworkingV1DnsForwarder(dnsForwarderUpdate).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}

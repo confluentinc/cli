@@ -4,9 +4,11 @@ Usage:
   confluent network dns forwarder [command]
 
 Available Commands:
+  create      Create a DNS forwarder.
   delete      Delete one or more DNS forwarders.
   describe    Describe a DNS forwarder.
   list        List DNS forwarders.
+  update      Update an existing DNS forwarder.
 
 Global Flags:
   -h, --help            Show help for this command.
