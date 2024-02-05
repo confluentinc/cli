@@ -27,14 +27,14 @@ func (c *command) newDnsForwarderUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
-	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
 	cmd.Flags().String("name", "", "Name of the DNS forwarder.")
+	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
+	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("dns-server-ips", "domains", "name")
+	cmd.MarkFlagsOneRequired("name", "domains", "dns-server-ips")
 
 	return cmd
 }
