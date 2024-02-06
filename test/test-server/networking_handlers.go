@@ -1579,7 +1579,7 @@ func handleNetworkingDnsForwarderCreate(t *testing.T) http.HandlerFunc {
 					Domains:     body.Spec.Domains,
 					Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
 						NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
-							Kind:         "ForwardViaIp",
+							Kind:         body.Spec.Config.NetworkingV1ForwardViaIp.Kind,
 							DnsServerIps: body.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps,
 						},
 					},

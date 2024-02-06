@@ -632,11 +632,11 @@ func (s *CLITestSuite) TestNetworkDnsForwarderUpdate() {
 func (s *CLITestSuite) TestNetworkDnsForwarderCreate() {
 	tests := []CLITest{
 		{args: "network dns forwarder create my-dns-forwarder", fixture: "network/dns/forwarder/create-missing-flags.golden", exitCode: 1},
-		{args: "network dns forwarder create dnsf-invalid-gateway --dns-server-ips 10.200.0.0 --gateway gw-123456", fixture: "network/dns/forwarder/create-invalid-gateway.golden", exitCode: 1},
-		{args: "network dns forwarder create dnsf-duplicate --dns-server-ips 10.200.0.0 --gateway gw-123456", fixture: "network/dns/forwarder/create-duplicate.golden", exitCode: 1},
-		{args: "network dns forwarder create dnsf-exceed-quota --dns-server-ips 10.200.0.0 --gateway gw-123456", fixture: "network/dns/forwarder/create-exceed-quota.golden", exitCode: 1},
-		{args: "network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com,def.com,xyz.com", fixture: "network/dns/forwarder/create.golden"},
-		{args: "network dns forwarder create --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com,def.com,xyz.com", fixture: "network/dns/forwarder/create-no-name.golden"},
+		{args: "network dns forwarder create dnsf-invalid-gateway --dns-server-ips 10.200.0.0 --gateway gw-123456 --config ForwardViaIp", fixture: "network/dns/forwarder/create-invalid-gateway.golden", exitCode: 1},
+		{args: "network dns forwarder create dnsf-duplicate --dns-server-ips 10.200.0.0 --gateway gw-123456 --config ForwardViaIp", fixture: "network/dns/forwarder/create-duplicate.golden", exitCode: 1},
+		{args: "network dns forwarder create dnsf-exceed-quota --dns-server-ips 10.200.0.0 --gateway gw-123456 --config ForwardViaIp", fixture: "network/dns/forwarder/create-exceed-quota.golden", exitCode: 1},
+		{args: "network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com,def.com,xyz.com --config ForwardViaIp", fixture: "network/dns/forwarder/create.golden"},
+		{args: "network dns forwarder create --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com,def.com,xyz.com --config ForwardViaIp", fixture: "network/dns/forwarder/create-no-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -649,6 +649,7 @@ func (s *CLITestSuite) TestNetworkDnsForwarder_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete network dns forwarder describe ""`, login: "cloud", fixture: "network/dns/forwarder/describe-autocomplete.golden"},
 		{args: `__complete network dns forwarder delete ""`, login: "cloud", fixture: "network/dns/forwarder/delete-autocomplete.golden"},
+		{args: `__complete network dns forwarder create --config  ""`, login: "cloud", fixture: "network/dns/forwarder/create-config-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
