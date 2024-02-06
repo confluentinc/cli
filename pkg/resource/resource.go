@@ -24,6 +24,7 @@ const (
 	CustomConnectorPlugin           = "custom connector plugin"
 	ConsumerShare                   = "consumer share"
 	Context                         = "context"
+	DnsForwarder                    = "DNS forwarder"
 	Environment                     = "environment"
 	Flink                           = "flink"
 	FlinkComputePool                = "Flink compute pool"
