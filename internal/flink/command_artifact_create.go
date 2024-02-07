@@ -37,7 +37,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "ZIP/JAR Flink UDF artifact file.")
+	cmd.Flags().String("artifact-file", "", "JAR Flink UDF artifact file.")
 	cmd.Flags().String("description", "", "Description of Flink UDF artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

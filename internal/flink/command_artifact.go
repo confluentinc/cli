@@ -13,7 +13,7 @@ type customPluginSerializedOut struct {
 	Name           string `serialized:"name"`
 	Id             string `serialized:"id"`
 	ConnectorClass string `serialized:"connector_class"`
-	ContentFormat  string `serialized:"connector_class"`
+	ContentFormat  string `serialized:"content_format"`
 	Scope          string
 }
 
@@ -36,6 +36,7 @@ func (c *command) newArtifactCommand() *cobra.Command {
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newListCommand())
+
 	return cmd
 }
 
