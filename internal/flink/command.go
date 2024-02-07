@@ -26,11 +26,11 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	cmd.AddCommand(c.newArtifactCommand())
 	cmd.AddCommand(c.newComputePoolCommand())
 	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newShellCommand(prerunner))
 	cmd.AddCommand(c.newStatementCommand())
-	cmd.AddCommand(c.newArtifactCommand())
 
 	return cmd
 }
