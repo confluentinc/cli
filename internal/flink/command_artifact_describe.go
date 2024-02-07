@@ -28,7 +28,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	plugin, err := c.V2Client.DescribeArtifact(args[0])
+	plugin, err := c.V2Client.DescribeCustomPlugin(args[0])
 	if err != nil {
 		return err
 	}

@@ -43,7 +43,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("artifact-file"))
-	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip", "jar"))
+	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "jar"))
 
 	return cmd
 }
@@ -85,7 +85,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	pluginResp, err := c.V2Client.CreateArtifact(createArtifactRequest)
+	pluginResp, err := c.V2Client.CreateCustomPlugin(createArtifactRequest)
 	if err != nil {
 		return err
 	}

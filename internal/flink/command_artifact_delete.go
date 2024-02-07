@@ -38,7 +38,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteArtifact(id)
+		return c.V2Client.DeleteCustomPlugin(id)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.CustomConnectorPlugin)
@@ -46,7 +46,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) mapPluginIdToName() (map[string]string, error) {
-	plugins, err := c.V2Client.ListArtifacts()
+	plugins, err := c.V2Client.ListCustomPlugins()
 	if err != nil {
 		return nil, err
 	}

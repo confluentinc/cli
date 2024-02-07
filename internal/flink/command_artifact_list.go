@@ -36,7 +36,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	plugins, err := c.V2Client.ListArtifacts()
+	plugins, err := c.V2Client.ListCustomPlugins()
 	if err != nil {
 		return err
 	}
