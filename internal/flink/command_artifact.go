@@ -3,7 +3,7 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-artifact/v1"
+	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
