@@ -11,7 +11,7 @@ import (
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
-		Short: "Delete one or more custom connector plugins.",
+		Short: "Delete one or more flink udf artifact",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 	}
@@ -38,7 +38,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCustomPlugin(id)
+		return c.V2Client.DeleteArtifact(id)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.CustomConnectorPlugin)
@@ -46,7 +46,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) mapPluginIdToName() (map[string]string, error) {
-	plugins, err := c.V2Client.ListCustomPlugins()
+	plugins, err := c.V2Client.ListArtifacts()
 	if err != nil {
 		return nil, err
 	}

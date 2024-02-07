@@ -10,13 +10,13 @@ import (
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe a custom connector plugin.",
+		Short: "Describe a flink udf artifact.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe custom connector plugin",
-				Code: "confluent connect custom-plugin describe ccp-123456",
+				Text: "Describe flink udf artifact",
+				Code: "confluent connect artifact describe ccp-123456",
 			},
 		),
 	}
@@ -28,7 +28,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	plugin, err := c.V2Client.DescribeCustomPlugin(args[0])
+	plugin, err := c.V2Client.DescribeArtifact(args[0])
 	if err != nil {
 		return err
 	}

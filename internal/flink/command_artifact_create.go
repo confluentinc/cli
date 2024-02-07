@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-artifact/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -26,42 +26,42 @@ type pluginCreateOut struct {
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a custom connector plugin.",
+		Short: "Create a flink udf artifact.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.createCustomPlugin,
+		RunE:  c.createArtifact,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create custom connector plugin "my-flink-plugin".`,
-				Code: "confluent flink custom-plugin create my-flink-plugin --plugin-file /Users/byang/Documents/config/plugin.jar",
+				Text: `Create flink udf artifact "my-flink-artifact".`,
+				Code: "confluent flink artifact create my-flink-artifact --artifact-file /Users/xyz/Documents/config/plugin.jar",
 			},
 		),
 	}
 
-	cmd.Flags().String("plugin-file", "", "ZIP/JAR custom plugin file.")
-	cmd.Flags().String("description", "", "Description of custom plugin.")
+	cmd.Flags().String("artifact-file", "", "ZIP/JAR flink udf artifact file.")
+	cmd.Flags().String("description", "", "Description of flink udf artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("plugin-file"))
-	cobra.CheckErr(cmd.MarkFlagFilename("plugin-file", "zip", "jar"))
+	cobra.CheckErr(cmd.MarkFlagRequired("artifact-file"))
+	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip", "jar"))
 
 	return cmd
 }
 
-func (c *command) createCustomPlugin(cmd *cobra.Command, args []string) error {
+func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	displayName := args[0]
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
 	}
-	pluginFileName, err := cmd.Flags().GetString("plugin-file")
+	pluginFileName, err := cmd.Flags().GetString("artifact-file")
 	if err != nil {
 		return err
 	}
 
 	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(pluginFileName), "."))
-	if extension != "zip" && extension != "jar" {
-		return fmt.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
+	if extension != "jar" {
+		return fmt.Errorf(`only file extensions ".jar" is allowed`)
 	}
 
 	request := *connectcustompluginv1.NewConnectV1PresignedUrlRequest()
@@ -76,7 +76,7 @@ func (c *command) createCustomPlugin(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createCustomPluginRequest := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+	createArtifactRequest := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 		DisplayName:   connectcustompluginv1.PtrString(displayName),
 		Description:   connectcustompluginv1.PtrString(description),
 		ConnectorType: connectcustompluginv1.PtrString("flink-udf"),
@@ -85,7 +85,7 @@ func (c *command) createCustomPlugin(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	pluginResp, err := c.V2Client.CreateCustomPlugin(createCustomPluginRequest)
+	pluginResp, err := c.V2Client.CreateArtifact(createArtifactRequest)
 	if err != nil {
 		return err
 	}

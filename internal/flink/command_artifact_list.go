@@ -18,13 +18,13 @@ type customPluginOutList struct {
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List custom connector plugins.",
+		Short: "List flink udf artifact",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List custom connector plugins in the org",
-				Code: "confluent connect custom-plugin list",
+				Text: "List flink udf artifacts in the org",
+				Code: "confluent connect artifact list",
 			},
 		),
 	}
@@ -36,7 +36,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	plugins, err := c.V2Client.ListCustomPlugins()
+	plugins, err := c.V2Client.ListArtifacts()
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-artifact/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -25,10 +25,10 @@ type customPluginHumanOut struct {
 	Scope          string `human:"Scope"`
 }
 
-func (c *command) newCustomPluginCommand() *cobra.Command {
+func (c *command) newArtifactCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "custom-plugin",
-		Short:       "Manage custom connector plugins.",
+		Use:         "artifact",
+		Short:       "Manage flink udf artifact",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
