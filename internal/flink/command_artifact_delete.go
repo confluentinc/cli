@@ -11,7 +11,7 @@ import (
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
-		Short: "Delete one or more flink udf artifact",
+		Short: "Delete one or more Flink UDF artifacts.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 	}

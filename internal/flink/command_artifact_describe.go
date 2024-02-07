@@ -10,12 +10,12 @@ import (
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe a flink udf artifact.",
+		Short: "Describe a Flink UDF artifact.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe flink udf artifact",
+				Text: "Describe Flink UDF artifact",
 				Code: "confluent connect artifact describe ccp-123456",
 			},
 		),

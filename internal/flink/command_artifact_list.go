@@ -18,12 +18,12 @@ type customPluginOutList struct {
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List flink udf artifact",
+		Short: "List Flink UDF artifacts.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List flink udf artifacts in the org",
+				Text: "List Flink UDF artifacts in the org",
 				Code: "confluent connect artifact list",
 			},
 		),
