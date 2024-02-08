@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
@@ -100,7 +100,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
-		createSqlV1beta1Statement(statement, statementName, computePoolId, properties),
+		createSqlV1Statement(statement, statementName, computePoolId, properties),
 		principal,
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrganizationId(),
@@ -112,10 +112,10 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	return types.NewProcessedStatement(statementObj), nil
 }
 
-func createSqlV1beta1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1beta1.SqlV1beta1Statement {
-	return flinkgatewayv1beta1.SqlV1beta1Statement{
+func createSqlV1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1.SqlV1Statement {
+	return flinkgatewayv1.SqlV1Statement{
 		Name: &statementName,
-		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+		Spec: &flinkgatewayv1.SqlV1StatementSpec{
 			Statement:     &statement,
 			ComputePoolId: &computePoolId,
 			Properties:    &properties,
@@ -287,7 +287,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	}
 }
 
-func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) string {
+func (s *Store) getStatusDetail(statementObj flinkgatewayv1.SqlV1Statement) string {
 	status := statementObj.GetStatus()
 	if status.GetDetail() != "" {
 		return status.GetDetail()
@@ -303,7 +303,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1State
 	}
 
 	// most recent exception is on top of the returned list
-	return exceptions[0].GetStacktrace()
+	return exceptions[0].GetMessage()
 }
 
 func extractPageToken(nextUrl string) (string, error) {
