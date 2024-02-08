@@ -46,7 +46,7 @@ func (c *command) statementExceptionList(cmd *cobra.Command, args []string) erro
 		list.Add(&exceptionOut{
 			Name:       exception.GetName(),
 			Timestamp:  exception.GetTimestamp(),
-			StackTrace: exception.GetStacktrace(),
+			StackTrace: exception.GetMessage(),
 		})
 	}
 	return list.Print()

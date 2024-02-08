@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 )
 
 type StatementResults struct {
@@ -77,6 +77,6 @@ func (s StatementResultOperation) String() string {
 }
 
 type MockStatementResult struct {
-	ResultSchema     flinkgatewayv1beta1.SqlV1beta1ResultSchema
-	StatementResults flinkgatewayv1beta1.SqlV1beta1StatementResult
+	ResultSchema     flinkgatewayv1.SqlV1ResultSchema
+	StatementResults flinkgatewayv1.SqlV1StatementResult
 }
