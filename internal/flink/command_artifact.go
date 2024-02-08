@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type customPluginSerializedOut struct {
+type flinkArtifactSerializedOutOut struct {
 	Name           string `serialized:"name"`
 	Id             string `serialized:"id"`
 	ConnectorClass string `serialized:"connector_class"`
@@ -17,7 +17,12 @@ type customPluginSerializedOut struct {
 	Scope          string
 }
 
-type customPluginHumanOut struct {
+// TODO: https://confluentinc.atlassian.net/browse/FRT-334
+// This is reuse existing custom connector plugin api for flink udf management for EA customer only
+//
+//	aka, `ConnectorClass` will return version ID for EA
+//	For flink GA, flink team will have public API to do so
+type flinkArtifactHumanOut struct {
 	Name           string `human:"Name"`
 	Id             string `human:"Plugin ID"`
 	ConnectorClass string `human:"Version ID"`
@@ -43,7 +48,7 @@ func (c *command) newArtifactCommand() *cobra.Command {
 func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin) error {
 	table := output.NewTable(cmd)
 	if output.GetFormat(cmd) == output.Human {
-		table.Add(&customPluginHumanOut{
+		table.Add(&flinkArtifactHumanOut{
 			Id:             plugin.GetId(),
 			Name:           plugin.GetDisplayName(),
 			ConnectorClass: plugin.GetConnectorClass(),
@@ -51,7 +56,7 @@ func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1Custom
 			Scope:          "org",
 		})
 	} else {
-		table.Add(&customPluginSerializedOut{
+		table.Add(&flinkArtifactSerializedOutOut{
 			Id:             plugin.GetId(),
 			Name:           plugin.GetDisplayName(),
 			ConnectorClass: plugin.GetConnectorClass(),
