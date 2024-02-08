@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -32,12 +32,13 @@ type ProcessedStatement struct {
 	IsSelectStatement    bool
 	IsSensitiveStatement bool
 	PageToken            string
-	ResultSchema         flinkgatewayv1beta1.SqlV1beta1ResultSchema
+	ResultSchema         flinkgatewayv1.SqlV1ResultSchema
 	StatementResults     *StatementResults
 }
 
-func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) *ProcessedStatement {
+func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *ProcessedStatement {
 	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
+	traits := statementObj.Status.GetTraits()
 	return &ProcessedStatement{
 		Statement:         statementObj.Spec.GetStatement(),
 		StatementName:     statementObj.GetName(),
@@ -45,7 +46,7 @@ func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement)
 		Principal:         statementObj.Spec.GetPrincipal(),
 		StatusDetail:      statementObj.Status.GetDetail(),
 		Status:            PHASE(statementObj.Status.GetPhase()),
-		ResultSchema:      statementObj.Status.GetResultSchema(),
+		ResultSchema:      traits.GetSchema(),
 		IsSelectStatement: strings.HasPrefix(statement, "select"),
 	}
 }
