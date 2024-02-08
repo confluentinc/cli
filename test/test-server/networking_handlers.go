@@ -243,6 +243,11 @@ func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 			network := getAzureNetwork("n-abcde12", "dev-azure-eastus2", "PROVISIONING", []string{"PRIVATELINK"})
 			err := json.NewEncoder(w).Encode(network)
 			require.NoError(t, err)
+		case "n-abcde13":
+			network := getAwsNetwork("n-abcde13", "dev-aws-us-eastus1", "PROVISIONING", []string{"PEERING"})
+			network.Spec.Gateway.Set(&networkingv1.TypedEnvScopedObjectReference{Id: "gw-abcde1"})
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -282,16 +287,24 @@ func handleNetworkingNetworkUpdate(t *testing.T, id string) http.HandlerFunc {
 func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		awsNetwork := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+		awsNetwork2 := getAwsNetwork("n-abcde4", "prod-aws-us-east1", "READY", []string{"PEERING"})
 		gcpNetwork := getGcpNetwork("n-abcde2", "prod-gcp-us-central1", "READY", []string{"PEERING"})
 		azureNetwork := getAzureNetwork("n-abcde3", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
+
+		awsNetwork2.Spec.Gateway.Set(&networkingv1.TypedEnvScopedObjectReference{Id: "gw-abcde1"})
 
 		pageToken := r.URL.Query().Get("page_token")
 		var networkList networkingv1.NetworkingV1NetworkList
 		switch pageToken {
+		case "aws-2":
+			networkList = networkingv1.NetworkingV1NetworkList{
+				Data:     []networkingv1.NetworkingV1Network{awsNetwork2},
+				Metadata: networkingv1.ListMeta{},
+			}
 		case "azure":
 			networkList = networkingv1.NetworkingV1NetworkList{
 				Data:     []networkingv1.NetworkingV1Network{azureNetwork},
-				Metadata: networkingv1.ListMeta{},
+				Metadata: networkingv1.ListMeta{Next: *networkingv1.NewNullableString(networkingv1.PtrString("/networking/v1/networks?environment=a-595&page_size=1&page_token=aws-2"))},
 			}
 		case "gcp":
 			networkList = networkingv1.NetworkingV1NetworkList{

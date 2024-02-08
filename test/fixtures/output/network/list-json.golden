@@ -29,5 +29,16 @@
     "phase": "READY",
     "active_connection_types": ["PRIVATELINK"],
     "dns_resolution": "PRIVATE"
+  },
+  {
+    "id": "n-abcde4",
+    "name": "prod-aws-us-east1",
+    "gateway": "gw-abcde1",
+    "cloud": "AWS",
+    "region": "us-east-1",
+    "cidr": "10.200.0.0/16",
+    "zones": ["use1-az1", "use1-az2", "use1-az3"],
+    "phase": "READY",
+    "active_connection_types": ["PEERING"]
   }
 ]
