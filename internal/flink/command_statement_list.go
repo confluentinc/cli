@@ -7,7 +7,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -79,7 +79,7 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 	}
 
 	if status != "" {
-		statements = lo.Filter(statements, func(statement v1beta1.SqlV1beta1Statement, _ int) bool {
+		statements = lo.Filter(statements, func(statement v1.SqlV1Statement, _ int) bool {
 			return strings.ToLower(statement.Status.GetPhase()) == status
 		})
 	}
