@@ -9,23 +9,16 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type flinkArtifactSerializedOutOut struct {
-	Name           string `serialized:"name"`
-	Id             string `serialized:"plugin_id"`
-	ConnectorClass string `serialized:"version_id"`
-	ContentFormat  string `serialized:"content_format"`
-}
-
 // TODO: https://confluentinc.atlassian.net/browse/FRT-334
 // This is reuse existing custom connector plugin api for flink udf management for EA customer only
 //
 //	aka, `ConnectorClass` will return version ID for EA
 //	For flink GA, flink team will have public API to do so
-type flinkArtifactHumanOut struct {
-	Name           string `human:"Name"`
-	Id             string `human:"Plugin ID"`
-	ConnectorClass string `human:"Version ID"`
-	ContentFormat  string `human:"Content Format"`
+type flinkArtifactOut struct {
+	Name           string `serialized:"name" human:"Name"`
+	Id             string `serialized:"plugin_id" human:"Plugin ID"`
+	ConnectorClass string `serialized:"version_id" human:"Version ID"`
+	ContentFormat  string `serialized:"content_format" human:"Content Format"`
 }
 
 func (c *command) newArtifactCommand() *cobra.Command {
@@ -45,21 +38,12 @@ func (c *command) newArtifactCommand() *cobra.Command {
 
 func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin) error {
 	table := output.NewTable(cmd)
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&flinkArtifactHumanOut{
-			Id:             plugin.GetId(),
-			Name:           plugin.GetDisplayName(),
-			ConnectorClass: plugin.GetConnectorClass(),
-			ContentFormat:  plugin.GetContentFormat(),
-		})
-	} else {
-		table.Add(&flinkArtifactSerializedOutOut{
-			Id:             plugin.GetId(),
-			Name:           plugin.GetDisplayName(),
-			ConnectorClass: plugin.GetConnectorClass(),
-			ContentFormat:  plugin.GetContentFormat(),
-		})
-	}
+	table.Add(&flinkArtifactOut{
+		Id:             plugin.GetId(),
+		Name:           plugin.GetDisplayName(),
+		ConnectorClass: plugin.GetConnectorClass(),
+		ContentFormat:  plugin.GetContentFormat(),
+	})
 
 	return table.Print()
 }
