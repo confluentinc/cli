@@ -38,7 +38,6 @@ type ProcessedStatement struct {
 
 func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *ProcessedStatement {
 	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
-	traits := statementObj.Status.GetTraits()
 	return &ProcessedStatement{
 		Statement:         statementObj.Spec.GetStatement(),
 		StatementName:     statementObj.GetName(),
@@ -46,7 +45,7 @@ func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *Processe
 		Principal:         statementObj.Spec.GetPrincipal(),
 		StatusDetail:      statementObj.Status.GetDetail(),
 		Status:            PHASE(statementObj.Status.GetPhase()),
-		ResultSchema:      traits.GetSchema(),
+		ResultSchema:      statementObj.Status.Traits.GetSchema(),
 		IsSelectStatement: strings.HasPrefix(statement, "select"),
 	}
 }
