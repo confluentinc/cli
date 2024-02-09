@@ -5,6 +5,7 @@
 //
 //	mockgen -destination prompt_mock.go -package=mock github.com/confluentinc/go-prompt IPrompt
 //
+
 // Package mock is a generated GoMock package.
 package mock
 
@@ -12,6 +13,7 @@ import (
 	reflect "reflect"
 
 	prompt "github.com/confluentinc/go-prompt"
+	lsp "github.com/sourcegraph/go-lsp"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -200,6 +202,18 @@ func (m *MockIPrompt) SetConsoleParser(arg0 prompt.ConsoleParser) {
 func (mr *MockIPromptMockRecorder) SetConsoleParser(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConsoleParser", reflect.TypeOf((*MockIPrompt)(nil).SetConsoleParser), arg0)
+}
+
+// SetDiagnostics mocks base method.
+func (m *MockIPrompt) SetDiagnostics(arg0 []lsp.Diagnostic) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDiagnostics", arg0)
+}
+
+// SetDiagnostics indicates an expected call of SetDiagnostics.
+func (mr *MockIPromptMockRecorder) SetDiagnostics(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDiagnostics", reflect.TypeOf((*MockIPrompt)(nil).SetDiagnostics), arg0)
 }
 
 // SetExitChecker mocks base method.
