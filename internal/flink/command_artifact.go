@@ -14,7 +14,6 @@ type flinkArtifactSerializedOutOut struct {
 	Id             string `serialized:"id"`
 	ConnectorClass string `serialized:"connector_class"`
 	ContentFormat  string `serialized:"content_format"`
-	Scope          string
 }
 
 // TODO: https://confluentinc.atlassian.net/browse/FRT-334
@@ -27,7 +26,6 @@ type flinkArtifactHumanOut struct {
 	Id             string `human:"Plugin ID"`
 	ConnectorClass string `human:"Version ID"`
 	ContentFormat  string `human:"Content Format"`
-	Scope          string `human:"Scope"`
 }
 
 func (c *command) newArtifactCommand() *cobra.Command {
@@ -53,7 +51,6 @@ func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1Custom
 			Name:           plugin.GetDisplayName(),
 			ConnectorClass: plugin.GetConnectorClass(),
 			ContentFormat:  plugin.GetContentFormat(),
-			Scope:          "org",
 		})
 	} else {
 		table.Add(&flinkArtifactSerializedOutOut{
@@ -61,7 +58,6 @@ func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1Custom
 			Name:           plugin.GetDisplayName(),
 			ConnectorClass: plugin.GetConnectorClass(),
 			ContentFormat:  plugin.GetContentFormat(),
-			Scope:          "org",
 		})
 	}
 

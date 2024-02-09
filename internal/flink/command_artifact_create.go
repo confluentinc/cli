@@ -19,7 +19,6 @@ type pluginCreateOut struct {
 	Id             string `human:"Plugin ID" serialized:"id"`
 	ConnectorClass string `human:"Version ID" serialized:"connector_class"`
 	ContentFormat  string `human:"Content Format" serialized:"content_format"`
-	Scope          string `human:"Scope"`
 	ErrorTrace     string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
@@ -96,7 +95,6 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		Name:           pluginResp.GetDisplayName(),
 		ConnectorClass: pluginResp.GetConnectorClass(),
 		ContentFormat:  pluginResp.GetContentFormat(),
-		Scope:          "org",
 	})
 	return table.Print()
 }
