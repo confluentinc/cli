@@ -1,5 +1,6 @@
-     Principal    |      Name       |        Email          
-------------------+-----------------+-----------------------
-  User:pool-12345 | identity-pool   |                       
-  User:sa-12345   | service-account |                       
-  User:u-11aaa    |                 | u-11aaa@confluent.io  
+     Principal    |         Name          |        Email          
+------------------+-----------------------+-----------------------
+  User:group-abc  | another-group-mapping |                       
+  User:pool-12345 | identity-pool         |                       
+  User:sa-12345   | service-account       |                       
+  User:u-11aaa    |                       | u-11aaa@confluent.io  

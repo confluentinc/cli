@@ -28,6 +28,8 @@ var (
 			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("rb-12345", "sa-12345", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
+		buildRoleBinding("rb-123ab", "group-abc", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("rb-111aa", "u-11aaa", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-1111aaa"),
 		buildRoleBinding("rb-22bbb", "u-22bbb", "CloudClusterAdmin",
@@ -589,7 +591,7 @@ func handleIamInvitations(t *testing.T) http.HandlerFunc {
 // Handler for "iam/v2/sso/group-mappings"
 func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		groupMapping := buildIamGroupMapping("pool-12345", "my-group-mapping", "new description", `"engineering" in claims.group || "marketing" in claims.group`)
+		groupMapping := buildIamGroupMapping("group-12345", "my-group-mapping", "new description", `"engineering" in claims.group || "marketing" in claims.group`)
 		switch r.Method {
 		case http.MethodGet:
 			anotherMapping := buildIamGroupMapping(groupMappingId, "another-group-mapping", "another description", "true")
@@ -609,7 +611,7 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != groupMappingId && id != "pool-def" {
+		if id != groupMappingId && id != "group-def" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return

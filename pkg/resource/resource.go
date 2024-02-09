@@ -66,6 +66,7 @@ const (
 	KsqlClusterPrefix           = "lksqlc"
 	SchemaRegistryClusterPrefix = "lsrc"
 	ServiceAccountPrefix        = "sa"
+	SsoGroupMappingPrefix       = "group"
 	UserPrefix                  = "u"
 )
 
@@ -79,6 +80,7 @@ var prefixToResource = map[string]string{
 	KsqlClusterPrefix:           KsqlCluster,
 	SchemaRegistryClusterPrefix: SchemaRegistryCluster,
 	ServiceAccountPrefix:        ServiceAccount,
+	SsoGroupMappingPrefix:       SsoGroupMapping,
 	UserPrefix:                  User,
 }
 
@@ -90,6 +92,7 @@ var resourceToPrefix = map[string]string{
 	KsqlCluster:           KsqlClusterPrefix,
 	SchemaRegistryCluster: SchemaRegistryClusterPrefix,
 	ServiceAccount:        ServiceAccountPrefix,
+	SsoGroupMapping:       SsoGroupMappingPrefix,
 	User:                  UserPrefix,
 }
 
