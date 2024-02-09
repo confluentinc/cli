@@ -30,14 +30,14 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.createArtifact,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create Flink UDF artifact "my-flink-artifact".`,
+				Text: `Create Flink artifact "my-flink-artifact".`,
 				Code: "confluent flink artifact create my-flink-artifact --artifact-file /Users/xyz/Documents/config/plugin.jar",
 			},
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "Flink UDF artifact JAR file.")
-	cmd.Flags().String("description", "", "Description of Flink UDF artifact.")
+	cmd.Flags().String("artifact-file", "", "Flink artifact JAR file.")
+	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

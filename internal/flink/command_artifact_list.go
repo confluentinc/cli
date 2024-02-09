@@ -23,7 +23,7 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List Flink UDF artifacts in the org",
+				Text: "List Flink UDF artifacts in the org.",
 				Code: "confluent flink artifact list",
 			},
 		),

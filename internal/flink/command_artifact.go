@@ -19,7 +19,7 @@ type flinkArtifactOut struct {
 func (c *command) newArtifactCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "artifact",
-		Short:       "Manage Flink UDF artifact",
+		Short:       "Manage Flink UDF artifact.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
