@@ -11,8 +11,8 @@ import (
 
 type flinkArtifactSerializedOutOut struct {
 	Name           string `serialized:"name"`
-	Id             string `serialized:"id"`
-	ConnectorClass string `serialized:"connector_class"`
+	Id             string `serialized:"plugin_id"`
+	ConnectorClass string `serialized:"version_id"`
 	ContentFormat  string `serialized:"content_format"`
 }
 
