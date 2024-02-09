@@ -22,16 +22,26 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	cmd.RunE = c.ai
+	cmd.Run = c.ai
 
 	return cmd
 }
 
-func (c *command) ai(cmd *cobra.Command, _ []string) error {
-	output.Println(c.Config.EnableColor, `Welcome to the Confluent AI Assistant! Exit with "exit", or rate an answer with "+1" or "-1".`)
+const message = `Hi, I’m the Confluent AI Assistant. I can help you with questions and tasks related to Confluent Cloud. Ask me things like:
+- How many Kafka clusters do I have?
+- What is an enterprise Kafka cluster?
+- How do I get started with Flink on Confluent Cloud?
+- Can I chat with support?
+
+The Confluent AI Assistant does not have access to data inside topics and cannot execute code. Visit the Confluent AI Assistant documentation to learn more.
+https://docs.confluent.io/cloud/current/release-notes/cflt-assistant.html
+
+I'm currently in preview and am learning more everyday. Help me improve by rating answers with "+1" or "-1".
+You can exit the shell at any time with "exit".`
+
+func (c *command) ai(cmd *cobra.Command, _ []string) {
+	output.Println(c.Config.EnableColor, message)
 
 	shell := newShell(c.V2Client)
 	prompt.New(shell.executor, shell.completer, prompt.OptionPrefix("> ")).Run()
-
-	return nil
 }

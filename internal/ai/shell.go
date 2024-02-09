@@ -3,6 +3,7 @@ package ai
 import (
 	"os"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -74,6 +75,7 @@ func (s *shell) executor(input string) {
 		}
 
 		s.feedback = newFeedback(reply.GetId())
+		s.session.expiresAt = time.Now().Add(time.Hour)
 		s.session.addHistory(aiv1.AiV1ChatCompletionsHistory{
 			Question: aiv1.PtrString(input),
 			Answer:   aiv1.PtrString(reply.GetAnswer()),
