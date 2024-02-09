@@ -1,0 +1,19 @@
+Describe a Flink UDF artifact.
+
+Usage:
+  confluent flink artifact describe <id> [flags]
+
+Examples:
+Describe Flink UDF artifact.
+
+  $ confluent flink artifact describe ccp-123456
+
+Flags:
+      --context string   CLI context name.
+  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  
