@@ -1,5 +1,5 @@
-      ID     |         Name          |     Description     |             Filter             | Principal  |  State   
--------------+-----------------------+---------------------+--------------------------------+------------+----------
-  pool-12345 | my-group-mapping      | new description     | "engineering" in claims.group  | pool-12345 | ENABLED  
-             |                       |                     | || "marketing" in claims.group |            |          
-  pool-abc   | another-group-mapping | another description | true                           | pool-abc   | ENABLED  
+      ID      |         Name          |     Description     |             Filter             |  Principal  |  State   
+--------------+-----------------------+---------------------+--------------------------------+-------------+----------
+  group-12345 | my-group-mapping      | new description     | "engineering" in claims.group  | group-12345 | ENABLED  
+              |                       |                     | || "marketing" in claims.group |             |          
+  group-abc   | another-group-mapping | another description | true                           | group-abc   | ENABLED  

@@ -400,7 +400,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	principalType := presource.LookupType(userId)
 
 	var fields []string
-	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool {
+	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool || principalType == presource.SsoGroupMapping {
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
