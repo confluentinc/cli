@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"pgregory.net/rapid"
 	"reflect"
 	"strings"
 	"testing"
@@ -36,6 +37,13 @@ func TestStoreTestSuite(t *testing.T) {
 
 func tokenRefreshFunc() error {
 	return nil
+}
+
+func (s *StoreTestSuite) TestGenerateStatementName() {
+	statementRegex := `^cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`
+	rapid.Check(s.T(), func(t *rapid.T) {
+		s.Require().Regexp(statementRegex, types.GenerateStatementName())
+	})
 }
 
 func TestStoreProcessLocalStatement(t *testing.T) {
