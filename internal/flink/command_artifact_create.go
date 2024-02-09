@@ -84,7 +84,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	pluginResp, err := c.V2Client.CreateCustomPlugin(createArtifactRequest)
+	plugin, err := c.V2Client.CreateCustomPlugin(createArtifactRequest)
 	if err != nil {
 		return err
 	}
