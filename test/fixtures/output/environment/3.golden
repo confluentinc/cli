@@ -1,6 +1,5 @@
-+---------------------------+----------------+
-| Current                   | true           |
-| ID                        | env-595        |
-| Name                      | new-other-name |
-| Stream Governance Package | ADVANCED       |
-+---------------------------+----------------+
++---------+----------------+
+| Current | true           |
+| ID      | env-595        |
+| Name    | new-other-name |
++---------+----------------+

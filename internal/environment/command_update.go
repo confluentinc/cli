@@ -1,8 +1,6 @@
 package environment
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
@@ -21,11 +19,10 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
-	c.addStreamGovernancePackageFlag(cmd, "")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "governance-package")
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
@@ -35,21 +32,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	governancePackage, err := cmd.Flags().GetString("governance-package")
-	if err != nil {
-		return err
-	}
 
-	environment := orgv2.OrgV2Environment{}
-	if name != "" {
-		environment.SetDisplayName(name)
-	}
-	if governancePackage != "" {
-		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
-			Package: orgv2.PtrString(strings.ToUpper(governancePackage)),
-		})
-	}
-
+	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
 	environment, err = c.V2Client.UpdateOrgEnvironment(args[0], environment)
 	if err != nil {
 		return err
@@ -57,10 +41,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent:               environment.GetId() == c.Context.GetCurrentEnvironment(),
-		Id:                      environment.GetId(),
-		Name:                    environment.GetDisplayName(),
-		StreamGovernancePackage: environment.StreamGovernanceConfig.GetPackage(),
+		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:        environment.GetId(),
+		Name:      environment.GetDisplayName(),
 	})
 	return table.Print()
 }
