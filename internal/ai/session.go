@@ -21,6 +21,13 @@ func newSession() *session {
 	}
 }
 
+func (s *session) addHistory(history aiv1.AiV1ChatCompletionsHistory) {
+	s.history = append(s.history, history)
+	if len(s.history) > 5 {
+		s.history = s.history[:5]
+	}
+}
+
 func (s *session) isExpired() bool {
 	return time.Now().After(s.expiresAt)
 }

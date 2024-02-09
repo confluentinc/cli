@@ -74,7 +74,7 @@ func (s *shell) executor(input string) {
 		}
 
 		s.feedback = newFeedback(reply.GetId())
-		s.session.history = append(s.session.history, aiv1.AiV1ChatCompletionsHistory{
+		s.session.addHistory(aiv1.AiV1ChatCompletionsHistory{
 			Question: aiv1.PtrString(input),
 			Answer:   aiv1.PtrString(reply.GetAnswer()),
 		})
