@@ -15,11 +15,11 @@ import (
 )
 
 type pluginCreateOut struct {
-	Name           string `human:"Name" serialized:"name"`
-	Id             string `human:"Plugin ID" serialized:"id"`
-	ConnectorClass string `human:"Version ID" serialized:"connector_class"`
-	ContentFormat  string `human:"Content Format" serialized:"content_format"`
-	ErrorTrace     string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
+	Name          string `human:"Name" serialized:"name"`
+	PluginId      string `human:"Plugin ID" serialized:"plugin_id"`
+	VersionId     string `human:"Version ID" serialized:"version_id"`
+	ContentFormat string `human:"Content Format" serialized:"content_format"`
+	ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
 func (c *command) newCreateCommand() *cobra.Command {
@@ -36,7 +36,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "JAR Flink UDF artifact file.")
+	cmd.Flags().String("artifact-file", "", "Flink UDF artifact JAR file.")
 	cmd.Flags().String("description", "", "Description of Flink UDF artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -91,11 +91,14 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	}
 
 	table := output.NewTable(cmd)
+	// Flink UDF artfact lifecycle management is reuse custom connector plugin api for EA customer only
+	// Version ID will be surfaced by `ConnectorClass` for EA
+	// For Flink GA, Flink team will have public documented API for this. tracking by internal ticket FRT-334
 	table.Add(&pluginCreateOut{
-		Id:             plugin.GetId(),
-		Name:           plugin.GetDisplayName(),
-		ConnectorClass: plugin.GetConnectorClass(),
-		ContentFormat:  plugin.GetContentFormat(),
+		Name:          plugin.GetDisplayName(),
+		PluginId:      plugin.GetId(),
+		VersionId:     plugin.GetConnectorClass(),
+		ContentFormat: plugin.GetContentFormat(),
 	})
 	return table.Print()
 }

@@ -24,7 +24,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List Flink UDF artifacts in the org",
-				Code: "confluent connect artifact list",
+				Code: "confluent flink artifact list",
 			},
 		),
 	}
@@ -43,7 +43,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, plugin := range plugins {
-		if strings.ToLower(*plugin.ConnectorType) != "flink-udf" {
+		if strings.ToLower(plugin.GetConnectorType()) != "flink-udf" {
 			continue
 		}
 		list.Add(&customPluginOutList{

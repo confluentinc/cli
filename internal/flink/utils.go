@@ -18,7 +18,10 @@ func uploadFile(url, filePath string, formFields map[string]any) error {
 
 	for key, value := range formFields {
 		if strValue, ok := value.(string); ok {
-			_ = writer.WriteField(key, strValue)
+			err := writer.WriteField(key, strValue)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

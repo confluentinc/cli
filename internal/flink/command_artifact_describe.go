@@ -16,7 +16,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe Flink UDF artifact",
-				Code: "confluent connect artifact describe ccp-123456",
+				Code: "confluent flink artifact describe ccp-123456",
 			},
 		),
 	}

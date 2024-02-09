@@ -9,16 +9,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-// TODO: https://confluentinc.atlassian.net/browse/FRT-334
-// This is reuse existing custom connector plugin api for flink udf management for EA customer only
-//
-//	aka, `ConnectorClass` will return version ID for EA
-//	For flink GA, flink team will have public API to do so
 type flinkArtifactOut struct {
-	Name           string `serialized:"name" human:"Name"`
-	Id             string `serialized:"plugin_id" human:"Plugin ID"`
-	ConnectorClass string `serialized:"version_id" human:"Version ID"`
-	ContentFormat  string `serialized:"content_format" human:"Content Format"`
+	Name          string `human:"Name" serialized:"name" `
+	PluginId      string `human:"Plugin ID" serialized:"plugin_id" `
+	VersionId     string `human:"Version ID" serialized:"version_id" `
+	ContentFormat string `human:"Content Format" serialized:"content_format" `
 }
 
 func (c *command) newArtifactCommand() *cobra.Command {
@@ -38,11 +33,14 @@ func (c *command) newArtifactCommand() *cobra.Command {
 
 func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin) error {
 	table := output.NewTable(cmd)
+	// Flink UDF artfact lifecycle management is reuse custom connector plugin api for EA customer only
+	// Version ID will be surfaced by `ConnectorClass` for EA
+	// For Flink GA, Flink team will have public documented API for this. tracking by internal ticket FRT-334
 	table.Add(&flinkArtifactOut{
-		Id:             plugin.GetId(),
-		Name:           plugin.GetDisplayName(),
-		ConnectorClass: plugin.GetConnectorClass(),
-		ContentFormat:  plugin.GetContentFormat(),
+		Name:          plugin.GetDisplayName(),
+		PluginId:      plugin.GetId(),
+		VersionId:     plugin.GetConnectorClass(),
+		ContentFormat: plugin.GetContentFormat(),
 	})
 
 	return table.Print()
