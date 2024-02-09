@@ -91,9 +91,9 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	// Flink UDF artfact lifecycle management is reuse custom connector plugin api for EA customer only
+	// Flink UDF artfact lifecycle management reuses custom connector plugin api for EA customer only
 	// Version ID will be surfaced by `ConnectorClass` for EA
-	// For Flink GA, Flink team will have public documented API for this. tracking by internal ticket FRT-334
+	// For Flink GA, Flink team will have public documented API for this. Tracking it by internal ticket FRT-334
 	table.Add(&pluginCreateOut{
 		Name:          plugin.GetDisplayName(),
 		PluginId:      plugin.GetId(),
