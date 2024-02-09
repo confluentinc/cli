@@ -4,7 +4,7 @@ Usage:
   confluent flink artifact describe <id> [flags]
 
 Examples:
-Describe Flink UDF artifact
+Describe Flink UDF artifact.
 
   $ confluent flink artifact describe ccp-123456
 

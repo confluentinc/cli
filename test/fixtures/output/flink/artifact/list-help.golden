@@ -4,7 +4,7 @@ Usage:
   confluent flink artifact list [flags]
 
 Examples:
-List Flink UDF artifacts in the org
+List Flink UDF artifacts in the org.
 
   $ confluent flink artifact list
 

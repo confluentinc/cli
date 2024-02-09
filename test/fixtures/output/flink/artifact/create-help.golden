@@ -4,13 +4,13 @@ Usage:
   confluent flink artifact create <name> [flags]
 
 Examples:
-Create Flink UDF artifact "my-flink-artifact".
+Create Flink artifact "my-flink-artifact".
 
   $ confluent flink artifact create my-flink-artifact --artifact-file /Users/xyz/Documents/config/plugin.jar
 
 Flags:
-      --artifact-file string   REQUIRED: Flink UDF artifact JAR file.
-      --description string     Description of Flink UDF artifact.
+      --artifact-file string   REQUIRED: Flink artifact JAR file.
+      --description string     Description of Flink artifact.
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 
