@@ -53,12 +53,12 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pluginFileName, err := cmd.Flags().GetString("artifact-file")
+	artifactFile, err := cmd.Flags().GetString("artifact-file")
 	if err != nil {
 		return err
 	}
 
-	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(pluginFileName), "."))
+	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(artifactFile), "."))
 	if extension != "jar" {
 		return fmt.Errorf(`only file extensions ".jar" is allowed`)
 	}
@@ -71,7 +71,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := uploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
+	if err := uploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
 		return err
 	}
 
@@ -91,10 +91,10 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&pluginCreateOut{
-		Id:             pluginResp.GetId(),
-		Name:           pluginResp.GetDisplayName(),
-		ConnectorClass: pluginResp.GetConnectorClass(),
-		ContentFormat:  pluginResp.GetContentFormat(),
+		Id:             plugin.GetId(),
+		Name:           plugin.GetDisplayName(),
+		ConnectorClass: plugin.GetConnectorClass(),
+		ContentFormat:  plugin.GetContentFormat(),
 	})
 	return table.Print()
 }
