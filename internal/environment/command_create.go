@@ -21,7 +21,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
-	c.addStreamGovernancePackageFlag(cmd, "essentials")
+	c.addStreamGovernancePackageFlag(cmd, "")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
