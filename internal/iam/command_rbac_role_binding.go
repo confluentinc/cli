@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -54,6 +55,8 @@ var (
 
 	literalPatternType  = "LITERAL"
 	prefixedPatternType = "PREFIXED"
+
+	nonUserPrincipalTypes = []string{presource.ServiceAccount, presource.IdentityPool, presource.SsoGroupMapping}
 )
 
 type roleBindingOptions struct {
@@ -400,7 +403,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	principalType := presource.LookupType(userId)
 
 	var fields []string
-	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool || principalType == presource.SsoGroupMapping {
+	if slices.Contains(nonUserPrincipalTypes, principalType) {
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
