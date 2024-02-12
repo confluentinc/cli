@@ -51,7 +51,7 @@ var (
 const (
 	serviceAccountId                 = int32(12345)
 	serviceAccountResourceId         = "sa-12345"
-	groupMappingId                   = "pool-abc"
+	groupMappingId                   = "group-abc"
 	identityProviderId               = "op-12345"
 	identityPoolId                   = "pool-12345"
 	ipGroupId                        = "ipg-wjnde"
