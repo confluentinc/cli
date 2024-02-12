@@ -38,6 +38,13 @@ func tokenRefreshFunc() error {
 	return nil
 }
 
+func (s *StoreTestSuite) TestGenerateStatementName() {
+	statementRegex := `^cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`
+	for i := 0; i < 100; i++ {
+		s.Require().Regexp(statementRegex, types.GenerateStatementName())
+	}
+}
+
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
