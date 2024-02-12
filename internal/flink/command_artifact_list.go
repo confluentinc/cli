@@ -19,12 +19,6 @@ func (c *command) newListCommand() *cobra.Command {
 		Short: "List Flink UDF artifacts.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List Flink UDF artifacts in the org.",
-				Code: "confluent flink artifact list",
-			},
-		),
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
