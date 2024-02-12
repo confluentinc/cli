@@ -3,11 +3,6 @@ List Flink UDF artifacts.
 Usage:
   confluent flink artifact list [flags]
 
-Examples:
-List Flink UDF artifacts in the org.
-
-  $ confluent flink artifact list
-
 Flags:
       --context string   CLI context name.
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
