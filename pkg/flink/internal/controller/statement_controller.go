@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/v3/pkg/color"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -42,11 +41,6 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 	c.createdStatementName = processedStatement.StatementName
 	processedStatement.PrintStatusMessage()
 
-	if c.shouldDisplayUserIdentityWarning(processedStatement) {
-		utils.OutputWarnf("[WARN] To ensure that your statements run continuously, switch to using a service account instead of your user identity by running `SET '%s'='sa-123';`. Otherwise, statements will stop running after 4 hours.",
-			config.KeyServiceAccount)
-	}
-
 	processedStatement, err = c.waitForStatementToBeReadyOrError(*processedStatement)
 	if err != nil {
 		c.handleStatementError(*err)
@@ -68,18 +62,6 @@ func (c *StatementController) handleStatementError(err types.StatementError) {
 	if err.StatusCode == http.StatusUnauthorized {
 		c.applicationController.ExitApplication()
 	}
-}
-
-func (c *StatementController) shouldDisplayUserIdentityWarning(processedStatement *types.ProcessedStatement) bool {
-	if processedStatement.IsLocalStatement {
-		return false
-	}
-	// the warning is only needed for INSERT INTO and STATEMENT SET statements
-	if !c.isInsertOrStatementSetStatement(processedStatement) {
-		return false
-	}
-	principal := strings.ToLower(strings.TrimSpace(processedStatement.Principal))
-	return strings.HasPrefix(principal, "u-")
 }
 
 func (c *StatementController) isInsertOrStatementSetStatement(processedStatement *types.ProcessedStatement) bool {
