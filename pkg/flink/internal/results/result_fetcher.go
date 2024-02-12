@@ -176,8 +176,8 @@ func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema(statement types
 	if len(statement.StatementResults.GetHeaders()) > 0 {
 		return statement.StatementResults.GetHeaders()
 	}
-	headers := make([]string, len(statement.ResultSchema.GetColumns()))
-	for idx, column := range statement.ResultSchema.GetColumns() {
+	headers := make([]string, len(statement.Traits.Schema.GetColumns()))
+	for idx, column := range statement.Traits.Schema.GetColumns() {
 		headers[idx] = column.GetName()
 	}
 	return headers

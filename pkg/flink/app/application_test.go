@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -226,8 +227,12 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 			isBasicOutput: false,
 		},
 		{
-			name:          "select statement should always use TView",
-			statement:     types.ProcessedStatement{IsSelectStatement: true, StatementResults: &types.StatementResults{}},
+			name: "select statement should always use TView",
+			statement: types.ProcessedStatement{
+				Traits: flinkgatewayv1.SqlV1StatementTraits{
+					SqlKind: flinkgatewayv1.PtrString("SELECT"),
+				},
+				StatementResults: &types.StatementResults{}},
 			isBasicOutput: false,
 		},
 		{

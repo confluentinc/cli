@@ -6,7 +6,7 @@ import (
 
 	"pgregory.net/rapid"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
@@ -22,8 +22,8 @@ const (
 )
 
 type FakeFlinkGatewayClient struct {
-	statement  flinkgatewayv1beta1.SqlV1beta1Statement
-	statements []flinkgatewayv1beta1.SqlV1beta1Statement
+	statement  flinkgatewayv1.SqlV1Statement
+	statements []flinkgatewayv1.SqlV1Statement
 	fakeCount  int
 }
 
@@ -39,22 +39,22 @@ func (c *FakeFlinkGatewayClient) DeleteStatement(_, _, _ string) error {
 	return nil
 }
 
-func (c *FakeFlinkGatewayClient) UpdateStatement(_, _, _ string, _ flinkgatewayv1beta1.SqlV1beta1Statement) error {
+func (c *FakeFlinkGatewayClient) UpdateStatement(_, _, _ string, _ flinkgatewayv1.SqlV1Statement) error {
 	return nil
 }
 
-func (c *FakeFlinkGatewayClient) GetStatement(_, _, _ string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
+func (c *FakeFlinkGatewayClient) GetStatement(_, _, _ string) (flinkgatewayv1.SqlV1Statement, error) {
 	secondsToWait := time.Duration(rapid.IntRange(1, 3).Example())
 	time.Sleep(secondsToWait * time.Second)
 	c.statement.Status.Phase = "RUNNING"
 	return c.statement, nil
 }
 
-func (c *FakeFlinkGatewayClient) ListStatements(_, _, _ string) ([]flinkgatewayv1beta1.SqlV1beta1Statement, error) {
+func (c *FakeFlinkGatewayClient) ListStatements(_, _, _ string) ([]flinkgatewayv1.SqlV1Statement, error) {
 	return c.statements, nil
 }
 
-func (c *FakeFlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.SqlV1beta1Statement, _, _, _ string) (flinkgatewayv1beta1.SqlV1beta1Statement, error) {
+func (c *FakeFlinkGatewayClient) CreateStatement(statement flinkgatewayv1.SqlV1Statement, _, _, _ string) (flinkgatewayv1.SqlV1Statement, error) {
 	c.fakeCount = 0
 	c.statement = statement
 	c.statements = append(c.statements, c.statement)
@@ -62,7 +62,7 @@ func (c *FakeFlinkGatewayClient) CreateStatement(statement flinkgatewayv1beta1.S
 	return c.statement, nil
 }
 
-func (c *FakeFlinkGatewayClient) getFakeResultSchema(statement string) []flinkgatewayv1beta1.ColumnDetails {
+func (c *FakeFlinkGatewayClient) getFakeResultSchema(statement string) []flinkgatewayv1.ColumnDetails {
 	switch statement {
 	case staticQuery:
 		return c.getStaticFakeResultSchema()
@@ -72,15 +72,15 @@ func (c *FakeFlinkGatewayClient) getFakeResultSchema(statement string) []flinkga
 	return nil
 }
 
-func (c *FakeFlinkGatewayClient) getStaticFakeResultSchema() []flinkgatewayv1beta1.ColumnDetails {
+func (c *FakeFlinkGatewayClient) getStaticFakeResultSchema() []flinkgatewayv1.ColumnDetails {
 	return generators.MockResultColumns(5, 2).Example()
 }
 
-func (c *FakeFlinkGatewayClient) getDynamicFakeResultSchema() []flinkgatewayv1beta1.ColumnDetails {
-	return []flinkgatewayv1beta1.ColumnDetails{
+func (c *FakeFlinkGatewayClient) getDynamicFakeResultSchema() []flinkgatewayv1.ColumnDetails {
+	return []flinkgatewayv1.ColumnDetails{
 		{
 			Name: "Count",
-			Type: flinkgatewayv1beta1.DataType{
+			Type: flinkgatewayv1.DataType{
 				Nullable: false,
 				Type:     "INTEGER",
 			},
@@ -88,11 +88,11 @@ func (c *FakeFlinkGatewayClient) getDynamicFakeResultSchema() []flinkgatewayv1be
 	}
 }
 
-func (c *FakeFlinkGatewayClient) GetStatementResults(_, _, _, _ string) (flinkgatewayv1beta1.SqlV1beta1StatementResult, error) {
+func (c *FakeFlinkGatewayClient) GetStatementResults(_, _, _, _ string) (flinkgatewayv1.SqlV1StatementResult, error) {
 	resultData, nextUrl := c.getFakeResults()
-	result := flinkgatewayv1beta1.SqlV1beta1StatementResult{
-		Metadata: flinkgatewayv1beta1.ResultListMeta{Next: &nextUrl},
-		Results:  &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{Data: &resultData},
+	result := flinkgatewayv1.SqlV1StatementResult{
+		Metadata: flinkgatewayv1.ResultListMeta{Next: &nextUrl},
+		Results:  &flinkgatewayv1.SqlV1StatementResultResults{Data: &resultData},
 	}
 	return result, nil
 }
@@ -108,7 +108,7 @@ func (c *FakeFlinkGatewayClient) getFakeResults() ([]any, string) {
 }
 
 func (c *FakeFlinkGatewayClient) getFakeResultsCompletedTable() ([]any, string) {
-	return rapid.SliceOfN(generators.MockResultRow(c.statement.Status.ResultSchema.GetColumns()), 20, 50).Example(), ""
+	return rapid.SliceOfN(generators.MockResultRow(c.statement.Status.Traits.Schema.GetColumns()), 20, 50).Example(), ""
 }
 
 func (c *FakeFlinkGatewayClient) getFakeResultsRunningCounter() ([]any, string) {
@@ -138,6 +138,6 @@ func (c *FakeFlinkGatewayClient) getFakeResultsRunningCounter() ([]any, string) 
 	return results, fmt.Sprintf("https://devel.cpdev.cloud/some/results?page_token=%s", "not-empty")
 }
 
-func (c *FakeFlinkGatewayClient) GetExceptions(_, _, _ string) ([]flinkgatewayv1beta1.SqlV1beta1StatementException, error) {
-	return []flinkgatewayv1beta1.SqlV1beta1StatementException{}, nil
+func (c *FakeFlinkGatewayClient) GetExceptions(_, _, _ string) ([]flinkgatewayv1.SqlV1StatementException, error) {
+	return []flinkgatewayv1.SqlV1StatementException{}, nil
 }
