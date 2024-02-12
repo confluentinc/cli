@@ -60,7 +60,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
 	if strings.ToLower(extension) != "jar" {
-		return fmt.Errorf(`only ".jar" file extensions is allowed`)
+		return fmt.Errorf(`only ".jar" file extensions are allowed`)
 	}
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
