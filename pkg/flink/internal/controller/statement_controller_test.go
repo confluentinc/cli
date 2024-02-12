@@ -157,7 +157,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 	cupaloy.SnapshotT(s.T(), stdout)
 }
 
-func (s *StatementControllerTestSuite) TestExecuteStatementPrintsWarningWhenNoServiceAccountIsUsed() {
+func (s *StatementControllerTestSuite) TestExecuteStatementPrintsNoWarningWhenUserIdentityIsUsed() {
 	statementToExecute := "insert into table values (1,2);"
 	processedStatement := types.ProcessedStatement{
 		Statement:     statementToExecute,
