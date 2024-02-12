@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
 
 	fColor "github.com/fatih/color"
@@ -62,15 +61,6 @@ func (c *StatementController) handleStatementError(err types.StatementError) {
 	if err.StatusCode == http.StatusUnauthorized {
 		c.applicationController.ExitApplication()
 	}
-}
-
-func (c *StatementController) isInsertOrStatementSetStatement(processedStatement *types.ProcessedStatement) bool {
-	// transform statement to uppercase and remove duplicated white spaces
-	statement := strings.ToUpper(strings.Join(strings.Fields(processedStatement.Statement), " "))
-	if strings.HasPrefix(statement, "INSERT") || strings.HasPrefix(statement, "EXECUTE STATEMENT SET") {
-		return true
-	}
-	return false
 }
 
 func (c *StatementController) waitForStatementToBeReadyOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
