@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
+	"pgregory.net/rapid"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
@@ -36,6 +37,13 @@ func TestStoreTestSuite(t *testing.T) {
 
 func tokenRefreshFunc() error {
 	return nil
+}
+
+func (s *StoreTestSuite) TestGenerateStatementName() {
+	statementRegex := `^cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`
+	rapid.Check(s.T(), func(t *rapid.T) {
+		s.Require().Regexp(statementRegex, types.GenerateStatementName())
+	})
 }
 
 func TestStoreProcessLocalStatement(t *testing.T) {
