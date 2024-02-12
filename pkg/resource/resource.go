@@ -117,6 +117,12 @@ func ValidatePrefixes(resourceType string, args []string) error {
 		return nil
 	}
 
+	// old group mappings may still have "pool-" instead of "group-"
+	// so we must skip the check for this resource
+	if prefix == SsoGroupMappingPrefix {
+		return nil
+	}
+
 	var malformed []string
 	for _, id := range args {
 		if LookupType(id) != resourceType {
