@@ -29,24 +29,21 @@ type ProcessedStatement struct {
 	Status               PHASE  `json:"status"`
 	StatusDetail         string `json:"status_detail,omitempty"` // Shown at the top before the table
 	IsLocalStatement     bool
-	IsSelectStatement    bool
 	IsSensitiveStatement bool
 	PageToken            string
-	ResultSchema         flinkgatewayv1.SqlV1ResultSchema
 	StatementResults     *StatementResults
+	Traits               flinkgatewayv1.SqlV1StatementTraits
 }
 
 func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *ProcessedStatement {
-	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
 	return &ProcessedStatement{
-		Statement:         statementObj.Spec.GetStatement(),
-		StatementName:     statementObj.GetName(),
-		ComputePool:       statementObj.Spec.GetComputePoolId(),
-		Principal:         statementObj.Spec.GetPrincipal(),
-		StatusDetail:      statementObj.Status.GetDetail(),
-		Status:            PHASE(statementObj.Status.GetPhase()),
-		ResultSchema:      statementObj.Status.Traits.GetSchema(),
-		IsSelectStatement: strings.HasPrefix(statement, "select"),
+		Statement:     statementObj.Spec.GetStatement(),
+		StatementName: statementObj.GetName(),
+		ComputePool:   statementObj.Spec.GetComputePoolId(),
+		Principal:     statementObj.Spec.GetPrincipal(),
+		StatusDetail:  statementObj.Status.GetDetail(),
+		Status:        PHASE(statementObj.Status.GetPhase()),
+		Traits:        statementObj.Status.GetTraits(),
 	}
 }
 
@@ -94,4 +91,8 @@ func (s ProcessedStatement) PrintStatementDoneStatus() {
 func (s ProcessedStatement) IsTerminalState() bool {
 	isRunningAndHasResults := s.Status == RUNNING && s.PageToken != ""
 	return s.Status == COMPLETED || s.Status == FAILED || isRunningAndHasResults
+}
+
+func (s ProcessedStatement) IsSelectStatement() bool {
+	return strings.EqualFold(s.Traits.GetSqlKind(), "SELECT")
 }

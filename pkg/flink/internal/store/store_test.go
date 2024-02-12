@@ -1492,64 +1492,35 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
 }
 
-func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
+func (s *StoreTestSuite) TestIsSelectStatement() {
 	tests := []struct {
 		name              string
 		statement         flinkgatewayv1.SqlV1Statement
 		isSelectStatement bool
 	}{
 		{
-			name: "select lowercase",
-			statement: flinkgatewayv1.SqlV1Statement{
-				Spec: &flinkgatewayv1.SqlV1StatementSpec{
-					Statement: flinkgatewayv1.PtrString("select * FROM table"),
-				},
-			},
+			name:              "select lowercase",
+			statement:         createStatementWithSqlKind("select"),
 			isSelectStatement: true,
 		},
 		{
-			name: "select uppercase",
-			statement: flinkgatewayv1.SqlV1Statement{
-				Spec: &flinkgatewayv1.SqlV1StatementSpec{
-					Statement: flinkgatewayv1.PtrString("SELECT * FROM table"),
-				},
-			},
+			name:              "select uppercase",
+			statement:         createStatementWithSqlKind("SELECT"),
 			isSelectStatement: true,
 		},
 		{
-			name: "select random case",
-			statement: flinkgatewayv1.SqlV1Statement{
-				Spec: &flinkgatewayv1.SqlV1StatementSpec{
-					Statement: flinkgatewayv1.PtrString("SeLeCt * FROM table"),
-				},
-			},
+			name:              "select random case",
+			statement:         createStatementWithSqlKind("SeLeCt"),
 			isSelectStatement: true,
 		},
 		{
-			name: "leading white space",
-			statement: flinkgatewayv1.SqlV1Statement{
-				Spec: &flinkgatewayv1.SqlV1StatementSpec{
-					Statement: flinkgatewayv1.PtrString("   select * FROM table"),
-				},
-			},
-			isSelectStatement: true,
-		},
-		{
-			name: "missing last char",
-			statement: flinkgatewayv1.SqlV1Statement{
-				Spec: &flinkgatewayv1.SqlV1StatementSpec{
-					Statement: flinkgatewayv1.PtrString("selec * FROM table"),
-				},
-			},
+			name:              "leading and trailing white space",
+			statement:         createStatementWithSqlKind("   select   "),
 			isSelectStatement: false,
 		},
 		{
-			name: "missing last char",
-			statement: flinkgatewayv1.SqlV1Statement{
-				Spec: &flinkgatewayv1.SqlV1StatementSpec{
-					Statement: flinkgatewayv1.PtrString("insert into table values (1, 2)"),
-				},
-			},
+			name:              "missing last char",
+			statement:         createStatementWithSqlKind("selec"),
 			isSelectStatement: false,
 		},
 	}
@@ -1557,8 +1528,18 @@ func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
 	for _, testCase := range tests {
 		s.T().Run(testCase.name, func(t *testing.T) {
 			processedStatement := types.NewProcessedStatement(testCase.statement)
-			require.Equal(t, testCase.isSelectStatement, processedStatement.IsSelectStatement)
+			require.Equal(t, testCase.isSelectStatement, processedStatement.IsSelectStatement())
 		})
+	}
+}
+
+func createStatementWithSqlKind(sqlKind string) flinkgatewayv1.SqlV1Statement {
+	return flinkgatewayv1.SqlV1Statement{
+		Status: &flinkgatewayv1.SqlV1StatementStatus{
+			Traits: &flinkgatewayv1.SqlV1StatementTraits{
+				SqlKind: flinkgatewayv1.PtrString(sqlKind),
+			},
+		},
 	}
 }
 

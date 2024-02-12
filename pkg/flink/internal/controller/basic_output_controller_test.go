@@ -65,7 +65,7 @@ func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintTable() 
 func getStatementWithResultsExample() types.ProcessedStatement {
 	statement := types.ProcessedStatement{
 		StatementName: "example-statement",
-		ResultSchema:  flinkgatewayv1.SqlV1ResultSchema{},
+		Traits:        flinkgatewayv1.SqlV1StatementTraits{},
 		StatementResults: &types.StatementResults{
 			Headers: []string{"Count"},
 			Rows:    []types.StatementResultRow{},

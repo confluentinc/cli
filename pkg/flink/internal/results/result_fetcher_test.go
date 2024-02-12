@@ -214,9 +214,9 @@ func (s *ResultFetcherTestSuite) TestReturnHeadersFromResultSchema() {
 	mockStatement := getStatementWithResultsExample()
 	mockStatement.StatementResults.Headers = nil
 	columnDetails := generators.MockResultColumns(2, 1).Example()
-	mockStatement.ResultSchema = flinkgatewayv1.SqlV1ResultSchema{Columns: &columnDetails}
-	headers := make([]string, len(mockStatement.ResultSchema.GetColumns()))
-	for idx, column := range mockStatement.ResultSchema.GetColumns() {
+	mockStatement.Traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &columnDetails}
+	headers := make([]string, len(mockStatement.Traits.Schema.GetColumns()))
+	for idx, column := range mockStatement.Traits.Schema.GetColumns() {
 		headers[idx] = column.GetName()
 	}
 
