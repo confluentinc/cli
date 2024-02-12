@@ -3,4 +3,4 @@
   User:group-abc  | another-group-mapping |                       
   User:pool-12345 | identity-pool         |                       
   User:sa-12345   | service-account       |                       
-  User:u-11aaa    |                       | u-11aaa@confluent.io  
+  User:u-11aaa    | 11 Aaa                | u-11aaa@confluent.io  

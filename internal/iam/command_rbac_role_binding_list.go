@@ -500,6 +500,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, listRo
 		row := &roleBindingListOut{Principal: principal}
 		if user, ok := principalToUser[principal]; ok {
 			row.Email = user.GetEmail()
+			row.Name = user.GetFullName()
 			list.Add(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
