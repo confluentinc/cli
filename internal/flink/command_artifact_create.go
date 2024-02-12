@@ -58,8 +58,8 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(artifactFile), "."))
-	if extension != "jar" {
+	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
+	if strings.ToLower(extension) != "jar" {
 		return fmt.Errorf(`only ".jar" file extensions is allowed`)
 	}
 
