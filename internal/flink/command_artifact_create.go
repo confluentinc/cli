@@ -31,7 +31,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink artifact "my-flink-artifact".`,
-				Code: "confluent flink artifact create my-flink-artifact --artifact-file /Users/xyz/Documents/config/plugin.jar",
+				Code: "confluent flink artifact create my-flink-artifact --artifact-file plugin.jar",
 			},
 		),
 	}

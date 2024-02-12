@@ -1,4 +1,4 @@
-Manage Flink UDF artifact.
+Manage Flink UDF artifacts.
 
 Usage:
   confluent flink artifact [command]
