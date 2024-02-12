@@ -55,8 +55,6 @@ var (
 
 	literalPatternType  = "LITERAL"
 	prefixedPatternType = "PREFIXED"
-
-	nonUserPrincipalTypes = []string{presource.ServiceAccount, presource.IdentityPool, presource.SsoGroupMapping}
 )
 
 type roleBindingOptions struct {
@@ -401,6 +399,8 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 
 	userId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
 	principalType := presource.LookupType(userId)
+
+	nonUserPrincipalTypes := []string{presource.ServiceAccount, presource.IdentityPool, presource.SsoGroupMapping}
 
 	var fields []string
 	if slices.Contains(nonUserPrincipalTypes, principalType) {
