@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -43,7 +41,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, plugin := range plugins {
-		if strings.ToLower(plugin.GetConnectorType()) != "flink-udf" {
+		if plugin.GetConnectorType() != "flink-udf" {
 			continue
 		}
 		list.Add(&customPluginOutList{
