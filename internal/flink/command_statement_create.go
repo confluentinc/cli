@@ -109,7 +109,6 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	principal := serviceAccount
 	if serviceAccount == "" {
-		output.ErrPrintln(c.Config.EnableColor, serviceAccountWarning)
 		principal = c.Context.GetUser().GetResourceId()
 	}
 
