@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create Flink artifact "my-flink-artifact".
 
-  $ confluent flink artifact create my-flink-artifact --artifact-file /Users/xyz/Documents/config/plugin.jar
+  $ confluent flink artifact create my-flink-artifact --artifact-file plugin.jar
 
 Flags:
       --artifact-file string   REQUIRED: Flink artifact JAR file.
