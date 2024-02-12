@@ -1,5 +1,5 @@
 creation_date: 2023-01-01T00:00:00Z
-name: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}
+name: ^cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$
 statement: INSERT \* INTO table;
 compute_pool: lfcp-123456
 status: PENDING
