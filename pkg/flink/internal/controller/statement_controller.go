@@ -53,7 +53,12 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 		return nil, err
 	}
 
-	processedStatement, err = c.waitForStatementToBeInTerminalStateOrError(*processedStatement)
+	if processedStatement.IsBackgroundStatement() {
+		processedStatement, err = c.waitForBackgroundStatementTerminalState(*processedStatement)
+	} else {
+		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
+	}
+
 	if err != nil {
 		c.handleStatementError(*err)
 		return nil, err
@@ -121,16 +126,7 @@ func (c *StatementController) listenForUserInputEvent(ctx context.Context, userI
 	}
 }
 
-func (c *StatementController) waitForStatementToBeInTerminalStateOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
-	readyStatementWithResults, err := c.store.FetchStatementResults(processedStatement)
-	if err != nil {
-		return nil, err
-	}
-
-	if readyStatementWithResults.IsTerminalState() {
-		return readyStatementWithResults, nil
-	}
-
+func (c *StatementController) waitForBackgroundStatementTerminalState(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	ctx, cancelWaitForTerminalStatementState := context.WithCancel(context.Background())
 	defer cancelWaitForTerminalStatementState()
 
@@ -138,10 +134,10 @@ func (c *StatementController) waitForStatementToBeInTerminalStateOrError(process
 		c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isDetachEvent, isCancelEvent), cancelWaitForTerminalStatementState)
 	})()
 
-	output.Printf(false, "Statement phase is %s.\n", readyStatementWithResults.Status)
+	output.Printf(false, "Statement phase is %s.\n", processedStatement.Status)
 	col := fColor.New(color.AccentColor)
 	output.Printf(false, "Listening for execution errors. %s.\n", col.Sprint("Press Enter to detach"))
-	terminalStatement, err := c.store.WaitForTerminalStatementState(ctx, *readyStatementWithResults)
+	terminalStatement, err := c.store.WaitForTerminalStatementState(ctx, processedStatement)
 	if err != nil {
 		return nil, err
 	}
