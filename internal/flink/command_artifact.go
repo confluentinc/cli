@@ -27,7 +27,6 @@ func (c *command) newArtifactCommand() *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
-	
 
 	return cmd
 }
