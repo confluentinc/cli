@@ -23,6 +23,11 @@ func (c *Client) aiApiContext() context.Context {
 	return context.WithValue(context.Background(), aiv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
+func (c *Client) GetAvailability() (aiv1.AiV1Availability, error) {
+	res, httpResp, err := c.AiClient.AvailabilitiesAiV1Api.GetAiV1Availability(c.aiApiContext()).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
 func (c *Client) QueryChatCompletion(req aiv1.AiV1ChatCompletionsRequest) (aiv1.AiV1ChatCompletionsReply, error) {
 	res, httpResp, err := c.AiClient.ChatCompletionsAiV1Api.QueryAiV1ChatCompletion(c.aiApiContext()).AiV1ChatCompletionsRequest(req).Execute()
 	return res, errors.CatchCCloudV2Error(err, httpResp)

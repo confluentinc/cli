@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/go-prompt"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -22,7 +23,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	cmd.Run = c.ai
+	cmd.RunE = c.ai
 
 	return cmd
 }
@@ -39,9 +40,23 @@ https://docs.confluent.io/cloud/current/release-notes/cflt-assistant.html
 I'm currently in preview and am learning more everyday. Help me improve by rating answers with "+1" or "-1".
 You can exit the shell at any time with "exit".`
 
-func (c *command) ai(cmd *cobra.Command, _ []string) {
+func (c *command) ai(cmd *cobra.Command, _ []string) error {
+	availability, err := c.V2Client.GetAvailability()
+	if err != nil {
+		return err
+	}
+
+	if !availability.GetAiAssistantEnabled() {
+		return errors.NewErrorWithSuggestions(
+			"the AI assistant is not enabled for your organization",
+			"See here for more information: https://docs.confluent.io/cloud/current/release-notes/cflt-assistant.html",
+		)
+	}
+
 	output.Println(c.Config.EnableColor, message)
 
 	shell := newShell(c.V2Client)
 	prompt.New(shell.executor, shell.completer, prompt.OptionPrefix("> ")).Run()
+
+	return nil
 }
