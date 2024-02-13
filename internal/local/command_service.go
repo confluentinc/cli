@@ -730,11 +730,6 @@ func isValidJavaVersion(service, javaVersion string) (bool, error) {
 		return true, nil
 	}
 
-	v12, _ := version.NewSemver("12")
-	if v.Compare(v12) >= 0 {
-		return false, nil
-	}
-
 	return true, nil
 }
 
