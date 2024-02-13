@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -18,29 +19,30 @@ import (
 )
 
 type humanOut struct {
-	Id                                         string `human:"ID"`
-	EnvironmentId                              string `human:"Environment"`
-	Name                                       string `human:"Name,omitempty"`
-	Cloud                                      string `human:"Cloud"`
-	Region                                     string `human:"Region"`
-	Cidr                                       string `human:"CIDR,omitempty"`
-	Zones                                      string `human:"Zones,omitempty"`
-	Phase                                      string `human:"Phase"`
-	SupportedConnectionTypes                   string `human:"Supported Connection Types"`
-	ActiveConnectionTypes                      string `human:"Active Connection Types,omitempty"`
-	AwsVpc                                     string `human:"AWS VPC,omitempty"`
-	AwsAccount                                 string `human:"AWS Account,omitempty"`
-	AwsPrivateLinkEndpointService              string `human:"AWS Private Link Endpoint Service,omitempty"`
-	GcpProject                                 string `human:"GCP Project,omitempty"`
-	GcpVpcNetwork                              string `human:"GCP VPC Network,omitempty"`
-	GcpPrivateServiceConnectServiceAttachments string `human:"GCP Private Service Connect Service Attachments,omitempty"`
-	AzureVNet                                  string `human:"Azure VNet,omitempty"`
-	AzureSubscription                          string `human:"Azure Subscription,omitempty"`
-	AzurePrivateLinkServiceAliases             string `human:"Azure Private Link Service Aliases,omitempty"`
-	AzurePrivateLinkServiceResourceIds         string `human:"Azure Private Link Service Resources,omitempty"`
-	DnsResolution                              string `human:"DNS Resolution,omitempty"`
-	DnsDomain                                  string `human:"DNS Domain,omitempty"`
-	ZonalSubdomains                            string `human:"Zonal Subdomains,omitempty"`
+	Id                                         string    `human:"ID"`
+	EnvironmentId                              string    `human:"Environment"`
+	Name                                       string    `human:"Name,omitempty"`
+	Cloud                                      string    `human:"Cloud"`
+	Region                                     string    `human:"Region"`
+	Cidr                                       string    `human:"CIDR,omitempty"`
+	Zones                                      string    `human:"Zones,omitempty"`
+	Phase                                      string    `human:"Phase"`
+	SupportedConnectionTypes                   string    `human:"Supported Connection Types"`
+	ActiveConnectionTypes                      string    `human:"Active Connection Types,omitempty"`
+	AwsVpc                                     string    `human:"AWS VPC,omitempty"`
+	AwsAccount                                 string    `human:"AWS Account,omitempty"`
+	AwsPrivateLinkEndpointService              string    `human:"AWS Private Link Endpoint Service,omitempty"`
+	GcpProject                                 string    `human:"GCP Project,omitempty"`
+	GcpVpcNetwork                              string    `human:"GCP VPC Network,omitempty"`
+	GcpPrivateServiceConnectServiceAttachments string    `human:"GCP Private Service Connect Service Attachments,omitempty"`
+	AzureVNet                                  string    `human:"Azure VNet,omitempty"`
+	AzureSubscription                          string    `human:"Azure Subscription,omitempty"`
+	AzurePrivateLinkServiceAliases             string    `human:"Azure Private Link Service Aliases,omitempty"`
+	AzurePrivateLinkServiceResourceIds         string    `human:"Azure Private Link Service Resources,omitempty"`
+	DnsResolution                              string    `human:"DNS Resolution,omitempty"`
+	DnsDomain                                  string    `human:"DNS Domain,omitempty"`
+	ZonalSubdomains                            string    `human:"Zonal Subdomains,omitempty"`
+	IdleSince                                  time.Time `human:"Idle Since,omitempty"`
 }
 
 type serializedOut struct {
@@ -67,6 +69,7 @@ type serializedOut struct {
 	DnsResolution                              string            `serialized:"dns_resolution,omitempty"`
 	DnsDomain                                  string            `serialized:"dns_domain,omitempty"`
 	ZonalSubdomains                            map[string]string `serialized:"zonal_subdomains,omitempty"`
+	IdleSince                                  time.Time         `serialized:"idle_since,omitempty"`
 }
 
 type command struct {
@@ -188,6 +191,11 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 		}
 	}
 
+	if !network.Status.GetIdleSince().IsZero() {
+		human.IdleSince = network.Status.GetIdleSince()
+		describeFields = append(describeFields, "IdleSince")
+	}
+
 	table := output.NewTable(cmd)
 	table.Add(human)
 	table.Filter(describeFields)
@@ -259,6 +267,11 @@ func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1N
 			serialized.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
 			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
 		}
+	}
+
+	if !network.Status.GetIdleSince().IsZero() {
+		serialized.IdleSince = network.Status.GetIdleSince()
+		describeFields = append(describeFields, "IdleSince")
 	}
 
 	table := output.NewTable(cmd)
