@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -401,6 +402,7 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 					Kind: "AwsNetwork",
 				},
 			},
+			IdleSince: networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
 		},
 	}
 
