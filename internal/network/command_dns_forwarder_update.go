@@ -11,10 +11,11 @@ import (
 
 func (c *command) newDnsForwarderUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update an existing DNS forwarder.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.dnsForwarderUpdate,
+		Use:               "update <id>",
+		Short:             "Update an existing DNS forwarder.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validDnsForwarderArgs),
+		RunE:              c.dnsForwarderUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the name of DNS forwarder "dnsf-123456".`,

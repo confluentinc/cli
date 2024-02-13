@@ -1,4 +1,4 @@
-Error: required flag(s) "gateway", "config", "dns-server-ips" not set
+Error: required flag(s) "gateway", "config", "dns-server-ips", "domains" not set
 Usage:
   confluent network dns forwarder create [name] [flags]
 
@@ -15,7 +15,7 @@ Flags:
       --gateway string           REQUIRED: Gateway ID.
       --config string            REQUIRED: Specify the DNS forwarder configuration "ForwardViaIp".
       --dns-server-ips strings   REQUIRED: A comma-separated list of IP addresses for the DNS server.
-      --domains strings          A comma-separated list of domains for the DNS forwarder to use.
+      --domains strings          REQUIRED: A comma-separated list of domains for the DNS forwarder to use.
       --context string           CLI context name.
       --environment string       Environment ID.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")

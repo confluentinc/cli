@@ -38,6 +38,7 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
 	cobra.CheckErr(cmd.MarkFlagRequired("config"))
 	cobra.CheckErr(cmd.MarkFlagRequired("dns-server-ips"))
+	cobra.CheckErr(cmd.MarkFlagRequired("domains"))
 
 	return cmd
 }
