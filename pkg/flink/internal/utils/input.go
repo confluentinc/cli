@@ -19,20 +19,17 @@ func GetStdin() *term.State {
 	return state
 }
 
-func GetConsoleParser() prompt.ConsoleParser {
-	if fileInfo, err := os.Stat("/dev/tty"); err != nil {
-		log.CliLogger.Warnf(`Couldn't open "/dev/tty" file: %v`, err)
-		return nil
-	} else if fileInfo.Mode().Perm()&0444 == 0 {
-		log.CliLogger.Warn(`Couldn't read "/dev/tty" file because read permissions are not set.`)
-		return nil
-	}
-	consoleParser := prompt.NewStandardInputParser()
-	err := consoleParser.Setup()
+func GetConsoleParser() (prompt.ConsoleParser, error) {
+	consoleParser, err := prompt.NewStandardInputParser()
 	if err != nil {
-		log.CliLogger.Warnf("Couldn't setup console parser: %v", err)
+		log.CliLogger.Warnf("Couldn't create console parser: %v", err)
+		return nil, err
 	}
-	return consoleParser
+	if err := consoleParser.Setup(); err != nil {
+		log.CliLogger.Warnf("Couldn't set up console parser: %v", err)
+		return nil, err
+	}
+	return consoleParser, nil
 }
 
 func TearDownConsoleParser(consoleParser prompt.ConsoleParser) {
