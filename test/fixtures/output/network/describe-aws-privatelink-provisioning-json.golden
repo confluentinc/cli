@@ -8,5 +8,5 @@
   "phase": "PROVISIONING",
   "supported_connection_types": ["PRIVATELINK"],
   "dns_resolution": "PRIVATE",
-  "idle_since": "2021-01-01 00:00:00 +0000 UTC"
+  "idle_since": "2021-01-01T00:00:00Z"
 }
