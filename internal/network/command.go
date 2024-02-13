@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
-
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -41,6 +40,7 @@ type humanOut struct {
 	DnsResolution                              string `human:"DNS Resolution,omitempty"`
 	DnsDomain                                  string `human:"DNS Domain,omitempty"`
 	ZonalSubdomains                            string `human:"Zonal Subdomains,omitempty"`
+	IdleSince                                  string `human:"Idle Since,omitempty"`
 }
 
 type serializedOut struct {
@@ -67,6 +67,7 @@ type serializedOut struct {
 	DnsResolution                              string            `serialized:"dns_resolution,omitempty"`
 	DnsDomain                                  string            `serialized:"dns_domain,omitempty"`
 	ZonalSubdomains                            map[string]string `serialized:"zonal_subdomains,omitempty"`
+	IdleSince                                  string            `serialized:"idle_since,omitempty"`
 }
 
 type command struct {
@@ -188,6 +189,11 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 		}
 	}
 
+	if !network.Status.GetIdleSince().IsZero() {
+		human.IdleSince = network.Status.GetIdleSince().String()
+		describeFields = append(describeFields, "IdleSince")
+	}
+
 	table := output.NewTable(cmd)
 	table.Add(human)
 	table.Filter(describeFields)
@@ -259,6 +265,11 @@ func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1N
 			serialized.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
 			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
 		}
+	}
+
+	if !network.Status.GetIdleSince().IsZero() {
+		serialized.IdleSince = network.Status.GetIdleSince().String()
+		describeFields = append(describeFields, "IdleSince")
 	}
 
 	table := output.NewTable(cmd)
