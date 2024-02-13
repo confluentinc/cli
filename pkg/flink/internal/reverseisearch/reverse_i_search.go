@@ -53,7 +53,7 @@ func (r reverseISearch) ReverseISearch(history []string, initialBufferText strin
 		reverseISearchEnabled = false
 		livePrefixState.LivePrefix = ""
 	}
-	in := prompt.New(
+	in, err := prompt.New(
 		func(s string) {},
 		searchCompleter(history, writer, searchState, livePrefixState),
 		prompt.OptionSetExitCheckerOnInput(func(input string, lineBreak bool) bool {
@@ -88,7 +88,9 @@ func (r reverseISearch) ReverseISearch(history []string, initialBufferText strin
 			return false
 		}),
 	)
-	in.Run()
+	if err != nil {
+		in.Run()
+	}
 	return searchState.CurrentMatch
 }
 

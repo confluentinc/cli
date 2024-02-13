@@ -66,8 +66,8 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	lspClient := lsp.NewLSPClientWS(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId())
 
 	stdinBefore := utils.GetStdin()
-	consoleParser := utils.GetConsoleParser()
-	if consoleParser == nil {
+	consoleParser, err := utils.GetConsoleParser()
+	if err != nil {
 		utils.OutputErr("Error: failed to initialize console parser")
 		return errors.NewErrorWithSuggestions("failed to initialize console parser", "Restart your shell session or try another terminal.")
 	}
