@@ -38,7 +38,9 @@ func NewInputController(history *history.History, lspCompleter prompt.Completer)
 		reverseISearch:  reverseisearch.NewReverseISearch(),
 		lspCompleter:    lspCompleter,
 	}
-	inputController.prompt = inputController.Prompt()
+	if prompt, err := inputController.Prompt(); err == nil {
+		inputController.prompt = prompt
+	}
 	return inputController
 }
 
@@ -113,7 +115,7 @@ func (c *InputController) getMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func (c *InputController) Prompt() prompt.IPrompt {
+func (c *InputController) Prompt() (prompt.IPrompt, error) {
 	return prompt.New(
 		nil,
 		c.promptCompleter(),
