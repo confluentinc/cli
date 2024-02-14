@@ -93,28 +93,30 @@ func (c *command) newProduceCommand() *cobra.Command {
 }
 
 func (c *command) produce(cmd *cobra.Command, args []string) error {
-	if c.Context == nil || c.Context.State == nil {
-		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
-		}
+	if c.Config.IsCloudLogin() {
+		return c.produceCloud(cmd, args)
+	}
 
-		if err := c.prepareAnonymousContext(cmd); err != nil {
+	if !cmd.Flags().Changed("bootstrap") { // Required if the user isn't logged into Confluent Cloud
+		return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
+	}
+
+	if c.Context.GetState() == nil {
+		bootstrap, err := cmd.Flags().GetString("bootstrap")
+		if err != nil {
 			return err
 		}
-		return c.produceCloud(cmd, args)
-	} else if c.Context.Config.IsCloudLogin() {
-		return c.produceCloud(cmd, args)
-	} else {
-		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
-		}
 
-		if !cmd.Flags().Changed("ca-location") {
-			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "ca-location")
-		}
+		if strings.Contains(bootstrap, "confluent.cloud") {
+			if err := c.prepareAnonymousContext(cmd); err != nil {
+				return err
+			}
 
-		return c.produceOnPrem(cmd, args)
+			return c.produceCloud(cmd, args)
+		}
 	}
+
+	return c.produceOnPrem(cmd, args)
 }
 
 func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
