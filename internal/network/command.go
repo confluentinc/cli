@@ -22,6 +22,7 @@ type humanOut struct {
 	Id                                         string    `human:"ID"`
 	EnvironmentId                              string    `human:"Environment"`
 	Name                                       string    `human:"Name,omitempty"`
+	Gateway                                    string    `human:"Gateway,omitempty"`
 	Cloud                                      string    `human:"Cloud"`
 	Region                                     string    `human:"Region"`
 	Cidr                                       string    `human:"CIDR,omitempty"`
@@ -49,6 +50,7 @@ type serializedOut struct {
 	Id                                         string            `serialized:"id"`
 	EnvironmentId                              string            `serialized:"environment_id"`
 	Name                                       string            `serialized:"name,omitempty"`
+	Gateway                                    string            `serialized:"gateway,omitempty"`
 	Cloud                                      string            `serialized:"cloud"`
 	Region                                     string            `serialized:"region"`
 	Cidr                                       string            `serialized:"cidr,omitempty"`
@@ -133,6 +135,7 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 		Id:                       network.GetId(),
 		EnvironmentId:            network.Spec.Environment.GetId(),
 		Name:                     network.Spec.GetDisplayName(),
+		Gateway:                  network.Spec.GetGateway().Id,
 		Cloud:                    cloud,
 		Region:                   network.Spec.GetRegion(),
 		Zones:                    strings.Join(network.Spec.GetZones(), ", "),
@@ -141,7 +144,7 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 		ActiveConnectionTypes:    strings.Join(network.Status.GetActiveConnectionTypes().Items, ", "),
 	}
 
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		human.DnsResolution = network.Spec.DnsConfig.GetResolution()
@@ -211,6 +214,7 @@ func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1N
 		Id:                       network.GetId(),
 		EnvironmentId:            network.Spec.Environment.GetId(),
 		Name:                     network.Spec.GetDisplayName(),
+		Gateway:                  network.Spec.GetGateway().Id,
 		Cloud:                    network.Spec.GetCloud(),
 		Region:                   network.Spec.GetRegion(),
 		Zones:                    network.Spec.GetZones(),
@@ -219,7 +223,7 @@ func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1N
 		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
 	}
 
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		serialized.DnsResolution = network.Spec.DnsConfig.GetResolution()

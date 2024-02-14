@@ -22,6 +22,8 @@ func (s *CLITestSuite) TestNetworkDescribe() {
 		{args: "network describe n-abcde10 --output json", fixture: "network/describe-aws-privatelink-provisioning-json.golden"},
 		{args: "network describe n-abcde11 --output json", fixture: "network/describe-gcp-privatelink-provisioning-json.golden"},
 		{args: "network describe n-abcde12 --output json", fixture: "network/describe-azure-privatelink-provisioning-json.golden"},
+		{args: "network describe n-abcde13", fixture: "network/describe-gateway.golden"},
+		{args: "network describe n-abcde13 --output json", fixture: "network/describe-gateway-json.golden"},
 		{args: "network describe", fixture: "network/describe-missing-id.golden", exitCode: 1},
 		{args: "network describe n-invalid", fixture: "network/describe-invalid.golden", exitCode: 1},
 	}
