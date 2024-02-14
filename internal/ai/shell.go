@@ -16,9 +16,10 @@ import (
 )
 
 type shell struct {
-	client   *ccloudv2.Client
-	session  *session
-	feedback *feedback
+	client           *ccloudv2.Client
+	session          *session
+	feedback         *feedback
+	cleanupFunctions []func()
 }
 
 func newShell(client *ccloudv2.Client) *shell {
@@ -28,10 +29,16 @@ func newShell(client *ccloudv2.Client) *shell {
 	}
 }
 
+func (s *shell) AddCleanupFunction(cleanupFunction func()) *shell {
+	s.cleanupFunctions = append(s.cleanupFunctions, cleanupFunction)
+	return s
+}
+
 func (s *shell) executor(input string) {
 	input = strings.TrimSpace(input)
 
 	if input == "exit" {
+		s.cleanup()
 		os.Exit(0)
 	}
 
@@ -40,7 +47,7 @@ func (s *shell) executor(input string) {
 			s.feedback.comment = input
 
 			if err := s.feedback.create(s.client, s.session.id); err != nil {
-				exitWithErr(err)
+				s.exitWithErr(err)
 			}
 
 			s.feedback = nil
@@ -71,7 +78,7 @@ func (s *shell) executor(input string) {
 
 		reply, err := s.client.QueryChatCompletion(req)
 		if err != nil {
-			exitWithErr(err)
+			s.exitWithErr(err)
 		}
 
 		s.feedback = newFeedback(reply.GetId())
@@ -83,13 +90,13 @@ func (s *shell) executor(input string) {
 
 		out, err := glamour.Render(reply.GetAnswer(), "auto")
 		if err != nil {
-			exitWithErr(err)
+			s.exitWithErr(err)
 		}
 		m.out = out
 	}()
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
-		exitWithErr(err)
+		s.exitWithErr(err)
 	}
 
 	// Print outside of bubbletea to avoid text cropping
@@ -98,11 +105,18 @@ func (s *shell) executor(input string) {
 	}
 }
 
+func (s *shell) cleanup() {
+	for _, cleanupFunction := range s.cleanupFunctions {
+		cleanupFunction()
+	}
+}
+
 func (s *shell) completer(_ prompt.Document) []prompt.Suggest {
 	return nil
 }
 
-func exitWithErr(err error) {
+func (s *shell) exitWithErr(err error) {
+	s.cleanup()
 	output.Printf(false, "Error: %v\n", err)
 	os.Exit(1)
 }

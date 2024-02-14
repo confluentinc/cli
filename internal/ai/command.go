@@ -1,13 +1,16 @@
 package ai
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
+	"os"
 
 	"github.com/confluentinc/go-prompt"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type command struct {
@@ -55,8 +58,26 @@ func (c *command) ai(cmd *cobra.Command, _ []string) error {
 
 	output.Println(c.Config.EnableColor, message)
 
-	shell := newShell(c.V2Client)
+	stdinState := getStdin()
+	defer restoreStdin(stdinState)
+
+	shell := newShell(c.V2Client).AddCleanupFunction(func() { restoreStdin(stdinState) })
 	prompt.New(shell.executor, shell.completer, prompt.OptionPrefix("> ")).Run()
 
 	return nil
+}
+
+func getStdin() *term.State {
+	state, err := term.GetState(int(os.Stdin.Fd()))
+	if err != nil {
+		log.CliLogger.Warnf("Couldn't get stdin state with term.GetState: %v", err)
+		return nil
+	}
+	return state
+}
+
+func restoreStdin(state *term.State) {
+	if state != nil {
+		_ = term.Restore(int(os.Stdin.Fd()), state)
+	}
 }
