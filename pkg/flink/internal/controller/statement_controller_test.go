@@ -411,7 +411,7 @@ func TestIsCancelEvent(t *testing.T) {
 		},
 		{
 			name: "Escape",
-			key:  prompt.Escape,
+			key:  prompt.ControlSpace,
 			want: true,
 		},
 		{
