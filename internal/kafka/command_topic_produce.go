@@ -93,7 +93,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 }
 
 func (c *command) produce(cmd *cobra.Command, args []string) error {
-	if c.Context.GetConfig().IsCloudLogin() {
+	if c.Config.IsCloudLogin() {
 		return c.produceCloud(cmd, args)
 	}
 
