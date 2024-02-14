@@ -101,7 +101,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
 	}
 
-	if c.Context == nil || c.Context.State == nil {
+	if c.Context.GetState() == nil {
 		bootstrap, err := cmd.Flags().GetString("bootstrap")
 		if err != nil {
 			return err
