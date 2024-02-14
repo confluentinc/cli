@@ -3,6 +3,13 @@
 /legal/
 /prebuilt/
 /test/bin/
+/vendor/
+
+# RPM/DEB
+/rpm/
+/deb/
+*.gpg
+*passphrase
 
 #
 # BEGIN managed content - any manual changes below this block will be discarded
@@ -29,7 +36,7 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-vendor/
+# vendor/
 
 # Go workspace file
 go.work
@@ -224,6 +231,12 @@ flycheck_*.el
 # network security
 /network-security.data
 
+
+/mk-include/
+/.mk-include-timestamp
+
+/coverage.txt
+/vendor/
 
 # ServiceBot work directory
 .servicebot/*

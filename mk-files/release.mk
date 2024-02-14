@@ -45,7 +45,10 @@ release-to-prod:
 	$(aws-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
-	$(call copy-stag-content-to-prod,archives,latest)
+	$(call copy-stag-content-to-prod,archives,latest); \
+	$(call dry-run, aws s3 sync $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/deb $(S3_DEB_RPM_PROD_PATH)/deb); \
+	$(call dry-run, aws s3 sync $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/rpm $(S3_DEB_RPM_PROD_PATH)/rpm); \
+	$(call dry-run, s3-repo-utils -v website index --fake-index --prefix $(S3_DEB_RPM_PROD_PREFIX)/ $(S3_DEB_RPM_BUCKET_NAME))
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
 	$(MAKE) verify-prod
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
@@ -59,16 +62,16 @@ endef
 .PHONY: gorelease-linux-amd64
 gorelease-linux-amd64:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-amd64.yml
+	goreleaser release --clean --config .goreleaser-linux-amd64.yml
 
 .PHONY: gorelease-linux-arm64
 gorelease-linux-arm64:
 ifneq (,$(findstring x86_64,$(shell uname -m)))
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
+	CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ goreleaser release --clean --config .goreleaser-linux-arm64.yml
 else
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
+	goreleaser release --clean --config .goreleaser-linux-arm64.yml
 endif
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
@@ -79,12 +82,16 @@ gorelease:
 
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
-	rm -rf prebuilt/ && \
-	mkdir prebuilt/ && \
+	rm -rf prebuilt/ deb/ rpm/ && \
+	mkdir prebuilt/ deb/ rpm/ && \
 	scripts/build_linux.sh && \
+	$(call dry-run,aws s3 sync deb $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/deb) && \
+	$(call dry-run,aws s3 sync rpm $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/rpm) && \
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
-	GORELEASER_KEY=$(GORELEASER_KEY) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
+	GORELEASER_KEY=$(GORELEASER_KEY) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m && \
+	sha256sum prebuilt/confluent-cli_$(VERSION_NO_V)*.deb prebuilt/confluent-cli-$(VERSION_NO_V)*.rpm | sed -e 's|prebuilt/||' >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
+	$(call dry-run,gh release upload $(VERSION) prebuilt/*.deb prebuilt/*.rpm dist/confluent_$(VERSION_NO_V)_checksums.txt --clobber)
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
@@ -160,15 +167,13 @@ update-muckrake:
 	$(eval MUCKRAKE=$(DIR)/muckrake)
 
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
-	cd $(CLI_RELEASE) && \
-	version=$$(ls release-notes | $(SED) "s/.json$$//" | sort --version-sort | tail -1) && \
+	version=$$(ls $(CLI_RELEASE)/release-notes | $(SED) "s/.json$$//" | sort --version-sort | tail -1) && \
 	git clone git@github.com:confluentinc/muckrake.git $(MUCKRAKE) && \
 	cd $(MUCKRAKE) && \
-	git fetch --all && \
-	branch=bump-cli && \
 	base=$$(git branch --remote --format "%(refname:short)" | sed -n "s|^origin/\([1-9][0-9]*\.[0-9][0-9]*\.x\)$$|\1|p" | tail -1) && \
 	git checkout $$base && \
-	git checkout $$branch || git checkout -b $$branch && \
+	branch=bump-cli && \
+	git checkout -b $$branch && \
 	$(SED) -i "s|confluent-cli-.*=\$${confluent_s3}/confluent\.cloud/confluent-cli/archives/.*/confluent_.*_linux_amd64\.tar\.gz|confluent-cli-$${version}=\$${confluent_s3}/confluent.cloud/confluent-cli/archives/$${version}/confluent_$${version}_linux_amd64.tar.gz|" ducker/ducker && \
 	$(SED) -i "s|VERSION = \".*\"|VERSION = \"$${version}\"|" muckrake/services/cli.py && \
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-redhat.sh && \
@@ -176,8 +181,8 @@ update-muckrake:
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-redhat9.sh && \
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-ubuntu.sh && \
 	git commit -am "bump cli to v$${version}" && \
-	$(call dry-run,git push -u origin $$branch) && \
-	if ! gh pr view $$branch; then \
+	$(call dry-run,git push --force --set-upstream origin $$branch) && \
+	if gh pr view $$branch --json state --jq .state 2>&1 | grep -E "no pull requests found|MERGED"; then \
 		$(call dry-run,gh pr create --base $${base} --title "Bump CLI to v$${version}" --body "") && \
 		$(call dry-run,gh pr merge --squash --auto); \
 	fi
@@ -191,20 +196,18 @@ update-packaging:
 	$(eval PACKAGING=$(DIR)/packaging)
 
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
-	cd $(CLI_RELEASE) && \
-	version=$$(ls release-notes | $(SED) "s/.json$$//" | sort --version-sort | tail -1) && \
+	version=$$(ls $(CLI_RELEASE)/release-notes | $(SED) "s/.json$$//" | sort --version-sort | tail -1) && \
 	git clone git@github.com:confluentinc/packaging.git $(PACKAGING) && \
 	cd $(PACKAGING) && \
-	git fetch --all && \
-	branch="bump-cli" && \
 	base=$$(git branch --remote --format "%(refname:short)" | sed -n "s|^origin/\([1-9][0-9]*\.[0-9][0-9]*\.x\)$$|\1|p" | tail -1) && \
 	git checkout $$base && \
-	git checkout $$branch || git checkout -b $$branch && \
-	$(SED) -i "s|cli_BRANCH=\".*\"|cli_BRANCH=\"$${version}\"|" settings.sh && \
+	branch="bump-cli" && \
+	git checkout -b $$branch && \
+	$(SED) -i "s|cli_BRANCH=\".*\"|cli_BRANCH=\"v$${version}\"|" settings.sh && \
 	$(SED) -i "s|CLI_VERSION=.*|CLI_VERSION=$${version}|" release_testing/bin/smoke_test.sh && \
 	git commit -am "bump cli to v$${version}" && \
-	$(call dry-run,git push -u origin $$branch) && \
-	if ! gh pr view $$branch; then \
+	$(call dry-run,git push --force --set-upstream origin $$branch) && \
+	if gh pr view $$branch --json state --jq .state 2>&1 | grep -E "no pull requests found|MERGED"; then \
 		$(call dry-run,gh pr create --base $${base} --title "Bump CLI to v$${version}" --body "") && \
 		$(call dry-run,gh pr merge --squash --auto); \
 	fi
