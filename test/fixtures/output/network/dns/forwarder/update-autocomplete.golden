@@ -1,0 +1,8 @@
+--name	Name of the DNS forwarder.
+--domains	A comma-separated list of domains for the DNS forwarder to use.
+--dns-server-ips	A comma-separated list of IP addresses for the DNS server.
+dnsf-abcde1	my-dns-forwarder-1
+dnsf-abcde2	my-dns-forwarder-2
+dnsf-abcde3	my-dns-forwarder-3
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp
