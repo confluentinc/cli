@@ -35,10 +35,10 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")
-	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
+	cmd.Flags().String("principal", "", `Principal type and identifier using "Prefix:ID" format.`)
 	pcmd.AddForceFlag(cmd)
 	addClusterFlags(cmd, c.cfg, c.CLICommand)
-	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	cmd.Flags().String("resource", "", `Resource type and identifier using "Prefix:ID" format.`)
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
 
@@ -99,7 +99,7 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		)
 	}
 
-	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
+	if err := deletion.ConfirmPromptYesOrNo(cmd, rbacPromptMsg); err != nil {
 		return err
 	}
 
@@ -111,7 +111,7 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 }
 
 func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
-	if err := deletion.ConfirmDeletionYesNo(cmd, rbacPromptMsg); err != nil {
+	if err := deletion.ConfirmPromptYesOrNo(cmd, rbacPromptMsg); err != nil {
 		return nil, err
 	}
 

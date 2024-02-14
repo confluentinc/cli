@@ -1,5 +1,9 @@
 project_name: confluent
 
+env:
+  - CGO_ENABLED=1
+  - GOEXPERIMENT=boringcrypto
+
 builds:
   - binary: confluent
     main: cmd/confluent/main.go
