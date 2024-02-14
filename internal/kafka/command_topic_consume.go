@@ -81,7 +81,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 }
 
 func (c *command) consume(cmd *cobra.Command, args []string) error {
-	if c.Context.GetConfig().IsCloudLogin() {
+	if c.Config.IsCloudLogin() {
 		return c.consumeCloud(cmd, args)
 	}
 
