@@ -136,7 +136,7 @@ func (c *StatementController) userInputIsOneOf(keyEvents ...func(key prompt.Key)
 }
 
 func isCancelEvent(key prompt.Key) bool {
-	return lo.Contains([]prompt.Key{prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.Escape}, key)
+	return lo.Contains([]prompt.Key{prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.ControlSpace}, key)
 }
 
 func isDetachEvent(key prompt.Key) bool {
