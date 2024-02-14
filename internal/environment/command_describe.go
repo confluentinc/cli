@@ -12,7 +12,7 @@ type out struct {
 	IsCurrent               bool   `human:"Current" serialized:"is_current"`
 	Id                      string `human:"ID" serialized:"id"`
 	Name                    string `human:"Name" serialized:"name"`
-	StreamGovernancePackage string `human:"Stream Governance Package" serialized:"stream_governance_package"`
+	StreamGovernancePackage string `human:"Stream Governance Package,omitempty" serialized:"stream_governance_package,omitempty"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
