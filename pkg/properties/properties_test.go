@@ -176,8 +176,14 @@ func TestConfigFlagToMapWithJavaPropertyParsing_EqualInValue(t *testing.T) {
 	require.Equal(t, map[string]string{"key": "username=\"xyx\" password=\"123\""}, m)
 }
 
+func TestConfigFlagToMapWithJavaPropertyParsing_TrimWhiteSpaces(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key= val "})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val"}, m)
+}
+
 func TestGetMap_ExplictNewLineCharacter(t *testing.T) {
-	file, err := os.CreateTemp("", "TestGetMap")
+	file, err := os.CreateTemp(os.TempDir(), "TestGetMap")
 	if err != nil {
 		require.NoError(t, err)
 		return
@@ -197,7 +203,7 @@ func TestGetMap_ExplictNewLineCharacter(t *testing.T) {
 }
 
 func TestGetMapWithJavaPropertyParsing_ExplictNewLineCharacter(t *testing.T) {
-	file, err := os.CreateTemp("", "TestGetMap")
+	file, err := os.CreateTemp(os.TempDir(), "TestGetMap")
 	if err != nil {
 		require.NoError(t, err)
 		return

@@ -119,7 +119,7 @@ func fileToMapWithJavaPropertyParsing(filename string) (map[string]string, error
 	if err != nil {
 		return nil, err
 	}
-	return prop.Map(), err
+	return getMapFromProp(prop), err
 }
 
 // ConfigFlagToMapWithJavaPropertyParsing reads key=value pairs from the string slices, according to Java property
@@ -130,5 +130,13 @@ func ConfigFlagToMapWithJavaPropertyParsing(configs []string) (map[string]string
 	if err != nil {
 		return nil, err
 	}
-	return prop.Map(), err
+	return getMapFromProp(prop), err
+}
+
+func getMapFromProp(prop *properties.Properties) map[string]string {
+	propMap := prop.Map()
+	for k, v := range propMap {
+		propMap[k] = strings.TrimSpace(v)
+	}
+	return propMap
 }
