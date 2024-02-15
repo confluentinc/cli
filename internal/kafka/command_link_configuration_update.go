@@ -58,7 +58,7 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		config = []string{configFile}
 	}
 
-	configMap, err := properties.GetMap(config)
+	configMap, err := properties.GetMapWithJavaPropertyParsing(config)
 	if err != nil {
 		return err
 	}

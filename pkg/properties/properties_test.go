@@ -106,3 +106,71 @@ func TestCreateKeyValuePairsKeysWithDotsAndSorts(t *testing.T) {
 	m["connection.mode"] = "OUTBOUND"
 	require.Equal(t, "\"connection.mode\"=\"OUTBOUND\"\n\"link.mode\"=\"BIDIRECTIONAL\"\n", CreateKeyValuePairs(m))
 }
+
+func TestConfigFlagToMapWithJavaPropertyParsing_Basic(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_Override(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val1", "key=val2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val2"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_WithSpaceAsSeparator(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key val"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val"}, m)
+
+	m2, err2 := ConfigFlagToMapWithJavaPropertyParsing([]string{"key val1 val2"})
+	require.NoError(t, err2)
+	require.Equal(t, map[string]string{"key": "val1 val2"}, m2)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_KeyOnly(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": ""}, m)
+
+	m2, err2 := ConfigFlagToMapWithJavaPropertyParsing([]string{"key1", "key2"})
+	require.NoError(t, err2)
+	require.Equal(t, map[string]string{"key1": "", "key2": ""}, m2)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_Quote(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=\"val\""})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "\"val\""}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_MultipleValues(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val1 val2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1 val2"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_CSV(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val1,val2,val3"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1,val2,val3"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_MultiLine(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val1\\\nval2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1val2"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_NextLine(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key1=val1\nkey2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key1": "val1", "key2": ""}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_EqualInValue(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=username=\"xyx\" password=\"123\""})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "username=\"xyx\" password=\"123\""}, m)
+}

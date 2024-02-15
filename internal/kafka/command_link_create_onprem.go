@@ -73,7 +73,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		config = []string{configFile}
 	}
 
-	configMap, err := properties.GetMap(config)
+	configMap, err := properties.GetMapWithJavaPropertyParsing(config)
 	if err != nil {
 		return err
 	}
