@@ -1,6 +1,7 @@
 package properties
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -105,4 +106,118 @@ func TestCreateKeyValuePairsKeysWithDotsAndSorts(t *testing.T) {
 	m["link.mode"] = "BIDIRECTIONAL"
 	m["connection.mode"] = "OUTBOUND"
 	require.Equal(t, "\"connection.mode\"=\"OUTBOUND\"\n\"link.mode\"=\"BIDIRECTIONAL\"\n", CreateKeyValuePairs(m))
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_Basic(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_Override(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val1", "key=val2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val2"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_WithSpaceAsSeparator(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key val"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val"}, m)
+
+	m, err = ConfigFlagToMapWithJavaPropertyParsing([]string{"key val1 val2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1 val2"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_KeyOnly(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": ""}, m)
+
+	m, err = ConfigFlagToMapWithJavaPropertyParsing([]string{"key1", "key2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key1": "", "key2": ""}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_Quote(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=\"val\""})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "\"val\""}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_MultipleValues(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val1 val2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1 val2"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_CSV(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val1,val2,val3"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1,val2,val3"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_MultiLine(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=val1\\\nval2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1val2"}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_NextLine(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key1=val1\nkey2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key1": "val1", "key2": ""}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_EqualInValue(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key=username=\"xyx\" password=\"123\""})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "username=\"xyx\" password=\"123\""}, m)
+}
+
+func TestConfigFlagToMapWithJavaPropertyParsing_TrimWhiteSpaces(t *testing.T) {
+	m, err := ConfigFlagToMapWithJavaPropertyParsing([]string{"key= val "})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val"}, m)
+}
+
+func TestGetMap_ExplictNewLineCharacter(t *testing.T) {
+	file, err := os.CreateTemp(os.TempDir(), "TestGetMap")
+	if err != nil {
+		require.NoError(t, err)
+		return
+	}
+	defer os.Remove(file.Name())
+
+	// Write some content to the file
+	content := []byte("key=val1\\nval2")
+	_, err = file.Write(content)
+	if err != nil {
+		require.NoError(t, err)
+		return
+	}
+	m, err := GetMap([]string{file.Name()})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1\\nval2"}, m)
+}
+
+func TestGetMapWithJavaPropertyParsing_ExplictNewLineCharacter(t *testing.T) {
+	file, err := os.CreateTemp(os.TempDir(), "TestGetMap")
+	if err != nil {
+		require.NoError(t, err)
+		return
+	}
+	defer os.Remove(file.Name())
+
+	// Write some content to the file
+	content := []byte("key=val1\\nval2")
+	_, err = file.Write(content)
+	if err != nil {
+		require.NoError(t, err)
+		return
+	}
+	m, err := GetMapWithJavaPropertyParsing([]string{file.Name()})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1\nval2"}, m)
 }

@@ -3,6 +3,7 @@ package properties
 import (
 	"bytes"
 	"fmt"
+	"github.com/confluentinc/properties"
 	"os"
 	"sort"
 	"strings"
@@ -95,4 +96,47 @@ func CreateKeyValuePairs(m map[string]string) string {
 		fmt.Fprintf(b, "\"%s\"=\"%s\"\n", k, m[k])
 	}
 	return b.String()
+}
+
+// GetMapWithJavaPropertyParsing reads key=value pairs from the file or string slices, according to Java property
+// format as close as possible. One known difference is it treats the first space as the key value separator.
+// For examples:
+// key is equal to key=
+// key val is equal to key=val
+// key val1 val2 is equal to key=val1 val2
+// More examples are properties_test.go.
+func GetMapWithJavaPropertyParsing(config []string) (map[string]string, error) {
+	if len(config) == 1 && utils.FileExists(config[0]) {
+		return fileToMapWithJavaPropertyParsing(config[0])
+	}
+	return ConfigFlagToMapWithJavaPropertyParsing(config)
+}
+
+// fileToMapWithJavaPropertyParsing reads key=value pairs from a properties file, according to Java property file
+// format as close as possible.
+func fileToMapWithJavaPropertyParsing(filename string) (map[string]string, error) {
+	prop, err := properties.LoadFile(filename, properties.UTF8)
+	if err != nil {
+		return nil, err
+	}
+	return getMapFromProp(prop), err
+}
+
+// ConfigFlagToMapWithJavaPropertyParsing reads key=value pairs from the string slices, according to Java property
+// format as close as possible.
+func ConfigFlagToMapWithJavaPropertyParsing(configs []string) (map[string]string, error) {
+	combinedString := strings.Join(configs, "\n")
+	prop, err := properties.LoadString(combinedString)
+	if err != nil {
+		return nil, err
+	}
+	return getMapFromProp(prop), err
+}
+
+func getMapFromProp(prop *properties.Properties) map[string]string {
+	propMap := prop.Map()
+	for k, v := range propMap {
+		propMap[k] = strings.TrimSpace(v)
+	}
+	return propMap
 }
