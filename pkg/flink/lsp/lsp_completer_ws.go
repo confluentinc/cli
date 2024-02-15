@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -129,9 +130,11 @@ func newLSPConnection(baseUrl, authToken, organizationId, environmentId string) 
 
 func newWSObjectStream(socketUrl, authToken, organizationId, environmentId string) (jsonrpc2.ObjectStream, error) {
 	requestHeaders := http.Header{}
-	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
+	/* requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
 	requestHeaders.Add("Organization-ID", organizationId)
-	requestHeaders.Add("Environment-ID", environmentId)
+	requestHeaders.Add("Environment-ID", environmentId) */
+	socketUrl = fmt.Sprintf("%s?environment=%s&organization=%s&token=%s", socketUrl, url.QueryEscape(environmentId), url.QueryEscape(organizationId), url.QueryEscape(fmt.Sprintf("Bearer %s", authToken)))
+
 	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, requestHeaders)
 	if err != nil {
 		return nil, err
