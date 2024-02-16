@@ -1,11 +1,13 @@
 package store
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/samber/lo"
 	"github.com/texttheater/golang-levenshtein/levenshtein"
@@ -119,31 +121,48 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 }
 
 func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
-	configKey, configVal, err := parseUseStatement(statement)
+	catalog, database, err := parseUseStatement(statement)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
+	addedConfig := [][]string{}
 
-	// require catalog to be set before running USE <database>
-	if configKey == config.KeyDatabase && !s.Properties.HasKey(config.KeyCatalog) {
-		return nil, &types.StatementError{
-			Message:    "no catalog was set",
-			Suggestion: `please set a catalog first with "USE CATALOG catalog-name" before setting a database`,
-		}
-	}
-
-	// USE CATALOG <catalog> will remove the current database
-	if configKey == config.KeyCatalog {
+	// "USE CATALOG catalog_name" statement
+	if catalog != "" && database == "" {
+		// USE CATALOG <catalog> will remove the current database
 		s.Properties.Delete(config.KeyDatabase)
-	}
 
-	s.Properties.Set(configKey, configVal)
+		s.Properties.Set(config.KeyCatalog, catalog)
+		addedConfig = append(addedConfig, []string{config.KeyCatalog, catalog})
+
+		// "USE database" statement
+	} else if catalog == "" && database != "" {
+		// require catalog to be set before running USE <database>
+		if !s.Properties.HasKey(config.KeyCatalog) {
+			return nil, &types.StatementError{
+				Message:    "no catalog was set",
+				Suggestion: `please set a catalog first with "USE CATALOG catalog-name" or  before setting a database`,
+			}
+		}
+
+		s.Properties.Set(config.KeyDatabase, database)
+		addedConfig = append(addedConfig, []string{config.KeyDatabase, database})
+
+		// "USE `catalog_name`.`database_name`" statement
+	} else if catalog != "" && database != "" {
+		s.Properties.Set(catalog, database)
+		s.Properties.Set(catalog, database)
+		addedConfig = append(addedConfig, []string{config.KeyCatalog, catalog})
+		addedConfig = append(addedConfig, []string{config.KeyDatabase, database})
+	} else {
+		return nil, useError()
+	}
 
 	return &types.ProcessedStatement{
 		Kind:             config.OpUse,
 		StatusDetail:     "configuration updated successfully",
 		Status:           types.COMPLETED,
-		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		StatementResults: createStatementResults([]string{"Key", "Value"}, addedConfig),
 		IsLocalStatement: true,
 	}, nil
 }
@@ -255,49 +274,123 @@ func parseSetStatement(statement string) (string, string, error) {
 	return key, value, nil
 }
 
-/*
-Expected statement: "USE CATALOG catalog_name" or "USE database_name"
-Steps to parse:
-1. Remove semicolon if present
-2. Split into words
-3. If resulting array length is smaller than 2 directly return
-4. If word length is 2, first word is "use" and second word IS NOT "catalog", second word is the database name
-5. If word length is 3, first word is "use" and second word IS "catalog", third word is the catalog name
-6. Otherwise, return empty
-*/
-func parseUseStatement(statement string) (string, string, error) {
-	statement = removeStatementTerminator(statement)
-	words := strings.Fields(statement)
-	if len(words) < 2 {
-		return "", "", &types.StatementError{
-			Message: "missing database/catalog name",
-			Usage:   []string{"USE CATALOG my_catalog", "USE my_database"},
+func TokenizeSQL(input string) []string {
+	var tokens []string
+	var buffer bytes.Buffer
+	var inBacktick bool
+
+	// Iterate over each character in the input string
+	for i := 0; i < len(input); i++ {
+		c := rune(input[i])
+		// Ignore whitespace
+		if unicode.IsSpace(c) && !inBacktick {
+			tokens = appendToTokens(tokens, &buffer)
+			continue
 		}
+
+		// Dot is a separator
+		if input[i] == '.' && !inBacktick {
+			tokens = appendToTokens(tokens, &buffer)
+			tokens = append(tokens, ".")
+			continue
+		}
+
+		// Handle backticks
+		if c == '`' {
+			if inBacktick {
+				// escaped backtick
+				if i+1 < len(input) && input[i+1] == '`' {
+					i++
+					buffer.WriteRune(c)
+					continue
+				}
+
+				// End of backtick
+				tokens = append(tokens, buffer.String())
+				buffer.Reset()
+				inBacktick = false
+
+			} else {
+				// Start of backtick
+				tokens = appendToTokens(tokens, &buffer)
+				inBacktick = true
+			}
+			continue
+		}
+
+		buffer.WriteRune(c)
 	}
 
-	isFirstWordUse := strings.ToUpper(words[0]) == config.OpUse
-	isSecondWordCatalog := strings.ToUpper(words[1]) == config.OpUseCatalog
-	// handle "USE database_name" statement
-	if len(words) == 2 && isFirstWordUse {
-		if isSecondWordCatalog {
-			// handle empty catalog name -> "USE CATALOG "
-			return "", "", &types.StatementError{
-				Message: "missing catalog name",
-				Usage:   []string{"USE CATALOG my_catalog"},
-			}
-		} else {
-			return config.KeyDatabase, words[1], nil
-		}
+	// Add last token if in backtick
+	if inBacktick {
+		tokens = append(tokens, buffer.String())
+	} else if buffer.Len() > 0 {
+		tokens = append(tokens, buffer.String())
 	}
+
+	if len(tokens) == 0 {
+		return []string{}
+	}
+
+	return tokens
+}
+
+func appendToTokens(tokens []string, buffer *bytes.Buffer) []string {
+	if str := buffer.String(); len(str) > 0 {
+		tokens = append(tokens, str)
+		buffer.Reset()
+	}
+	return tokens
+}
+
+/*
+Expected statement: "USE CATALOG `catalog_name`" or "USE `database_name` or "USE `catalog_name`.`database_name`"
+Returns the catalog and database extracted if the present, otherwise returns an error
+*/
+func parseUseStatement(statement string) (catalog string, database string, err error) {
+	statement = removeStatementTerminator(statement)
+	tokens := TokenizeSQL(statement)
+	if len(tokens) < 2 {
+		return "", "", useError()
+	}
+
+	isFirstWordUse := strings.ToUpper(tokens[0]) == config.OpUse
+	isSecondWordCatalog := strings.ToUpper(tokens[1]) == config.OpUseCatalog
 
 	// handle "USE CATALOG catalog_name" statement
-	if len(words) == 3 && isFirstWordUse && isSecondWordCatalog {
-		return config.KeyCatalog, words[2], nil
+	if isFirstWordUse && isSecondWordCatalog {
+		if len(tokens) == 3 {
+			return tokens[2], "", nil
+		} else {
+			return "", "", &types.StatementError{
+				Message: "invalid syntax for USE CATALOG",
+				Usage:   []string{"USE CATALOG `my_catalog`"},
+			}
+		}
 	}
 
-	return "", "", &types.StatementError{
+	if isFirstWordUse {
+		switch len(tokens) {
+		// handle "USE database_name" statement
+		case 2:
+			return "", tokens[1], nil
+		// handle "USE `catalog_name`.`database_name`" statement
+		case 4:
+			if tokens[2] == "." {
+				return tokens[1], tokens[3], nil
+			}
+		default:
+			return "", "", useError()
+		}
+	}
+
+	return "", "", useError()
+}
+
+func useError() *types.StatementError {
+	return &types.StatementError{
 		Message: "invalid syntax for USE",
-		Usage:   []string{"USE CATALOG my_catalog", "USE my_database"},
+		Usage:   []string{"USE CATALOG `my_catalog`", "USE `my_database`", "USE `my_catalog`.`my_database`"},
 	}
 }
 
