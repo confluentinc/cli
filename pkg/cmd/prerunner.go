@@ -497,7 +497,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 	if err != nil {
 		return "", nil, err
 	}
-	token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
+	token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
 	if err != nil {
 		return "", nil, err
 	}
@@ -727,7 +727,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 		if err != nil {
 			return "", "", err
 		}
-		token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
+		token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
 		return token, "", err
 	}
 }

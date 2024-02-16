@@ -8,16 +8,19 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/pkg/browser"
 
 	"github.com/confluentinc/cli/v3/pkg/auth/sso"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/retry"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 type AuthTokenHandler interface {
 	GetCCloudTokens(CCloudClientFactory, string, *Credentials, bool, string) (string, string, error)
-	GetConfluentToken(*mdsv1.APIClient, *Credentials) (string, error)
+	GetConfluentToken(*mdsv1.APIClient, *Credentials, bool) (string, error)
 }
 
 type AuthTokenHandlerImpl struct{}
@@ -141,14 +144,52 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, re
 	return res.GetToken(), refreshToken, err
 }
 
-func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials) (string, error) {
+func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials, noBrowser bool) (string, error) {
 	ctx := utils.GetContext()
-	basicContext := context.WithValue(ctx, mdsv1.ContextBasicAuth, mdsv1.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
-	resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
-	if err != nil {
-		return "", err
+	if credentials.IsSSO {
+		resp, _, err := mdsClient.SSODeviceAuthorizationApi.Security10OidcDeviceAuthenticatePost(context.Background())
+		if err != nil {
+			return "", err
+		}
+
+		if noBrowser {
+			output.Println(false, "Navigate to the following link in your browser to authenticate:")
+			output.Println(false, resp.VerificationUri)
+		} else {
+			if err := browser.OpenURL(resp.VerificationUri); err != nil {
+				return "", fmt.Errorf("unable to open web browser for SSO authentication: %w", err)
+			}
+		}
+
+		checkDeviceAuthRequest := mdsv1.CheckDeviceAuthRequest{
+			UserCode: resp.UserCode,
+			Key:      resp.Key,
+		}
+
+		var authToken string
+		retry.Retry(time.Duration(resp.Interval)*time.Second, time.Duration(resp.ExpiresIn)*time.Second, func() error {
+			checkAuthResp, _, err := mdsClient.SSODeviceAuthorizationApi.CheckDeviceAuth(context.Background(), checkDeviceAuthRequest)
+			if err != nil {
+				return fmt.Errorf("%s: %w", checkAuthResp.Error, err)
+			}
+
+			if !checkAuthResp.Complete {
+				return fmt.Errorf("%s: %s", checkAuthResp.Status, checkAuthResp.Description)
+			}
+
+			authToken = checkAuthResp.AuthToken
+			return nil
+		})
+
+		return authToken, nil
+	} else {
+		basicContext := context.WithValue(ctx, mdsv1.ContextBasicAuth, mdsv1.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
+		resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
+		if err != nil {
+			return "", err
+		}
+		return resp.AuthToken, nil
 	}
-	return resp.AuthToken, nil
 }
 
 func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client, loginEmail string) error {

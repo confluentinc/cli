@@ -2,6 +2,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime"
@@ -75,6 +76,7 @@ type LoginCredentialsManager interface {
 	GetCredentialsFromConfig(*config.Config, netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
@@ -258,6 +260,27 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMa
 		return nil, fmt.Errorf("found no netrc machine using the filter: %+v", filterParams)
 	}
 	return netrcMachine, err
+}
+
+func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		clientManager := &MDSClientManagerImpl{}
+		client, err := clientManager.GetMDSClient(url, caCertPath, unsafeTrace)
+		if err != nil {
+			return nil, err
+		}
+
+		featuresInfo, _, err := client.MetadataServiceOperationsApi.Features(context.Background())
+		if err != nil {
+			return nil, err
+		}
+		isSSO := featuresInfo.Features["oidc.login.device.1.enabled"]
+		if isSSO {
+			return &Credentials{Username: "user", IsSSO: isSSO}, nil
+		}
+
+		return nil, nil
+	}
 }
 
 func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(organizationId string) func() (*Credentials, error) {

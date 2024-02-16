@@ -108,6 +108,11 @@ var (
 				return nil, nil
 			}
 		},
+		GetOnPremSsoCredentialsFunc: func(_ string, _ string, _ bool) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
 		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -133,7 +138,7 @@ var (
 				return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
 			}
 		},
-		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials) (string, error) {
+		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, error) {
 			return testToken1, nil
 		},
 	}
@@ -425,6 +430,11 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 					}
 				},
 				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				GetOnPremSsoCredentialsFunc: func(_ string, _ string, _ bool) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
