@@ -5,6 +5,7 @@ func (s *CLITestSuite) TestEnvironment() {
 		{args: "environment list", fixture: "environment/1.golden", login: "cloud"},
 		{args: "environment use env-595", fixture: "environment/2.golden"},
 		{args: "environment update env-595 --name new-other-name --governance-package advanced", fixture: "environment/3.golden"},
+		{args: "environment update env-595 --governance-package essentials", fixture: "environment/sg-downgrade-fail.golden", exitCode: 1},
 		{args: "environment list", fixture: "environment/4.golden"},
 		{args: "environment list -o json", fixture: "environment/5.golden"},
 		{args: "environment list -o yaml", fixture: "environment/6.golden"},
