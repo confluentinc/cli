@@ -627,6 +627,30 @@ func (s *StoreTestSuite) TestParseUseStatementCatalogDatabasePath() {
 	catalog, database, _ = parseUseStatement("USE `my_catalog`.`my_database`")
 	assert.Equal(s.T(), "my_catalog", catalog)
 	assert.Equal(s.T(), "my_database", database)
+
+	catalog, database, _ = parseUseStatement("USE `my catalog`.database")
+	assert.Equal(s.T(), "my catalog", catalog)
+	assert.Equal(s.T(), "database", database)
+
+	catalog, database, _ = parseUseStatement("USE cat.`my database`")
+	assert.Equal(s.T(), "cat", catalog)
+	assert.Equal(s.T(), "my database", database)
+
+	catalog, database, _ = parseUseStatement("USE `my catalog`   .   `my database`")
+	assert.Equal(s.T(), "my catalog", catalog)
+	assert.Equal(s.T(), "my database", database)
+
+	catalog, database, _ = parseUseStatement("USE cat   .   db")
+	assert.Equal(s.T(), "cat", catalog)
+	assert.Equal(s.T(), "db", database)
+
+	catalog, database, _ = parseUseStatement("USE cat.   db")
+	assert.Equal(s.T(), "cat", catalog)
+	assert.Equal(s.T(), "db", database)
+
+	catalog, database, _ = parseUseStatement("USE cat   .db")
+	assert.Equal(s.T(), "cat", catalog)
+	assert.Equal(s.T(), "db", database)
 }
 
 func (s *StoreTestSuite) TestParseUseStatementError() {
@@ -642,19 +666,7 @@ func (s *StoreTestSuite) TestParseUseStatementError() {
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: invalid syntax for USE CATALOG\nUsage: \"USE CATALOG `my_catalog`\"", err.Error())
 
-	_, _, err = parseUseStatement("USE `use`.CATALOG ;")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for USE\nUsage: \"USE CATALOG `my_catalog`\", \"USE `my_database`\", or \"USE `my_catalog`.`my_database`\"", err.Error())
-
 	_, _, err = parseUseStatement("USE `use`.`CATALOG`.`table` ;")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for USE\nUsage: \"USE CATALOG `my_catalog`\", \"USE `my_database`\", or \"USE `my_catalog`.`my_database`\"", err.Error())
-
-	_, _, err = parseUseStatement("USE use.`CATALOG` ;")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for USE\nUsage: \"USE CATALOG `my_catalog`\", \"USE `my_database`\", or \"USE `my_catalog`.`my_database`\"", err.Error())
-
-	_, _, err = parseUseStatement("USE use.`CATALOG ;")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: invalid syntax for USE\nUsage: \"USE CATALOG `my_catalog`\", \"USE `my_database`\", or \"USE `my_catalog`.`my_database`\"", err.Error())
 }

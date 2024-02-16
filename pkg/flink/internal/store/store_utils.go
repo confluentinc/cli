@@ -288,6 +288,13 @@ func TokenizeSQL(input string) []string {
 			continue
 		}
 
+		// Dot is a separator
+		if input[i] == '.' && !inBacktick {
+			tokens = appendToTokens(tokens, &buffer)
+			tokens = append(tokens, ".")
+			continue
+		}
+
 		// Handle backticks
 		if c == '`' {
 			if inBacktick {

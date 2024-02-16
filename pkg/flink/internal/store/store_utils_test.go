@@ -419,8 +419,40 @@ func TestTokenizeSQL(t *testing.T) {
 	expected = []string{"USE", "db"}
 	require.Equal(expected, TokenizeSQL(input))
 
+	input = "   USE  `my catalog`.`my db`"
+	expected = []string{"USE", "my catalog", ".", "my db"}
+	require.Equal(expected, TokenizeSQL(input))
+
 	input = "   USE  `catalog`.`db`"
 	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.`db.1`"
+	expected = []string{"USE", "catalog", ".", "db.1"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.`db`"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog   .  db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.  db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "USE catalog.`my database`"
+	expected = []string{"USE", "catalog", ".", "my database"}
 	require.Equal(expected, TokenizeSQL(input))
 
 	// Test empty string
