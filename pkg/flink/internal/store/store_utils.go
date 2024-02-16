@@ -282,6 +282,7 @@ func TokenizeSQL(input string) []string {
 	// Iterate over each character in the input string
 	for i := 0; i < len(input); i++ {
 		c := rune(input[i])
+
 		// Ignore whitespace
 		if unicode.IsSpace(c) && !inBacktick {
 			tokens = appendToTokens(tokens, &buffer)
@@ -309,7 +310,6 @@ func TokenizeSQL(input string) []string {
 				tokens = append(tokens, buffer.String())
 				buffer.Reset()
 				inBacktick = false
-
 			} else {
 				// Start of backtick
 				tokens = appendToTokens(tokens, &buffer)
@@ -347,7 +347,7 @@ func appendToTokens(tokens []string, buffer *bytes.Buffer) []string {
 Expected statement: "USE CATALOG `catalog_name`" or "USE `database_name` or "USE `catalog_name`.`database_name`"
 Returns the catalog and database extracted if the present, otherwise returns an error
 */
-func parseUseStatement(statement string) (catalog string, database string, err error) {
+func parseUseStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 	tokens := TokenizeSQL(statement)
 	if len(tokens) < 2 {
