@@ -3,10 +3,11 @@ package properties
 import (
 	"bytes"
 	"fmt"
-	"github.com/confluentinc/properties"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/confluentinc/properties"
 
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
