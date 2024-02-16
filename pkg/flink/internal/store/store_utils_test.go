@@ -357,3 +357,84 @@ func TestFormatUTCOffsetToTimezone(t *testing.T) {
 		require.Equal(t, tc.expected, actual)
 	}
 }
+
+func TestTokenizeSQL(t *testing.T) {
+	require := require.New(t)
+	// Test escaped backticks
+	input := "`a``b`"
+	expected := []string{"a`b"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test trailing whitespaces
+	input = "   The dog  "
+	expected = []string{"The", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test whitespaces inside backticks
+	input = "   `The dog`  "
+	expected = []string{"The dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test basic string with backticks
+	input = "   The  `quick`  `brown``fox`  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`fox", "jumps", "over", "the", "lazy", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with escaped backticks
+	input = "   The  `quick`  `brown``f``o``x`  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`f`o`x", "jumps", "over", "the", "lazy", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with unclosed backtick
+	input = "   The  `quick`  `brown``fox  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`fox  jumps over   the  lazy dog  "}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test closed closing backtick
+	input = "   The  `quick`  `brown``fox  jumps over   the  lazy dog `"
+	expected = []string{"The", "quick", "brown`fox  jumps over   the  lazy dog "}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG   `catalog`"
+	expected = []string{"USE", "CATALOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG catalog"
+	expected = []string{"USE", "CATALOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   UsE  CATalOG   `catalog`"
+	expected = []string{"UsE", "CATalOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG catAlog"
+	expected = []string{"USE", "CATALOG", "catAlog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  db"
+	expected = []string{"USE", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `db`"
+	expected = []string{"USE", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.`db`"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test empty string
+	input = ""
+	expected = []string{}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with only whitespace
+	input = "   \t\n\r "
+	expected = []string{}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with only backticks
+	input = "````"
+	expected = []string{"`"}
+	require.Equal(expected, TokenizeSQL(input))
+}
