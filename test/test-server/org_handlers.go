@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 var OrgEnvironments = []*orgv2.OrgV2Environment{
@@ -56,8 +58,17 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
-			req.Id = orgv2.PtrString(id)
+			if id == "env-595" && req.StreamGovernanceConfig.GetPackage() == "ESSENTIALS" {
+				w.WriteHeader(http.StatusForbidden)
+				resp := errors.ErrorResponseBody{Errors: []errors.ErrorDetail{
+					{Detail: "SR package downgrade is not a supported operation"}},
+				}
+				err = json.NewEncoder(w).Encode(resp)
+				require.NoError(t, err)
+				return
+			}
 
+			req.Id = orgv2.PtrString(id)
 			err = json.NewEncoder(w).Encode(req)
 			require.NoError(t, err)
 		}
@@ -73,8 +84,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(environmentList)
 			require.NoError(t, err)
 		case http.MethodPost:
-			req := &orgv2.OrgV2Environment{
-				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("")}}
+			var req *orgv2.OrgV2Environment
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 
