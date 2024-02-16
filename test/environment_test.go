@@ -63,6 +63,17 @@ func (s *CLITestSuite) TestEnvironmentUse() {
 	}
 }
 
+func (s *CLITestSuite) TestEnvironmentNoPackage() {
+	tests := []CLITest{
+		{args: "environment update env-5555 --governance-package essentials", fixture: "environment/sg-downgrade-fail.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestEnvironment_Autocomplete() {
 	test := CLITest{args: `__complete environment describe ""`, login: "cloud", fixture: "environment/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
