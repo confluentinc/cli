@@ -138,7 +138,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		config = []string{configFile}
 	}
 
-	configMap, err := properties.GetMapWithJavaPropertyParsing(config)
+	configMap, err := properties.GetMap(config)
 	if err != nil {
 		return err
 	}
