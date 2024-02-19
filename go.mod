@@ -39,7 +39,6 @@ require (
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
-	github.com/confluentinc/go-prompt v0.2.28-completion-down
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20230117192233-7e6d894d74a9
@@ -105,6 +104,8 @@ require (
 	k8s.io/apimachinery v0.29.1
 	pgregory.net/rapid v1.1.0
 )
+
+require github.com/confluentinc/go-prompt v0.2.29-0.20240219181509-0882b16d9f56
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
