@@ -170,6 +170,7 @@ func (c *InputController) Prompt() (prompt.IPrompt, error) {
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
 		prompt.OptionSuggestionBGColor(prompt.DarkGray),
 		prompt.OptionSetLexer(highlighting.Lexer),
+		prompt.OptionCompletionOnDown(),
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)
