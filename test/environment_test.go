@@ -65,7 +65,7 @@ func (s *CLITestSuite) TestEnvironmentUse() {
 
 func (s *CLITestSuite) TestEnvironmentUpdate_PackageDowngrade() {
 	tests := []CLITest{
-		{args: "environment update env-595 --governance-package essentials", fixture: "environment/upgrade-governance-package-downgrade-fail.golden", exitCode: 1},
+		{args: "environment update env-595 --governance-package essentials", fixture: "environment/update-governance-package-downgrade-fail.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
