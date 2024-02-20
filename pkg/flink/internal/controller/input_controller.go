@@ -150,6 +150,7 @@ func (c *InputController) Prompt() (prompt.IPrompt, error) {
 				c.reverseISearchEnabled = true
 			},
 		}),
+		// Mac shortcuts
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
 			// Alt/Option + Arrow Left
 			ASCIICode: []byte{0x1b, 0x62},
@@ -163,6 +164,20 @@ func (c *InputController) Prompt() (prompt.IPrompt, error) {
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
 			// Alt/Option + Backspace
 			ASCIICode: []byte{0x1b, 0x7F},
+			Fn:        prompt.DeleteWord,
+		}),
+		// Windows shortcuts
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlLeft,
+			Fn:  prompt.GoLeftWord,
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlRight,
+			Fn:  prompt.GoRightWord,
+		}),
+		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			// Ctrl + Backspace
+			ASCIICode: []byte{0x1b, 0x8},
 			Fn:        prompt.DeleteWord,
 		}),
 		prompt.OptionPrefixTextColor(prompt.Yellow),
