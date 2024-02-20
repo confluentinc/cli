@@ -122,6 +122,7 @@ func (c *InputController) Prompt() (prompt.IPrompt, error) {
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
+		prompt.OptionCompletionOnDown(),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
 			return c.reverseISearchEnabled || c.shouldExit
 		}),
