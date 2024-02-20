@@ -84,7 +84,8 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(environmentList)
 			require.NoError(t, err)
 		case http.MethodPost:
-			var req *orgv2.OrgV2Environment
+			req := &orgv2.OrgV2Environment{
+				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("")}}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 
