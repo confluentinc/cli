@@ -90,7 +90,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/stripe/stripe-go/v76 v76.17.0
 	github.com/swaggest/go-asyncapi v0.8.0
-	github.com/tidwall/gjson v1.17.0
+	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
