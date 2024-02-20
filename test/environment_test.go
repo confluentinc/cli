@@ -63,7 +63,7 @@ func (s *CLITestSuite) TestEnvironmentUse() {
 	}
 }
 
-func (s *CLITestSuite) TestEnvironmentNoPackage() {
+func (s *CLITestSuite) TestEnvironmentUpdate_PackageDowngrade() {
 	tests := []CLITest{
 		{args: "environment update env-595 --governance-package essentials", fixture: "environment/sg-downgrade-fail.golden", exitCode: 1},
 	}
