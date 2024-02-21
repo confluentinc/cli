@@ -180,7 +180,7 @@ func (c *InputController) toggleSmartCompletion() {
 }
 
 func (c *InputController) getKeyBindings() []prompt.Option {
-	osSpecificBindings := getMacBindings()
+	osSpecificBindings := getUnixBindings()
 	if runtime.GOOS == "windows" {
 		osSpecificBindings = getWindowsBindings()
 	}
