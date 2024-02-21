@@ -29,8 +29,7 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("gateway", "", "Gateway ID.")
 	addConfigFlag(cmd)
-	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
-	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
+	addForwarderFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)

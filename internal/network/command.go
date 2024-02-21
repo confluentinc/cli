@@ -372,3 +372,8 @@ func addConfigFlag(cmd *cobra.Command) {
 	cmd.Flags().String("config", "", fmt.Sprintf("Specify the DNS forwarder configuration %s.", utils.ArrayToCommaDelimitedString(DnsForwarderConfigs, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "config", func(_ *cobra.Command, _ []string) []string { return DnsForwarderConfigs })
 }
+
+func addForwarderFlags(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
+	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
+}
