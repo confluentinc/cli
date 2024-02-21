@@ -8,5 +8,6 @@
   "cidr": "10.200.0.0/16",
   "zones": ["use1-az1", "use1-az2", "use1-az3"],
   "phase": "PROVISIONING",
-  "supported_connection_types": ["PEERING"]
+  "supported_connection_types": ["PEERING"],
+  "idle_since": "2021-01-01T00:00:00Z"
 }
