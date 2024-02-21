@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder/v1"
+	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
@@ -44,7 +44,7 @@ func (c *Client) ListDnsForwarders(environment string) ([]networkingdnsforwarder
 }
 
 func (c *Client) executeListDnsForwarders(environment, pageToken string) (networkingdnsforwarderv1.NetworkingV1DnsForwarderList, error) {
-	req := c.NetworkingDnsForwarderClient.DnsForwardersNetworkingV1Api.ListNetworkingV1DnsForwarders(c.networkingDnsForwarderApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+	req := c.NetworkingDnsForwarderClient.DNSForwardersNetworkingV1Api.ListNetworkingV1DnsForwarders(c.networkingDnsForwarderApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
@@ -54,21 +54,21 @@ func (c *Client) executeListDnsForwarders(environment, pageToken string) (networ
 }
 
 func (c *Client) GetDnsForwarder(environment, id string) (networkingdnsforwarderv1.NetworkingV1DnsForwarder, error) {
-	resp, httpResp, err := c.NetworkingDnsForwarderClient.DnsForwardersNetworkingV1Api.GetNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext(), id).Environment(environment).Execute()
+	resp, httpResp, err := c.NetworkingDnsForwarderClient.DNSForwardersNetworkingV1Api.GetNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteDnsForwarder(environment, id string) error {
-	httpResp, err := c.NetworkingDnsForwarderClient.DnsForwardersNetworkingV1Api.DeleteNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext(), id).Environment(environment).Execute()
+	httpResp, err := c.NetworkingDnsForwarderClient.DNSForwardersNetworkingV1Api.DeleteNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) CreateDnsForwarder(forwarder networkingdnsforwarderv1.NetworkingV1DnsForwarder) (networkingdnsforwarderv1.NetworkingV1DnsForwarder, error) {
-	resp, httpResp, err := c.NetworkingDnsForwarderClient.DnsForwardersNetworkingV1Api.CreateNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext()).NetworkingV1DnsForwarder(forwarder).Execute()
+	resp, httpResp, err := c.NetworkingDnsForwarderClient.DNSForwardersNetworkingV1Api.CreateNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext()).NetworkingV1DnsForwarder(forwarder).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateDnsForwarder(environment, id string, dnsForwarderUpdate networkingdnsforwarderv1.NetworkingV1DnsForwarder) (networkingdnsforwarderv1.NetworkingV1DnsForwarder, error) {
-	resp, httpResp, err := c.NetworkingDnsForwarderClient.DnsForwardersNetworkingV1Api.UpdateNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext(), id).NetworkingV1DnsForwarder(dnsForwarderUpdate).Execute()
+func (c *Client) UpdateDnsForwarder(environment, id string, dnsForwarderUpdate networkingdnsforwarderv1.NetworkingV1DnsForwarderUpdate) (networkingdnsforwarderv1.NetworkingV1DnsForwarder, error) {
+	resp, httpResp, err := c.NetworkingDnsForwarderClient.DNSForwardersNetworkingV1Api.UpdateNetworkingV1DnsForwarder(c.networkingDnsForwarderApiContext(), id).NetworkingV1DnsForwarderUpdate(dnsForwarderUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
