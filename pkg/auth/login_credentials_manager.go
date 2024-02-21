@@ -276,7 +276,9 @@ func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentials(url, caCertPath st
 		}
 		isSSO := featuresInfo.Features["oidc.login.device.1.enabled"]
 		if isSSO {
-			return &Credentials{Username: "user", IsSSO: isSSO}, nil
+			// For on-prem SSO logins, the sub claim of the Confluent Token is used in place of the Username
+			// A placeholder is used here since we don't have the token yet
+			return &Credentials{Username: "placeholder", IsSSO: isSSO}, nil
 		}
 
 		return nil, nil
