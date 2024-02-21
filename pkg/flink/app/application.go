@@ -165,7 +165,7 @@ func (a *Application) getOutputController(processedStatementWithResults types.Pr
 	if processedStatementWithResults.IsLocalStatement {
 		return a.basicOutputController
 	}
-	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement {
+	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement() {
 		return a.interactiveOutputController
 	}
 
