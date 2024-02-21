@@ -63,28 +63,32 @@ Pull `confluent` v3.6.0:
 
 ### Building from Source
 
-    make
+    make build
     dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 
 #### Cross Compile for Other Platforms
 
-Cross compilation from a Darwin/amd64 machine to Darwin/arm64, Linux/amd64 and Windows/amd64 platforms is supported.
-To build for Darwin/arm64, run the following:
+From darwin/amd64 or darwin/arm64, you can build the CLI for any other supported platform.
 
-    GOARCH=arm64 make cross-build
+To build for darwin/amd64 from darwin/arm64, run the following:
 
-To build for Linux (glibc or musl), install cross compiler `musl-cross` with Homebrew:
+    GOARCH=amd64 make build
+
+To build for darwin/arm64 from darwin/amd64, run the following:
+
+    GOARCH=arm64 make build
+
+To build for linux/amd64 (glibc or musl), run the following:
 
     brew install FiloSottile/musl-cross/musl-cross
-    GOOS=linux make cross-build
+    GOOS=linux GOARCH=amd64 make cross-build
 
-To build for Windows/amd64, install `mingw-w64` compilers with Homebrew:
+To build for linux/arm64 (glibc or musl), run the following:
+
+    brew install FiloSottile/musl-cross/musl-cross
+    GOOS=linux GOARCH=arm64 make cross-build
+
+To build for windows/amd64, run the following:
 
     brew install mingw-w64
-    GOOS=windows make cross-build
-
-Cross compilation from an M1 Macbook (Darwin/arm64) to other platforms is also supported.
-
-#### Troubleshooting
-
-Please update your system to MacOS 11.0 or later if you are building on Darwin/arm64.
+    GOOS=windows GOARCH=amd64 make cross-build
