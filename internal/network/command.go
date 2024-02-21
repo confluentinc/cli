@@ -85,8 +85,9 @@ const (
 )
 
 var (
-	ConnectionTypes = []string{"privatelink", "peering", "transitgateway"}
-	DnsResolutions  = []string{"private", "chased-private"}
+	ConnectionTypes     = []string{"privatelink", "peering", "transitgateway"}
+	DnsResolutions      = []string{"private", "chased-private"}
+	DnsForwarderConfigs = []string{"ForwardViaIp"}
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
@@ -101,6 +102,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newDnsCommand())
 	cmd.AddCommand(c.newIpAddressCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newPeeringCommand())
@@ -364,4 +366,9 @@ func convertMapToString(m map[string]string) string {
 
 	sort.Strings(items)
 	return strings.Join(items, ", ")
+}
+
+func addConfigFlag(cmd *cobra.Command) {
+	cmd.Flags().String("config", "", fmt.Sprintf("Specify the DNS forwarder configuration %s.", utils.ArrayToCommaDelimitedString(DnsForwarderConfigs, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "config", func(_ *cobra.Command, _ []string) []string { return DnsForwarderConfigs })
 }
