@@ -522,47 +522,153 @@ func (s *StoreTestSuite) TestParseSetStatementError() {
 }
 
 func (s *StoreTestSuite) TestParseUseStatement() {
-	key, value, _ := parseUseStatement("USE CATALOG c;")
-	assert.Equal(s.T(), flinkconfig.KeyCatalog, key)
-	assert.Equal(s.T(), "c", value)
+	catalog, database, _ := parseUseStatement("USE CATALOG c;")
+	assert.Equal(s.T(), "c", catalog)
+	assert.Equal(s.T(), "", database)
 
-	key, value, _ = parseUseStatement("use   catalog   \nc   ")
-	assert.Equal(s.T(), flinkconfig.KeyCatalog, key)
-	assert.Equal(s.T(), "c", value)
+	catalog, database, _ = parseUseStatement("use   catalog   \nc   ")
+	assert.Equal(s.T(), "c", catalog)
+	assert.Equal(s.T(), "", database)
 
-	key, value, _ = parseUseStatement("use   catalog     ")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
+	catalog, database, _ = parseUseStatement("use   catalog     ")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "", database)
 
-	key, value, _ = parseUseStatement("catalog   c")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
+	catalog, database, _ = parseUseStatement("catalog   c")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "", database)
 
-	key, value, _ = parseUseStatement("use     db   ")
-	assert.Equal(s.T(), flinkconfig.KeyDatabase, key)
-	assert.Equal(s.T(), "db", value)
+	catalog, database, _ = parseUseStatement("use     db   ")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "db", database)
 
-	key, value, _ = parseUseStatement("dAtaBaSe  db   ")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
+	catalog, database, _ = parseUseStatement("dAtaBaSe  db   ")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "", database)
 
-	key, value, _ = parseUseStatement("use     \ndatabase_name   ")
-	assert.Equal(s.T(), flinkconfig.KeyDatabase, key)
-	assert.Equal(s.T(), "database_name", value)
+	catalog, database, _ = parseUseStatement("use     \ndatabase_name   ")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "database_name", database)
+}
+
+func (s *StoreTestSuite) TestParseUseStatementCatalogPath() {
+	catalog, database, _ := parseUseStatement("USE CATALOG `my catalog-123`")
+	assert.Equal(s.T(), "", database)
+	assert.Equal(s.T(), "my catalog-123", catalog)
+
+	catalog, database, _ = parseUseStatement("USE CATALOG `cat`")
+	assert.Equal(s.T(), "", database)
+	assert.Equal(s.T(), "cat", catalog)
+
+	catalog, database, _ = parseUseStatement("use catalog `cAt`")
+	assert.Equal(s.T(), "", database)
+	assert.Equal(s.T(), "cAt", catalog)
+
+	catalog, database, _ = parseUseStatement("USE CATALOG `ca``t`")
+	assert.Equal(s.T(), "", database)
+	assert.Equal(s.T(), "ca`t", catalog)
+
+	catalog, database, _ = parseUseStatement("use   catalog   \n`cat`   ")
+	assert.Equal(s.T(), "", database)
+	assert.Equal(s.T(), "cat", catalog)
+
+	catalog, database, _ = parseUseStatement("use   catalog     ")
+	assert.Equal(s.T(), "", database)
+	assert.Equal(s.T(), "", catalog)
+
+	catalog, database, _ = parseUseStatement("catalog   `c`")
+	assert.Equal(s.T(), "", database)
+	assert.Equal(s.T(), "", catalog)
+}
+
+func (s *StoreTestSuite) TestParseUseStatementDatabasePath() {
+	catalog, database, _ := parseUseStatement("USE `my db-123`")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "my db-123", database)
+
+	catalog, database, _ = parseUseStatement("USE `db`")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "db", database)
+
+	catalog, database, _ = parseUseStatement("use `dB`")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "dB", database)
+
+	catalog, database, _ = parseUseStatement("USE `d``B`")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "d`B", database)
+
+	catalog, database, _ = parseUseStatement("use     \n`db`   ")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "db", database)
+
+	catalog, database, _ = parseUseStatement("use        ")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "", database)
+
+	catalog, database, _ = parseUseStatement("  `c`")
+	assert.Equal(s.T(), "", catalog)
+	assert.Equal(s.T(), "", database)
+}
+
+func (s *StoreTestSuite) TestParseUseStatementCatalogDatabasePath() {
+	catalog, database, _ := parseUseStatement("USE `my catalog`.`my database`")
+	assert.Equal(s.T(), "my catalog", catalog)
+	assert.Equal(s.T(), "my database", database)
+
+	catalog, database, _ = parseUseStatement("USE `my catalog`.`my_database`")
+	assert.Equal(s.T(), "my catalog", catalog)
+	assert.Equal(s.T(), "my_database", database)
+
+	catalog, database, _ = parseUseStatement("USE `my_catalog`.`my database`")
+	assert.Equal(s.T(), "my_catalog", catalog)
+	assert.Equal(s.T(), "my database", database)
+
+	catalog, database, _ = parseUseStatement("USE `my_catalog`.`my_database`")
+	assert.Equal(s.T(), "my_catalog", catalog)
+	assert.Equal(s.T(), "my_database", database)
+
+	catalog, database, _ = parseUseStatement("USE `my catalog`.database")
+	assert.Equal(s.T(), "my catalog", catalog)
+	assert.Equal(s.T(), "database", database)
+
+	catalog, database, _ = parseUseStatement("USE cat.`my database`")
+	assert.Equal(s.T(), "cat", catalog)
+	assert.Equal(s.T(), "my database", database)
+
+	catalog, database, _ = parseUseStatement("USE `my catalog`   .   `my database`")
+	assert.Equal(s.T(), "my catalog", catalog)
+	assert.Equal(s.T(), "my database", database)
+
+	catalog, database, _ = parseUseStatement("USE cat   .   db")
+	assert.Equal(s.T(), "cat", catalog)
+	assert.Equal(s.T(), "db", database)
+
+	catalog, database, _ = parseUseStatement("USE cat.   db")
+	assert.Equal(s.T(), "cat", catalog)
+	assert.Equal(s.T(), "db", database)
+
+	catalog, database, _ = parseUseStatement("USE cat   .db")
+	assert.Equal(s.T(), "cat", catalog)
+	assert.Equal(s.T(), "db", database)
 }
 
 func (s *StoreTestSuite) TestParseUseStatementError() {
 	_, _, err := parseUseStatement("USE CATALOG ;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: missing catalog name\nUsage: \"USE CATALOG my_catalog\"", err.Error())
+	assert.Equal(s.T(), "Error: invalid syntax for USE CATALOG\nUsage: \"USE CATALOG `my_catalog`\"", err.Error())
 
 	_, _, err = parseUseStatement("USE;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: missing database/catalog name\nUsage: \"USE CATALOG my_catalog\" or \"USE my_database\"", err.Error())
+	assert.Equal(s.T(), "Error: invalid syntax for USE\nUsage: \"USE CATALOG `my_catalog`\", \"USE `my_database`\", or \"USE `my_catalog`.`my_database`\"", err.Error())
 
 	_, _, err = parseUseStatement("USE CATALOG DATABASE DB2;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for USE\nUsage: \"USE CATALOG my_catalog\" or \"USE my_database\"", err.Error())
+	assert.Equal(s.T(), "Error: invalid syntax for USE CATALOG\nUsage: \"USE CATALOG `my_catalog`\"", err.Error())
+
+	_, _, err = parseUseStatement("USE `use`.`CATALOG`.`table` ;")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: invalid syntax for USE\nUsage: \"USE CATALOG `my_catalog`\", \"USE `my_database`\", or \"USE `my_catalog`.`my_database`\"", err.Error())
 }
 
 func (s *StoreTestSuite) TestParseResetStatement() {
