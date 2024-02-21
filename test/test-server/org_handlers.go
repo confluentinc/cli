@@ -61,7 +61,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			if id == "env-595" && req.StreamGovernanceConfig.GetPackage() == "ESSENTIALS" {
 				w.WriteHeader(http.StatusForbidden)
 				resp := errors.ErrorResponseBody{Errors: []errors.ErrorDetail{
-					{Detail: "SR package downgrade is not a supported operation"}},
+					{Detail: "Schema Registry package downgrade is not a supported operation"}},
 				}
 				err = json.NewEncoder(w).Encode(resp)
 				require.NoError(t, err)
