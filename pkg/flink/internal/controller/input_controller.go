@@ -213,7 +213,7 @@ func (c *InputController) getKeyBindings() []prompt.Option {
 		}, osSpecificBindings...)
 }
 
-func getMacBindings() []prompt.Option {
+func getUnixBindings() []prompt.Option {
 	return []prompt.Option{
 		prompt.OptionAddASCIICodeBind(
 			prompt.ASCIICodeBind{
