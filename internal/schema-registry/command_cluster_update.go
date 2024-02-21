@@ -20,7 +20,7 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 		Short:       "Update global mode or compatibility of Schema Registry.",
 		Args:        cobra.NoArgs,
 		RunE:        c.clusterUpdate,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update top-level compatibility of Schema Registry.",
