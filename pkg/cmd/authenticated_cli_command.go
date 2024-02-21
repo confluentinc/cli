@@ -59,7 +59,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 
 		if computePoolOnly {
 			if computePoolId := c.Context.GetCurrentFlinkComputePool(); computePoolId != "" {
-				url, err = c.getGatewayUrlForComputePool(computePoolId, c.Context)
+				url, err = c.getGatewayUrlForComputePool(computePoolId)
 				if err != nil {
 					return nil, err
 				}
@@ -91,18 +91,22 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 	return c.flinkGatewayClient, nil
 }
 
-func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(computePoolId string, ctx *config.Context) (string, error) {
-	computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
+func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(id string) (string, error) {
+	if c.Config.IsTest {
+		return testserver.TestFlinkGatewayUrl.String(), nil
+	}
+
+	computePool, err := c.V2Client.DescribeFlinkComputePool(id, c.Context.GetCurrentEnvironment())
 	if err != nil {
 		return "", err
 	}
 
-	u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
+	u, err := url.Parse(c.Context.GetPlatformServer())
 	if err != nil {
 		return "", err
 	}
-	u.Path = ""
-	return u.String(), nil
+
+	return fmt.Sprintf("https://flink.%s.%s.%s", computePool.Spec.GetRegion(), strings.ToLower(computePool.Spec.GetCloud()), u.Host), nil
 }
 
 func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string) (string, error) {
