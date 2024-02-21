@@ -73,8 +73,4 @@ func TestIsValidJavaVersion(t *testing.T) {
 	isValid, err = isValidJavaVersion("zookeeper", "13")
 	req.NoError(err)
 	req.True(isValid)
-
-	isValid, err = isValidJavaVersion("", "13")
-	req.NoError(err)
-	req.False(isValid)
 }

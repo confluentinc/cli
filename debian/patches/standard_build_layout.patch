@@ -1,5 +1,5 @@
---- cli/Makefile	2024-01-18 12:30:40.334194366 -0800
-+++ debian/Makefile	2024-01-12 08:35:04.157968782 -0800
+--- cli/Makefile	2024-02-14 12:44:40.000000000 -0800
++++ debian/Makefile	2024-02-14 10:24:04.000000000 -0800
 @@ -1,132 +1,144 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
@@ -41,7 +41,7 @@
 -
 -.PHONY: cli-builder
 -cli-builder:
--	GOOS="" GOARCH="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+-	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 -	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 -
 -include ./mk-files/semver.mk

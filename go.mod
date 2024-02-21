@@ -4,7 +4,7 @@ go 1.21.5
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.50.10
+	github.com/aws/aws-sdk-go v1.50.15
 	github.com/billgraziano/dpapi v0.5.0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/brianstrauch/cobra-shell v0.5.0
@@ -31,15 +31,15 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.0
+	github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.1
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.0
+	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
-	github.com/confluentinc/go-prompt v0.2.24
+	github.com/confluentinc/go-prompt v0.2.28
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240202015159-115bc1e4e726
@@ -51,7 +51,7 @@ require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/fatih/color v1.16.0
-	github.com/gdamore/tcell/v2 v2.7.0
+	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/go-jose/go-jose/v3 v3.0.1
 	github.com/gobuffalo/flect v1.0.2
@@ -88,21 +88,21 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/stripe/stripe-go/v76 v76.15.0
+	github.com/stripe/stripe-go/v76 v76.17.0
 	github.com/swaggest/go-asyncapi v0.8.0
-	github.com/tidwall/gjson v1.17.0
+	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.uber.org/mock v0.4.0
-	golang.org/x/crypto v0.18.0
+	golang.org/x/crypto v0.19.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	golang.org/x/oauth2 v0.16.0
-	golang.org/x/term v0.16.0
+	golang.org/x/oauth2 v0.17.0
+	golang.org/x/term v0.17.0
 	golang.org/x/text v0.14.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.29.1
+	k8s.io/apimachinery v0.29.2
 	pgregory.net/rapid v1.1.0
 )
 
@@ -181,9 +181,9 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/tools v0.16.1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect

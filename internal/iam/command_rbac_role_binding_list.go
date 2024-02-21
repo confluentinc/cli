@@ -149,6 +149,18 @@ func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 	return poolToName, nil
 }
 
+func (c *roleBindingCommand) getGroupMappingToNameMap() (map[string]string, error) {
+	groupMappings, err := c.V2Client.ListGroupMappings()
+	if err != nil {
+		return map[string]string{}, err
+	}
+	groupMappingToNameMap := make(map[string]string)
+	for _, groupMapping := range groupMappings {
+		groupMappingToNameMap["User:"+groupMapping.GetId()] = groupMapping.GetDisplayName()
+	}
+	return groupMappingToNameMap, nil
+}
+
 func (c *roleBindingCommand) getPrincipalToUserMap() (map[string]*iamv2.IamV2User, error) {
 	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
@@ -473,14 +485,22 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, listRo
 		return err
 	}
 
-	// TODO: Catch this error once Identity Providers goes GA
-	poolToNameMap, _ := c.getPoolToNameMap()
+	poolToNameMap, err := c.getPoolToNameMap()
+	if err != nil {
+		return err
+	}
+
+	groupMappingToNameMap, err := c.getGroupMappingToNameMap()
+	if err != nil {
+		return err
+	}
 
 	sort.Strings(principalStrings)
 	for _, principal := range principalStrings {
 		row := &roleBindingListOut{Principal: principal}
 		if user, ok := principalToUser[principal]; ok {
 			row.Email = user.GetEmail()
+			row.Name = user.GetFullName()
 			list.Add(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
@@ -488,6 +508,10 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, listRo
 			list.Add(row)
 		}
 		if name, ok := poolToNameMap[principal]; ok {
+			row.Name = name
+			list.Add(row)
+		}
+		if name, ok := groupMappingToNameMap[principal]; ok {
 			row.Name = name
 			list.Add(row)
 		}

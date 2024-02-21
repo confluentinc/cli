@@ -26,7 +26,7 @@ func FileExists(filename string) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
-	return !info.IsDir()
+	return info != nil && !info.IsDir()
 }
 
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
