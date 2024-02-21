@@ -1,7 +1,11 @@
 package network
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
 
@@ -18,11 +22,11 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a DNS forwarder.",
-				Code: "confluent network dns forwarder create --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config ForwardViaIp --domains abc.com,def.com ",
+				Code: "confluent network dns forwarder create --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config forward-via-ip --domains abc.com,def.com ",
 			},
 			examples.Example{
 				Text: "Create a named DNS forwarder.",
-				Code: "confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config ForwardViaIp --domains abc.com,def.com ",
+				Code: "confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config forward-via-ip --domains abc.com,def.com ",
 			},
 		),
 	}
@@ -72,6 +76,8 @@ func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	config = strings.ReplaceAll(cases.Title(language.Und).String(config), "-", "")
 
 	createDnsForwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
 		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{

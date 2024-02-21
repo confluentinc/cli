@@ -6,15 +6,15 @@ Usage:
 Examples:
 Create a DNS forwarder.
 
-  $ confluent network dns forwarder create --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config ForwardViaIp --domains abc.com,def.com 
+  $ confluent network dns forwarder create --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config forward-via-ip --domains abc.com,def.com 
 
 Create a named DNS forwarder.
 
-  $ confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config ForwardViaIp --domains abc.com,def.com 
+  $ confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config forward-via-ip --domains abc.com,def.com 
 
 Flags:
       --gateway string           REQUIRED: Gateway ID.
-      --config string            REQUIRED: Specify the DNS forwarder configuration "ForwardViaIp".
+      --config string            REQUIRED: Specify the DNS forwarder configuration as "forward-via-ip".
       --dns-server-ips strings   REQUIRED: A comma-separated list of IP addresses for the DNS server.
       --domains strings          REQUIRED: A comma-separated list of domains for the DNS forwarder to use.
       --context string           CLI context name.
