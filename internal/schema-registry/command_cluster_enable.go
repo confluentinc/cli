@@ -28,7 +28,7 @@ func (c *command) newClusterEnableCommand() *cobra.Command {
 		Short:       "Enable Schema Registry for this environment.",
 		Args:        cobra.NoArgs,
 		RunE:        c.clusterEnable,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package.`,

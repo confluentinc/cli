@@ -19,7 +19,7 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 		Short:       "Delete the Schema Registry cluster for this environment.",
 		Args:        cobra.NoArgs,
 		RunE:        c.clusterDelete,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the Schema Registry cluster for environment "env-123456".`,

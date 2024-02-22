@@ -19,7 +19,7 @@ func (c *command) newClusterUpgradeCommand() *cobra.Command {
 		Short:       "Upgrade the Schema Registry package for this environment.",
 		Args:        cobra.NoArgs,
 		RunE:        c.clusterUpgrade,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Upgrade Schema Registry to the "advanced" package for environment "env-123456".`,

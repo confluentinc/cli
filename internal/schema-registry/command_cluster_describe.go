@@ -44,7 +44,7 @@ func (c *command) newClusterDescribeCommand() *cobra.Command {
 		Short:       "Describe the Schema Registry cluster for this environment.",
 		Args:        cobra.NoArgs,
 		RunE:        c.clusterDescribe,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
