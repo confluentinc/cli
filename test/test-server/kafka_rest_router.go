@@ -1791,8 +1791,22 @@ func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs:alter"
-func handleKafkaBrokerConfigsAlter(_ *testing.T) http.HandlerFunc {
+func handleKafkaBrokerConfigsAlter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var req cckafkarestv3.AlterConfigBatchRequestData
+			_ = json.NewDecoder(r.Body).Decode(&req)
+
+			dataMap := make(map[cckafkarestv3.AlterConfigBatchRequestDataData]bool)
+			for _, data := range req.Data {
+				dataMap[data] = true
+			}
+
+			if len(dataMap) < len(req.Data) {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+			return
+		}
 		w.WriteHeader(http.StatusCreated)
 	}
 }
