@@ -10,7 +10,7 @@ import (
 func (c *command) newClusterCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
 	if cfg.IsCloudLogin() {
