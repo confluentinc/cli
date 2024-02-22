@@ -77,6 +77,7 @@ type LoginCredentialsManager interface {
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error)
+	GetOnPremSsoCredentialsFromConfig(*config.Config, bool) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
@@ -237,6 +238,38 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config
 	}
 }
 
+func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *config.Config, unsafeTrace bool) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		if err := cfg.DecryptContextStates(); err != nil {
+			return nil, nil
+		}
+
+		ctx := cfg.Context()
+		if ctx == nil {
+			return nil, nil
+		}
+
+		url := ctx.GetPlatform().GetServer()
+		caCertPath := ctx.GetPlatform().GetCaCertPath()
+
+		isSSO := h.isOnPremSSOUser(url, caCertPath, unsafeTrace)
+		if isSSO {
+			sub, err := getSsoSub(ctx.GetAuthToken())
+			if err != nil {
+				return nil, err
+			}
+
+			return &Credentials{
+				Username:  sub,
+				IsSSO:     isSSO,
+				AuthToken: ctx.GetAuthToken(),
+			}, nil
+		}
+
+		return nil, nil
+	}
+}
+
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(filterParams)
@@ -264,17 +297,7 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMa
 
 func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		clientManager := &MDSClientManagerImpl{}
-		client, err := clientManager.GetMDSClient(url, caCertPath, unsafeTrace)
-		if err != nil {
-			return nil, err
-		}
-
-		featuresInfo, _, err := client.MetadataServiceOperationsApi.Features(context.Background())
-		if err != nil {
-			return nil, err
-		}
-		isSSO := featuresInfo.Features["oidc.login.device.1.enabled"]
+		isSSO := h.isOnPremSSOUser(url, caCertPath, unsafeTrace)
 		if isSSO {
 			// For on-prem SSO logins, the sub claim of the Confluent Token is used in place of the Username
 			// A placeholder is used here since we don't have the token yet
@@ -346,6 +369,20 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, organizationId string) bo
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
 	return err == nil && res.GetIsSso()
+}
+
+func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath string, unsafeTrace bool) bool {
+	clientManager := &MDSClientManagerImpl{}
+	client, err := clientManager.GetMDSClient(url, caCertPath, unsafeTrace)
+	if err != nil {
+		return false
+	}
+
+	featuresInfo, _, err := client.MetadataServiceOperationsApi.Features(context.Background())
+	if err != nil {
+		return false
+	}
+	return featuresInfo.Features["oidc.login.device.1.enabled"]
 }
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)

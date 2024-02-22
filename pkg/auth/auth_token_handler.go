@@ -147,6 +147,10 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, re
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials, noBrowser bool) (string, error) {
 	ctx := utils.GetContext()
 	if credentials.IsSSO {
+		if authToken, err := refreshConfluentToken(mdsClient, credentials); err == nil {
+			return authToken, nil
+		}
+
 		resp, _, err := mdsClient.SSODeviceAuthorizationApi.Security10OidcDeviceAuthenticatePost(context.Background())
 		if err != nil {
 			return "", err
@@ -190,6 +194,16 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 		}
 		return resp.AuthToken, nil
 	}
+}
+
+func refreshConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials) (string, error) {
+	ctx := context.WithValue(utils.GetContext(), mdsv1.ContextAccessToken, credentials.AuthToken)
+	resp, _, err := mdsClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return resp.AuthToken, nil
 }
 
 func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client, loginEmail string) error {
