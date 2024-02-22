@@ -13,6 +13,7 @@ import (
 
 const (
 	Unknown                         = "unknown"
+	AccessPoint                     = "access point"
 	ACL                             = "ACL"
 	ApiKey                          = "API key"
 	Broker                          = "broker"
@@ -25,6 +26,7 @@ const (
 	ConsumerShare                   = "consumer share"
 	Context                         = "context"
 	Dek                             = "DEK"
+	DnsRecord                       = "DNS record"
 	Environment                     = "environment"
 	Flink                           = "flink"
 	FlinkComputePool                = "Flink compute pool"
