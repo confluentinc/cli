@@ -76,7 +76,7 @@ func (c *command) useAPIKey(apiKey, clusterId string) error {
 			return errors.CatchCCloudV2Error(err, httpResp)
 		}
 		// check if the key is for the right cluster
-		if key.Spec.Resource.Id != clusterId {
+		if key.Spec.GetResource().Id != clusterId {
 			return errors.NewErrorWithSuggestions(
 				fmt.Sprintf(errors.InvalidApiKeyErrorMsg, apiKey, clusterId),
 				fmt.Sprintf(errors.InvalidApiKeySuggestions, clusterId),
