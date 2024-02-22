@@ -48,8 +48,15 @@ func (c *command) privateLinkAttachmentList(cmd *cobra.Command, _ []string) erro
 			Phase:  attachment.Status.GetPhase(),
 		}
 
-		if attachment.Status.Cloud != nil && attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus != nil {
-			out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
+		if attachment.Status.Cloud != nil {
+			switch {
+			case attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus != nil:
+				out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
+			case attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus != nil:
+				out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.GetPrivateLinkService().PrivateLinkServiceAlias   // do we want to output id as well
+				out.AzurePrivateLinkServiceId = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.GetPrivateLinkService().PrivateLinkServiceResourceId // is this necessary
+			}
+
 		}
 
 		list.Add(out)
