@@ -19,21 +19,22 @@ func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Comma
 		RunE:  c.privateLinkAttachmentConnectionCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a named AWS PrivateLink attachment connection.",
+				Text: "Create a named PrivateLink attachment connection.",
 				Code: "confluent network private-link attachment connection create aws-private-link-attachment-connection --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("endpoint", "", "ID of an AWS VPC endpoint that is connected to the AWS VPC endpoint service.")
+	cmd.Flags().String("endpoint", "", "ID of an endpoint that is connected to either AWS VPC endpoint service or Azure PrivateLink service.")
+	// ^ do we want to create a different command flag/arg specifically for azure? below all the clouds seem to use this endpoint argument to feed their specific service, but wording it differently may make it clearer
 	c.addPrivateLinkAttachmentFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
-	cobra.CheckErr(cmd.MarkFlagRequired("endpoint"))
+	cobra.CheckErr(cmd.MarkFlagRequired("endpoint")) // need to mark required only if aws... check in create?
 	cobra.CheckErr(cmd.MarkFlagRequired("attachment"))
 
 	return cmd
