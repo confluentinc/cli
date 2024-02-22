@@ -172,7 +172,7 @@ func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 		{args: "kafka cluster use lkc-12345"},
 		{args: "kafka cluster configuration describe compression.type", fixture: "kafka/cluster/configuration/describe.golden"},
 		{args: "kafka cluster configuration update --config auto.create.topics.enable=true", fixture: "kafka/cluster/configuration/update.golden"},
-		{args: "kafka cluster configuration update --config ssl.cipher.suites=\"val1,val2,val3\"", fixture: "kafka/cluster/configuration/update-with-commas.golden"},
+		{args: `kafka cluster configuration update --config ssl.cipher.suites="val1,val2,val3"`, fixture: "kafka/cluster/configuration/update-with-commas.golden"},
 		{args: "kafka cluster configuration update --config test/fixtures/input/kafka/cluster/configuration/update.properties", fixture: "kafka/cluster/configuration/update.golden"},
 		{args: "kafka cluster configuration list", fixture: "kafka/cluster/configuration/list.golden"},
 	}
