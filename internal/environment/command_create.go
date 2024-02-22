@@ -65,5 +65,5 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) addStreamGovernancePackageFlag(cmd *cobra.Command, defaultValue string) {
 	values := utils.ArrayToCommaDelimitedString([]string{"essentials", "advanced"}, "or")
-	cmd.Flags().String("governance-package", defaultValue, fmt.Sprintf("Specify the Stream Governance package as %s.", values))
+	cmd.Flags().String("governance-package", defaultValue, fmt.Sprintf(`Specify the Stream Governance package as %s. Downgrading the package from "advanced" to "essentials" is not allowed once the Schema Registry cluster is provisioned.`, values))
 }
