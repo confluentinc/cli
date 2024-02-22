@@ -1,16 +1,16 @@
 package network
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+)
+
+const (
+	forwardViaIp = "ForwardViaIp"
 )
 
 func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
@@ -22,24 +22,22 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a DNS forwarder.",
-				Code: "confluent network dns forwarder create --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config forward-via-ip --domains abc.com,def.com ",
+				Code: "confluent network dns forwarder create --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --domains abc.com,def.com ",
 			},
 			examples.Example{
 				Text: "Create a named DNS forwarder.",
-				Code: "confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --config forward-via-ip --domains abc.com,def.com ",
+				Code: "confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --domains abc.com,def.com ",
 			},
 		),
 	}
 
 	cmd.Flags().String("gateway", "", "Gateway ID.")
-	addConfigFlag(cmd)
 	addForwarderFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
-	cobra.CheckErr(cmd.MarkFlagRequired("config"))
 	cobra.CheckErr(cmd.MarkFlagRequired("dns-server-ips"))
 	cobra.CheckErr(cmd.MarkFlagRequired("domains"))
 
@@ -72,19 +70,12 @@ func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	config, err := cmd.Flags().GetString("config")
-	if err != nil {
-		return err
-	}
-
-	config = strings.ReplaceAll(cases.Title(language.Und).String(config), "-", "")
-
 	createDnsForwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
 		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
 			Domains: &domains,
 			Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
 				NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
-					Kind:         config,
+					Kind:         forwardViaIp,
 					DnsServerIps: dnsServerIps,
 				},
 			},
