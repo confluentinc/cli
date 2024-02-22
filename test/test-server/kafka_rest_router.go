@@ -1805,9 +1805,7 @@ func handleKafkaBrokerConfigsAlter(_ *testing.T) http.HandlerFunc {
 			if len(dataMap) < len(req.Data) {
 				w.WriteHeader(http.StatusBadRequest)
 			}
-			return
 		}
-		w.WriteHeader(http.StatusCreated)
 	}
 }
 
