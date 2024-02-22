@@ -2,7 +2,6 @@ package ccloudv2
 
 import (
 	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-outbound-privatelink/v1"
-
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
