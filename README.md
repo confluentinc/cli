@@ -92,3 +92,7 @@ To build for windows/amd64, run the following:
 
     brew install mingw-w64
     GOOS=windows GOARCH=amd64 make cross-build
+
+#### TEST
+
+#### TEST 2
