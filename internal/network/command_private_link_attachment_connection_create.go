@@ -19,7 +19,7 @@ func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Comma
 		RunE:  c.privateLinkAttachmentConnectionCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a named PrivateLink attachment connection.",
+				Text: "Create a Private Link attachment connection named 'aws-private-link-attachment-connection'.",
 				Code: "confluent network private-link attachment connection create aws-private-link-attachment-connection --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456",
 			},
 		),
@@ -34,7 +34,7 @@ func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Comma
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
-	cobra.CheckErr(cmd.MarkFlagRequired("endpoint")) // need to mark required only if aws... check in create?
+	cobra.CheckErr(cmd.MarkFlagRequired("endpoint"))
 	cobra.CheckErr(cmd.MarkFlagRequired("attachment"))
 
 	return cmd

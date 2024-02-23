@@ -19,7 +19,7 @@ func (c *command) newPrivateLinkAttachmentCreateCommand() *cobra.Command {
 		RunE:  c.privateLinkAttachmentCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a named PrivateLink attachment.",
+				Text: "Create a named Private Link attachment.",
 				Code: "confluent network private-link attachment create private-link-attachment --cloud aws --region us-west-2",
 			},
 		),

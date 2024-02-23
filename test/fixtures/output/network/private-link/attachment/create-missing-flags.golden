@@ -3,9 +3,9 @@ Usage:
   confluent network private-link attachment create [name] [flags]
 
 Examples:
-Create a named AWS PrivateLink attachment.
+Create a named Private Link attachment.
 
-  $ confluent network private-link attachment create aws-private-link-attachment --cloud aws --region us-west-2
+  $ confluent network private-link attachment create private-link-attachment --cloud aws --region us-west-2
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".

@@ -18,7 +18,7 @@ type privateLinkAttachmentOut struct {
 	Region                       string `human:"Region" serialized:"region"`
 	AwsVpcEndpointService        string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
 	AzurePrivateLinkServiceAlias string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
-	AzurePrivateLinkServiceId    string `human:"Azure Private Link Service Id,omitempty" serialized:"azure_private_link_service_id,omitempty"`
+	AzurePrivateLinkServiceId    string `human:"Azure Private Link Service ID,omitempty" serialized:"azure_private_link_service_id,omitempty"`
 	Phase                        string `human:"Phase" serialized:"phase"`
 }
 
@@ -91,13 +91,13 @@ func printPrivateLinkAttachmentTable(cmd *cobra.Command, attachment networkingpr
 		Phase:  attachment.Status.GetPhase(),
 	}
 
-	if attachment.Status.Cloud != nil {
+	if attachment.Status.HasCloud() {
 		switch {
-		case attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus != nil:
+		case attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus != nil:
 			out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
 		case attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus != nil:
-			out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.GetPrivateLinkService().PrivateLinkServiceAlias   // do we want to output id as well
-			out.AzurePrivateLinkServiceId = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.GetPrivateLinkService().PrivateLinkServiceResourceId // is this necessary
+			out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceAlias()
+			out.AzurePrivateLinkServiceId = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
 		}
 
 	}
