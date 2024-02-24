@@ -240,30 +240,9 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	// Current functionality:
-	// empty ca-cert-path is equivalent to not using ca-cert-path flag
-	// if users want to login with ca-cert-path they must explicitly use the flag every time they login
-	//
-	// For legacy users:
-	// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
-	// if user passes empty string for ca-cert-path flag then reset the ca-cert-path value in config for the context
-	// (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path)
-	var isLegacyContext bool
-	caCertPath, err := getCACertPath(cmd)
+	caCertPath, isLegacyContext, err := c.getCACertPath(cmd, credentials.Username, url)
 	if err != nil {
 		return err
-	}
-	if caCertPath == "" {
-		contextName := pauth.GenerateContextName(credentials.Username, url, "")
-		caCertPath = c.checkLegacyContextCACertPath(cmd, contextName)
-		isLegacyContext = caCertPath != ""
-	}
-
-	if caCertPath != "" {
-		caCertPath, err = filepath.Abs(caCertPath)
-		if err != nil {
-			return err
-		}
 	}
 
 	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
@@ -276,7 +255,12 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	token, err := c.authTokenHandler.GetConfluentToken(client, credentials)
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
+	if err != nil {
+		return err
+	}
+
+	token, err := c.authTokenHandler.GetConfluentToken(client, credentials, noBrowser)
 	if err != nil {
 		return err
 	}
@@ -300,16 +284,44 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 	return nil
 }
 
-func getCACertPath(cmd *cobra.Command) (string, error) {
-	if caCertPath, err := cmd.Flags().GetString("ca-cert-path"); caCertPath != "" || err != nil {
-		return caCertPath, err
+// Current functionality:
+// empty ca-cert-path is equivalent to not using ca-cert-path flag
+// if users want to login with ca-cert-path they must explicitly use the flag every time they login
+//
+// For legacy users:
+// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
+// if user passes empty string for ca-cert-path flag then reset the ca-cert-path value in config for the context
+// (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path)
+func (c *command) getCACertPath(cmd *cobra.Command, username, url string) (string, bool, error) {
+	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	if err != nil {
+		return "", false, err
 	}
 
-	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
+	if caCertPath == "" {
+		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+	}
+
+	var isLegacyContext bool
+	if caCertPath == "" {
+		contextName := pauth.GenerateContextName(username, url, "")
+		caCertPath = c.checkLegacyContextCACertPath(cmd, contextName)
+		isLegacyContext = caCertPath != ""
+	}
+
+	if caCertPath != "" {
+		caCertPath, err = filepath.Abs(caCertPath)
+		if err != nil {
+			return "", false, err
+		}
+	}
+
+	return caCertPath, isLegacyContext, nil
 }
 
-// Order of precedence: env vars > netrc > prompt
+// Order of precedence: env vars > sso > ldap (keychain > config > netrc > prompt)
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
+// SSO and LDAP (basic auth) can be enabled simultaneously; in this case we should prefer SSO (unless --prompt is used)
 func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
 	prompt, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
@@ -317,6 +329,16 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 	}
 	if prompt {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt())
+	}
+
+	caCertPath, _, err := c.getCACertPath(cmd, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return nil, err
 	}
 
 	netrcFilterParams := netrc.NetrcMachineParams{
@@ -330,6 +352,8 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
+		c.loginCredentialsManager.GetOnPremSsoCredentialsFromConfig(c.cfg, unsafeTrace),
+		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(false, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),

@@ -42,7 +42,7 @@ require (
 	github.com/confluentinc/go-prompt v0.2.29
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18
-	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20230117192233-7e6d894d74a9
+	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240202015159-115bc1e4e726
 	github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20230117192233-7e6d894d74a9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.1.0
