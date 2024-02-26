@@ -99,7 +99,6 @@ func printPrivateLinkAttachmentTable(cmd *cobra.Command, attachment networkingpr
 			out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceAlias()
 			out.AzurePrivateLinkServiceId = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
 		}
-
 	}
 
 	table := output.NewTable(cmd)

@@ -56,7 +56,6 @@ func (c *command) privateLinkAttachmentList(cmd *cobra.Command, _ []string) erro
 				out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceAlias()
 				out.AzurePrivateLinkServiceId = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
 			}
-
 		}
 
 		list.Add(out)

@@ -1068,7 +1068,6 @@ func getPrivateLinkAttachment(id, name, phase string, cloud string) networkingpr
 				},
 			}
 		}
-
 	}
 
 	return attachment
@@ -1217,7 +1216,6 @@ func handleNetworkingPrivateLinkAttachmentConnectionGet(t *testing.T, id string)
 			err := json.NewEncoder(w).Encode(connection)
 			require.NoError(t, err)
 		}
-
 	}
 }
 

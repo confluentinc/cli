@@ -76,7 +76,6 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 				out.Cloud = CloudAzure
 				out.AzurePrivateEndpointResourceId = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
 			}
-
 		}
 
 		if connection.Status.HasCloud() {
