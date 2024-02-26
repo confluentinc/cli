@@ -47,7 +47,7 @@ require (
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.1.0
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dghubble/sling v1.4.2
+	github.com/dghubble/sling v1.4.1
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/fatih/color v1.16.0
