@@ -1223,7 +1223,7 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 	connection := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpec{
-			PrivateLinkAttachment: &networkingprivatelinkv1.ObjectReference{Id: id},
+			PrivateLinkAttachment: &networkingprivatelinkv1.ObjectReference{Id: "platt-111111"},
 			DisplayName:           networkingprivatelinkv1.PtrString(name),
 			Environment:           &networkingprivatelinkv1.ObjectReference{Id: "env-00000"},
 		},

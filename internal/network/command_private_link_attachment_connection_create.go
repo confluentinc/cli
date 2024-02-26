@@ -19,7 +19,7 @@ func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Comma
 		RunE:  c.privateLinkAttachmentConnectionCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a Private Link attachment connection named 'aws-private-link-attachment-connection'.",
+				Text: `Create a Private Link attachment connection named "aws-private-link-attachment-connection".`,
 				Code: "confluent network private-link attachment connection create aws-private-link-attachment-connection --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456",
 			},
 		),

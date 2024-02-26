@@ -2,7 +2,7 @@
 | ID                         | plattc-111112          |
 | Name                       | aws-plattc             |
 | Cloud                      | AWS                    |
-| Private Link Attachment ID | plattc-111112          |
+| Private Link Attachment ID | platt-111111           |
 | Phase                      | PROVISIONING           |
 | AWS VPC Endpoint ID        | vpce-01234567890abcdef |
 +----------------------------+------------------------+
