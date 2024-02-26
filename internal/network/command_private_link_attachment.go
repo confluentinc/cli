@@ -12,12 +12,14 @@ import (
 )
 
 type privateLinkAttachmentOut struct {
-	Id                    string `human:"ID" serialized:"id"`
-	Name                  string `human:"Name,omitempty" serialized:"name,omitempty"`
-	Cloud                 string `human:"Cloud" serialized:"cloud"`
-	Region                string `human:"Region" serialized:"region"`
-	AwsVpcEndpointService string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
-	Phase                 string `human:"Phase" serialized:"phase"`
+	Id                           string `human:"ID" serialized:"id"`
+	Name                         string `human:"Name,omitempty" serialized:"name,omitempty"`
+	Cloud                        string `human:"Cloud" serialized:"cloud"`
+	Region                       string `human:"Region" serialized:"region"`
+	AwsVpcEndpointService        string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
+	AzurePrivateLinkServiceAlias string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
+	AzurePrivateLinkServiceId    string `human:"Azure Private Link Service ID,omitempty" serialized:"azure_private_link_service_id,omitempty"`
+	Phase                        string `human:"Phase" serialized:"phase"`
 }
 
 func (c *command) newPrivateLinkAttachmentCommand() *cobra.Command {
@@ -89,8 +91,14 @@ func printPrivateLinkAttachmentTable(cmd *cobra.Command, attachment networkingpr
 		Phase:  attachment.Status.GetPhase(),
 	}
 
-	if attachment.Status.Cloud != nil && attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus != nil {
-		out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
+	if attachment.Status.HasCloud() {
+		switch {
+		case attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus != nil:
+			out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
+		case attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus != nil:
+			out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceAlias()
+			out.AzurePrivateLinkServiceId = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
+		}
 	}
 
 	table := output.NewTable(cmd)
