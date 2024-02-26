@@ -1,0 +1,12 @@
++--------------------------------+----------------+
+| ID                             | plattc-azure   |
+| Name                           | azure-plattc   |
+| Cloud                          | AZURE          |
+| Private Link Attachment ID     | platt-111111   |
+| Phase                          | READY          |
+| Azure Private Endpoint         | azure-pl-id    |
+| Resrouce ID                    |                |
+| Azure Private Link Service     | azure-pl-alias |
+| Alias                          |                |
+| Azure Private Link Service ID  | azure-pl-id    |
++--------------------------------+----------------+
