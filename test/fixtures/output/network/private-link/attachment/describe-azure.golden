@@ -1,0 +1,10 @@
++--------------------------------+-------------------------+
+| ID                             | platt-azure             |
+| Name                           | azure-platt             |
+| Cloud                          | Azure                   |
+| Region                         | us-west-2               |
+| Azure Private Link Service     | azure-pl-alias          |
+| Alias                          |                         |
+| Azure Private Link Service ID  | azure-pl-id             |
+| Phase                          | WAITING_FOR_CONNECTIONS |
++--------------------------------+-------------------------+
