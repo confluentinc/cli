@@ -31,7 +31,7 @@ func NewJWTValidator() *JWTValidatorImpl {
 
 // Validate returns an error if the JWT in the specified context is invalid.
 // The JWT is invalid if it's not parsable or expired.
-func (v *JWTValidatorImpl) Validate(context *config.Context) error {
+func (v *ValidatorImpl) Validate(context *config.Context) error {
 	expClaim, err := GetClaim(context.GetAuthToken(), "exp")
 	if err != nil {
 		return err

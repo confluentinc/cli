@@ -80,7 +80,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(), Out: os.Stdout}
-	jwtValidator := jwt.NewJWTValidator()
+	jwtValidator := jwt.NewValidator()
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(cfg.IsTest))
 	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(), ccloudClient)

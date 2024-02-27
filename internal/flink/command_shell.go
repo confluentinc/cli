@@ -40,7 +40,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator jwt.JWTValidator) func() error {
+func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator jwt.Validator) func() error {
 	return func() error {
 		authToken := c.Context.GetAuthToken()
 		authRefreshToken := c.Context.GetAuthRefreshToken()
