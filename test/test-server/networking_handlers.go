@@ -1022,6 +1022,10 @@ func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.Hand
 			attachment := getPrivateLinkAttachment("platt-azure", "my-azure-private-link-attachment", "WAITING_FOR_CONNECTIONS", "azure")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
+		case "platt-azure-2":
+			attachment := getPrivateLinkAttachment("platt-azure-2", "my-azure-private-link-attachment", "PROVISIONING", "azure")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -1062,8 +1066,8 @@ func getPrivateLinkAttachment(id, name, phase string, cloud string) networkingpr
 				NetworkingV1AzurePrivateLinkAttachmentStatus: &networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentStatus{
 					Kind: "AzurePrivateLinkAttachmentStatus",
 					PrivateLinkService: networkingprivatelinkv1.NetworkingV1AzurePrivateLinkService{
-						PrivateLinkServiceAlias:      "azure-pl-alias",
-						PrivateLinkServiceResourceId: "azure-pl-id",
+						PrivateLinkServiceAlias:      "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice",
+						PrivateLinkServiceResourceId: "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1",
 					},
 				},
 			}
@@ -1215,6 +1219,10 @@ func handleNetworkingPrivateLinkAttachmentConnectionGet(t *testing.T, id string)
 			connection := getPrivateLinkAttachmentConnection("plattc-azure", "my-azure-platt-connection", "READY", "azure")
 			err := json.NewEncoder(w).Encode(connection)
 			require.NoError(t, err)
+		case "plattc-azure-2":
+			connection := getPrivateLinkAttachmentConnection("plattc-azure-2", "my-azure-platt-connection", "PROVISIONING", "azure")
+			err := json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -1251,14 +1259,14 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 		connection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
 			NetworkingV1AzurePrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnection{
 				Kind:                      "AzurePrivateLinkAttachmentConnection",
-				PrivateEndpointResourceId: "azure-pl-id",
+				PrivateEndpointResourceId: "azure-private-endpoint-id",
 			},
 		}
 		connection.Status.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
 			NetworkingV1AzurePrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus{
 				Kind:                         "AzurePrivateLinkAttachmentConnectionStatus",
-				PrivateLinkServiceAlias:      "azure-pl-alias",
-				PrivateLinkServiceResourceId: "azure-pl-id",
+				PrivateLinkServiceAlias:      "",
+				PrivateLinkServiceResourceId: "",
 			},
 		}
 	}
@@ -1267,6 +1275,9 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 		switch cloud {
 		case "aws":
 			connection.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus.VpcEndpointServiceName = "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef"
+		case "azure":
+			connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.PrivateLinkServiceAlias = "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice"
+			connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.PrivateLinkServiceResourceId = "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1"
 		}
 	}
 

@@ -1,12 +1,12 @@
-+--------------------------------+---------------------------+
-| ID                             | plattc-azure              |
-| Name                           | my-azure-platt-connection |
-| Cloud                          | AZURE                     |
-| Private Link Attachment ID     | platt-111111              |
-| Phase                          | READY                     |
-| Azure Private Endpoint         | azure-pl-id               |
-| Resource ID                    |                           |
-| Azure Private Link Service     | azure-pl-alias            |
-| Alias                          |                           |
-| Azure Private Link Service ID  | azure-pl-id               |
-+--------------------------------+---------------------------+
++--------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ID                             | plattc-azure                                                                                                                                           |
+| Name                           | my-azure-platt-connection                                                                                                                              |
+| Cloud                          | AZURE                                                                                                                                                  |
+| Private Link Attachment ID     | platt-111111                                                                                                                                           |
+| Phase                          | READY                                                                                                                                                  |
+| Azure Private Endpoint         | azure-private-endpoint-id                                                                                                                              |
+| Resource ID                    |                                                                                                                                                        |
+| Azure Private Link Service     | azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice                                                         |
+| Alias                          |                                                                                                                                                        |
+| Azure Private Link Service ID  | /subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1 |
++--------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+

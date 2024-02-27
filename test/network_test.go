@@ -404,6 +404,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDescribe() {
 		{args: "network private-link attachment describe", fixture: "network/private-link/attachment/describe-missing-id.golden", exitCode: 1},
 		{args: "network private-link attachment describe platt-invalid", fixture: "network/private-link/attachment/describe-invalid.golden", exitCode: 1},
 		{args: "network private-link attachment describe platt-azure", fixture: "network/private-link/attachment/describe-azure.golden"},
+		{args: "network private-link attachment describe platt-azure-2", fixture: "network/private-link/attachment/describe-azure-provisioning.golden"},
 	}
 
 	for _, test := range tests {
@@ -495,6 +496,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDescribe() {
 		{args: "network private-link attachment connection describe", fixture: "network/private-link/attachment/connection/describe-missing-id.golden", exitCode: 1},
 		{args: "network private-link attachment connection describe plattc-invalid", fixture: "network/private-link/attachment/connection/describe-invalid.golden", exitCode: 1},
 		{args: "network private-link attachment connection describe plattc-azure", fixture: "network/private-link/attachment/connection/describe-azure.golden"},
+		{args: "network private-link attachment connection describe plattc-azure-2", fixture: "network/private-link/attachment/connection/describe-azure-provisioning.golden"},
 	}
 
 	for _, test := range tests {

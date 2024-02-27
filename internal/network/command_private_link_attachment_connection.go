@@ -75,10 +75,6 @@ func printPrivateLinkAttachmentConnectionTable(cmd *cobra.Command, connection ne
 		}
 	}
 
-	if connection.Status.Cloud != nil && connection.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus != nil {
-		out.AwsVpcEndpointServiceName = connection.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus.GetVpcEndpointServiceName()
-	}
-
 	table := output.NewTable(cmd)
 	table.Add(out)
 	return table.Print()
