@@ -3,7 +3,7 @@ Usage:
   confluent network private-link attachment describe <id> [flags]
 
 Examples:
-Describe private link attachment "platt-123456".
+Describe Private Link attachment "platt-123456".
 
   $ confluent network private-link attachment describe platt-123456
 
