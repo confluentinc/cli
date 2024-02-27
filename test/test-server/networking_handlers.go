@@ -1019,7 +1019,7 @@ func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.Hand
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-azure":
-			attachment := getPrivateLinkAttachment("platt-azure", "azure-platt", "WAITING_FOR_CONNECTIONS", "azure")
+			attachment := getPrivateLinkAttachment("platt-azure", "my-azure-private-link-attachment", "WAITING_FOR_CONNECTIONS", "azure")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
@@ -1212,7 +1212,7 @@ func handleNetworkingPrivateLinkAttachmentConnectionGet(t *testing.T, id string)
 			err := json.NewEncoder(w).Encode(connection)
 			require.NoError(t, err)
 		case "plattc-azure":
-			connection := getPrivateLinkAttachmentConnection("plattc-azure", "azure-plattc", "READY", "azure")
+			connection := getPrivateLinkAttachmentConnection("plattc-azure", "my-azure-platt-connection", "READY", "azure")
 			err := json.NewEncoder(w).Encode(connection)
 			require.NoError(t, err)
 		}

@@ -27,7 +27,6 @@ func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Comma
 
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("endpoint", "", "ID of an endpoint that is connected to either AWS VPC endpoint service or Azure PrivateLink service.")
-	// ^ do we want to create a different command flag/arg specifically for azure? below all the clouds seem to use this endpoint argument to feed their specific service, but wording it differently may make it clearer
 	c.addPrivateLinkAttachmentFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
