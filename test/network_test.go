@@ -403,6 +403,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDescribe() {
 		{args: "network private-link attachment describe platt-111111 --output json", fixture: "network/private-link/attachment/describe-aws-json.golden"},
 		{args: "network private-link attachment describe", fixture: "network/private-link/attachment/describe-missing-id.golden", exitCode: 1},
 		{args: "network private-link attachment describe platt-invalid", fixture: "network/private-link/attachment/describe-invalid.golden", exitCode: 1},
+		{args: "network private-link attachment describe platt-azure", fixture: "network/private-link/attachment/describe-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -448,7 +449,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentCreate() {
 		{args: "network private-link attachment create --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-no-name.golden", exitCode: 1},
 		{args: "network private-link attachment create aws-platt --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-aws.golden"},
 		{args: "network private-link attachment create gcp-platt --cloud gcp --region us-central1", fixture: "network/private-link/attachment/create-gcp-fail.golden", exitCode: 1},
-		{args: "network private-link attachment create azure-platt --cloud azure --region eastus2", fixture: "network/private-link/attachment/create-azure-fail.golden", exitCode: 1},
+		{args: "network private-link attachment create azure-platt --cloud azure --region eastus2", fixture: "network/private-link/attachment/create-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -493,6 +494,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDescribe() {
 		{args: "network private-link attachment connection describe plattc-111111 --output json", fixture: "network/private-link/attachment/connection/describe-aws-json.golden"},
 		{args: "network private-link attachment connection describe", fixture: "network/private-link/attachment/connection/describe-missing-id.golden", exitCode: 1},
 		{args: "network private-link attachment connection describe plattc-invalid", fixture: "network/private-link/attachment/connection/describe-invalid.golden", exitCode: 1},
+		{args: "network private-link attachment connection describe plattc-azure", fixture: "network/private-link/attachment/connection/describe-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -541,6 +543,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionCreate() {
 		{args: "network private-link attachment connection create aws-plattc-wrong-endpoint --cloud aws --endpoint vpce-invalid --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-aws-invalid-endpoint.golden", exitCode: 1},
 		{args: "network private-link attachment connection create aws-plattc-invalid-platt --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-invalid", fixture: "network/private-link/attachment/connection/create-aws-platt-not-found.golden", exitCode: 1},
 		{args: "network private-link attachment connection create gcp-plattc-wrong-platt-cloud --cloud gcp --endpoint vpce-1234567890abcdef0 --attachment platt-aws123", fixture: "network/private-link/attachment/connection/create-wrong-platt-cloud.golden", exitCode: 1},
+		{args: "network private-link attachment connection create azure-plattc --cloud azure --endpoint azure-pl-endpoint --attachment platt-azure", fixture: "network/private-link/attachment/connection/create-azure.golden"},
 	}
 
 	for _, test := range tests {
