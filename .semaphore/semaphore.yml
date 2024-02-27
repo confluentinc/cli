@@ -21,7 +21,9 @@ blocks:
           commands:
             - checkout
             - sem-version go $(cat .go-version)
+            - go install github.com/charmbracelet/vhs@latest
             - export PATH=$(go env GOPATH)/bin:$PATH
+            - vhs -v
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
@@ -43,7 +45,23 @@ blocks:
           commands:
             - checkout
             - sem-version go $(cat .go-version)
+            - export PATH="$PWD:$PATH"
+            - wget https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-darwin-arm64
+            - mv ffmpeg-darwin-arm64 ffmpeg
+            - chmod +x ffmpeg
+            - ls
+            - ffmpeg -h
+            - wget https://github.com/tsl0922/ttyd/releases/download/1.7.4/ttyd.aarch64
+            - mv ttyd.aarch64 ttyd
+            - chmod +x ttyd
+            - ls
+            - ttyd -v
+            - wget https://github.com/charmbracelet/vhs/releases/download/v0.7.1/vhs_0.7.1_Darwin_arm64.tar.gz
+            - tar -xzvf vhs_0.7.1_Darwin_arm64.tar.gz
+            - chmod +x vhs
+            - vhs --version
             - export PATH=$(go env GOPATH)/bin:$PATH
+            - vhs -v
             - make test
       epilogue:
         always:
@@ -64,6 +82,8 @@ blocks:
             - choco install -y golang --version $(Get-Content .go-version)
             - $env:GOCOVERDIR = 'test/coverage'
             - New-Item $env:GOCOVERDIR -ItemType Directory
+            - go install github.com/charmbracelet/vhs@latest
+            - vhs -v
             - go install gotest.tools/gotestsum@v1.8.2
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
