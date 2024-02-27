@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	pmock "github.com/confluentinc/cli/v3/pkg/mock"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
@@ -84,7 +85,7 @@ var (
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return "", "", nil
 		},
-		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials) (string, error) {
+		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, error) {
 			return "", nil
 		},
 	}
@@ -117,7 +118,7 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		LoginCredentialsManager: mockLoginCredentialsManager,
-		JWTValidator:            pcmd.NewJWTValidator(),
+		JWTValidator:            jwt.NewJWTValidator(),
 		AuthTokenHandler:        AuthTokenHandler,
 	}
 }
@@ -431,7 +432,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 					return validAuthToken, "", nil
 				},
-				GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials) (string, error) {
+				GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, error) {
 					return validAuthToken, nil
 				},
 			}

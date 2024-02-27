@@ -107,3 +107,16 @@ func handleAuthenticate(t *testing.T) http.HandlerFunc {
 		require.NoError(t, err)
 	}
 }
+
+// Handler for: "/security/1.0/features"
+func handleFeatures(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reply := &mdsv1.FeaturesInfo{
+			Features: map[string]bool{"oidc.login.device.1.enabled": false},
+		}
+		b, err := json.Marshal(&reply)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
