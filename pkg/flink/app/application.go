@@ -112,9 +112,9 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 }
 
 func (a *Application) readEvalPrintLoop() error {
-	run := utils.NewPanicRecovererWithLimit(3, 3*time.Second)
+	run := utils.NewPanicRecoveryWithLimit(3, 3*time.Second)
 	for a.isAuthenticated() {
-		err := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
+		err := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)
 		if err != nil {
 			return err
 		}
