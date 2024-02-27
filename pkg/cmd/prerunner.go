@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
@@ -55,7 +56,7 @@ type PreRun struct {
 	MDSClientManager        pauth.MDSClientManager
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
-	JWTValidator            JWTValidator
+	JWTValidator            jwt.JWTValidator
 }
 
 type KafkaRESTProvider func() (*KafkaREST, error)

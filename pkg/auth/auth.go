@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/dghubble/sling"
-	"github.com/go-jose/go-jose/v3/jwt"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
@@ -73,13 +73,17 @@ func PersistLogout(config *config.Config) error {
 
 func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
 	if credentials.IsSSO {
-		sub, err := getSsoSub(token)
+		subClaim, err := jwt.GetClaim(token, "sub")
 		if err != nil {
 			return err
 		}
-		if sub != "" {
-			credentials.Username = sub
+
+		sub, ok := subClaim.(string)
+		if !ok {
+			return fmt.Errorf("malformed token: exp claim has the wrong type")
 		}
+
+		credentials.Username = sub
 	}
 	username := credentials.Username
 
@@ -91,25 +95,6 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 		ctxName = GenerateContextName(username, url, caCertPath)
 	}
 	return addOrUpdateContext(cfg, false, credentials, ctxName, url, state, caCertPath, "", save)
-}
-
-func getSsoSub(authToken string) (string, error) {
-	token, err := jwt.ParseSigned(authToken)
-	if err != nil {
-		return "", err
-	}
-
-	var claims map[string]any
-	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return "", err
-	}
-
-	sub, ok := claims["sub"].(string)
-	if ok {
-		return sub, nil
-	}
-
-	return "", nil
 }
 
 func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Client, url string, credentials *Credentials, save bool) (string, *ccloudv1.Organization, error) {

@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
@@ -252,16 +253,20 @@ func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *con
 		url := ctx.GetPlatform().GetServer()
 		caCertPath := ctx.GetPlatform().GetCaCertPath()
 
-		isSSO := h.isOnPremSSOUser(url, caCertPath, unsafeTrace)
-		if isSSO {
-			sub, err := getSsoSub(ctx.GetAuthToken())
+		if h.isOnPremSSOUser(url, caCertPath, unsafeTrace) {
+			subClaim, err := jwt.GetClaim(ctx.GetAuthToken(), "sub")
 			if err != nil {
-				return nil, err
+				return nil, nil
+			}
+
+			sub, ok := subClaim.(string)
+			if !ok {
+				return nil, nil
 			}
 
 			return &Credentials{
 				Username:  sub,
-				IsSSO:     isSSO,
+				IsSSO:     true,
 				AuthToken: ctx.GetAuthToken(),
 			}, nil
 		}
@@ -297,14 +302,12 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMa
 
 func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		isSSO := h.isOnPremSSOUser(url, caCertPath, unsafeTrace)
-		if isSSO {
-			// For on-prem SSO logins, the sub claim of the Confluent Token is used in place of the Username
-			// A placeholder is used here since we don't have the token yet
-			return &Credentials{Username: "placeholder", IsSSO: isSSO}, nil
-		}
-
-		return nil, nil
+		// For on-prem SSO logins, the sub claim of the Confluent Token is used in place of the Username
+		// A placeholder is used here since we don't have the token yet
+		return &Credentials{
+			Username: "placeholder",
+			IsSSO:    h.isOnPremSSOUser(url, caCertPath, unsafeTrace),
+		}, nil
 	}
 }
 

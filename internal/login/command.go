@@ -240,7 +240,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	caCertPath, isLegacyContext, err := c.getCACertPath(cmd, credentials.Username, url)
+	caCertPath, isLegacyContext, err := c.getCaCertPath(cmd, credentials.Username, url)
 	if err != nil {
 		return err
 	}
@@ -292,7 +292,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 // if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
 // if user passes empty string for ca-cert-path flag then reset the ca-cert-path value in config for the context
 // (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path)
-func (c *command) getCACertPath(cmd *cobra.Command, username, url string) (string, bool, error) {
+func (c *command) getCaCertPath(cmd *cobra.Command, username, url string) (string, bool, error) {
 	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
 	if err != nil {
 		return "", false, err
@@ -331,7 +331,7 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt())
 	}
 
-	caCertPath, _, err := c.getCACertPath(cmd, "", "")
+	caCertPath, _, err := c.getCaCertPath(cmd, "", "")
 	if err != nil {
 		return nil, err
 	}

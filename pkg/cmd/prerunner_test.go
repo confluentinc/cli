@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	pmock "github.com/confluentinc/cli/v3/pkg/mock"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
@@ -117,7 +118,7 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		LoginCredentialsManager: mockLoginCredentialsManager,
-		JWTValidator:            pcmd.NewJWTValidator(),
+		JWTValidator:            jwt.NewJWTValidator(),
 		AuthTokenHandler:        AuthTokenHandler,
 	}
 }
