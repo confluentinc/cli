@@ -115,6 +115,7 @@ endif
 .PHONY: integration-test
 integration-test:
 ifdef CI
+	go install github.com/charmbracelet/vhs@latest && \
 	go install gotest.tools/gotestsum@v1.8.2 && \
 	export GOCOVERDIR=test/coverage && \
 	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
