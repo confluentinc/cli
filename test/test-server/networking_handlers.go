@@ -1264,9 +1264,7 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 		}
 		connection.Status.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
 			NetworkingV1AzurePrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus{
-				Kind:                         "AzurePrivateLinkAttachmentConnectionStatus",
-				PrivateLinkServiceAlias:      "",
-				PrivateLinkServiceResourceId: "",
+				Kind: "AzurePrivateLinkAttachmentConnectionStatus",
 			},
 		}
 	}
