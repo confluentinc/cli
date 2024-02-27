@@ -1,4 +1,4 @@
-package cmd
+package jwt
 
 import (
 	"fmt"
@@ -31,20 +31,15 @@ func NewJWTValidator() *JWTValidatorImpl {
 
 // Validate returns an error if the JWT in the specified context is invalid.
 // The JWT is invalid if it's not parsable or expired.
-func (v *JWTValidatorImpl) Validate(context *config.Context) error {
-	token, err := jwt.ParseSigned(context.GetAuthToken())
+func (v *ValidatorImpl) Validate(context *config.Context) error {
+	expClaim, err := GetClaim(context.GetAuthToken(), "exp")
 	if err != nil {
-		return new(ccloudv1.InvalidTokenError)
-	}
-
-	var claims map[string]any
-	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 		return err
 	}
 
-	exp, ok := claims["exp"].(float64)
+	exp, ok := expClaim.(float64)
 	if !ok {
-		return fmt.Errorf("malformed token: no expiration")
+		return fmt.Errorf("malformed token: exp claim has the wrong type")
 	}
 
 	// Add a time buffer of 1 minute to the token validator
@@ -53,4 +48,23 @@ func (v *JWTValidatorImpl) Validate(context *config.Context) error {
 	}
 
 	return nil
+}
+
+func GetClaim(jwtToken, claim string) (any, error) {
+	token, err := jwt.ParseSigned(jwtToken)
+	if err != nil {
+		return nil, new(ccloudv1.InvalidTokenError)
+	}
+
+	var claims map[string]any
+	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		return nil, err
+	}
+
+	val, ok := claims[claim]
+	if !ok {
+		return nil, fmt.Errorf("malformed token: no %s claim", claim)
+	}
+
+	return val, nil
 }
