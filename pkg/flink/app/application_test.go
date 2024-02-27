@@ -60,6 +60,7 @@ func (s *ApplicationTestSuite) SetupTest() {
 		interactiveOutputController: s.interactiveOutputController,
 		basicOutputController:       s.basicOutputController,
 		refreshToken:                authenticated,
+		reportUsage:                 func() {},
 	}
 }
 
@@ -326,18 +327,18 @@ func (s *ApplicationTestSuite) TestPanicRecovery() {
 func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitExceeded() {
 	// Given
 	recoverCount := 5
-	s.inputController.EXPECT().GetUserInput().Times(recoverCount).Do(func() {
+	s.inputController.EXPECT().GetUserInput().Times(recoverCount + 1).Do(func() {
 		panic("err in repl")
 	})
-	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
+	s.statementController.EXPECT().CleanupStatement().Times(recoverCount + 1)
 
 	// When
-	run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
+	run := utils.NewPanicRecoveryWithLimit(recoverCount, 3*time.Second)
 	for i := 0; i < recoverCount; i++ {
-		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)
 		require.NoError(s.T(), err)
 	}
-	err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+	err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)
 
 	// Then
 	require.Error(s.T(), err)
@@ -357,9 +358,9 @@ func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitNotExceeded() 
 	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
 
 	// When
-	run := utils.NewPanicRecovererWithLimit(recoverCount, 3*time.Second)
+	run := utils.NewPanicRecoveryWithLimit(recoverCount, 3*time.Second)
 	for i := 0; i < recoverCount; i++ {
-		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)
 		require.NoError(s.T(), err)
 	}
 
@@ -367,7 +368,7 @@ func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenLimitNotExceeded() 
 	require.Equal(s.T(), recoverCount, callCount)
 }
 
-func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenSparsePannics() {
+func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenSparsePanics() {
 	// Given
 	recoverCount := 15
 	callCount := 0
@@ -380,10 +381,10 @@ func (s *ApplicationTestSuite) TestPanicRecoveryWithLimitWhenSparsePannics() {
 	s.statementController.EXPECT().CleanupStatement().Times(recoverCount)
 
 	// When
-	run := utils.NewPanicRecovererWithLimit(recoverCount/3, 0)
+	run := utils.NewPanicRecoveryWithLimit(recoverCount/3, 0)
 	for i := 0; i < recoverCount; i++ {
 		time.Sleep(time.Millisecond * 10)
-		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)()
+		err := run.WithCustomPanicRecovery(s.app.readEvalPrint, s.app.panicRecovery)
 		require.NoError(s.T(), err)
 	}
 
