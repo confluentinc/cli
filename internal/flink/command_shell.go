@@ -148,7 +148,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	jwtValidator := jwt.NewJWTValidator()
+	jwtValidator := jwt.NewValidator()
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 

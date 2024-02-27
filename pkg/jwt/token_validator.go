@@ -14,17 +14,17 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
-type JWTValidator interface {
+type Validator interface {
 	Validate(context *config.Context) error
 }
 
-type JWTValidatorImpl struct {
+type ValidatorImpl struct {
 	Clock   clockwork.Clock
 	Version *version.Version
 }
 
-func NewJWTValidator() *JWTValidatorImpl {
-	return &JWTValidatorImpl{
+func NewValidator() *ValidatorImpl {
+	return &ValidatorImpl{
 		Clock: clockwork.NewRealClock(),
 	}
 }

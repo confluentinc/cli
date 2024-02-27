@@ -118,7 +118,7 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		LoginCredentialsManager: mockLoginCredentialsManager,
-		JWTValidator:            jwt.NewJWTValidator(),
+		JWTValidator:            jwt.NewValidator(),
 		AuthTokenHandler:        AuthTokenHandler,
 	}
 }

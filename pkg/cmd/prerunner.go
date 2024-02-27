@@ -56,7 +56,7 @@ type PreRun struct {
 	MDSClientManager        pauth.MDSClientManager
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
-	JWTValidator            jwt.JWTValidator
+	JWTValidator            jwt.Validator
 }
 
 type KafkaRESTProvider func() (*KafkaREST, error)
