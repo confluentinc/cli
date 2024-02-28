@@ -11,7 +11,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-outbound-privatelink v0.0.2
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2
@@ -31,6 +30,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.1.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.1
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
@@ -212,3 +212,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-outbound-privatelink v0.0.2

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-outbound-privatelink/v1"
+	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
