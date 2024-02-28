@@ -96,7 +96,3 @@ func (s ProcessedStatement) IsTerminalState() bool {
 func (s ProcessedStatement) IsSelectStatement() bool {
 	return strings.EqualFold(s.Traits.GetSqlKind(), "SELECT")
 }
-
-func (s ProcessedStatement) IsBackgroundStatement() bool {
-	return strings.EqualFold(s.Traits.GetSqlKind(), "INSERT_INTO")
-}
