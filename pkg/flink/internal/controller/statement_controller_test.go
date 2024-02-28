@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 	"github.com/confluentinc/go-prompt"
 
 	testUtils "github.com/confluentinc/cli/v3/pkg/flink/test"
@@ -78,15 +77,12 @@ func (s *StatementControllerTestSuite) TestExecuteStatementReturnsFetchStatement
 
 func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWaitForTerminalStateError() {
 	statementToExecute := "select 1;"
-	processedStatement := types.ProcessedStatement{
-		Traits: flinkgatewayv1.SqlV1StatementTraits{
-			SqlKind: flinkgatewayv1.PtrString("INSERT_INTO"),
-		},
-	}
+	processedStatement := types.ProcessedStatement{}
 	waitForTerminalStatementStateError := &types.StatementError{Message: "wait for terminal state error"}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
 	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&processedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(processedStatement).Return(&processedStatement, nil)
 	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), processedStatement).Return(nil, waitForTerminalStatementStateError)
 
 	_, err := s.statementController.ExecuteStatement(statementToExecute)
@@ -231,17 +227,73 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsNoWarningForSta
 	cupaloy.SnapshotT(s.T(), stdout)
 }
 
+func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForCompletedState() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123"}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
+	completedStatement := types.ProcessedStatement{Status: types.COMPLETED}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&completedStatement, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), &completedStatement, returnedStatement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForFailedState() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123"}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
+	failedStatement := types.ProcessedStatement{Status: types.FAILED}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&failedStatement, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), &failedStatement, returnedStatement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForNonEmptyPageToken() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123"}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
+	runningStatementWithNextPage := types.ProcessedStatement{Status: types.RUNNING, PageToken: "not-empty"}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&runningStatementWithNextPage, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), &runningStatementWithNextPage, returnedStatement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
 func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWhenUserDetaches() {
 	statementToExecute := "select 1;"
 	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123"}
-	runningStatement := types.ProcessedStatement{
-		Status: types.RUNNING,
-		Traits: flinkgatewayv1.SqlV1StatementTraits{
-			SqlKind: flinkgatewayv1.PtrString("INSERT_INTO"),
-		},
-	}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
 	s.consoleParser.EXPECT().Read().Return([]byte{byte(prompt.ControlM)}, nil).AnyTimes()
 	var waitForTerminalStateCtx context.Context
 	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).DoAndReturn(

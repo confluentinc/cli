@@ -1636,6 +1636,14 @@ func (s *StoreTestSuite) TestIsSelectStatement() {
 			statement:         createStatementWithSqlKind("selec"),
 			isSelectStatement: false,
 		},
+		{
+			name: "select random case without trait",
+			statement: flinkgatewayv1.SqlV1Statement{
+				Spec: &flinkgatewayv1.SqlV1StatementSpec{
+					Statement: flinkgatewayv1.PtrString("SeLeCt"),
+				}},
+			isSelectStatement: true,
+		},
 	}
 
 	for _, testCase := range tests {
@@ -1653,47 +1661,6 @@ func createStatementWithSqlKind(sqlKind string) flinkgatewayv1.SqlV1Statement {
 				SqlKind: flinkgatewayv1.PtrString(sqlKind),
 			},
 		},
-	}
-}
-
-func (s *StoreTestSuite) TestIsBackgroundStatement() {
-	tests := []struct {
-		name                  string
-		statement             flinkgatewayv1.SqlV1Statement
-		isBackgroundStatement bool
-	}{
-		{
-			name:                  "insert_into lowercase",
-			statement:             createStatementWithSqlKind("insert_into"),
-			isBackgroundStatement: true,
-		},
-		{
-			name:                  "insert_into uppercase",
-			statement:             createStatementWithSqlKind("INSERT_INTO"),
-			isBackgroundStatement: true,
-		},
-		{
-			name:                  "insert_into random case",
-			statement:             createStatementWithSqlKind("iNsErt_inTo"),
-			isBackgroundStatement: true,
-		},
-		{
-			name:                  "leading and trailing white space",
-			statement:             createStatementWithSqlKind("   INSERT_INTO   "),
-			isBackgroundStatement: false,
-		},
-		{
-			name:                  "missing last char",
-			statement:             createStatementWithSqlKind("INSERT_INT"),
-			isBackgroundStatement: false,
-		},
-	}
-
-	for _, testCase := range tests {
-		s.T().Run(testCase.name, func(t *testing.T) {
-			processedStatement := types.NewProcessedStatement(testCase.statement)
-			require.Equal(t, testCase.isBackgroundStatement, processedStatement.IsBackgroundStatement())
-		})
 	}
 }
 
