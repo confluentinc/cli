@@ -1636,6 +1636,14 @@ func (s *StoreTestSuite) TestIsSelectStatement() {
 			statement:         createStatementWithSqlKind("selec"),
 			isSelectStatement: false,
 		},
+		{
+			name: "select random case without trait",
+			statement: flinkgatewayv1.SqlV1Statement{
+				Spec: &flinkgatewayv1.SqlV1StatementSpec{
+					Statement: flinkgatewayv1.PtrString("SeLeCt"),
+				}},
+			isSelectStatement: true,
+		},
 	}
 
 	for _, testCase := range tests {
