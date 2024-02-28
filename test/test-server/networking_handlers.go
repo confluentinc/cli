@@ -1440,8 +1440,6 @@ func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.Ha
 						Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
 							NetworkingV1AzurePrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus{
 								Kind:                         "AzurePrivateLinkAttachmentConnectionStatus",
-								PrivateLinkServiceAlias:      "",
-								PrivateLinkServiceResourceId: "",
 							},
 						},
 					},
