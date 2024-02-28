@@ -21,5 +21,14 @@
     "region": "us-west-2",
     "aws_vpc_endpoint_service": "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef",
     "phase": "WAITING_FOR_CONNECTIONS"
+  },
+  {
+    "id": "platt-azure",
+    "name": "azure-platt-1",
+    "cloud": "Azure",
+    "region": "us-west-2",
+    "azure_private_link_service_alias": "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice",
+    "azure_private_link_service_id": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1",
+    "phase": "WAITING_FOR_CONNECTIONS"
   }
 ]
