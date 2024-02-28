@@ -22,25 +22,25 @@ func (c *command) newDnsRecordCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a DNS record.",
-				Code: "confluent network dns record create --gateway gw-123456 TODO",
+				Code: "confluent network dns record create --gateway gw-123456 --access-point ap-123456 --fqdn www.example.com",
 			},
 			examples.Example{
 				Text: "Create a named DNS record.",
-				Code: "confluent network dns record create my-dns-record --gateway gw-123456 TODO",
+				Code: "confluent network dns record create my-dns-record --gateway gw-123456 --access-point ap-123456 --fqdn www.example.com",
 			},
 		),
 	}
 
 	c.addAccessPointFlag(cmd)
 	cmd.Flags().String("gateway", "", "Gateway ID.")
-	cmd.Flags().String("fully-qualified-domain-name", "", "Fully qualified domain name of the DNS record.")
+	cmd.Flags().String("fqdn", "", "Fully qualified domain name of the DNS record.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("access-point"))
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
-	cobra.CheckErr(cmd.MarkFlagRequired("fully-qualified-domain-name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("fqdn"))
 
 	return cmd
 }
@@ -51,7 +51,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 		name = args[0]
 	}
 
-	fqdn, err := cmd.Flags().GetString("fully-qualified-domain-name")
+	fqdn, err := cmd.Flags().GetString("fqdn")
 	if err != nil {
 		return err
 	}

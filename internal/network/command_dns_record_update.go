@@ -22,8 +22,8 @@ func (c *command) newDnsRecordUpdateCommand() *cobra.Command {
 				Code: "confluent network dns record update dnsrec-123456 --name my-new-dns-record",
 			},
 			examples.Example{
-				Text: `Update the DNS server IPs and domains of DNS record "dnsrec-123456".`,
-				Code: "confluent network dns record update dnsrec-123456 TODO",
+				Text: `Update the Privatelink access point of DNS record "dnsrec-123456".`,
+				Code: "confluent network dns record update dnsrec-123456 --access-point ap-123456",
 			},
 		),
 	}
