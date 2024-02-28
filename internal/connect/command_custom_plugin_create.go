@@ -91,7 +91,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	if err := uploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
+	if err := UploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
 		return err
 	}
 

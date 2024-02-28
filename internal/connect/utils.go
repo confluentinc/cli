@@ -5,16 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
+)
+
+const (
+	maxFileSize = 1024 * 1024 * 1024 // 1GB
 )
 
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
@@ -86,13 +90,26 @@ func parseConfigFile(filename string) (map[string]string, error) {
 	return kvPairs, err
 }
 
-func uploadFile(url, filePath string, formFields map[string]any) error {
+func UploadFile(url, filePath string, formFields map[string]any) error {
 	var buffer bytes.Buffer
 	writer := multipart.NewWriter(&buffer)
 
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+
+	fileSize := fileInfo.Size()
+	if fileSize > maxFileSize {
+		return fmt.Errorf("File size exceeds the limit. Maximum allowed size is 1GB. Actual Size %d", fileSize)
+	}
+
 	for key, value := range formFields {
 		if strValue, ok := value.(string); ok {
-			_ = writer.WriteField(key, strValue)
+			err := writer.WriteField(key, strValue)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -117,9 +134,23 @@ func uploadFile(url, filePath string, formFields map[string]any) error {
 	client := &http.Client{
 		Timeout: 20 * time.Minute,
 	}
-	_, err = sling.New().Client(client).Base(url).Set("Content-Type", writer.FormDataContentType()).Post("").Body(&buffer).ReceiveSuccess(nil)
+
+	// Create the HTTP request
+	request, err := http.NewRequest("POST", url, &buffer)
 	if err != nil {
 		return err
+	}
+	// Set the Content-Type header to multipart/form-data
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode >= 400 {
+		responseBody, err := ioutil.ReadAll(response.Body)
+		return fmt.Errorf("[Response] %s [Error] %v", string(responseBody), err)
 	}
 
 	return nil
