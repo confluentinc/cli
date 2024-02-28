@@ -1439,7 +1439,7 @@ func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.Ha
 						Phase: "PROVISIONING",
 						Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
 							NetworkingV1AzurePrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus{
-								Kind:                         "AzurePrivateLinkAttachmentConnectionStatus",
+								Kind: "AzurePrivateLinkAttachmentConnectionStatus",
 							},
 						},
 					},
