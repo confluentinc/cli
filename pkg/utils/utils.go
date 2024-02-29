@@ -123,16 +123,15 @@ func AddDryRunPrefix(msg string) string {
 }
 
 func UploadFile(url, filePath string, formFields map[string]any) error {
-	var buffer bytes.Buffer
-	writer := multipart.NewWriter(&buffer)
+	buffer := new(bytes.Buffer)
+	writer := multipart.NewWriter(buffer)
 
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		return err
 	}
 
-	fileSize := fileInfo.Size()
-	if fileSize > maxFileSize {
+	if fileInfo.Size() > maxFileSize {
 		return fmt.Errorf("File size exceeds the limit of 1GB. Actual size: %d", fileInfo.Size())
 	}
 
@@ -163,11 +162,8 @@ func UploadFile(url, filePath string, formFields map[string]any) error {
 		return err
 	}
 
-	client := &http.Client{
-		Timeout: 20 * time.Minute,
-	}
-
-	request, err := http.NewRequest("POST", url, &buffer)
+	client := &http.Client{Timeout: 20 * time.Minute}
+	request, err := http.NewRequest(http.MethodPost, url, buffer)
 	if err != nil {
 		return err
 	}
