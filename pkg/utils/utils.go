@@ -131,7 +131,7 @@ func UploadFile(url, filePath string, formFields map[string]any) error {
 	}
 
 	if fileInfo.Size() > maxFileSize {
-		return fmt.Errorf("File size exceeds the limit of 1GB. Actual size: %d", fileInfo.Size())
+		return fmt.Errorf("file size %d exceeds the 1GB limit", fileInfo.Size())
 	}
 
 	for key, value := range formFields {
