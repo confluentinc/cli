@@ -2,6 +2,7 @@ package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -298,7 +299,7 @@ func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
 			uploadUrl := connectcustompluginv1.ConnectV1PresignedUrl{
 				ContentFormat: PtrString("ZIP"),
 				UploadId:      PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
-				UploadUrl:     PtrString("http://127.0.0.1:2048/connect/v1/dummy-presigned-url"),
+				UploadUrl:     PtrString(fmt.Sprintf("http://%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.Host)),
 			}
 			err := json.NewEncoder(w).Encode(uploadUrl)
 			require.NoError(t, err)
