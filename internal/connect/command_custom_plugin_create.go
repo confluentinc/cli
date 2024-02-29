@@ -12,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 type pluginCreateOut struct {
@@ -91,7 +92,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	if err := UploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
+	if err := utils.UploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
 		return err
 	}
 

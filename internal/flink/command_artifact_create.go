@@ -9,10 +9,10 @@ import (
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
-	"github.com/confluentinc/cli/v3/internal/connect"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 type pluginCreateOut struct {
@@ -73,7 +73,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := connect.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
+	if err := utils.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
 		return err
 	}
 
