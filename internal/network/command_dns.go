@@ -10,6 +10,7 @@ func (c *command) newDnsCommand() *cobra.Command {
 		Short: "Manage DNS resources.",
 	}
 
+	cmd.AddCommand(c.newDnsForwarderCommand())
 	cmd.AddCommand(c.newDnsRecordCommand())
 
 	return cmd

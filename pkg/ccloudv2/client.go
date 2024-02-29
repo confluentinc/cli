@@ -15,6 +15,7 @@ import (
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
@@ -48,6 +49,7 @@ type Client struct {
 	KsqlClient                          *ksqlv2.APIClient
 	MdsClient                           *mdsv2.APIClient
 	NetworkingClient                    *networkingv1.APIClient
+	NetworkingDnsForwarderClient        *networkingdnsforwarderv1.APIClient
 	NetworkingIpClient                  *networkingipv1.APIClient
 	NetworkingOutboundPrivateLinkClient *networkingoutboundprivatelinkv1.APIClient
 	NetworkingPrivateLinkClient         *networkingprivatelinkv1.APIClient
@@ -86,6 +88,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		KsqlClient:                          newKsqlClient(httpClient, url, userAgent, unsafeTrace),
 		MdsClient:                           newMdsClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingClient:                    newNetworkingClient(httpClient, url, userAgent, unsafeTrace),
+		NetworkingDnsForwarderClient:        newNetworkingDnsForwarderClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingIpClient:                  newNetworkingIpClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingOutboundPrivateLinkClient: newNetworkingOutboundPrivateLinkClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingPrivateLinkClient:         newNetworkingPrivateLinkClient(httpClient, url, userAgent, unsafeTrace),
