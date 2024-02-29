@@ -30,15 +30,19 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Use:               "update <topic>",
 		Short:             "Update a Kafka topic.",
 		Args:              cobra.ExactArgs(1),
-		RunE:              c.update,
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.update,
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Modify the "my_topic" topic to have a retention period of 3 days (259200000 milliseconds).`,
-				Code: "confluent kafka topic update my_topic --config retention.ms=259200000",
+				Text: `Modify the "my-topic" topic to have a partition count of 8.`,
+				Code: "confluent kafka topic update my-topic --config num.partitions=8",
+			},
+			examples.Example{
+				Text: `Modify the "my-topic" topic to have a retention period of 3 days (259200000 milliseconds).`,
+				Code: "confluent kafka topic update my-topic --config retention.ms=259200000",
 			},
 		),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	pcmd.AddConfigFlag(cmd)
@@ -104,33 +108,33 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	readOnlyConfigs := types.NewSet[string]()
+	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
+	if err != nil {
+		return err
+	}
+
 	configsValues := make(map[string]string)
+	readOnlyConfigs := types.NewSet[string]()
+	for _, config := range configsResp {
+		if config.IsReadOnly {
+			readOnlyConfigs.Add(config.Name)
+		}
+		configsValues[config.Name] = config.GetValue()
+	}
 
 	if hasNumPartitionsChanged {
 		updateNumPartitionsInt, err := strconv.ParseInt(updateNumPartitions, 10, 32)
 		if err != nil {
 			return err
 		}
-		updateResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
-		if err != nil {
+
+		data := kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)}
+		if _, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(topicName, data); err != nil {
 			return err
 		}
-		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
-		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
-		kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
-	}
 
-	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
-	if err != nil {
-		return err
-	}
-
-	for _, config := range configsResp {
-		if config.IsReadOnly {
-			readOnlyConfigs.Add(config.Name)
-		}
-		configsValues[config.Name] = config.GetValue()
+		configsValues[numPartitionsKey] = fmt.Sprint(updateNumPartitionsInt)
+		kafkaRestConfigs = append(kafkaRestConfigs, kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey})
 	}
 
 	var readOnlyConfigNotUpdatedString string
