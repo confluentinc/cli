@@ -180,7 +180,10 @@ func UploadFile(url, filePath string, formFields map[string]any) error {
 
 	if response.StatusCode >= 400 {
 		responseBody, err := ioutil.ReadAll(response.Body)
-		return fmt.Errorf("[Response] %s [Error] %v", string(responseBody), err)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("%s", string(responseBody))
 	}
 
 	return nil
