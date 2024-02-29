@@ -3,7 +3,12 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -11,6 +16,8 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
+
+const maxFileSize = 1024 * 1024 * 1024 // 1GB
 
 func DoesPathExist(path string) bool {
 	if path == "" {
@@ -113,4 +120,67 @@ func Int32Ptr(x int32) *int32 {
 
 func AddDryRunPrefix(msg string) string {
 	return fmt.Sprintf("[DRY RUN] %s", msg)
+}
+
+func UploadFile(url, filePath string, formFields map[string]any) error {
+	buffer := new(bytes.Buffer)
+	writer := multipart.NewWriter(buffer)
+
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+
+	if fileInfo.Size() > maxFileSize {
+		return fmt.Errorf("File size exceeds the limit of 1GB. Actual size: %d", fileInfo.Size())
+	}
+
+	for key, value := range formFields {
+		if strValue, ok := value.(string); ok {
+			err := writer.WriteField(key, strValue)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(part, file); err != nil {
+		return err
+	}
+
+	if err := writer.Close(); err != nil {
+		return err
+	}
+
+	client := &http.Client{Timeout: 20 * time.Minute}
+	request, err := http.NewRequest(http.MethodPost, url, buffer)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode >= 400 {
+		responseBody, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("%s", string(responseBody))
+	}
+
+	return nil
 }
