@@ -40,7 +40,7 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
-		list.Add(&RecordOut{
+		list.Add(&recordOut{
 			Id:          record.GetId(),
 			Name:        record.Spec.GetDisplayName(),
 			Fqdn:        record.Spec.GetFqdn(),

@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type RecordOut struct {
+type recordOut struct {
 	Id          string `human:"ID" serialized:"id"`
 	Name        string `human:"Name,omitempty" serialized:"name,omitempty"`
 	Fqdn        string `human:"FQDN" serialized:"fqdn"`
@@ -87,7 +87,7 @@ func printDnsRecordTable(cmd *cobra.Command, record networkingoutboundprivatelin
 
 	table := output.NewTable(cmd)
 
-	table.Add(&RecordOut{
+	table.Add(&recordOut{
 		Id:          record.GetId(),
 		Name:        record.Spec.GetDisplayName(),
 		Fqdn:        record.Spec.GetFqdn(),
