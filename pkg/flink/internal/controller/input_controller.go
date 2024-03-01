@@ -230,13 +230,13 @@ func getUnixBindings() []prompt.Option {
 				},
 			},
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x75}, // UpCaseWord (Alt/Option + u)
+				ASCIICode: []byte{0x1b, 0x75}, // UpCaseWord (ESC + u)
 				Fn: func(buf *prompt.Buffer) {
 					buf.InsertText(strings.ToUpper(buf.Document().GetWordAfterCursorWithSpace()), true, true)
 				},
 			},
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x6c}, // DownCaseWord (Alt/Option + l)
+				ASCIICode: []byte{0x1b, 0x6c}, // DownCaseWord (ESC + l)
 				Fn: func(buf *prompt.Buffer) {
 					buf.InsertText(strings.ToLower(buf.Document().GetWordAfterCursorWithSpace()), true, true)
 				},
