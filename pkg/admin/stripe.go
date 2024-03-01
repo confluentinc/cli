@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/token"
+
+	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
 const (

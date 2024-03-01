@@ -3,10 +3,11 @@ package admin
 import (
 	"testing"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
 	"github.com/stretchr/testify/require"
 	"github.com/stripe/stripe-go/v76"
+
+	"github.com/confluentinc/cli/v3/pkg/config"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 func TestInitStripe(t *testing.T) {
