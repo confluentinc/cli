@@ -4,7 +4,7 @@ Usage:
   confluent network access-point [command]
 
 Available Commands:
-  private-link Manage private links.
+  private-link Manage access point private links.
 
 Global Flags:
   -h, --help            Show help for this command.

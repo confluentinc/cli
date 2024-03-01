@@ -1,4 +1,4 @@
-Manage private links.
+Manage access point private links.
 
 Usage:
   confluent network access-point private-link [command]
