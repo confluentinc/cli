@@ -190,7 +190,11 @@ func (c *InputController) getKeyBindings() []prompt.Option {
 			prompt.OptionAddKeyBind(prompt.KeyBind{
 				Key: prompt.ControlD,
 				Fn: func(b *prompt.Buffer) {
-					c.shouldExit = true
+					if b.Text() != "" {
+						b.Delete(1)
+					} else {
+						c.shouldExit = true
+					}
 				},
 			}),
 			prompt.OptionAddKeyBind(prompt.KeyBind{
@@ -218,16 +222,34 @@ func getUnixBindings() []prompt.Option {
 	return []prompt.Option{
 		prompt.OptionAddASCIICodeBind(
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x62}, // Alt/Option + Arrow Left
+				ASCIICode: []byte{0x1b, 0x62}, // Alt/Option + Arrow Left (ESC + b)
 				Fn:        prompt.GoLeftWord,
 			},
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x66}, // Alt/Option + Arrow Right
+				ASCIICode: []byte{0x1b, 0x66}, // Alt/Option + Arrow Right (ESC + f)
 				Fn:        prompt.GoRightWord,
 			},
 			prompt.ASCIICodeBind{
 				ASCIICode: []byte{0x1b, 0x7F}, // Alt/Option + Backspace
 				Fn:        prompt.DeleteWord,
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x64}, // ForwardDeleteWord (ESC + d)
+				Fn: func(buf *prompt.Buffer) {
+					buf.Delete(buf.Document().FindEndOfCurrentWordWithSpace())
+				},
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x75}, // UpCaseWord (Alt/Option + u)
+				Fn: func(buf *prompt.Buffer) {
+					buf.InsertText(strings.ToUpper(buf.Document().GetWordAfterCursorWithSpace()), true, true)
+				},
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x6c}, // DownCaseWord (Alt/Option + l)
+				Fn: func(buf *prompt.Buffer) {
+					buf.InsertText(strings.ToLower(buf.Document().GetWordAfterCursorWithSpace()), true, true)
+				},
 			},
 		),
 	}
