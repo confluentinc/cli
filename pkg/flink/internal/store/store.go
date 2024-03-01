@@ -371,12 +371,15 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 				}
 			}
 
+			statement.Status = types.PHASE(statementObj.Status.GetPhase())
+			statement.StatusDetail = statusDetail
+			if statement.IsTerminalState() {
+				break
+			}
+
 			if statusDetail != "" {
 				output.Println(false, statusDetail)
 			}
-
-			statement.Status = types.PHASE(statementObj.Status.GetPhase())
-			statement.StatusDetail = statusDetail
 
 			time.Sleep(time.Second)
 		}
