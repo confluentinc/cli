@@ -7,7 +7,7 @@ import (
 func (c *accessPointCommand) newPrivateLinkCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "private-link",
-		Short: "Manage private links.",
+		Short: "Manage access point private links.",
 	}
 
 	cmd.AddCommand(c.newEgressEndpointCommand())
