@@ -188,16 +188,6 @@ func (c *InputController) getKeyBindings() []prompt.Option {
 	return append(
 		[]prompt.Option{
 			prompt.OptionAddKeyBind(prompt.KeyBind{
-				Key: prompt.ControlD,
-				Fn: func(b *prompt.Buffer) {
-					if b.Text() != "" {
-						b.Delete(1)
-					} else {
-						c.shouldExit = true
-					}
-				},
-			}),
-			prompt.OptionAddKeyBind(prompt.KeyBind{
 				Key: prompt.ControlQ,
 				Fn: func(b *prompt.Buffer) {
 					c.shouldExit = true
