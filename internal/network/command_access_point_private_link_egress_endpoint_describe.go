@@ -22,9 +22,9 @@ func (c *accessPointCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
