@@ -29,7 +29,7 @@ func (c *accessPointCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagRequired("name")
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
