@@ -15,13 +15,7 @@ const (
 )
 
 func NewStripeToken(cfg *config.Config, number, expiration, cvc, name string) (*stripe.Token, error) {
-	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{Level: stripe.LevelNull}
-
-	if cfg.Context().GetPlatform().GetName() == "confluent.cloud" {
-		stripe.Key = stripeLiveKey
-	} else {
-		stripe.Key = stripeTestKey
-	}
+	initStripe(cfg)
 
 	exp := strings.Split(expiration, "/")
 
@@ -42,4 +36,14 @@ func NewStripeToken(cfg *config.Config, number, expiration, cvc, name string) (*
 	}
 
 	return stripeToken, nil
+}
+
+func initStripe(cfg *config.Config) {
+	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{Level: stripe.LevelNull}
+
+	if cfg.Context().GetPlatform().GetName() == "confluent.cloud" {
+		stripe.Key = stripeLiveKey
+	} else {
+		stripe.Key = stripeTestKey
+	}
 }
