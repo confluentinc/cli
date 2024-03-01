@@ -3,7 +3,7 @@ package network
 import (
 	"github.com/spf13/cobra"
 
-	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -50,10 +50,10 @@ func (c *command) dnsRecordUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updateDnsRecord := networkingoutboundprivatelinkv1.NetworkingV1DnsRecordUpdate{
-		Spec: &networkingoutboundprivatelinkv1.NetworkingV1DnsRecordSpecUpdate{
-			Environment: &networkingoutboundprivatelinkv1.ObjectReference{Id: environmentId},
-			Config:      &networkingoutboundprivatelinkv1.NetworkingV1DnsRecordSpecUpdateConfigOneOf{NetworkingV1PrivateLinkAccessPoint: dnsRecord.Spec.Config.NetworkingV1PrivateLinkAccessPoint},
+	updateDnsRecord := networkingaccesspointv1.NetworkingV1DnsRecordUpdate{
+		Spec: &networkingaccesspointv1.NetworkingV1DnsRecordSpecUpdate{
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},
+			Config:      &networkingaccesspointv1.NetworkingV1DnsRecordSpecUpdateConfigOneOf{NetworkingV1PrivateLinkAccessPoint: dnsRecord.Spec.Config.NetworkingV1PrivateLinkAccessPoint},
 		},
 	}
 

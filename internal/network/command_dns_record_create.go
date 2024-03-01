@@ -3,7 +3,7 @@ package network
 import (
 	"github.com/spf13/cobra"
 
-	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -71,17 +71,17 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createDnsRecord := networkingoutboundprivatelinkv1.NetworkingV1DnsRecord{
-		Spec: &networkingoutboundprivatelinkv1.NetworkingV1DnsRecordSpec{
-			Fqdn: networkingoutboundprivatelinkv1.PtrString(fqdn),
-			Config: &networkingoutboundprivatelinkv1.NetworkingV1DnsRecordSpecConfigOneOf{
-				NetworkingV1PrivateLinkAccessPoint: &networkingoutboundprivatelinkv1.NetworkingV1PrivateLinkAccessPoint{
+	createDnsRecord := networkingaccesspointv1.NetworkingV1DnsRecord{
+		Spec: &networkingaccesspointv1.NetworkingV1DnsRecordSpec{
+			Fqdn: networkingaccesspointv1.PtrString(fqdn),
+			Config: &networkingaccesspointv1.NetworkingV1DnsRecordSpecConfigOneOf{
+				NetworkingV1PrivateLinkAccessPoint: &networkingaccesspointv1.NetworkingV1PrivateLinkAccessPoint{
 					Kind:       privateLinkAccessPoint,
 					ResourceId: accessPoint,
 				},
 			},
-			Environment: &networkingoutboundprivatelinkv1.ObjectReference{Id: environmentId},
-			Gateway:     &networkingoutboundprivatelinkv1.EnvScopedObjectReference{Id: gateway},
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},
+			Gateway:     &networkingaccesspointv1.EnvScopedObjectReference{Id: gateway},
 		},
 	}
 

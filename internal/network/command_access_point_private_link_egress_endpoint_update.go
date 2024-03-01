@@ -3,7 +3,7 @@ package network
 import (
 	"github.com/spf13/cobra"
 
-	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -45,10 +45,10 @@ func (c *accessPointCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updateAccessPoint := networkingoutboundprivatelinkv1.NetworkingV1AccessPointUpdate{
-		Spec: &networkingoutboundprivatelinkv1.NetworkingV1AccessPointSpecUpdate{
-			DisplayName: networkingoutboundprivatelinkv1.PtrString(name),
-			Environment: &networkingoutboundprivatelinkv1.ObjectReference{Id: environmentId},
+	updateAccessPoint := networkingaccesspointv1.NetworkingV1AccessPointUpdate{
+		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpecUpdate{
+			DisplayName: networkingaccesspointv1.PtrString(name),
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},
 		},
 	}
 

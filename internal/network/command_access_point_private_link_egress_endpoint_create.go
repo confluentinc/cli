@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -76,10 +76,10 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createAccessPoint := networkingoutboundprivatelinkv1.NetworkingV1AccessPoint{
-		Spec: &networkingoutboundprivatelinkv1.NetworkingV1AccessPointSpec{
-			Environment: &networkingoutboundprivatelinkv1.ObjectReference{Id: environmentId},
-			Gateway:     &networkingoutboundprivatelinkv1.ObjectReference{Id: gateway},
+	createAccessPoint := networkingaccesspointv1.NetworkingV1AccessPoint{
+		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},
+			Gateway:     &networkingaccesspointv1.ObjectReference{Id: gateway},
 		},
 	}
 
@@ -89,16 +89,16 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 
 	switch cloud {
 	case CloudAws:
-		createAccessPoint.Spec.Config = &networkingoutboundprivatelinkv1.NetworkingV1AccessPointSpecConfigOneOf{
-			NetworkingV1AwsEgressPrivateLinkEndpoint: &networkingoutboundprivatelinkv1.NetworkingV1AwsEgressPrivateLinkEndpoint{
+		createAccessPoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+			NetworkingV1AwsEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsEgressPrivateLinkEndpoint{
 				Kind:                   "AwsEgressPrivateLinkEndpoint",
 				VpcEndpointServiceName: endpoint,
-				EnableHighAvailability: networkingoutboundprivatelinkv1.PtrBool(highAvailability),
+				EnableHighAvailability: networkingaccesspointv1.PtrBool(highAvailability),
 			},
 		}
 	case CloudAzure:
-		createAccessPoint.Spec.Config = &networkingoutboundprivatelinkv1.NetworkingV1AccessPointSpecConfigOneOf{
-			NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingoutboundprivatelinkv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
+		createAccessPoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+			NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
 				Kind:                         "AzureEgressPrivateLinkEndpoint",
 				PrivateLinkServiceResourceId: endpoint,
 			},

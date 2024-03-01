@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -26,7 +26,7 @@ func (c *accessPointCommand) newEgressEndpointCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *accessPointCommand) getEgressEndpoints() ([]networkingoutboundprivatelinkv1.NetworkingV1AccessPoint, error) {
+func (c *accessPointCommand) getEgressEndpoints() ([]networkingaccesspointv1.NetworkingV1AccessPoint, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (c *accessPointCommand) autocompleteEgressEndpoints() []string {
 	return suggestions
 }
 
-func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, accessPoint networkingoutboundprivatelinkv1.NetworkingV1AccessPoint) error {
+func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, accessPoint networkingaccesspointv1.NetworkingV1AccessPoint) error {
 	if accessPoint.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 	}

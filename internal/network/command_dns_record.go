@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkingoutboundprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-outbound-privatelink/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -40,7 +40,7 @@ func (c *command) addAccessPointFlag(cmd *cobra.Command) {
 	cmd.Flags().String("access-point", "", "PrivateLink access point.")
 }
 
-func (c *command) getDnsRecords() ([]networkingoutboundprivatelinkv1.NetworkingV1DnsRecord, error) {
+func (c *command) getDnsRecords() ([]networkingaccesspointv1.NetworkingV1DnsRecord, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (c *command) autocompleteDnsRecords() []string {
 	return suggestions
 }
 
-func printDnsRecordTable(cmd *cobra.Command, record networkingoutboundprivatelinkv1.NetworkingV1DnsRecord) error {
+func printDnsRecordTable(cmd *cobra.Command, record networkingaccesspointv1.NetworkingV1DnsRecord) error {
 	if record.Spec == nil {
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 	}
