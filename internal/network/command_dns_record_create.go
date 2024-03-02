@@ -33,14 +33,14 @@ func (c *command) newDnsRecordCreateCommand() *cobra.Command {
 
 	c.addAccessPointFlag(cmd)
 	cmd.Flags().String("gateway", "", "Gateway ID.")
-	cmd.Flags().String("fqdn", "", "Fully qualified domain name of the DNS record.")
+	cmd.Flags().String("fully-qualified-domain-name", "", "Fully qualified domain name of the DNS record.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("access-point"))
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
-	cobra.CheckErr(cmd.MarkFlagRequired("fqdn"))
+	cobra.CheckErr(cmd.MarkFlagRequired("fully-qualified-domain-name"))
 
 	return cmd
 }
@@ -51,7 +51,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 		name = args[0]
 	}
 
-	fqdn, err := cmd.Flags().GetString("fqdn")
+	fullyQualifiedDomainName, err := cmd.Flags().GetString("fully-qualified-domain-name")
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 
 	createDnsRecord := networkingaccesspointv1.NetworkingV1DnsRecord{
 		Spec: &networkingaccesspointv1.NetworkingV1DnsRecordSpec{
-			Fqdn: networkingaccesspointv1.PtrString(fqdn),
+			Fqdn: networkingaccesspointv1.PtrString(fullyQualifiedDomainName),
 			Config: &networkingaccesspointv1.NetworkingV1DnsRecordSpecConfigOneOf{
 				NetworkingV1PrivateLinkAccessPoint: &networkingaccesspointv1.NetworkingV1PrivateLinkAccessPoint{
 					Kind:       privateLinkAccessPoint,

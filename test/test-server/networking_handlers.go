@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
@@ -186,6 +187,29 @@ func handleNetworkingIpAddresses(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingIpAddressList(t)(w, r)
+		}
+	}
+}
+
+// Handler for: "/networking/v1/dns-records/{id}"
+func handleNetworkingDnsRecord(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		environment := r.URL.Query().Get("environment")
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingDnsRecordGet(t, id, environment)(w, r)
+		}
+	}
+}
+
+// Handler for: "/networking/v1/dns-records"
+func handleNetworkingDnsRecords(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		environment := r.URL.Query().Get("environment")
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingDnsRecordList(t, environment)(w, r)
 		}
 	}
 }
@@ -1440,6 +1464,45 @@ func getIpAddress(ipPrefix, cloud, region string, services []string) networkingi
 		Cloud:       networkingipv1.PtrString(cloud),
 		Region:      networkingipv1.PtrString(region),
 		Services:    &networkingipv1.NetworkingV1Services{Items: services},
+	}
+}
+
+func getDnsRecord(id, environment, name string) networkingaccesspointv1.NetworkingV1DnsRecord {
+	return networkingaccesspointv1.NetworkingV1DnsRecord{
+		Id: networkingaccesspointv1.PtrString(id),
+		Spec: &networkingaccesspointv1.NetworkingV1DnsRecordSpec{
+			DisplayName: networkingaccesspointv1.PtrString(name),
+			Fqdn:        networkingaccesspointv1.PtrString("www.example.com"),
+			Config: &networkingaccesspointv1.NetworkingV1DnsRecordSpecConfigOneOf{
+				NetworkingV1PrivateLinkAccessPoint: &networkingaccesspointv1.NetworkingV1PrivateLinkAccessPoint{
+					Kind:       "PrivateLinkAccessPoint",
+					ResourceId: "ap-12345",
+				},
+			},
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
+			Gateway:     &networkingaccesspointv1.EnvScopedObjectReference{Id: "gw-12345"},
+		},
+		Status: &networkingaccesspointv1.NetworkingV1DnsRecordStatus{Phase: "READY"},
+	}
+}
+
+func handleNetworkingDnsRecordGet(t *testing.T, id, environment string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		record := getDnsRecord(id, environment, "my-dns-record")
+		err := json.NewEncoder(w).Encode(record)
+		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingDnsRecordList(t *testing.T, environment string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		recordOne := getDnsRecord("dnsrec-12345", environment, "my-dns-record")
+		recordTwo := getDnsRecord("dnsrec-67890", environment, "my-dns-record-2")
+		recordTwo.Status.SetPhase("PROVISIONING")
+
+		recordList := networkingaccesspointv1.NetworkingV1DnsRecordList{Data: []networkingaccesspointv1.NetworkingV1DnsRecord{recordOne, recordTwo}}
+		err := json.NewEncoder(w).Encode(recordList)
+		require.NoError(t, err)
 	}
 }
 

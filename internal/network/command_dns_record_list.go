@@ -41,13 +41,13 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 		}
 
 		list.Add(&recordOut{
-			Id:          record.GetId(),
-			Name:        record.Spec.GetDisplayName(),
-			Fqdn:        record.Spec.GetFqdn(),
-			AccessPoint: record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
-			Gateway:     record.Spec.Gateway.GetId(),
-			Environment: record.Spec.Environment.GetId(),
-			Phase:       record.Status.GetPhase(),
+			Id:                       record.GetId(),
+			Name:                     record.Spec.GetDisplayName(),
+			FullyQualifiedDomainName: record.Spec.GetFqdn(),
+			AccessPoint:              record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
+			Gateway:                  record.Spec.Gateway.GetId(),
+			Environment:              record.Spec.Environment.GetId(),
+			Phase:                    record.Status.GetPhase(),
 		})
 	}
 

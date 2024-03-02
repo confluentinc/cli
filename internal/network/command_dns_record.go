@@ -12,13 +12,13 @@ import (
 )
 
 type recordOut struct {
-	Id          string `human:"ID" serialized:"id"`
-	Name        string `human:"Name,omitempty" serialized:"name,omitempty"`
-	Fqdn        string `human:"FQDN" serialized:"fqdn"`
-	AccessPoint string `human:"Access Point" serialized:"access_point"`
-	Environment string `human:"Environment" serialized:"environment"`
-	Gateway     string `human:"Gateway" serialized:"gateway"`
-	Phase       string `human:"Phase" serialized:"phase"`
+	Id                       string `human:"ID" serialized:"id"`
+	Name                     string `human:"Name,omitempty" serialized:"name,omitempty"`
+	FullyQualifiedDomainName string `human:"Fully Qualified Domain Name" serialized:"fully_qualified_domain_name"`
+	AccessPoint              string `human:"Access Point" serialized:"access_point"`
+	Environment              string `human:"Environment" serialized:"environment"`
+	Gateway                  string `human:"Gateway" serialized:"gateway"`
+	Phase                    string `human:"Phase" serialized:"phase"`
 }
 
 func (c *command) newDnsRecordCommand() *cobra.Command {
@@ -88,13 +88,13 @@ func printDnsRecordTable(cmd *cobra.Command, record networkingaccesspointv1.Netw
 	table := output.NewTable(cmd)
 
 	table.Add(&recordOut{
-		Id:          record.GetId(),
-		Name:        record.Spec.GetDisplayName(),
-		Fqdn:        record.Spec.GetFqdn(),
-		AccessPoint: record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
-		Gateway:     record.Spec.Gateway.GetId(),
-		Environment: record.Spec.Environment.GetId(),
-		Phase:       record.Status.GetPhase(),
+		Id:                       record.GetId(),
+		Name:                     record.Spec.GetDisplayName(),
+		FullyQualifiedDomainName: record.Spec.GetFqdn(),
+		AccessPoint:              record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
+		Gateway:                  record.Spec.Gateway.GetId(),
+		Environment:              record.Spec.Environment.GetId(),
+		Phase:                    record.Status.GetPhase(),
 	})
 
 	return table.Print()
