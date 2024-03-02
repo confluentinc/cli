@@ -4,6 +4,7 @@ Usage:
   confluent network [command]
 
 Available Commands:
+  access-point               Manage access points.
   create                     Create a network.
   delete                     Delete one or more networks.
   describe                   Describe a network.
