@@ -45,17 +45,17 @@ func (c *accessPointCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updateAccessPoint := networkingaccesspointv1.NetworkingV1AccessPointUpdate{
+	updateEgressEndpoint := networkingaccesspointv1.NetworkingV1AccessPointUpdate{
 		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpecUpdate{
 			DisplayName: networkingaccesspointv1.PtrString(name),
 			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},
 		},
 	}
 
-	accessPoint, err := c.V2Client.UpdateAccessPoint(args[0], updateAccessPoint)
+	egressEndpoint, err := c.V2Client.UpdateAccessPoint(args[0], updateEgressEndpoint)
 	if err != nil {
 		return err
 	}
 
-	return printPrivateLinkEgressEndpointTable(cmd, accessPoint)
+	return printPrivateLinkEgressEndpointTable(cmd, egressEndpoint)
 }

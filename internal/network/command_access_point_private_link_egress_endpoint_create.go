@@ -76,7 +76,7 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createAccessPoint := networkingaccesspointv1.NetworkingV1AccessPoint{
+	createEgressEndpoint := networkingaccesspointv1.NetworkingV1AccessPoint{
 		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
 			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},
 			Gateway:     &networkingaccesspointv1.ObjectReference{Id: gateway},
@@ -84,12 +84,12 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if name != "" {
-		createAccessPoint.Spec.SetDisplayName(name)
+		createEgressEndpoint.Spec.SetDisplayName(name)
 	}
 
 	switch cloud {
 	case CloudAws:
-		createAccessPoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AwsEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsEgressPrivateLinkEndpoint{
 				Kind:                   "AwsEgressPrivateLinkEndpoint",
 				VpcEndpointServiceName: endpoint,
@@ -97,7 +97,7 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 			},
 		}
 	case CloudAzure:
-		createAccessPoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
 				Kind:                         "AzureEgressPrivateLinkEndpoint",
 				PrivateLinkServiceResourceId: endpoint,
@@ -105,10 +105,10 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	accessPoint, err := c.V2Client.CreateAccessPoint(createAccessPoint)
+	egressEndpoint, err := c.V2Client.CreateAccessPoint(createEgressEndpoint)
 	if err != nil {
 		return err
 	}
 
-	return printPrivateLinkEgressEndpointTable(cmd, accessPoint)
+	return printPrivateLinkEgressEndpointTable(cmd, egressEndpoint)
 }

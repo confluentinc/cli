@@ -26,34 +26,34 @@ func (c *accessPointCommand) newListCommand() *cobra.Command {
 }
 
 func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
-	accessPoints, err := c.getEgressEndpoints()
+	egressEndpoints, err := c.getEgressEndpoints()
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, accessPoint := range accessPoints {
-		if accessPoint.Spec == nil {
+	for _, egressEndpoint := range egressEndpoints {
+		if egressEndpoint.Spec == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 		}
-		if accessPoint.Status == nil {
+		if egressEndpoint.Status == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
 		out := &accessPointOut{
-			Id:          accessPoint.GetId(),
-			Name:        accessPoint.Spec.GetDisplayName(),
-			Gateway:     accessPoint.Spec.Gateway.GetId(),
-			Environment: accessPoint.Spec.Environment.GetId(),
-			Phase:       accessPoint.Status.GetPhase(),
+			Id:          egressEndpoint.GetId(),
+			Name:        egressEndpoint.Spec.GetDisplayName(),
+			Gateway:     egressEndpoint.Spec.Gateway.GetId(),
+			Environment: egressEndpoint.Spec.Environment.GetId(),
+			Phase:       egressEndpoint.Status.GetPhase(),
 		}
 
-		if accessPoint.Status.Config != nil && accessPoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus != nil {
-			out.AwsVpcEndpointService = accessPoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus.GetVpcEndpointId()
+		if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus != nil {
+			out.AwsVpcEndpointService = egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus.GetVpcEndpointId()
 		}
 
-		if accessPoint.Status.Config != nil && accessPoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus != nil {
-			out.AzurePrivateLinkPrivateEndpoint = accessPoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointResourceId()
+		if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus != nil {
+			out.AzurePrivateLinkPrivateEndpoint = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointResourceId()
 		}
 
 		list.Add(out)

@@ -35,10 +35,10 @@ func (c *accessPointCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	accessPoint, err := c.V2Client.GetAccessPoint(environmentId, args[0])
+	egressEndpoint, err := c.V2Client.GetAccessPoint(environmentId, args[0])
 	if err != nil {
 		return err
 	}
 
-	return printPrivateLinkEgressEndpointTable(cmd, accessPoint)
+	return printPrivateLinkEgressEndpointTable(cmd, egressEndpoint)
 }
