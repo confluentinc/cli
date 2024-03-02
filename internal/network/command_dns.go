@@ -11,6 +11,7 @@ func (c *command) newDnsCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newDnsForwarderCommand())
+	cmd.AddCommand(c.newDnsRecordCommand())
 
 	return cmd
 }

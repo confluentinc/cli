@@ -1,0 +1,4 @@
+       ID      |      Name       | Fully Qualified Domain Name | Access Point | Environment | Gateway  |    Phase      
+---------------+-----------------+-----------------------------+--------------+-------------+----------+---------------
+  dnsrec-12345 | my-dns-record   | www.example.com             | ap-12345     | env-596     | gw-12345 | READY         
+  dnsrec-67890 | my-dns-record-2 | www.example.com             | ap-12345     | env-596     | gw-12345 | PROVISIONING  
