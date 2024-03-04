@@ -131,7 +131,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf("must provide both `--cloud` and `--region`")
 		}
 
-		key.Spec.Resource.Id = fmt.Sprintf("%s.%s.%s", environmentId, cloud, region)
+		key.Spec.Resource.Id = fmt.Sprintf("%s.%s", cloud, region)
+		key.Spec.Resource.Environment = &environmentId
 	}
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
