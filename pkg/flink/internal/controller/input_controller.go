@@ -224,19 +224,19 @@ func getUnixBindings() []prompt.Option {
 				Fn:        prompt.DeleteWord,
 			},
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x64}, // ForwardDeleteWord (ESC + d)
+				ASCIICode: []byte{0x1b, 0x64}, // ForwardDeleteWord (Alt/Option + d)
 				Fn: func(buf *prompt.Buffer) {
 					buf.Delete(buf.Document().FindEndOfCurrentWordWithSpace())
 				},
 			},
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x75}, // UpCaseWord (ESC + u)
+				ASCIICode: []byte{0x1b, 0x75}, // UpCaseWord (Alt/Option + u)
 				Fn: func(buf *prompt.Buffer) {
 					buf.InsertText(strings.ToUpper(buf.Document().GetWordAfterCursorWithSpace()), true, true)
 				},
 			},
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x6c}, // DownCaseWord (ESC + l)
+				ASCIICode: []byte{0x1b, 0x6c}, // DownCaseWord (Alt/Option + l)
 				Fn: func(buf *prompt.Buffer) {
 					buf.InsertText(strings.ToLower(buf.Document().GetWordAfterCursorWithSpace()), true, true)
 				},
