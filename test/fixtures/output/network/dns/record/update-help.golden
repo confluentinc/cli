@@ -1,0 +1,25 @@
+Update an existing DNS record.
+
+Usage:
+  confluent network dns record update <id> [flags]
+
+Examples:
+Update the name of DNS record "dnsrec-123456".
+
+  $ confluent network dns record update dnsrec-123456 --name my-new-dns-record
+
+Update the Privatelink access point of DNS record "dnsrec-123456".
+
+  $ confluent network dns record update dnsrec-123456 --access-point ap-123456
+
+Flags:
+      --name string                        Name of the DNS record.
+      --private-link-access-point string   PrivateLink access point.
+      --context string                     CLI context name.
+      --environment string                 Environment ID.
+  -o, --output string                      Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
