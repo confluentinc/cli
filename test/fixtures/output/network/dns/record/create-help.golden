@@ -6,14 +6,14 @@ Usage:
 Examples:
 Create a DNS record.
 
-  $ confluent network dns record create --gateway gw-123456 --access-point ap-123456 --fqdn www.example.com
+  $ confluent network dns record create --gateway gw-123456 --access-point ap-123456 --fully-qualified-domain-name www.example.com
 
 Create a named DNS record.
 
-  $ confluent network dns record create my-dns-record --gateway gw-123456 --access-point ap-123456 --fqdn www.example.com
+  $ confluent network dns record create my-dns-record --gateway gw-123456 --access-point ap-123456 --fully-qualified-domain-name www.example.com
 
 Flags:
-      --access-point string                  REQUIRED: PrivateLink access point.
+      --private-link-access-point string     REQUIRED: PrivateLink access point.
       --gateway string                       REQUIRED: Gateway ID.
       --fully-qualified-domain-name string   REQUIRED: Fully qualified domain name of the DNS record.
       --context string                       CLI context name.

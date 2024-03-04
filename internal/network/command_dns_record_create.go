@@ -22,11 +22,11 @@ func (c *command) newDnsRecordCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a DNS record.",
-				Code: "confluent network dns record create --gateway gw-123456 --access-point ap-123456 --fqdn www.example.com",
+				Code: "confluent network dns record create --gateway gw-123456 --access-point ap-123456 --fully-qualified-domain-name www.example.com",
 			},
 			examples.Example{
 				Text: "Create a named DNS record.",
-				Code: "confluent network dns record create my-dns-record --gateway gw-123456 --access-point ap-123456 --fqdn www.example.com",
+				Code: "confluent network dns record create my-dns-record --gateway gw-123456 --access-point ap-123456 --fully-qualified-domain-name www.example.com",
 			},
 		),
 	}
@@ -38,7 +38,7 @@ func (c *command) newDnsRecordCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("access-point"))
+	cobra.CheckErr(cmd.MarkFlagRequired("private-link-access-point"))
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
 	cobra.CheckErr(cmd.MarkFlagRequired("fully-qualified-domain-name"))
 

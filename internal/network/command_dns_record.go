@@ -7,6 +7,7 @@ import (
 
 	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -15,7 +16,7 @@ type recordOut struct {
 	Id                       string `human:"ID" serialized:"id"`
 	Name                     string `human:"Name,omitempty" serialized:"name,omitempty"`
 	FullyQualifiedDomainName string `human:"Fully Qualified Domain Name" serialized:"fully_qualified_domain_name"`
-	AccessPoint              string `human:"Access Point" serialized:"access_point"`
+	PrivateLinkAccessPoint   string `human:"Private Link Access Point" serialized:"private_link_access_point"`
 	Environment              string `human:"Environment" serialized:"environment"`
 	Gateway                  string `human:"Gateway" serialized:"gateway"`
 	Phase                    string `human:"Phase" serialized:"phase"`
@@ -37,16 +38,7 @@ func (c *command) newDnsRecordCommand() *cobra.Command {
 }
 
 func (c *command) addAccessPointFlag(cmd *cobra.Command) {
-	cmd.Flags().String("access-point", "", "PrivateLink access point.")
-}
-
-func (c *command) getDnsRecords() ([]networkingaccesspointv1.NetworkingV1DnsRecord, error) {
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return nil, err
-	}
-
-	return c.V2Client.ListDnsRecords(environmentId)
+	cmd.Flags().String("private-link-access-point", "", "PrivateLink access point.")
 }
 
 func (c *command) validDnsRecordArgs(cmd *cobra.Command, args []string) []string {
@@ -65,7 +57,12 @@ func (c *command) validDnsRecordArgsMultiple(cmd *cobra.Command, args []string) 
 }
 
 func (c *command) autocompleteDnsRecords() []string {
-	records, err := c.getDnsRecords()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	records, err := c.V2Client.ListDnsRecords(environmentId, ccloudv2.DnsRecordListParameters{})
 	if err != nil {
 		return nil
 	}
@@ -91,7 +88,7 @@ func printDnsRecordTable(cmd *cobra.Command, record networkingaccesspointv1.Netw
 		Id:                       record.GetId(),
 		Name:                     record.Spec.GetDisplayName(),
 		FullyQualifiedDomainName: record.Spec.GetFqdn(),
-		AccessPoint:              record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
+		PrivateLinkAccessPoint:   record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
 		Gateway:                  record.Spec.Gateway.GetId(),
 		Environment:              record.Spec.Environment.GetId(),
 		Phase:                    record.Status.GetPhase(),

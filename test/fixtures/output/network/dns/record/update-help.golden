@@ -13,11 +13,11 @@ Update the Privatelink access point of DNS record "dnsrec-123456".
   $ confluent network dns record update dnsrec-123456 --access-point ap-123456
 
 Flags:
-      --name string           Name of the DNS record.
-      --access-point string   PrivateLink access point.
-      --context string        CLI context name.
-      --environment string    Environment ID.
-  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+      --name string                        Name of the DNS record.
+      --private-link-access-point string   PrivateLink access point.
+      --context string                     CLI context name.
+      --environment string                 Environment ID.
+  -o, --output string                      Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -34,7 +34,7 @@ func (c *command) newDnsRecordUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "access-point")
+	cmd.MarkFlagsOneRequired("name", "private-link-access-point")
 
 	return cmd
 }
@@ -65,8 +65,8 @@ func (c *command) dnsRecordUpdate(cmd *cobra.Command, args []string) error {
 		updateDnsRecord.Spec.SetDisplayName(name)
 	}
 
-	if cmd.Flags().Changed("access-point") {
-		accessPoint, err := cmd.Flags().GetString("access-point")
+	if cmd.Flags().Changed("private-link-access-point") {
+		accessPoint, err := cmd.Flags().GetString("private-link-access-point")
 		if err != nil {
 			return err
 		}

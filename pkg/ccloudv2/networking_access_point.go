@@ -9,6 +9,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
+type DnsRecordListParameters struct {
+	FullyQualifiedDomainNames []string
+	Gateway                   string
+	Names                     []string
+	ResourceIds               []string
+}
+
 func newNetworkingAccessPointClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *networkingaccesspointv1.APIClient {
 	cfg := networkingaccesspointv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
@@ -73,13 +80,13 @@ func (c *Client) CreateAccessPoint(accessPoint networkingaccesspointv1.Networkin
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListDnsRecords(environment string) ([]networkingaccesspointv1.NetworkingV1DnsRecord, error) {
+func (c *Client) ListDnsRecords(environment string, listParameters DnsRecordListParameters) ([]networkingaccesspointv1.NetworkingV1DnsRecord, error) {
 	var list []networkingaccesspointv1.NetworkingV1DnsRecord
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListDnsRecords(environment, pageToken)
+		page, err := c.executeListDnsRecords(environment, pageToken, listParameters)
 		if err != nil {
 			return nil, err
 		}
@@ -93,10 +100,26 @@ func (c *Client) ListDnsRecords(environment string) ([]networkingaccesspointv1.N
 	return list, nil
 }
 
-func (c *Client) executeListDnsRecords(environment, pageToken string) (networkingaccesspointv1.NetworkingV1DnsRecordList, error) {
+func (c *Client) executeListDnsRecords(environment, pageToken string, listParameters DnsRecordListParameters) (networkingaccesspointv1.NetworkingV1DnsRecordList, error) {
 	req := c.NetworkingAccessPointClient.DNSRecordsNetworkingV1Api.ListNetworkingV1DnsRecords(c.networkingAccessPointApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
+	}
+
+	if listParameters.Gateway != "" {
+		req = req.SpecGateway(listParameters.Gateway)
+	}
+
+	if listParameters.FullyQualifiedDomainNames != nil {
+		req = req.SpecFqdn(listParameters.FullyQualifiedDomainNames)
+	}
+
+	if listParameters.Names != nil {
+		req = req.SpecDisplayName(listParameters.Names)
+	}
+
+	if listParameters.ResourceIds != nil {
+		req = req.ResourceId(listParameters.ResourceIds)
 	}
 
 	resp, httpResp, err := req.Execute()
