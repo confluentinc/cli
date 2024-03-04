@@ -88,7 +88,7 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/stripe/stripe-go/v76 v76.19.0
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.17.1
