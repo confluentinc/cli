@@ -20,11 +20,11 @@ func (c *accessPointCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an AWS private link egress endpoint with high availability.",
-				Code: "confluent network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service vpce-123456 --high-availability",
+				Code: "confluent network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability",
 			},
 			examples.Example{
 				Text: "Create a named Azure private link egress endpoint.",
-				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service vpce-123456",
+				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
 			},
 		),
 	}
