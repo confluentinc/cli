@@ -40,7 +40,7 @@ func (c *command) dnsForwarderDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.DnsForwarder); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.DnsForwarder); err != nil {
 		return err
 	}
 
