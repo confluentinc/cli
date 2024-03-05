@@ -16,13 +16,13 @@ import (
 
 var OrgEnvironments = []*orgv2.OrgV2Environment{
 	{Id: orgv2.PtrString("env-596"), DisplayName: orgv2.PtrString("default"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}},
+		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
 	{Id: orgv2.PtrString("env-595"), DisplayName: orgv2.PtrString("other"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ADVANCED")}},
+		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ADVANCED"}},
 	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}},
+		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
 	{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}},
+		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
 }
 
 // Handler for: "/org/v2/environments/{id}"
@@ -39,10 +39,10 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			environment := &orgv2.OrgV2Environment{
 				Id:                     orgv2.PtrString(id),
 				DisplayName:            orgv2.PtrString("default"),
-				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")},
+				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"},
 			}
 			if id == "env-595" {
-				environment.StreamGovernanceConfig.Package = orgv2.PtrString("ADVANCED")
+				environment.StreamGovernanceConfig.Package = "ADVANCED"
 			}
 			err := json.NewEncoder(w).Encode(environment)
 			require.NoError(t, err)
@@ -55,7 +55,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodPatch:
 			req := &orgv2.OrgV2Environment{
-				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("ESSENTIALS")}}
+				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 			if id == "env-595" && req.StreamGovernanceConfig.GetPackage() == "ESSENTIALS" {
@@ -85,7 +85,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodPost:
 			req := &orgv2.OrgV2Environment{
-				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: orgv2.PtrString("")}}
+				StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: ""}}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 
