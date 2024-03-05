@@ -312,7 +312,7 @@ func TestLoginSuccess(t *testing.T) {
 		}
 		if s.orgId != "" {
 			org2 = s.orgId == organizationId2
-			s.args = append(s.args, "--organization-id", s.orgId)
+			s.args = append(s.args, "--organization", s.orgId)
 		}
 		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)

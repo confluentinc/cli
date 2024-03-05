@@ -151,7 +151,7 @@ const (
 		AvoidTimeoutSuggestions
 	InvalidLoginURLErrorMsg      = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
 	InvalidLoginErrorMsg         = "incorrect email, password, or organization ID"
-	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
+	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization` flag.\n" +
 		"To skip auto-login and force a username and password prompt, use the `--prompt` flag.\n" + // TODO: Remove in V4
 		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."

@@ -1,4 +1,4 @@
-       ID      |        Name        | Topic Prefix |   Kafka   | Storage |         Endpoint         |    Status    | Detailed Processing Log  
----------------+--------------------+--------------+-----------+---------+--------------------------+--------------+--------------------------
-  lksqlc-ksql5 | account ksql       | pksqlc-abcde | lkc-qwert |     101 | SASL_SSL://ksql-endpoint | PROVISIONING | true                     
-  lksqlc-woooo | kay cee queue elle | pksqlc-ghjkl | lkc-zxcvb |     123 | SASL_SSL://ksql-endpoint | PROVISIONING | true                     
+       ID      |        Name        | Topic Prefix | Kafka Cluster | Storage |         Endpoint         |    Status    | Detailed Processing Log  
+---------------+--------------------+--------------+---------------+---------+--------------------------+--------------+--------------------------
+  lksqlc-ksql5 | account ksql       | pksqlc-abcde | lkc-qwert     |     101 | SASL_SSL://ksql-endpoint | PROVISIONING | true                     
+  lksqlc-woooo | kay cee queue elle | pksqlc-ghjkl | lkc-zxcvb     |     123 | SASL_SSL://ksql-endpoint | PROVISIONING | true                     

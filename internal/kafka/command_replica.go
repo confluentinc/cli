@@ -21,6 +21,7 @@ func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newStatusCommand())
 
 	return cmd
 }
