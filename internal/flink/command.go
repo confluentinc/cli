@@ -7,11 +7,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 )
-
-const serviceAccountWarning = "[WARN] No service account provided. To ensure that your statements run continuously, " +
-	"use a service account instead of your user identity with `confluent iam service-account use` or `--service-account`. " +
-	"Otherwise, statements will stop running after 4 hours."
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
@@ -26,6 +23,9 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink_artifact.early_access", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(c.newArtifactCommand())
+	}
 	cmd.AddCommand(c.newComputePoolCommand())
 	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newShellCommand(prerunner))

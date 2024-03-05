@@ -12,3 +12,4 @@ phase: PROVISIONING
 supported_connection_types:
     - TRANSITGATEWAY
     - PEERING
+idle_since: 2021-01-01T00:00:00Z

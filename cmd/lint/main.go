@@ -214,6 +214,7 @@ var vocabWords = []string{
 	"hostname",
 	"iam",
 	"ip",
+	"ips",
 	"json",
 	"jit",
 	"jsonschema",
