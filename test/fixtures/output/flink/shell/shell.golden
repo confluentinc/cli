@@ -1,0 +1,67 @@
+> ./test/bin/confluent flink shell --compute-pool lfcp-123456
+Welcome!
+To exit, press Ctrl-Q or type "exit".
+
+[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion
+> use catalog default;
+Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++---------------------+---------+
+|         Key         |  Value  |
++---------------------+---------+
+| sql.current-catalog | default |
++---------------------+---------+
+> use db1;
+Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++----------------------+-------+
+|         Key          | Value |
++----------------------+-------+
+| sql.current-database | db1   |
++----------------------+-------+
+> set;
+Statement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+> set 'cli.test-key'='value';
+Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++--------------+-------+
+|     Key      | Value |
++--------------+-------+
+| cli.test-key | value |
++--------------+-------+
+> set;
+Statement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| cli.test-key           | value               |
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+> reset;
+Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration has been reset successfully.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.service-account | <unset> (default)   |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+> exit
+>
