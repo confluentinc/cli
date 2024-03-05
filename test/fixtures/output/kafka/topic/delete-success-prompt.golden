@@ -1,2 +1,1 @@
-Are you sure you want to delete topic "topic-exist"?
-To confirm, type "topic-exist". To cancel, press Ctrl-C: Deleted topic "topic-exist".
+Are you sure you want to delete topic "topic-exist"? (y/n): Deleted topic "topic-exist".
