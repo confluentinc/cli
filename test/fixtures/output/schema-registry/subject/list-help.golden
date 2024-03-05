@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry subject list [flags]
 
 Flags:
-      --deleted              Include deleted subjects.
+      --all                  Include deleted subjects.
       --prefix string        Subject prefix. (default ":*:")
       --context string       CLI context name.
       --environment string   Environment ID.

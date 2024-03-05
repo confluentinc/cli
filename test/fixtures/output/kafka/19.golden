@@ -2,8 +2,8 @@ is_current: true
 id: lkc-describe
 name: kafka-cluster
 type: BASIC
-ingress: 250
-egress: 750
+ingress_limit: 250
+egress_limit: 750
 storage: 5 TB
 provider: aws
 region: us-west-2
