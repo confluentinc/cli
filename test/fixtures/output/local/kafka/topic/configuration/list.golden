@@ -7,10 +7,10 @@
   flush.messages                          | 9223372036854775807  
   flush.ms                                | 9223372036854775807  
   follower.replication.throttled.replicas |                      
-  local.retention.bytes                   | -2                   
-  local.retention.ms                      | -2                   
   index.interval.bytes                    | 4096                 
   leader.replication.throttled.replicas   |                      
+  local.retention.bytes                   | -2                   
+  local.retention.ms                      | -2                   
   max.compaction.lag.ms                   | 9223372036854775807  
   max.message.bytes                       | 1048588              
   message.downconversion.enable           | true                 
@@ -23,8 +23,8 @@
   min.compaction.lag.ms                   | 0                    
   min.insync.replicas                     | 1                    
   preallocate                             | false                
-  retention.bytes                         | -1                   
   remote.storage.enable                   | false                
+  retention.bytes                         | -1                   
   retention.ms                            | 604800000            
   segment.bytes                           | 1073741824           
   segment.index.bytes                     | 10485760             
