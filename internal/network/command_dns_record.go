@@ -15,7 +15,7 @@ import (
 type recordOut struct {
 	Id                       string `human:"ID" serialized:"id"`
 	Name                     string `human:"Name,omitempty" serialized:"name,omitempty"`
-	FullyQualifiedDomainName string `human:"Fully Qualified Domain Name" serialized:"fully_qualified_domain_name"`
+	Domain                   string `human:"Domain" serialized:"domain"`
 	PrivateLinkAccessPoint   string `human:"Private Link Access Point" serialized:"private_link_access_point"`
 	Environment              string `human:"Environment" serialized:"environment"`
 	Gateway                  string `human:"Gateway" serialized:"gateway"`
@@ -37,8 +37,8 @@ func (c *command) newDnsRecordCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) addAccessPointFlag(cmd *cobra.Command) {
-	cmd.Flags().String("private-link-access-point", "", "PrivateLink access point.")
+func (c *command) addPrivateLinkAccessPointFlag(cmd *cobra.Command) {
+	cmd.Flags().String("private-link-access-point", "", "Private Link access point.")
 }
 
 func (c *command) validDnsRecordArgs(cmd *cobra.Command, args []string) []string {
@@ -87,7 +87,7 @@ func printDnsRecordTable(cmd *cobra.Command, record networkingaccesspointv1.Netw
 	table.Add(&recordOut{
 		Id:                       record.GetId(),
 		Name:                     record.Spec.GetDisplayName(),
-		FullyQualifiedDomainName: record.Spec.GetFqdn(),
+		Domain:                   record.Spec.GetFqdn(),
 		PrivateLinkAccessPoint:   record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
 		Gateway:                  record.Spec.Gateway.GetId(),
 		Environment:              record.Spec.Environment.GetId(),

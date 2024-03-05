@@ -29,7 +29,7 @@ func (c *command) newDnsRecordUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the DNS record.")
-	c.addAccessPointFlag(cmd)
+	c.addPrivateLinkAccessPointFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)

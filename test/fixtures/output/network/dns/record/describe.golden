@@ -1,9 +1,9 @@
-+-----------------------------+-----------------+
-| ID                          | dnsrec-12345    |
-| Name                        | my-dns-record   |
-| Fully Qualified Domain Name | www.example.com |
-| Access Point                | ap-12345        |
-| Environment                 | env-596         |
-| Gateway                     | gw-12345        |
-| Phase                       | READY           |
-+-----------------------------+-----------------+
++---------------------------+-----------------+
+| ID                        | dnsrec-12345    |
+| Name                      | my-dns-record   |
+| Domain                    | www.example.com |
+| Private Link Access Point | ap-12345        |
+| Environment               | env-596         |
+| Gateway                   | gw-12345        |
+| Phase                     | READY           |
++---------------------------+-----------------+

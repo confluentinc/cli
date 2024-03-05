@@ -29,7 +29,7 @@ func (c *command) newDnsRecordListCommand() *cobra.Command {
 	cmd.Flags().String("gateway", "", "Gateway ID.")
 	cmd.Flags().StringSlice("names", nil, "A comma-separated list of display names.")
 	cmd.Flags().StringSlice("resource-ids", nil, "A comma-separated list of resource IDs.")
-	cmd.Flags().StringSlice("fully-qualified-domain-names", nil, "A comma-separated list of fully qualified domain names.")
+	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of fully qualified domain names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -58,14 +58,14 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	fullyQualifiedDomainNames, err := cmd.Flags().GetStringSlice("fully-qualified-domain-names")
+	domains, err := cmd.Flags().GetStringSlice("domains")
 	if err != nil {
 		return err
 	}
 
 	listParameters := ccloudv2.DnsRecordListParameters{
 		Gateway:                   gateway,
-		FullyQualifiedDomainNames: fullyQualifiedDomainNames,
+		Domains:                   domains,
 		Names:                     names,
 		ResourceIds:               resourceIds,
 	}
@@ -87,7 +87,7 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 		list.Add(&recordOut{
 			Id:                       record.GetId(),
 			Name:                     record.Spec.GetDisplayName(),
-			FullyQualifiedDomainName: record.Spec.GetFqdn(),
+			Domain:                   record.Spec.GetFqdn(),
 			PrivateLinkAccessPoint:   record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
 			Gateway:                  record.Spec.Gateway.GetId(),
 			Environment:              record.Spec.Environment.GetId(),
