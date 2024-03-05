@@ -134,11 +134,11 @@ func (c *InputController) initPrompt() (prompt.IPrompt, error) {
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)
-			text = strings.ToUpper(text)
 			if text == "" {
 				return false
 			}
 
+			text = strings.ToUpper(text)
 			return text == config.OpExit || text == config.OpQuit || strings.HasSuffix(text, ";") || lastKeyStroke == prompt.AltEnter
 		}),
 	}
