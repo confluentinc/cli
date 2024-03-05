@@ -1,0 +1,18 @@
+Manage Schema Registry configuration.
+
+Usage:
+  confluent schema-registry configuration [command]
+
+Aliases:
+  configuration, config
+
+Available Commands:
+  delete      Delete top-level or subject-level schema configuration.
+  describe    Describe top-level or subject-level schema configuration.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent schema-registry configuration [command] --help" for more information about a command.

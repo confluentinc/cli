@@ -1,7 +1,7 @@
 id: lksqlc-12345
 name: account ksql
 topic_prefix: pksqlc-zxcvb
-kafka: lkc-abcde
+kafka_cluster: lkc-abcde
 storage: 130
 endpoint: SASL_SSL://ksql-endpoint
 status: PROVISIONING
