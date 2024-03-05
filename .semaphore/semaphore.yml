@@ -21,7 +21,9 @@ blocks:
           commands:
             - checkout
             - sem-version go $(cat .go-version)
+            - go install github.com/charmbracelet/vhs@latest
             - export PATH=$(go env GOPATH)/bin:$PATH
+            - vhs -v
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
@@ -44,6 +46,11 @@ blocks:
             - checkout
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
+            - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            - brew install vhs
+            - ffmpeg -h
+            - ttyd -v
+            - vhs -v
             - make test
       epilogue:
         always:
@@ -64,6 +71,8 @@ blocks:
             - choco install -y golang --version $(Get-Content .go-version)
             - $env:GOCOVERDIR = 'test/coverage'
             - New-Item $env:GOCOVERDIR -ItemType Directory
+            - go install github.com/charmbracelet/vhs@latest
+            - vhs -v
             - go install gotest.tools/gotestsum@v1.8.2
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
