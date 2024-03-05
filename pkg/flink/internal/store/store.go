@@ -50,6 +50,8 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 		return s.processResetStatement(statement)
 	case UseStatement:
 		return s.processUseStatement(statement)
+	case QuitStatement:
+		fallthrough
 	case ExitStatement:
 		s.exitApplication()
 		return nil, nil
