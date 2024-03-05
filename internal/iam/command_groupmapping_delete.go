@@ -31,17 +31,12 @@ func (c *groupMappingCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
-	groupMapping, err := c.V2Client.GetGroupMapping(args[0])
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.SsoGroupMapping, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.GetGroupMapping(id)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.SsoGroupMapping, groupMapping.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.SsoGroupMapping); err != nil {
 		return err
 	}
 
@@ -49,6 +44,6 @@ func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteGroupMapping(id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.SsoGroupMapping)
+	_, err := deletion.Delete(args, deleteFunc, resource.SsoGroupMapping)
 	return err
 }

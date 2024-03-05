@@ -2,7 +2,7 @@
 id: lksqlc-woooo
 name: kay cee queue elle
 topic_prefix: pksqlc-ghjkl
-kafka: lkc-zxcvb
+kafka_cluster: lkc-zxcvb
 storage: 123
 endpoint: SASL_SSL://ksql-endpoint
 status: PROVISIONING
