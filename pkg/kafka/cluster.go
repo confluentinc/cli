@@ -51,7 +51,7 @@ func FindCluster(client *ccloudv2.Client, ctx *config.Context, clusterId string)
 	}
 
 	if client == nil {
-		return nil, fmt.Errorf(errors.KafkaClusterNotFoundErrorMsg, clusterId)
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), "You can set the active Kafka cluster with `confluent kafka cluster use`.")
 	}
 
 	cluster, httpResp, err := client.DescribeKafkaCluster(clusterId, environmentId)
