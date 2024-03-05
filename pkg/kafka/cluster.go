@@ -50,6 +50,10 @@ func FindCluster(client *ccloudv2.Client, ctx *config.Context, clusterId string)
 		return nil, err
 	}
 
+	if client == nil {
+		return nil, fmt.Errorf(errors.KafkaClusterNotFoundErrorMsg, clusterId)
+	}
+
 	cluster, httpResp, err := client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
