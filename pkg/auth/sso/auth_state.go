@@ -35,7 +35,7 @@ var (
 			ssoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"infra-us-gov": {
-			ssoProviderDomain: "confluent-infra-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderDomain: "confluent-infra-us-gov.okta.com/oauth2/v1",
 			ssoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"prod": {

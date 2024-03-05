@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -29,24 +29,21 @@ type ProcessedStatement struct {
 	Status               PHASE  `json:"status"`
 	StatusDetail         string `json:"status_detail,omitempty"` // Shown at the top before the table
 	IsLocalStatement     bool
-	IsSelectStatement    bool
 	IsSensitiveStatement bool
 	PageToken            string
-	ResultSchema         flinkgatewayv1beta1.SqlV1beta1ResultSchema
 	StatementResults     *StatementResults
+	Traits               flinkgatewayv1.SqlV1StatementTraits
 }
 
-func NewProcessedStatement(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) *ProcessedStatement {
-	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
+func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *ProcessedStatement {
 	return &ProcessedStatement{
-		Statement:         statementObj.Spec.GetStatement(),
-		StatementName:     statementObj.GetName(),
-		ComputePool:       statementObj.Spec.GetComputePoolId(),
-		Principal:         statementObj.Spec.GetPrincipal(),
-		StatusDetail:      statementObj.Status.GetDetail(),
-		Status:            PHASE(statementObj.Status.GetPhase()),
-		ResultSchema:      statementObj.Status.GetResultSchema(),
-		IsSelectStatement: strings.HasPrefix(statement, "select"),
+		Statement:     statementObj.Spec.GetStatement(),
+		StatementName: statementObj.GetName(),
+		ComputePool:   statementObj.Spec.GetComputePoolId(),
+		Principal:     statementObj.Spec.GetPrincipal(),
+		StatusDetail:  statementObj.Status.GetDetail(),
+		Status:        PHASE(statementObj.Status.GetPhase()),
+		Traits:        statementObj.Status.GetTraits(),
 	}
 }
 
@@ -92,6 +89,12 @@ func (s ProcessedStatement) PrintStatementDoneStatus() {
 }
 
 func (s ProcessedStatement) IsTerminalState() bool {
-	isRunningAndHasResults := s.Status == RUNNING && s.PageToken != ""
-	return s.Status == COMPLETED || s.Status == FAILED || isRunningAndHasResults
+	isRunningAndHasNextPage := s.Status == RUNNING && s.PageToken != ""
+	hasResults := len(s.StatementResults.GetRows()) > 1
+	return s.Status == COMPLETED || s.Status == FAILED || isRunningAndHasNextPage || hasResults
+}
+
+func (s ProcessedStatement) IsSelectStatement() bool {
+	return strings.EqualFold(s.Traits.GetSqlKind(), "SELECT") ||
+		strings.HasPrefix(strings.ToUpper(s.Statement), "SELECT")
 }

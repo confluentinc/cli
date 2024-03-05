@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -181,7 +182,6 @@ func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CL
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
-		cmd.Flags().String("flink-region", "", "Flink region ID for the role binding.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
@@ -399,8 +399,10 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	userId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
 	principalType := presource.LookupType(userId)
 
+	nonUserPrincipalTypes := []string{presource.ServiceAccount, presource.IdentityPool, presource.SsoGroupMapping}
+
 	var fields []string
-	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool {
+	if slices.Contains(nonUserPrincipalTypes, principalType) {
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
@@ -561,14 +563,6 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		crnPattern += "/environment=" + environment
-	}
-
-	if cmd.Flags().Changed("flink-region") {
-		flinkRegion, err := cmd.Flags().GetString("flink-region")
-		if err != nil {
-			return "", err
-		}
-		crnPattern += "/flink-region=" + flinkRegion
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") {

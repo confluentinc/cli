@@ -66,8 +66,8 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	lspClient := lsp.NewLSPClientWS(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId())
 
 	stdinBefore := utils.GetStdin()
-	consoleParser := utils.GetConsoleParser()
-	if consoleParser == nil {
+	consoleParser, err := utils.GetConsoleParser()
+	if err != nil {
 		utils.OutputErr("Error: failed to initialize console parser")
 		return errors.NewErrorWithSuggestions("failed to initialize console parser", "Restart your shell session or try another terminal.")
 	}
@@ -112,9 +112,9 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 }
 
 func (a *Application) readEvalPrintLoop() error {
-	run := utils.NewPanicRecovererWithLimit(3, 3*time.Second)
+	run := utils.NewPanicRecoveryWithLimit(3, 3*time.Second)
 	for a.isAuthenticated() {
-		err := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)()
+		err := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)
 		if err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func (a *Application) getOutputController(processedStatementWithResults types.Pr
 	if processedStatementWithResults.IsLocalStatement {
 		return a.basicOutputController
 	}
-	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement {
+	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement() {
 		return a.interactiveOutputController
 	}
 

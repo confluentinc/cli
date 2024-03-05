@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/confluentinc/go-prompt"
@@ -38,7 +39,9 @@ func NewInputController(history *history.History, lspCompleter prompt.Completer)
 		reverseISearch:  reverseisearch.NewReverseISearch(),
 		lspCompleter:    lspCompleter,
 	}
-	inputController.prompt = inputController.Prompt()
+	if prompt, err := inputController.initPrompt(); err == nil {
+		inputController.prompt = prompt
+	}
 	return inputController
 }
 
@@ -113,55 +116,14 @@ func (c *InputController) getMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func (c *InputController) Prompt() prompt.IPrompt {
-	return prompt.New(
-		nil,
-		c.promptCompleter(),
+func (c *InputController) initPrompt() (prompt.IPrompt, error) {
+	options := []prompt.Option{
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
+		prompt.OptionCompletionOnDown(),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
 			return c.reverseISearchEnabled || c.shouldExit
-		}),
-		prompt.OptionAddASCIICodeBind(),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlD,
-			Fn: func(b *prompt.Buffer) {
-				c.shouldExit = true
-			},
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlQ,
-			Fn: func(b *prompt.Buffer) {
-				c.shouldExit = true
-			},
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlS,
-			Fn: func(b *prompt.Buffer) {
-				c.toggleSmartCompletion()
-			},
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlR,
-			Fn: func(b *prompt.Buffer) {
-				c.reverseISearchEnabled = true
-			},
-		}),
-		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-			// Alt/Option + Arrow Left
-			ASCIICode: []byte{0x1b, 0x62},
-			Fn:        prompt.GoLeftWord,
-		}),
-		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-			// Alt/Option + Arrow Right
-			ASCIICode: []byte{0x1b, 0x66},
-			Fn:        prompt.GoRightWord,
-		}),
-		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-			// Alt/Option + Backspace
-			ASCIICode: []byte{0x1b, 0x7F},
-			Fn:        prompt.DeleteWord,
 		}),
 		prompt.OptionPrefixTextColor(prompt.Yellow),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
@@ -176,6 +138,12 @@ func (c *InputController) Prompt() prompt.IPrompt {
 			}
 			return text == "exit" || strings.HasSuffix(text, ";") || lastKeyStroke == prompt.AltEnter
 		}),
+	}
+	options = append(options, c.getKeyBindings()...)
+	return prompt.New(
+		nil,
+		c.promptCompleter(),
+		options...,
 	)
 }
 
@@ -210,4 +178,90 @@ func (c *InputController) toggleSmartCompletion() {
 	}
 
 	components.PrintSmartCompletionState(c.getSmartCompletion(), maxCol)
+}
+
+func (c *InputController) getKeyBindings() []prompt.Option {
+	osSpecificBindings := getUnixBindings()
+	if runtime.GOOS == "windows" {
+		osSpecificBindings = getWindowsBindings()
+	}
+	return append(
+		[]prompt.Option{
+			prompt.OptionAddKeyBind(prompt.KeyBind{
+				Key: prompt.ControlQ,
+				Fn: func(b *prompt.Buffer) {
+					c.shouldExit = true
+				},
+			}),
+			prompt.OptionAddKeyBind(prompt.KeyBind{
+				Key: prompt.ControlS,
+				Fn: func(b *prompt.Buffer) {
+					c.toggleSmartCompletion()
+				},
+			}),
+			prompt.OptionAddKeyBind(prompt.KeyBind{
+				Key: prompt.ControlR,
+				Fn: func(b *prompt.Buffer) {
+					c.reverseISearchEnabled = true
+				},
+			}),
+		}, osSpecificBindings...)
+}
+
+func getUnixBindings() []prompt.Option {
+	return []prompt.Option{
+		prompt.OptionAddASCIICodeBind(
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x62}, // Alt/Option + Arrow Left (sometimes Alt/Option + b)
+				Fn:        prompt.GoLeftWord,
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x66}, // Alt/Option + Arrow Right (sometimes Alt/Option + f)
+				Fn:        prompt.GoRightWord,
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x7F}, // Alt/Option + Backspace
+				Fn:        prompt.DeleteWord,
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x64}, // ForwardDeleteWord (Alt/Option + d)
+				Fn: func(buf *prompt.Buffer) {
+					buf.Delete(buf.Document().FindEndOfCurrentWordWithSpace())
+				},
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x75}, // UpCaseWord (Alt/Option + u)
+				Fn: func(buf *prompt.Buffer) {
+					buf.InsertText(strings.ToUpper(buf.Document().GetWordAfterCursorWithSpace()), true, true)
+				},
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x6c}, // DownCaseWord (Alt/Option + l)
+				Fn: func(buf *prompt.Buffer) {
+					buf.InsertText(strings.ToLower(buf.Document().GetWordAfterCursorWithSpace()), true, true)
+				},
+			},
+		),
+	}
+}
+
+func getWindowsBindings() []prompt.Option {
+	return []prompt.Option{
+		prompt.OptionAddKeyBind(
+			prompt.KeyBind{
+				Key: prompt.ControlLeft,
+				Fn:  prompt.GoLeftWord,
+			},
+			prompt.KeyBind{
+				Key: prompt.ControlRight,
+				Fn:  prompt.GoRightWord,
+			},
+		),
+		prompt.OptionAddASCIICodeBind(
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x8}, // Ctrl + Backspace
+				Fn:        prompt.DeleteWord,
+			},
+		),
+	}
 }

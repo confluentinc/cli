@@ -9,7 +9,7 @@ func (s *CLITestSuite) TestEnvironment() {
 		{args: "environment list -o json", fixture: "environment/5.golden"},
 		{args: "environment list -o yaml", fixture: "environment/6.golden"},
 		{args: "environment use env-dne", fixture: "environment/7.golden", exitCode: 1},
-		{args: "environment create saucayyy", fixture: "environment/8.golden"},
+		{args: "environment create saucayyy --governance-package essentials", fixture: "environment/8.golden"},
 		{args: "environment create saucayyy -o json --governance-package advanced", fixture: "environment/9.golden"},
 		{args: "environment create saucayyy -o yaml", fixture: "environment/10.golden"},
 	}
@@ -59,6 +59,17 @@ func (s *CLITestSuite) TestEnvironmentUse() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestEnvironmentUpdate_PackageDowngrade() {
+	tests := []CLITest{
+		{args: "environment update env-595 --governance-package essentials", fixture: "environment/update-governance-package-downgrade-fail.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }

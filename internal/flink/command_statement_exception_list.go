@@ -44,9 +44,9 @@ func (c *command) statementExceptionList(cmd *cobra.Command, args []string) erro
 	list := output.NewList(cmd)
 	for _, exception := range exceptions {
 		list.Add(&exceptionOut{
-			Name:       exception.GetName(),
-			Timestamp:  exception.GetTimestamp(),
-			StackTrace: exception.GetStacktrace(),
+			Name:      exception.GetName(),
+			Timestamp: exception.GetTimestamp(),
+			Message:   exception.GetMessage(),
 		})
 	}
 	return list.Print()

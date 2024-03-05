@@ -25,6 +25,7 @@ const (
 	ConsumerShare                   = "consumer share"
 	Context                         = "context"
 	Dek                             = "DEK"
+	DnsForwarder                    = "DNS forwarder"
 	Environment                     = "environment"
 	Flink                           = "flink"
 	FlinkComputePool                = "Flink compute pool"
@@ -66,6 +67,7 @@ const (
 	KsqlClusterPrefix           = "lksqlc"
 	SchemaRegistryClusterPrefix = "lsrc"
 	ServiceAccountPrefix        = "sa"
+	SsoGroupMappingPrefix       = "group"
 	UserPrefix                  = "u"
 )
 
@@ -79,6 +81,7 @@ var prefixToResource = map[string]string{
 	KsqlClusterPrefix:           KsqlCluster,
 	SchemaRegistryClusterPrefix: SchemaRegistryCluster,
 	ServiceAccountPrefix:        ServiceAccount,
+	SsoGroupMappingPrefix:       SsoGroupMapping,
 	UserPrefix:                  User,
 }
 
@@ -90,6 +93,7 @@ var resourceToPrefix = map[string]string{
 	KsqlCluster:           KsqlClusterPrefix,
 	SchemaRegistryCluster: SchemaRegistryClusterPrefix,
 	ServiceAccount:        ServiceAccountPrefix,
+	SsoGroupMapping:       SsoGroupMappingPrefix,
 	User:                  UserPrefix,
 }
 
@@ -111,6 +115,12 @@ func LookupType(id string) string {
 func ValidatePrefixes(resourceType string, args []string) error {
 	prefix, ok := resourceToPrefix[resourceType]
 	if !ok {
+		return nil
+	}
+
+	// old group mappings may still have "pool-" instead of "group-"
+	// so we must skip the check for this resource
+	if prefix == SsoGroupMappingPrefix {
 		return nil
 	}
 

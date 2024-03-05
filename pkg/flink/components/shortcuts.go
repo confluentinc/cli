@@ -6,6 +6,7 @@ import (
 
 	"github.com/rivo/tview"
 
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
@@ -24,7 +25,7 @@ func NewShortcuts(shortcuts []types.Shortcut) *tview.TextView {
 func formatShortcuts(shortcuts []types.Shortcut) string {
 	sb := strings.Builder{}
 	for index, shortcut := range shortcuts {
-		sb.WriteString(fmt.Sprintf(`[[white]%s] ["%d"][darkcyan]%s[white][""]  `, shortcut.KeyText, index, shortcut.Text))
+		sb.WriteString(fmt.Sprintf(`[[white]%s] ["%d"][%s]%s[white][""]  `, shortcut.KeyText, index, color.CyanHexCode, shortcut.Text))
 	}
 	return sb.String()
 }
