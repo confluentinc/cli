@@ -170,6 +170,7 @@ func (s *CLITestSuite) TestFlinkShell() {
 			return *update
 		}),
 	)
+	fmt.Println(lastFrame)
 	require.NoError(s.T(), snapshotConfig.SnapshotWithName("shell.golden", lastFrame))
 }
 
