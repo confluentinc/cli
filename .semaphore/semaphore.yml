@@ -21,7 +21,15 @@ blocks:
           commands:
             - checkout
             - sem-version go $(cat .go-version)
+            - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            - (echo; echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"') >> /home/semaphore/.bashrc
+            - eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            - brew install vhs
+            - ffmpeg -h
+            - ttyd -v
+            - vhs -v
             - export PATH=$(go env GOPATH)/bin:$PATH
+            - vhs -v
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
@@ -44,6 +52,11 @@ blocks:
             - checkout
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
+            - /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            - brew install vhs
+            - ffmpeg -h
+            - ttyd -v
+            - vhs -v
             - make test
       epilogue:
         always:
@@ -64,6 +77,14 @@ blocks:
             - choco install -y golang --version $(Get-Content .go-version)
             - $env:GOCOVERDIR = 'test/coverage'
             - New-Item $env:GOCOVERDIR -ItemType Directory
+            - choco install ffmpeg -y
+            - Invoke-WebRequest -Uri https://github.com/tsl0922/ttyd/releases/download/1.7.4/ttyd.win32.exe -OutFile ttyd.exe
+            - Invoke-WebRequest -Uri https://github.com/charmbracelet/vhs/releases/download/v0.7.1/vhs_0.7.1_Windows_x86_64.zip -OutFile vhs.zip
+            - Expand-Archive -Path vhs.zip
+            - setx PATH "%PATH%;%CD%;%CD%/vhs"
+            - ffmpeg -h
+            - ttyd -v
+            - vhs -v
             - go install gotest.tools/gotestsum@v1.8.2
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
