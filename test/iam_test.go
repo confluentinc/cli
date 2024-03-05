@@ -297,7 +297,7 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 	tests := []CLITest{
 		{args: `iam group-mapping create group_mapping --description new-group-description --filter '"engineering" in claims.group || "marketing" in claims.group'`, fixture: "iam/group-mapping/create.golden"},
 		{args: "iam group-mapping delete group-abc --force", fixture: "iam/group-mapping/delete.golden"},
-		{args: "iam group-mapping delete group-abc", input: "another-group-mapping\n", fixture: "iam/group-mapping/delete-prompt.golden"},
+		{args: "iam group-mapping delete group-abc", input: "y\n", fixture: "iam/group-mapping/delete-prompt.golden"},
 		{args: "iam group-mapping delete group-abc group-def", input: "n\n", fixture: "iam/group-mapping/delete-multiple-refuse.golden"},
 		{args: "iam group-mapping delete group-abc group-def", input: "y\n", fixture: "iam/group-mapping/delete-multiple-success.golden"},
 		{args: "iam group-mapping delete group-dne --force", fixture: "iam/group-mapping/delete-dne.golden", exitCode: 1},
