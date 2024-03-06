@@ -500,6 +500,8 @@ github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh
 github.com/mattn/go-tty v0.0.3/go.mod h1:ihxohKRERHTVzN+aSVRwACLCeqIoZAWpoICkkvrWyR0=
 github.com/mattn/go-tty v0.0.4 h1:NVikla9X8MN0SQAqCYzpGyXv0jY7MNl3HOWD2dkle7E=
 github.com/mattn/go-tty v0.0.4/go.mod h1:u5GGXBtZU6RQoKV8gY5W6UhMudbR5vXnUe7j3pxse28=
+github.com/micmonay/keybd_event v1.1.2 h1:RpgvPJKOh4Jc+ZYe0OrVzGd2eNMCfuVg3dFTCsuSah4=
+github.com/micmonay/keybd_event v1.1.2/go.mod h1:CGMWMDNgsfPljzrAWoybUOSKafQPZpv+rLigt2LzNGI=
 github.com/mitchellh/mapstructure v1.4.1 h1:CpVNEelQCZBooIPDn+AR3NpivK/TIKU8bDxdASFVQag=
 github.com/mitchellh/mapstructure v1.4.1/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/moby/term v0.5.0 h1:xt8Q1nalod/v7BqbG21f8mQPqH+xAaC9C3N3wfWbVP0=
