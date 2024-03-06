@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	privateLinkAccessPoint = "PrivateLinkAccessPoint"
+	privateLinkAccessPointKind = "PrivateLinkAccessPoint"
 )
 
 func (c *command) newDnsRecordCreateCommand() *cobra.Command {
@@ -76,7 +76,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 			Fqdn: networkingaccesspointv1.PtrString(domain),
 			Config: &networkingaccesspointv1.NetworkingV1DnsRecordSpecConfigOneOf{
 				NetworkingV1PrivateLinkAccessPoint: &networkingaccesspointv1.NetworkingV1PrivateLinkAccessPoint{
-					Kind:       privateLinkAccessPoint,
+					Kind:       privateLinkAccessPointKind,
 					ResourceId: privateLinkAccessPoint,
 				},
 			},

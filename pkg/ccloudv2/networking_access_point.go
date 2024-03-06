@@ -10,10 +10,10 @@ import (
 )
 
 type DnsRecordListParameters struct {
-	Domains                   []string
-	Gateway                   string
-	Names                     []string
-	ResourceIds               []string
+	Domains     []string
+	Gateway     string
+	Names       []string
+	ResourceIds []string
 }
 
 func newNetworkingAccessPointClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *networkingaccesspointv1.APIClient {
