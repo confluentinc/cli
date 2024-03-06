@@ -1,0 +1,21 @@
+[
+  {
+    "id": "ap-12345",
+    "name": "my-aws-egress-access-point",
+    "aws_vpc_endpoint_service": "vpc-endpoint-service",
+    "aws_vpc_endpoint": "vpc-endpoint-id",
+    "high_availability": true,
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY"
+  },
+  {
+    "id": "ap-67890",
+    "name": "my-azure-egress-access-point",
+    "azure_private_link_service": "private-link-service-id",
+    "azure_private_link_endpoint": "private-endpoint-id",
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY"
+  }
+]
