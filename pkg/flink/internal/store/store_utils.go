@@ -274,14 +274,15 @@ func parseSetStatement(statement string) (string, string, error) {
 	return key, value, nil
 }
 
-func TokenizeSQL(input string) []string {
+func TokenizeSQL(statement string) []string {
 	var tokens []string
 	var buffer bytes.Buffer
 	var inBacktick bool
+	input := []rune(statement)
 
 	// Iterate over each character in the input string
 	for i := 0; i < len(input); i++ {
-		c := rune(input[i])
+		c := input[i]
 
 		// Ignore whitespace
 		if unicode.IsSpace(c) && !inBacktick {
