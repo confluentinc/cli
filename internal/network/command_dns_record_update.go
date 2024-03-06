@@ -23,7 +23,7 @@ func (c *command) newDnsRecordUpdateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Update the Privatelink access point of DNS record "dnsrec-123456".`,
-				Code: "confluent network dns record update dnsrec-123456 --access-point ap-123456",
+				Code: "confluent network dns record update dnsrec-123456 --private-link-access-point ap-123456",
 			},
 		),
 	}
