@@ -107,6 +107,8 @@ require (
 	pgregory.net/rapid v1.1.0
 )
 
+require github.com/micmonay/keybd_event v1.1.2 // indirect
+
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
