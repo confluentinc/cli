@@ -1,0 +1,20 @@
+[
+  {
+    "id": "dnsrec-12345",
+    "name": "my-dns-record",
+    "domain": "www.example.com",
+    "private_link_access_point": "ap-12345",
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY"
+  },
+  {
+    "id": "dnsrec-67890",
+    "name": "my-dns-record-2",
+    "domain": "www.example.com",
+    "private_link_access_point": "ap-12345",
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "PROVISIONING"
+  }
+]
