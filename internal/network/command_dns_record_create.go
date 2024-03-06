@@ -26,7 +26,7 @@ func (c *command) newDnsRecordCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create a named DNS record.",
-				Code: "confluent network dns record create my-dns-record --gateway gw-123456 --access-point ap-123456 --domain www.example.com",
+				Code: "confluent network dns record create my-dns-record --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com",
 			},
 		),
 	}
@@ -77,7 +77,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 			Config: &networkingaccesspointv1.NetworkingV1DnsRecordSpecConfigOneOf{
 				NetworkingV1PrivateLinkAccessPoint: &networkingaccesspointv1.NetworkingV1PrivateLinkAccessPoint{
 					Kind:       privateLinkAccessPoint,
-					ResourceId: accessPoint,
+					ResourceId: privateLinkAccessPoint,
 				},
 			},
 			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},

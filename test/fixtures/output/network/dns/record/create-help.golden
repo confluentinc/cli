@@ -6,11 +6,11 @@ Usage:
 Examples:
 Create a DNS record.
 
-  $ confluent network dns record create --gateway gw-123456 --access-point ap-123456 --domain www.example.com
+  $ confluent network dns record create --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com
 
 Create a named DNS record.
 
-  $ confluent network dns record create my-dns-record --gateway gw-123456 --access-point ap-123456 --domain www.example.com
+  $ confluent network dns record create my-dns-record --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com
 
 Flags:
       --private-link-access-point string   REQUIRED: Private Link access point.

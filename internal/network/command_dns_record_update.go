@@ -66,11 +66,11 @@ func (c *command) dnsRecordUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("private-link-access-point") {
-		accessPoint, err := cmd.Flags().GetString("private-link-access-point")
+		privateLinkAccessPoint, err := cmd.Flags().GetString("private-link-access-point")
 		if err != nil {
 			return err
 		}
-		updateDnsRecord.Spec.Config.NetworkingV1PrivateLinkAccessPoint.SetResourceId(accessPoint)
+		updateDnsRecord.Spec.Config.NetworkingV1PrivateLinkAccessPoint.SetResourceId(privateLinkAccessPoint)
 	}
 
 	record, err := c.V2Client.UpdateDnsRecord(args[0], updateDnsRecord)
