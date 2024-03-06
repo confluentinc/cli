@@ -4,6 +4,7 @@ Usage:
   confluent network access-point private-link egress-endpoint list [flags]
 
 Flags:
+      --names strings        A comma-separated list of display names.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

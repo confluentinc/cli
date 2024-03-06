@@ -2,7 +2,7 @@
   {
     "id": "ap-12345",
     "name": "my-aws-egress-access-point",
-    "aws_vpc_endpoint_service": "vpc-endpoint-service",
+    "aws_vpc_endpoint_service": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
     "aws_vpc_endpoint": "vpc-endpoint-id",
     "high_availability": true,
     "environment": "env-596",
@@ -12,7 +12,7 @@
   {
     "id": "ap-67890",
     "name": "my-azure-egress-access-point",
-    "azure_private_link_service": "private-link-service-id",
+    "azure_private_link_service": "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
     "azure_private_link_endpoint": "private-endpoint-id",
     "environment": "env-596",
     "gateway": "gw-12345",

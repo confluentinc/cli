@@ -1703,7 +1703,7 @@ func getAwsEgressAccessPoint(id, environment, name string) networkingaccesspoint
 			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 				NetworkingV1AwsEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsEgressPrivateLinkEndpoint{
 					Kind:                   "AwsEgressPrivateLinkEndpoint",
-					VpcEndpointServiceName: "vpc-endpoint-service",
+					VpcEndpointServiceName: "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
 					EnableHighAvailability: networkingaccesspointv1.PtrBool(true),
 				},
 			},
@@ -1730,7 +1730,7 @@ func getAzureEgressAccessPoint(id, environment, name string) networkingaccesspoi
 			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 				NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
 					Kind:                         "AzureEgressPrivateLinkEndpoint",
-					PrivateLinkServiceResourceId: "private-link-service-id",
+					PrivateLinkServiceResourceId: "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
 				},
 			},
 			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
