@@ -22,7 +22,7 @@ func (c *command) newDnsRecordCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a DNS record.",
-				Code: "confluent network dns record create --gateway gw-123456 --access-point ap-123456 --domain www.example.com",
+				Code: "confluent network dns record create --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com",
 			},
 			examples.Example{
 				Text: "Create a named DNS record.",
