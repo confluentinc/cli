@@ -1,0 +1,11 @@
+use catalog default;
+use db1;
+set;
+set 'cli.a-key'='a value';
+set 'cli.another-key'='another value';
+set;
+reset 'cli.another-key';
+set;
+reset;
+set;
+exit
