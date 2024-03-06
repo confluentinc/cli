@@ -282,7 +282,7 @@ func TokenizeSQL(statement string) []string {
 
 	// Iterate over each character in the input string
 	for i := 0; i < len(input); i++ {
-		c := rune(input[i])
+		c := input[i]
 
 		// Ignore whitespace
 		if unicode.IsSpace(c) && !inBacktick {
