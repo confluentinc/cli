@@ -1,5 +1,26 @@
 package test
 
+import (
+	"bytes"
+	"fmt"
+	"github.com/confluentinc/go-prompt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/bradleyjkemp/cupaloy/v2"
+	"github.com/stretchr/testify/require"
+)
+
+const (
+	flinkShellCommandsInputFile = "test/fixtures/input/flink/flinkshell-commands"
+	fixtureOutputFolder         = "test/fixtures/output/flink/shell"
+)
+
+var vhsFrameSeparator = strings.Repeat("─", 80)
+
 func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
 		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
@@ -119,4 +140,95 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
+
+func (s *CLITestSuite) TestFlinkShell() {
+	// HACK: empty test to log in, before running the actual integration test with charm/VHS
+	test := CLITest{
+		login: "cloud",
+	}
+	s.runIntegrationTest(test)
+
+	dir, err := os.Getwd()
+	require.NoError(s.T(), err)
+
+	// create a file for go-prompt to use as the input stream
+	file, err := os.Create("input.txt")
+	require.NoError(s.T(), err, "error creating file")
+	defer cleanup(file)
+
+	err = os.Setenv(prompt.EnvVarInputFile, file.Name())
+	require.NoError(s.T(), err, "failed to set env var")
+
+	cmd := exec.Command(filepath.Join(dir, testBin), "flink", "shell", "--compute-pool", "lfcp-123456")
+
+	var outputBuffer bytes.Buffer
+	cmd.Stdout = &outputBuffer
+	cmd.Stderr = &outputBuffer
+
+	err = cmd.Start()
+	require.NoError(s.T(), err)
+
+	time.Sleep(5 * time.Second)
+
+	commands, err := getCommandsFromFixture(flinkShellCommandsInputFile)
+	require.NoError(s.T(), err)
+	err = executeCommands(file, commands)
+	require.NoError(s.T(), err)
+
+	err = cmd.Wait()
+	require.NoError(s.T(), err)
+
+	snapshotConfig := cupaloy.New(
+		cupaloy.SnapshotSubdirectory(filepath.Join(dir, fixtureOutputFolder)),
+		// update snapshot if update flag was set
+		cupaloy.ShouldUpdate(func() bool {
+			return *update
+		}),
+	)
+	require.NoError(s.T(), snapshotConfig.SnapshotWithName("shell.golden", outputBuffer.String()))
+	fmt.Println(outputBuffer.String())
+}
+
+func getCommandsFromFixture(inputFilePath string) ([]string, error) {
+	// read file and split it into lines
+	file, err := os.ReadFile(inputFilePath)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(string(file), "\n"), nil
+}
+
+func cleanup(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		fmt.Printf("failed to close file: %v\n", err)
+	}
+	err = os.Remove(file.Name())
+	if err != nil {
+		fmt.Printf("failed to remove file: %v\n", err)
+	}
+}
+
+func executeCommands(file *os.File, commands []string) error {
+	for _, command := range commands {
+		// write command
+		_, err := file.WriteString(command)
+		if err != nil {
+			return err
+		}
+
+		// wait a bit before submitting
+		time.Sleep(100 * time.Millisecond)
+
+		// write enter to submit
+		_, err = file.WriteString("\n")
+		if err != nil {
+			return err
+		}
+
+		// wait between commands
+		time.Sleep(1 * time.Second)
+	}
+	return nil
 }

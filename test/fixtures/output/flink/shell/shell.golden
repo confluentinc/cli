@@ -1,0 +1,110 @@
+Welcome! 
+To exit, press Ctrl-Q or type "exit". 
+
+[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion 
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49muse[0;39;49m [0;36;49mcatalog[0;39;49m [0;36;49mdefault[0;39;49m;[0;39;49m[22D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49muse[0;39;49m [0;36;49mcatalog[0;39;49m [0;36;49mdefault[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m default; [0;30;106m History entry [0;39;100m [0;39;49m[26D[0;39;49m[1A[22D[J[0;93;49m> [0;39;49m[0;36;49muse[0;39;49m [0;36;49mcatalog[0;39;49m [0;36;49mdefault[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++---------------------+---------+
+|         Key         |  Value  |
++---------------------+---------+
+| sql.current-catalog | default |
++---------------------+---------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49muse[0;39;49m [0;39;49mdb1[0;39;49m;[0;39;49m[10D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49muse[0;39;49m [0;39;49mdb1[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m db1; [0;30;106m History entry [0;39;100m [0;39;49m[22D[0;39;49m[1A[10D[J[0;93;49m> [0;39;49m[0;36;49muse[0;39;49m [0;39;49mdb1[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++----------------------+-------+
+|         Key          | Value |
++----------------------+-------+
+| sql.current-database | db1   |
++----------------------+-------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m;[0;39;49m[6D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m set; [0;30;106m History entry [0;39;100m [0;39;49m[22D[0;39;49m[1A[6D[J[0;93;49m> [0;39;49m[0;36;49mset[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m [0;93;49m'cli.a-key'[0;39;49m=[0;39;49m'a[0;39;49m [0;39;49mvalue'[0;39;49m;[0;39;49m[28D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m [0;93;49m'cli.a-key'[0;39;49m=[0;39;49m'a[0;39;49m [0;39;49mvalue'[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m value'; [0;30;106m History entry [0;39;100m [0;39;49m[25D[0;39;49m[1A[28D[J[0;93;49m> [0;39;49m[0;36;49mset[0;39;49m [0;93;49m'cli.a-key'[0;39;49m=[0;39;49m'a[0;39;49m [0;39;49mvalue'[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++-----------+---------+
+|    Key    |  Value  |
++-----------+---------+
+| cli.a-key | a value |
++-----------+---------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m [0;93;49m'cli.another-key'[0;39;49m=[0;39;49m'another[0;39;49m [0;39;49mvalue'[0;39;49m;[0;39;49m[40D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m [0;93;49m'cli.another-key'[0;39;49m=[0;39;49m'another[0;39;49m [0;39;49mvalue'[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m value'; [0;30;106m History entry [0;39;100m [0;39;49m[25D[0;39;49m[1A[40D[J[0;93;49m> [0;39;49m[0;36;49mset[0;39;49m [0;93;49m'cli.another-key'[0;39;49m=[0;39;49m'another[0;39;49m [0;39;49mvalue'[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++-----------------+---------------+
+|       Key       |     Value     |
++-----------------+---------------+
+| cli.another-key | another value |
++-----------------+---------------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m;[0;39;49m[6D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m set; [0;30;106m History entry [0;39;100m [0;39;49m[22D[0;39;49m[1A[6D[J[0;93;49m> [0;39;49m[0;36;49mset[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| cli.a-key              | a value             |
+| cli.another-key        | another value       |
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mreset[0;39;49m [0;93;49m'cli.another-key'[0;39;49m;[0;39;49m[26D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mreset[0;39;49m [0;93;49m'cli.another-key'[0;39;49m;[0;39;49m[26D[J[0;93;49m> [0;39;49m[0;36;49mreset[0;39;49m [0;93;49m'cli.another-key'[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
+configuration key "cli.another-key" has been reset successfully.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| cli.a-key              | a value             |
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m;[0;39;49m[6D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m set; [0;30;106m History entry [0;39;100m [0;39;49m[22D[0;39;49m[1A[6D[J[0;93;49m> [0;39;49m[0;36;49mset[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| cli.a-key              | a value             |
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mreset[0;39;49m;[0;39;49m[8D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mreset[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m reset; [0;30;106m History entry [0;39;100m [0;39;49m[24D[0;39;49m[1A[8D[J[0;93;49m> [0;39;49m[0;36;49mreset[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
+configuration has been reset successfully.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.service-account | <unset> (default)   |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m;[0;39;49m[6D[J[0;93;49m> [0;39;49m[0;39;49m[0;36;49mset[0;39;49m;[0;39;49mDM[0;97;46m[1B[0;97;100m set; [0;30;106m History entry [0;39;100m [0;39;49m[22D[0;39;49m[1A[6D[J[0;93;49m> [0;39;49m[0;36;49mset[0;39;49m;[0;39;49m
+[0;39;49m]2;[JStatement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.service-account | <unset> (default)   |
+| sql.local-time-zone    | GMT+01:00 (default) |
++------------------------+---------------------+
+]2;sql-prompt[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49m[2D[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49mexit[0;39;49m[6D[J[0;93;49m> [0;39;49m[0;39;49m[0;39;49mexit[0;39;49m[6D[J[0;93;49m> [0;39;49m[0;39;49mexit[0;39;49m
+[0;39;49m]2;[J
