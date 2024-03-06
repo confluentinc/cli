@@ -470,3 +470,15 @@ func TestTokenizeSQL(t *testing.T) {
 	expected = []string{"`"}
 	require.Equal(expected, TokenizeSQL(input))
 }
+
+func TestTokenizeSQLSpecialCharacters(t *testing.T) {
+	require := require.New(t)
+
+	input := "my clusté€r"
+	expected := []string{"my", "clusté€r"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "my cluster αβγбвг汉字あア한😀"
+	expected = []string{"my", "cluster", "αβγбвг汉字あア한😀"}
+	require.Equal(expected, TokenizeSQL(input))
+}
