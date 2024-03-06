@@ -659,3 +659,27 @@ func (s *CLITestSuite) TestNetworkDnsForwarder_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkDnsRecordDescribe() {
+	tests := []CLITest{
+		{args: "network dns record describe dnsrec-12345", fixture: "network/dns/record/describe.golden"},
+		{args: "network dns record describe dnsrec-12345 --output json", fixture: "network/dns/record/describe-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkDnsRecordList() {
+	tests := []CLITest{
+		{args: "network dns record list", fixture: "network/dns/record/list.golden"},
+		{args: "network dns record list --output json", fixture: "network/dns/record/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
