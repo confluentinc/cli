@@ -17,7 +17,7 @@ type accessPointOut struct {
 	AwsVpcEndpoint           string `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
 	AzurePrivateLinkService  string `human:"Azure Private Link Service,omitempty" serialized:"azure_private_link_service,omitempty"`
 	AzurePrivateLinkEndpoint string `human:"Azure Private Link Endpoint,omitempty" serialized:"azure_private_link_endpoint,omitempty"`
-	HighAvailability         string `human:"High Availability,omitempty" serialized:"high_availability,omitempty"`
+	HighAvailability         bool   `human:"High Availability,omitempty" serialized:"high_availability,omitempty"`
 	Environment              string `human:"Environment" serialized:"environment"`
 	Gateway                  string `human:"Gateway" serialized:"gateway"`
 	Phase                    string `human:"Phase" serialized:"phase"`

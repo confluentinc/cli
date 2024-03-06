@@ -45,7 +45,7 @@ func (c *accessPointCommand) validArgsMultiple(cmd *cobra.Command, args []string
 func (c *accessPointCommand) autocompleteEgressEndpoints() []string {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	egressEndpoints, err := c.V2Client.ListAccessPoints(environmentId, nil)

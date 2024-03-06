@@ -29,7 +29,7 @@ func (c *accessPointCommand) newListCommand() *cobra.Command {
 func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	names, err := cmd.Flags().GetStringSlice("names")
