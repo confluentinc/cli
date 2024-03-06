@@ -30,13 +30,13 @@ func (c *Client) networkingAccessPointApiContext() context.Context {
 	return context.WithValue(context.Background(), networkingaccesspointv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-func (c *Client) ListAccessPoints(environment string) ([]networkingaccesspointv1.NetworkingV1AccessPoint, error) {
+func (c *Client) ListAccessPoints(environment string, names []string) ([]networkingaccesspointv1.NetworkingV1AccessPoint, error) {
 	var list []networkingaccesspointv1.NetworkingV1AccessPoint
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListAccessPoints(environment, pageToken)
+		page, err := c.executeListAccessPoints(environment, pageToken, names)
 		if err != nil {
 			return nil, err
 		}
@@ -50,10 +50,14 @@ func (c *Client) ListAccessPoints(environment string) ([]networkingaccesspointv1
 	return list, nil
 }
 
-func (c *Client) executeListAccessPoints(environment, pageToken string) (networkingaccesspointv1.NetworkingV1AccessPointList, error) {
+func (c *Client) executeListAccessPoints(environment, pageToken string, names []string) (networkingaccesspointv1.NetworkingV1AccessPointList, error) {
 	req := c.NetworkingAccessPointClient.AccessPointsNetworkingV1Api.ListNetworkingV1AccessPoints(c.networkingAccessPointApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
+	}
+
+	if names != nil {
+		req = req.SpecDisplayName(names)
 	}
 
 	resp, httpResp, err := req.Execute()

@@ -18,6 +18,7 @@ func (c *accessPointCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
+	cmd.Flags().StringSlice("names", nil, "A comma-separated list of display names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -26,7 +27,17 @@ func (c *accessPointCommand) newListCommand() *cobra.Command {
 }
 
 func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
-	egressEndpoints, err := c.getEgressEndpoints()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	names, err := cmd.Flags().GetStringSlice("names")
+	if err != nil {
+		return err
+	}
+
+	egressEndpoints, err := c.V2Client.ListAccessPoints(environmentId, names)
 	if err != nil {
 		return err
 	}

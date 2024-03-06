@@ -26,15 +26,6 @@ func (c *accessPointCommand) newEgressEndpointCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *accessPointCommand) getEgressEndpoints() ([]networkingaccesspointv1.NetworkingV1AccessPoint, error) {
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return nil, err
-	}
-
-	return c.V2Client.ListAccessPoints(environmentId)
-}
-
 func (c *accessPointCommand) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
@@ -52,7 +43,12 @@ func (c *accessPointCommand) validArgsMultiple(cmd *cobra.Command, args []string
 }
 
 func (c *accessPointCommand) autocompleteEgressEndpoints() []string {
-	egressEndpoints, err := c.getEgressEndpoints()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	egressEndpoints, err := c.V2Client.ListAccessPoints(environmentId, nil)
 	if err != nil {
 		return nil
 	}
