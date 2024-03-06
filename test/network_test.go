@@ -659,3 +659,52 @@ func (s *CLITestSuite) TestNetworkDnsForwarder_Autocomplete() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestNetworkDnsRecordDescribe() {
+	tests := []CLITest{
+		{args: "network dns record describe dnsrec-12345", fixture: "network/dns/record/describe.golden"},
+		{args: "network dns record describe dnsrec-12345 --output json", fixture: "network/dns/record/describe-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkDnsRecordList() {
+	tests := []CLITest{
+		{args: "network dns record list", fixture: "network/dns/record/list.golden"},
+		{args: "network dns record list --output json", fixture: "network/dns/record/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDescribe() {
+	tests := []CLITest{
+		{args: "network access-point private-link egress-endpoint describe ap-12345", fixture: "network/access-point/private-link/egress-endpoint/describe-aws.golden"},
+		{args: "network access-point private-link egress-endpoint describe ap-67890", fixture: "network/access-point/private-link/egress-endpoint/describe-azure.golden"},
+		{args: "network access-point private-link egress-endpoint describe ap-12345 --output json", fixture: "network/access-point/private-link/egress-endpoint/describe-aws-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointList() {
+	tests := []CLITest{
+		{args: "network access-point private-link egress-endpoint list", fixture: "network/access-point/private-link/egress-endpoint/list.golden"},
+		{args: "network access-point private-link egress-endpoint list --output json", fixture: "network/access-point/private-link/egress-endpoint/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
