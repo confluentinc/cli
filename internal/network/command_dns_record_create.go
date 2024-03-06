@@ -61,7 +61,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	accessPoint, err := cmd.Flags().GetString("access-point")
+	privateLinkAccessPoint, err := cmd.Flags().GetString("private-link-access-point")
 	if err != nil {
 		return err
 	}
