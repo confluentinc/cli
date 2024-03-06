@@ -13,13 +13,13 @@ import (
 )
 
 type recordOut struct {
-	Id                       string `human:"ID" serialized:"id"`
-	Name                     string `human:"Name,omitempty" serialized:"name,omitempty"`
-	Domain                   string `human:"Domain" serialized:"domain"`
-	PrivateLinkAccessPoint   string `human:"Private Link Access Point" serialized:"private_link_access_point"`
-	Environment              string `human:"Environment" serialized:"environment"`
-	Gateway                  string `human:"Gateway" serialized:"gateway"`
-	Phase                    string `human:"Phase" serialized:"phase"`
+	Id                     string `human:"ID" serialized:"id"`
+	Name                   string `human:"Name,omitempty" serialized:"name,omitempty"`
+	Domain                 string `human:"Domain" serialized:"domain"`
+	PrivateLinkAccessPoint string `human:"Private Link Access Point" serialized:"private_link_access_point"`
+	Environment            string `human:"Environment" serialized:"environment"`
+	Gateway                string `human:"Gateway" serialized:"gateway"`
+	Phase                  string `human:"Phase" serialized:"phase"`
 }
 
 func (c *command) newDnsRecordCommand() *cobra.Command {
@@ -85,13 +85,13 @@ func printDnsRecordTable(cmd *cobra.Command, record networkingaccesspointv1.Netw
 	table := output.NewTable(cmd)
 
 	table.Add(&recordOut{
-		Id:                       record.GetId(),
-		Name:                     record.Spec.GetDisplayName(),
-		Domain:                   record.Spec.GetFqdn(),
-		PrivateLinkAccessPoint:   record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
-		Gateway:                  record.Spec.Gateway.GetId(),
-		Environment:              record.Spec.Environment.GetId(),
-		Phase:                    record.Status.GetPhase(),
+		Id:                     record.GetId(),
+		Name:                   record.Spec.GetDisplayName(),
+		Domain:                 record.Spec.GetFqdn(),
+		PrivateLinkAccessPoint: record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
+		Gateway:                record.Spec.Gateway.GetId(),
+		Environment:            record.Spec.Environment.GetId(),
+		Phase:                  record.Status.GetPhase(),
 	})
 
 	return table.Print()

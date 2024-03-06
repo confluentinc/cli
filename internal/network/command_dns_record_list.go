@@ -64,10 +64,10 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 	}
 
 	listParameters := ccloudv2.DnsRecordListParameters{
-		Gateway:                   gateway,
-		Domains:                   domains,
-		Names:                     names,
-		ResourceIds:               resourceIds,
+		Gateway:     gateway,
+		Domains:     domains,
+		Names:       names,
+		ResourceIds: resourceIds,
 	}
 
 	records, err := c.V2Client.ListDnsRecords(environmentId, listParameters)
@@ -85,13 +85,13 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 		}
 
 		list.Add(&recordOut{
-			Id:                       record.GetId(),
-			Name:                     record.Spec.GetDisplayName(),
-			Domain:                   record.Spec.GetFqdn(),
-			PrivateLinkAccessPoint:   record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
-			Gateway:                  record.Spec.Gateway.GetId(),
-			Environment:              record.Spec.Environment.GetId(),
-			Phase:                    record.Status.GetPhase(),
+			Id:                     record.GetId(),
+			Name:                   record.Spec.GetDisplayName(),
+			Domain:                 record.Spec.GetFqdn(),
+			PrivateLinkAccessPoint: record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
+			Gateway:                record.Spec.Gateway.GetId(),
+			Environment:            record.Spec.Environment.GetId(),
+			Phase:                  record.Status.GetPhase(),
 		})
 	}
 
