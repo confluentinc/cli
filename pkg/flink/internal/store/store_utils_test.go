@@ -257,6 +257,8 @@ func TestParseStatementType(t *testing.T) {
 	require.Equal(t, UseStatement, parseStatementType("use ..."))
 	require.Equal(t, ResetStatement, parseStatementType("reset ..."))
 	require.Equal(t, ExitStatement, parseStatementType("exit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit"))
 	require.Equal(t, OtherStatement, parseStatementType("Some other statement"))
 }
 

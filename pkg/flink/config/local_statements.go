@@ -6,6 +6,7 @@ const (
 	OpUse               = "USE"
 	OpReset             = "RESET"
 	OpExit              = "EXIT"
+	OpQuit              = "QUIT"
 	OpUseCatalog        = "CATALOG"
 	StatementTerminator = ";"
 

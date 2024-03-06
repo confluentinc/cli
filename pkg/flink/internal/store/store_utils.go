@@ -23,6 +23,7 @@ const (
 	UseStatement   StatementType = config.OpUse
 	ResetStatement StatementType = config.OpReset
 	ExitStatement  StatementType = config.OpExit
+	QuitStatement  StatementType = config.OpQuit
 	OtherStatement StatementType = "OTHER"
 )
 
@@ -472,6 +473,8 @@ func parseStatementType(statement string) StatementType {
 		return ResetStatement
 	} else if statementStartsWithOp(statement, string(ExitStatement)) {
 		return ExitStatement
+	} else if statementStartsWithOp(statement, string(QuitStatement)) {
+		return QuitStatement
 	} else {
 		return OtherStatement
 	}
