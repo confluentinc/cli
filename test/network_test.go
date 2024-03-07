@@ -660,6 +660,31 @@ func (s *CLITestSuite) TestNetworkDnsForwarder_Autocomplete() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkDnsRecordDelete() {
+	tests := []CLITest{
+		{args: "network dns record delete dnsrec-12345", input: "y\n", fixture: "network/dns/record/delete.golden"},
+		{args: "network dns record delete dnsrec-12345 dnsrec-67890", input: "y\n", fixture: "network/dns/record/delete-multiple.golden"},
+		{args: "network dns record delete dnsrec-invalid", fixture: "network/dns/record/delete-fail.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkDnsRecordCreate() {
+	tests := []CLITest{
+		{args: "network dns record create --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com", fixture: "network/dns/record/create.golden"},
+		{args: "network dns record create my-dns-record --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com", fixture: "network/dns/record/create-name.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkDnsRecordDescribe() {
 	tests := []CLITest{
 		{args: "network dns record describe dnsrec-12345", fixture: "network/dns/record/describe.golden"},
@@ -676,6 +701,44 @@ func (s *CLITestSuite) TestNetworkDnsRecordList() {
 	tests := []CLITest{
 		{args: "network dns record list", fixture: "network/dns/record/list.golden"},
 		{args: "network dns record list --output json", fixture: "network/dns/record/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkDnsRecordUpdate() {
+	tests := []CLITest{
+		{args: "network dns record update dnsrec-12345", fixture: "network/dns/record/update-missing-flags.golden", exitCode: 1},
+		{args: "network dns record update dnsrec-12345 --name my-new-dns-record", fixture: "network/dns/record/update.golden"},
+		{args: "network dns record update dnsrec-12345 --private-link-access-point ap-67890", fixture: "network/dns/record/update-access-point.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDelete() {
+	tests := []CLITest{
+		{args: "network access-point private-link egress-endpoint delete ap-12345", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/delete.golden"},
+		{args: "network access-point private-link egress-endpoint delete ap-12345 ap-67890", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/delete-multiple.golden"},
+		{args: "network access-point private-link egress-endpoint delete ap-invalid", fixture: "network/access-point/private-link/egress-endpoint/delete-fail.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointCreate() {
+	tests := []CLITest{
+		{args: "network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability", fixture: "network/access-point/private-link/egress-endpoint/create-aws.golden"},
+		{args: "network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName", fixture: "network/access-point/private-link/egress-endpoint/create-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -701,6 +764,18 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointList() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint list", fixture: "network/access-point/private-link/egress-endpoint/list.golden"},
 		{args: "network access-point private-link egress-endpoint list --output json", fixture: "network/access-point/private-link/egress-endpoint/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointUpdate() {
+	tests := []CLITest{
+		{args: "network access-point private-link egress-endpoint update ap-12345 --name my-new-aws-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-aws.golden"},
+		{args: "network access-point private-link egress-endpoint update ap-67890 --name my-new-azure-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-azure.golden"},
 	}
 
 	for _, test := range tests {

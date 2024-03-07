@@ -61,7 +61,7 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	endpoint, err := cmd.Flags().GetString("endpoint")
+	service, err := cmd.Flags().GetString("service")
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AwsEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsEgressPrivateLinkEndpoint{
 				Kind:                   "AwsEgressPrivateLinkEndpoint",
-				VpcEndpointServiceName: endpoint,
+				VpcEndpointServiceName: service,
 				EnableHighAvailability: networkingaccesspointv1.PtrBool(highAvailability),
 			},
 		}
@@ -100,7 +100,7 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
 				Kind:                         "AzureEgressPrivateLinkEndpoint",
-				PrivateLinkServiceResourceId: endpoint,
+				PrivateLinkServiceResourceId: service,
 			},
 		}
 	}

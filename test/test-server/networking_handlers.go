@@ -196,9 +196,14 @@ func handleNetworkingDnsRecord(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 		environment := r.URL.Query().Get("environment")
+
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingDnsRecordGet(t, id, environment)(w, r)
+		case http.MethodDelete:
+			handleNetworkingDnsRecordDelete(t)(w, r)
+		case http.MethodPatch:
+			handleNetworkingDnsRecordUpdate(t, id)(w, r)
 		}
 	}
 }
@@ -210,6 +215,8 @@ func handleNetworkingDnsRecords(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingDnsRecordList(t, environment)(w, r)
+		case http.MethodPost:
+			handleNetworkingDnsRecordCreate(t)(w, r)
 		}
 	}
 }
@@ -248,6 +255,8 @@ func handleNetworkingAccessPoints(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingAccessPointList(t, environment)(w, r)
+		case http.MethodPost:
+			handleNetworkingAccessPointCreate(t)(w, r)
 		}
 	}
 }
@@ -260,6 +269,10 @@ func handleNetworkingAccessPoint(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingAccessPointGet(t, id, environment)(w, r)
+		case http.MethodDelete:
+			handleNetworkingAccessPointDelete(t)(w, r)
+		case http.MethodPatch:
+			handleNetworkingAccessPointUpdate(t, id)(w, r)
 		}
 	}
 }
@@ -1511,8 +1524,38 @@ func getDnsRecord(id, environment, name string) networkingaccesspointv1.Networki
 
 func handleNetworkingDnsRecordGet(t *testing.T, id, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		record := getDnsRecord(id, environment, "my-dns-record")
-		err := json.NewEncoder(w).Encode(record)
+		switch id {
+		case "dnsrec-invalid":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			record := getDnsRecord(id, environment, "my-dns-record")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleNetworkingDnsRecordDelete(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func handleNetworkingDnsRecordUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkingaccesspointv1.NetworkingV1DnsRecord{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		record := getDnsRecord(id, body.Spec.Environment.GetId(), "my-dns-record")
+		if body.Spec.DisplayName != nil {
+			record.Spec.SetDisplayName(body.Spec.GetDisplayName())
+		}
+		if body.Spec.Config != nil {
+			record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.SetResourceId(body.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId())
+		}
+
+		err = json.NewEncoder(w).Encode(record)
 		require.NoError(t, err)
 	}
 }
@@ -1525,6 +1568,20 @@ func handleNetworkingDnsRecordList(t *testing.T, environment string) http.Handle
 
 		recordList := networkingaccesspointv1.NetworkingV1DnsRecordList{Data: []networkingaccesspointv1.NetworkingV1DnsRecord{recordOne, recordTwo}}
 		err := json.NewEncoder(w).Encode(recordList)
+		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingDnsRecordCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		record := &networkingaccesspointv1.NetworkingV1DnsRecord{}
+		err := json.NewDecoder(r.Body).Decode(record)
+		require.NoError(t, err)
+
+		record.SetId("dnsrec-12345")
+		record.Status = &networkingaccesspointv1.NetworkingV1DnsRecordStatus{Phase: "PROVISIONING"}
+
+		err = json.NewEncoder(w).Encode(record)
 		require.NoError(t, err)
 	}
 }
@@ -1752,12 +1809,41 @@ func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.H
 	return func(w http.ResponseWriter, r *http.Request) {
 		var record networkingaccesspointv1.NetworkingV1AccessPoint
 		switch id {
+		case "ap-invalid":
+			w.WriteHeader(http.StatusNotFound)
 		case "ap-12345":
 			record = getAwsEgressAccessPoint(id, environment, "my-aws-egress-access-point")
 		case "ap-67890":
 			record = getAzureEgressAccessPoint(id, environment, "my-azure-egress-access-point")
 		}
 		err := json.NewEncoder(w).Encode(record)
+		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingAccessPointDelete(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkingaccesspointv1.NetworkingV1AccessPointUpdate{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		var record networkingaccesspointv1.NetworkingV1AccessPoint
+		switch id {
+		case "ap-12345":
+			record = getAwsEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-aws-egress-access-point")
+		case "ap-67890":
+			record = getAzureEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-egress-access-point")
+		}
+
+		record.Spec.SetDisplayName(body.Spec.GetDisplayName())
+
+		err = json.NewEncoder(w).Encode(record)
 		require.NoError(t, err)
 	}
 }
@@ -1769,6 +1855,41 @@ func handleNetworkingAccessPointList(t *testing.T, environment string) http.Hand
 
 		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo}}
 		err := json.NewEncoder(w).Encode(recordList)
+		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accessPoint := &networkingaccesspointv1.NetworkingV1AccessPoint{}
+		err := json.NewDecoder(r.Body).Decode(accessPoint)
+		require.NoError(t, err)
+
+		if accessPoint.Spec.Config.NetworkingV1AwsEgressPrivateLinkEndpoint != nil {
+			accessPoint.SetId("ap-12345")
+			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+				Phase: "READY",
+				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+					NetworkingV1AwsEgressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AwsEgressPrivateLinkEndpointStatus{
+						Kind:          "AwsEgressPrivateLinkEndpointStatus",
+						VpcEndpointId: "vpc-endpoint-id",
+					},
+				},
+			}
+		} else if accessPoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint != nil {
+			accessPoint.SetId("ap-67890")
+			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+				Phase: "READY",
+				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+					NetworkingV1AzureEgressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpointStatus{
+						Kind:                      "AzureEgressPrivateLinkEndpointStatus",
+						PrivateEndpointResourceId: "private-endpoint-id",
+					},
+				},
+			}
+		}
+
+		err = json.NewEncoder(w).Encode(accessPoint)
 		require.NoError(t, err)
 	}
 }
