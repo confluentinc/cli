@@ -1,0 +1,4 @@
+Error: DNS record "dnsrec-invalid" not found
+
+Suggestions:
+    List available DNS records with `confluent network dns record list`.

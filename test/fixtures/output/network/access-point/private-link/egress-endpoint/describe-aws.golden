@@ -1,0 +1,10 @@
++--------------------------+---------------------------------------------------------+
+| ID                       | ap-12345                                                |
+| Name                     | my-aws-egress-access-point                              |
+| AWS VPC Endpoint Service | com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 |
+| AWS VPC Endpoint         | vpc-endpoint-id                                         |
+| High Availability        | true                                                    |
+| Environment              | env-596                                                 |
+| Gateway                  | gw-12345                                                |
+| Phase                    | READY                                                   |
++--------------------------+---------------------------------------------------------+

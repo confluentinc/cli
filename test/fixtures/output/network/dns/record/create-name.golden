@@ -1,0 +1,9 @@
++---------------------------+-----------------+
+| ID                        | dnsrec-12345    |
+| Name                      | my-dns-record   |
+| Domain                    | www.example.com |
+| Private Link Access Point | ap-123456       |
+| Environment               | env-596         |
+| Gateway                   | gw-123456       |
+| Phase                     | PROVISIONING    |
++---------------------------+-----------------+
