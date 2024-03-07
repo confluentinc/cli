@@ -161,15 +161,6 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 func handlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case http.MethodPost: // admin payment update
-			req := &ccloudv1.UpdatePaymentInfoRequest{}
-			err := ccstructs.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			require.NotEmpty(t, req.StripeToken)
-
-			res := &ccloudv1.UpdatePaymentInfoReply{}
-			err = json.NewEncoder(w).Encode(res)
-			require.NoError(t, err)
 		case http.MethodGet: // admin payment describe
 			res := ccloudv1.GetPaymentInfoReply{
 				Card: &ccloudv1.Card{
@@ -184,6 +175,23 @@ func handlePaymentInfo(t *testing.T) http.HandlerFunc {
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
 			_, err = w.Write(data)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/api/organizations/%d/update_default_payment_method"
+func handleUpdateDefaultPaymentMethod(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost: // admin payment update
+			req := &ccloudv1.UpdateDefaultPaymentMethodRequest{}
+			err := ccstructs.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			require.NotEmpty(t, req.PaymentMethodId)
+
+			res := &ccloudv1.UpdateDefaultPaymentMethodReply{}
+			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		}
 	}
