@@ -26,7 +26,7 @@ func (c *command) newDnsRecordListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("gateways", "", "A comma-sepaated list of gateway IDs.")
+	cmd.Flags().StringSlice("gateways", nil, "A comma-separated list of gateway IDs.")
 	cmd.Flags().StringSlice("names", nil, "A comma-separated list of display names.")
 	cmd.Flags().StringSlice("resource-ids", nil, "A comma-separated list of resource IDs.")
 	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of fully qualified domain names.")
