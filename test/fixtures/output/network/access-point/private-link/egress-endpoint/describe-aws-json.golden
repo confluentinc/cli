@@ -1,0 +1,10 @@
+{
+  "id": "ap-12345",
+  "name": "my-aws-egress-access-point",
+  "aws_vpc_endpoint_service": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+  "aws_vpc_endpoint": "vpc-endpoint-id",
+  "high_availability": true,
+  "environment": "env-596",
+  "gateway": "gw-12345",
+  "phase": "READY"
+}
