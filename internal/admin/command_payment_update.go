@@ -18,8 +18,6 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(_ *cobra.Command, _ []string) error {
-	output.Println(c.Config.EnableColor, "Edit credit card")
-
 	f := form.New(
 		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
 		form.Field{ID: "expiration", Prompt: "MM/YY", Regex: `^\d{2}/\d{2}$`},
@@ -41,7 +39,7 @@ func (c *command) update(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.Client.Billing.UpdatePaymentInfo(user.GetOrganization(), stripeToken.ID); err != nil {
+	if err := c.Client.Billing.UpdateDefaultPaymentMethod(user.GetOrganization(), stripeToken.ID); err != nil {
 		return err
 	}
 
