@@ -26,7 +26,7 @@ func (c *command) newDnsRecordListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("gateway", "", "Gateway ID.")
+	cmd.Flags().String("gateways", "", "A comma-sepaated list of gateway IDs.")
 	cmd.Flags().StringSlice("names", nil, "A comma-separated list of display names.")
 	cmd.Flags().StringSlice("resource-ids", nil, "A comma-separated list of resource IDs.")
 	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of fully qualified domain names.")
@@ -43,7 +43,7 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	gateway, err := cmd.Flags().GetString("gateway")
+	gateways, err := cmd.Flags().GetStringSlice("gateways")
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 	}
 
 	listParameters := ccloudv2.DnsRecordListParameters{
-		Gateway:     gateway,
+		Gateways:    gateways,
 		Domains:     domains,
 		Names:       names,
 		ResourceIds: resourceIds,
@@ -87,7 +87,7 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 		list.Add(&recordOut{
 			Id:                     record.GetId(),
 			Name:                   record.Spec.GetDisplayName(),
-			Domain:                 record.Spec.GetFqdn(),
+			Domain:                 record.Spec.GetDomain(),
 			PrivateLinkAccessPoint: record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
 			Gateway:                record.Spec.Gateway.GetId(),
 			Environment:            record.Spec.Environment.GetId(),

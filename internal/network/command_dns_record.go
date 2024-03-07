@@ -87,7 +87,7 @@ func printDnsRecordTable(cmd *cobra.Command, record networkingaccesspointv1.Netw
 	table.Add(&recordOut{
 		Id:                     record.GetId(),
 		Name:                   record.Spec.GetDisplayName(),
-		Domain:                 record.Spec.GetFqdn(),
+		Domain:                 record.Spec.GetDomain(),
 		PrivateLinkAccessPoint: record.Spec.Config.NetworkingV1PrivateLinkAccessPoint.GetResourceId(),
 		Gateway:                record.Spec.Gateway.GetId(),
 		Environment:            record.Spec.Environment.GetId(),

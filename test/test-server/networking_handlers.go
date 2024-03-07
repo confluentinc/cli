@@ -1508,7 +1508,7 @@ func getDnsRecord(id, environment, name string) networkingaccesspointv1.Networki
 		Id: networkingaccesspointv1.PtrString(id),
 		Spec: &networkingaccesspointv1.NetworkingV1DnsRecordSpec{
 			DisplayName: networkingaccesspointv1.PtrString(name),
-			Fqdn:        networkingaccesspointv1.PtrString("www.example.com"),
+			Domain:      networkingaccesspointv1.PtrString("www.example.com"),
 			Config: &networkingaccesspointv1.NetworkingV1DnsRecordSpecConfigOneOf{
 				NetworkingV1PrivateLinkAccessPoint: &networkingaccesspointv1.NetworkingV1PrivateLinkAccessPoint{
 					Kind:       "PrivateLinkAccessPoint",

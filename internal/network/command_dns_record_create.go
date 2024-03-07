@@ -73,7 +73,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 
 	createDnsRecord := networkingaccesspointv1.NetworkingV1DnsRecord{
 		Spec: &networkingaccesspointv1.NetworkingV1DnsRecordSpec{
-			Fqdn: networkingaccesspointv1.PtrString(domain),
+			Domain: networkingaccesspointv1.PtrString(domain),
 			Config: &networkingaccesspointv1.NetworkingV1DnsRecordSpecConfigOneOf{
 				NetworkingV1PrivateLinkAccessPoint: &networkingaccesspointv1.NetworkingV1PrivateLinkAccessPoint{
 					Kind:       privateLinkAccessPointKind,

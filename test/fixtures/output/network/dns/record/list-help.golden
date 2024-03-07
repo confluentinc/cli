@@ -9,7 +9,7 @@ List DNS records with display names "my-dns-record-1" or "my-dns-record-2.
   $ confluent network dns record list --names my-dns-record-1,my-dns-record-2
 
 Flags:
-      --gateway string         Gateway ID.
+      --gateways string        A comma-sepaated list of gateway IDs.
       --names strings          A comma-separated list of display names.
       --resource-ids strings   A comma-separated list of resource IDs.
       --domains strings        A comma-separated list of fully qualified domain names.

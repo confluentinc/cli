@@ -11,7 +11,7 @@ import (
 
 type DnsRecordListParameters struct {
 	Domains     []string
-	Gateway     string
+	Gateways    []string
 	Names       []string
 	ResourceIds []string
 }
@@ -110,12 +110,12 @@ func (c *Client) executeListDnsRecords(environment, pageToken string, listParame
 		req = req.PageToken(pageToken)
 	}
 
-	if listParameters.Gateway != "" {
-		req = req.SpecGateway(listParameters.Gateway)
+	if listParameters.Gateways != nil {
+		req = req.SpecGateway(listParameters.Gateways)
 	}
 
 	if listParameters.Domains != nil {
-		req = req.SpecFqdn(listParameters.Domains)
+		req = req.SpecDomain(listParameters.Domains)
 	}
 
 	if listParameters.Names != nil {
