@@ -1,3 +1,123 @@
+
+TEXT OUTPUT 
+========================================================================== 
+
+Welcome! 
+To exit, press Ctrl-Q or type "exit". 
+
+[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion 
+ 
+Smart Completion is now disabled                                                                    
+> > > use catalog default;> use catalog default;> use catalog default;
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++---------------------+---------+
+|         Key         |  Value  |
++---------------------+---------+
+| sql.current-catalog | default |
++---------------------+---------+
+ > use db1;> use db1;> use db1;
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++----------------------+-------+
+|         Key          | Value |
++----------------------+-------+
+| sql.current-database | db1   |
++----------------------+-------+
+ > set;> set;> set;
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+00:00 (default) |
++------------------------+---------------------+
+ > set 'cli.a-key'='a value';> set 'cli.a-key'='a value';> set 'cli.a-key'='a value';
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++-----------+---------+
+|    Key    |  Value  |
++-----------+---------+
+| cli.a-key | a value |
++-----------+---------+
+ > set 'cli.another-key'='another value';> set 'cli.another-key'='another value';> set 'cli.another-key'='another value';
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++-----------------+---------------+
+|       Key       |     Value     |
++-----------------+---------------+
+| cli.another-key | another value |
++-----------------+---------------+
+ > set;> set;> set;
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| cli.a-key              | a value             |
+| cli.another-key        | another value       |
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+00:00 (default) |
++------------------------+---------------------+
+ > reset 'cli.another-key';> reset 'cli.another-key';> reset 'cli.another-key';
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration key "cli.another-key" has been reset successfully.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| cli.a-key              | a value             |
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+00:00 (default) |
++------------------------+---------------------+
+ > set;> set;> set;
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| cli.a-key              | a value             |
+| client.service-account | <unset> (default)   |
+| sql.current-catalog    | default             |
+| sql.current-database   | db1                 |
+| sql.local-time-zone    | GMT+00:00 (default) |
++------------------------+---------------------+
+ > reset;> reset;> reset;
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration has been reset successfully.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.service-account | <unset> (default)   |
+| sql.local-time-zone    | GMT+00:00 (default) |
++------------------------+---------------------+
+ > set;> set;> set;
+]2;Statement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.service-account | <unset> (default)   |
+| sql.local-time-zone    | GMT+00:00 (default) |
++------------------------+---------------------+
+ > exit> exit> exit
+]2;
+
+TEXT + ANSI ESCAPE SEQUENCES OUTPUT
+==========================================================================
+
 Welcome! 
 To exit, press Ctrl-Q or type "exit". 
 

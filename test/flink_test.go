@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -198,8 +199,32 @@ func (s *CLITestSuite) TestFlinkShell() {
 			return *update
 		}),
 	)
-	require.NoError(s.T(), snapshotConfig.SnapshotWithName("shell.golden", outputBuffer.String()),
+
+	output := outputBuffer.String()
+	escaped := removeANSIEscapeSequences(outputBuffer.String())
+
+	snapshot := fmt.Sprintf(`
+TEXT OUTPUT 
+========================================================================== 
+
+%s
+
+TEXT + ANSI ESCAPE SEQUENCES OUTPUT
+==========================================================================
+
+%s`, escaped, output)
+
+	require.NoError(s.T(), snapshotConfig.SnapshotWithName("shell.golden", snapshot),
 		fmt.Sprintf("full output was %s", outputBuffer.String()))
+}
+
+func removeANSIEscapeSequences(input string) string {
+	// The optimal solution would be to remove all escape sequences.
+	// Terminals have some special escape (like for moving the cursor) sequences that we don't catch with this and that's why it's an approximation.
+	//(\x1B]2;sql-prompt\x07\x1B\[J\x1B\[0;93;49m>) - to remove the title of the terminal. Basically a hard coded string.
+	// (\x1b\[[0-9;]*[a-zA-Z]) - to remove the ansii codes/colors.
+	re := regexp.MustCompile(`(\x1B]2;sql-prompt\x07\x1B\[J\x1B\[0;93;49m>)|(\x1b\[[0-9;]*[a-zA-Z])`)
+	return re.ReplaceAllString(input, "")
 }
 
 func cleanup(file *os.File) {
