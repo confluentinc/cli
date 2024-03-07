@@ -173,23 +173,23 @@ func (s *CLITestSuite) TestFlinkShell() {
 	cmd.Stderr = &outputBuffer
 
 	err = cmd.Start()
-	require.NoError(s.T(), err, outputBuffer.String())
+	require.NoError(s.T(), err)
 
 	// wait for flink shell to be ready
 	time.Sleep(5 * time.Second)
 
 	// disable autocompletion because the history is different on CI and local
 	err = disableAutoCompletion(file)
-	require.NoError(s.T(), err, outputBuffer.String())
+	require.NoError(s.T(), err)
 
 	// execute commands
 	commands, err := getCommandsFromFixture(flinkShellCommandsInputFile)
-	require.NoError(s.T(), err, outputBuffer.String())
+	require.NoError(s.T(), err)
 	err = executeCommands(file, commands)
-	require.NoError(s.T(), err, outputBuffer.String())
+	require.NoError(s.T(), err)
 
 	err = cmd.Wait()
-	require.NoError(s.T(), err, outputBuffer.String())
+	require.NoError(s.T(), err)
 
 	// compare to golden file
 	snapshotConfig := cupaloy.New(
