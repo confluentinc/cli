@@ -1,5 +1,27 @@
 package test
 
+import (
+	"bytes"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/bradleyjkemp/cupaloy/v2"
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/go-prompt"
+)
+
+const (
+	flinkShellCommandsInputFile = "test/fixtures/input/flink/flinkshell-commands"
+	fixtureOutputFolder         = "test/fixtures/output/flink/shell"
+	timezoneEnvVar              = "TZ"
+)
+
 func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
 		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
@@ -119,4 +141,140 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
+
+func (s *CLITestSuite) TestFlinkShell() {
+	// HACK: empty test to log in, before running the actual integration test
+	test := CLITest{
+		login: "cloud",
+	}
+	s.runIntegrationTest(test)
+
+	// create a file for go-prompt to use as the input stream
+	file, err := os.Create("input.txt")
+	require.NoError(s.T(), err, "error creating file")
+	defer cleanup(file)
+
+	// set the go-prompt file input env var, so go-prompt uses this file as the input stream
+	err = os.Setenv(prompt.EnvVarInputFile, file.Name())
+	require.NoError(s.T(), err, "failed to set go-prompt input file env var")
+
+	// fake the timezone, to ensure CI and local run with the same default timezone
+	err = os.Setenv(timezoneEnvVar, "Europe/London")
+	require.NoError(s.T(), err, "failed to set timezone env var")
+
+	// start flink shell
+	dir, err := os.Getwd()
+	require.NoError(s.T(), err)
+	cmd := exec.Command(filepath.Join(dir, testBin), "flink", "shell", "--compute-pool", "lfcp-123456")
+
+	var outputBuffer bytes.Buffer
+	cmd.Stdout = &outputBuffer
+	cmd.Stderr = &outputBuffer
+
+	err = cmd.Start()
+	require.NoError(s.T(), err, outputBuffer.String())
+
+	// wait for flink shell to be ready
+	time.Sleep(5 * time.Second)
+
+	// disable autocompletion because the history is different on CI and local
+	err = disableAutoCompletion(file)
+	require.NoError(s.T(), err, outputBuffer.String())
+
+	// execute commands
+	commands, err := getCommandsFromFixture(flinkShellCommandsInputFile)
+	require.NoError(s.T(), err, outputBuffer.String())
+	err = executeCommands(file, commands)
+	require.NoError(s.T(), err, outputBuffer.String())
+
+	err = cmd.Wait()
+	require.NoError(s.T(), err, outputBuffer.String())
+
+	// compare to golden file
+	snapshotConfig := cupaloy.New(
+		cupaloy.SnapshotSubdirectory(filepath.Join(dir, fixtureOutputFolder)),
+		// update snapshot if update flag was set
+		cupaloy.ShouldUpdate(func() bool {
+			return *update
+		}),
+	)
+
+	output := outputBuffer.String()
+	escaped := removeANSIEscapeSequences(outputBuffer.String())
+
+	snapshot := fmt.Sprintf(`
+TEXT OUTPUT 
+========================================================================== 
+
+%s
+
+TEXT + ANSI ESCAPE SEQUENCES OUTPUT
+==========================================================================
+
+%s`, escaped, output)
+
+	require.NoError(s.T(), snapshotConfig.SnapshotWithName("shell.golden", snapshot),
+		fmt.Sprintf("full output was %s", outputBuffer.String()))
+}
+
+func removeANSIEscapeSequences(input string) string {
+	// The optimal solution would be to remove all escape sequences.
+	// Terminals have some special escape (like for moving the cursor) sequences that we don't catch with this and that's why it's an approximation.
+	//(\x1B]2;sql-prompt\x07\x1B\[J\x1B\[0;93;49m>) - to remove the title of the terminal. Basically a hard coded string.
+	// (\x1b\[[0-9;]*[a-zA-Z]) - to remove the ansii codes/colors.
+	re := regexp.MustCompile(`(\x1B]2;sql-prompt\x07\x1B\[J\x1B\[0;93;49m>)|(\x1b\[[0-9;]*[a-zA-Z])`)
+	return re.ReplaceAllString(input, "")
+}
+
+func cleanup(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		fmt.Printf("failed to close file: %v\n", err)
+	}
+	err = os.Remove(file.Name())
+	if err != nil {
+		fmt.Printf("failed to remove file: %v\n", err)
+	}
+}
+
+func getCommandsFromFixture(inputFilePath string) ([]string, error) {
+	// read file and split it into lines
+	file, err := os.ReadFile(inputFilePath)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(string(file), "\n"), nil
+}
+
+func executeCommands(file *os.File, commands []string) error {
+	for _, command := range commands {
+		// write command
+		_, err := file.WriteString(command)
+		if err != nil {
+			return err
+		}
+
+		// wait a bit before submitting
+		time.Sleep(100 * time.Millisecond)
+
+		// write enter to submit
+		_, err = file.WriteString("\n")
+		if err != nil {
+			return err
+		}
+
+		// wait between commands
+		time.Sleep(1 * time.Second)
+	}
+	return nil
+}
+
+func disableAutoCompletion(file *os.File) error {
+	_, err := file.Write([]byte{byte(prompt.ControlS)})
+	if err != nil {
+		return err
+	}
+	time.Sleep(100 * time.Millisecond)
+	return nil
 }
