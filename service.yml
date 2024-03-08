@@ -1,5 +1,6 @@
 name: cli
 lang: go
+lang_version: "1.21.8"
 git:
   enable: true
   hooks:
