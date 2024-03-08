@@ -294,8 +294,8 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 
 func (s *CLITestSuite) TestLogin_MdsSso() {
 	resetConfiguration(s.T(), false)
-	testserver.EnableMdsSso()
-	defer testserver.DisableMdsSso()
+	testserver.IsSsoEnabled = true
+	defer func() { testserver.IsSsoEnabled = false }()
 
 	tests := []CLITest{
 		{args: fmt.Sprintf("login --no-browser --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl())},

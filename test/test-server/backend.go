@@ -102,11 +102,3 @@ func (b *TestBackend) GetKafkaRestUrl() string {
 func (b *TestBackend) GetMdsUrl() string {
 	return b.mds.URL
 }
-
-func EnableMdsSso() {
-	isSsoEnabled = true
-}
-
-func DisableMdsSso() {
-	isSsoEnabled = false
-}

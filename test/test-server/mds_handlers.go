@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	isSsoEnabled = false
+	IsSsoEnabled = false
 )
 
 // Handler for: "/security/1.0/registry/clusters"
@@ -116,7 +116,7 @@ func handleAuthenticate(t *testing.T) http.HandlerFunc {
 func handleFeatures(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		reply := &mdsv1.FeaturesInfo{
-			Features: map[string]bool{"oidc.login.device.1.enabled": isSsoEnabled},
+			Features: map[string]bool{"oidc.login.device.1.enabled": IsSsoEnabled},
 		}
 		b, err := json.Marshal(&reply)
 		require.NoError(t, err)
