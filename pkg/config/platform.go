@@ -13,3 +13,17 @@ func (p *Platform) GetName() string {
 	}
 	return ""
 }
+
+func (p *Platform) GetServer() string {
+	if p != nil {
+		return p.Server
+	}
+	return ""
+}
+
+func (p *Platform) GetCaCertPath() string {
+	if p != nil {
+		return p.CaCertPath
+	}
+	return ""
+}
