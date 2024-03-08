@@ -11,6 +11,10 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
+var (
+	IsSsoEnabled = false
+)
+
 // Handler for: "/security/1.0/registry/clusters"
 func handleRegistryClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -105,5 +109,55 @@ func handleAuthenticate(t *testing.T) http.HandlerFunc {
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/security/1.0/features"
+func handleFeatures(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reply := &mdsv1.FeaturesInfo{
+			Features: map[string]bool{"oidc.login.device.1.enabled": IsSsoEnabled},
+		}
+		b, err := json.Marshal(&reply)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/security/1.0/oidc/device/authenticate"
+func handleDeviceAuthenticate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reply := &mdsv1.InitDeviceAuthResponse{
+			VerificationUri: "https://example.com",
+			Interval:        5,
+			ExpiresIn:       30,
+		}
+		b, err := json.Marshal(&reply)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/security/1.0/oidc/device/check-auth"
+func handleDeviceCheckAuth(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		reply := &mdsv1.CheckDeviceAuthResponse{
+			Complete:  true,
+			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
+			ExpiresIn: 10,
+		}
+		b, err := json.Marshal(&reply)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/security/1.0/oidc/device/extend-auth"
+func handleDeviceExtendAuth(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
