@@ -5,6 +5,7 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -18,8 +19,8 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.kekCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create a KEK with a AWS KMS key:`,
-				Code: "confluent schema-registry kek create --name test --kms-type AWS_KMS --kms-key-id arn:aws:kms:us-west-2:037502941121:key/a1231e22-1n78-4l0d-9d50-9pww5faedb54 --kms-properties KeyUsage=ENCRYPT_DECRYPT,KeyState=Enabled",
+				Text: "Create a KEK with a AWS KMS key:",
+				Code: "confluent schema-registry kek create --name test --kms-type aws-kms --kms-key-id arn:aws:kms:us-west-2:037502941121:key/a1231e22-1n78-4l0d-9d50-9pww5faedb54 --kms-properties KeyUsage=ENCRYPT_DECRYPT,KeyState=Enabled",
 			},
 		),
 	}
@@ -61,6 +62,7 @@ func (c *command) kekCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	kmsType = ccloudv2.ToUpper(kmsType)
 
 	kmsId, err := cmd.Flags().GetString("kms-key-id")
 	if err != nil {
