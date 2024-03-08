@@ -171,7 +171,7 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 		}
 
 		var authToken string
-		retry.Retry(time.Duration(resp.Interval)*time.Second, time.Duration(resp.ExpiresIn)*time.Second, func() error {
+		err = retry.Retry(time.Duration(resp.Interval)*time.Second, time.Duration(resp.ExpiresIn)*time.Second, func() error {
 			checkAuthResp, _, err := mdsClient.SSODeviceAuthorizationApi.CheckDeviceAuth(context.Background(), checkDeviceAuthRequest)
 			if err != nil {
 				return fmt.Errorf("%s: %w", checkAuthResp.Error, err)
@@ -184,6 +184,9 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 			authToken = checkAuthResp.AuthToken
 			return nil
 		})
+		if err != nil {
+			return "", err
+		}
 
 		return authToken, nil
 	} else {
