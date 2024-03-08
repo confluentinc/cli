@@ -45,16 +45,6 @@ func (c *command) newConfigurationDescribeCommand(cfg *config.Config) *cobra.Com
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	return cmd
 }
 

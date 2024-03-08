@@ -42,16 +42,6 @@ func (c *command) newSchemaDeleteCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddForceFlag(cmd)
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 

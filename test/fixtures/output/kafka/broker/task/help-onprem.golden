@@ -1,15 +1,14 @@
-Manage Kafka clusters.
+Manage broker tasks.
 
 Usage:
-  confluent kafka cluster [command]
+  confluent kafka broker task [command]
 
 Available Commands:
-  configuration Manage Kafka cluster configurations.
-  list          List registered Kafka clusters.
+  list        List broker tasks.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent kafka cluster [command] --help" for more information about a command.
+Use "confluent kafka broker task [command] --help" for more information about a command.

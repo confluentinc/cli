@@ -22,12 +22,11 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Describe the non-default cluster-wide broker configuration values.",
-				Code: "confluent kafka broker describe --all",
+				Code: "confluent kafka broker describe",
 			},
 		),
 	}
 
-	cmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
 	cmd.Flags().String("config-name", "", `Get a specific configuration value (pair with "--all" to see a cluster-wide configuration).`)
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
@@ -41,5 +40,5 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return broker.Describe(cmd, args, restClient, restContext, clusterId, true)
+	return broker.Describe(cmd, args, restClient, restContext, clusterId)
 }

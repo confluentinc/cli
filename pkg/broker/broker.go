@@ -2,7 +2,6 @@ package broker
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -29,27 +28,12 @@ type out struct {
 	Port      int32  `human:"Port" serialized:"port"`
 }
 
-func CheckAllOrIdSpecified(cmd *cobra.Command, args []string, checkAll bool) (int32, bool, error) {
-	var all bool
-	var err error
-	if checkAll {
-		if cmd.Flags().Changed("all") && len(args) > 0 {
-			return -1, false, fmt.Errorf("only specify broker ID argument OR `--all` flag")
-		}
-		if !cmd.Flags().Changed("all") && len(args) == 0 {
-			return -1, false, fmt.Errorf("must pass broker ID argument or specify `--all` flag")
-		}
-		all, err = cmd.Flags().GetBool("all")
-		if err != nil {
-			return -1, false, err
-		}
-	}
+func GetId(cmd *cobra.Command, args []string) (int32, error) {
 	if len(args) > 0 {
-		brokerIdStr := args[0]
-		brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
-		return int32(brokerId), false, err
+		brokerId, err := strconv.ParseInt(args[0], 10, 32)
+		return int32(brokerId), err
 	}
-	return -1, all, nil
+	return -1, nil
 }
 
 func ParseClusterConfigData(clusterConfig []kafkarestv3.ClusterConfigData) []*ConfigOut {

@@ -6,8 +6,8 @@ Usage:
 Available Commands:
   delete      Delete one or more Kafka brokers.
   describe    Describe a Kafka broker.
-  get-tasks   List broker tasks.
   list        List Kafka brokers.
+  task        Manage broker tasks.
   update      Update Kafka broker configurations.
 
 Global Flags:
