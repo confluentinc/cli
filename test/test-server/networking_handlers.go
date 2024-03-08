@@ -1771,8 +1771,9 @@ func getAwsEgressAccessPoint(id, environment, name string) networkingaccesspoint
 			Phase: "READY",
 			Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
 				NetworkingV1AwsEgressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AwsEgressPrivateLinkEndpointStatus{
-					Kind:          "AwsEgressPrivateLinkEndpointStatus",
-					VpcEndpointId: "vpc-endpoint-id",
+					Kind:               "AwsEgressPrivateLinkEndpointStatus",
+					VpcEndpointId:      "vpc-endpoint-id",
+					VpcEndpointDnsName: "vpc-endpoint-dns-name",
 				},
 			},
 		},
@@ -1871,8 +1872,9 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 				Phase: "READY",
 				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
 					NetworkingV1AwsEgressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AwsEgressPrivateLinkEndpointStatus{
-						Kind:          "AwsEgressPrivateLinkEndpointStatus",
-						VpcEndpointId: "vpc-endpoint-id",
+						Kind:               "AwsEgressPrivateLinkEndpointStatus",
+						VpcEndpointId:      "vpc-endpoint-id",
+						VpcEndpointDnsName: "vpc-endpoint-dns-name",
 					},
 				},
 			}

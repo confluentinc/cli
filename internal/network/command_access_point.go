@@ -15,6 +15,7 @@ type accessPointOut struct {
 	Name                     string `human:"Name,omitempty" serialized:"name,omitempty"`
 	AwsVpcEndpointService    string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
 	AwsVpcEndpoint           string `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
+	AwsVpcEndpointDnsName    string `human:"AWS VPC Endpoint DNS Name,omitempty" serialized:"aws_vpc_endpoint_dns_name,omitempty"`
 	AzurePrivateLinkService  string `human:"Azure Private Link Service,omitempty" serialized:"azure_private_link_service,omitempty"`
 	AzurePrivateLinkEndpoint string `human:"Azure Private Link Endpoint,omitempty" serialized:"azure_private_link_endpoint,omitempty"`
 	HighAvailability         bool   `human:"High Availability,omitempty" serialized:"high_availability,omitempty"`
