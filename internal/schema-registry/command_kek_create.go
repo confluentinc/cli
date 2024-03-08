@@ -18,7 +18,7 @@ func (c *command) newKekCreateCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.kekCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a KEK with a AWS KMS key:",
+				Text: "Create a KEK with an AWS KMS key:",
 				Code: "confluent schema-registry kek create --name test --kms-type aws-kms --kms-key-id arn:aws:kms:us-west-2:037502941121:key/a1231e22-1n78-4l0d-9d50-9pww5faedb54 --kms-properties KeyUsage=ENCRYPT_DECRYPT,KeyState=Enabled",
 			},
 		),
