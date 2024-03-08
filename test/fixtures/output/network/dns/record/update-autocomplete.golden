@@ -1,0 +1,6 @@
+--name	Name of the DNS record.
+--private-link-access-point	Private Link access point.
+dnsrec-12345	my-dns-record
+dnsrec-67890	my-dns-record-2
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

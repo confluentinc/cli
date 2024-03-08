@@ -722,6 +722,19 @@ func (s *CLITestSuite) TestNetworkDnsRecordUpdate() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkDnsRecord_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network dns record describe ""`, login: "cloud", fixture: "network/dns/record/describe-autocomplete.golden"},
+		{args: `__complete network dns record delete ""`, login: "cloud", fixture: "network/dns/record/delete-autocomplete.golden"},
+		{args: `__complete network dns record update ""`, login: "cloud", fixture: "network/dns/record/update-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDelete() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint delete ap-12345", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/delete.golden"},
@@ -776,6 +789,19 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointUpdate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint update ap-12345 --name my-new-aws-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-aws.golden"},
 		{args: "network access-point private-link egress-endpoint update ap-67890 --name my-new-azure-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-azure.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpoint_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network access-point private-link egress-endpoint describe ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/describe-autocomplete.golden"},
+		{args: `__complete network access-point private-link egress-endpoint delete ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/delete-autocomplete.golden"},
+		{args: `__complete network access-point private-link egress-endpoint update ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/update-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
