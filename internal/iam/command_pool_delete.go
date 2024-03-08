@@ -39,17 +39,12 @@ func (c *poolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pool, err := c.V2Client.GetIdentityPool(args[0], provider)
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.IdentityPool, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.GetIdentityPool(id, provider)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.IdentityPool, pool.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.IdentityPool); err != nil {
 		return err
 	}
 

@@ -21,7 +21,7 @@ import (
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
-	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
+	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
@@ -53,7 +53,7 @@ type Client struct {
 	NetworkingPrivateLinkClient  *networkingprivatelinkv1.APIClient
 	OrgClient                    *orgv2.APIClient
 	ServiceQuotaClient           *servicequotav1.APIClient
-	SrcmClient                   *srcmv2.APIClient
+	SrcmClient                   *srcmv3.APIClient
 	SsoClient                    *ssov2.APIClient
 	StreamDesignerClient         *streamdesignerv1.APIClient
 }
