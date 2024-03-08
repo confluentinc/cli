@@ -5,6 +5,7 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -61,6 +62,7 @@ func (c *command) kekCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	kmsType = ccloudv2.ToUpper(kmsType)
 
 	kmsId, err := cmd.Flags().GetString("kms-key-id")
 	if err != nil {
