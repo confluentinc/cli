@@ -28,7 +28,7 @@ func (c *customPluginCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("cloud", "", "Filter plugins by cloud provider.")
+	pcmd.AddCloudFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

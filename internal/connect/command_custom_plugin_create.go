@@ -39,7 +39,7 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("plugin-file", "", "ZIP/JAR custom plugin file.")
 	cmd.Flags().String("connector-class", "", "Connector class of custom plugin.")
 	cmd.Flags().String("connector-type", "", "Connector type of custom plugin.")
-	cmd.Flags().String("cloud", "", "Cloud provider of custom plugin.")
+	cmd.Flags().String("cloud", "", "Cloud provider of custom plugin. Supported value [\"aws\",\"azure\"] (default \"aws\").")
 	cmd.Flags().String("description", "", "Description of custom plugin.")
 	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
@@ -68,6 +68,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
+
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
