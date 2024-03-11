@@ -302,10 +302,10 @@ func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			uploadUrl := connectcustompluginv1.ConnectV1PresignedUrl{
-				ContentFormat: PtrString("ZIP"),
-				Cloud:         PtrString("aws"),
-				UploadId:      PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
-				UploadUrl:     PtrString(fmt.Sprintf("http://%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.Host)),
+				ContentFormat: connectcustompluginv1.PtrString("ZIP"),
+				Cloud:         connectcustompluginv1.PtrString("aws"),
+				UploadId:      connectcustompluginv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl:     connectcustompluginv1.PtrString(fmt.Sprintf("http://%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.Host)),
 			}
 			err := json.NewEncoder(w).Encode(uploadUrl)
 			require.NoError(t, err)
