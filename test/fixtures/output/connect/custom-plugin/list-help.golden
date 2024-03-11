@@ -6,9 +6,10 @@ Usage:
 Examples:
 List custom connector plugins in the org
 
-  $ confluent connect custom-plugin list
+  $ confluent connect custom-plugin list --cloud aws
 
 Flags:
+      --cloud string     Filter plugins by cloud provider.
       --context string   CLI context name.
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
 

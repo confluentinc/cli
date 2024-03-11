@@ -9,8 +9,9 @@ import (
 )
 
 type customPluginOutList struct {
-	Id   string `human:"ID" serialized:"id"`
-	Name string `human:"Name" serialized:"name"`
+	Id    string `human:"ID" serialized:"id"`
+	Name  string `human:"Name" serialized:"name"`
+	Cloud string `human:"Cloud" serialized:"cloud"`
 }
 
 func (c *customPluginCommand) newListCommand() *cobra.Command {
@@ -22,11 +23,12 @@ func (c *customPluginCommand) newListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List custom connector plugins in the org",
-				Code: "confluent connect custom-plugin list",
+				Code: "confluent connect custom-plugin list --cloud aws",
 			},
 		),
 	}
 
+	cmd.Flags().String("cloud", "", "Filter plugins by cloud provider.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -34,7 +36,12 @@ func (c *customPluginCommand) newListCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) list(cmd *cobra.Command, _ []string) error {
-	plugins, err := c.V2Client.ListCustomPlugins()
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
+
+	plugins, err := c.V2Client.ListCustomPlugins(cloud)
 	if err != nil {
 		return err
 	}
@@ -42,8 +49,9 @@ func (c *customPluginCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, plugin := range plugins {
 		list.Add(&customPluginOutList{
-			Name: plugin.GetDisplayName(),
-			Id:   plugin.GetId(),
+			Name:  plugin.GetDisplayName(),
+			Id:    plugin.GetId(),
+			Cloud: plugin.GetCloud(),
 		})
 	}
 	return list.Print()
