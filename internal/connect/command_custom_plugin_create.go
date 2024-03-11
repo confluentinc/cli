@@ -91,9 +91,10 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	}
 	cloudProvider := strings.ToLower(cloud)
 
-	request := *connectcustompluginv1.NewConnectV1PresignedUrlRequest()
-	request.SetContentFormat(extension)
-	request.SetCloud(cloudProvider)
+	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
+		ContentFormat: connectcustompluginv1.PtrString(extension),
+		Cloud:         connectcustompluginv1.PtrString(cloudProvider),
+	}
 
 	resp, err := c.V2Client.GetPresignedUrl(request)
 	if err != nil {
