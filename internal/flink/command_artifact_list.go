@@ -27,7 +27,12 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	plugins, err := c.V2Client.ListCustomPlugins()
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
+
+	plugins, err := c.V2Client.ListCustomPlugins(cloud)
 	if err != nil {
 		return err
 	}
