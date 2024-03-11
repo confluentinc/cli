@@ -89,11 +89,11 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	if extension != "zip" && extension != "jar" {
 		return fmt.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
 	}
-	cloudProvider := strings.ToLower(cloud)
+	cloud = strings.ToLower(cloud)
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
 		ContentFormat: connectcustompluginv1.PtrString(extension),
-		Cloud:         connectcustompluginv1.PtrString(cloudProvider),
+		Cloud:         connectcustompluginv1.PtrString(cloud),
 	}
 
 	resp, err := c.V2Client.GetPresignedUrl(request)
