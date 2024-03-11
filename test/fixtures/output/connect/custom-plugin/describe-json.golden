@@ -2,6 +2,7 @@
   "id": "ccp-123456",
   "name": "CliPluginTest",
   "description": "",
+  "cloud": "aws",
   "connector_class": "io.confluent.kafka.connect.test",
   "connector_type": "source",
   "sensitive_properties": null

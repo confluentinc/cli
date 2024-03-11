@@ -19,6 +19,7 @@ type customPluginSerializedOut struct {
 	Id                  string   `serialized:"id"`
 	Name                string   `serialized:"name"`
 	Description         string   `serialized:"description"`
+	Cloud               string   `serialized:"cloud"`
 	ConnectorClass      string   `serialized:"connector_class"`
 	ConnectorType       string   `serialized:"connector_type"`
 	SensitiveProperties []string `serialized:"sensitive_properties"`
@@ -28,6 +29,7 @@ type customPluginHumanOut struct {
 	Id                  string `human:"ID"`
 	Name                string `human:"Name"`
 	Description         string `human:"Description"`
+	Cloud               string `human:"Cloud"`
 	ConnectorClass      string `human:"Connector Class"`
 	ConnectorType       string `human:"Connector Type"`
 	SensitiveProperties string `human:"Sensitive Properties"`
@@ -59,6 +61,7 @@ func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1Custom
 			Id:                  plugin.GetId(),
 			Name:                plugin.GetDisplayName(),
 			Description:         plugin.GetDescription(),
+			Cloud:               plugin.GetCloud(),
 			ConnectorClass:      plugin.GetConnectorClass(),
 			ConnectorType:       plugin.GetConnectorType(),
 			SensitiveProperties: strings.Join(sensitiveProperties, ", "),
@@ -68,6 +71,7 @@ func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1Custom
 			Id:                  plugin.GetId(),
 			Name:                plugin.GetDisplayName(),
 			Description:         plugin.GetDescription(),
+			Cloud:               plugin.GetCloud(),
 			ConnectorClass:      plugin.GetConnectorClass(),
 			ConnectorType:       plugin.GetConnectorType(),
 			SensitiveProperties: sensitiveProperties,
