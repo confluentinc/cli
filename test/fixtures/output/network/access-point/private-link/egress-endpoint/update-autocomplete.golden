@@ -1,0 +1,5 @@
+--name	Name of the egress endpoint.
+ap-12345	my-aws-egress-access-point
+ap-67890	my-azure-egress-access-point
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp
