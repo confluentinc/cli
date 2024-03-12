@@ -94,6 +94,11 @@ func AddCloudFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
 
+func AddPluginCloudFlag(cmd *cobra.Command) {
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Cloud provider of custom plugin. Supported value %s. (default \"aws\").", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
+	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return []string{"aws", "azure"} })
+}
+
 func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {

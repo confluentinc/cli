@@ -12,10 +12,10 @@ Flags:
       --plugin-file string             REQUIRED: ZIP/JAR custom plugin file.
       --connector-class string         REQUIRED: Connector class of custom plugin.
       --connector-type string          REQUIRED: Connector type of custom plugin.
-      --cloud string                   Cloud provider of custom plugin. Supported value ["aws","azure"] (default "aws").
       --description string             Description of custom plugin.
       --documentation-link string      Document link of custom plugin.
       --sensitive-properties strings   A comma-separated list of sensitive property names.
+      --cloud string                   Cloud provider of custom plugin. Supported value "aws" or "azure". (default "aws").
       --context string                 CLI context name.
   -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
 
