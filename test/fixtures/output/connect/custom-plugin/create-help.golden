@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create custom connector plugin "my-plugin".
 
-  $ confluent connect custom-plugin create my-plugin --plugin-file datagen.zip --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector
+  $ confluent connect custom-plugin create my-plugin --plugin-file datagen.zip --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector --cloud aws
 
 Flags:
       --plugin-file string             REQUIRED: ZIP/JAR custom plugin file.
@@ -15,6 +15,7 @@ Flags:
       --description string             Description of custom plugin.
       --documentation-link string      Document link of custom plugin.
       --sensitive-properties strings   A comma-separated list of sensitive property names.
+      --cloud string                   Cloud provider of custom plugin. Supported value "aws" or "azure". (default "aws").
       --context string                 CLI context name.
   -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
 
