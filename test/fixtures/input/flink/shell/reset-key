@@ -1,0 +1,4 @@
+set 'cli.a-key'='a value';
+reset 'cli.a-key';
+set;
+exit
