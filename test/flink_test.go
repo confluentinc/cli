@@ -172,7 +172,7 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest FlinkShellTest) {
 		s.login(t)
 
 		// Create a file for go-prompt to use as the input stream
-		stdin, err := os.Create("input.txt")
+		stdin, err := os.Create("flink_shell_input_stream.txt")
 		require.NoError(t, err, "error creating file")
 		defer cleanupInputFile(stdin)
 
