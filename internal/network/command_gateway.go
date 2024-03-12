@@ -6,8 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 type gatewayOut struct {
@@ -67,14 +65,14 @@ func (c *command) autocompleteGateways() []string {
 	return suggestions
 }
 
-func getGatewayCloud(gateway networkingv1.NetworkingV1Gateway) (string, error) {
+func getGatewayCloud(gateway networkingv1.NetworkingV1Gateway) string {
 	cloud := gateway.Status.GetCloudGateway()
 
 	if cloud.NetworkingV1AwsEgressPrivateLinkGatewayStatus != nil {
-		return CloudAws, nil
+		return CloudAws
 	} else if cloud.NetworkingV1AzureEgressPrivateLinkGatewayStatus != nil {
-		return CloudAzure, nil
+		return CloudAzure
 	}
 
-	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
+	return ""
 }

@@ -4,7 +4,6 @@
     "name": "my-azure-peering-gateway",
     "environment": "env-596",
     "region": "eastus2",
-    "azure_subscription": "aa000000-a000-0a00-00aa-0000aaa0a0a0",
     "phase": "READY"
   },
   {
@@ -20,7 +19,6 @@
     "name": "my-aws-peering-gateway",
     "environment": "env-596",
     "region": "us-east-2",
-    "aws_principal_arn": "arn:aws:iam::123456789012:role",
     "phase": "READY"
   },
   {

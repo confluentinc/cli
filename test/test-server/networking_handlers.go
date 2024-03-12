@@ -1592,9 +1592,9 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gatewayOne := getGateway("gw-12345", environment, "my-aws-gateway", "AwsEgressPrivateLinkGatewaySpec", "AwsEgressPrivateLinkGatewayStatus")
-		gatewayTwo := getGateway("gw-54321", environment, "my-aws-peering-gateway", "AwsPeeringGatewaySpec", "AwsEgressPrivateLinkGatewayStatus")
+		gatewayTwo := getGateway("gw-54321", environment, "my-aws-peering-gateway", "AwsPeeringGatewaySpec", "")
 		gatewayThree := getGateway("gw-67890", environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
-		gatewayFour := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
+		gatewayFour := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
 
 		recordList := networkingv1.NetworkingV1GatewayList{Data: []networkingv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour}}
 		err := json.NewEncoder(w).Encode(recordList)

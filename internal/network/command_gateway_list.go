@@ -60,10 +60,7 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 			out.Region = gateway.Spec.Config.NetworkingV1AzurePeeringGatewaySpec.GetRegion()
 		}
 
-		cloud, err := getGatewayCloud(gateway)
-		if err != nil {
-			return err
-		}
+		cloud := getGatewayCloud(gateway)
 
 		switch cloud {
 		case CloudAws:
