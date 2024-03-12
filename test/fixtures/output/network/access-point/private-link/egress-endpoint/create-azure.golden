@@ -1,0 +1,9 @@
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
+| ID                          | ap-67890                                                                                                               |
+| Name                        | my-egress-endpoint                                                                                                     |
+| Azure Private Link Service  | /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName |
+| Azure Private Link Endpoint | private-endpoint-id                                                                                                    |
+| Environment                 | env-596                                                                                                                |
+| Gateway                     | gw-123456                                                                                                              |
+| Phase                       | READY                                                                                                                  |
++-----------------------------+------------------------------------------------------------------------------------------------------------------------+
