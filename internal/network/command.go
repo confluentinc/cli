@@ -103,6 +103,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newDnsCommand())
+	cmd.AddCommand(c.newGatewayCommand())
 	cmd.AddCommand(c.newIpAddressCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newPeeringCommand())

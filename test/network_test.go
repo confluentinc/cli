@@ -111,6 +111,42 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkGatewayDescribe() {
+	tests := []CLITest{
+		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
+		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
+		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkGatewayList() {
+	tests := []CLITest{
+		{args: "network gateway list", fixture: "network/gateway/list.golden"},
+		{args: "network gateway list --output json", fixture: "network/gateway/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkGateway_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network gateway describe ""`, login: "cloud", fixture: "network/gateway/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkPeeringList() {
 	tests := []CLITest{
 		{args: "network peering list", fixture: "network/peering/list.golden"},

@@ -68,6 +68,8 @@ var ccloudV2Routes = []route{
 	{"/networking/v1/dns-forwarders/{id}", handleNetworkingDnsForwarder},
 	{"/networking/v1/dns-records", handleNetworkingDnsRecords},
 	{"/networking/v1/dns-records/{id}", handleNetworkingDnsRecord},
+	{"/networking/v1/gateways", handleNetworkingGateways},
+	{"/networking/v1/gateways/{id}", handleNetworkingGateway},
 	{"/networking/v1/ip-addresses", handleNetworkingIpAddresses},
 	{"/networking/v1/networks", handleNetworkingNetworks},
 	{"/networking/v1/networks/{id}", handleNetworkingNetwork},
