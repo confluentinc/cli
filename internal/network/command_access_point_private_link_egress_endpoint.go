@@ -86,14 +86,6 @@ func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, egressEndpoint netw
 		out.AwsVpcEndpointDnsName = egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus.GetVpcEndpointDnsName()
 	}
 
-	if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint != nil {
-		out.AzurePrivateLinkService = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkServiceResourceId()
-	}
-
-	if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus != nil {
-		out.AzurePrivateLinkEndpoint = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointResourceId()
-	}
-
 	table := output.NewTable(cmd)
 	table.Add(out)
 	return table.Print()
