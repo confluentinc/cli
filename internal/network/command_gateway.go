@@ -9,13 +9,12 @@ import (
 )
 
 type gatewayOut struct {
-	Id                string `human:"ID" serialized:"id"`
-	Name              string `human:"Name,omitempty" serialized:"name,omitempty"`
-	Environment       string `human:"Environment" serialized:"environment"`
-	Region            string `human:"Region,omitempty" serialized:"region,omitempty"`
-	AwsPrincipalArn   string `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
-	AzureSubscription string `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
-	Phase             string `human:"Phase" serialized:"phase"`
+	Id              string `human:"ID" serialized:"id"`
+	Name            string `human:"Name,omitempty" serialized:"name,omitempty"`
+	Environment     string `human:"Environment" serialized:"environment"`
+	Region          string `human:"Region,omitempty" serialized:"region,omitempty"`
+	AwsPrincipalArn string `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
+	Phase           string `human:"Phase" serialized:"phase"`
 }
 
 func (c *command) newGatewayCommand() *cobra.Command {
