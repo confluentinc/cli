@@ -43,8 +43,9 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of custom plugin.")
 	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
-	cmd.Flags().String("cloud", "aws", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
-	pcmd.RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return ccloudv2.ByocSupportClouds })
+	//cmd.Flags().String("cloud", "aws", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
+	//pcmd.RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return ccloudv2.ByocSupportClouds })
+	c.addCloudFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -139,4 +140,9 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		Cloud: pluginResp.GetCloud(),
 	})
 	return table.Print()
+}
+
+func (c *customPluginCommand) addCloudFlag(cmd *cobra.Command) {
+	cmd.Flags().String("cloud", "aws", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return ccloudv2.ByocSupportClouds })
 }

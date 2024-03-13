@@ -18,7 +18,7 @@ import (
 
 const (
 	maxFileSize     = 1024 * 1024 * 1024 // 1GB
-	maxFileSizeInGB = float64(maxFileSize) / float64(1024*1024*1024)
+	maxFileSizeInGB = 1
 )
 
 func DoesPathExist(path string) bool {
@@ -134,7 +134,7 @@ func UploadFile(url, filePath string, formFields map[string]any) error {
 	}
 
 	if fileInfo.Size() > maxFileSize {
-		return fmt.Errorf("file size %d exceeds the %fGB limit", fileInfo.Size(), maxFileSizeInGB)
+		return fmt.Errorf("file size %d exceeds the %dGB limit", fileInfo.Size(), maxFileSizeInGB)
 	}
 
 	for key, value := range formFields {
@@ -194,7 +194,7 @@ func UploadFileToAzureBlob(url, filePath, contentFormat string) error {
 	}
 
 	if fileInfo.Size() > maxFileSize {
-		return fmt.Errorf("file size %d exceeds the %fGB limit", fileInfo.Size(), maxFileSizeInGB)
+		return fmt.Errorf("file size %d exceeds the %dGB limit", fileInfo.Size(), maxFileSizeInGB)
 	}
 
 	file, err := os.Open(filePath)
