@@ -244,6 +244,11 @@ func (s *CLITestSuite) tearDownFlinkShellTests() {
 
 func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 	testName := strings.TrimSuffix(flinkShellTest.goldenFile, ".golden")
+	testTimeout := flinkShellTest.timeout
+	// set a default timeout of 10 seconds
+	if testTimeout == 0 {
+		testTimeout = 10 * time.Second
+	}
 	s.T().Run(testName, func(t *testing.T) {
 		// Create a file for go-prompt to use as the input stream
 		stdin, err := os.Create(flinkShellInputStreamFile)
@@ -265,10 +270,6 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 		// Start command
 		err = cmd.Start()
 		require.NoError(t, err)
-		go func() {
-			require.NoError(t, killCommandIfTimeoutExceeded(flinkShellTest.timeout, cmd))
-			require.NoError(t, pipe.Close())
-		}()
 
 		output := &strings.Builder{}
 		output.WriteString(waitForLine(stdoutScanner, "[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion"))
@@ -279,9 +280,20 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 		require.NoError(t, err)
 		output.WriteString(outputFromCommands)
 
-		// Wait for flink shell to exit
-		err = cmd.Wait()
-		require.NoError(t, err)
+		cmdDone := make(chan error)
+		go func() {
+			cmdDone <- cmd.Wait()
+		}()
+
+		// Wait for flink shell to exit or timeout
+		select {
+		case err := <-cmdDone:
+			require.NoError(t, err)
+		case <-time.After(testTimeout):
+			require.NoError(t, cmd.Process.Kill())
+			require.NoError(t, pipe.Close())
+			t.Fatalf("test timed out")
+		}
 
 		// Compare to golden file
 		snapshotConfig := cupaloy.New(
@@ -304,14 +316,6 @@ func cleanupInputFile(file *os.File) error {
 		return err
 	}
 	return nil
-}
-
-func killCommandIfTimeoutExceeded(timeout time.Duration, cmd *exec.Cmd) error {
-	if timeout == 0 {
-		timeout = 10 * time.Second
-	}
-	time.Sleep(timeout)
-	return cmd.Process.Kill()
 }
 
 func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Scanner) (string, error) {
