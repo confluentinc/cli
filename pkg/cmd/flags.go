@@ -95,8 +95,8 @@ func AddCloudFlag(cmd *cobra.Command) {
 }
 
 func AddPluginCloudFlag(cmd *cobra.Command) {
-	cmd.Flags().String("cloud", "", fmt.Sprintf("Cloud provider of custom plugin. Supported value %s. (default \"aws\").", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
-	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return []string{"aws", "azure"} })
+	cmd.Flags().String("cloud", "aws", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(kafka.BYOCSupportClouds, "or")))
+	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.BYOCSupportClouds })
 }
 
 func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {

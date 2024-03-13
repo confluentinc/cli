@@ -102,8 +102,14 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	if err := utils.UploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
-		return err
+	if cloud == "azure" {
+		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), pluginFileName, strings.ToLower(resp.GetContentFormat())); err != nil {
+			return err
+		}
+	} else {
+		if err := utils.UploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
+			return err
+		}
 	}
 
 	createCustomPluginRequest := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
