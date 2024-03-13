@@ -16,7 +16,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-const maxFileSize = 1024 * 1024 * 1024 // 1GB
+const (
+	maxFileSize     = 1024 * 1024 * 1024 // 1GB
+	maxFileSizeInGB = float64(maxFileSize) / float64(1024*1024*1024)
+)
 
 func DoesPathExist(path string) bool {
 	if path == "" {
@@ -131,7 +134,7 @@ func UploadFile(url, filePath string, formFields map[string]any) error {
 	}
 
 	if fileInfo.Size() > maxFileSize {
-		return fmt.Errorf("file size %d exceeds the 1GB limit", fileInfo.Size())
+		return fmt.Errorf("file size %d exceeds the %fGB limit", fileInfo.Size(), maxFileSizeInGB)
 	}
 
 	for key, value := range formFields {
@@ -191,7 +194,7 @@ func UploadFileToAzureBlob(url, filePath, contentFormat string) error {
 	}
 
 	if fileInfo.Size() > maxFileSize {
-		return fmt.Errorf("file size %d exceeds the 1GB limit", fileInfo.Size())
+		return fmt.Errorf("file size %d exceeds the %fGB limit", fileInfo.Size(), maxFileSizeInGB)
 	}
 
 	file, err := os.Open(filePath)
