@@ -345,7 +345,7 @@ func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Sca
 
 		for stdoutScanner.Scan() {
 			// Strip all terminal control sequences and skip empty lines
-			line := removeANSIEscapeSequences(stdoutScanner.Text())
+			line := removeAnsiEscapeSequences(stdoutScanner.Text())
 			if line == "" {
 				continue
 			}
@@ -368,7 +368,7 @@ func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Sca
 	return nil
 }
 
-func removeANSIEscapeSequences(input string) string {
+func removeAnsiEscapeSequences(input string) string {
 	stripColors := regexp.MustCompile(`\x1b\[[0-9;]*[JKmsu]`)
 	stripBellCharacter := regexp.MustCompile(`\a`)
 	stripTitle := regexp.MustCompile(`\x1B]2;`)
