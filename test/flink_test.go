@@ -21,11 +21,12 @@ import (
 )
 
 const (
+	flinkShellInputStreamFile     = "flink_shell_input_stream.txt"
 	flinkShellFixtureOutputFolder = "test/fixtures/output/flink/shell"
 	timezoneEnvVar                = "TZ"
 )
 
-type FlinkShellTest struct {
+type flinkShellTest struct {
 	commands   []string
 	goldenFile string
 	timeout    time.Duration
@@ -153,7 +154,7 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 }
 
 func (s *CLITestSuite) TestFlinkShell() {
-	tests := []FlinkShellTest{
+	tests := []flinkShellTest{
 		{
 			goldenFile: "use-catalog.golden",
 			commands: []string{
@@ -194,24 +195,62 @@ func (s *CLITestSuite) TestFlinkShell() {
 		},
 	}
 
+	s.setupFlinkShellTests()
+	defer s.tearDownFlinkShellTests()
 	for _, test := range tests {
 		s.runFlinkShellTest(test)
 	}
 }
 
-func (s *CLITestSuite) runFlinkShellTest(flinkShellTest FlinkShellTest) {
+func (s *CLITestSuite) setupFlinkShellTests() {
+	s.login(s.T())
+
+	// Set the go-prompt file input env var, so go-prompt uses this file as the input stream
+	err := os.Setenv(prompt.EnvVarInputFile, flinkShellInputStreamFile)
+	require.NoError(s.T(), err)
+
+	// Fake the timezone, to ensure CI and local run with the same default timezone
+	err = os.Setenv(timezoneEnvVar, "Europe/London")
+	require.NoError(s.T(), err)
+}
+
+func (s *CLITestSuite) login(t *testing.T) {
+	loginString := fmt.Sprintf("login --url %s", s.TestBackend.GetCloudUrl())
+	env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
+	for _, e := range env {
+		keyVal := strings.Split(e, "=")
+		os.Setenv(keyVal[0], keyVal[1])
+	}
+
+	defer func() {
+		for _, e := range env {
+			keyVal := strings.Split(e, "=")
+			os.Unsetenv(keyVal[0])
+		}
+	}()
+
+	if output := runCommand(t, testBin, env, loginString, 0, ""); *debug {
+		fmt.Println(output)
+	}
+}
+
+func (s *CLITestSuite) tearDownFlinkShellTests() {
+	err := os.Unsetenv(prompt.EnvVarInputFile)
+	require.NoError(s.T(), err)
+
+	err = os.Unsetenv(timezoneEnvVar)
+	require.NoError(s.T(), err)
+}
+
+func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 	testName := strings.TrimSuffix(flinkShellTest.goldenFile, ".golden")
 	s.T().Run(testName, func(t *testing.T) {
-		s.login(t)
-
 		// Create a file for go-prompt to use as the input stream
-		stdin, err := os.Create("flink_shell_input_stream.txt")
-		require.NoError(t, err, "error creating file")
-		defer cleanupInputFile(stdin)
-
-		envVars, err := setEnvVars(stdin.Name())
-		require.NoError(t, err, "error setting env vars")
-		defer cleanupEnvVars(envVars)
+		stdin, err := os.Create(flinkShellInputStreamFile)
+		require.NoError(s.T(), err, "error creating file")
+		defer func() {
+			require.NoError(t, cleanupInputFile(stdin))
+		}()
 
 		// Start flink shell
 		dir, err := os.Getwd()
@@ -221,13 +260,15 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest FlinkShellTest) {
 		// Register stdout scanner
 		pipe, err := cmd.StdoutPipe()
 		require.NoError(t, err)
-		defer pipe.Close()
 		stdoutScanner := bufio.NewScanner(pipe)
 
 		// Start command
 		err = cmd.Start()
 		require.NoError(t, err)
-		go killCommandIfTimeoutExceeded(flinkShellTest.timeout, cmd)
+		go func() {
+			require.NoError(t, killCommandIfTimeoutExceeded(flinkShellTest.timeout, cmd))
+			require.NoError(t, pipe.Close())
+		}()
 
 		output := &strings.Builder{}
 		output.WriteString(waitForLine(stdoutScanner, "[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion"))
@@ -255,69 +296,22 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest FlinkShellTest) {
 	})
 }
 
-func (s *CLITestSuite) login(t *testing.T) {
-	loginString := fmt.Sprintf("login --url %s", s.TestBackend.GetCloudUrl())
-	env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
-	for _, e := range env {
-		keyVal := strings.Split(e, "=")
-		os.Setenv(keyVal[0], keyVal[1])
+func cleanupInputFile(file *os.File) error {
+	if err := file.Close(); err != nil {
+		return err
 	}
-
-	defer func() {
-		for _, e := range env {
-			keyVal := strings.Split(e, "=")
-			os.Unsetenv(keyVal[0])
-		}
-	}()
-
-	if output := runCommand(t, testBin, env, loginString, 0, ""); *debug {
-		fmt.Println(output)
+	if err := os.Remove(file.Name()); err != nil {
+		return err
 	}
+	return nil
 }
 
-func cleanupInputFile(file *os.File) {
-	err := file.Close()
-	if err != nil {
-		fmt.Printf("failed to close file: %v\n", err)
-	}
-	err = os.Remove(file.Name())
-	if err != nil {
-		fmt.Printf("failed to remove file: %v\n", err)
-	}
-}
-
-func setEnvVars(inputFileName string) ([]string, error) {
-	var envVars []string
-
-	// Set the go-prompt file input env var, so go-prompt uses this file as the input stream
-	if err := os.Setenv(prompt.EnvVarInputFile, inputFileName); err != nil {
-		return envVars, err
-	}
-	envVars = append(envVars, prompt.EnvVarInputFile)
-
-	// Fake the timezone, to ensure CI and local run with the same default timezone
-	if err := os.Setenv(timezoneEnvVar, "Europe/London"); err != nil {
-		return envVars, err
-	}
-	envVars = append(envVars, timezoneEnvVar)
-
-	return envVars, nil
-}
-
-func cleanupEnvVars(envVars []string) {
-	for _, envVar := range envVars {
-		os.Unsetenv(envVar)
-	}
-}
-
-func killCommandIfTimeoutExceeded(timeout time.Duration, cmd *exec.Cmd) {
+func killCommandIfTimeoutExceeded(timeout time.Duration, cmd *exec.Cmd) error {
 	if timeout == 0 {
 		timeout = 10 * time.Second
 	}
 	time.Sleep(timeout)
-	if err := cmd.Process.Kill(); err != nil {
-		fmt.Printf("failed to kill command %v/n", err)
-	}
+	return cmd.Process.Kill()
 }
 
 func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Scanner) (string, error) {
@@ -365,19 +359,18 @@ func waitForLine(stdoutScanner *bufio.Scanner, lineToWaitFor string) string {
 }
 
 func removeAnsiEscapeSequences(input string) string {
-	stripColors := regexp.MustCompile(`\x1b\[[0-9;]*[JKmsu]`)
-	stripBellCharacter := regexp.MustCompile(`\a`)
-	stripTitle := regexp.MustCompile(`\x1B]2;`)
-	stripSqlPrompt := regexp.MustCompile(`sql-prompt`)
-	stripErasePrefix := regexp.MustCompile(`> \x1b\[2D`)
-	stripCursorUp := regexp.MustCompile(`\x1b\[1A.*`)
+	regexes := []*regexp.Regexp{
+		regexp.MustCompile(`\x1b\[[0-9;]*[JKmsu]`), // strip colors
+		regexp.MustCompile(`\a`),                   // strip bell characters
+		regexp.MustCompile(`\x1B]2;`),              // strip terminal title
+		regexp.MustCompile(`sql-prompt`),           // strip 'sql-prompt'
+		regexp.MustCompile(`> \x1b\[2D`),           // strip cursor back
+		regexp.MustCompile(`\x1b\[1A.*`),           // strip cursor up
+	}
 
-	input = stripColors.ReplaceAllString(input, "")
-	input = stripBellCharacter.ReplaceAllString(input, "")
-	input = stripTitle.ReplaceAllString(input, "")
-	input = stripSqlPrompt.ReplaceAllString(input, "")
-	input = stripErasePrefix.ReplaceAllString(input, "")
-	input = stripCursorUp.ReplaceAllString(input, "")
+	for _, regex := range regexes {
+		input = regex.ReplaceAllString(input, "")
+	}
 
 	return strings.TrimSpace(input)
 }
