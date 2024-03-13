@@ -8,6 +8,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	"github.com/confluentinc/cli/v3/internal/connect"
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
@@ -92,6 +93,11 @@ func AddByokStateFlag(cmd *cobra.Command) {
 func AddCloudFlag(cmd *cobra.Command) {
 	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds, "or")))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
+}
+
+func AddPluginCloudFlag(cmd *cobra.Command) {
+	cmd.Flags().String("cloud", "aws", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(connect.BYOCSupportClouds, "or")))
+	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return connect.BYOCSupportClouds })
 }
 
 func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
