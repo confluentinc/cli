@@ -26,7 +26,6 @@ const (
 )
 
 type FlinkShellTest struct {
-	name       string
 	commands   []string
 	goldenFile string
 	timeout    time.Duration
@@ -156,7 +155,6 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 func (s *CLITestSuite) TestFlinkShell() {
 	tests := []FlinkShellTest{
 		{
-			name:       "TestUseCatalog",
 			goldenFile: "use-catalog.golden",
 			commands: []string{
 				"use catalog default;",
@@ -164,7 +162,6 @@ func (s *CLITestSuite) TestFlinkShell() {
 			},
 		},
 		{
-			name:       "TestUseDatabase",
 			goldenFile: "use-database.golden",
 			commands: []string{
 				"use db1;",
@@ -172,16 +169,14 @@ func (s *CLITestSuite) TestFlinkShell() {
 			},
 		},
 		{
-			name:       "TestSetSingleKey",
-			goldenFile: "set-key.golden",
+			goldenFile: "set-single-key.golden",
 			commands: []string{
 				"set 'cli.a-key'='a value';",
 				"set;",
 			},
 		},
 		{
-			name:       "TestResetSingleKey",
-			goldenFile: "reset-key.golden",
+			goldenFile: "reset-single-key.golden",
 			commands: []string{
 				"set 'cli.a-key'='a value';",
 				"reset 'cli.a-key';",
@@ -189,12 +184,12 @@ func (s *CLITestSuite) TestFlinkShell() {
 			},
 		},
 		{
-			name:       "TestResetAllKeys",
-			goldenFile: "reset-all.golden",
+			goldenFile: "reset-all-keys.golden",
 			commands: []string{
 				"set 'cli.a-key'='a value';",
 				"set 'cli.another-key'='another value';",
-				"reset;", "set;",
+				"reset;",
+				"set;",
 			},
 		},
 	}
@@ -205,7 +200,8 @@ func (s *CLITestSuite) TestFlinkShell() {
 }
 
 func (s *CLITestSuite) runFlinkShellTest(flinkShellTest FlinkShellTest) {
-	s.T().Run(flinkShellTest.name, func(t *testing.T) {
+	testName := strings.TrimSuffix(flinkShellTest.goldenFile, ".golden")
+	s.T().Run(testName, func(t *testing.T) {
 		s.login(t)
 
 		// Create a file for go-prompt to use as the input stream
