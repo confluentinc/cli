@@ -23,6 +23,10 @@ const (
 	ccloudV2ListPageSize    = 100
 )
 
+var (
+	ByocSupportClouds = []string{"aws", "azure"}
+)
+
 type NullableString interface {
 	Get() *string
 	IsSet() bool
