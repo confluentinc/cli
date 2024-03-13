@@ -234,12 +234,13 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest FlinkShellTest) {
 		go killCommandIfTimeoutExceeded(flinkShellTest.timeout, cmd)
 
 		output := &strings.Builder{}
-		waitForFlinkShellToBeReady(stdoutScanner, output)
+		output.WriteString(waitForLine(stdoutScanner, "[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion"))
 
 		// Execute commands
 		require.NoError(t, err)
-		err = executeCommands(stdin, flinkShellTest.commands, stdoutScanner, output)
+		outputFromCommands, err := executeCommands(stdin, flinkShellTest.commands, stdoutScanner)
 		require.NoError(t, err)
+		output.WriteString(outputFromCommands)
 
 		// Wait for flink shell to exit
 		err = cmd.Wait()
@@ -323,49 +324,48 @@ func killCommandIfTimeoutExceeded(timeout time.Duration, cmd *exec.Cmd) {
 	}
 }
 
-func waitForFlinkShellToBeReady(scanner *bufio.Scanner, output *strings.Builder) {
-	for scanner.Scan() {
-		line := scanner.Text()
-		output.WriteString(line + "\n")
-		if strings.Contains(line, "[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion") {
-			break
-		}
-	}
-}
-
-func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Scanner, output *strings.Builder) error {
+func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Scanner) (string, error) {
 	// add exit command to ensure we always close the flink shell
 	commands = append(commands, "exit")
+	output := strings.Builder{}
 	for _, command := range commands {
 		// Simulate the user entering a command and add a new line to flush the output buffer
 		_, err := stdin.WriteString(command + "\n")
 		if err != nil {
-			return err
+			return "", err
 		}
 
-		for stdoutScanner.Scan() {
-			// Strip all terminal control sequences and skip empty lines
-			line := removeAnsiEscapeSequences(stdoutScanner.Text())
-			if line == "" {
-				continue
-			}
+		output.WriteString(waitForLine(stdoutScanner, fmt.Sprintf("> %s", command)))
 
-			// Record the output
-			output.WriteString(line + "\n")
+		// submit the statement
+		_, err = stdin.WriteString("\n")
+		if err != nil {
+			return "", err
+		}
 
-			// Once we've seen our command be printed, we know we can continue to submit the statement.
-			// This effectively means we wait for the previous command to complete, since the new command will only
-			// be printed, if the previous one is finished.
-			if strings.Contains(line, fmt.Sprintf("> %s", command)) {
-				err := submitStatement(stdin)
-				if err != nil {
-					return err
-				}
-				break
-			}
+		output.WriteString(waitForLine(stdoutScanner, "Statement successfully submitted."))
+	}
+	return output.String(), nil
+}
+
+func waitForLine(stdoutScanner *bufio.Scanner, lineToWaitFor string) string {
+	output := strings.Builder{}
+	for stdoutScanner.Scan() {
+		// Strip all terminal control sequences and skip empty lines
+		line := removeAnsiEscapeSequences(stdoutScanner.Text())
+		if line == "" {
+			continue
+		}
+
+		// Record the output
+		output.WriteString(line + "\n")
+
+		// Once we've seen the line we wanted to wait for, we break.
+		if strings.HasPrefix(line, lineToWaitFor) {
+			break
 		}
 	}
-	return nil
+	return output.String()
 }
 
 func removeAnsiEscapeSequences(input string) string {
@@ -384,12 +384,4 @@ func removeAnsiEscapeSequences(input string) string {
 	input = stripCursorUp.ReplaceAllString(input, "")
 
 	return strings.TrimSpace(input)
-}
-
-func submitStatement(stdin *os.File) error {
-	// We need to wait before and after writing a new line, so go-prompt receives the ENTER as an individual key press
-	time.Sleep(50 * time.Millisecond)
-	_, err := stdin.WriteString("\n")
-	time.Sleep(50 * time.Millisecond)
-	return err
 }

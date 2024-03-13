@@ -1,7 +1,6 @@
-Welcome! 
-To exit, press Ctrl-Q or type "exit". 
-
-[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion 
+Welcome!
+To exit, press Ctrl-Q or type "exit".
+[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion
 > use catalog default;
 Statement successfully submitted.
 Statement phase is COMPLETED.
