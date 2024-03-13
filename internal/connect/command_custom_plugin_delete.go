@@ -46,7 +46,7 @@ func (c *customPluginCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *customPluginCommand) mapPluginIdToName() (map[string]string, error) {
-	plugins, err := c.V2Client.ListCustomPlugins()
+	plugins, err := c.V2Client.ListCustomPlugins("")
 	if err != nil {
 		return nil, err
 	}
