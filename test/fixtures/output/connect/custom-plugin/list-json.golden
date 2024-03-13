@@ -1,10 +1,12 @@
 [
   {
     "id": "ccp-123456",
-    "name": "CliPluginTest1"
+    "name": "CliPluginTest1",
+    "cloud": "aws"
   },
   {
     "id": "ccp-789012",
-    "name": "CliPluginTest2"
+    "name": "CliPluginTest2",
+    "cloud": "aws"
   }
 ]

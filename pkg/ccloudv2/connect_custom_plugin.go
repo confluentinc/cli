@@ -33,13 +33,13 @@ func (c *Client) CreateCustomPlugin(createCustomPluginRequest connectcustomplugi
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCustomPlugins() ([]connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
+func (c *Client) ListCustomPlugins(cloud string) ([]connectcustompluginv1.ConnectV1CustomConnectorPlugin, error) {
 	var list []connectcustompluginv1.ConnectV1CustomConnectorPlugin
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListPlugins(pageToken)
+		page, httpResp, err := c.executeListPlugins(pageToken, cloud)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -68,10 +68,13 @@ func (c *Client) UpdateCustomPlugin(id string, updateCustomPluginRequest connect
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) executeListPlugins(pageToken string) (connectcustompluginv1.ConnectV1CustomConnectorPluginList, *http.Response, error) {
+func (c *Client) executeListPlugins(pageToken, cloud string) (connectcustompluginv1.ConnectV1CustomConnectorPluginList, *http.Response, error) {
 	req := c.ConnectCustomPluginClient.CustomConnectorPluginsConnectV1Api.ListConnectV1CustomConnectorPlugins(c.connectCustomPluginApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
+	}
+	if cloud != "" {
+		req = req.Cloud(cloud)
 	}
 	return req.Execute()
 }
