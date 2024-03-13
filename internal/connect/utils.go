@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	BYOCSupportClouds = []string{"aws", "azure"}
+	ByocSupportClouds = []string{"aws", "azure"}
 )
 
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
