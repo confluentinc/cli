@@ -230,6 +230,7 @@ func handleCustomPlugin(t *testing.T) http.HandlerFunc {
 			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:          PtrString("ccp-123456"),
 				DisplayName: PtrString("my-custom-plugin"),
+				Cloud:       PtrString("aws"),
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
@@ -238,10 +239,12 @@ func handleCustomPlugin(t *testing.T) http.HandlerFunc {
 			plugin1 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:          PtrString("ccp-123456"),
 				DisplayName: PtrString("CliPluginTest1"),
+				Cloud:       PtrString("aws"),
 			}
 			plugin2 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:          PtrString("ccp-789012"),
 				DisplayName: PtrString("CliPluginTest2"),
+				Cloud:       PtrString("aws"),
 			}
 			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2}})
 			require.NoError(t, err)
@@ -262,6 +265,7 @@ func handleCustomPluginWithId(t *testing.T) http.HandlerFunc {
 					DisplayName:    PtrString("CliPluginTest"),
 					ConnectorType:  PtrString("source"),
 					ConnectorClass: PtrString("io.confluent.kafka.connect.test"),
+					Cloud:          PtrString("aws"),
 				}
 			} else {
 				sensitiveProperties := []string{"aws.key", "aws.secret"}
@@ -271,6 +275,7 @@ func handleCustomPluginWithId(t *testing.T) http.HandlerFunc {
 					Description:               PtrString("Source datagen plugin"),
 					ConnectorType:             PtrString("source"),
 					ConnectorClass:            PtrString("io.confluent.kafka.connect.test"),
+					Cloud:                     PtrString("aws"),
 					SensitiveConfigProperties: &sensitiveProperties,
 				}
 			}
@@ -297,9 +302,10 @@ func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			uploadUrl := connectcustompluginv1.ConnectV1PresignedUrl{
-				ContentFormat: PtrString("ZIP"),
-				UploadId:      PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
-				UploadUrl:     PtrString(fmt.Sprintf("http://%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.Host)),
+				ContentFormat: connectcustompluginv1.PtrString("ZIP"),
+				Cloud:         connectcustompluginv1.PtrString("aws"),
+				UploadId:      connectcustompluginv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl:     connectcustompluginv1.PtrString(fmt.Sprintf("%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.String())),
 			}
 			err := json.NewEncoder(w).Encode(uploadUrl)
 			require.NoError(t, err)
