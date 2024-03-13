@@ -1,5 +1,0 @@
-set 'cli.a-key'='a value';
-set 'cli.another-key'='another value';
-reset;
-set;
-exit

@@ -21,13 +21,13 @@ import (
 )
 
 const (
-	flinkShellFixtureInputFolder  = "test/fixtures/input/flink/shell"
 	flinkShellFixtureOutputFolder = "test/fixtures/output/flink/shell"
 	timezoneEnvVar                = "TZ"
 )
 
 type FlinkShellTest struct {
-	inputFile  string
+	name       string
+	commands   []string
 	goldenFile string
 	timeout    time.Duration
 }
@@ -155,11 +155,48 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 
 func (s *CLITestSuite) TestFlinkShell() {
 	tests := []FlinkShellTest{
-		{inputFile: "use-catalog", goldenFile: "use-catalog.golden"},
-		{inputFile: "use-database", goldenFile: "use-database.golden"},
-		{inputFile: "set-key", goldenFile: "set-key.golden"},
-		{inputFile: "reset-key", goldenFile: "reset-key.golden"},
-		{inputFile: "reset-all", goldenFile: "reset-all.golden"},
+		{
+			name:       "TestUseCatalog",
+			goldenFile: "use-catalog.golden",
+			commands: []string{
+				"use catalog default;",
+				"set;",
+			},
+		},
+		{
+			name:       "TestUseDatabase",
+			goldenFile: "use-database.golden",
+			commands: []string{
+				"use db1;",
+				"set;",
+			},
+		},
+		{
+			name:       "TestSetSingleKey",
+			goldenFile: "set-key.golden",
+			commands: []string{
+				"set 'cli.a-key'='a value';",
+				"set;",
+			},
+		},
+		{
+			name:       "TestResetSingleKey",
+			goldenFile: "reset-key.golden",
+			commands: []string{
+				"set 'cli.a-key'='a value';",
+				"reset 'cli.a-key';",
+				"set;",
+			},
+		},
+		{
+			name:       "TestResetAllKeys",
+			goldenFile: "reset-all.golden",
+			commands: []string{
+				"set 'cli.a-key'='a value';",
+				"set 'cli.another-key'='another value';",
+				"reset;", "set;",
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -168,7 +205,7 @@ func (s *CLITestSuite) TestFlinkShell() {
 }
 
 func (s *CLITestSuite) runFlinkShellTest(flinkShellTest FlinkShellTest) {
-	s.T().Run(flinkShellTest.inputFile, func(t *testing.T) {
+	s.T().Run(flinkShellTest.name, func(t *testing.T) {
 		s.login(t)
 
 		// Create a file for go-prompt to use as the input stream
@@ -200,9 +237,8 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest FlinkShellTest) {
 		waitForFlinkShellToBeReady(stdoutScanner, output)
 
 		// Execute commands
-		commands, err := getCommandsFromFixture(filepath.Join(dir, flinkShellFixtureInputFolder, flinkShellTest.inputFile))
 		require.NoError(t, err)
-		err = executeCommands(stdin, commands, stdoutScanner, output)
+		err = executeCommands(stdin, flinkShellTest.commands, stdoutScanner, output)
 		require.NoError(t, err)
 
 		// Wait for flink shell to exit
@@ -297,15 +333,9 @@ func waitForFlinkShellToBeReady(scanner *bufio.Scanner, output *strings.Builder)
 	}
 }
 
-func getCommandsFromFixture(inputFilePath string) ([]string, error) {
-	file, err := os.ReadFile(inputFilePath)
-	if err != nil {
-		return nil, err
-	}
-	return strings.Split(string(file), "\n"), nil
-}
-
 func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Scanner, output *strings.Builder) error {
+	// add exit command to ensure we always close the flink shell
+	commands = append(commands, "exit")
 	for _, command := range commands {
 		// Simulate the user entering a command and add a new line to flush the output buffer
 		_, err := stdin.WriteString(command + "\n")
