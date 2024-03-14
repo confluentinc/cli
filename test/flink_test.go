@@ -24,12 +24,12 @@ const (
 	flinkShellInputStreamFile     = "flink_shell_input_stream.txt"
 	flinkShellFixtureOutputFolder = "test/fixtures/output/flink/shell"
 	timezoneEnvVar                = "TZ"
+	flinkShellTimeout             = 10 * time.Second
 )
 
 type flinkShellTest struct {
 	commands   []string
 	goldenFile string
-	timeout    time.Duration
 }
 
 func (s *CLITestSuite) TestFlinkComputePool() {
@@ -217,18 +217,6 @@ func (s *CLITestSuite) setupFlinkShellTests() {
 func (s *CLITestSuite) login(t *testing.T) {
 	loginString := fmt.Sprintf("login --url %s", s.TestBackend.GetCloudUrl())
 	env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
-	for _, e := range env {
-		keyVal := strings.Split(e, "=")
-		os.Setenv(keyVal[0], keyVal[1])
-	}
-
-	defer func() {
-		for _, e := range env {
-			keyVal := strings.Split(e, "=")
-			os.Unsetenv(keyVal[0])
-		}
-	}()
-
 	if output := runCommand(t, testBin, env, loginString, 0, ""); *debug {
 		fmt.Println(output)
 	}
@@ -244,11 +232,6 @@ func (s *CLITestSuite) tearDownFlinkShellTests() {
 
 func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 	testName := strings.TrimSuffix(flinkShellTest.goldenFile, ".golden")
-	testTimeout := flinkShellTest.timeout
-	// set a default timeout of 10 seconds
-	if testTimeout == 0 {
-		testTimeout = 10 * time.Second
-	}
 	s.T().Run(testName, func(t *testing.T) {
 		// Create a file for go-prompt to use as the input stream
 		stdin, err := os.Create(flinkShellInputStreamFile)
@@ -289,7 +272,7 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 		select {
 		case err := <-cmdDone:
 			require.NoError(t, err)
-		case <-time.After(testTimeout):
+		case <-time.After(flinkShellTimeout):
 			require.NoError(t, cmd.Process.Kill())
 			require.NoError(t, pipe.Close())
 			t.Fatalf("test timed out")
