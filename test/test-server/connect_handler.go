@@ -237,7 +237,9 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodGet:
 			plugin1 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Cloud: connectcustompluginv1.PtrString("aws"),
+				Id:          connectcustompluginv1.PtrString("ccp-123456"),
+				DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
+				Cloud:       connectcustompluginv1.PtrString("aws"),
 			}
 			plugin2 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:          connectcustompluginv1.PtrString("ccp-789012"),
@@ -245,7 +247,7 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 				Cloud:       connectcustompluginv1.PtrString("aws"),
 			}
 			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:            connectcustompluginv1.PtrString("ccp-789012"),
+				Id:            connectcustompluginv1.PtrString("ccp-789013"),
 				DisplayName:   connectcustompluginv1.PtrString("CliPluginTest3"),
 				ConnectorType: connectcustompluginv1.PtrString("flink-udf"),
 				Cloud:         connectcustompluginv1.PtrString("aws"),
@@ -259,7 +261,8 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/custom-connector-plugins/{id}"
 func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			vars := mux.Vars(r)
 			id := vars["id"]
 			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
@@ -285,16 +288,14 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
-		}
-		if r.Method == http.MethodPatch {
+		case http.MethodPatch:
 			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:          connectcustompluginv1.PtrString("ccp-123456"),
 				DisplayName: connectcustompluginv1.PtrString("CliPluginTestUpdate"),
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
-		}
-		if r.Method == http.MethodDelete {
+		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPlugin{})
 			require.NoError(t, err)
 		}

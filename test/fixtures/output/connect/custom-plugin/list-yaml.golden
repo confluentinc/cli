@@ -4,3 +4,6 @@
 - id: ccp-789012
   name: CliPluginTest2
   cloud: aws
+- id: ccp-789013
+  name: CliPluginTest3
+  cloud: aws
