@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v3
 
-go 1.22.0
+go 1.21.7
 
 require (
 	github.com/antihax/optional v1.0.0
