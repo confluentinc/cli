@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/autocomplete"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
@@ -136,7 +137,9 @@ func (c *InputController) initPrompt() (prompt.IPrompt, error) {
 			if text == "" {
 				return false
 			}
-			return text == "exit" || strings.HasSuffix(text, ";") || lastKeyStroke == prompt.AltEnter
+
+			text = strings.ToUpper(text)
+			return text == config.OpExit || text == config.OpQuit || strings.HasSuffix(text, ";") || lastKeyStroke == prompt.AltEnter
 		}),
 	}
 	options = append(options, c.getKeyBindings()...)
@@ -188,12 +191,6 @@ func (c *InputController) getKeyBindings() []prompt.Option {
 	return append(
 		[]prompt.Option{
 			prompt.OptionAddKeyBind(prompt.KeyBind{
-				Key: prompt.ControlD,
-				Fn: func(b *prompt.Buffer) {
-					c.shouldExit = true
-				},
-			}),
-			prompt.OptionAddKeyBind(prompt.KeyBind{
 				Key: prompt.ControlQ,
 				Fn: func(b *prompt.Buffer) {
 					c.shouldExit = true
@@ -218,16 +215,34 @@ func getUnixBindings() []prompt.Option {
 	return []prompt.Option{
 		prompt.OptionAddASCIICodeBind(
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x62}, // Alt/Option + Arrow Left
+				ASCIICode: []byte{0x1b, 0x62}, // Alt/Option + Arrow Left (sometimes Alt/Option + b)
 				Fn:        prompt.GoLeftWord,
 			},
 			prompt.ASCIICodeBind{
-				ASCIICode: []byte{0x1b, 0x66}, // Alt/Option + Arrow Right
+				ASCIICode: []byte{0x1b, 0x66}, // Alt/Option + Arrow Right (sometimes Alt/Option + f)
 				Fn:        prompt.GoRightWord,
 			},
 			prompt.ASCIICodeBind{
 				ASCIICode: []byte{0x1b, 0x7F}, // Alt/Option + Backspace
 				Fn:        prompt.DeleteWord,
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x64}, // ForwardDeleteWord (Alt/Option + d)
+				Fn: func(buf *prompt.Buffer) {
+					buf.Delete(buf.Document().FindEndOfCurrentWordWithSpace())
+				},
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x75}, // UpCaseWord (Alt/Option + u)
+				Fn: func(buf *prompt.Buffer) {
+					buf.InsertText(strings.ToUpper(buf.Document().GetWordAfterCursorWithSpace()), true, true)
+				},
+			},
+			prompt.ASCIICodeBind{
+				ASCIICode: []byte{0x1b, 0x6c}, // DownCaseWord (Alt/Option + l)
+				Fn: func(buf *prompt.Buffer) {
+					buf.InsertText(strings.ToLower(buf.Document().GetWordAfterCursorWithSpace()), true, true)
+				},
 			},
 		),
 	}

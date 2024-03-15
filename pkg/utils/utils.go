@@ -16,7 +16,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-const maxFileSize = 1024 * 1024 * 1024 // 1GB
+const (
+	maxFileSize     = 1024 * 1024 * 1024 // 1GB
+	maxFileSizeInGB = 1
+)
 
 func DoesPathExist(path string) bool {
 	if path == "" {
@@ -131,7 +134,7 @@ func UploadFile(url, filePath string, formFields map[string]any) error {
 	}
 
 	if fileInfo.Size() > maxFileSize {
-		return fmt.Errorf("file size %d exceeds the 1GB limit", fileInfo.Size())
+		return fmt.Errorf("file size %d exceeds the %dGB limit", fileInfo.Size(), maxFileSizeInGB)
 	}
 
 	for key, value := range formFields {
@@ -167,6 +170,52 @@ func UploadFile(url, filePath string, formFields map[string]any) error {
 		return err
 	}
 	request.Header.Set("Content-Type", writer.FormDataContentType())
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode >= 400 {
+		responseBody, err := io.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("%s", string(responseBody))
+	}
+
+	return nil
+}
+
+func UploadFileToAzureBlob(url, filePath, contentFormat string) error {
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+
+	if fileInfo.Size() > maxFileSize {
+		return fmt.Errorf("file size %d exceeds the %dGB limit", fileInfo.Size(), maxFileSizeInGB)
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	client := &http.Client{Timeout: 20 * time.Minute}
+	request, err := http.NewRequest(http.MethodPut, url, file)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("x-ms-blob-type", "BlockBlob")
+	switch contentFormat {
+	case "zip":
+		request.Header.Set("Content-Type", "application/zip")
+	case "jar":
+		request.Header.Set("Content-Type", "application/java-archive")
+	}
+	request.ContentLength = fileInfo.Size()
 	response, err := client.Do(request)
 	if err != nil {
 		return err

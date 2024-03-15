@@ -32,6 +32,17 @@ type flinkShellTest struct {
 	goldenFile string
 }
 
+func (s *CLITestSuite) TestFlinkArtifactList() {
+	tests := []CLITest{
+		{args: "flink artifact list", fixture: "flink/artifact/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
 		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
