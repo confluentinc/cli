@@ -229,9 +229,11 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost:
 			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          connectcustompluginv1.PtrString("ccp-123456"),
-				DisplayName: connectcustompluginv1.PtrString("my-custom-plugin"),
-				Cloud:       connectcustompluginv1.PtrString("aws"),
+				Id:             connectcustompluginv1.PtrString("ccp-123456"),
+				DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
+				Cloud:          connectcustompluginv1.PtrString("aws"),
+				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
@@ -247,10 +249,12 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 				Cloud:       connectcustompluginv1.PtrString("aws"),
 			}
 			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:            connectcustompluginv1.PtrString("ccp-789013"),
-				DisplayName:   connectcustompluginv1.PtrString("CliPluginTest3"),
-				ConnectorType: connectcustompluginv1.PtrString("flink-udf"),
-				Cloud:         connectcustompluginv1.PtrString("aws"),
+				Id:             connectcustompluginv1.PtrString("ccp-789013"),
+				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
+				ConnectorType:  connectcustompluginv1.PtrString("flink-udf"),
+				Cloud:          connectcustompluginv1.PtrString("aws"),
+				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 			}
 			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3}})
 			require.NoError(t, err)
@@ -274,16 +278,25 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 					ConnectorClass: connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
 					Cloud:          connectcustompluginv1.PtrString("aws"),
 				}
-			} else {
+			} else if id == "ccp-789012" {
 				sensitiveProperties := []string{"aws.key", "aws.secret"}
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-					Id:                        connectcustompluginv1.PtrString("ccp-123456"),
+					Id:                        connectcustompluginv1.PtrString("ccp-789012"),
 					DisplayName:               connectcustompluginv1.PtrString("CliPluginTest"),
 					Description:               connectcustompluginv1.PtrString("Source datagen plugin"),
 					ConnectorType:             connectcustompluginv1.PtrString("source"),
 					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
 					Cloud:                     connectcustompluginv1.PtrString("aws"),
 					SensitiveConfigProperties: &sensitiveProperties,
+				}
+			} else {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:             connectcustompluginv1.PtrString("ccp-789013"),
+					DisplayName:    connectcustompluginv1.PtrString("CliPluginTest"),
+					ConnectorType:  connectcustompluginv1.PtrString("flink-udf"),
+					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+					Cloud:          connectcustompluginv1.PtrString("aws"),
+					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 				}
 			}
 			err := json.NewEncoder(w).Encode(plugin)

@@ -4,9 +4,9 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 	tests := []CLITest{
 		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar", fixture: "flink/artifact/create.golden"},
 		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --description cliPluginTest", fixture: "flink/artifact/create.golden"},
-		{args: "flink artifact describe ccp-123456", fixture: "flink/artifact/describe.golden"},
+		{args: "flink artifact describe ccp-789013", fixture: "flink/artifact/describe.golden"},
 		{args: "flink artifact list", fixture: "flink/artifact/list.golden"},
-		{args: "flink artifact delete ccp-123456 --force ", fixture: "flink/artifact/delete.golden"},
+		{args: "flink artifact delete ccp-123456 --force", fixture: "flink/artifact/delete.golden"},
 		{args: "flink artifact delete ccp-123456", input: "CliPluginTest1\n", fixture: "flink/artifact/delete-prompt.golden"},
 	}
 
