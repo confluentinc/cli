@@ -1,4 +1,5 @@
 package test
+
 import (
 	"bufio"
 	"fmt"
