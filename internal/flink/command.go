@@ -66,6 +66,14 @@ func (c *command) addDatabaseFlag(cmd *cobra.Command) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "database", c.autocompleteDatabases)
 }
 
+func (c *command) addOrgFlag(cmd *cobra.Command) {
+	cmd.Flags().String("org", "", "Override the Org ID in context")
+}
+
+func (c *command) addCatalogFlag(cmd *cobra.Command) {
+	cmd.Flags().String("catalog", "", "Override the Catalog in context")
+}
+
 func (c *command) autocompleteDatabases(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil

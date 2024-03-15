@@ -33,9 +33,12 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
+	c.addOrgFlag(cmd)
+	c.addCatalogFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	cmd.Flags().String("gateway-url", "", "Flink Gateway URL")
+	cmd.Flags().Bool("disable-auth", false, "Whether to disable auth")
 
 	return cmd
 }
@@ -81,6 +84,20 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			}, func() {})
 	}
 
+	orgId, err := cmd.Flags().GetString("org")
+	if err != nil {
+		return err
+	}
+	if orgId == "" {
+		if c.Context.GetCurrentOrganization() == "" {
+			return errors.NewErrorWithSuggestions(
+				"no org provided",
+				"Provide an org with `confluent environment use env-123456` or `--environment`.",
+			)
+		}
+		orgId = c.Context.GetCurrentOrganization()
+	}
+
 	environmentId, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
@@ -95,13 +112,20 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		environmentId = c.Context.GetCurrentEnvironment()
 	}
 
-	catalog := c.Context.GetCurrentFlinkCatalog()
+	catalog, err := cmd.Flags().GetString("catalog")
+	if err != nil {
+		return err
+	}
+
 	if catalog == "" {
-		environment, err := c.V2Client.GetOrgEnvironment(environmentId)
-		if err != nil {
-			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		catalog = c.Context.GetCurrentFlinkCatalog()
+		if catalog == "" {
+			environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+			if err != nil {
+				return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+			}
+			catalog = environment.GetDisplayName()
 		}
-		catalog = environment.GetDisplayName()
 	}
 
 	computePool := c.Context.GetCurrentFlinkComputePool()
@@ -168,7 +192,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		UserAgent:        c.Version.UserAgent,
 		EnvironmentName:  catalog,
 		EnvironmentId:    environmentId,
-		OrganizationId:   c.Context.GetOrganization().GetResourceId(),
+		OrganizationId:   orgId,
 		Database:         database,
 		ComputePoolId:    computePool,
 		ServiceAccountId: serviceAccount,
@@ -176,7 +200,19 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		LSPBaseUrl:       lspBaseUrl,
 	}
 
-	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
+	disableAuth, err := cmd.Flags().GetBool("disable-auth")
+	if err != nil {
+		return err
+	}
+
+	refreshAuthFunc := c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator)
+	if disableAuth {
+		refreshAuthFunc = func() error {
+			return nil
+		}
+	}
+
+	return client.StartApp(flinkGatewayClient, refreshAuthFunc, opts, reportUsage(cmd, c.Config, unsafeTrace))
 }
 
 func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewayClient) (string, error) {
