@@ -30,6 +30,16 @@ const (
 type flinkShellTest struct {
 	commands   []string
 	goldenFile string
+
+func (s *CLITestSuite) TestFlinkArtifactList() {
+	tests := []CLITest{
+		{args: "flink artifact list", fixture: "flink/artifact/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestFlinkComputePool() {
