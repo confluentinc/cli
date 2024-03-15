@@ -35,6 +35,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	cmd.Flags().String("gateway-url", "", "Flink Gateway URL")
 
 	return cmd
 }
@@ -136,7 +137,17 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
+	gatewayURL, err := cmd.Flags().GetString("gateway-url")
+	if err != nil {
+		return err
+	}
+
+	var flinkGatewayClient *ccloudv2.FlinkGatewayClient
+	if gatewayURL != "" {
+		flinkGatewayClient, err = c.GetFlinkGatewayClientWithURL(gatewayURL)
+	} else {
+		flinkGatewayClient, err = c.GetFlinkGatewayClient(true)
+	}
 	if err != nil {
 		return err
 	}

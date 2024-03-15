@@ -91,6 +91,24 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 	return c.flinkGatewayClient, nil
 }
 
+func (c *AuthenticatedCLICommand) GetFlinkGatewayClientWithURL(gatewayURL string) (*ccloudv2.FlinkGatewayClient, error) {
+	if c.flinkGatewayClient == nil {
+		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		dataplaneToken, err := auth.GetDataplaneToken(c.Context)
+		if err != nil {
+			return nil, err
+		}
+
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(gatewayURL, c.Version.UserAgent, unsafeTrace, dataplaneToken)
+	}
+
+	return c.flinkGatewayClient, nil
+}
+
 func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(id string) (string, error) {
 	if c.Config.IsTest {
 		return testserver.TestFlinkGatewayUrl.String(), nil
