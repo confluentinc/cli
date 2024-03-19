@@ -81,6 +81,19 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	assert.Nil(t, result)
 }
 
+func TestStoreProcessLocalQuitStatement(t *testing.T) {
+	// Create a new store
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
+	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{}
+	s := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc).(*Store)
+
+	mockAppController.EXPECT().ExitApplication()
+	result, err := s.ProcessLocalStatement("quit")
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+}
+
 func TestWaitForPendingStatement3(t *testing.T) {
 	statementName := "statementName"
 
@@ -350,6 +363,23 @@ func (s *StoreTestSuite) TestIsExitStatement() {
 	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.OpReset))
 	assert.False(s.T(), false, statementStartsWithOp("exitt;", flinkconfig.OpReset))
 	assert.False(s.T(), false, statementStartsWithOp("exi", flinkconfig.OpReset))
+}
+
+func (s *StoreTestSuite) TestIsQuitStatement() {
+	assert.True(s.T(), true, statementStartsWithOp("QUIT", flinkconfig.OpQuit))
+	assert.True(s.T(), true, statementStartsWithOp("QUIT ;", flinkconfig.OpQuit))
+	assert.True(s.T(), true, statementStartsWithOp("quit   ;", flinkconfig.OpQuit))
+	assert.True(s.T(), true, statementStartsWithOp("quiT   ", flinkconfig.OpQuit))
+	assert.True(s.T(), true, statementStartsWithOp("Quit   ", flinkconfig.OpQuit))
+	assert.True(s.T(), true, statementStartsWithOp("qUit   ", flinkconfig.OpQuit))
+	assert.True(s.T(), true, statementStartsWithOp("quit", flinkconfig.OpQuit))
+	assert.True(s.T(), true, statementStartsWithOp("quit ", flinkconfig.OpQuit))
+
+	assert.False(s.T(), false, statementStartsWithOp("quits", flinkconfig.OpQuit))
+	assert.False(s.T(), false, statementStartsWithOp("", flinkconfig.OpQuit))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", flinkconfig.OpQuit))
+	assert.False(s.T(), false, statementStartsWithOp("quitt;", flinkconfig.OpQuit))
+	assert.False(s.T(), false, statementStartsWithOp("qui", flinkconfig.OpQuit))
 }
 
 func (s *StoreTestSuite) TestParseSetStatement() {
@@ -1636,6 +1666,14 @@ func (s *StoreTestSuite) TestIsSelectStatement() {
 			statement:         createStatementWithSqlKind("selec"),
 			isSelectStatement: false,
 		},
+		{
+			name: "select random case without trait",
+			statement: flinkgatewayv1.SqlV1Statement{
+				Spec: &flinkgatewayv1.SqlV1StatementSpec{
+					Statement: flinkgatewayv1.PtrString("SeLeCt"),
+				}},
+			isSelectStatement: true,
+		},
 	}
 
 	for _, testCase := range tests {
@@ -1653,47 +1691,6 @@ func createStatementWithSqlKind(sqlKind string) flinkgatewayv1.SqlV1Statement {
 				SqlKind: flinkgatewayv1.PtrString(sqlKind),
 			},
 		},
-	}
-}
-
-func (s *StoreTestSuite) TestIsBackgroundStatement() {
-	tests := []struct {
-		name                  string
-		statement             flinkgatewayv1.SqlV1Statement
-		isBackgroundStatement bool
-	}{
-		{
-			name:                  "insert_into lowercase",
-			statement:             createStatementWithSqlKind("insert_into"),
-			isBackgroundStatement: true,
-		},
-		{
-			name:                  "insert_into uppercase",
-			statement:             createStatementWithSqlKind("INSERT_INTO"),
-			isBackgroundStatement: true,
-		},
-		{
-			name:                  "insert_into random case",
-			statement:             createStatementWithSqlKind("iNsErt_inTo"),
-			isBackgroundStatement: true,
-		},
-		{
-			name:                  "leading and trailing white space",
-			statement:             createStatementWithSqlKind("   INSERT_INTO   "),
-			isBackgroundStatement: false,
-		},
-		{
-			name:                  "missing last char",
-			statement:             createStatementWithSqlKind("INSERT_INT"),
-			isBackgroundStatement: false,
-		},
-	}
-
-	for _, testCase := range tests {
-		s.T().Run(testCase.name, func(t *testing.T) {
-			processedStatement := types.NewProcessedStatement(testCase.statement)
-			require.Equal(t, testCase.isBackgroundStatement, processedStatement.IsBackgroundStatement())
-		})
 	}
 }
 

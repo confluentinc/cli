@@ -25,6 +25,7 @@ const (
 	ConsumerShare                   = "consumer share"
 	Context                         = "context"
 	Dek                             = "DEK"
+	DnsForwarder                    = "DNS forwarder"
 	Environment                     = "environment"
 	Flink                           = "flink"
 	FlinkComputePool                = "Flink compute pool"

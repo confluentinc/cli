@@ -2,6 +2,7 @@ package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -223,68 +224,91 @@ func handlePluginValidate(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/connect/v1/custom-connector-plugins"
-func handleCustomPlugin(t *testing.T) http.HandlerFunc {
+func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
+		switch r.Method {
+		case http.MethodPost:
 			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          PtrString("ccp-123456"),
-				DisplayName: PtrString("my-custom-plugin"),
+				Id:             connectcustompluginv1.PtrString("ccp-123456"),
+				DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
+				Cloud:          connectcustompluginv1.PtrString("aws"),
+				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
-		}
-		if r.Method == http.MethodGet {
+		case http.MethodGet:
 			plugin1 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          PtrString("ccp-123456"),
-				DisplayName: PtrString("CliPluginTest1"),
+				Id:          connectcustompluginv1.PtrString("ccp-123456"),
+				DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
+				Cloud:       connectcustompluginv1.PtrString("aws"),
 			}
 			plugin2 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          PtrString("ccp-789012"),
-				DisplayName: PtrString("CliPluginTest2"),
+				Id:          connectcustompluginv1.PtrString("ccp-789012"),
+				DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
+				Cloud:       connectcustompluginv1.PtrString("aws"),
 			}
-			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2}})
+			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+				Id:             connectcustompluginv1.PtrString("ccp-789013"),
+				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
+				ConnectorType:  connectcustompluginv1.PtrString("flink-udf"),
+				Cloud:          connectcustompluginv1.PtrString("aws"),
+				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+			}
+			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3}})
 			require.NoError(t, err)
 		}
 	}
 }
 
 // Handler for: "/connect/v1/custom-connector-plugins/{id}"
-func handleCustomPluginWithId(t *testing.T) http.HandlerFunc {
+func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			vars := mux.Vars(r)
 			id := vars["id"]
 			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
 			if id == "ccp-123456" {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-					Id:             PtrString("ccp-123456"),
-					DisplayName:    PtrString("CliPluginTest"),
-					ConnectorType:  PtrString("source"),
-					ConnectorClass: PtrString("io.confluent.kafka.connect.test"),
+					Id:             connectcustompluginv1.PtrString("ccp-123456"),
+					DisplayName:    connectcustompluginv1.PtrString("CliPluginTest"),
+					ConnectorType:  connectcustompluginv1.PtrString("source"),
+					ConnectorClass: connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
+					Cloud:          connectcustompluginv1.PtrString("aws"),
 				}
-			} else {
+			} else if id == "ccp-789012" {
 				sensitiveProperties := []string{"aws.key", "aws.secret"}
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-					Id:                        PtrString("ccp-123456"),
-					DisplayName:               PtrString("CliPluginTest"),
-					Description:               PtrString("Source datagen plugin"),
-					ConnectorType:             PtrString("source"),
-					ConnectorClass:            PtrString("io.confluent.kafka.connect.test"),
+					Id:                        connectcustompluginv1.PtrString("ccp-789012"),
+					DisplayName:               connectcustompluginv1.PtrString("CliPluginTest"),
+					Description:               connectcustompluginv1.PtrString("Source datagen plugin"),
+					ConnectorType:             connectcustompluginv1.PtrString("source"),
+					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
+					Cloud:                     connectcustompluginv1.PtrString("aws"),
 					SensitiveConfigProperties: &sensitiveProperties,
+				}
+			} else {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:             connectcustompluginv1.PtrString("ccp-789013"),
+					DisplayName:    connectcustompluginv1.PtrString("CliPluginTest"),
+					ConnectorType:  connectcustompluginv1.PtrString("flink-udf"),
+					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+					Cloud:          connectcustompluginv1.PtrString("aws"),
+					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 				}
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
-		}
-		if r.Method == http.MethodPatch {
+		case http.MethodPatch:
 			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          PtrString("ccp-123456"),
-				DisplayName: PtrString("CliPluginTestUpdate"),
+				Id:          connectcustompluginv1.PtrString("ccp-123456"),
+				DisplayName: connectcustompluginv1.PtrString("CliPluginTestUpdate"),
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
-		}
-		if r.Method == http.MethodDelete {
+		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPlugin{})
 			require.NoError(t, err)
 		}
@@ -296,9 +320,10 @@ func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			uploadUrl := connectcustompluginv1.ConnectV1PresignedUrl{
-				ContentFormat: PtrString("ZIP"),
-				UploadId:      PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
-				UploadUrl:     PtrString("https://api.confluent.cloud/connect/v1/dummy-presigned-url"),
+				ContentFormat: connectcustompluginv1.PtrString("ZIP"),
+				Cloud:         connectcustompluginv1.PtrString("aws"),
+				UploadId:      connectcustompluginv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl:     connectcustompluginv1.PtrString(fmt.Sprintf("%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.String())),
 			}
 			err := json.NewEncoder(w).Encode(uploadUrl)
 			require.NoError(t, err)
@@ -310,7 +335,7 @@ func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
 func handleCustomPluginUploadFile(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			err := json.NewEncoder(w).Encode(PtrString("Success"))
+			err := json.NewEncoder(w).Encode(connectcustompluginv1.PtrString("Success"))
 			require.NoError(t, err)
 		}
 	}

@@ -54,6 +54,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Id:                    network.GetId(),
 				Name:                  network.Spec.GetDisplayName(),
 				EnvironmentId:         network.Spec.Environment.GetId(),
+				Gateway:               network.Spec.GetGateway().Id,
 				Cloud:                 network.Spec.GetCloud(),
 				Region:                network.Spec.GetRegion(),
 				Cidr:                  network.Spec.GetCidr(),
@@ -67,6 +68,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Id:                    network.GetId(),
 				Name:                  network.Spec.GetDisplayName(),
 				EnvironmentId:         network.Spec.Environment.GetId(),
+				Gateway:               network.Spec.GetGateway().Id,
 				Cloud:                 network.Spec.GetCloud(),
 				Region:                network.Spec.GetRegion(),
 				Cidr:                  network.Spec.GetCidr(),
@@ -77,6 +79,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 	}
-	list.Filter([]string{"Id", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
+	list.Filter([]string{"Id", "Name", "Gateway", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
 	return list.Print()
 }

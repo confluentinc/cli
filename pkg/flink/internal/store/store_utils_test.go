@@ -257,6 +257,8 @@ func TestParseStatementType(t *testing.T) {
 	require.Equal(t, UseStatement, parseStatementType("use ..."))
 	require.Equal(t, ResetStatement, parseStatementType("reset ..."))
 	require.Equal(t, ExitStatement, parseStatementType("exit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit"))
 	require.Equal(t, OtherStatement, parseStatementType("Some other statement"))
 }
 
@@ -468,5 +470,17 @@ func TestTokenizeSQL(t *testing.T) {
 	// Test string with only backticks
 	input = "````"
 	expected = []string{"`"}
+	require.Equal(expected, TokenizeSQL(input))
+}
+
+func TestTokenizeSQLSpecialCharacters(t *testing.T) {
+	require := require.New(t)
+
+	input := "my clusté€r"
+	expected := []string{"my", "clusté€r"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "my cluster αβγбвг汉字あア한😀"
+	expected = []string{"my", "cluster", "αβγбвг汉字あア한😀"}
 	require.Equal(expected, TokenizeSQL(input))
 }

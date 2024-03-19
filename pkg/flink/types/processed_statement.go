@@ -89,14 +89,12 @@ func (s ProcessedStatement) PrintStatementDoneStatus() {
 }
 
 func (s ProcessedStatement) IsTerminalState() bool {
-	isRunningAndHasResults := s.Status == RUNNING && s.PageToken != ""
-	return s.Status == COMPLETED || s.Status == FAILED || isRunningAndHasResults
+	isRunningAndHasNextPage := s.Status == RUNNING && s.PageToken != ""
+	hasResults := len(s.StatementResults.GetRows()) > 1
+	return s.Status == COMPLETED || s.Status == FAILED || isRunningAndHasNextPage || hasResults
 }
 
 func (s ProcessedStatement) IsSelectStatement() bool {
-	return strings.EqualFold(s.Traits.GetSqlKind(), "SELECT")
-}
-
-func (s ProcessedStatement) IsBackgroundStatement() bool {
-	return strings.EqualFold(s.Traits.GetSqlKind(), "INSERT_INTO")
+	return strings.EqualFold(s.Traits.GetSqlKind(), "SELECT") ||
+		strings.HasPrefix(strings.ToUpper(s.Statement), "SELECT")
 }

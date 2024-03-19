@@ -38,7 +38,7 @@ func (c *command) newKafkaTopicConsumeCommand() *cobra.Command {
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client. For a full list, see https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html`)
 	pcmd.AddConsumerConfigFileFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
