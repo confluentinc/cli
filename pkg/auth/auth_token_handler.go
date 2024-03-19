@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/browser"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	"github.com/pkg/browser"
 
 	"github.com/confluentinc/cli/v3/pkg/auth/sso"
 	"github.com/confluentinc/cli/v3/pkg/errors"
