@@ -12,6 +12,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
@@ -71,7 +72,21 @@ func PersistLogout(config *config.Config) error {
 }
 
 func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
+	if credentials.IsSSO {
+		subClaim, err := jwt.GetClaim(token, "sub")
+		if err != nil {
+			return err
+		}
+
+		sub, ok := subClaim.(string)
+		if !ok {
+			return fmt.Errorf("malformed token: sub claim has the wrong type")
+		}
+
+		credentials.Username = sub
+	}
 	username := credentials.Username
+
 	state := &config.ContextState{AuthToken: token}
 	var ctxName string
 	if isLegacyContext {

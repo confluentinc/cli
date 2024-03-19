@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
@@ -55,7 +56,7 @@ type PreRun struct {
 	MDSClientManager        pauth.MDSClientManager
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
-	JWTValidator            JWTValidator
+	JWTValidator            jwt.Validator
 }
 
 type KafkaRESTProvider func() (*KafkaREST, error)
@@ -497,7 +498,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 	if err != nil {
 		return "", nil, err
 	}
-	token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
+	token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
 	if err != nil {
 		return "", nil, err
 	}
@@ -727,7 +728,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 		if err != nil {
 			return "", "", err
 		}
-		token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
+		token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
 		return token, "", err
 	}
 }
