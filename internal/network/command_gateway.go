@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 )
 
 type gatewayOut struct {
@@ -30,13 +31,8 @@ func (c *command) newGatewayCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) getGateways() ([]networkingv1.NetworkingV1Gateway, error) {
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return nil, err
-	}
-
-	return c.V2Client.ListGateways(environmentId)
+func getGateways(client *ccloudv2.Client, environmentId string) ([]networkingv1.NetworkingV1Gateway, error) {
+	return client.ListGateways(environmentId)
 }
 
 func (c *command) validGatewayArgs(cmd *cobra.Command, args []string) []string {
@@ -48,11 +44,16 @@ func (c *command) validGatewayArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return c.autocompleteGateways()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	return autocompleteGateways(c.V2Client, environmentId)
 }
 
-func (c *command) autocompleteGateways() []string {
-	gateways, err := c.getGateways()
+func autocompleteGateways(client *ccloudv2.Client, environmentId string) []string {
+	gateways, err := getGateways(client, environmentId)
 	if err != nil {
 		return nil
 	}

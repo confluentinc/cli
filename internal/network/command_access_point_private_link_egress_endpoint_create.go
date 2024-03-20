@@ -27,7 +27,7 @@ func (c *accessPointCommand) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("cloud", "", "Specify the cloud provider as aws.")
 	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service.")
-	cmd.Flags().String("gateway", "", "Gateway ID.")
+	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("high-availability", false, "Enable high availability for AWS egress endpoint.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

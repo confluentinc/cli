@@ -26,7 +26,12 @@ func (c *command) newGatewayListCommand() *cobra.Command {
 }
 
 func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
-	gateways, err := c.getGateways()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	gateways, err := getGateways(c.V2Client, environmentId)
 	if err != nil {
 		return err
 	}

@@ -32,7 +32,7 @@ func (c *command) newDnsRecordCreateCommand() *cobra.Command {
 	}
 
 	c.addPrivateLinkAccessPointFlag(cmd)
-	cmd.Flags().String("gateway", "", "Gateway ID.")
+	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("domain", "", "Fully qualified domain name of the DNS record.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

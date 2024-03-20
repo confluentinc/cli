@@ -762,6 +762,8 @@ func (s *CLITestSuite) TestNetworkDnsRecord_Autocomplete() {
 		{args: `__complete network dns record describe ""`, login: "cloud", fixture: "network/dns/record/describe-autocomplete.golden"},
 		{args: `__complete network dns record delete ""`, login: "cloud", fixture: "network/dns/record/delete-autocomplete.golden"},
 		{args: `__complete network dns record update ""`, login: "cloud", fixture: "network/dns/record/update-autocomplete.golden"},
+		{args: `__complete network dns record create --private-link-access-point ""`, login: "cloud", fixture: "network/dns/record/create-autocomplete-private-link-access-point-flag.golden"},
+		{args: `__complete network dns record create --gateway ""`, login: "cloud", fixture: "network/dns/record/create-autocomplete-gateway-flag.golden"},
 	}
 
 	for _, test := range tests {

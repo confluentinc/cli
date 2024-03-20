@@ -8,6 +8,7 @@ import (
 	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -39,6 +40,31 @@ func (c *command) newDnsRecordCommand() *cobra.Command {
 
 func (c *command) addPrivateLinkAccessPointFlag(cmd *cobra.Command) {
 	cmd.Flags().String("private-link-access-point", "", "Private Link access point.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "private-link-access-point", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteAccessPoints(c.V2Client, environmentId)
+	})
+}
+
+func autocompleteAccessPoints(client *ccloudv2.Client, environmentId string) []string {
+	accessPoints, err := client.ListAccessPoints(environmentId, nil)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(accessPoints))
+	for i, accessPoint := range accessPoints {
+		suggestions[i] = fmt.Sprintf("%s\t%s", accessPoint.GetId(), accessPoint.Spec.GetDisplayName())
+	}
+	return suggestions
 }
 
 func (c *command) validDnsRecordArgs(cmd *cobra.Command, args []string) []string {
