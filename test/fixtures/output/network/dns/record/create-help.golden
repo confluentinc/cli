@@ -1,0 +1,26 @@
+Create a DNS record.
+
+Usage:
+  confluent network dns record create [name] [flags]
+
+Examples:
+Create a DNS record.
+
+  $ confluent network dns record create --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com
+
+Create a named DNS record.
+
+  $ confluent network dns record create my-dns-record --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com
+
+Flags:
+      --private-link-access-point string   REQUIRED: Private Link access point.
+      --gateway string                     REQUIRED: Gateway ID.
+      --domain string                      REQUIRED: Fully qualified domain name of the DNS record.
+      --context string                     CLI context name.
+      --environment string                 Environment ID.
+  -o, --output string                      Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

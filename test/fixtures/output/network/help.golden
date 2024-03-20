@@ -4,10 +4,12 @@ Usage:
   confluent network [command]
 
 Available Commands:
+  access-point               Manage access points.
   create                     Create a network.
   delete                     Delete one or more networks.
   describe                   Describe a network.
   dns                        Manage DNS resources.
+  gateway                    Manage gateways.
   ip-address                 List Confluent Cloud egress public IP addresses.
   list                       List networks.
   peering                    Manage peerings.
