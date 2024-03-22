@@ -33,6 +33,12 @@ type LoginCredentialsManager struct {
 	lockGetCredentialsFromNetrc sync.Mutex
 	GetCredentialsFromNetrcFunc func(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
+	lockGetOnPremSsoCredentials sync.Mutex
+	GetOnPremSsoCredentialsFunc func(url, caCertPath string, unsafeTrace bool) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
+
+	lockGetOnPremSsoCredentialsFromConfig sync.Mutex
+	GetOnPremSsoCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 bool) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
+
 	lockGetCloudCredentialsFromPrompt sync.Mutex
 	GetCloudCredentialsFromPromptFunc func(arg0 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
@@ -72,6 +78,15 @@ type LoginCredentialsManager struct {
 		}
 		GetCredentialsFromNetrc []struct {
 			Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
+		}
+		GetOnPremSsoCredentials []struct {
+			Url         string
+			CaCertPath  string
+			UnsafeTrace bool
+		}
+		GetOnPremSsoCredentialsFromConfig []struct {
+			Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+			Arg1 bool
 		}
 		GetCloudCredentialsFromPrompt []struct {
 			Arg0 string
@@ -328,6 +343,91 @@ func (m *LoginCredentialsManager) GetCredentialsFromNetrcCalls() []struct {
 	return m.calls.GetCredentialsFromNetrc
 }
 
+// GetOnPremSsoCredentials mocks base method by wrapping the associated func.
+func (m *LoginCredentialsManager) GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
+	m.lockGetOnPremSsoCredentials.Lock()
+	defer m.lockGetOnPremSsoCredentials.Unlock()
+
+	if m.GetOnPremSsoCredentialsFunc == nil {
+		panic("mocker: LoginCredentialsManager.GetOnPremSsoCredentialsFunc is nil but LoginCredentialsManager.GetOnPremSsoCredentials was called.")
+	}
+
+	call := struct {
+		Url         string
+		CaCertPath  string
+		UnsafeTrace bool
+	}{
+		Url:         url,
+		CaCertPath:  caCertPath,
+		UnsafeTrace: unsafeTrace,
+	}
+
+	m.calls.GetOnPremSsoCredentials = append(m.calls.GetOnPremSsoCredentials, call)
+
+	return m.GetOnPremSsoCredentialsFunc(url, caCertPath, unsafeTrace)
+}
+
+// GetOnPremSsoCredentialsCalled returns true if GetOnPremSsoCredentials was called at least once.
+func (m *LoginCredentialsManager) GetOnPremSsoCredentialsCalled() bool {
+	m.lockGetOnPremSsoCredentials.Lock()
+	defer m.lockGetOnPremSsoCredentials.Unlock()
+
+	return len(m.calls.GetOnPremSsoCredentials) > 0
+}
+
+// GetOnPremSsoCredentialsCalls returns the calls made to GetOnPremSsoCredentials.
+func (m *LoginCredentialsManager) GetOnPremSsoCredentialsCalls() []struct {
+	Url         string
+	CaCertPath  string
+	UnsafeTrace bool
+} {
+	m.lockGetOnPremSsoCredentials.Lock()
+	defer m.lockGetOnPremSsoCredentials.Unlock()
+
+	return m.calls.GetOnPremSsoCredentials
+}
+
+// GetOnPremSsoCredentialsFromConfig mocks base method by wrapping the associated func.
+func (m *LoginCredentialsManager) GetOnPremSsoCredentialsFromConfig(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 bool) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
+	m.lockGetOnPremSsoCredentialsFromConfig.Lock()
+	defer m.lockGetOnPremSsoCredentialsFromConfig.Unlock()
+
+	if m.GetOnPremSsoCredentialsFromConfigFunc == nil {
+		panic("mocker: LoginCredentialsManager.GetOnPremSsoCredentialsFromConfigFunc is nil but LoginCredentialsManager.GetOnPremSsoCredentialsFromConfig was called.")
+	}
+
+	call := struct {
+		Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+		Arg1 bool
+	}{
+		Arg0: arg0,
+		Arg1: arg1,
+	}
+
+	m.calls.GetOnPremSsoCredentialsFromConfig = append(m.calls.GetOnPremSsoCredentialsFromConfig, call)
+
+	return m.GetOnPremSsoCredentialsFromConfigFunc(arg0, arg1)
+}
+
+// GetOnPremSsoCredentialsFromConfigCalled returns true if GetOnPremSsoCredentialsFromConfig was called at least once.
+func (m *LoginCredentialsManager) GetOnPremSsoCredentialsFromConfigCalled() bool {
+	m.lockGetOnPremSsoCredentialsFromConfig.Lock()
+	defer m.lockGetOnPremSsoCredentialsFromConfig.Unlock()
+
+	return len(m.calls.GetOnPremSsoCredentialsFromConfig) > 0
+}
+
+// GetOnPremSsoCredentialsFromConfigCalls returns the calls made to GetOnPremSsoCredentialsFromConfig.
+func (m *LoginCredentialsManager) GetOnPremSsoCredentialsFromConfigCalls() []struct {
+	Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
+	Arg1 bool
+} {
+	m.lockGetOnPremSsoCredentialsFromConfig.Lock()
+	defer m.lockGetOnPremSsoCredentialsFromConfig.Unlock()
+
+	return m.calls.GetOnPremSsoCredentialsFromConfig
+}
+
 // GetCloudCredentialsFromPrompt mocks base method by wrapping the associated func.
 func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(arg0 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetCloudCredentialsFromPrompt.Lock()
@@ -568,6 +668,12 @@ func (m *LoginCredentialsManager) Reset() {
 	m.lockGetCredentialsFromNetrc.Lock()
 	m.calls.GetCredentialsFromNetrc = nil
 	m.lockGetCredentialsFromNetrc.Unlock()
+	m.lockGetOnPremSsoCredentials.Lock()
+	m.calls.GetOnPremSsoCredentials = nil
+	m.lockGetOnPremSsoCredentials.Unlock()
+	m.lockGetOnPremSsoCredentialsFromConfig.Lock()
+	m.calls.GetOnPremSsoCredentialsFromConfig = nil
+	m.lockGetOnPremSsoCredentialsFromConfig.Unlock()
 	m.lockGetCloudCredentialsFromPrompt.Lock()
 	m.calls.GetCloudCredentialsFromPrompt = nil
 	m.lockGetCloudCredentialsFromPrompt.Unlock()
