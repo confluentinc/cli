@@ -32,7 +32,7 @@ func (s *MaterializedStatementResultsTestSuite) TestChangelogMode() {
 		require.NoError(t, err)
 
 		// test if in changelog mode all the rows are there and in the correct order
-		materializedStatementResults := types.NewMaterializedStatementResults(convertedResults.GetHeaders(), 100)
+		materializedStatementResults := types.NewMaterializedStatementResults(convertedResults.GetHeaders(), 100, nil)
 		materializedStatementResults.SetTableMode(false)
 		materializedStatementResults.Append(convertedResults.GetRows()...)
 		// in changelog mode we have an additional column "Operation"
@@ -63,7 +63,7 @@ func (s *MaterializedStatementResultsTestSuite) TestTableMode() {
 			},
 		},
 	}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10000)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10000, nil)
 	materializedStatementResults.Append(previousRow)
 	require.Equal(s.T(), headers, materializedStatementResults.GetHeaders())
 	require.Equal(s.T(), 1, materializedStatementResults.GetTableSize())
@@ -102,7 +102,7 @@ func (s *MaterializedStatementResultsTestSuite) TestKeyCountIncreases() {
 
 		// object under test
 		headers := []string{"Key", "Count"}
-		materializedStatementResults := types.NewMaterializedStatementResults(headers, 10000)
+		materializedStatementResults := types.NewMaterializedStatementResults(headers, 10000, nil)
 
 		for _, key := range keys {
 			row := types.StatementResultRow{
@@ -193,7 +193,7 @@ func (s *MaterializedStatementResultsTestSuite) TestChangelogIsCleanedUpWhenOver
 	var expectedRows []types.StatementResultRow
 	expectedRows = append(expectedRows, previousRow)
 
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 3)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 3, nil)
 	materializedStatementResults.Append(previousRow)
 	materializedStatementResults.SetTableMode(false)
 	for count := 1; count <= 10; count++ {
@@ -229,7 +229,7 @@ func (s *MaterializedStatementResultsTestSuite) TestTableIsCleanedUpWhenOverCapa
 	headers := []string{"Count"}
 	var expectedRows []types.StatementResultRow
 
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 3)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 3, nil)
 	for count := 1; count <= 10; count++ {
 		row := types.StatementResultRow{
 			Operation: types.Insert,
@@ -265,7 +265,7 @@ func (s *MaterializedStatementResultsTestSuite) TestTableDoesNotCleanupEventsTha
 		},
 	}
 
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 2)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 2, nil)
 	materializedStatementResults.Append(row)
 	for count := 0; count <= 10; count++ {
 		// add new row
@@ -307,7 +307,7 @@ func (s *MaterializedStatementResultsTestSuite) TestCleanup() {
 			},
 		},
 	}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 1)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 1, nil)
 	materializedStatementResults.Append(row)
 	iterator := materializedStatementResults.Iterator(false)
 	require.Equal(s.T(), row, *iterator.GetNext())
@@ -346,13 +346,13 @@ func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchem
 			},
 		},
 	}
-	materializedStatementResults := types.NewMaterializedStatementResults(invalidHeaders, 1)
+	materializedStatementResults := types.NewMaterializedStatementResults(invalidHeaders, 1, nil)
 	valuesInserted := materializedStatementResults.Append(row)
 	require.False(s.T(), valuesInserted)
 	require.Empty(s.T(), materializedStatementResults.GetTableSize())
 
 	validHeaders := []string{"Count", "Count2"}
-	materializedStatementResults = types.NewMaterializedStatementResults(validHeaders, 1)
+	materializedStatementResults = types.NewMaterializedStatementResults(validHeaders, 1, nil)
 	valuesInserted = materializedStatementResults.Append(row)
 	require.True(s.T(), valuesInserted)
 	require.Equal(s.T(), 1, materializedStatementResults.GetTableSize())
@@ -360,7 +360,7 @@ func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchem
 
 func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardResetThenBackward() {
 	headers := []string{"Count"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 
 	for i := 0; i < 10; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
@@ -411,7 +411,7 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardResetThenBack
 
 func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardAndBackward() {
 	headers := []string{"Count"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 
 	for i := 0; i < 10; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
@@ -441,7 +441,7 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardAndBackward()
 
 func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveToEndThenMoveToStart() {
 	headers := []string{"Count"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 
 	for i := 0; i < 10; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
@@ -482,7 +482,7 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveToEndThenMoveToS
 
 func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveDoesNotWorkOnceEndWasReached() {
 	headers := []string{"Count"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 
 	for i := 0; i < 10; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
@@ -520,7 +520,7 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveDoesNotWorkOnceE
 
 func (s *MaterializedStatementResultsTestSuite) TestForEach() {
 	headers := []string{"Count"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 
 	for i := 0; i < 10; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
@@ -554,7 +554,7 @@ func (s *MaterializedStatementResultsTestSuite) TestForEach() {
 
 func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidths() {
 	headers := []string{"1234", "12"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 	materializedStatementResults.Append(types.StatementResultRow{
 		Operation: types.Insert,
 		Fields: []types.StatementResultField{
@@ -574,7 +574,7 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidths() {
 
 func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsWithMultiLineValues() {
 	headers := []string{"1234", "12"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 	materializedStatementResults.Append(types.StatementResultRow{
 		Operation: types.Insert,
 		Fields: []types.StatementResultField{
@@ -594,7 +594,7 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsWithMultiLine
 
 func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode() {
 	headers := []string{"1234", "12"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 	materializedStatementResults.SetTableMode(false)
 	materializedStatementResults.Append(types.StatementResultRow{
 		Operation: types.Insert,
@@ -615,7 +615,7 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode
 
 func (s *MaterializedStatementResultsTestSuite) TestToggleTableMode() {
 	headers := []string{"column1", "column2"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 	materializedStatementResults.Append(types.StatementResultRow{
 		Operation: types.Delete,
 		Fields: []types.StatementResultField{
@@ -643,7 +643,7 @@ func (s *MaterializedStatementResultsTestSuite) TestToggleTableMode() {
 
 func (s *MaterializedStatementResultsTestSuite) TestRowKeysShouldNotCollide() {
 	headers := []string{"column1", "column2"}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
 	materializedStatementResults.Append(types.StatementResultRow{
 		Operation: types.Insert,
 		Fields: []types.StatementResultField{
@@ -696,4 +696,102 @@ func (s *MaterializedStatementResultsTestSuite) TestRowKeysShouldNotCollide() {
 	})
 
 	require.Equal(s.T(), expected, actual)
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestUpsertColumns() {
+	headers := []string{"column1", "column2", "column3"}
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, &[]int32{0, 2})
+
+	// insert 2 rows
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "key1", "1", "key2")
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "key1", "2", "key1")
+	require.Equal(s.T(), [][]string{
+		{"key1", "1", "key2"},
+		{"key1", "2", "key1"},
+	}, toSlice(&materializedStatementResults))
+	// update before should nothing
+	appendRow(&materializedStatementResults, types.UpdateBefore, types.Varchar, "key1", "1", "key2")
+	appendRow(&materializedStatementResults, types.UpdateBefore, types.Varchar, "key1", "2", "key1")
+	require.Equal(s.T(), [][]string{
+		{"key1", "1", "key2"},
+		{"key1", "2", "key1"},
+	}, toSlice(&materializedStatementResults))
+
+	appendRow(&materializedStatementResults, types.UpdateAfter, types.Varchar, "key1", "2", "key2")
+	appendRow(&materializedStatementResults, types.UpdateAfter, types.Varchar, "key1", "3", "key1")
+	// another UpdateAfter will be ignored
+	appendRow(&materializedStatementResults, types.UpdateAfter, types.Varchar, "key1", "3", "key1")
+	require.Equal(s.T(), [][]string{
+		{"key1", "2", "key2"},
+		{"key1", "3", "key1"},
+	}, toSlice(&materializedStatementResults))
+
+	// row will be deleted regardless of the value, only the keys are important
+	appendRow(&materializedStatementResults, types.Delete, types.Varchar, "key1", "2", "key1")
+	require.Equal(s.T(), [][]string{
+		{"key1", "2", "key2"},
+	}, toSlice(&materializedStatementResults))
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestFallbackToEntireRowAsKeyIfUpsertColumnsFail() {
+	headers := []string{"column1", "column2", "column3"}
+	// choose an upsert column idx that's out of range
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, &[]int32{0, 10})
+
+	// insert 2 rows
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "key1", "1", "key2")
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "key1", "2", "key1")
+	require.Equal(s.T(), [][]string{
+		{"key1", "1", "key2"},
+		{"key1", "2", "key1"},
+	}, toSlice(&materializedStatementResults))
+	// update before should delete both rows
+	appendRow(&materializedStatementResults, types.UpdateBefore, types.Varchar, "key1", "1", "key2")
+	appendRow(&materializedStatementResults, types.UpdateBefore, types.Varchar, "key1", "2", "key1")
+	require.Empty(s.T(), toSlice(&materializedStatementResults))
+
+	appendRow(&materializedStatementResults, types.UpdateAfter, types.Varchar, "key1", "2", "key2")
+	appendRow(&materializedStatementResults, types.UpdateAfter, types.Varchar, "key1", "3", "key1")
+	// another UpdateAfter will duplicate the row
+	appendRow(&materializedStatementResults, types.UpdateAfter, types.Varchar, "key1", "3", "key1")
+	require.Equal(s.T(), [][]string{
+		{"key1", "2", "key2"},
+		{"key1", "3", "key1"},
+		{"key1", "3", "key1"},
+	}, toSlice(&materializedStatementResults))
+
+	// Delete with wrong value will be ignored, because we can't find the row
+	appendRow(&materializedStatementResults, types.Delete, types.Varchar, "key1", "2", "key1")
+	// Delete with correct value will only delete one of the duplicates
+	appendRow(&materializedStatementResults, types.Delete, types.Varchar, "key1", "3", "key1")
+	require.Equal(s.T(), [][]string{
+		{"key1", "2", "key2"},
+		{"key1", "3", "key1"},
+	}, toSlice(&materializedStatementResults))
+}
+
+func appendRow(materializedStatementResults *types.MaterializedStatementResults, operation types.StatementResultOperation, typeOfValues types.StatementResultFieldType, rowValues ...string) {
+	fields := []types.StatementResultField{}
+	for _, value := range rowValues {
+		fields = append(fields, types.AtomicStatementResultField{
+			Type:  typeOfValues,
+			Value: value,
+		})
+	}
+	materializedStatementResults.Append(types.StatementResultRow{
+		Operation: operation,
+		Fields:    fields,
+	})
+}
+
+func toSlice(materializedStatementResults *types.MaterializedStatementResults) [][]string {
+	var actual [][]string
+	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		var fields []string
+		for _, field := range row.GetFields() {
+			fields = append(fields, field.ToString())
+		}
+		actual = append(actual, fields)
+	})
+	return actual
 }
