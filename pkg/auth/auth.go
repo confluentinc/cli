@@ -71,7 +71,7 @@ func PersistLogout(config *config.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
+func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, isLegacyContext, save bool) error {
 	if credentials.IsSSO {
 		subClaim, err := jwt.GetClaim(token, "sub")
 		if err != nil {
@@ -87,7 +87,7 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 	}
 	username := credentials.Username
 
-	state := &config.ContextState{AuthToken: token}
+	state := &config.ContextState{AuthToken: token, AuthRefreshToken: refreshToken}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")

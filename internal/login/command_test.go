@@ -143,8 +143,8 @@ var (
 				return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
 			}
 		},
-		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, error) {
-			return testToken1, nil
+		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, string, error) {
+			return testToken1, "", nil
 		},
 	}
 	mockNetrcHandler = &pmock.NetrcHandler{

@@ -17,7 +17,7 @@ type AuthTokenHandler struct {
 	GetCCloudTokensFunc func(arg0 github_com_confluentinc_cli_v3_pkg_auth.CCloudClientFactory, arg1 string, arg2 *github_com_confluentinc_cli_v3_pkg_auth.Credentials, arg3 bool, arg4 string) (string, string, error)
 
 	lockGetConfluentToken sync.Mutex
-	GetConfluentTokenFunc func(arg0 *github_com_confluentinc_mds_sdk_go_public_mdsv1.APIClient, arg1 *github_com_confluentinc_cli_v3_pkg_auth.Credentials, arg2 bool) (string, error)
+	GetConfluentTokenFunc func(arg0 *github_com_confluentinc_mds_sdk_go_public_mdsv1.APIClient, arg1 *github_com_confluentinc_cli_v3_pkg_auth.Credentials, arg2 bool) (string, string, error)
 
 	calls struct {
 		GetCCloudTokens []struct {
@@ -86,7 +86,7 @@ func (m *AuthTokenHandler) GetCCloudTokensCalls() []struct {
 }
 
 // GetConfluentToken mocks base method by wrapping the associated func.
-func (m *AuthTokenHandler) GetConfluentToken(arg0 *github_com_confluentinc_mds_sdk_go_public_mdsv1.APIClient, arg1 *github_com_confluentinc_cli_v3_pkg_auth.Credentials, arg2 bool) (string, error) {
+func (m *AuthTokenHandler) GetConfluentToken(arg0 *github_com_confluentinc_mds_sdk_go_public_mdsv1.APIClient, arg1 *github_com_confluentinc_cli_v3_pkg_auth.Credentials, arg2 bool) (string, string, error) {
 	m.lockGetConfluentToken.Lock()
 	defer m.lockGetConfluentToken.Unlock()
 

@@ -260,7 +260,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	token, err := c.authTokenHandler.GetConfluentToken(client, credentials, noBrowser)
+	token, refreshToken, err := c.authTokenHandler.GetConfluentToken(client, credentials, noBrowser)
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	if err := pauth.PersistConfluentLoginToConfig(c.Config, credentials, url, token, caCertPath, isLegacyContext, save); err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(c.Config, credentials, url, token, refreshToken, caCertPath, isLegacyContext, save); err != nil {
 		return err
 	}
 

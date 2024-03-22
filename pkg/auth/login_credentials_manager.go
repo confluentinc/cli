@@ -265,9 +265,10 @@ func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *con
 			}
 
 			return &Credentials{
-				Username:  sub,
-				IsSSO:     true,
-				AuthToken: ctx.GetAuthToken(),
+				Username:         sub,
+				IsSSO:            true,
+				AuthToken:        ctx.GetAuthToken(),
+				AuthRefreshToken: ctx.GetAuthRefreshToken(),
 			}, nil
 		}
 

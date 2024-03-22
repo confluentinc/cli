@@ -21,7 +21,7 @@ import (
 
 type AuthTokenHandler interface {
 	GetCCloudTokens(CCloudClientFactory, string, *Credentials, bool, string) (string, string, error)
-	GetConfluentToken(*mdsv1.APIClient, *Credentials, bool) (string, error)
+	GetConfluentToken(*mdsv1.APIClient, *Credentials, bool) (string, string, error)
 }
 
 type AuthTokenHandlerImpl struct{}
@@ -145,16 +145,18 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, re
 	return res.GetToken(), refreshToken, err
 }
 
-func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials, noBrowser bool) (string, error) {
+func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials, noBrowser bool) (string, string, error) {
 	ctx := utils.GetContext()
 	if credentials.IsSSO {
-		if authToken, err := refreshConfluentToken(mdsClient, credentials); err == nil {
-			return authToken, nil
+		if credentials.AuthRefreshToken != "" {
+			if authToken, err := refreshConfluentToken(mdsClient, credentials); err == nil {
+				return authToken, "", nil
+			}
 		}
 
 		resp, _, err := mdsClient.SSODeviceAuthorizationApi.Security10OidcDeviceAuthenticatePost(context.Background())
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		if noBrowser {
@@ -162,7 +164,7 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 			output.Println(false, resp.VerificationUri)
 		} else {
 			if err := browser.OpenURL(resp.VerificationUri); err != nil {
-				return "", fmt.Errorf("unable to open web browser for SSO authentication: %w", err)
+				return "", "", fmt.Errorf("unable to open web browser for SSO authentication: %w", err)
 			}
 		}
 
@@ -171,7 +173,7 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 			Key:      resp.Key,
 		}
 
-		var authToken string
+		var authToken, refreshToken string
 		err = retry.Retry(time.Duration(resp.Interval)*time.Second, time.Duration(resp.ExpiresIn)*time.Second, func() error {
 			checkAuthResp, _, err := mdsClient.SSODeviceAuthorizationApi.CheckDeviceAuth(context.Background(), checkDeviceAuthRequest)
 			if err != nil {
@@ -183,26 +185,30 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 			}
 
 			authToken = checkAuthResp.AuthToken
+			refreshToken = checkAuthResp.RefreshToken
 			return nil
 		})
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
-		return authToken, nil
+		return authToken, refreshToken, nil
 	} else {
 		basicContext := context.WithValue(ctx, mdsv1.ContextBasicAuth, mdsv1.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
 		resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
-		return resp.AuthToken, nil
+		return resp.AuthToken, "", nil
 	}
 }
 
 func refreshConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials) (string, error) {
-	ctx := context.WithValue(utils.GetContext(), mdsv1.ContextAccessToken, credentials.AuthToken)
-	resp, _, err := mdsClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(ctx)
+	extendDeviceAuthRequest := mdsv1.ExtendAuthRequest{
+		AccessToken:  credentials.AuthToken,
+		RefreshToken: credentials.AuthRefreshToken,
+	}
+	resp, _, err := mdsClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(context.Background(), extendDeviceAuthRequest)
 	if err != nil {
 		return "", err
 	}
