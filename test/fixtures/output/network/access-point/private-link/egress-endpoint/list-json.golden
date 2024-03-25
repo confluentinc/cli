@@ -1,0 +1,24 @@
+[
+  {
+    "id": "ap-12345",
+    "name": "my-aws-egress-access-point",
+    "aws_vpc_endpoint_service": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+    "aws_vpc_endpoint": "vpc-endpoint-id",
+    "aws_vpc_endpoint_dns_name": "vpc-endpoint-dns-name",
+    "high_availability": true,
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY"
+  },
+  {
+    "id": "ap-67890",
+    "name": "my-aws-egress-access-point-2",
+    "aws_vpc_endpoint_service": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+    "aws_vpc_endpoint": "vpc-endpoint-id",
+    "aws_vpc_endpoint_dns_name": "vpc-endpoint-dns-name",
+    "high_availability": true,
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY"
+  }
+]
