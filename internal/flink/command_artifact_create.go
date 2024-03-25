@@ -80,7 +80,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	createArtifactRequest := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 		DisplayName:   connectcustompluginv1.PtrString(displayName),
 		Description:   connectcustompluginv1.PtrString(description),
-		ConnectorType: connectcustompluginv1.PtrString("flink-udf"),
+		ConnectorType: connectcustompluginv1.PtrString("flink_udf"),
 		UploadSource: &connectcustompluginv1.ConnectV1CustomConnectorPluginUploadSourceOneOf{
 			ConnectV1UploadSourcePresignedUrl: &connectcustompluginv1.ConnectV1UploadSourcePresignedUrl{
 				Location: "PRESIGNED_URL_LOCATION",
