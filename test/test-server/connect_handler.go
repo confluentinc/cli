@@ -251,9 +251,9 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:             connectcustompluginv1.PtrString("ccp-789013"),
 				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
-				ConnectorType:  connectcustompluginv1.PtrString("flink-udf"),
+				ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
 				Cloud:          connectcustompluginv1.PtrString("aws"),
-				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+				ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
 				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 			}
 			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3}})
@@ -293,7 +293,7 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 					Id:             connectcustompluginv1.PtrString("ccp-789013"),
 					DisplayName:    connectcustompluginv1.PtrString("CliPluginTest"),
-					ConnectorType:  connectcustompluginv1.PtrString("flink-udf"),
+					ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
 					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
 					Cloud:          connectcustompluginv1.PtrString("aws"),
 					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
