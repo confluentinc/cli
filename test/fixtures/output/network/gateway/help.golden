@@ -1,15 +1,15 @@
-Manage DNS resources.
+Manage gateways.
 
 Usage:
-  confluent network dns [command]
+  confluent network gateway [command]
 
 Available Commands:
-  forwarder   Manage DNS forwarders.
-  record      Manage DNS records.
+  describe    Describe a gateway.
+  list        List gateways.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent network dns [command] --help" for more information about a command.
+Use "confluent network gateway [command] --help" for more information about a command.
