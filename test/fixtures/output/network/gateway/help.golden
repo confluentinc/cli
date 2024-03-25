@@ -1,4 +1,4 @@
-Manage gateways.
+Manage network gateways.
 
 Usage:
   confluent network gateway [command]
