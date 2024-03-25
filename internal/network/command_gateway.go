@@ -21,7 +21,7 @@ type gatewayOut struct {
 func (c *command) newGatewayCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gateway",
-		Short: "Manage gateways.",
+		Short: "Manage network gateways.",
 		Args:  cobra.NoArgs,
 	}
 
