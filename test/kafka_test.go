@@ -590,21 +590,25 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 
 func (s *CLITestSuite) TestKafkaConsumerGroupLag() {
 	tests := []CLITest{
-		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe.golden"},
-		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-1234 --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer/group/lag/describe-json.golden"},
-		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/list.golden"},
-		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/list-json.golden"},
-		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/lag/summarize.golden"},
-		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/lag/summarize-json.golden"},
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-describe-dedicated --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe.golden"},
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-describe-dedicated --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer/group/lag/describe-json.golden"},
+		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-basic --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/basic.golden", exitCode: 1},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-describe-dedicated", fixture: "kafka/consumer/group/lag/list.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-describe-dedicated -o json", fixture: "kafka/consumer/group/lag/list-json.golden"},
+		{args: "kafka consumer group lag list consumer-group-1 --cluster lkc-basic", fixture: "kafka/consumer/group/lag/basic.golden", exitCode: 1},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-describe-dedicated", fixture: "kafka/consumer/group/lag/summarize.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-describe-dedicated -o json", fixture: "kafka/consumer/group/lag/summarize-json.golden"},
+		{args: "kafka consumer group lag summarize consumer-group-1 --cluster lkc-basic", fixture: "kafka/consumer/group/lag/basic.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
 
-	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
-	tests = []CLITest{
+func (s *CLITestSuite) TestKafkaConsumerGroupLag_OnPrem() {
+	tests := []CLITest{
 		{args: "kafka consumer group lag describe consumer-group-1 --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe-onprem.golden"},
 		{args: "kafka consumer group lag list consumer-group-1", fixture: "kafka/consumer/group/lag/list-onprem.golden"},
 		{args: "kafka consumer group lag summarize consumer-group-1", fixture: "kafka/consumer/group/lag/summarize-onprem.golden"},
@@ -612,7 +616,7 @@ func (s *CLITestSuite) TestKafkaConsumerGroupLag() {
 
 	for _, test := range tests {
 		test.login = "onprem"
-		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		test.env = []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()}
 		s.runIntegrationTest(test)
 	}
 }
