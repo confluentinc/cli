@@ -57,8 +57,7 @@ func (c *consumerCommand) checkIsDedicated() error {
 		return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
 
-	if !isDedicated(&cluster) {
-		clusterType := getCmkClusterType(&cluster)
+	if clusterType := getCmkClusterType(&cluster); clusterType != "DEDICATED" {
 		return fmt.Errorf(`Kafka cluster "%s" is type "%s" but must be type "DEDICATED"`, clusterId, clusterType)
 	}
 
