@@ -31,7 +31,7 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	gateways, err := getGateways(c.V2Client, environmentId)
+	gateways, err := c.V2Client.ListGateways(environmentId)
 	if err != nil {
 		return err
 	}

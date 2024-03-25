@@ -31,10 +31,6 @@ func (c *command) newGatewayCommand() *cobra.Command {
 	return cmd
 }
 
-func getGateways(client *ccloudv2.Client, environmentId string) ([]networkingv1.NetworkingV1Gateway, error) {
-	return client.ListGateways(environmentId)
-}
-
 func (c *command) validGatewayArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
@@ -53,7 +49,7 @@ func (c *command) validGatewayArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func autocompleteGateways(client *ccloudv2.Client, environmentId string) []string {
-	gateways, err := getGateways(client, environmentId)
+	gateways, err := client.ListGateways(environmentId)
 	if err != nil {
 		return nil
 	}

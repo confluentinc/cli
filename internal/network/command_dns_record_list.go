@@ -28,7 +28,7 @@ func (c *command) newDnsRecordListCommand() *cobra.Command {
 
 	cmd.Flags().StringSlice("gateways", nil, "A comma-separated list of gateway IDs.")
 	cmd.Flags().StringSlice("names", nil, "A comma-separated list of display names.")
-	cmd.Flags().StringSlice("resource-ids", nil, "A comma-separated list of resource IDs.")
+	cmd.Flags().StringSlice("resources", nil, "A comma-separated list of resource IDs.")
 	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of fully qualified domain names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -53,7 +53,7 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	resourceIds, err := cmd.Flags().GetStringSlice("resource-ids")
+	resourceIds, err := cmd.Flags().GetStringSlice("resources")
 	if err != nil {
 		return err
 	}

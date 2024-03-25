@@ -9,10 +9,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
-const (
-	privateLinkAccessPointKind = "PrivateLinkAccessPoint"
-)
-
 func (c *command) newDnsRecordCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [name]",
@@ -76,7 +72,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 			Domain: networkingaccesspointv1.PtrString(domain),
 			Config: &networkingaccesspointv1.NetworkingV1DnsRecordSpecConfigOneOf{
 				NetworkingV1PrivateLinkAccessPoint: &networkingaccesspointv1.NetworkingV1PrivateLinkAccessPoint{
-					Kind:       privateLinkAccessPointKind,
+					Kind:       "PrivateLinkAccessPoint",
 					ResourceId: privateLinkAccessPoint,
 				},
 			},
