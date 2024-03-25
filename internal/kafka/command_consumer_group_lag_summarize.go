@@ -37,6 +37,10 @@ func (c *consumerCommand) newLagSummarizeCommand() *cobra.Command {
 }
 
 func (c *consumerCommand) groupLagSummarize(cmd *cobra.Command, args []string) error {
+	if err := c.checkIsDedicated(); err != nil {
+		return err
+	}
+
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
