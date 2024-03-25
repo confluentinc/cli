@@ -51,10 +51,7 @@ func handleNetworkingGateway(t *testing.T) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 		environment := r.URL.Query().Get("environment")
 
-		switch r.Method {
-		case http.MethodGet:
-			handleNetworkingGatewayGet(t, id, environment)(w, r)
-		}
+		handleNetworkingGatewayGet(t, id, environment)(w, r)
 	}
 }
 
@@ -1613,7 +1610,7 @@ func handleNetworkingDnsRecordGet(t *testing.T, id, environment string) http.Han
 	}
 }
 
-func handleNetworkingDnsRecordDelete(t *testing.T) http.HandlerFunc {
+func handleNetworkingDnsRecordDelete(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
@@ -1872,7 +1869,7 @@ func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.H
 	}
 }
 
-func handleNetworkingAccessPointDelete(t *testing.T) http.HandlerFunc {
+func handleNetworkingAccessPointDelete(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
