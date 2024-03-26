@@ -30,15 +30,33 @@ type StatementResultRow struct {
 	Fields    []StatementResultField
 }
 
-func (r *StatementResultRow) GetRowKey() string {
-	rowKey := strings.Builder{}
-	for idx, field := range r.GetFields() {
-		rowKey.WriteString(field.ToString())
-		if idx != len(r.GetFields())-1 {
-			rowKey.WriteString("-")
-		}
+func (r *StatementResultRow) GetRowKey(upsertColumns *[]int32) (string, bool) {
+	rowValues := r.tryGetRowKeyWithUpsertColumns(upsertColumns)
+	if len(rowValues) > 0 {
+		return strings.Join(rowValues, "-"), true
 	}
-	return rowKey.String()
+
+	// fallback to using the whole row as a key, in case we couldn't construct a row key with upsert columns
+	for _, field := range r.GetFields() {
+		rowValues = append(rowValues, field.ToString())
+	}
+	return strings.Join(rowValues, "-"), false
+}
+
+func (r *StatementResultRow) tryGetRowKeyWithUpsertColumns(upsertColumns *[]int32) []string {
+	if upsertColumns == nil || len(*upsertColumns) == 0 {
+		return nil
+	}
+
+	rowValues := []string{}
+	for _, upsertColumnIdxInt32 := range *upsertColumns {
+		upsertColumnIdx := int(upsertColumnIdxInt32)
+		if upsertColumnIdx < 0 || upsertColumnIdx > len(r.GetFields()) {
+			return nil
+		}
+		rowValues = append(rowValues, r.GetFields()[upsertColumnIdx].ToString())
+	}
+	return rowValues
 }
 
 func (r *StatementResultRow) GetFields() []StatementResultField {
