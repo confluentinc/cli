@@ -159,7 +159,7 @@ func (t *ResultFetcher) Init(statement types.ProcessedStatement) {
 	t.setStatement(statement)
 	t.setInitialRefreshState(statement)
 	headers := t.getResultHeadersOrCreateFromResultSchema(statement)
-	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity)
+	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity, statement.Traits.UpsertColumns)
 	t.materializedStatementResults.SetTableMode(true)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
 }

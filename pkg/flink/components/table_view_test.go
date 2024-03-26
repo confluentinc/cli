@@ -42,7 +42,7 @@ func (s *TableViewTestSuite) TestJumpUp() {
 }
 
 func getResultsExample(numRows int) *types.MaterializedStatementResults {
-	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10, nil)
 	for i := 0; i < numRows; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
 			Operation: types.Insert,
