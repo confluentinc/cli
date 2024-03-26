@@ -154,7 +154,7 @@ func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 
 func getResultsExample() *types.MaterializedStatementResults {
 	executedStatementWithResults := getStatementWithResultsExample()
-	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
+	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10, nil)
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 	return &mat
 }
@@ -229,7 +229,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMo
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAndCacheSizeWithUnsafeTrace() {
 	executedStatementWithResults := getStatementWithResultsExample()
-	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
+	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10, nil)
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)

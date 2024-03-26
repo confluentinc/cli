@@ -72,23 +72,25 @@ func (i *MaterializedStatementResultsIterator) Move(stepsToMove int) *StatementR
 }
 
 type MaterializedStatementResults struct {
-	isTableMode bool
-	maxCapacity int
-	headers     []string
-	changelog   LinkedList[StatementResultRow]
-	table       LinkedList[StatementResultRow]
-	cache       map[string]*ListElement[StatementResultRow]
-	lock        sync.RWMutex
+	isTableMode   bool
+	maxCapacity   int
+	headers       []string
+	changelog     LinkedList[StatementResultRow]
+	table         LinkedList[StatementResultRow]
+	cache         map[string]*ListElement[StatementResultRow]
+	lock          sync.RWMutex
+	upsertColumns *[]int32
 }
 
-func NewMaterializedStatementResults(headers []string, maxCapacity int) MaterializedStatementResults {
+func NewMaterializedStatementResults(headers []string, maxCapacity int, upsertColumns *[]int32) MaterializedStatementResults {
 	return MaterializedStatementResults{
-		isTableMode: true,
-		maxCapacity: maxCapacity,
-		headers:     headers,
-		changelog:   NewLinkedList[StatementResultRow](),
-		table:       NewLinkedList[StatementResultRow](),
-		cache:       map[string]*ListElement[StatementResultRow]{},
+		isTableMode:   true,
+		maxCapacity:   maxCapacity,
+		headers:       headers,
+		changelog:     NewLinkedList[StatementResultRow](),
+		table:         NewLinkedList[StatementResultRow](),
+		cache:         map[string]*ListElement[StatementResultRow]{},
+		upsertColumns: upsertColumns,
 	}
 }
 
@@ -123,7 +125,7 @@ func (s *MaterializedStatementResults) cleanup() {
 
 	if s.table.Len() > s.maxCapacity {
 		removedRow := s.table.RemoveFront()
-		removedRowKey := removedRow.GetRowKey()
+		removedRowKey, _ := removedRow.GetRowKey(s.upsertColumns)
 		delete(s.cache, removedRowKey)
 	}
 }
@@ -140,22 +142,58 @@ func (s *MaterializedStatementResults) Append(rows ...StatementResultRow) bool {
 		}
 		s.changelog.PushBack(row)
 
-		rowKey := row.GetRowKey()
-		if row.Operation.IsInsertOperation() {
-			listPtr := s.table.PushBack(row)
-			s.cache[rowKey] = listPtr
+		if rowKey, hasUpsertColumns := row.GetRowKey(s.upsertColumns); hasUpsertColumns {
+			s.processRowWithUpsertColumns(row, rowKey)
 		} else {
-			listPtr, ok := s.cache[rowKey]
-			if ok {
-				s.table.Remove(listPtr)
-				delete(s.cache, rowKey)
-			}
+			s.processRowWithoutUpsertColumns(row, rowKey)
 		}
 
 		// if we are now over the capacity we need to remove some records
 		s.cleanup()
 	}
 	return allValuesInserted
+}
+
+func (s *MaterializedStatementResults) processRowWithUpsertColumns(row StatementResultRow, rowKey string) {
+	// ignore update before when we have upsertColumns
+	if row.Operation == UpdateBefore {
+		return
+	}
+
+	// upsert row
+	if row.Operation.IsInsertOperation() {
+		listPtr, ok := s.cache[rowKey]
+		if ok {
+			listPtr.element.Value = row
+		} else {
+			listPtr := s.table.PushBack(row)
+			s.cache[rowKey] = listPtr
+		}
+		return
+	}
+
+	// delete row
+	listPtr, ok := s.cache[rowKey]
+	if ok {
+		s.table.Remove(listPtr)
+		delete(s.cache, rowKey)
+	}
+}
+
+func (s *MaterializedStatementResults) processRowWithoutUpsertColumns(row StatementResultRow, rowKey string) {
+	// insert row at the end
+	if row.Operation.IsInsertOperation() {
+		listPtr := s.table.PushBack(row)
+		s.cache[rowKey] = listPtr
+		return
+	}
+
+	// delete row
+	listPtr, ok := s.cache[rowKey]
+	if ok {
+		s.table.Remove(listPtr)
+		delete(s.cache, rowKey)
+	}
 }
 
 func (s *MaterializedStatementResults) Size() int {
