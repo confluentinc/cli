@@ -1,0 +1,18 @@
+Manage DNS records.
+
+Usage:
+  confluent network dns record [command]
+
+Available Commands:
+  create      Create a DNS record.
+  delete      Delete one or more DNS records.
+  describe    Describe a DNS record.
+  list        List DNS records.
+  update      Update an existing DNS record.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network dns record [command] --help" for more information about a command.
