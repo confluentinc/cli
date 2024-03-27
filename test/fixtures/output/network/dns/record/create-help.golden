@@ -13,7 +13,7 @@ Create a named DNS record.
   $ confluent network dns record create my-dns-record --gateway gw-123456 --private-link-access-point ap-123456 --domain www.example.com
 
 Flags:
-      --private-link-access-point string   REQUIRED: Private Link access point.
+      --private-link-access-point string   REQUIRED: ID of associated PrivateLink Access Point.
       --gateway string                     REQUIRED: Gateway ID.
       --domain string                      REQUIRED: Fully qualified domain name of the DNS record.
       --context string                     CLI context name.

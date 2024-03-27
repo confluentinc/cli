@@ -14,7 +14,7 @@ Update the Privatelink access point of DNS record "dnsrec-123456".
 
 Flags:
       --name string                        Name of the DNS record.
-      --private-link-access-point string   Private Link access point.
+      --private-link-access-point string   ID of associated PrivateLink Access Point.
       --context string                     CLI context name.
       --environment string                 Environment ID.
   -o, --output string                      Specify the output format as "human", "json", or "yaml". (default "human")

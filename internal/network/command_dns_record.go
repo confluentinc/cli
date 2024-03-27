@@ -39,7 +39,7 @@ func (c *command) newDnsRecordCommand() *cobra.Command {
 }
 
 func (c *command) addPrivateLinkAccessPointFlag(cmd *cobra.Command) {
-	cmd.Flags().String("private-link-access-point", "", "Private Link access point.")
+	cmd.Flags().String("private-link-access-point", "", "ID of associated PrivateLink Access Point.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "private-link-access-point", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
