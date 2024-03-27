@@ -157,17 +157,18 @@ func (s *MaterializedStatementResults) Append(rows ...StatementResultRow) bool {
 
 func (s *MaterializedStatementResults) processRowWithUpsertColumns(row StatementResultRow, rowKey string) {
 	switch row.Operation {
-	case Insert:
-		listPtr := s.table.PushBack(row)
-		s.cache[rowKey] = listPtr
-	case UpdateBefore:
-		// ignore update before, when using upsert columns
-		return
-	case UpdateAfter:
+	case Insert, UpdateAfter:
+		// treat Insert and UpdateAfter both as upsert events
 		listPtr, ok := s.cache[rowKey]
 		if ok {
 			listPtr.element.Value = row
+		} else {
+			listPtr = s.table.PushBack(row)
+			s.cache[rowKey] = listPtr
 		}
+	case UpdateBefore:
+		// ignore update before, when using upsert columns
+		return
 	case Delete:
 		listPtr, ok := s.cache[rowKey]
 		if ok {

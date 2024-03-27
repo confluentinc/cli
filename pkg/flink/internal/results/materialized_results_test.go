@@ -447,9 +447,9 @@ func (s *MaterializedStatementResultsTestSuite) TestUpsertColumns() {
 	headers := []string{"column1", "column2", "column3"}
 	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, &[]int32{0, 2})
 
-	// insert 2 rows
+	// insert 2 rows, update after should be treated the same as insert
 	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "key1", "1", "key2")
-	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "key1", "2", "key1")
+	appendRow(&materializedStatementResults, types.UpdateAfter, types.Varchar, "key1", "2", "key1")
 	require.Equal(s.T(), [][]string{
 		{"key1", "1", "key2"},
 		{"key1", "2", "key1"},
