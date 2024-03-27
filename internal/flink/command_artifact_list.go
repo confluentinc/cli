@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -27,20 +29,19 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	plugins, err := c.V2Client.ListCustomPlugins()
+	plugins, err := c.V2Client.ListCustomPlugins("")
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
 	for _, plugin := range plugins {
-		if plugin.GetConnectorType() != "flink-udf" {
-			continue
+		if strings.HasPrefix(plugin.GetConnectorType(), "flink") {
+			list.Add(&customPluginOutList{
+				Name: plugin.GetDisplayName(),
+				Id:   plugin.GetId(),
+			})
 		}
-		list.Add(&customPluginOutList{
-			Name: plugin.GetDisplayName(),
-			Id:   plugin.GetId(),
-		})
 	}
 	return list.Print()
 }

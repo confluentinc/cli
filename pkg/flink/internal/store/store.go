@@ -50,7 +50,7 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 		return s.processResetStatement(statement)
 	case UseStatement:
 		return s.processUseStatement(statement)
-	case ExitStatement:
+	case QuitStatement, ExitStatement:
 		s.exitApplication()
 		return nil, nil
 	default:
@@ -371,12 +371,15 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 				}
 			}
 
+			statement.Status = types.PHASE(statementObj.Status.GetPhase())
+			statement.StatusDetail = statusDetail
+			if statement.IsTerminalState() {
+				break
+			}
+
 			if statusDetail != "" {
 				output.Println(false, statusDetail)
 			}
-
-			statement.Status = types.PHASE(statementObj.Status.GetPhase())
-			statement.StatusDetail = statusDetail
 
 			time.Sleep(time.Second)
 		}

@@ -95,6 +95,14 @@ func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeTrueWhenShoul
 	require.True(s.T(), hasUserInitiatedExit)
 }
 
+func (s *InputControllerTestSuite) TestHasUserInitiatedQuitShouldBeTrueWhenShouldExitIsTrue() {
+	s.inputController.shouldExit = true
+
+	hasUserInitiatedExit := s.inputController.HasUserInitiatedExit("quit;")
+
+	require.True(s.T(), hasUserInitiatedExit)
+}
+
 func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeTrueWhenUserInputEmpty() {
 	hasUserInitiatedExit := s.inputController.HasUserInitiatedExit("")
 
