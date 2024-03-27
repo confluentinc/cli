@@ -5,16 +5,17 @@ import (
 )
 
 type ApplicationOptions struct {
-	UnsafeTrace      bool
-	UserAgent        string
-	EnvironmentId    string
-	EnvironmentName  string
-	OrganizationId   string
-	Database         string
-	ComputePoolId    string
-	ServiceAccountId string
-	Verbose          bool
-	LSPBaseUrl       string
+	UnsafeTrace      bool   `json:"unsafeTrace"`
+	UserAgent        string `json:"userAgent"`
+	EnvironmentId    string `json:"environmentId"`
+	EnvironmentName  string `json:"environmentName"`
+	OrganizationId   string `json:"organizationId"`
+	Database         string `json:"database"`
+	ComputePoolId    string `json:"computePoolId"`
+	ServiceAccountId string `json:"serviceAccountId"`
+	Verbose          bool   `json:"verbose"`
+	LSPBaseUrl       string `json:"lspBaseUrl"`
+	GatewayURL       string `json:"gatewayUrl"`
 	Context          *config.Context
 }
 

@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -11,8 +13,8 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
@@ -35,6 +37,12 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+		cmd.Flags().Bool("local-mode", false, "enables local development mode")
+		cmd.Flags().StringSlice("config-key", []string{}, "app option keys for local mode")
+		cmd.Flags().StringSlice("config-value", []string{}, "app option values for local mode")
+	}
 
 	return cmd
 }
@@ -70,14 +78,14 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
-	if useFakeGateway {
-		return client.StartApp(
-			mock.NewFakeFlinkGatewayClient(),
-			func() error { return nil },
-			types.ApplicationOptions{
-				Context:   c.Context,
-				UserAgent: c.Version.UserAgent,
-			}, func() {})
+	localMode, _ := cmd.Flags().GetBool("local-mode")
+	if localMode {
+		appOptions, err := getAppOptionsFromConfigFlags(cmd)
+		if err != nil {
+			return err
+		}
+		flinkGatewayClient := ccloudv2.NewFlinkGatewayClient(appOptions.GatewayURL, c.Version.UserAgent, appOptions.UnsafeTrace, "")
+		return client.StartApp(flinkGatewayClient, func() error { return nil }, *appOptions, func() {})
 	}
 
 	environmentId, err := cmd.Flags().GetString("environment")
@@ -166,6 +174,42 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 
 	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
+}
+
+func getAppOptionsFromConfigFlags(cmd *cobra.Command) (*types.ApplicationOptions, error) {
+	configKeys, err := cmd.Flags().GetStringSlice("config-key")
+	if err != nil {
+		return nil, err
+	}
+	configValues, err := cmd.Flags().GetStringSlice("config-value")
+	if err != nil {
+		return nil, err
+	}
+	if len(configKeys) != len(configValues) {
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("number of config keys %d and config values %d don't match", len(configKeys), len(configValues)),
+			"please provide the same number of config keys and values")
+	}
+
+	// Convert config keys and values to a map
+	configMap := make(map[string]string)
+	for i, key := range configKeys {
+		configMap[key] = configValues[i]
+	}
+
+	// Convert config map to JSON
+	configJSON, err := json.Marshal(configMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal JSON to ApplicationOptions struct
+	applicationOptions := types.ApplicationOptions{}
+	err = json.Unmarshal(configJSON, &applicationOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	return &applicationOptions, nil
 }
 
 func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewayClient) (string, error) {
