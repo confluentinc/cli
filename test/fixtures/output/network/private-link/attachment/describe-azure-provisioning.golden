@@ -1,0 +1,7 @@
++--------+----------------------------------+
+| ID     | platt-azure-2                    |
+| Name   | my-azure-private-link-attachment |
+| Cloud  | Azure                            |
+| Region | us-west-2                        |
+| Phase  | PROVISIONING                     |
++--------+----------------------------------+

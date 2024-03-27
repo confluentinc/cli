@@ -16,7 +16,7 @@ func (c *command) newPrivateLinkAttachmentDescribeCommand() *cobra.Command {
 		RunE:              c.privateLinkAttachmentDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe private link attachment "platt-123456".`,
+				Text: `Describe Private Link attachment "platt-123456".`,
 				Code: "confluent network private-link attachment describe platt-123456",
 			},
 		),
