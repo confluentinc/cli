@@ -19,11 +19,11 @@ func (c *command) newNetworkLinkServiceUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the name and description of network link service "nls-123456".`,
-				Code: `confluent network network-link service update nls-123456 --name my-network-link-service --description "example network link service"`,
+				Code: `confluent network link service update nls-123456 --name my-network-link-service --description "example network link service"`,
 			},
 			examples.Example{
 				Text: `Update the accepted environments and accepted networks of network link service "nls-123456".`,
-				Code: `confluent network network-link service update nls-123456 --description "example network link service" --accepted-environments env-111111 --accepted-networks n-111111,n-222222`,
+				Code: `confluent network link service update nls-123456 --description "example network link service" --accepted-environments env-111111 --accepted-networks n-111111,n-222222`,
 			},
 		),
 	}

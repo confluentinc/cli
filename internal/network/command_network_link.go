@@ -6,9 +6,8 @@ import (
 
 func (c *command) newNetworkLinkCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "network-link",
-		Short:   "Manage network links.",
-		Aliases: []string{"nl"},
+		Use:   "link",
+		Short: "Manage network links.",
 	}
 
 	cmd.AddCommand(c.newNetworkLinkEndpointCommand())

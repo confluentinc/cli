@@ -18,11 +18,11 @@ func (c *command) newNetworkLinkEndpointCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a network link endpoint for network "n-123456" and network link service "nls-abcde1".`,
-				Code: `confluent network network-link endpoint create --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1`,
+				Code: `confluent network link endpoint create --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1`,
 			},
 			examples.Example{
 				Text: `Create a named network link endpoint for network "n-123456" and network link service "nls-abcde1".`,
-				Code: `confluent network network-link endpoint create my-network-link-endpoint --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1`,
+				Code: `confluent network link endpoint create my-network-link-endpoint --network n-123456 --description "example network link endpoint" --network-link-service nls-abcde1`,
 			},
 		),
 	}

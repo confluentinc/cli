@@ -17,7 +17,7 @@ func (c *command) newNetworkLinkEndpointDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe network link endpoint "nle-123456".`,
-				Code: "confluent network network-link endpoint describe nle-123456",
+				Code: "confluent network link endpoint describe nle-123456",
 			},
 		),
 	}

@@ -21,7 +21,7 @@ func (c *command) newNetworkLinkServiceAssociationListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List associations for network link service "nls-123456".`,
-				Code: "confluent network network-link service association list --network-link-service nls-123456",
+				Code: "confluent network link service association list --network-link-service nls-123456",
 			},
 		),
 	}

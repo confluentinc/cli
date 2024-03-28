@@ -9,8 +9,8 @@ Available Commands:
   describe                   Describe a network.
   dns                        Manage DNS resources.
   ip-address                 List Confluent Cloud egress public IP addresses.
+  link                       Manage network links.
   list                       List networks.
-  network-link               Manage network links.
   peering                    Manage peerings.
   private-link               Manage private links.
   region                     Manage Confluent Cloud network regions.

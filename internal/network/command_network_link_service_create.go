@@ -18,11 +18,11 @@ func (c *command) newNetworkLinkServiceCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a network link service for network "n-123456" with accepted environments "env-111111" and "env-222222".`,
-				Code: `confluent network network-link service create --network n-123456 --description "example network link service" --accepted-environments env-111111,env-222222`,
+				Code: `confluent network link service create --network n-123456 --description "example network link service" --accepted-environments env-111111,env-222222`,
 			},
 			examples.Example{
 				Text: `Create a named network link service for network "n-123456" with accepted networks "n-abced1" and "n-abcde2".`,
-				Code: `confluent network network-link service create my-network-link-service --network n-123456 --description "example network link service" --accepted-networks n-abcde1,n-abcde2`,
+				Code: `confluent network link service create my-network-link-service --network n-123456 --description "example network link service" --accepted-networks n-abcde1,n-abcde2`,
 			},
 		),
 	}

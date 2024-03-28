@@ -17,7 +17,7 @@ func (c *command) newNetworkLinkServiceDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe network link service "nls-123456".`,
-				Code: "confluent network network-link service describe nls-123456",
+				Code: "confluent network link service describe nls-123456",
 			},
 		),
 	}

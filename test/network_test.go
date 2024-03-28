@@ -578,11 +578,10 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnection_Autocomplete()
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceDescribe() {
 	tests := []CLITest{
-		{args: "network nl service describe nls-123456", fixture: "network/network-link/service/describe.golden"},
-		{args: "network network-link service describe nls-123456", fixture: "network/network-link/service/describe.golden"},
-		{args: "network network-link service describe nls-123456 --output json", fixture: "network/network-link/service/describe-json.golden"},
-		{args: "network network-link service describe", fixture: "network/network-link/service/describe-missing-id.golden", exitCode: 1},
-		{args: "network network-link service describe nls-invalid", fixture: "network/network-link/service/describe-invalid.golden", exitCode: 1},
+		{args: "network link service describe nls-123456", fixture: "network/link/service/describe.golden"},
+		{args: "network link service describe nls-123456 --output json", fixture: "network/link/service/describe-json.golden"},
+		{args: "network link service describe", fixture: "network/link/service/describe-missing-id.golden", exitCode: 1},
+		{args: "network link service describe nls-invalid", fixture: "network/link/service/describe-invalid.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -593,11 +592,10 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceDescribe() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
 	tests := []CLITest{
-		{args: "network nl service list", fixture: "network/network-link/service/list.golden"},
-		{args: "network network-link service list", fixture: "network/network-link/service/list.golden"},
-		{args: "network network-link service list --output json", fixture: "network/network-link/service/list-json.golden"},
-		{args: "network network-link service list --network n-abcde1 --name my-network-link-service-1", fixture: "network/network-link/service/list-network-name.golden"},
-		{args: "network network-link service list --phase ready --name my-network-link-service-2,my-network-link-service-3", fixture: "network/network-link/service/list-phase-name.golden"},
+		{args: "network link service list", fixture: "network/link/service/list.golden"},
+		{args: "network link service list --output json", fixture: "network/link/service/list-json.golden"},
+		{args: "network link service list --network n-abcde1 --name my-network-link-service-1", fixture: "network/link/service/list-network-name.golden"},
+		{args: "network link service list --phase ready --name my-network-link-service-2,my-network-link-service-3", fixture: "network/link/service/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -608,12 +606,12 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceDelete() {
 	tests := []CLITest{
-		{args: "network network-link service delete nls-111111 --force", fixture: "network/network-link/service/delete.golden"},
-		{args: "network network-link service delete nls-111111", input: "y\n", fixture: "network/network-link/service/delete-prompt.golden"},
-		{args: "network network-link service delete nls-111111 nls-222222", input: "n\n", fixture: "network/network-link/service/delete-multiple-refuse.golden"},
-		{args: "network network-link service delete nls-111111 nls-222222", input: "y\n", fixture: "network/network-link/service//delete-multiple-success.golden"},
-		{args: "network network-link service delete nls-111111 nls-invalid", fixture: "network/network-link/service/delete-multiple-fail.golden", exitCode: 1},
-		{args: "network network-link service delete nls-invalid --force", fixture: "network/network-link/service/delete-nls-not-exist.golden", exitCode: 1},
+		{args: "network link service delete nls-111111 --force", fixture: "network/link/service/delete.golden"},
+		{args: "network link service delete nls-111111", input: "y\n", fixture: "network/link/service/delete-prompt.golden"},
+		{args: "network link service delete nls-111111 nls-222222", input: "n\n", fixture: "network/link/service/delete-multiple-refuse.golden"},
+		{args: "network link service delete nls-111111 nls-222222", input: "y\n", fixture: "network/link/service//delete-multiple-success.golden"},
+		{args: "network link service delete nls-111111 nls-invalid", fixture: "network/link/service/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network link service delete nls-invalid --force", fixture: "network/link/service/delete-nls-not-exist.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -624,13 +622,13 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceDelete() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceCreate() {
 	tests := []CLITest{
-		{args: "network network-link service create", fixture: "network/network-link/service/create-missing-network.golden", exitCode: 1},
-		{args: "network network-link service create --network n-123456", fixture: "network/network-link/service/create-missing-flag.golden", exitCode: 1},
-		{args: "network network-link service create --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create-no-name.golden"},
-		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create-accepted-environments.golden"},
-		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222", fixture: "network/network-link/service/create-accepted-networks.golden"},
-		{args: "network network-link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222 --accepted-environments env-11111,env-22222", fixture: "network/network-link/service/create.golden"},
-		{args: "network network-link service create nls-duplicate --network n-123455 --accepted-networks n-111111", fixture: "network/network-link/service/create-duplicate.golden", exitCode: 1},
+		{args: "network link service create", fixture: "network/link/service/create-missing-network.golden", exitCode: 1},
+		{args: "network link service create --network n-123456", fixture: "network/link/service/create-missing-flag.golden", exitCode: 1},
+		{args: "network link service create --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/link/service/create-no-name.golden"},
+		{args: "network link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/link/service/create-accepted-environments.golden"},
+		{args: "network link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222", fixture: "network/link/service/create-accepted-networks.golden"},
+		{args: "network link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222 --accepted-environments env-11111,env-22222", fixture: "network/link/service/create.golden"},
+		{args: "network link service create nls-duplicate --network n-123455 --accepted-networks n-111111", fixture: "network/link/service/create-duplicate.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -641,12 +639,12 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceCreate() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceUpdate() {
 	tests := []CLITest{
-		{args: "network network-link service update", fixture: "network/network-link/service/update-missing-args.golden", exitCode: 1},
-		{args: "network network-link service update nls-111111", fixture: "network/network-link/service/update-missing-flags.golden", exitCode: 1},
-		{args: "network nl service update nls-111111 --name my-new-network-link-service --description 'example new network link service'", fixture: "network/network-link/service/update.golden"},
-		{args: "network network-link service update nls-111111 --accepted-environments env-22222 --accepted-networks n-111111", fixture: "network/network-link/service/update-accept-policy.golden"},
-		{args: "network network-link service update nls-111111 --accepted-environments env-11111,env-22222 --accepted-networks n-111111,n-222222", fixture: "network/network-link/service/update-accept-policy-multiple.golden"},
-		{args: "network network-link service update nls-invalid --name 'my-network-link-service'", fixture: "network/network-link/service/update-nls-not-exist.golden", exitCode: 1},
+		{args: "network link service update", fixture: "network/link/service/update-missing-args.golden", exitCode: 1},
+		{args: "network link service update nls-111111", fixture: "network/link/service/update-missing-flags.golden", exitCode: 1},
+		{args: "network link service update nls-111111 --name my-new-network-link-service --description 'example new network link service'", fixture: "network/link/service/update.golden"},
+		{args: "network link service update nls-111111 --accepted-environments env-22222 --accepted-networks n-111111", fixture: "network/link/service/update-accept-policy.golden"},
+		{args: "network link service update nls-111111 --accepted-environments env-11111,env-22222 --accepted-networks n-111111,n-222222", fixture: "network/link/service/update-accept-policy-multiple.golden"},
+		{args: "network link service update nls-invalid --name 'my-network-link-service'", fixture: "network/link/service/update-nls-not-exist.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -657,10 +655,10 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceUpdate() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkService_Autocomplete() {
 	tests := []CLITest{
-		{args: `__complete network network-link service describe ""`, login: "cloud", fixture: "network/network-link/service/describe-autocomplete.golden"},
-		{args: `__complete network network-link service delete ""`, login: "cloud", fixture: "network/network-link/service/delete-autocomplete.golden"},
-		{args: `__complete network network-link service create my-network-link-service --network ""`, login: "cloud", fixture: "network/network-link/service/create-autocomplete.golden"},
-		{args: `__complete network network-link service update ""`, login: "cloud", fixture: "network/network-link/service/update-autocomplete.golden"},
+		{args: `__complete network link service describe ""`, login: "cloud", fixture: "network/link/service/describe-autocomplete.golden"},
+		{args: `__complete network link service delete ""`, login: "cloud", fixture: "network/link/service/delete-autocomplete.golden"},
+		{args: `__complete network link service create my-network-link-service --network ""`, login: "cloud", fixture: "network/link/service/create-autocomplete.golden"},
+		{args: `__complete network link service update ""`, login: "cloud", fixture: "network/link/service/update-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
@@ -671,11 +669,10 @@ func (s *CLITestSuite) TestNetworkNetworkLinkService_Autocomplete() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDescribe() {
 	tests := []CLITest{
-		{args: "network nl endpoint describe nle-123456", fixture: "network/network-link/endpoint/describe.golden"},
-		{args: "network network-link endpoint describe nle-123456", fixture: "network/network-link/endpoint/describe.golden"},
-		{args: "network network-link endpoint describe nle-123456 --output json", fixture: "network/network-link/endpoint/describe-json.golden"},
-		{args: "network network-link endpoint describe", fixture: "network/network-link/endpoint/describe-missing-id.golden", exitCode: 1},
-		{args: "network network-link endpoint describe nle-invalid", fixture: "network/network-link/endpoint/describe-invalid.golden", exitCode: 1},
+		{args: "network link endpoint describe nle-123456", fixture: "network/link/endpoint/describe.golden"},
+		{args: "network link endpoint describe nle-123456 --output json", fixture: "network/link/endpoint/describe-json.golden"},
+		{args: "network link endpoint describe", fixture: "network/link/endpoint/describe-missing-id.golden", exitCode: 1},
+		{args: "network link endpoint describe nle-invalid", fixture: "network/link/endpoint/describe-invalid.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -686,12 +683,11 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDescribe() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpointList() {
 	tests := []CLITest{
-		{args: "network nl endpoint list", fixture: "network/network-link/endpoint/list.golden"},
-		{args: "network network-link endpoint list", fixture: "network/network-link/endpoint/list.golden"},
-		{args: "network network-link endpoint list --output json", fixture: "network/network-link/endpoint/list-json.golden"},
-		{args: "network network-link endpoint list --network n-abcde1 --name my-network-link-endpoint-1", fixture: "network/network-link/endpoint/list-network-name.golden"},
-		{args: "network network-link endpoint list --phase ready --name my-network-link-endpoint-2,my-network-link-endpoint-3", fixture: "network/network-link/endpoint/list-phase-name.golden"},
-		{args: "network network-link endpoint list --network-link-service nls-123456", fixture: "network/network-link/endpoint/list-service.golden"},
+		{args: "network link endpoint list", fixture: "network/link/endpoint/list.golden"},
+		{args: "network link endpoint list --output json", fixture: "network/link/endpoint/list-json.golden"},
+		{args: "network link endpoint list --network n-abcde1 --name my-network-link-endpoint-1", fixture: "network/link/endpoint/list-network-name.golden"},
+		{args: "network link endpoint list --phase ready --name my-network-link-endpoint-2,my-network-link-endpoint-3", fixture: "network/link/endpoint/list-phase-name.golden"},
+		{args: "network link endpoint list --network-link-service nls-123456", fixture: "network/link/endpoint/list-service.golden"},
 	}
 
 	for _, test := range tests {
@@ -702,12 +698,12 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointList() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDelete() {
 	tests := []CLITest{
-		{args: "network network-link endpoint delete nle-111111 --force", fixture: "network/network-link/endpoint/delete.golden"},
-		{args: "network network-link endpoint delete nle-111111", input: "y\n", fixture: "network/network-link/endpoint/delete-prompt.golden"},
-		{args: "network network-link endpoint delete nle-111111 nle-222222", input: "n\n", fixture: "network/network-link/endpoint/delete-multiple-refuse.golden"},
-		{args: "network network-link endpoint delete nle-111111 nle-222222", input: "y\n", fixture: "network/network-link/endpoint/delete-multiple-success.golden"},
-		{args: "network network-link endpoint delete nle-111111 nle-invalid", fixture: "network/network-link/endpoint/delete-multiple-fail.golden", exitCode: 1},
-		{args: "network network-link endpoint delete nle-invalid --force", fixture: "network/network-link/endpoint/delete-nle-not-exist.golden", exitCode: 1},
+		{args: "network link endpoint delete nle-111111 --force", fixture: "network/link/endpoint/delete.golden"},
+		{args: "network link endpoint delete nle-111111", input: "y\n", fixture: "network/link/endpoint/delete-prompt.golden"},
+		{args: "network link endpoint delete nle-111111 nle-222222", input: "n\n", fixture: "network/link/endpoint/delete-multiple-refuse.golden"},
+		{args: "network link endpoint delete nle-111111 nle-222222", input: "y\n", fixture: "network/link/endpoint/delete-multiple-success.golden"},
+		{args: "network link endpoint delete nle-111111 nle-invalid", fixture: "network/link/endpoint/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network link endpoint delete nle-invalid --force", fixture: "network/link/endpoint/delete-nle-not-exist.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -718,11 +714,11 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDelete() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpointCreate() {
 	tests := []CLITest{
-		{args: "network network-link endpoint create", fixture: "network/network-link/endpoint/create-missing-flags.golden", exitCode: 1},
-		{args: "network network-link endpoint create --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-no-name.golden"},
-		{args: "network network-link endpoint create my-network-link-endpoint --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create.golden"},
-		{args: "network network-link endpoint create nle-duplicate --network n-123455 --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-duplicate.golden", exitCode: 1},
-		{args: "network network-link endpoint create nle-same-id --network n-123455 --network-link-service nls-abcde1", fixture: "network/network-link/endpoint/create-same-id.golden", exitCode: 1},
+		{args: "network link endpoint create", fixture: "network/link/endpoint/create-missing-flags.golden", exitCode: 1},
+		{args: "network link endpoint create --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/link/endpoint/create-no-name.golden"},
+		{args: "network link endpoint create my-network-link-endpoint --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/link/endpoint/create.golden"},
+		{args: "network link endpoint create nle-duplicate --network n-123455 --network-link-service nls-abcde1", fixture: "network/link/endpoint/create-duplicate.golden", exitCode: 1},
+		{args: "network link endpoint create nle-same-id --network n-123455 --network-link-service nls-abcde1", fixture: "network/link/endpoint/create-same-id.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -733,11 +729,11 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointCreate() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpointUpdate() {
 	tests := []CLITest{
-		{args: "network network-link endpoint update", fixture: "network/network-link/endpoint/update-missing-args.golden", exitCode: 1},
-		{args: "network network-link endpoint update nle-111111", fixture: "network/network-link/endpoint/update-missing-flags.golden", exitCode: 1},
-		{args: "network nl endpoint update nle-111111 --name my-new-network-link-endpoint", fixture: "network/network-link/endpoint/update.golden"},
-		{args: "network network-link endpoint update nle-111111 --name my-new-network-link-endpoint --description 'example new network link endpoint'", fixture: "network/network-link/endpoint/update-name-description.golden"},
-		{args: "network network-link endpoint update nle-invalid --name 'my-network-link-endpoint'", fixture: "network/network-link/endpoint/update-nle-not-exist.golden", exitCode: 1},
+		{args: "network link endpoint update", fixture: "network/link/endpoint/update-missing-args.golden", exitCode: 1},
+		{args: "network link endpoint update nle-111111", fixture: "network/link/endpoint/update-missing-flags.golden", exitCode: 1},
+		{args: "network link endpoint update nle-111111 --name my-new-network-link-endpoint", fixture: "network/link/endpoint/update.golden"},
+		{args: "network link endpoint update nle-111111 --name my-new-network-link-endpoint --description 'example new network link endpoint'", fixture: "network/link/endpoint/update-name-description.golden"},
+		{args: "network link endpoint update nle-invalid --name 'my-network-link-endpoint'", fixture: "network/link/endpoint/update-nle-not-exist.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -748,10 +744,10 @@ func (s *CLITestSuite) TestNetworkNetworkLinkEndpointUpdate() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkEndpoint_Autocomplete() {
 	tests := []CLITest{
-		{args: `__complete network network-link endpoint describe ""`, login: "cloud", fixture: "network/network-link/endpoint/describe-autocomplete.golden"},
-		{args: `__complete network network-link endpoint delete ""`, login: "cloud", fixture: "network/network-link/endpoint/delete-autocomplete.golden"},
-		{args: `__complete network network-link endpoint create my-network-link-endpoint --network ""`, login: "cloud", fixture: "network/network-link/endpoint/create-autocomplete.golden"},
-		{args: `__complete network network-link endpoint update ""`, login: "cloud", fixture: "network/network-link/endpoint/update-autocomplete.golden"},
+		{args: `__complete network link endpoint describe ""`, login: "cloud", fixture: "network/link/endpoint/describe-autocomplete.golden"},
+		{args: `__complete network link endpoint delete ""`, login: "cloud", fixture: "network/link/endpoint/delete-autocomplete.golden"},
+		{args: `__complete network link endpoint create my-network-link-endpoint --network ""`, login: "cloud", fixture: "network/link/endpoint/create-autocomplete.golden"},
+		{args: `__complete network link endpoint update ""`, login: "cloud", fixture: "network/link/endpoint/update-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
@@ -789,12 +785,11 @@ func (s *CLITestSuite) TestNetworkIpAddressList() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationDescribe() {
 	tests := []CLITest{
-		{args: "network nl service association describe nle-123456 --network-link-service nls-123456", fixture: "network/network-link/service/association/describe.golden"},
-		{args: "network network-link service association describe nle-123456 --network-link-service nls-123456", fixture: "network/network-link/service/association/describe.golden"},
-		{args: "network network-link service association describe nle-123456 --network-link-service nls-123456 --output json", fixture: "network/network-link/service/association/describe-json.golden"},
-		{args: "network network-link service association describe nle-123456", fixture: "network/network-link/service/association/describe-missing-flag.golden", exitCode: 1},
-		{args: "network network-link service association describe", fixture: "network/network-link/service/association/describe-missing-id.golden", exitCode: 1},
-		{args: "network network-link service association describe nle-invalid --network-link-service nls-123456", fixture: "network/network-link/service/association/describe-invalid.golden", exitCode: 1},
+		{args: "network link service association describe nle-123456 --network-link-service nls-123456", fixture: "network/link/service/association/describe.golden"},
+		{args: "network link service association describe nle-123456 --network-link-service nls-123456 --output json", fixture: "network/link/service/association/describe-json.golden"},
+		{args: "network link service association describe nle-123456", fixture: "network/link/service/association/describe-missing-flag.golden", exitCode: 1},
+		{args: "network link service association describe", fixture: "network/link/service/association/describe-missing-id.golden", exitCode: 1},
+		{args: "network link service association describe nle-invalid --network-link-service nls-123456", fixture: "network/link/service/association/describe-invalid.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -805,13 +800,12 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationDescribe() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationList() {
 	tests := []CLITest{
-		{args: "network nl service association list --network-link-service nls-123456", fixture: "network/network-link/service/association/list.golden"},
-		{args: "network network-link service association list --network-link-service nls-123456", fixture: "network/network-link/service/association/list.golden"},
-		{args: "network network-link service association list --network-link-service nls-123456 --output json", fixture: "network/network-link/service/association/list-json.golden"},
-		{args: "network network-link service association list --network-link-service nls-invalid", fixture: "network/network-link/service/association/list-nls-invalid.golden", exitCode: 1},
-		{args: "network network-link service association list --network-link-service nls-no-endpoints", fixture: "network/network-link/service/association/list-no-endpoints.golden", exitCode: 1},
-		{args: "network nl service association list ", fixture: "network/network-link/service/association/list-missing-flag.golden", exitCode: 1},
-		{args: "network network-link service association list --network-link-service nls-123456 --phase pending-accept", fixture: "network/network-link/service/association/list-phase.golden"},
+		{args: "network link service association list --network-link-service nls-123456", fixture: "network/link/service/association/list.golden"},
+		{args: "network link service association list --network-link-service nls-123456 --output json", fixture: "network/link/service/association/list-json.golden"},
+		{args: "network link service association list --network-link-service nls-invalid", fixture: "network/link/service/association/list-nls-invalid.golden", exitCode: 1},
+		{args: "network link service association list --network-link-service nls-no-endpoints", fixture: "network/link/service/association/list-no-endpoints.golden", exitCode: 1},
+		{args: "network link service association list ", fixture: "network/link/service/association/list-missing-flag.golden", exitCode: 1},
+		{args: "network link service association list --network-link-service nls-123456 --phase pending-accept", fixture: "network/link/service/association/list-phase.golden"},
 	}
 
 	for _, test := range tests {
@@ -822,8 +816,8 @@ func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationList() {
 
 func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociation_Autocomplete() {
 	tests := []CLITest{
-		{args: `__complete network network-link service association describe ""`, login: "cloud", fixture: "network/network-link/service/association/describe-autocomplete.golden"},
-		{args: `__complete network network-link service association list --network-link-service ""`, login: "cloud", fixture: "network/network-link/service/association/list-autocomplete.golden"},
+		{args: `__complete network link service association describe ""`, login: "cloud", fixture: "network/link/service/association/describe-autocomplete.golden"},
+		{args: `__complete network link service association list --network-link-service ""`, login: "cloud", fixture: "network/link/service/association/list-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
