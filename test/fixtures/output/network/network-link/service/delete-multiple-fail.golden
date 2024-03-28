@@ -1,0 +1,4 @@
+Error: network link service "nls-invalid" not found
+
+Suggestions:
+    List available network link services with `confluent network network-link service list`.

@@ -1,0 +1,15 @@
+Error: required flag(s) "network-link-service" not set
+Usage:
+  confluent network network-link service association describe <id> [flags]
+
+Flags:
+      --network-link-service string   REQUIRED: Network link service ID.
+      --context string                CLI context name.
+      --environment string            Environment ID.
+  -o, --output string                 Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

@@ -1,0 +1,4 @@
+      ID      |     Name      | Network  | Cloud | Custom Region |                                        Virtual Nework                                        | Cloud Account | Phase  
+--------------+---------------+----------+-------+---------------+----------------------------------------------------------------------------------------------+---------------+--------
+  peer-111112 | gcp-peering   | n-abcde1 | GCP   |               | v-1                                                                                          | p-1           | READY  
+  peer-111113 | azure-peering | n-abcde1 | AZURE | centralus     | /subscriptions/s-1/resourceGroups/group-1/providers/Microsoft.Network/virtualNetworks/vnet-1 | t-1           | READY  

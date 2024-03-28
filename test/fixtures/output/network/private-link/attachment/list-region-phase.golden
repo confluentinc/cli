@@ -1,0 +1,3 @@
+       ID      |    Name     | Cloud |  Region   | AWS VPC Endpoint Service |    Phase      
+---------------+-------------+-------+-----------+--------------------------+---------------
+  platt-111111 | aws-platt-1 | AWS   | us-west-2 |                          | PROVISIONING  
