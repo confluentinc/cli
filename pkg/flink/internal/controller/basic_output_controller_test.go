@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
@@ -34,7 +34,7 @@ func (s *BasicOutputControllerTestSuite) SetupTest() {
 }
 
 func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintNoRows() {
-	mat := types.NewMaterializedStatementResults([]string{}, 10)
+	mat := types.NewMaterializedStatementResults([]string{}, 10, nil)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat)
 	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{})
 	stdout := test.RunAndCaptureSTDOUT(s.T(), s.basicOutputController.VisualizeResults)
@@ -43,7 +43,7 @@ func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintNoRows()
 }
 
 func (s *BasicOutputControllerTestSuite) TestRunInteractiveInputShouldNotPrintNoRowsWhenStatusDetailAvailable() {
-	mat := types.NewMaterializedStatementResults([]string{}, 10)
+	mat := types.NewMaterializedStatementResults([]string{}, 10, nil)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat)
 	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatusDetail: "Created table 'test'"})
 	stdout := test.RunAndCaptureSTDOUT(s.T(), s.basicOutputController.VisualizeResults)
@@ -53,7 +53,7 @@ func (s *BasicOutputControllerTestSuite) TestRunInteractiveInputShouldNotPrintNo
 
 func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintTable() {
 	executedStatementWithResults := getStatementWithResultsExample()
-	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
+	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10, nil)
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(4)
 
@@ -65,7 +65,7 @@ func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintTable() 
 func getStatementWithResultsExample() types.ProcessedStatement {
 	statement := types.ProcessedStatement{
 		StatementName: "example-statement",
-		ResultSchema:  flinkgatewayv1beta1.SqlV1beta1ResultSchema{},
+		Traits:        flinkgatewayv1.SqlV1StatementTraits{},
 		StatementResults: &types.StatementResults{
 			Headers: []string{"Count"},
 			Rows:    []types.StatementResultRow{},

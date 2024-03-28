@@ -54,7 +54,7 @@ func (c *clusterCommand) configurationUpdate(cmd *cobra.Command, _ []string) err
 		return err
 	}
 
-	data := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(config))
+	data := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configMap))
 	i := 0
 	for key, value := range configMap {
 		data[i] = kafkarestv3.AlterConfigBatchRequestDataData{

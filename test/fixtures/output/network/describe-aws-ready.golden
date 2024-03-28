@@ -1,14 +1,15 @@
-+----------------------------+------------------------------+
-| ID                         | n-abcde1                     |
-| Environment                | env-00000                    |
-| Name                       | prod-aws-us-east1            |
-| Cloud                      | AWS                          |
-| Region                     | us-east-1                    |
-| CIDR                       | 10.200.0.0/16                |
-| Zones                      | use1-az1, use1-az2, use1-az3 |
-| Phase                      | READY                        |
-| Supported Connection Types | TRANSITGATEWAY, PEERING      |
-| Active Connection Types    | TRANSITGATEWAY, PEERING      |
-| AWS VPC                    | vpc-00000000000000000        |
-| AWS Account                | 000000000000                 |
-+----------------------------+------------------------------+
++----------------------------+-------------------------------+
+| ID                         | n-abcde1                      |
+| Environment                | env-00000                     |
+| Name                       | prod-aws-us-east1             |
+| Cloud                      | AWS                           |
+| Region                     | us-east-1                     |
+| CIDR                       | 10.200.0.0/16                 |
+| Zones                      | use1-az1, use1-az2, use1-az3  |
+| Phase                      | READY                         |
+| Supported Connection Types | TRANSITGATEWAY, PEERING       |
+| Active Connection Types    | TRANSITGATEWAY, PEERING       |
+| AWS VPC                    | vpc-00000000000000000         |
+| AWS Account                | 000000000000                  |
+| Idle Since                 | 2021-01-01 00:00:00 +0000 UTC |
++----------------------------+-------------------------------+

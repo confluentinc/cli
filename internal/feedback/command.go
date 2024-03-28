@@ -1,6 +1,7 @@
 package feedback
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -48,7 +49,8 @@ func (c *command) feedback(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if len(feedback) == 0 {
+
+	if len(bytes.Trim(feedback, " \t\n")) == 0 {
 		output.ErrPrintln(c.Config.EnableColor, "Empty feedback not submitted.")
 		return nil
 	}

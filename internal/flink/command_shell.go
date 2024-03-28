@@ -15,7 +15,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
 
@@ -118,9 +117,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 	if serviceAccount == "" {
 		serviceAccount = c.Context.GetCurrentServiceAccount()
-	}
-	if serviceAccount == "" {
-		output.ErrPrintln(c.Config.EnableColor, serviceAccountWarning)
 	}
 
 	database, err := cmd.Flags().GetString("database")

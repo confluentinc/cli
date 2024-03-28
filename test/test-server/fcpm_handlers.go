@@ -82,14 +82,11 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 			computePool = flinkv2.FcpmV2ComputePool{
 				Id: flinkv2.PtrString(id),
 				Spec: &flinkv2.FcpmV2ComputePoolSpec{
-					DisplayName:  flinkv2.PtrString("my-compute-pool-1"),
-					HttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrl.String()),
-					MaxCfu:       flinkv2.PtrInt32(1),
-					Cloud:        flinkv2.PtrString("AWS"),
-					Region:       flinkv2.PtrString("us-west-2"),
-					Environment: &flinkv2.GlobalObjectReference{
-						Id: "env-123",
-					},
+					DisplayName: flinkv2.PtrString("my-compute-pool-1"),
+					MaxCfu:      flinkv2.PtrInt32(1),
+					Cloud:       flinkv2.PtrString("AWS"),
+					Region:      flinkv2.PtrString("us-west-2"),
+					Environment: &flinkv2.GlobalObjectReference{Id: "env-123"},
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
 			}
@@ -108,9 +105,7 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 					MaxCfu:      flinkv2.PtrInt32(update.Spec.GetMaxCfu()),
 					Cloud:       flinkv2.PtrString("AWS"),
 					Region:      flinkv2.PtrString("us-west-2"),
-					Environment: &flinkv2.GlobalObjectReference{
-						Id: "env-123",
-					},
+					Environment: &flinkv2.GlobalObjectReference{Id: "env-123"},
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
 			}

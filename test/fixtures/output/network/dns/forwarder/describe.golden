@@ -1,0 +1,12 @@
++----------------+----------------------------------+
+| ID             | dnsf-abcde1                      |
+| Name           | my-dns-forwarder                 |
+| Domains        | abc.com, def.com,                |
+|                | example.domain,                  |
+|                | my.dns.forwarder.example.domain, |
+|                | xyz.com                          |
+| DNS Server IPs | 10.200.0.0, 10.206.0.0           |
+| Environment    | env-00000                        |
+| Gateway        | gw-111111                        |
+| Phase          | READY                            |
++----------------+----------------------------------+

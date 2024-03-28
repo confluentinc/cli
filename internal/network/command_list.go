@@ -77,7 +77,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Sort networks by DisplayName, then Cloud, then Region, then CreatedAt ASC.
+	// Sort networks by Cloud, then Region, then CreatedAt ASC.
 	sort.Slice(networks, func(i, j int) bool {
 		if networks[i].Spec.GetCloud() != networks[j].Spec.GetCloud() {
 			return networks[i].Spec.GetCloud() < networks[j].Spec.GetCloud()
@@ -106,6 +106,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Id:                    network.GetId(),
 				Name:                  network.Spec.GetDisplayName(),
 				EnvironmentId:         network.Spec.Environment.GetId(),
+				Gateway:               network.Spec.GetGateway().Id,
 				Cloud:                 network.Spec.GetCloud(),
 				Region:                network.Spec.GetRegion(),
 				Cidr:                  network.Spec.GetCidr(),
@@ -119,6 +120,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Id:                    network.GetId(),
 				Name:                  network.Spec.GetDisplayName(),
 				EnvironmentId:         network.Spec.Environment.GetId(),
+				Gateway:               network.Spec.GetGateway().Id,
 				Cloud:                 network.Spec.GetCloud(),
 				Region:                network.Spec.GetRegion(),
 				Cidr:                  network.Spec.GetCidr(),
@@ -129,9 +131,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 	}
-
-	// Disable default sort to use the custom sort above.
 	list.Sort(false)
-	list.Filter([]string{"Id", "Name", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
+	list.Filter([]string{"Id", "Name", "Gateway", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
 	return list.Print()
 }

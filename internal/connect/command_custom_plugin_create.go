@@ -9,14 +9,17 @@ import (
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 type pluginCreateOut struct {
 	Id         string `human:"ID" serialized:"id"`
 	Name       string `human:"Name" serialized:"name"`
+	Cloud      string `human:"Cloud" serialized:"cloud"`
 	ErrorTrace string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
@@ -29,7 +32,7 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create custom connector plugin "my-plugin".`,
-				Code: "confluent connect custom-plugin create my-plugin --plugin-file datagen.zip --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector",
+				Code: "confluent connect custom-plugin create my-plugin --plugin-file datagen.zip --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector --cloud aws",
 			},
 		),
 	}
@@ -40,6 +43,7 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of custom plugin.")
 	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
+	c.addCloudFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -65,6 +69,11 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
+
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
 	connectorClass, err := cmd.Flags().GetString("connector-class")
 	if err != nil {
 		return err
@@ -82,23 +91,33 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	if extension != "zip" && extension != "jar" {
 		return fmt.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
 	}
+	cloud = strings.ToLower(cloud)
 
-	request := *connectcustompluginv1.NewConnectV1PresignedUrlRequest()
-	request.SetContentFormat(extension)
+	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
+		ContentFormat: connectcustompluginv1.PtrString(extension),
+		Cloud:         connectcustompluginv1.PtrString(cloud),
+	}
 
 	resp, err := c.V2Client.GetPresignedUrl(request)
 	if err != nil {
 		return err
 	}
 
-	if err := uploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
-		return err
+	if cloud == "azure" {
+		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), pluginFileName, strings.ToLower(resp.GetContentFormat())); err != nil {
+			return err
+		}
+	} else {
+		if err := utils.UploadFile(resp.GetUploadUrl(), pluginFileName, resp.GetUploadFormData()); err != nil {
+			return err
+		}
 	}
 
 	createCustomPluginRequest := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 		DisplayName:               connectcustompluginv1.PtrString(displayName),
 		Description:               connectcustompluginv1.PtrString(description),
 		DocumentationLink:         connectcustompluginv1.PtrString(documentationLink),
+		Cloud:                     connectcustompluginv1.PtrString(cloud),
 		ConnectorClass:            connectcustompluginv1.PtrString(connectorClass),
 		ConnectorType:             connectcustompluginv1.PtrString(connectorType),
 		SensitiveConfigProperties: &sensitiveProperties,
@@ -114,8 +133,14 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 
 	table := output.NewTable(cmd)
 	table.Add(&pluginCreateOut{
-		Id:   pluginResp.GetId(),
-		Name: pluginResp.GetDisplayName(),
+		Id:    pluginResp.GetId(),
+		Name:  pluginResp.GetDisplayName(),
+		Cloud: pluginResp.GetCloud(),
 	})
 	return table.Print()
+}
+
+func (c *customPluginCommand) addCloudFlag(cmd *cobra.Command) {
+	cmd.Flags().String("cloud", "aws", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return ccloudv2.ByocSupportClouds })
 }

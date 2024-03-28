@@ -11,9 +11,9 @@ import (
 var auth0ClientIds = map[string]string{
 	"cpd":          "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
 	"devel":        "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
-	"infra-us-gov": "0oa7c9gkc6bHBD2OW1d7",
+	"infra-us-gov": "0oa73yrenxpdtNXEe4h7",
 	"prod-us-gov":  "0oa41ih4ms3TVVAT04h7",
-	"devel-us-gov": "TODO",
+	"devel-us-gov": "0oaa5al9x9Rf0rF3j1d7",
 	"prod":         "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
 	"stag":         "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
 	"test":         "00000000000000000000000000000000",

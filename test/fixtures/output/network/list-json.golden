@@ -21,6 +21,7 @@
   {
     "id": "n-abcde4",
     "name": "prod-aws-us-east1",
+    "gateway": "gw-abcde1",
     "cloud": "AWS",
     "region": "us-west-2",
     "cidr": "10.200.0.0/16",
