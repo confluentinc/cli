@@ -213,5 +213,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace github.com/confluentinc/ccloud-sdk-go-v2/networking => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.34

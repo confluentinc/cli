@@ -66,8 +66,6 @@ func getGatewayCloud(gateway networkingv1.NetworkingV1Gateway) string {
 
 	if cloud.NetworkingV1AwsEgressPrivateLinkGatewayStatus != nil {
 		return CloudAws
-	} else if cloud.NetworkingV1AzureEgressPrivateLinkGatewayStatus != nil {
-		return CloudAzure
 	}
 
 	return ""
