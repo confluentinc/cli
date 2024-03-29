@@ -31,7 +31,7 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("gateway", "", "Gateway ID.")
+	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	addForwarderFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
