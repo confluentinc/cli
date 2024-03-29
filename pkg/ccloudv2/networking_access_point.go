@@ -123,7 +123,7 @@ func (c *Client) executeListDnsRecords(environment, pageToken string, listParame
 	}
 
 	if listParameters.ResourceIds != nil {
-		req = req.ResourceId(listParameters.ResourceIds)
+		req = req.Resource(listParameters.ResourceIds)
 	}
 
 	resp, httpResp, err := req.Execute()
