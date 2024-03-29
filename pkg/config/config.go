@@ -303,6 +303,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 	environments := []string{
 		"confluentgov.com",
 		"devel.confluentgov-internal.com",
+    "devel-1.confluentgov-internal.com",
 		"infra.confluentgov-internal.com",
 	}
 	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && slices.Contains(environments, c.Context().PlatformName)
