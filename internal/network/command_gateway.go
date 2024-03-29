@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 )
 
