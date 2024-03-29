@@ -28,7 +28,8 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.10.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.11.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.2.0
