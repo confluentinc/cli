@@ -352,11 +352,11 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetOnPremSsoCredentialsFromConfig(c.cfg, unsafeTrace),
-		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(false, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
+		c.loginCredentialsManager.GetOnPremSsoCredentialsFromConfig(c.cfg, unsafeTrace),
+		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
 }

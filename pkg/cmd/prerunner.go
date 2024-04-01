@@ -713,11 +713,11 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.GetPlatformServer(), credentials, false, organizationId)
 	} else {
 		credentials, err := pauth.GetLoginCredentials(
-			r.LoginCredentialsManager.GetOnPremSsoCredentialsFromConfig(r.Config, unsafeTrace),
 			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 			r.LoginCredentialsManager.GetCredentialsFromKeychain(false, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
+			r.LoginCredentialsManager.GetOnPremSsoCredentialsFromConfig(r.Config, unsafeTrace),
 		)
 		if err != nil {
 			return "", "", err
