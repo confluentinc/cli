@@ -13,6 +13,7 @@ import (
 
 const (
 	Unknown                         = "unknown"
+	AccessPoint                     = "access point"
 	ACL                             = "ACL"
 	ApiKey                          = "API key"
 	Broker                          = "broker"
@@ -26,6 +27,7 @@ const (
 	Context                         = "context"
 	Dek                             = "DEK"
 	DnsForwarder                    = "DNS forwarder"
+	DnsRecord                       = "DNS record"
 	Environment                     = "environment"
 	Flink                           = "flink"
 	FlinkComputePool                = "Flink compute pool"
@@ -58,7 +60,9 @@ const (
 )
 
 const (
+	AccessPointPrefix           = "ap"
 	ConnectorPrefix             = "lcc"
+	DnsRecordPrefix             = "dnsrec"
 	EnvironmentPrefix           = "env"
 	IdentityPoolPrefix          = "pool"
 	IdentityProviderPrefix      = "op"
@@ -72,7 +76,9 @@ const (
 )
 
 var prefixToResource = map[string]string{
+	AccessPointPrefix:           AccessPoint,
 	ConnectorPrefix:             Connector,
+	DnsRecordPrefix:             DnsRecord,
 	EnvironmentPrefix:           Environment,
 	IdentityPoolPrefix:          IdentityPool,
 	IdentityProviderPrefix:      IdentityProvider,
@@ -86,6 +92,8 @@ var prefixToResource = map[string]string{
 }
 
 var resourceToPrefix = map[string]string{
+	AccessPoint:           AccessPointPrefix,
+	DnsRecord:             DnsRecordPrefix,
 	Environment:           EnvironmentPrefix,
 	IdentityPool:          IdentityPoolPrefix,
 	IdentityProvider:      IdentityProviderPrefix,
