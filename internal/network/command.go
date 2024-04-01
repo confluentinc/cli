@@ -100,10 +100,12 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	cmd.AddCommand(newAccessPointCommand(prerunner))
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newDnsCommand())
+	cmd.AddCommand(c.newGatewayCommand())
 	cmd.AddCommand(c.newIpAddressCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newNetworkLinkCommand())
@@ -502,4 +504,20 @@ func toUpper(strSlice []string) []string {
 func addForwarderFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
 	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
+}
+
+func addGatewayFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().String("gateway", "", "Gateway ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "gateway", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteGateways(c.V2Client, environmentId)
+	})
 }

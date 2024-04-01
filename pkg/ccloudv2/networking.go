@@ -23,6 +23,41 @@ func (c *Client) networkingApiContext() context.Context {
 	return context.WithValue(context.Background(), networkingv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
+func (c *Client) GetGateway(environment, id string) (networkingv1.NetworkingV1Gateway, error) {
+	resp, httpResp, err := c.NetworkingClient.GatewaysNetworkingV1Api.GetNetworkingV1Gateway(c.networkingApiContext(), id).Environment(environment).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListGateways(environment string) ([]networkingv1.NetworkingV1Gateway, error) {
+	var list []networkingv1.NetworkingV1Gateway
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, err := c.executeListGateways(environment, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListGateways(environment, pageToken string) (networkingv1.NetworkingV1GatewayList, error) {
+	req := c.NetworkingClient.GatewaysNetworkingV1Api.ListNetworkingV1Gateways(c.networkingApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
 func (c *Client) GetNetwork(environment, id string) (networkingv1.NetworkingV1Network, error) {
 	resp, httpResp, err := c.NetworkingClient.NetworksNetworkingV1Api.GetNetworkingV1Network(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)

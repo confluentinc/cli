@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   forwarder   Manage DNS forwarders.
+  record      Manage DNS records.
 
 Global Flags:
   -h, --help            Show help for this command.
