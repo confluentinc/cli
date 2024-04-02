@@ -57,32 +57,29 @@ func handleConnectorResume(_ *testing.T) http.HandlerFunc {
 
 func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		offset := map[string]any{
-			"partition": map[string]any{
-				"server": "dbzv2",
-			},
-			"offset": map[string]any{
-				"event":          2,
-				"file":           "mysql-bin.000600",
-				"pos":            2001,
-				"row":            1,
-				"server_id":      1,
-				"transaction_id": nil,
-				"ts_sec":         1711788870,
-			},
-		}
-
 		currTime := time.Unix(1712046213, 123).UTC()
-		metadata := connectv1.NewConnectV1ConnectorOffsetsMetadata()
-		metadata.SetObservedAt(currTime)
-
 		connectorOffset := connectv1.ConnectV1ConnectorOffsets{
 			Name: connectv1.PtrString("az-connector"),
 			Id:   connectv1.PtrString("lcc-123"),
 			Offsets: &[]map[string]any{
-				0: offset,
+				0: {
+					"partition": map[string]any{
+						"server": "dbzv2",
+					},
+					"offset": map[string]any{
+						"event":          2,
+						"file":           "mysql-bin.000600",
+						"pos":            2001,
+						"row":            1,
+						"server_id":      1,
+						"transaction_id": nil,
+						"ts_sec":         1711788870,
+					},
+				},
 			},
-			Metadata: metadata,
+			Metadata: &connectv1.ConnectV1ConnectorOffsetsMetadata{
+				ObservedAt: &currTime,
+			},
 		}
 		err := json.NewEncoder(w).Encode(connectorOffset)
 		require.NoError(t, err)
@@ -94,17 +91,15 @@ func handleAlterConnectorOffsets(t *testing.T) http.HandlerFunc {
 		currTime := time.Unix(1712046213, 123).UTC()
 		connectorOffsetStatus := connectv1.ConnectV1AlterOffsetStatus{
 			Request: connectv1.ConnectV1AlterOffsetRequestInfo{
-				Id:          "lcc-123",
-				Name:        "GcsSink",
-				Offsets:     nil,
-				RequestedAt: time.Time{},
-				Type:        "PATCH",
+				Id:   "lcc-123",
+				Name: "GcsSink",
+				Type: "PATCH",
 			},
 			Status: connectv1.ConnectV1AlterOffsetStatusStatus{
 				Phase:   "PENDING",
 				Message: connectv1.PtrString("Alter offset process is pending"),
 			},
-			PreviousOffsets: &[]map[string]interface{}{},
+			PreviousOffsets: &[]map[string]any{},
 			AppliedAt:       *connectv1.NewNullableTime(&currTime),
 		}
 		err := json.NewEncoder(w).Encode(connectorOffsetStatus)
@@ -127,7 +122,7 @@ func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 				Phase:   "PENDING",
 				Message: connectv1.PtrString("Alter offset process is pending"),
 			},
-			PreviousOffsets: &[]map[string]interface{}{},
+			PreviousOffsets: &[]map[string]any{},
 			AppliedAt:       *connectv1.NewNullableTime(&currTime),
 		}
 		err := json.NewEncoder(w).Encode(connectorOffsetStatus)

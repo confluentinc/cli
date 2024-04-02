@@ -13,7 +13,7 @@ type alterStatusOut struct {
 	Id        string `human:"ID" serialized:"id"`
 	Phase     string `human:"Phase" serialized:"phase"`
 	Message   string `human:"Message,omitempty" serialized:"message,omitempty"`
-	AppliedAt string `human:"Applied at,omitempty" serialized:"applied_at,omitempty"`
+	AppliedAt string `human:"Applied At,omitempty" serialized:"applied_at,omitempty"`
 }
 
 func (c *offsetStatusCommand) newStatusDescribeCommand() *cobra.Command {
@@ -41,6 +41,7 @@ func (c *offsetStatusCommand) newStatusDescribeCommand() *cobra.Command {
 
 	return cmd
 }
+
 func (c *offsetStatusCommand) alterStatus(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {

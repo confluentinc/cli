@@ -16,7 +16,7 @@ func newStatusCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Status of offset update",
 	}
 
-	c := &offsetStatusCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &offsetStatusCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.AddCommand(c.newStatusDescribeCommand())
 
 	return cmd

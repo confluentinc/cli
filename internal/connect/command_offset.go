@@ -21,7 +21,7 @@ func newOffsetCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage offsets for managed connectors.",
 	}
 
-	c := &offsetCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &offsetCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.AddCommand(c.newAlterCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(newStatusCommand(prerunner))

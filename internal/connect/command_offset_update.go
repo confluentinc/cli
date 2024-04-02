@@ -18,7 +18,6 @@ import (
 )
 
 func (c *offsetCommand) newAlterCommand() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update a connector's offsets",
@@ -36,16 +35,13 @@ func (c *offsetCommand) newAlterCommand() *cobra.Command {
 			},
 		),
 	}
-
 	cmd.Flags().String("config-file", "", "JSON file containing connector offsets to set to.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
-
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "json"))
 	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
-
 	return cmd
 }
 
@@ -80,7 +76,7 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	var offsetStatus connectv1.ConnectV1AlterOffsetStatus
 	table := output.NewTable(cmd)
 
-	retry.Retry(5*time.Second, 30*time.Second, func() error {
+	err = retry.Retry(time.Second, 30*time.Second, func() error {
 		offsetStatus, err = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
 		if err != nil {
 			return err

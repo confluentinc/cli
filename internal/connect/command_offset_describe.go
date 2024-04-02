@@ -13,14 +13,14 @@ import (
 )
 
 type OffsetConnectorOut struct {
-	Id       string `human:"Id" json:"id" yaml:"id"`
+	Id       string `human:"ID" json:"id" yaml:"id"`
 	Name     string `human:"Name" json:"name" yaml:"name"`
 	Offsets  string `human:"Offsets" json:"offsets,omitempty" yaml:"offsets,omitempty"`
 	Metadata string `human:"Metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 type SerializedOffsetConnectorOut struct {
-	Id       string                                      `human:"Id" json:"id" yaml:"id"`
+	Id       string                                      `human:"ID" json:"id" yaml:"id"`
 	Name     string                                      `human:"Name" json:"name" yaml:"name"`
 	Offsets  []map[string]any                            `human:"Offsets" json:"offsets,omitempty" yaml:"offsets,omitempty"`
 	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `human:"Metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
