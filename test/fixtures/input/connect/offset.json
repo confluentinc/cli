@@ -1,0 +1,19 @@
+{
+  "type": "PATCH",
+  "offsets": [
+    {
+      "partition": {
+        "server": "dbzv2"
+      },
+      "offset": {
+        "event": 2,
+        "file": "mysql-bin.000600",
+        "pos": 2001,
+        "row": 1,
+        "server_id": 1,
+        "transaction_id": null,
+        "ts_sec": 1711788870
+      }
+    }
+  ]
+}
