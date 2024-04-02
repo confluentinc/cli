@@ -65,7 +65,7 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
 						State: "RUNNING",
 					},
-					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{{Id: 1, State: "RUNNING"}},
+					Tasks: &[]connectv1.InlineResponse2001Tasks{{Id: 1, State: "RUNNING"}},
 					Type:  "Sink",
 				},
 				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
@@ -80,7 +80,7 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
 						State: "RUNNING",
 					},
-					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{{Id: 1, State: "RUNNING"}},
+					Tasks: &[]connectv1.InlineResponse2001Tasks{{Id: 1, State: "RUNNING"}},
 					Type:  "Sink",
 				},
 				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
