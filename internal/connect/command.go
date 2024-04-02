@@ -26,6 +26,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newCustomPluginCommand(prerunner))
 	cmd.AddCommand(newEventCommand(prerunner))
 	cmd.AddCommand(newPluginCommand(cfg, prerunner))
+	cmd.AddCommand(newOffsetCommand(cfg, prerunner))
 
 	return cmd
 }
