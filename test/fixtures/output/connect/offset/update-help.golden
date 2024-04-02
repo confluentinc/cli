@@ -1,4 +1,4 @@
-Update a connector's offsets
+Update a connector's offsets.
 
 Usage:
   confluent connect offset update <id> [flags]

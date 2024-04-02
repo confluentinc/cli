@@ -1,4 +1,4 @@
-Describe connector offset update status
+Describe connector offset update status.
 
 Usage:
   confluent connect offset status describe [flags]

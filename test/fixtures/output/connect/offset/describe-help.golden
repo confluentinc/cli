@@ -1,4 +1,4 @@
-Describe connector offsets
+Describe connector offsets.
 
 Usage:
   confluent connect offset describe <id> [flags]

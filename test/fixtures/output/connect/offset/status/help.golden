@@ -1,10 +1,10 @@
-Status of offset update
+Status of offset update.
 
 Usage:
   confluent connect offset status [command]
 
 Available Commands:
-  describe    Describe connector offset update status
+  describe    Describe connector offset update status.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -4,9 +4,9 @@ Usage:
   confluent connect offset [command]
 
 Available Commands:
-  describe    Describe connector offsets
-  status      Status of offset update
-  update      Update a connector's offsets
+  describe    Describe connector offsets.
+  status      Status of offset update.
+  update      Update a connector's offsets.
 
 Global Flags:
   -h, --help            Show help for this command.
