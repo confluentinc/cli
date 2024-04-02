@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"encoding/json"
+
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
 
@@ -10,35 +12,35 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type serializedOffsetOut struct {
-	Connector *serializedOffsetConnectorOut `json:"connector" yaml:"connector"`
-	Tasks     []serializedTasksOut          `json:"tasks" yaml:"tasks"`
-	Configs   []serializedConfigsOut        `json:"configs" yaml:"configs"`
-}
-
 type serializedOffsetConnectorOut struct {
 	Id       string                                      `json:"id" yaml:"id"`
 	Name     string                                      `json:"name" yaml:"name"`
-	Offsets  []map[string]interface{}                    `json:"offsets,omitempty" yaml:"offsets"`
-	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `json:"metadata,omitempty" yaml:"metadata"`
+	Offsets  []map[string]interface{}                    `json:"offsets,omitempty" yaml:"offsets,omitempty"`
+	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+}
+
+type ConnectDescribeOut struct {
+	Id   string `human:"Id"`
+	Name string `human:"Name"`
 }
 
 type offsetsDescribeOut struct {
-	Partition interface{} `human:"Partition"`
-	Offset    interface{} `human:"Offset"`
+	Partition string `human:"Partition"`
+	Offset    string `human:"Offset"`
 }
 
 type metadataDescribeOut struct {
 	ObservedAt string `human:"Observed At"`
 }
 
-func (c *offsetCommand) newGetOffsetCommand() *cobra.Command {
+func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "get <id>",
-		Short:       "Get connector offsets",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.getOffset,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:               "get <id>",
+		Short:             "Get connector offsets",
+		Args:              cobra.ExactArgs(1),
+		RunE:              c.getOffset,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get connector offsets for a lccId in the current or specified Kafka cluster context.",
@@ -80,10 +82,10 @@ func (c *offsetCommand) getOffset(cmd *cobra.Command, args []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printHumanDescribeOffset(cmd, offsets)
+		return printHumanDescribeOffset(cmd, offsets, args[0], connectorIdToName[args[0]])
 	}
 
-	return printSerializedDescribeOffsets(cmd, offsets)
+	return printSerializedDescribeOffsets(cmd, offsets, args[0], connectorIdToName[args[0]])
 }
 
 func (c *offsetCommand) mapConnectorIdToName(environmentId, kafkaClusterId string) (map[string]string, error) {
@@ -101,12 +103,12 @@ func (c *offsetCommand) mapConnectorIdToName(environmentId, kafkaClusterId strin
 	return connectorIdToName, nil
 }
 
-func printHumanDescribeOffset(cmd *cobra.Command, offset connectv1.ConnectV1ConnectorOffsets) error {
+func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {
 	output.Println(false, "Connector Details")
 	table := output.NewTable(cmd)
-	table.Add(&connectOut{
-		Name: *offset.Name,
-		Id:   *offset.Id,
+	table.Add(&ConnectDescribeOut{
+		Name: name,
+		Id:   id,
 	})
 	if err := table.Print(); err != nil {
 		return err
@@ -114,37 +116,65 @@ func printHumanDescribeOffset(cmd *cobra.Command, offset connectv1.ConnectV1Conn
 	output.Println(false, "")
 	output.Println(false, "")
 
-	output.Println(false, "Offset Details")
 	list := output.NewList(cmd)
-	for _, values := range *offset.Offsets {
-		list.Add(&offsetsDescribeOut{
-			Partition: values["partition"],
-			Offset:    values["offset"],
+	output.Println(false, "Offset Details")
+	if &offsets != nil && offsets.HasOffsets() {
+		for _, values := range *offsets.Offsets {
+			partition := values["partition"]
+			partitionString, err := json.Marshal(partition)
+			if err != nil {
+				return err
+			}
+			offset := values["offset"]
+			offsetString, err := json.Marshal(offset)
+			if err != nil {
+				return err
+			}
+			list.Add(&offsetsDescribeOut{
+				Partition: string(partitionString),
+				Offset:    string(offsetString),
+			})
+		}
+		if err := list.Print(); err != nil {
+			return err
+		}
+		output.Println(false, "")
+		output.Println(false, "")
+	}
+
+	if &offsets != nil && offsets.HasMetadata() {
+		output.Println(false, "Metadata Details")
+		list = output.NewList(cmd)
+
+		var observedAt string
+		if offsets.Metadata.ObservedAt != nil {
+			observedAt = offsets.Metadata.ObservedAt.String()
+		}
+		list.Add(&metadataDescribeOut{
+			ObservedAt: observedAt,
 		})
 	}
-	if err := list.Print(); err != nil {
-		return err
-	}
-	output.Println(false, "")
-	output.Println(false, "")
-
-	output.Println(false, "Metadata Details")
-	list = output.NewList(cmd)
-
-	list.Add(&metadataDescribeOut{
-		ObservedAt: offset.Metadata.ObservedAt.String(),
-	})
 
 	return list.Print()
 }
 
-func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets) error {
+func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {
+
+	var offsetInfo []map[string]interface{}
+	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
+	if &offsets != nil && offsets.HasMetadata() {
+		metadata = *offsets.Metadata
+	}
+
+	if &offsets != nil && offsets.HasOffsets() {
+		offsetInfo = *offsets.Offsets
+	}
 
 	out := &serializedOffsetConnectorOut{
-		Id:       *offsets.Id,
-		Name:     *offsets.Name,
-		Offsets:  *offsets.Offsets,
-		Metadata: *offsets.Metadata,
+		Id:       id,
+		Name:     name,
+		Offsets:  offsetInfo,
+		Metadata: metadata,
 	}
 	return output.SerializedOutput(cmd, out)
 }

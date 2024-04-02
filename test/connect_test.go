@@ -38,9 +38,15 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json", fixture: "connect/cluster/update.golden"},
 
 		//offset CLI
-		{args: "connect offset get lcc-123 --cluster lkc-123 -o json", fixture: "connect/cluster/get-offset-json.golden"},
-		{args: "connect offset alter lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o json", fixture: "connect/cluster/alter-offset-json.golden"},
-		{args: "connect offset status lcc-123 --cluster lkc-123 -o json", fixture: "connect/cluster/alter-offset-status-json.golden"},
+		{args: "connect offset get lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/get-offset-json.golden"},
+		{args: "connect offset get lcc-123 --cluster lkc-123", fixture: "connect/offset/get-offset.golden"},
+		{args: "connect offset get lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/offset/get-offset-yaml.golden"},
+		{args: "connect offset alter lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123", fixture: "connect/offset/alter-offset.golden"},
+		{args: "connect offset alter lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o json", fixture: "connect/offset/alter-offset-json.golden"},
+		{args: "connect offset alter lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o yaml", fixture: "connect/offset/alter-offset-yaml.golden"},
+		{args: "connect offset status lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/alter-offset-status-json.golden"},
+		{args: "connect offset status lcc-123 --cluster lkc-123", fixture: "connect/offset/alter-offset-status.golden"},
+		{args: "connect offset status lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/offset/alter-offset-status-yaml.golden"},
 	}
 
 	for _, test := range tests {

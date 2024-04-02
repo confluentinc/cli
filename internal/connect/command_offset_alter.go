@@ -16,14 +16,15 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *offsetCommand) newAlterOffsetCommand() *cobra.Command {
+func (c *offsetCommand) newAlterCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:         "alter <id>",
-		Short:       "Alter a connector's offsets'",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.alterOffset,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:               "alter <id>",
+		Short:             "Alter a connector's offsets'",
+		Args:              cobra.ExactArgs(1),
+		RunE:              c.alterOffset,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Alter connector offsets for a lccId in the current or specified Kafka cluster context.",
@@ -82,16 +83,29 @@ func (c *offsetCommand) alterOffset(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if offsetStatus.GetStatus().Phase != "PENDING" || time2.Since(currTime).Seconds() > 30 {
+		if (offsetStatus.GetStatus().Phase != "PENDING" || time2.Since(currTime).Seconds() > 30) && &offsetStatus != nil {
+			var appliedAt string
+			if offsetStatus.AppliedAt.IsSet() {
+				appliedAt = offsetStatus.AppliedAt.Get().String()
+			}
+
+			var phase string
+			var message string
+			_, isStatusSet := offsetStatus.GetStatusOk()
+			if isStatusSet {
+				phase = offsetStatus.GetStatus().Phase
+				if messagePtr := offsetStatus.GetStatus().Message; messagePtr != nil {
+					message = *messagePtr
+				}
+			}
 			table.Add(&alterStatusOut{
 				Id:        args[0],
-				Phase:     offsetStatus.GetStatus().Phase,
-				Message:   *offsetStatus.GetStatus().Message,
-				AppliedAt: offsetStatus.AppliedAt.Get().String(),
+				Phase:     phase,
+				Message:   message,
+				AppliedAt: appliedAt,
 			})
+			return table.Print()
 		}
-
-		return table.Print()
 	}
 }
 

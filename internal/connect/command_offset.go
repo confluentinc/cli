@@ -25,9 +25,9 @@ func newOffsetCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comma
 	c := &offsetCommand{}
 
 	c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
-	cmd.AddCommand(c.newGetOffsetCommand())
-	cmd.AddCommand(c.newAlterOffsetCommand())
-	cmd.AddCommand(c.newGetAlterOffsetStatusCommand())
+	cmd.AddCommand(c.newAlterCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newStatusCommand())
 
 	return cmd
 }

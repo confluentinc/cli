@@ -16,13 +16,14 @@ type alterStatusOut struct {
 	AppliedAt string `human:"Applied at,omitempty" serialized:"applied_at,omitempty"`
 }
 
-func (c *offsetCommand) newGetAlterOffsetStatusCommand() *cobra.Command {
+func (c *offsetCommand) newStatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "status",
-		Short:       "Get connector offset alter status",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.alterStatus,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:               "status",
+		Short:             "Get connector offset alter status",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.alterStatus,
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get connector offset alter status for a lccId in the current or specified Kafka cluster context.",
@@ -62,12 +63,25 @@ func (c *offsetCommand) alterStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var appliedAt string
+	if offsetStatus.AppliedAt.IsSet() {
+		appliedAt = offsetStatus.AppliedAt.Get().String()
+	}
+	var phase string
+	var message string
+	_, isStatusSet := offsetStatus.GetStatusOk()
+	if isStatusSet {
+		phase = offsetStatus.GetStatus().Phase
+		if messagePtr := offsetStatus.GetStatus().Message; messagePtr != nil {
+			message = *messagePtr
+		}
+	}
 	table := output.NewTable(cmd)
 	table.Add(&alterStatusOut{
 		Id:        args[0],
-		Phase:     offsetStatus.GetStatus().Phase,
-		Message:   *offsetStatus.GetStatus().Message,
-		AppliedAt: offsetStatus.AppliedAt.Get().String(),
+		Phase:     phase,
+		Message:   message,
+		AppliedAt: appliedAt,
 	})
 	return table.Print()
 }
