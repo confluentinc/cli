@@ -1,0 +1,16 @@
+Manage offsets for managed connectors.
+
+Usage:
+  confluent connect offset [command]
+
+Available Commands:
+  describe    Describe connector offsets
+  status      Status of offset update
+  update      Update a connector's offsets
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent connect offset [command] --help" for more information about a command.
