@@ -298,7 +298,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
 
-	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
+	// The Confluent Gov environment and the Confluent Platform MDS return a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
 	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
 	environments := []string{
 		"confluentgov.com",
@@ -307,7 +307,9 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 	}
 	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && slices.Contains(environments, c.Context().PlatformName)
 
-	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
+	isUnencryptedConfluentPlatform := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && !c.Context().IsCloud(c.IsTest)
+
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
