@@ -27,7 +27,7 @@ configuration has been reset successfully.
 |          Key           |        Value        |
 +------------------------+---------------------+
 | client.service-account | <unset> (default)   |
-| sql.local-time-zone    | GMT+00:00 (default) |
+| sql.local-time-zone    | GMT+01:00 (default) |
 +------------------------+---------------------+
 > set;
 Statement successfully submitted.
@@ -36,7 +36,7 @@ Statement phase is COMPLETED.
 |          Key           |        Value        |
 +------------------------+---------------------+
 | client.service-account | <unset> (default)   |
-| sql.local-time-zone    | GMT+00:00 (default) |
+| sql.local-time-zone    | GMT+01:00 (default) |
 +------------------------+---------------------+
 > exit
 
