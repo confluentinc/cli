@@ -42,6 +42,7 @@ func (c *offsetStatusCommand) newStatusDescribeCommand() *cobra.Command {
 	return cmd
 }
 
+
 func (c *offsetStatusCommand) alterStatus(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
