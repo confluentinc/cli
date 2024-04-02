@@ -87,7 +87,10 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 	}
 	username := credentials.Username
 
-	state := &config.ContextState{AuthToken: token, AuthRefreshToken: refreshToken}
+	state := &config.ContextState{
+		AuthToken: token,
+		AuthRefreshToken: refreshToken,
+	}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
