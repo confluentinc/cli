@@ -87,7 +87,7 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 	var offsetInfo []map[string]any
 	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
 	var metadataStr string
-	if &offsets != nil && offsets.HasMetadata() {
+	if offsets.HasMetadata() {
 		metadata = *offsets.Metadata
 		metadataBytes, err := json.Marshal(metadata)
 		if err != nil {
@@ -97,7 +97,7 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 	}
 
 	var offsetStr string
-	if &offsets != nil && offsets.HasOffsets() {
+	if offsets.HasOffsets() {
 		offsetInfo = *offsets.Offsets
 		offSetBytes, err := json.Marshal(offsetInfo)
 		if err != nil {
@@ -119,11 +119,10 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {
 	var offsetInfo []map[string]any
 	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
-	if &offsets != nil && offsets.HasMetadata() {
+	if offsets.HasMetadata() {
 		metadata = *offsets.Metadata
 	}
-
-	if &offsets != nil && offsets.HasOffsets() {
+	if offsets.HasOffsets() {
 		offsetInfo = *offsets.Offsets
 	}
 
