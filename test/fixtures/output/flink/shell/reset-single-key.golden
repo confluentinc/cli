@@ -20,7 +20,7 @@ configuration key "cli.a-key" has been reset successfully.
 | client.service-account | <unset> (default)   |
 | sql.current-catalog    | default             |
 | sql.current-database   | db1                 |
-| sql.local-time-zone    | GMT+00:00 (default) |
+| sql.local-time-zone    | GMT+01:00 (default) |
 +------------------------+---------------------+
 > set;
 Statement successfully submitted.
@@ -31,7 +31,7 @@ Statement phase is COMPLETED.
 | client.service-account | <unset> (default)   |
 | sql.current-catalog    | default             |
 | sql.current-database   | db1                 |
-| sql.local-time-zone    | GMT+00:00 (default) |
+| sql.local-time-zone    | GMT+01:00 (default) |
 +------------------------+---------------------+
 > exit
 
