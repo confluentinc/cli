@@ -226,7 +226,7 @@ func (s *CLITestSuite) setupFlinkShellTests() {
 	require.NoError(s.T(), err)
 
 	// Fake the timezone, to ensure CI and local run with the same default timezone.
-	// We use UTC to avoid TZ differences due to daylight savings time.
+	// We use UTC to avoid time zone differences due to daylight savings time.
 	err = os.Setenv(timezoneEnvVar, "UTC")
 	require.NoError(s.T(), err)
 }
