@@ -17,14 +17,16 @@ type offsetCommand struct {
 
 func newOffsetCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "offset",
-		Short: "Manage offsets for managed connectors.",
+		Use:         "offset",
+		Short:       "Manage offsets for managed connectors.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	c := &offsetCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
 	cmd.AddCommand(c.newAlterCommand())
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(newStatusCommand(prerunner))
+	cmd.AddCommand(c.newStatusCommand())
 
 	return cmd
 }

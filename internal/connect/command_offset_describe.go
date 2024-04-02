@@ -5,6 +5,7 @@ import (
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -29,11 +30,10 @@ type SerializedOffsetConnectorOut struct {
 func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
-		Short:             "Describe connector offsets",
+		Short:             "Describe connector offsets.",
 		Args:              cobra.ExactArgs(1),
-		RunE:              c.getOffset,
+		RunE:              c.describe,
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe offsets for a connector in the current or specified Kafka cluster context.",
@@ -44,6 +44,7 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 			},
 		),
 	}
+
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -52,7 +53,7 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *offsetCommand) getOffset(cmd *cobra.Command, args []string) error {
+func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
@@ -82,8 +83,6 @@ func (c *offsetCommand) getOffset(cmd *cobra.Command, args []string) error {
 }
 
 func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {
-	output.Println(false, "Offset Details")
-	table := output.NewTable(cmd)
 	var offsetInfo []map[string]any
 	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
 	var metadataStr string
@@ -93,7 +92,7 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 		if err != nil {
 			return err
 		}
-		metadataStr = string(metadataBytes)
+		metadataStr = string(pretty.Pretty(metadataBytes))
 	}
 
 	var offsetStr string
@@ -103,17 +102,19 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 		if err != nil {
 			return err
 		}
-		offsetStr = string(offSetBytes)
+		offsetStr = string(pretty.Pretty(offSetBytes))
 	}
 
-	table.Add(&OffsetConnectorOut{
-		Name:     name,
+	list := output.NewList(cmd)
+
+	list.Add(&OffsetConnectorOut{
 		Id:       id,
-		Metadata: metadataStr,
+		Name:     name,
 		Offsets:  offsetStr,
+		Metadata: metadataStr,
 	})
 
-	return table.Print()
+	return list.PrintWithAutoWrap(false)
 }
 
 func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {

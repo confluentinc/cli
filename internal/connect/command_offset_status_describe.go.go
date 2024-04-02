@@ -16,13 +16,12 @@ type alterStatusOut struct {
 	AppliedAt string `human:"Applied At,omitempty" serialized:"applied_at,omitempty"`
 }
 
-func (c *offsetStatusCommand) newStatusDescribeCommand() *cobra.Command {
+func (c *offsetCommand) newStatusDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe",
-		Short:       "Describe connector offset update status",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.alterStatus,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "describe",
+		Short: "Describe connector offset update status.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.statusDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe offset update status for a connector in the current or specified Kafka cluster context.",
@@ -42,7 +41,7 @@ func (c *offsetStatusCommand) newStatusDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *offsetStatusCommand) alterStatus(cmd *cobra.Command, args []string) error {
+func (c *offsetCommand) statusDescribe(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err

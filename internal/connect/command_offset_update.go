@@ -20,11 +20,10 @@ import (
 func (c *offsetCommand) newAlterCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
-		Short:             "Update a connector's offsets",
+		Short:             "Update a connector's offsets.",
 		Args:              cobra.ExactArgs(1),
 		RunE:              c.update,
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update offsets for a connector in the current or specified Kafka cluster context.",
@@ -35,13 +34,16 @@ func (c *offsetCommand) newAlterCommand() *cobra.Command {
 			},
 		),
 	}
+
 	cmd.Flags().String("config-file", "", "JSON file containing connector offsets to set to.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "json"))
 	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
+
 	return cmd
 }
 
@@ -74,7 +76,6 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	var offsetStatus connectv1.ConnectV1AlterOffsetStatus
-	table := output.NewTable(cmd)
 
 	err = retry.Retry(time.Second, 30*time.Second, func() error {
 		offsetStatus, err = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
@@ -104,6 +105,8 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 			message = *messagePtr
 		}
 	}
+
+	table := output.NewTable(cmd)
 	table.Add(&alterStatusOut{
 		Id:        args[0],
 		Phase:     phase,
