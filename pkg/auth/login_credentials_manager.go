@@ -241,10 +241,6 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config
 
 func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *config.Config, unsafeTrace bool) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		if err := cfg.DecryptContextStates(); err != nil {
-			return nil, nil
-		}
-
 		ctx := cfg.Context()
 		if ctx == nil {
 			return nil, nil
