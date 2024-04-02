@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type alterStatusOut struct {
+type statusDescribeOut struct {
 	Id        string `human:"ID" serialized:"id"`
 	Phase     string `human:"Phase" serialized:"phase"`
 	Message   string `human:"Message,omitempty" serialized:"message,omitempty"`
@@ -78,7 +78,7 @@ func (c *offsetCommand) statusDescribe(cmd *cobra.Command, args []string) error 
 		}
 	}
 	table := output.NewTable(cmd)
-	table.Add(&alterStatusOut{
+	table.Add(&statusDescribeOut{
 		Id:        args[0],
 		Phase:     phase,
 		Message:   message,

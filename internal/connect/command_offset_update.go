@@ -107,7 +107,7 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&alterStatusOut{
+	table.Add(&statusDescribeOut{
 		Id:        args[0],
 		Phase:     phase,
 		Message:   message,
