@@ -24,7 +24,7 @@ func newOffsetCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &offsetCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newAlterCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newStatusCommand())
 

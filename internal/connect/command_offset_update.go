@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/retry"
 )
 
-func (c *offsetCommand) newAlterCommand() *cobra.Command {
+func (c *offsetCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update a connector's offsets.",
