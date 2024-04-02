@@ -56,13 +56,11 @@ func handleConnectorResume(_ *testing.T) http.HandlerFunc {
 }
 
 func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		var partitionData interface{} = map[string]interface{}{
+		var partitionData any = map[string]any{
 			"server": "dbzv2",
 		}
-		var offsetData interface{} = map[string]interface{}{
+		var offsetData any = map[string]any{
 			"event":          2,
 			"file":           "mysql-bin.000600",
 			"pos":            2001,
@@ -71,7 +69,7 @@ func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
 			"transaction_id": nil,
 			"ts_sec":         1711788870,
 		}
-		offset := map[string]interface{}{
+		offset := map[string]any{
 			"partition": partitionData,
 			"offset":    offsetData,
 		}
@@ -83,20 +81,18 @@ func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
 		connectorOffset := connectv1.ConnectV1ConnectorOffsets{
 			Name: connectv1.PtrString("az-connector"),
 			Id:   connectv1.PtrString("lcc-123"),
-			Offsets: &[]map[string]interface{}{
+			Offsets: &[]map[string]any{
 				0: offset,
 			},
 			Metadata: metadata,
 		}
 		err := json.NewEncoder(w).Encode(connectorOffset)
 		require.NoError(t, err)
-
 	}
 }
 
 func handleAlterConnectorOffsets(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		currTime := time.Unix(1712046213, 123).UTC()
 		connectorOffsetStatus := connectv1.ConnectV1AlterOffsetStatus{
 			Request: connectv1.ConnectV1AlterOffsetRequestInfo{
@@ -113,16 +109,13 @@ func handleAlterConnectorOffsets(t *testing.T) http.HandlerFunc {
 			PreviousOffsets: &[]map[string]interface{}{},
 			AppliedAt:       *connectv1.NewNullableTime(&currTime),
 		}
-
 		err := json.NewEncoder(w).Encode(connectorOffsetStatus)
 		require.NoError(t, err)
-
 	}
 }
 
 func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		currTime := time.Unix(1712046213, 123).UTC()
 		connectorOffsetStatus := connectv1.ConnectV1AlterOffsetStatus{
 			Request: connectv1.ConnectV1AlterOffsetRequestInfo{
@@ -139,10 +132,8 @@ func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 			PreviousOffsets: &[]map[string]interface{}{},
 			AppliedAt:       *connectv1.NewNullableTime(&currTime),
 		}
-
 		err := json.NewEncoder(w).Encode(connectorOffsetStatus)
 		require.NoError(t, err)
-
 	}
 }
 

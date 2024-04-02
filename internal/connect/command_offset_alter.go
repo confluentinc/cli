@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	time2 "time"
+	"time"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
@@ -14,24 +14,25 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/retry"
 )
 
 func (c *offsetCommand) newAlterCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:               "alter <id>",
-		Short:             "Alter a connector's offsets'",
+		Use:               "update <id>",
+		Short:             "Update a connector's offsets'",
 		Args:              cobra.ExactArgs(1),
-		RunE:              c.alterOffset,
+		RunE:              c.update,
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Alter connector offsets for a lccId in the current or specified Kafka cluster context.",
-				Code: "confluent connect offset alter lcc-123456 --config-file config.json",
+				Text: "Update offsets for a connector in the current or specified Kafka cluster context.",
+				Code: "confluent connect offset update lcc-123456 --config-file config.json",
 			},
 			examples.Example{
-				Code: "confluent connect offset alter lcc-123456 --config-file config.json --cluster lkc-123456",
+				Code: "confluent connect offset update lcc-123456 --config-file config.json --cluster lkc-123456",
 			},
 		),
 	}
@@ -48,7 +49,7 @@ func (c *offsetCommand) newAlterCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *offsetCommand) alterOffset(cmd *cobra.Command, args []string) error {
+func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
@@ -59,58 +60,65 @@ func (c *offsetCommand) alterOffset(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorIdToName, err := c.mapConnectorIdToName(environmentId, kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
+
+	connectorName := connector.Info.GetName()
 
 	request, err := c.getAlterOffsetRequestBody(cmd)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.V2Client.AlterConnectorOffsets(connectorIdToName[args[0]], environmentId, kafkaCluster.ID, *request)
+	_, err = c.V2Client.AlterConnectorOffsets(connectorName, environmentId, kafkaCluster.ID, *request)
 	if err != nil {
 		return err
 	}
 
 	var offsetStatus connectv1.ConnectV1AlterOffsetStatus
-	currTime := time2.Now()
 	table := output.NewTable(cmd)
-	for {
-		offsetStatus, err = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorIdToName[args[0]], environmentId, kafkaCluster.ID)
+
+	err = retry.Retry(time.Second, 30*time.Second, func() error {
+		offsetStatus, err = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
 		if err != nil {
 			return err
 		}
 
-		if (offsetStatus.GetStatus().Phase != "PENDING" || time2.Since(currTime).Seconds() > 30) && &offsetStatus != nil {
-			var appliedAt string
-			if offsetStatus.AppliedAt.IsSet() {
-				appliedAt = offsetStatus.AppliedAt.Get().String()
-			}
+		if offsetStatus.GetStatus().Phase != "PENDING" {
+			return nil
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
 
-			var phase string
-			var message string
-			_, isStatusSet := offsetStatus.GetStatusOk()
-			if isStatusSet {
-				phase = offsetStatus.GetStatus().Phase
-				if messagePtr := offsetStatus.GetStatus().Message; messagePtr != nil {
-					message = *messagePtr
-				}
-			}
-			table.Add(&alterStatusOut{
-				Id:        args[0],
-				Phase:     phase,
-				Message:   message,
-				AppliedAt: appliedAt,
-			})
-			return table.Print()
+	var appliedAt string
+	if offsetStatus.AppliedAt.IsSet() {
+		appliedAt = offsetStatus.AppliedAt.Get().String()
+	}
+	var phase string
+	var message string
+	_, isStatusSet := offsetStatus.GetStatusOk()
+	if isStatusSet {
+		phase = offsetStatus.Status.Phase
+		if messagePtr := offsetStatus.Status.Message; messagePtr != nil {
+			message = *messagePtr
 		}
 	}
+	table.Add(&alterStatusOut{
+		Id:        args[0],
+		Phase:     phase,
+		Message:   message,
+		AppliedAt: appliedAt,
+	})
+
+	return table.Print()
 }
 
 func (c *offsetCommand) getAlterOffsetRequestBody(cmd *cobra.Command) (*connectv1.ConnectV1AlterOffsetRequest, error) {
-
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return nil, err
@@ -121,13 +129,12 @@ func (c *offsetCommand) getAlterOffsetRequestBody(cmd *cobra.Command) (*connectv
 		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, jsonFile, err)
 	}
 	if len(jsonFile) == 0 {
-		return nil, fmt.Errorf(`alter offset config file "%s" is empty`, jsonFile)
+		return nil, fmt.Errorf(`update offset configuration file "%s" is empty`, jsonFile)
 	}
 
 	var request connectv1.ConnectV1AlterOffsetRequest
 	if err := json.Unmarshal(jsonFile, &request); err != nil {
 		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, jsonFile, err)
 	}
-
 	return &request, err
 }

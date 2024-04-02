@@ -18,19 +18,19 @@ type alterStatusOut struct {
 
 func (c *offsetCommand) newStatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "status",
-		Short:             "Get connector offset alter status",
-		Args:              cobra.ExactArgs(1),
+		Use:               "status describe",
+		Short:             "Describe connector offset update status",
+		Args:              cobra.ExactArgs(2),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.alterStatus,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Get connector offset alter status for a lccId in the current or specified Kafka cluster context.",
-				Code: "confluent connect offset status lcc-123456",
+				Text: "Describe offset update status for a connector in the current or specified Kafka cluster context.",
+				Code: "confluent connect offset status describe lcc-123456",
 			},
 			examples.Example{
-				Code: "confluent connect offset status lcc-123456 --cluster lkc-123456",
+				Code: "confluent connect offset status describe lcc-123456 --cluster lkc-123456",
 			},
 		),
 	}
@@ -53,12 +53,14 @@ func (c *offsetCommand) alterStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorIdToName, err := c.mapConnectorIdToName(environmentId, kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(args[1], environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
 
-	offsetStatus, err := c.V2Client.AlterConnectorOffsetsRequestStatus(connectorIdToName[args[0]], environmentId, kafkaCluster.ID)
+	connectorName := connector.Info.GetName()
+
+	offsetStatus, err := c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
@@ -78,7 +80,7 @@ func (c *offsetCommand) alterStatus(cmd *cobra.Command, args []string) error {
 	}
 	table := output.NewTable(cmd)
 	table.Add(&alterStatusOut{
-		Id:        args[0],
+		Id:        args[1],
 		Phase:     phase,
 		Message:   message,
 		AppliedAt: appliedAt,
