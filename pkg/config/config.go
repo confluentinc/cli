@@ -307,7 +307,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 	}
 	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && slices.Contains(environments, c.Context().PlatformName)
 
-	isUnencryptedConfluentPlatform := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && !c.Context().IsCloud(c.IsTest)
+	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && !c.Context().IsCloud(c.IsTest)
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)

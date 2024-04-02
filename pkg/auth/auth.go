@@ -88,7 +88,7 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 	username := credentials.Username
 
 	state := &config.ContextState{
-		AuthToken: token,
+		AuthToken:        token,
 		AuthRefreshToken: refreshToken,
 	}
 	var ctxName string
