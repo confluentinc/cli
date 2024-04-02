@@ -21,7 +21,7 @@ func (c *offsetCommand) newAlterCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:               "update <id>",
-		Short:             "Update a connector's offsets'",
+		Short:             "Update a connector's offsets",
 		Args:              cobra.ExactArgs(1),
 		RunE:              c.update,
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -80,7 +80,7 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	var offsetStatus connectv1.ConnectV1AlterOffsetStatus
 	table := output.NewTable(cmd)
 
-	err = retry.Retry(time.Second, 30*time.Second, func() error {
+	retry.Retry(5*time.Second, 30*time.Second, func() error {
 		offsetStatus, err = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
 		if err != nil {
 			return err
@@ -89,11 +89,8 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 		if offsetStatus.GetStatus().Phase != "PENDING" {
 			return nil
 		}
-		return nil
+		return fmt.Errorf("update offset request still pending, checking status again")
 	})
-	if err != nil {
-		return err
-	}
 
 	var appliedAt string
 	if offsetStatus.AppliedAt.IsSet() {
@@ -104,6 +101,9 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	_, isStatusSet := offsetStatus.GetStatusOk()
 	if isStatusSet {
 		phase = offsetStatus.Status.Phase
+		if len(phase) == 0 {
+			phase = "PENDING"
+		}
 		if messagePtr := offsetStatus.Status.Message; messagePtr != nil {
 			message = *messagePtr
 		}
@@ -129,7 +129,7 @@ func (c *offsetCommand) getAlterOffsetRequestBody(cmd *cobra.Command) (*connectv
 		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, jsonFile, err)
 	}
 	if len(jsonFile) == 0 {
-		return nil, fmt.Errorf(`update offset configuration file "%s" is empty`, jsonFile)
+		return nil, fmt.Errorf(`offset configuration file "%s" is empty`, jsonFile)
 	}
 
 	var request connectv1.ConnectV1AlterOffsetRequest

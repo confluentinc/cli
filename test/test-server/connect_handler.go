@@ -57,21 +57,19 @@ func handleConnectorResume(_ *testing.T) http.HandlerFunc {
 
 func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var partitionData any = map[string]any{
-			"server": "dbzv2",
-		}
-		var offsetData any = map[string]any{
-			"event":          2,
-			"file":           "mysql-bin.000600",
-			"pos":            2001,
-			"row":            1,
-			"server_id":      1,
-			"transaction_id": nil,
-			"ts_sec":         1711788870,
-		}
 		offset := map[string]any{
-			"partition": partitionData,
-			"offset":    offsetData,
+			"partition": map[string]any{
+				"server": "dbzv2",
+			},
+			"offset": map[string]any{
+				"event":          2,
+				"file":           "mysql-bin.000600",
+				"pos":            2001,
+				"row":            1,
+				"server_id":      1,
+				"transaction_id": nil,
+				"ts_sec":         1711788870,
+			},
 		}
 
 		currTime := time.Unix(1712046213, 123).UTC()

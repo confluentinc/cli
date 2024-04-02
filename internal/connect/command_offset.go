@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
@@ -16,18 +15,16 @@ type offsetCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func newOffsetCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newOffsetCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "offset",
 		Short: "Manage offsets for managed connectors.",
 	}
 
-	c := &offsetCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-	}
+	c := &offsetCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.AddCommand(c.newAlterCommand())
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newStatusCommand())
+	cmd.AddCommand(newStatusCommand(prerunner))
 
 	return cmd
 }

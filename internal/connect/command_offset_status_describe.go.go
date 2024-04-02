@@ -16,14 +16,13 @@ type alterStatusOut struct {
 	AppliedAt string `human:"Applied at,omitempty" serialized:"applied_at,omitempty"`
 }
 
-func (c *offsetCommand) newStatusCommand() *cobra.Command {
+func (c *offsetStatusCommand) newStatusDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "status describe",
-		Short:             "Describe connector offset update status",
-		Args:              cobra.ExactArgs(2),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.alterStatus,
-		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:         "describe",
+		Short:       "Describe connector offset update status",
+		Args:        cobra.ExactArgs(1),
+		RunE:        c.alterStatus,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe offset update status for a connector in the current or specified Kafka cluster context.",
@@ -42,7 +41,7 @@ func (c *offsetCommand) newStatusCommand() *cobra.Command {
 
 	return cmd
 }
-func (c *offsetCommand) alterStatus(cmd *cobra.Command, args []string) error {
+func (c *offsetStatusCommand) alterStatus(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
@@ -53,7 +52,7 @@ func (c *offsetCommand) alterStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(args[1], environmentId, kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
@@ -80,7 +79,7 @@ func (c *offsetCommand) alterStatus(cmd *cobra.Command, args []string) error {
 	}
 	table := output.NewTable(cmd)
 	table.Add(&alterStatusOut{
-		Id:        args[1],
+		Id:        args[0],
 		Phase:     phase,
 		Message:   message,
 		AppliedAt: appliedAt,

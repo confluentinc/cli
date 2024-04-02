@@ -12,31 +12,24 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type serializedOffsetConnectorOut struct {
-	Id       string                                      `json:"id" yaml:"id"`
-	Name     string                                      `json:"name" yaml:"name"`
-	Offsets  []map[string]any                            `json:"offsets,omitempty" yaml:"offsets,omitempty"`
-	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+type OffsetConnectorOut struct {
+	Id       string `human:"Id" json:"id" yaml:"id"`
+	Name     string `human:"Name" json:"name" yaml:"name"`
+	Offsets  string `human:"Offsets" json:"offsets,omitempty" yaml:"offsets,omitempty"`
+	Metadata string `human:"Metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
-type ConnectDescribeOut struct {
-	Id   string `human:"Id"`
-	Name string `human:"Name"`
-}
-
-type offsetsDescribeOut struct {
-	Partition string `human:"Partition"`
-	Offset    string `human:"Offset"`
-}
-
-type metadataDescribeOut struct {
-	ObservedAt string `human:"Observed At"`
+type SerializedOffsetConnectorOut struct {
+	Id       string                                      `human:"Id" json:"id" yaml:"id"`
+	Name     string                                      `human:"Name" json:"name" yaml:"name"`
+	Offsets  []map[string]any                            `human:"Offsets" json:"offsets,omitempty" yaml:"offsets,omitempty"`
+	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `human:"Metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
-		Short:             "describe connector offsets",
+		Short:             "Describe connector offsets",
 		Args:              cobra.ExactArgs(1),
 		RunE:              c.getOffset,
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -89,58 +82,38 @@ func (c *offsetCommand) getOffset(cmd *cobra.Command, args []string) error {
 }
 
 func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {
-	output.Println(false, "Connector Details")
-	table := output.NewTable(cmd)
-	table.Add(&ConnectDescribeOut{
-		Name: name,
-		Id:   id,
-	})
-	if err := table.Print(); err != nil {
-		return err
-	}
-	output.Println(false, "")
-	output.Println(false, "")
-
-	list := output.NewList(cmd)
 	output.Println(false, "Offset Details")
-	if offsets.HasOffsets() {
-		for _, values := range *offsets.Offsets {
-			partition := values["partition"]
-			partitionString, err := json.Marshal(partition)
-			if err != nil {
-				return err
-			}
-			offset := values["offset"]
-			offsetString, err := json.Marshal(offset)
-			if err != nil {
-				return err
-			}
-			list.Add(&offsetsDescribeOut{
-				Partition: string(partitionString),
-				Offset:    string(offsetString),
-			})
-		}
-		if err := list.Print(); err != nil {
+	table := output.NewTable(cmd)
+	var offsetInfo []map[string]any
+	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
+	var metadataStr string
+	if &offsets != nil && offsets.HasMetadata() {
+		metadata = *offsets.Metadata
+		metadataBytes, err := json.Marshal(metadata)
+		if err != nil {
 			return err
 		}
-		output.Println(false, "")
-		output.Println(false, "")
+		metadataStr = string(metadataBytes)
 	}
 
-	if offsets.HasMetadata() {
-		output.Println(false, "Metadata Details")
-		list = output.NewList(cmd)
-
-		var observedAt string
-		if offsets.Metadata.ObservedAt != nil {
-			observedAt = offsets.Metadata.ObservedAt.String()
+	var offsetStr string
+	if &offsets != nil && offsets.HasOffsets() {
+		offsetInfo = *offsets.Offsets
+		offSetBytes, err := json.Marshal(offsetInfo)
+		if err != nil {
+			return err
 		}
-		list.Add(&metadataDescribeOut{
-			ObservedAt: observedAt,
-		})
+		offsetStr = string(offSetBytes)
 	}
 
-	return list.Print()
+	table.Add(&OffsetConnectorOut{
+		Name:     name,
+		Id:       id,
+		Metadata: metadataStr,
+		Offsets:  offsetStr,
+	})
+
+	return table.Print()
 }
 
 func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {
@@ -154,7 +127,7 @@ func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.Connec
 		offsetInfo = *offsets.Offsets
 	}
 
-	out := &serializedOffsetConnectorOut{
+	out := &SerializedOffsetConnectorOut{
 		Id:       id,
 		Name:     name,
 		Offsets:  offsetInfo,
