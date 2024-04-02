@@ -225,8 +225,9 @@ func (s *CLITestSuite) setupFlinkShellTests() {
 	err := os.Setenv(prompt.EnvVarInputFile, flinkShellInputStreamFile)
 	require.NoError(s.T(), err)
 
-	// Fake the timezone, to ensure CI and local run with the same default timezone
-	err = os.Setenv(timezoneEnvVar, "Europe/London")
+	// Fake the timezone, to ensure CI and local run with the same default timezone.
+	// We use UTC to avoid TZ differences due to daylight savings time.
+	err = os.Setenv(timezoneEnvVar, "UTC")
 	require.NoError(s.T(), err)
 }
 
