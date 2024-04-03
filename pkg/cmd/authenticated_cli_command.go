@@ -17,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/hub"
 	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
@@ -33,7 +32,6 @@ type AuthenticatedCLICommand struct {
 	V2Client          *ccloudv2.Client
 
 	flinkGatewayClient   *ccloudv2.FlinkGatewayClient
-	hubClient            *hub.Client
 	metricsClient        *ccloudv2.MetricsClient
 	schemaRegistryClient *schemaregistry.Client
 
@@ -133,19 +131,6 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string
 	u.Path = ""
 
 	return u.String(), nil
-}
-
-func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
-	if c.hubClient == nil {
-		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-		if err != nil {
-			return nil, err
-		}
-
-		c.hubClient = hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace)
-	}
-
-	return c.hubClient, nil
 }
 
 func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
