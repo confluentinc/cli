@@ -112,11 +112,9 @@ func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 		currTime := time.Unix(1712046213, 123).UTC()
 		connectorOffsetStatus := connectv1.ConnectV1AlterOffsetStatus{
 			Request: connectv1.ConnectV1AlterOffsetRequestInfo{
-				Id:          "lcc-123",
-				Name:        "GcsSink",
-				Offsets:     nil,
-				RequestedAt: time.Time{},
-				Type:        "PATCH",
+				Id:   "lcc-123",
+				Name: "GcsSink",
+				Type: "PATCH",
 			},
 			Status: connectv1.ConnectV1AlterOffsetStatusStatus{
 				Phase:   "PENDING",
