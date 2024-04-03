@@ -14,18 +14,18 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type OffsetConnectorOut struct {
+type humanOffsetConnectorOut struct {
 	Id       string `human:"ID"`
 	Name     string `human:"Name"`
 	Offsets  string `human:"Offsets"`
 	Metadata string `human:"Metadata"`
 }
 
-type SerializedOffsetConnectorOut struct {
+type serializedOffsetConnectorOut struct {
 	Id       string                                      `json:"id" yaml:"id"`
 	Name     string                                      `json:"name" yaml:"name"`
-	Offsets  []map[string]any                            `json:"offsets,omitempty" yaml:"offsets,omitempty"`
-	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Offsets  []map[string]any                            `json:"offsets" yaml:"offsets"`
+	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `json:"metadata" yaml:"metadata"`
 }
 
 func (c *offsetCommand) newDescribeCommand() *cobra.Command {
@@ -83,7 +83,7 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 	return printSerializedDescribeOffsets(cmd, offsets, args[0], connectorName)
 }
 
-func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {
+func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id, name string) error {
 	var offsetInfo []map[string]any
 	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
 	var metadataStr string
@@ -108,7 +108,7 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 
 	list := output.NewList(cmd)
 
-	list.Add(&OffsetConnectorOut{
+	list.Add(&humanOffsetConnectorOut{
 		Id:       id,
 		Name:     name,
 		Offsets:  offsetStr,
@@ -118,7 +118,7 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 	return list.PrintWithAutoWrap(false)
 }
 
-func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id string, name string) error {
+func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id, name string) error {
 	var offsetInfo []map[string]any
 	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
 	if offsets.HasMetadata() {
@@ -129,7 +129,7 @@ func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.Connec
 		offsetInfo = *offsets.Offsets
 	}
 
-	out := &SerializedOffsetConnectorOut{
+	out := &serializedOffsetConnectorOut{
 		Id:       id,
 		Name:     name,
 		Offsets:  offsetInfo,

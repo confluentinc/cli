@@ -133,10 +133,10 @@ func (c *offsetCommand) getAlterOffsetRequestBody(configFile string) (*connectv1
 		return nil, fmt.Errorf(`offset configuration file "%s" is empty`, configFile)
 	}
 
-	var request connectv1.ConnectV1AlterOffsetRequest
-	if err := json.Unmarshal(jsonFile, &request); err != nil {
+	var request *connectv1.ConnectV1AlterOffsetRequest
+	if err := json.Unmarshal(jsonFile, request); err != nil {
 		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
 	}
 
-	return &request, err
+	return request, err
 }
