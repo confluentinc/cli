@@ -250,6 +250,8 @@ func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *con
 		caCertPath := ctx.GetPlatform().GetCaCertPath()
 
 		if h.isOnPremSSOUser(url, caCertPath, unsafeTrace) {
+			// on-prem SSO login does not use a username or email
+			// the sub claim is used in place of a username since it is a unique identifier
 			subClaim, err := jwt.GetClaim(ctx.GetAuthToken(), "sub")
 			if err != nil {
 				return nil, nil
