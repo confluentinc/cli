@@ -78,6 +78,8 @@ func PersistLogout(config *config.Config) error {
 
 func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, isLegacyContext, save bool) error {
 	if credentials.IsSSO {
+		// on-prem SSO login does not use a username or email
+		// the sub claim is used in place of a username since it is a unique identifier
 		subClaim, err := jwt.GetClaim(token, "sub")
 		if err != nil {
 			return err

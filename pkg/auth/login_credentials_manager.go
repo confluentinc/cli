@@ -249,22 +249,22 @@ func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *con
 		url := ctx.GetPlatform().GetServer()
 		caCertPath := ctx.GetPlatform().GetCaCertPath()
 
-		if h.isOnPremSSOUser(url, caCertPath, unsafeTrace) {
-			// on-prem SSO login does not use a username or email
-			// the sub claim is used in place of a username since it is a unique identifier
-			subClaim, err := jwt.GetClaim(ctx.GetAuthToken(), "sub")
-			if err != nil {
-				return nil, nil
-			}
+		// on-prem SSO login does not use a username or email
+		// the sub claim is used in place of a username since it is a unique identifier
+		subClaim, err := jwt.GetClaim(ctx.GetAuthToken(), "sub")
+		if err != nil {
+			return nil, nil
+		}
 
-			sub, ok := subClaim.(string)
-			if !ok {
-				return nil, nil
-			}
+		sub, ok := subClaim.(string)
+		if !ok {
+			return nil, nil
+		}
 
+		if GenerateContextName(sub, url, caCertPath) == ctx.Name {
 			return &Credentials{
 				Username:         sub,
-				IsSSO:            true,
+				IsSSO:            h.isOnPremSSOUser(url, caCertPath, unsafeTrace),
 				AuthToken:        ctx.GetAuthToken(),
 				AuthRefreshToken: ctx.GetAuthRefreshToken(),
 			}, nil
