@@ -36,13 +36,13 @@ func (c *command) newPrivateLinkAttachmentCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) getPrivateLinkAttachments() ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
+func (c *command) getPrivateLinkAttachments(name, cloud, region, phase []string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.V2Client.ListPrivateLinkAttachments(environmentId)
+	return c.V2Client.ListPrivateLinkAttachments(environmentId, name, cloud, region, phase)
 }
 
 func (c *command) validPrivateLinkAttachmentArgs(cmd *cobra.Command, args []string) []string {
@@ -61,7 +61,7 @@ func (c *command) validPrivateLinkAttachmentArgsMultiple(cmd *cobra.Command, arg
 }
 
 func (c *command) autocompletePrivateLinkAttachments() []string {
-	attachments, err := c.getPrivateLinkAttachments()
+	attachments, err := c.getPrivateLinkAttachments(nil, nil, nil, nil)
 	if err != nil {
 		return nil
 	}

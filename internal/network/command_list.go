@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newListCommand() *cobra.Command {
@@ -19,6 +21,12 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
+	cmd.Flags().StringSlice("name", nil, "A comma-separated list of network names.")
+	pcmd.AddListCloudFlag(cmd)
+	c.addListRegionFlagNetwork(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().StringSlice("cidr", nil, "A comma-separated list of /16 IPv4 CIDR blocks.")
+	addPhaseFlag(cmd, resource.Network)
+	addConnectionTypesFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -32,10 +40,54 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	networks, err := getNetworks(c.V2Client, environmentId)
+	name, err := cmd.Flags().GetStringSlice("name")
 	if err != nil {
 		return err
 	}
+
+	cloud, err := cmd.Flags().GetStringSlice("cloud")
+	if err != nil {
+		return err
+	}
+
+	region, err := cmd.Flags().GetStringSlice("region")
+	if err != nil {
+		return err
+	}
+
+	cidr, err := cmd.Flags().GetStringSlice("cidr")
+	if err != nil {
+		return err
+	}
+
+	phase, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
+	connectionType, err := cmd.Flags().GetStringSlice("connection-types")
+	if err != nil {
+		return err
+	}
+
+	cloud, phase, connectionType = toUpper(cloud), toUpper(phase), toUpper(connectionType)
+
+	networks, err := getNetworks(c.V2Client, environmentId, name, cloud, region, cidr, phase, connectionType)
+	if err != nil {
+		return err
+	}
+
+	// Sort networks by Cloud, then Region, then CreatedAt ASC.
+	sort.Slice(networks, func(i, j int) bool {
+		if networks[i].Spec.GetCloud() != networks[j].Spec.GetCloud() {
+			return networks[i].Spec.GetCloud() < networks[j].Spec.GetCloud()
+		}
+		if networks[i].Spec.GetRegion() != networks[j].Spec.GetRegion() {
+			return networks[i].Spec.GetRegion() < networks[j].Spec.GetRegion()
+		}
+
+		return networks[i].Metadata.GetCreatedAt().Before(networks[j].Metadata.GetCreatedAt())
+	})
 
 	list := output.NewList(cmd)
 	for _, network := range networks {
@@ -79,6 +131,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 	}
+	list.Sort(false)
 	list.Filter([]string{"Id", "Name", "Gateway", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})
 	return list.Print()
 }
