@@ -28,6 +28,7 @@ const (
 	ConfluentPlatformPassword    = "CONFLUENT_PLATFORM_PASSWORD"
 	ConfluentPlatformMDSURL      = "CONFLUENT_PLATFORM_MDS_URL"
 	ConfluentPlatformCACertPath  = "CONFLUENT_PLATFORM_CA_CERT_PATH"
+	ConfluentPlatformSSO         = "CONFLUENT_PLATFORM_SSO"
 
 	DeprecatedConfluentCloudEmail         = "CCLOUD_EMAIL"
 	DeprecatedConfluentCloudPassword      = "CCLOUD_PASSWORD"
@@ -49,6 +50,10 @@ func GetEnvWithFallback(current, deprecated string) string {
 	}
 
 	return ""
+}
+
+func IsOnPremSSOEnv() bool {
+	return strings.ToLower(os.Getenv(ConfluentPlatformSSO)) == "true"
 }
 
 func PersistLogout(config *config.Config) error {

@@ -476,6 +476,11 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 }
 
 func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachineName string) (string, string, *pauth.Credentials, error) {
+	if pauth.IsOnPremSSOEnv() {
+		// Skip auto-login when CONFLUENT_PLATFORM_SSO=true
+		return "", "", nil, nil
+	}
+
 	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: false,
