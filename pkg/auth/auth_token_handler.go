@@ -204,7 +204,7 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 }
 
 func refreshConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials) (string, error) {
-	extendDeviceAuthRequest := mdsv1.ExtendAuthRequest{
+	req := mdsv1.ExtendAuthRequest{
 		AccessToken:  credentials.AuthToken,
 		RefreshToken: credentials.AuthRefreshToken,
 	}
