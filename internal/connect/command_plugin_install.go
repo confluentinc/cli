@@ -62,9 +62,7 @@ func newInstallCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagDirname("plugin-directory"))
 
-	c := &pluginInstallCommand{
-		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-	}
+	c := &pluginInstallCommand{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 	cmd.RunE = c.install
 
 	return cmd
