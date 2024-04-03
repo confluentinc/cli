@@ -125,15 +125,15 @@ func (c *offsetCommand) getAlterOffsetRequestBody(cmd *cobra.Command) (*connectv
 
 	jsonFile, err := os.ReadFile(configFile)
 	if err != nil {
-		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, jsonFile, err)
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
 	}
 	if len(jsonFile) == 0 {
-		return nil, fmt.Errorf(`offset configuration file "%s" is empty`, jsonFile)
+		return nil, fmt.Errorf(`offset configuration file "%s" is empty`, configFile)
 	}
 
 	var request connectv1.ConnectV1AlterOffsetRequest
 	if err := json.Unmarshal(jsonFile, &request); err != nil {
-		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, jsonFile, err)
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
 	}
 	return &request, err
 }
