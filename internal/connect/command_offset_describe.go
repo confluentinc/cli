@@ -15,17 +15,17 @@ import (
 )
 
 type OffsetConnectorOut struct {
-	Id       string `human:"ID" json:"id" yaml:"id"`
-	Name     string `human:"Name" json:"name" yaml:"name"`
-	Offsets  string `human:"Offsets" json:"offsets,omitempty" yaml:"offsets,omitempty"`
-	Metadata string `human:"Metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Id       string `human:"ID"`
+	Name     string `human:"Name"`
+	Offsets  string `human:"Offsets"`
+	Metadata string `human:"Metadata"`
 }
 
 type SerializedOffsetConnectorOut struct {
-	Id       string                                      `human:"ID" json:"id" yaml:"id"`
-	Name     string                                      `human:"Name" json:"name" yaml:"name"`
-	Offsets  []map[string]any                            `human:"Offsets" json:"offsets,omitempty" yaml:"offsets,omitempty"`
-	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `human:"Metadata" json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Id       string                                      `json:"id" yaml:"id"`
+	Name     string                                      `json:"name" yaml:"name"`
+	Offsets  []map[string]any                            `json:"offsets,omitempty" yaml:"offsets,omitempty"`
+	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 func (c *offsetCommand) newDescribeCommand() *cobra.Command {

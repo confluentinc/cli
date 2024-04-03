@@ -66,7 +66,11 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 
 	connectorName := connector.Info.GetName()
 
-	request, err := c.getAlterOffsetRequestBody(cmd)
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	request, err := c.getAlterOffsetRequestBody(configFile)
 	if err != nil {
 		return err
 	}
@@ -118,16 +122,12 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	return table.Print()
 }
 
-func (c *offsetCommand) getAlterOffsetRequestBody(cmd *cobra.Command) (*connectv1.ConnectV1AlterOffsetRequest, error) {
-	configFile, err := cmd.Flags().GetString("config-file")
-	if err != nil {
-		return nil, err
-	}
-
+func (c *offsetCommand) getAlterOffsetRequestBody(configFile string) (*connectv1.ConnectV1AlterOffsetRequest, error) {
 	jsonFile, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
 	}
+
 	if len(jsonFile) == 0 {
 		return nil, fmt.Errorf(`offset configuration file "%s" is empty`, configFile)
 	}
@@ -136,5 +136,6 @@ func (c *offsetCommand) getAlterOffsetRequestBody(cmd *cobra.Command) (*connectv
 	if err := json.Unmarshal(jsonFile, &request); err != nil {
 		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
 	}
+
 	return &request, err
 }
