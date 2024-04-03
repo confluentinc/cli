@@ -319,9 +319,9 @@ func (c *command) getCaCertPath(cmd *cobra.Command, username, url string) (strin
 	return caCertPath, isLegacyContext, nil
 }
 
-// Order of precedence: env vars > sso > ldap (keychain > config > netrc > prompt)
+// Order of precedence: environment variables > LDAP (keychain > config > netrc) > SSO > LDAP (prompt)
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-// SSO and LDAP (basic auth) can be enabled simultaneously; in this case we should prefer SSO (unless --prompt is used)
+// SSO and LDAP (basic auth) can be enabled simultaneously
 func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
 	prompt, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
