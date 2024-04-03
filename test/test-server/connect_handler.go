@@ -81,6 +81,7 @@ func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
 				ObservedAt: &currTime,
 			},
 		}
+
 		err := json.NewEncoder(w).Encode(connectorOffset)
 		require.NoError(t, err)
 	}
@@ -102,6 +103,7 @@ func handleAlterConnectorOffsets(t *testing.T) http.HandlerFunc {
 			PreviousOffsets: &[]map[string]any{},
 			AppliedAt:       *connectv1.NewNullableTime(&currTime),
 		}
+
 		err := json.NewEncoder(w).Encode(connectorOffsetStatus)
 		require.NoError(t, err)
 	}
@@ -123,6 +125,7 @@ func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 			PreviousOffsets: &[]map[string]any{},
 			AppliedAt:       *connectv1.NewNullableTime(&currTime),
 		}
+
 		err := json.NewEncoder(w).Encode(connectorOffsetStatus)
 		require.NoError(t, err)
 	}
