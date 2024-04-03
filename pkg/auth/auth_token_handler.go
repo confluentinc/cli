@@ -194,7 +194,11 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 
 		return authToken, refreshToken, nil
 	} else {
-		basicContext := context.WithValue(ctx, mdsv1.ContextBasicAuth, mdsv1.BasicAuth{UserName: credentials.Username, Password: credentials.Password})
+		basicAuth := mdsv1.BasicAuth{
+			UserName: credentials.Username,
+			Password: credentials.Password,
+		}
+		basicContext := context.WithValue(ctx, mdsv1.ContextBasicAuth, basicAuth)
 		resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(basicContext)
 		if err != nil {
 			return "", "", err
@@ -208,7 +212,7 @@ func refreshConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials)
 		AccessToken:  credentials.AuthToken,
 		RefreshToken: credentials.AuthRefreshToken,
 	}
-	resp, _, err := mdsClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(context.Background(), extendDeviceAuthRequest)
+	resp, _, err := mdsClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(context.Background(), req)
 	if err != nil {
 		return "", err
 	}
