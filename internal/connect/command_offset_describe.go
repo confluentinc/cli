@@ -124,6 +124,7 @@ func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.Connec
 	if offsets.HasMetadata() {
 		metadata = *offsets.Metadata
 	}
+
 	if offsets.HasOffsets() {
 		offsetInfo = *offsets.Offsets
 	}
@@ -134,5 +135,6 @@ func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.Connec
 		Offsets:  offsetInfo,
 		Metadata: metadata,
 	}
+
 	return output.SerializedOutput(cmd, out)
 }

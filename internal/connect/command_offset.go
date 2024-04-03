@@ -58,6 +58,7 @@ func (c *offsetCommand) autocompleteConnectors() []string {
 		suggestions[i] = fmt.Sprintf("%s\t%s", connectors[name].Id.GetId(), connectors[name].Info.GetName())
 		i++
 	}
+
 	return suggestions
 }
 

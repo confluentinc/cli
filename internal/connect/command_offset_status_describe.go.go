@@ -68,6 +68,7 @@ func (c *offsetCommand) statusDescribe(cmd *cobra.Command, args []string) error 
 	if offsetStatus.AppliedAt.IsSet() {
 		appliedAt = offsetStatus.AppliedAt.Get().String()
 	}
+
 	var phase string
 	var message string
 	_, isStatusSet := offsetStatus.GetStatusOk()
@@ -77,6 +78,7 @@ func (c *offsetCommand) statusDescribe(cmd *cobra.Command, args []string) error 
 			message = *messagePtr
 		}
 	}
+
 	table := output.NewTable(cmd)
 	table.Add(&statusDescribeOut{
 		Id:        args[0],
@@ -84,5 +86,6 @@ func (c *offsetCommand) statusDescribe(cmd *cobra.Command, args []string) error 
 		Message:   message,
 		AppliedAt: appliedAt,
 	})
+
 	return table.Print()
 }

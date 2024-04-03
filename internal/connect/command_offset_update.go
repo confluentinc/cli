@@ -65,11 +65,11 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	connectorName := connector.Info.GetName()
-
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
 	}
+
 	request, err := c.getAlterOffsetRequestBody(configFile)
 	if err != nil {
 		return err
@@ -98,6 +98,7 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	if offsetStatus.AppliedAt.IsSet() {
 		appliedAt = offsetStatus.AppliedAt.Get().String()
 	}
+
 	var phase string
 	var message string
 	_, isStatusSet := offsetStatus.GetStatusOk()
