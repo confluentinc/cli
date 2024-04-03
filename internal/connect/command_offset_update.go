@@ -1,0 +1,140 @@
+package connect
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/spf13/cobra"
+
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
+	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/retry"
+)
+
+func (c *offsetCommand) newUpdateCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "update <id>",
+		Short:             "Update a connector's offsets.",
+		Args:              cobra.ExactArgs(1),
+		RunE:              c.update,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Update offsets for a connector in the current or specified Kafka cluster context.",
+				Code: "confluent connect offset update lcc-123456 --config-file config.json",
+			},
+			examples.Example{
+				Code: "confluent connect offset update lcc-123456 --config-file config.json --cluster lkc-123456",
+			},
+		),
+	}
+
+	cmd.Flags().String("config-file", "", "JSON file containing connector offsets to set to.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "json"))
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
+
+	return cmd
+}
+
+func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
+	if err != nil {
+		return err
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
+	if err != nil {
+		return err
+	}
+
+	connectorName := connector.Info.GetName()
+
+	request, err := c.getAlterOffsetRequestBody(cmd)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.V2Client.AlterConnectorOffsets(connectorName, environmentId, kafkaCluster.ID, *request)
+	if err != nil {
+		return err
+	}
+
+	var offsetStatus connectv1.ConnectV1AlterOffsetStatus
+
+	err = retry.Retry(time.Second, 30*time.Second, func() error {
+		offsetStatus, err = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
+		if err != nil {
+			return err
+		}
+
+		if offsetStatus.GetStatus().Phase != "PENDING" {
+			return nil
+		}
+		return fmt.Errorf("update offset request still pending, checking status again")
+	})
+
+	var appliedAt string
+	if offsetStatus.AppliedAt.IsSet() {
+		appliedAt = offsetStatus.AppliedAt.Get().String()
+	}
+	var phase string
+	var message string
+	_, isStatusSet := offsetStatus.GetStatusOk()
+	if isStatusSet {
+		phase = offsetStatus.Status.Phase
+		if len(phase) == 0 {
+			phase = "PENDING"
+		}
+		if messagePtr := offsetStatus.Status.Message; messagePtr != nil {
+			message = *messagePtr
+		}
+	}
+
+	table := output.NewTable(cmd)
+	table.Add(&statusDescribeOut{
+		Id:        args[0],
+		Phase:     phase,
+		Message:   message,
+		AppliedAt: appliedAt,
+	})
+
+	return table.Print()
+}
+
+func (c *offsetCommand) getAlterOffsetRequestBody(cmd *cobra.Command) (*connectv1.ConnectV1AlterOffsetRequest, error) {
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return nil, err
+	}
+
+	jsonFile, err := os.ReadFile(configFile)
+	if err != nil {
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
+	}
+	if len(jsonFile) == 0 {
+		return nil, fmt.Errorf(`offset configuration file "%s" is empty`, configFile)
+	}
+
+	var request connectv1.ConnectV1AlterOffsetRequest
+	if err := json.Unmarshal(jsonFile, &request); err != nil {
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
+	}
+	return &request, err
+}
