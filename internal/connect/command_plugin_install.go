@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
@@ -31,12 +32,15 @@ const (
 	workerProcessRegexStr          = `org\.apache\.kafka\.connect\.cli\.Connect(Distributed|Standalone)`
 )
 
-func (c *pluginCommand) newInstallCommand() *cobra.Command {
+type pluginInstallCommand struct {
+	*pcmd.CLICommand
+}
+
+func newInstallCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install <plugin>",
 		Short: "Install a Connect plugin.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.install,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Install the latest version of the Datagen connector into your local Confluent Platform environment.",
@@ -47,7 +51,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest --plugin-directory $CONFLUENT_HOME/plugins --worker-configurations $CONFLUENT_HOME/etc/kafka/connect-distributed.properties",
 			},
 		),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonCloudLogin},
 	}
 
 	cmd.Flags().String("plugin-directory", "", "The plugin installation directory. If not specified, a default will be selected based on your Confluent Platform installation.")
@@ -58,10 +62,19 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagDirname("plugin-directory"))
 
+	c := &pluginInstallCommand{
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+	}
+	cmd.RunE = c.install
+
 	return cmd
 }
 
-func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
+func (c *pluginInstallCommand) install(cmd *cobra.Command, args []string) error {
+	if runtime.GOOS == "windows" {
+		return fmt.Errorf("this command is not available on Windows")
+	}
+
 	dryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return err
@@ -81,7 +94,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pluginManifest, err := c.getManifest(client, args[0])
+	pluginManifest, err := getManifest(client, args[0])
 	if err != nil {
 		return err
 	}
@@ -175,7 +188,7 @@ func parsePluginId(plugin string) (string, string, string, error) {
 	return ownerNameSplit[0], nameVersionSplit[0], nameVersionSplit[1], nil
 }
 
-func (c *pluginCommand) getManifest(client *hub.Client, id string) (*cpstructs.Manifest, error) {
+func getManifest(client *hub.Client, id string) (*cpstructs.Manifest, error) {
 	if utils.DoesPathExist(id) {
 		// if installing plugin from local archive
 		return getLocalManifest(id)
@@ -325,7 +338,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 	return nil
 }
 
-func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstructs.Manifest, archivePath, pluginDir string, dryRun bool) error {
+func (c *pluginInstallCommand) installPlugin(client *hub.Client, pluginManifest *cpstructs.Manifest, archivePath, pluginDir string, dryRun bool) error {
 	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
 		output.Printf(c.Config.EnableColor, utils.AddDryRunPrefix(installStr))
@@ -337,7 +350,7 @@ func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstru
 		return installFromLocal(pluginManifest, archivePath, pluginDir)
 	}
 
-	return c.installFromRemote(client, pluginManifest, pluginDir)
+	return installFromRemote(client, pluginManifest, pluginDir)
 }
 
 func installFromLocal(pluginManifest *cpstructs.Manifest, archivePath, pluginDir string) error {
@@ -350,7 +363,7 @@ func installFromLocal(pluginManifest *cpstructs.Manifest, archivePath, pluginDir
 	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
 }
 
-func (c *pluginCommand) installFromRemote(client *hub.Client, pluginManifest *cpstructs.Manifest, pluginDir string) error {
+func installFromRemote(client *hub.Client, pluginManifest *cpstructs.Manifest, pluginDir string) error {
 	archive, err := client.GetRemoteArchive(pluginManifest)
 	if err != nil {
 		return err
@@ -458,4 +471,13 @@ func updateWorkerConfigs(pluginDir string, workerConfigs []string, dryRun bool) 
 		}
 	}
 	return nil
+}
+
+func (c *pluginInstallCommand) GetHubClient() (*hub.Client, error) {
+	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return nil, err
+	}
+
+	return hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace), nil
 }
