@@ -1,4 +1,4 @@
-Status of offset update.
+Manage the status of an offset update.
 
 Usage:
   confluent connect offset status [command]

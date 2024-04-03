@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   describe    Describe connector offsets.
-  status      Status of offset update.
+  status      Manage the status of an offset update.
   update      Update a connector's offsets.
 
 Global Flags:
