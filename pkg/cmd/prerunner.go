@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
@@ -55,7 +56,7 @@ type PreRun struct {
 	MDSClientManager        pauth.MDSClientManager
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
-	JWTValidator            JWTValidator
+	JWTValidator            jwt.Validator
 }
 
 type KafkaRESTProvider func() (*KafkaREST, error)
@@ -458,7 +459,7 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 }
 
 func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string) error {
-	token, credentials, err := r.getConfluentTokenAndCredentials(cmd, netrcMachineName)
+	token, refreshToken, credentials, err := r.getConfluentTokenAndCredentials(cmd, netrcMachineName)
 	if err != nil {
 		return err
 	}
@@ -466,7 +467,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false); err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, refreshToken, credentials.PrerunLoginCaCertPath, false, false); err != nil {
 		return err
 	}
 	log.CliLogger.Debug(autoLoginMsg)
@@ -474,7 +475,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 	return nil
 }
 
-func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachineName string) (string, *pauth.Credentials, error) {
+func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachineName string) (string, string, *pauth.Credentials, error) {
 	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: false,
@@ -485,24 +486,24 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(filterParams),
 	)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath, unsafeTrace)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
-	token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
+	token, refreshToken, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
-	return token, credentials, err
+	return token, refreshToken, credentials, err
 }
 
 func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand, unsafeTrace bool) {
@@ -714,9 +715,9 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 		credentials, err := pauth.GetLoginCredentials(
 			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 			r.LoginCredentialsManager.GetCredentialsFromKeychain(false, ctx.Name, ctx.GetPlatformServer()),
-			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
+			r.LoginCredentialsManager.GetOnPremSsoCredentialsFromConfig(r.Config, unsafeTrace),
 		)
 		if err != nil {
 			return "", "", err
@@ -727,8 +728,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 		if err != nil {
 			return "", "", err
 		}
-		token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
-		return token, "", err
+		return r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
 	}
 }
 
