@@ -12,6 +12,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
@@ -27,6 +28,7 @@ const (
 	ConfluentPlatformPassword    = "CONFLUENT_PLATFORM_PASSWORD"
 	ConfluentPlatformMDSURL      = "CONFLUENT_PLATFORM_MDS_URL"
 	ConfluentPlatformCACertPath  = "CONFLUENT_PLATFORM_CA_CERT_PATH"
+	ConfluentPlatformSSO         = "CONFLUENT_PLATFORM_SSO"
 
 	DeprecatedConfluentCloudEmail         = "CCLOUD_EMAIL"
 	DeprecatedConfluentCloudPassword      = "CCLOUD_PASSWORD"
@@ -50,6 +52,10 @@ func GetEnvWithFallback(current, deprecated string) string {
 	return ""
 }
 
+func IsOnPremSSOEnv() bool {
+	return strings.ToLower(os.Getenv(ConfluentPlatformSSO)) == "true"
+}
+
 func PersistLogout(config *config.Config) error {
 	ctx := config.Context()
 	if ctx == nil {
@@ -70,9 +76,26 @@ func PersistLogout(config *config.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
+func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, isLegacyContext, save bool) error {
+	if credentials.IsSSO {
+		subClaim, err := jwt.GetClaim(token, "sub")
+		if err != nil {
+			return err
+		}
+
+		sub, ok := subClaim.(string)
+		if !ok {
+			return fmt.Errorf("malformed token: sub claim has the wrong type")
+		}
+
+		credentials.Username = sub
+	}
 	username := credentials.Username
-	state := &config.ContextState{AuthToken: token}
+
+	state := &config.ContextState{
+		AuthToken:        token,
+		AuthRefreshToken: refreshToken,
+	}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
