@@ -63,10 +63,6 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 		Type: connectv1.ConnectV1AlterOffsetRequestType("DELETE"),
 	}
 
-	if err != nil {
-		return err
-	}
-
 	alterOffsetRequestInfo, err := c.V2Client.AlterConnectorOffsets(connectorName, environmentId, kafkaCluster.ID, request)
 	if err != nil {
 		return err
