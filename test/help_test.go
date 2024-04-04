@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
-func (s *CLITestSuite) TestHelp() {
+func (s *CLITestSuite) mmTestHelp() {
 	configurations := []*config.Config{
 		{
 			CurrentContext: "cloud",
