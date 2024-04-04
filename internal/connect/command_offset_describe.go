@@ -49,8 +49,8 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().Uint32("staleness-threshold", 120, "Repeatedly fetch offsets, until receiving an offset with an observed time within the staleness threshold in seconds, for a minimum of 5 seconds.")
-	cmd.Flags().Uint32("timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
+	cmd.Flags().Uint("staleness-threshold", 120, "Repeatedly fetch offsets, until receiving an offset with an observed time within the staleness threshold in seconds, for a minimum of 5 seconds.")
+	cmd.Flags().Uint("timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -60,7 +60,7 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
-	stalenessThreshold, err := cmd.Flags().GetUint32("staleness-threshold")
+	stalenessThreshold, err := cmd.Flags().GetUint("staleness-threshold")
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("`--staleness-threshold` cannot be less than 5 seconds")
 	}
 
-	timeout, err := cmd.Flags().GetUint32("timeout")
+	timeout, err := cmd.Flags().GetUint("timeout")
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 			return apiErr
 		}
 
-		if offsets.HasMetadata() && offsets.Metadata.HasObservedAt() && uint32(time.Since(*offsets.Metadata.ObservedAt).Seconds()) <= stalenessThreshold {
+		if offsets.HasMetadata() && offsets.Metadata.HasObservedAt() && uint(time.Since(*offsets.Metadata.ObservedAt).Seconds()) <= stalenessThreshold {
 			return nil
 		}
 
