@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -57,9 +58,10 @@ func handleConnectorResume(_ *testing.T) http.HandlerFunc {
 
 func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		connectorName := strings.Split(r.URL.Path, "/")[8]
 		currTime := time.Unix(1712046213, 123).UTC()
 		connectorOffset := connectv1.ConnectV1ConnectorOffsets{
-			Name: connectv1.PtrString("az-connector"),
+			Name: connectv1.PtrString(connectorName),
 			Id:   connectv1.PtrString("lcc-123"),
 			Offsets: &[]map[string]any{
 				0: {
@@ -121,16 +123,30 @@ func handleAlterConnectorOffsets(t *testing.T) http.HandlerFunc {
 
 func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		connectorName := strings.Split(r.URL.Path, "/")[8]
 		currTime := time.Unix(1712046213, 123).UTC()
+		var request connectv1.ConnectV1AlterOffsetRequestInfo
+		if connectorName == "az-connector" {
+			request = connectv1.ConnectV1AlterOffsetRequestInfo{
+				Id:          "lcc-123",
+				Name:        connectorName,
+				Type:        "PATCH",
+				RequestedAt: currTime,
+			}
+		} else {
+			request = connectv1.ConnectV1AlterOffsetRequestInfo{
+				Id:          "lcc-111",
+				Name:        connectorName,
+				Type:        "DELETE",
+				RequestedAt: currTime,
+			}
+		}
+
 		connectorOffsetStatus := connectv1.ConnectV1AlterOffsetStatus{
-			Request: connectv1.ConnectV1AlterOffsetRequestInfo{
-				Id:   "lcc-123",
-				Name: "GcsSink",
-				Type: "PATCH",
-			},
+			Request: request,
 			Status: connectv1.ConnectV1AlterOffsetStatusStatus{
-				Phase:   "PENDING",
-				Message: connectv1.PtrString("Alter offset process is pending"),
+				Phase:   "Applied",
+				Message: connectv1.PtrString("Offset Updated"),
 			},
 			PreviousOffsets: &[]map[string]any{
 				0: {

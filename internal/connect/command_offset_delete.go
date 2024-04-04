@@ -75,10 +75,11 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 		},
 	}
 
+	var apiErr error
 	err = retry.Retry(time.Second, 30*time.Second, func() error {
-		offsetStatus, err = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
-		if err != nil {
-			return err
+		offsetStatus, apiErr = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
+		if apiErr != nil {
+			return nil
 		}
 
 		if offsetStatus.GetStatus().Phase != "PENDING" {
@@ -87,25 +88,22 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("delete offset request still pending, checking status again")
 	})
 
+	if apiErr != nil {
+		return apiErr
+	}
+
 	var msg string
 	if err != nil {
 		msg = "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the delete request."
+		output.Println(false, msg)
+		return nil
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		err = printHumanDescribeOffsetStatus(cmd, offsetStatus, args[0])
-		if err != nil {
-			return err
-		}
-	} else {
-		err = printSerializedDescribeOffsetStatus(cmd, offsetStatus, args[0])
-		if err != nil {
-			return err
-		}
+		return printHumanDescribeOffsetStatus(cmd, offsetStatus, args[0])
 	}
 
-	output.Println(false, msg)
-	return nil
+	return printSerializedDescribeOffsetStatus(cmd, offsetStatus, args[0])
 }
 
 func (c *offsetCommand) getDeleteOffsetRequestBody() connectv1.ConnectV1AlterOffsetRequest {

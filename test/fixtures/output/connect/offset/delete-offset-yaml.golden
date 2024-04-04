@@ -1,8 +1,8 @@
-id: lcc-123
-request_type: PATCH
-requested_at: 0001-01-01 00:00:00 +0000 UTC
-phase: PENDING
-message: Alter offset process is pending
+id: lcc-111
+request_type: DELETE
+requested_at: 2024-04-02 08:23:33.000000123 +0000 UTC
+phase: Applied
+message: Offset Updated
 applied_at: 2024-04-02 08:23:33.000000123 +0000 UTC
 previous_offsets:
     - offset:

@@ -1,9 +1,9 @@
 +------------------+-----------------------------------------+
 | ID               | lcc-123                                 |
 | RequestType      | PATCH                                   |
-| RequestedAt      | 0001-01-01 00:00:00 +0000 UTC           |
-| Phase            | PENDING                                 |
-| Message          | Alter offset process is pending         |
+| RequestedAt      | 2024-04-02 08:23:33.000000123 +0000 UTC |
+| Phase            | Applied                                 |
+| Message          | Offset Updated                          |
 | Applied At       | 2024-04-02 08:23:33.000000123 +0000 UTC |
 | Previous Offsets | [                                       |
 |                  |   {                                     |
