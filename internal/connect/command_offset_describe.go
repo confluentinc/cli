@@ -3,6 +3,7 @@ package connect
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -25,10 +26,14 @@ type humanOffsetConnectorOut struct {
 }
 
 type serializedOffsetConnectorOut struct {
-	Id       string                                      `json:"id" yaml:"id"`
-	Name     string                                      `json:"name" yaml:"name"`
-	Offsets  []map[string]any                            `json:"offsets" yaml:"offsets"`
-	Metadata connectv1.ConnectV1ConnectorOffsetsMetadata `json:"metadata" yaml:"metadata"`
+	Id       string            `json:"id" yaml:"id"`
+	Name     string            `json:"name" yaml:"name"`
+	Offsets  []map[string]any  `json:"offsets" yaml:"offsets"`
+	Metadata offsetMetadataOut `json:"metadata" yaml:"metadata"`
+}
+
+type offsetMetadataOut struct {
+	ObservedAt time.Time `json:"observed_at,omitempty" yaml:"observed_at,omitempty"`
 }
 
 func (c *offsetCommand) newDescribeCommand() *cobra.Command {
@@ -124,7 +129,7 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 		if err != nil {
 			return err
 		}
-		metadataStr = string(pretty.Pretty(metadataBytes))
+		metadataStr = strings.TrimSpace(string(pretty.Pretty(metadataBytes)))
 	}
 
 	var offsetInfo []map[string]any
@@ -135,7 +140,7 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 		if err != nil {
 			return err
 		}
-		offsetStr = string(pretty.Pretty(offSetBytes))
+		offsetStr = strings.TrimSpace(string(pretty.Pretty(offSetBytes)))
 	}
 
 	table := output.NewTable(cmd)
@@ -151,9 +156,11 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 }
 
 func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id, name string) error {
-	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
+	var metadata offsetMetadataOut
 	if offsets.HasMetadata() {
-		metadata = *offsets.Metadata
+		metadata = offsetMetadataOut{
+			ObservedAt: offsets.Metadata.GetObservedAt(),
+		}
 	}
 
 	var offsetInfo []map[string]any

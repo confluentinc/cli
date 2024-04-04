@@ -83,7 +83,7 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		if strings.ToUpper(offsetStatus.Status.Phase) != "PENDING" {
+		if strings.ToUpper(offsetStatus.Status.GetPhase()) != "PENDING" {
 			return nil
 		}
 		return fmt.Errorf("delete offset request still pending, checking status again")
@@ -92,7 +92,7 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 		return apiErr
 	}
 
-	if strings.ToUpper(offsetStatus.Status.Phase) == "PENDING" {
+	if strings.ToUpper(offsetStatus.Status.GetPhase()) == "PENDING" {
 		output.Println(c.Config.EnableColor, "Operation is PENDING. Please run `confluent connect offset status describe` to get the latest status of the delete request.")
 		return nil
 	}

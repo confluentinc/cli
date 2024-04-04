@@ -12,4 +12,4 @@ offsets:
       partition:
         server: dbzv2
 metadata:
-    observedat: 2024-04-02T08:23:33.000000123Z
+    observed_at: 2024-04-02T08:23:33.000000123Z
