@@ -49,8 +49,8 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().Int32("staleness-threshold", 120, "Repeatedly fetch offsets, until receiving an offset with an observed time within the staleness threshold in seconds, for a minimum of 5 seconds.")
-	cmd.Flags().Int32("timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
+	cmd.Flags().Uint32("staleness-threshold", 120, "Repeatedly fetch offsets, until receiving an offset with an observed time within the staleness threshold in seconds, for a minimum of 5 seconds.")
+	cmd.Flags().Uint32("timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -60,7 +60,7 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
-	stalenessThreshold, err := cmd.Flags().GetInt32("staleness-threshold")
+	stalenessThreshold, err := cmd.Flags().GetUint32("staleness-threshold")
 	if err != nil {
 		return err
 	}
@@ -69,12 +69,9 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("`--staleness-threshold` cannot be less than 5 seconds")
 	}
 
-	timeout, err := cmd.Flags().GetInt32("timeout")
+	timeout, err := cmd.Flags().GetUint32("timeout")
 	if err != nil {
 		return err
-	}
-	if timeout <= 0 {
-		return fmt.Errorf("`--timeout` has to be a positive value")
 	}
 
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
@@ -101,7 +98,7 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 			return apiErr
 		}
 
-		if offsets.HasMetadata() && offsets.Metadata.HasObservedAt() && int32(time.Since(*offsets.Metadata.ObservedAt).Seconds()) <= stalenessThreshold {
+		if offsets.HasMetadata() && offsets.Metadata.HasObservedAt() && uint32(time.Since(*offsets.Metadata.ObservedAt).Seconds()) <= stalenessThreshold {
 			return nil
 		}
 

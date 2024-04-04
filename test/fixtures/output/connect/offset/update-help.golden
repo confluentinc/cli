@@ -8,15 +8,15 @@ The configuration file contains offsets to be set for the connector.
 
   {
     "offsets": [
-  	  {
-  	    "partition": {
-  		  "kafka_partition": 0,
-  		  "kafka_topic": "topic_A"
-  	    },
-  	    "offset": {
-  		  "kafka_offset": 1000
-  	    }
+  	{
+  	  "partition": {
+  		"kafka_partition": 0,
+  		"kafka_topic": "topic_A"
+  	  },
+  	  "offset": {
+  		"kafka_offset": 1000
   	  }
+  	}
     ]
   }
 
@@ -27,7 +27,7 @@ Update offsets for a connector in the current or specified Kafka cluster context
   $ confluent connect offset update lcc-123456 --config-file config.json --cluster lkc-123456
 
 Flags:
-      --config-file string   REQUIRED: JSON file containing connector offsets to set to.
+      --config-file string   REQUIRED: JSON file containing new connector offsets.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
       --environment string   Environment ID.

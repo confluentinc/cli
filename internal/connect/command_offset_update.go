@@ -31,15 +31,15 @@ func (c *offsetCommand) newUpdateCommand() *cobra.Command {
 				Text: "The configuration file contains offsets to be set for the connector.",
 				Code: `{
   "offsets": [
-	  {
-	    "partition": {
-		  "kafka_partition": 0,
-		  "kafka_topic": "topic_A"
-	    },
-	    "offset": {
-		  "kafka_offset": 1000
-	    }
+	{
+	  "partition": {
+		"kafka_partition": 0,
+		"kafka_topic": "topic_A"
+	  },
+	  "offset": {
+		"kafka_offset": 1000
 	  }
+	}
   ]
 }`,
 			},
