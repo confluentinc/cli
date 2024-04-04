@@ -6,8 +6,9 @@ import (
 	"os"
 	"time"
 
-	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
+
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"

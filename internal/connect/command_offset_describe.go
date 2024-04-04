@@ -97,7 +97,7 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 
 	var apiErr error
 	if offsets.HasMetadata() && offsets.Metadata.HasObservedAt() && int32(time.Since(*offsets.Metadata.ObservedAt).Seconds()) > stalenessThreshold {
-		err = retry.Retry(time.Second, time.Duration(refetchTimeout)*time.Second, func() error {
+		_ = retry.Retry(time.Second, time.Duration(refetchTimeout)*time.Second, func() error {
 			offsets, apiErr := c.V2Client.GetConnectorOffset(connector.Info.GetName(), environmentId, kafkaCluster.ID)
 			if apiErr != nil {
 				return apiErr
@@ -106,7 +106,7 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 			if offsets.HasMetadata() && offsets.Metadata.HasObservedAt() && int32(time.Since(*offsets.Metadata.ObservedAt).Seconds()) <= stalenessThreshold {
 				return nil
 			}
-			return fmt.Errorf("got state offsets, fetching offsets again")
+			return fmt.Errorf("got stale offsets, fetching offsets again")
 		})
 	}
 
