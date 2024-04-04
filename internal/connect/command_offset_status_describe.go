@@ -2,6 +2,7 @@ package connect
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
@@ -21,8 +22,8 @@ type serializedOffsetStatusDescribeOut struct {
 	Phase            string           `json:"phase" yaml:"phase"`
 	Message          string           `json:"message,omitempty" yaml:"message,omitempty"`
 	AppliedAt        string           `json:"applied_at,omitempty" yaml:"applied_at,omitempty"`
-	PreviousOffsets  []map[string]any `json:"previous_offsets,omitempty" yaml:"previous_offsets,omitempty"`
 	RequestedOffsets []map[string]any `json:"requested_offsets,omitempty" yaml:"requested_offsets,omitempty"`
+	PreviousOffsets  []map[string]any `json:"previous_offsets,omitempty" yaml:"previous_offsets,omitempty"`
 }
 
 type humanOffsetStatusDescribeOut struct {
@@ -32,8 +33,8 @@ type humanOffsetStatusDescribeOut struct {
 	Phase            string `human:"Phase"`
 	Message          string `human:"Message,omitempty"`
 	AppliedAt        string `human:"Applied At,omitempty"`
-	PreviousOffsets  string `human:"Previous Offsets,omitempty"`
 	RequestedOffsets string `human:"Requested Offsets,omitempty"`
+	PreviousOffsets  string `human:"Previous Offsets,omitempty"`
 }
 
 func (c *offsetCommand) newStatusDescribeCommand() *cobra.Command {
@@ -115,7 +116,7 @@ func printHumanDescribeOffsetStatus(cmd *cobra.Command, offsetStatus connectv1.C
 		if err != nil {
 			return err
 		}
-		offsetStr = string(pretty.Pretty(offSetBytes))
+		offsetStr = strings.TrimSpace(string(pretty.Pretty(offSetBytes)))
 	}
 
 	var reqOffsets []map[string]any
@@ -126,7 +127,7 @@ func printHumanDescribeOffsetStatus(cmd *cobra.Command, offsetStatus connectv1.C
 		if err != nil {
 			return err
 		}
-		reqOffsetStr = string(pretty.Pretty(offSetBytes))
+		reqOffsetStr = strings.TrimSpace(string(pretty.Pretty(offSetBytes)))
 	}
 
 	table := output.NewTable(cmd)
