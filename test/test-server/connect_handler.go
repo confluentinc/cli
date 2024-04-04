@@ -93,6 +93,9 @@ func handleAlterConnectorOffsets(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request connectv1.ConnectV1AlterOffsetRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
+		if err != nil {
+			return
+		}
 		connectorOffsetRequestInfo := connectv1.ConnectV1AlterOffsetRequestInfo{
 			Id:          "lcc-123",
 			Name:        "GcsSink",
