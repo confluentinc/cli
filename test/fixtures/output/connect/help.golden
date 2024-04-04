@@ -7,6 +7,7 @@ Available Commands:
   cluster       Manage Connect clusters.
   custom-plugin Manage custom connector plugins.
   event         Manage log events for managed connectors.
+  offset        Manage offsets for managed connectors.
   plugin        Manage plugins for managed connectors.
 
 Global Flags:
