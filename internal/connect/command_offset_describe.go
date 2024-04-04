@@ -49,7 +49,7 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().Int32("staleness-threshold", 120, "Repeatedly fetch offsets until we get an offset with an observed time within staleness threshold in seconds. (min 5)")
+	cmd.Flags().Int32("staleness-threshold", 120, "Repeatedly fetches offsets, until we get an offset with an observed time within staleness threshold in seconds. (min 5)")
 	cmd.Flags().Int32("refetch-timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -76,11 +76,6 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorName := connector.Info.GetName()
-	offsets, err := c.V2Client.GetConnectorOffset(connector.Info.GetName(), environmentId, kafkaCluster.ID)
-	if err != nil {
-		return err
-	}
 	stalenessThreshold, err := cmd.Flags().GetInt32("staleness-threshold")
 	if err != nil {
 		return err
@@ -91,6 +86,12 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	refetchTimeout, err := cmd.Flags().GetInt32("refetch-timeout")
+	if err != nil {
+		return err
+	}
+
+	connectorName := connector.Info.GetName()
+	offsets, err := c.V2Client.GetConnectorOffset(connector.Info.GetName(), environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}

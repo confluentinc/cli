@@ -2,6 +2,7 @@ package connect
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -76,13 +77,13 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	var apiErr error
-	err = retry.Retry(time.Second, 30*time.Second, func() error {
+	_ = retry.Retry(time.Second, 30*time.Second, func() error {
 		offsetStatus, apiErr = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
 		if apiErr != nil {
 			return nil
 		}
 
-		if offsetStatus.GetStatus().Phase != "PENDING" {
+		if strings.ToUpper(offsetStatus.GetStatus().Phase) != "PENDING" {
 			return nil
 		}
 		return fmt.Errorf("delete offset request still pending, checking status again")
@@ -93,7 +94,7 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	var msg string
-	if err != nil {
+	if strings.ToUpper(offsetStatus.GetStatus().Phase) == "PENDING" {
 		msg = "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the delete request."
 		output.Println(false, msg)
 		return nil

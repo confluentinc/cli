@@ -11,7 +11,7 @@ Describe offsets for a connector in the current or specified Kafka cluster conte
   $ confluent connect offset describe lcc-123456 --cluster lkc-123456
 
 Flags:
-      --staleness-threshold int32   Repeatedly fetch offsets until we get an offset with an observed time within staleness threshold in seconds. (min 5) (default 120)
+      --staleness-threshold int32   Repeatedly fetches offsets, until we get an offset with an observed time within staleness threshold in seconds. (min 5) (default 120)
       --refetch-timeout int32       Max time in seconds to wait until we get an offset within the staleness threshold. (default 30)
       --cluster string              Kafka cluster ID.
       --context string              CLI context name.

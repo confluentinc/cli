@@ -2,7 +2,7 @@
 | ID               | lcc-111                                 |
 | RequestType      | DELETE                                  |
 | RequestedAt      | 2024-04-02 08:23:33.000000123 +0000 UTC |
-| Phase            | Applied                                 |
+| Phase            | APPLIED                                 |
 | Message          | Offset Updated                          |
 | Applied At       | 2024-04-02 08:23:33.000000123 +0000 UTC |
 | Previous Offsets | [                                       |

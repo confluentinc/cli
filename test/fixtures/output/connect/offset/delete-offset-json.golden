@@ -2,7 +2,7 @@
   "id": "lcc-111",
   "request_type": "DELETE",
   "requested_at": "2024-04-02 08:23:33.000000123 +0000 UTC",
-  "phase": "Applied",
+  "phase": "APPLIED",
   "message": "Offset Updated",
   "applied_at": "2024-04-02 08:23:33.000000123 +0000 UTC",
   "previous_offsets": [

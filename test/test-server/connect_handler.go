@@ -145,7 +145,7 @@ func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 		connectorOffsetStatus := connectv1.ConnectV1AlterOffsetStatus{
 			Request: request,
 			Status: connectv1.ConnectV1AlterOffsetStatusStatus{
-				Phase:   "Applied",
+				Phase:   "APPLIED",
 				Message: connectv1.PtrString("Offset Updated"),
 			},
 			PreviousOffsets: &[]map[string]any{
