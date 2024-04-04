@@ -28,8 +28,20 @@ func (c *offsetCommand) newUpdateCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Config JSON file contains offsets which is to be set for the connector",
-				Code: "config.json = {\n                \"offsets\": [\n                  {\n                    \"partition\": {\n                      \"kafka_partition\": 0,\n                      \"kafka_topic\": \"topic_A\"\n                    },\n                    \"offset\": {\n                      \"kafka_offset\": 1000\n                    }\n                  }\n                ]\n              }",
+				Text: "The configuration file contains offsets to be set for the connector.",
+				Code: `{
+  "offsets": [
+	  {
+	    "partition": {
+		  "kafka_partition": 0,
+		  "kafka_topic": "topic_A"
+	    },
+	    "offset": {
+		  "kafka_offset": 1000
+	    }
+	  }
+  ]
+}`,
 			},
 			examples.Example{
 				Text: "Update offsets for a connector in the current or specified Kafka cluster context.",
@@ -41,7 +53,7 @@ func (c *offsetCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config-file", "", "JSON file containing connector offsets to set to.")
+	cmd.Flags().String("config-file", "", "JSON file containing new connector offsets.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -109,7 +121,7 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if strings.ToUpper(offsetStatus.Status.Phase) == "PENDING" {
-		output.Println(false, "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the update request.")
+		output.Println(c.Config.EnableColor, "Operation is PENDING. Please run `confluent connect offset status describe` to get the latest status of the update request.")
 		return nil
 	}
 

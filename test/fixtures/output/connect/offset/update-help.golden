@@ -4,21 +4,21 @@ Usage:
   confluent connect offset update <id> [flags]
 
 Examples:
-Config JSON file contains offsets which is to be set for the connector
+The configuration file contains offsets to be set for the connector.
 
-  config.json = {
-                  "offsets": [
-                    {
-                      "partition": {
-                        "kafka_partition": 0,
-                        "kafka_topic": "topic_A"
-                      },
-                      "offset": {
-                        "kafka_offset": 1000
-                      }
-                    }
-                  ]
-                }
+  {
+    "offsets": [
+  	  {
+  	    "partition": {
+  		  "kafka_partition": 0,
+  		  "kafka_topic": "topic_A"
+  	    },
+  	    "offset": {
+  		  "kafka_offset": 1000
+  	    }
+  	  }
+    ]
+  }
 
 Update offsets for a connector in the current or specified Kafka cluster context.
 

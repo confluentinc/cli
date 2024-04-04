@@ -1,10 +1,10 @@
-Delete a connector's offsets.
+Delete a connector's offsets. The behaviour is identical to creating a fresh new connector with the current configurations.
 
 Usage:
   confluent connect offset delete <id> [flags]
 
 Examples:
-Delete offsets for a connector in the current or specified Kafka cluster context. The behaviour is identical to creating a fresh new connector with the current configurations.
+Delete offsets for a connector in the current or specified Kafka cluster context.
 
   $ confluent connect offset delete lcc-123456
 
