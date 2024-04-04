@@ -17,9 +17,8 @@ type connectOut struct {
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "connect",
-		Short:       "Manage Kafka Connect.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+		Use:   "connect",
+		Short: "Manage Kafka Connect.",
 	}
 
 	cmd.AddCommand(newClusterCommand(cfg, prerunner))
