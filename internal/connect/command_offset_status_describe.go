@@ -41,7 +41,7 @@ func (c *offsetCommand) newStatusDescribeCommand() *cobra.Command {
 		RunE:  c.statusDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe offset update or delete status for a connector in the current or specified Kafka cluster context.",
+				Text: "Describe the status of the latest offset update/delete operation for a connector in the current or specified Kafka cluster context.",
 				Code: "confluent connect offset status describe lcc-123456",
 			},
 			examples.Example{

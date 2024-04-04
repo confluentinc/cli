@@ -2,6 +2,8 @@ package connect
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
@@ -12,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/retry"
 )
 
 type humanOffsetConnectorOut struct {
@@ -46,6 +49,9 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().Int32("staleness-threshold", 120, "Repeatedly fetch offsets until we get an offset with an observed time within staleness threshold in seconds. (min 5)")
+	cmd.Flags().Int32("refetch-timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
+
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -74,6 +80,33 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 	offsets, err := c.V2Client.GetConnectorOffset(connector.Info.GetName(), environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
+	}
+	stalenessThreshold, err := cmd.Flags().GetInt32("staleness-threshold")
+	if err != nil {
+		return err
+	}
+
+	if stalenessThreshold < 5 {
+		return fmt.Errorf("staleness-threshold cannot be less than 5 seconds")
+	}
+
+	refetchTimeout, err := cmd.Flags().GetInt32("refetch-timeout")
+	if err != nil {
+		return err
+	}
+
+	if offsets.HasMetadata() && offsets.Metadata.HasObservedAt() && int32(time.Since(*offsets.Metadata.ObservedAt).Seconds()) > stalenessThreshold {
+		err = retry.Retry(time.Second, time.Duration(refetchTimeout)*time.Second, func() error {
+			offsets, err := c.V2Client.GetConnectorOffset(connector.Info.GetName(), environmentId, kafkaCluster.ID)
+			if err != nil {
+				return err
+			}
+
+			if offsets.HasMetadata() && offsets.Metadata.HasObservedAt() && int32(time.Since(*offsets.Metadata.ObservedAt).Seconds()) <= stalenessThreshold {
+				return nil
+			}
+			return fmt.Errorf("got state offsets, fetching offsets again")
+		})
 	}
 
 	if output.GetFormat(cmd) == output.Human {

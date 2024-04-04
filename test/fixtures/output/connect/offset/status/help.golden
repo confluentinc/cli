@@ -1,10 +1,10 @@
-Manage the status of an offset update.
+Manage the status of an offset update or delete.
 
 Usage:
   confluent connect offset status [command]
 
 Available Commands:
-  describe    Describe connector offset update status.
+  describe    Describe connector offset update or delete status.
 
 Global Flags:
   -h, --help            Show help for this command.

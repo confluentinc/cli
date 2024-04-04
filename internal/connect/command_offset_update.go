@@ -100,7 +100,7 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 
 	var msg string
 	if err != nil {
-		msg = "Please run `confluent connect offset status describe` command to get the latest status of the update request."
+		msg = "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the update request."
 	}
 
 	if output.GetFormat(cmd) == output.Human {
@@ -109,10 +109,10 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
+		err = printSerializedDescribeOffsetStatus(cmd, offsetStatus, args[0])
 		if err != nil {
 			return err
 		}
-		return printSerializedDescribeOffsetStatus(cmd, offsetStatus, args[0])
 	}
 
 	output.Println(false, msg)

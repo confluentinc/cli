@@ -4,8 +4,9 @@ Usage:
   confluent connect offset [command]
 
 Available Commands:
+  delete      Delete a connector's offsets.
   describe    Describe connector offsets.
-  status      Manage the status of an offset update.
+  status      Manage the status of an offset update or delete.
   update      Update a connector's offsets.
 
 Global Flags:

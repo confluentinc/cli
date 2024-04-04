@@ -24,7 +24,7 @@ func (c *offsetCommand) newDeleteCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete offsets for a connector in the current or specified Kafka cluster context.",
+				Text: "Delete offsets for a connector in the current or specified Kafka cluster context. The behaviour is identical to creating a fresh new connector with the current configs.",
 				Code: "confluent connect offset delete lcc-123456",
 			},
 			examples.Example{
@@ -89,7 +89,7 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 
 	var msg string
 	if err != nil {
-		msg = "Please run `confluent connect offset status describe` command to get the latest status of the delete request."
+		msg = "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the delete request."
 	}
 
 	if output.GetFormat(cmd) == output.Human {
@@ -98,10 +98,10 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
+		err = printSerializedDescribeOffsetStatus(cmd, offsetStatus, args[0])
 		if err != nil {
 			return err
 		}
-		return printSerializedDescribeOffsetStatus(cmd, offsetStatus, args[0])
 	}
 
 	output.Println(false, msg)

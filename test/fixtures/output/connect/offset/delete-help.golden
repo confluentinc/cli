@@ -1,14 +1,14 @@
-Describe connector offset update or delete status.
+Delete a connector's offsets.
 
 Usage:
-  confluent connect offset status describe [flags]
+  confluent connect offset delete <id> [flags]
 
 Examples:
-Describe the status of the latest offset update/delete opeation for a connector in the current or specified Kafka cluster context.
+Delete offsets for a connector in the current or specified Kafka cluster context. The behaviour is identical to creating a fresh new connector with the current configs.
 
-  $ confluent connect offset status describe lcc-123456
+  $ confluent connect offset delete lcc-123456
 
-  $ confluent connect offset status describe lcc-123456 --cluster lkc-123456
+  $ confluent connect offset update lcc-123456 --cluster lkc-123456
 
 Flags:
       --cluster string       Kafka cluster ID.
@@ -20,4 +20,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-

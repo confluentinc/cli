@@ -7,7 +7,7 @@ import (
 func (c *offsetCommand) newStatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Manage the status of an offset update.",
+		Short: "Manage the status of an offset update or delete.",
 	}
 
 	cmd.AddCommand(c.newStatusDescribeCommand())
