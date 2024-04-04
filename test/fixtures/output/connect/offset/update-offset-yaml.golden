@@ -1,0 +1,17 @@
+id: lcc-123
+request_type: PATCH
+requested_at: 2024-04-02 08:23:33.000000123 +0000 UTC
+phase: Applied
+message: Offset Updated
+applied_at: 2024-04-02 08:23:33.000000123 +0000 UTC
+previous_offsets:
+    - offset:
+        event: 2
+        file: mysql-bin.000600
+        pos: 2001
+        row: 1
+        server_id: 1
+        transaction_id: null
+        ts_sec: 1.71178887e+09
+      partition:
+        server: dbzv2
