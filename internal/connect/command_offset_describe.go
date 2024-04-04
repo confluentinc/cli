@@ -51,7 +51,6 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 
 	cmd.Flags().Int32("staleness-threshold", 120, "Repeatedly fetches offsets, until we get an offset with an observed time within staleness threshold in seconds. (min 5)")
 	cmd.Flags().Int32("refetch-timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
-
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -106,7 +105,6 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 
 		return fmt.Errorf("got stale offsets, fetching again")
 	})
-
 	if apiErr != nil {
 		return apiErr
 	}
@@ -119,7 +117,6 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id, name string) error {
-	var offsetInfo []map[string]any
 	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
 	var metadataStr string
 	if offsets.HasMetadata() {
@@ -131,6 +128,7 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 		metadataStr = string(pretty.Pretty(metadataBytes))
 	}
 
+	var offsetInfo []map[string]any
 	var offsetStr string
 	if offsets.HasOffsets() {
 		offsetInfo = *offsets.Offsets
@@ -154,12 +152,12 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 }
 
 func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id, name string) error {
-	var offsetInfo []map[string]any
 	var metadata connectv1.ConnectV1ConnectorOffsetsMetadata
 	if offsets.HasMetadata() {
 		metadata = *offsets.Metadata
 	}
 
+	var offsetInfo []map[string]any
 	if offsets.HasOffsets() {
 		offsetInfo = *offsets.Offsets
 	}

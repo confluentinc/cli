@@ -97,20 +97,17 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		if strings.ToUpper(offsetStatus.GetStatus().Phase) != "PENDING" {
+		if strings.ToUpper(offsetStatus.Status.Phase) != "PENDING" {
 			return nil
 		}
 		return fmt.Errorf("update offset request still pending, checking status again")
 	})
-
 	if apiErr != nil {
 		return apiErr
 	}
 
-	var msg string
-	if strings.ToUpper(offsetStatus.GetStatus().Phase) == "PENDING" {
-		msg = "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the update request."
-		output.Println(false, msg)
+	if strings.ToUpper(offsetStatus.Status.Phase) == "PENDING" {
+		output.Println(false, "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the update request.")
 		return nil
 	}
 

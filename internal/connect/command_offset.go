@@ -51,13 +51,9 @@ func (c *offsetCommand) autocompleteConnectors() []string {
 		return nil
 	}
 
-	names := types.GetSortedKeys(connectors)
-
 	suggestions := make([]string, len(connectors))
-	i := 0
-	for _, name := range names {
+	for i, name := range types.GetSortedKeys(connectors) {
 		suggestions[i] = fmt.Sprintf("%s\t%s", connectors[name].Id.GetId(), connectors[name].Info.GetName())
-		i++
 	}
 
 	return suggestions

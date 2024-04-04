@@ -59,7 +59,10 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	connectorName := connector.Info.GetName()
-	request := c.getDeleteOffsetRequestBody()
+	request := connectv1.ConnectV1AlterOffsetRequest{
+		Type: connectv1.ConnectV1AlterOffsetRequestType("DELETE"),
+	}
+
 	if err != nil {
 		return err
 	}
@@ -83,20 +86,17 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		if strings.ToUpper(offsetStatus.GetStatus().Phase) != "PENDING" {
+		if strings.ToUpper(offsetStatus.Status.Phase) != "PENDING" {
 			return nil
 		}
 		return fmt.Errorf("delete offset request still pending, checking status again")
 	})
-
 	if apiErr != nil {
 		return apiErr
 	}
 
-	var msg string
-	if strings.ToUpper(offsetStatus.GetStatus().Phase) == "PENDING" {
-		msg = "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the delete request."
-		output.Println(false, msg)
+	if strings.ToUpper(offsetStatus.Status.Phase) == "PENDING" {
+		output.Println(false, "Operation is PENDING. Please run `confluent connect offset status describe` command to get the latest status of the delete request.")
 		return nil
 	}
 
@@ -105,12 +105,4 @@ func (c *offsetCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	return printSerializedDescribeOffsetStatus(cmd, offsetStatus, args[0])
-}
-
-func (c *offsetCommand) getDeleteOffsetRequestBody() connectv1.ConnectV1AlterOffsetRequest {
-	request := connectv1.ConnectV1AlterOffsetRequest{
-		Type: connectv1.ConnectV1AlterOffsetRequestType("DELETE"),
-	}
-
-	return request
 }
