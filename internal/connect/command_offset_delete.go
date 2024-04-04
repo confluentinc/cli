@@ -20,7 +20,7 @@ func (c *offsetCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a connector's offsets.",
-		Long:              "Delete a connector's offsets. The behaviour is identical to creating a fresh new connector with the current configurations.",
+		Long:              "Delete a connector's offsets. The behavior is identical to creating a fresh new connector with the current configurations.",
 		Args:              cobra.ExactArgs(1),
 		RunE:              c.delete,
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
