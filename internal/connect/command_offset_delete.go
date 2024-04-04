@@ -25,7 +25,7 @@ func (c *offsetCommand) newDeleteCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete offsets for a connector in the current or specified Kafka cluster context. The behaviour is identical to creating a fresh new connector with the current configs.",
+				Text: "Delete offsets for a connector in the current or specified Kafka cluster context. The behaviour is identical to creating a fresh new connector with the current configurations.",
 				Code: "confluent connect offset delete lcc-123456",
 			},
 			examples.Example{

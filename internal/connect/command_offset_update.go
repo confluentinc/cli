@@ -28,8 +28,12 @@ func (c *offsetCommand) newUpdateCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{
+				Text: "Config JSON file contains offsets which is to be set for the connector",
+				Code: "config.json = {\n                \"offsets\": [\n                  {\n                    \"partition\": {\n                      \"kafka_partition\": 0,\n                      \"kafka_topic\": \"topic_A\"\n                    },\n                    \"offset\": {\n                      \"kafka_offset\": 1000\n                    }\n                  }\n                ]\n              }",
+			},
+			examples.Example{
 				Text: "Update offsets for a connector in the current or specified Kafka cluster context.",
-				Code: "config.json = {\n                \"offsets\": [\n                  {\n                    \"partition\": {\n                      \"kafka_partition\": 0,\n                      \"kafka_topic\": \"topic_A\"\n                    },\n                    \"offset\": {\n                      \"kafka_offset\": 1000\n                    }\n                  }\n                ]\n              }\nconfluent connect offset update lcc-123456 --config-file config.json",
+				Code: "confluent connect offset update lcc-123456 --config-file config.json",
 			},
 			examples.Example{
 				Code: "confluent connect offset update lcc-123456 --config-file config.json --cluster lkc-123456",
@@ -132,6 +136,5 @@ func (c *offsetCommand) getAlterOffsetRequestBody(configFile string) (*connectv1
 	}
 
 	request.SetType("PATCH")
-
-	return request, err
+	return request, nil
 }

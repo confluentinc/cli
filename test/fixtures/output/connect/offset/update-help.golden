@@ -4,7 +4,7 @@ Usage:
   confluent connect offset update <id> [flags]
 
 Examples:
-Update offsets for a connector in the current or specified Kafka cluster context.
+Config JSON file contains offsets which is to be set for the connector
 
   config.json = {
                   "offsets": [
@@ -19,6 +19,9 @@ Update offsets for a connector in the current or specified Kafka cluster context
                     }
                   ]
                 }
+
+Update offsets for a connector in the current or specified Kafka cluster context.
+
   $ confluent connect offset update lcc-123456 --config-file config.json
 
   $ confluent connect offset update lcc-123456 --config-file config.json --cluster lkc-123456

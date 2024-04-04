@@ -81,7 +81,7 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if stalenessThreshold < 5 {
-		return fmt.Errorf("staleness-threshold cannot be less than 5 seconds")
+		return fmt.Errorf("`--staleness-threshold` cannot be less than 5 seconds")
 	}
 
 	refetchTimeout, err := cmd.Flags().GetInt32("refetch-timeout")
