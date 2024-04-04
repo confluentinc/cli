@@ -37,7 +37,9 @@ func (c *offsetCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config-file", "", "JSON file containing connector offsets to set to.")
+	jsonExample := "\n{\n  \"offsets\": [\n    {\n      \"partition\": {\n        \"kafka_partition\": 0,\n        \"kafka_topic\": \"topic_A\"\n      },\n      \"offset\": {\n        \"kafka_offset\": 1000\n      }\n    }\n  ]\n}"
+
+	cmd.Flags().String("config-file", "", fmt.Sprintf("JSON file containing connector offsets to set to. Example :- %s", jsonExample))
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

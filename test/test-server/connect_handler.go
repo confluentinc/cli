@@ -132,6 +132,22 @@ func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 				Name:        connectorName,
 				Type:        "PATCH",
 				RequestedAt: currTime,
+				Offsets: &[]map[string]any{
+					0: {
+						"partition": map[string]any{
+							"server": "dbzv2",
+						},
+						"offset": map[string]any{
+							"event":          2,
+							"file":           "mysql-bin.000700",
+							"pos":            2003,
+							"row":            9,
+							"server_id":      0,
+							"transaction_id": nil,
+							"ts_sec":         1711788870,
+						},
+					},
+				},
 			}
 		} else {
 			request = connectv1.ConnectV1AlterOffsetRequestInfo{

@@ -15,23 +15,25 @@ import (
 )
 
 type serializedOffsetStatusDescribeOut struct {
-	Id              string           `json:"id" yaml:"id"`
-	RequestType     string           `json:"request_type" yaml:"request_type"`
-	RequestedAt     string           `json:"requested_at" yaml:"requested_at"`
-	Phase           string           `json:"phase" yaml:"phase"`
-	Message         string           `json:"message,omitempty" yaml:"message,omitempty"`
-	AppliedAt       string           `json:"applied_at,omitempty" yaml:"applied_at,omitempty"`
-	PreviousOffsets []map[string]any `json:"previous_offsets,omitempty" yaml:"previous_offsets,omitempty"`
+	Id               string           `json:"id" yaml:"id"`
+	RequestType      string           `json:"request_type" yaml:"request_type"`
+	RequestedAt      string           `json:"requested_at" yaml:"requested_at"`
+	Phase            string           `json:"phase" yaml:"phase"`
+	Message          string           `json:"message,omitempty" yaml:"message,omitempty"`
+	AppliedAt        string           `json:"applied_at,omitempty" yaml:"applied_at,omitempty"`
+	PreviousOffsets  []map[string]any `json:"previous_offsets,omitempty" yaml:"previous_offsets,omitempty"`
+	RequestedOffsets []map[string]any `json:"requested_offsets,omitempty" yaml:"requested-offsets_offsets,omitempty"`
 }
 
 type humanOffsetStatusDescribeOut struct {
-	Id              string `human:"ID"`
-	RequestType     string `human:"RequestType"`
-	RequestedAt     string `human:"RequestedAt"`
-	Phase           string `human:"Phase"`
-	Message         string `human:"Message,omitempty"`
-	AppliedAt       string `human:"Applied At,omitempty"`
-	PreviousOffsets string `human:"Previous Offsets,omitempty"`
+	Id               string `human:"ID"`
+	RequestType      string `human:"RequestType"`
+	RequestedAt      string `human:"RequestedAt"`
+	Phase            string `human:"Phase"`
+	Message          string `human:"Message,omitempty"`
+	AppliedAt        string `human:"Applied At,omitempty"`
+	PreviousOffsets  string `human:"Previous Offsets,omitempty"`
+	RequestedOffsets string `human:"Requested Offsets,omitempty"`
 }
 
 func (c *offsetCommand) newStatusDescribeCommand() *cobra.Command {
@@ -116,15 +118,27 @@ func printHumanDescribeOffsetStatus(cmd *cobra.Command, offsetStatus connectv1.C
 		offsetStr = string(pretty.Pretty(offSetBytes))
 	}
 
+	var reqOffsets []map[string]any
+	var reqOffsetStr string
+	if offsetStatus.Request.HasOffsets() {
+		reqOffsets = offsetStatus.Request.GetOffsets()
+		offSetBytes, err := json.Marshal(reqOffsets)
+		if err != nil {
+			return err
+		}
+		reqOffsetStr = string(pretty.Pretty(offSetBytes))
+	}
+
 	table := output.NewTable(cmd)
 	table.Add(&humanOffsetStatusDescribeOut{
-		Id:              id,
-		RequestType:     string(offsetStatus.Request.Type),
-		RequestedAt:     offsetStatus.Request.GetRequestedAt().String(),
-		Phase:           phase,
-		Message:         message,
-		AppliedAt:       appliedAt,
-		PreviousOffsets: offsetStr,
+		Id:               id,
+		RequestType:      string(offsetStatus.Request.Type),
+		RequestedAt:      offsetStatus.Request.GetRequestedAt().String(),
+		Phase:            phase,
+		Message:          message,
+		AppliedAt:        appliedAt,
+		PreviousOffsets:  offsetStr,
+		RequestedOffsets: reqOffsetStr,
 	})
 
 	return table.PrintWithAutoWrap(false)
@@ -147,13 +161,14 @@ func printSerializedDescribeOffsetStatus(cmd *cobra.Command, offsetStatus connec
 	}
 
 	out := &serializedOffsetStatusDescribeOut{
-		Id:              id,
-		RequestType:     string(offsetStatus.Request.Type),
-		RequestedAt:     offsetStatus.Request.GetRequestedAt().String(),
-		Phase:           phase,
-		Message:         message,
-		AppliedAt:       appliedAt,
-		PreviousOffsets: *offsetStatus.PreviousOffsets,
+		Id:               id,
+		RequestType:      string(offsetStatus.Request.Type),
+		RequestedAt:      offsetStatus.Request.GetRequestedAt().String(),
+		Phase:            phase,
+		Message:          message,
+		AppliedAt:        appliedAt,
+		PreviousOffsets:  *offsetStatus.PreviousOffsets,
+		RequestedOffsets: offsetStatus.Request.GetOffsets(),
 	}
 
 	return output.SerializedOutput(cmd, out)
