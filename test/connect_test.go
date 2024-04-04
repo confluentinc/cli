@@ -200,3 +200,29 @@ func (s *CLITestSuite) TestConnectCustomPlugin() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestConnectOffset() {
+	tests := []CLITest{
+		{args: "connect offset describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-json.golden"},
+		{args: "connect offset describe lcc-101112 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-fail.golden", exitCode: 1},
+		{args: "connect offset describe lcc-123 --cluster lkc-123", fixture: "connect/offset/describe-offset.golden"},
+
+		{args: "connect offset describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/offset/describe-offset-yaml.golden"},
+		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123", fixture: "connect/offset/update-offset.golden"},
+		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o json", fixture: "connect/offset/update-offset-json.golden"},
+		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o yaml", fixture: "connect/offset/update-offset-yaml.golden"},
+
+		{args: "connect offset status describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/update-offset-status-describe-json.golden"},
+		{args: "connect offset status describe lcc-123 --cluster lkc-123", fixture: "connect/offset/update-offset-status-describe.golden"},
+		{args: "connect offset status describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/offset/update-offset-status-describe-yaml.golden"},
+
+		{args: "connect offset delete lcc-123 --cluster lkc-123", fixture: "connect/offset/delete-offset.golden"},
+		{args: "connect offset delete lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/delete-offset-json.golden"},
+		{args: "connect offset delete lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/offset/delete-offset-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
