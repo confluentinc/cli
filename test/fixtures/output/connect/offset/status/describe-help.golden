@@ -4,7 +4,7 @@ Usage:
   confluent connect offset status describe [flags]
 
 Examples:
-Describe the status of the latest offset update/delete opeation for a connector in the current or specified Kafka cluster context.
+Describe the status of the latest offset update/delete operation for a connector in the current or specified Kafka cluster context.
 
   $ confluent connect offset status describe lcc-123456
 
@@ -20,4 +20,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
