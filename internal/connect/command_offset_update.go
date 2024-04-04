@@ -6,9 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/spf13/cobra"
-
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -75,12 +74,17 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = c.V2Client.AlterConnectorOffsets(connectorName, environmentId, kafkaCluster.ID, *request)
+	alterOffsetRequestInfo, err := c.V2Client.AlterConnectorOffsets(connectorName, environmentId, kafkaCluster.ID, *request)
 	if err != nil {
 		return err
 	}
 
-	var offsetStatus connectv1.ConnectV1AlterOffsetStatus
+	offsetStatus := connectv1.ConnectV1AlterOffsetStatus{
+		Request: alterOffsetRequestInfo,
+		Status: connectv1.ConnectV1AlterOffsetStatusStatus{
+			Phase: "PENDING",
+		},
+	}
 
 	err = retry.Retry(time.Second, 30*time.Second, func() error {
 		offsetStatus, err = c.V2Client.AlterConnectorOffsetsRequestStatus(connectorName, environmentId, kafkaCluster.ID)
@@ -94,33 +98,25 @@ func (c *offsetCommand) update(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("update offset request still pending, checking status again")
 	})
 
-	var appliedAt string
-	if offsetStatus.AppliedAt.IsSet() {
-		appliedAt = offsetStatus.AppliedAt.Get().String()
+	var msg string
+	if err != nil {
+		msg = "Please run `confluent connect offset status describe` command to get the latest status of the update request."
 	}
 
-	var phase string
-	var message string
-	_, isStatusSet := offsetStatus.GetStatusOk()
-	if isStatusSet {
-		phase = offsetStatus.Status.Phase
-		if len(phase) == 0 {
-			phase = "PENDING"
+	if output.GetFormat(cmd) == output.Human {
+		err = printHumanDescribeOffsetStatus(cmd, offsetStatus, args[0])
+		if err != nil {
+			return err
 		}
-		if messagePtr := offsetStatus.Status.Message; messagePtr != nil {
-			message = *messagePtr
+	} else {
+		if err != nil {
+			return err
 		}
+		return printSerializedDescribeOffsetStatus(cmd, offsetStatus, args[0])
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&statusDescribeOut{
-		Id:        args[0],
-		Phase:     phase,
-		Message:   message,
-		AppliedAt: appliedAt,
-	})
-
-	return table.Print()
+	output.Println(false, msg)
+	return nil
 }
 
 func (c *offsetCommand) getAlterOffsetRequestBody(configFile string) (*connectv1.ConnectV1AlterOffsetRequest, error) {
@@ -134,9 +130,11 @@ func (c *offsetCommand) getAlterOffsetRequestBody(configFile string) (*connectv1
 	}
 
 	var request *connectv1.ConnectV1AlterOffsetRequest
-	if err := json.Unmarshal(jsonFile, request); err != nil {
+	if err := json.Unmarshal(jsonFile, &request); err != nil {
 		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
 	}
+
+	request.SetType("PATCH")
 
 	return request, err
 }

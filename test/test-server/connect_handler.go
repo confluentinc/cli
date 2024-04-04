@@ -89,22 +89,32 @@ func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
 
 func handleAlterConnectorOffsets(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		currTime := time.Unix(1712046213, 123).UTC()
-		connectorOffsetStatus := connectv1.ConnectV1AlterOffsetStatus{
-			Request: connectv1.ConnectV1AlterOffsetRequestInfo{
-				Id:   "lcc-123",
-				Name: "GcsSink",
-				Type: "PATCH",
+		var request connectv1.ConnectV1AlterOffsetRequest
+		err := json.NewDecoder(r.Body).Decode(&request)
+		connectorOffsetRequestInfo := connectv1.ConnectV1AlterOffsetRequestInfo{
+			Id:          "lcc-123",
+			Name:        "GcsSink",
+			Type:        request.Type,
+			RequestedAt: time.Unix(1712046213, 123).UTC(),
+			Offsets: &[]map[string]any{
+				0: {
+					"partition": map[string]any{
+						"server": "dbzv2",
+					},
+					"offset": map[string]any{
+						"event":          2,
+						"file":           "mysql-bin.000600",
+						"pos":            2001,
+						"row":            1,
+						"server_id":      1,
+						"transaction_id": nil,
+						"ts_sec":         1711788870,
+					},
+				},
 			},
-			Status: connectv1.ConnectV1AlterOffsetStatusStatus{
-				Phase:   "PENDING",
-				Message: connectv1.PtrString("Alter offset process is pending"),
-			},
-			PreviousOffsets: &[]map[string]any{},
-			AppliedAt:       *connectv1.NewNullableTime(&currTime),
 		}
 
-		err := json.NewEncoder(w).Encode(connectorOffsetStatus)
+		err = json.NewEncoder(w).Encode(connectorOffsetRequestInfo)
 		require.NoError(t, err)
 	}
 }
@@ -122,8 +132,23 @@ func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
 				Phase:   "PENDING",
 				Message: connectv1.PtrString("Alter offset process is pending"),
 			},
-			PreviousOffsets: &[]map[string]any{},
-			AppliedAt:       *connectv1.NewNullableTime(&currTime),
+			PreviousOffsets: &[]map[string]any{
+				0: {
+					"partition": map[string]any{
+						"server": "dbzv2",
+					},
+					"offset": map[string]any{
+						"event":          2,
+						"file":           "mysql-bin.000600",
+						"pos":            2001,
+						"row":            1,
+						"server_id":      1,
+						"transaction_id": nil,
+						"ts_sec":         1711788870,
+					},
+				},
+			},
+			AppliedAt: *connectv1.NewNullableTime(&currTime),
 		}
 
 		err := json.NewEncoder(w).Encode(connectorOffsetStatus)

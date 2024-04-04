@@ -28,6 +28,7 @@ func newOffsetCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newUpdateCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newStatusCommand())
+	cmd.AddCommand(c.newDeleteCommand())
 
 	return cmd
 }

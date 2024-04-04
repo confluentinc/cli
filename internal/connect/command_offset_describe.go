@@ -106,16 +106,16 @@ func printHumanDescribeOffset(cmd *cobra.Command, offsets connectv1.ConnectV1Con
 		offsetStr = string(pretty.Pretty(offSetBytes))
 	}
 
-	list := output.NewList(cmd)
+	table := output.NewTable(cmd)
 
-	list.Add(&humanOffsetConnectorOut{
+	table.Add(&humanOffsetConnectorOut{
 		Id:       id,
 		Name:     name,
 		Offsets:  offsetStr,
 		Metadata: metadataStr,
 	})
 
-	return list.PrintWithAutoWrap(false)
+	return table.PrintWithAutoWrap(false)
 }
 
 func printSerializedDescribeOffsets(cmd *cobra.Command, offsets connectv1.ConnectV1ConnectorOffsets, id, name string) error {

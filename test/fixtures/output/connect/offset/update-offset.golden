@@ -1,8 +1,25 @@
-+------------+--------------------------------+
-| ID         | lcc-123                        |
-| Phase      | PENDING                        |
-| Message    | Alter offset process is        |
-|            | pending                        |
-| Applied At | 2024-04-02 08:23:33.000000123  |
-|            | +0000 UTC                      |
-+------------+--------------------------------+
++------------------+-----------------------------------------+
+| ID               | lcc-123                                 |
+| RequestType      | PATCH                                   |
+| RequestedAt      | 0001-01-01 00:00:00 +0000 UTC           |
+| Phase            | PENDING                                 |
+| Message          | Alter offset process is pending         |
+| Applied At       | 2024-04-02 08:23:33.000000123 +0000 UTC |
+| Previous Offsets | [                                       |
+|                  |   {                                     |
+|                  |     "offset": {                         |
+|                  |       "event": 2,                       |
+|                  |       "file": "mysql-bin.000600",       |
+|                  |       "pos": 2001,                      |
+|                  |       "row": 1,                         |
+|                  |       "server_id": 1,                   |
+|                  |       "transaction_id": null,           |
+|                  |       "ts_sec": 1711788870              |
+|                  |     },                                  |
+|                  |     "partition": {                      |
+|                  |       "server": "dbzv2"                 |
+|                  |     }                                   |
+|                  |   }                                     |
+|                  | ]                                       |
+|                  |                                         |
++------------------+-----------------------------------------+
