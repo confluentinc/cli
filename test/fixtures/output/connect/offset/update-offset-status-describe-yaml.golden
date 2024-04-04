@@ -15,3 +15,14 @@ previous_offsets:
         ts_sec: 1.71178887e+09
       partition:
         server: dbzv2
+requested_offsets:
+    - offset:
+        event: 2
+        file: mysql-bin.000700
+        pos: 2003
+        row: 9
+        server_id: 0
+        transaction_id: null
+        ts_sec: 1.71178887e+09
+      partition:
+        server: dbzv2

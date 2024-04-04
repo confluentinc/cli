@@ -22,7 +22,7 @@ type serializedOffsetStatusDescribeOut struct {
 	Message          string           `json:"message,omitempty" yaml:"message,omitempty"`
 	AppliedAt        string           `json:"applied_at,omitempty" yaml:"applied_at,omitempty"`
 	PreviousOffsets  []map[string]any `json:"previous_offsets,omitempty" yaml:"previous_offsets,omitempty"`
-	RequestedOffsets []map[string]any `json:"requested_offsets,omitempty" yaml:"requested-offsets_offsets,omitempty"`
+	RequestedOffsets []map[string]any `json:"requested_offsets,omitempty" yaml:"requested_offsets,omitempty"`
 }
 
 type humanOffsetStatusDescribeOut struct {
