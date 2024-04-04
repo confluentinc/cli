@@ -49,8 +49,8 @@ func (c *offsetCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().Int32("staleness-threshold", 120, "Repeatedly fetches offsets, until we get an offset with an observed time within staleness threshold in seconds. (min 5)")
-	cmd.Flags().Int32("refetch-timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
+	cmd.Flags().Int32("staleness-threshold", 120, "Repeatedly fetches offsets, until we get an offset with an observed time within staleness threshold in seconds. (min 5).")
+	cmd.Flags().Int32("re-fetch-timeout", 30, "Max time in seconds to wait until we get an offset within the staleness threshold.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -84,7 +84,7 @@ func (c *offsetCommand) describe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("`--staleness-threshold` cannot be less than 5 seconds")
 	}
 
-	refetchTimeout, err := cmd.Flags().GetInt32("refetch-timeout")
+	refetchTimeout, err := cmd.Flags().GetInt32("re-fetch-timeout")
 	if err != nil {
 		return err
 	}
