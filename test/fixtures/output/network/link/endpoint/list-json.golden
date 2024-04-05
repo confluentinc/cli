@@ -1,0 +1,26 @@
+[
+  {
+    "id": "nle-111111",
+    "name": "my-network-link-endpoint-1",
+    "network": "n-abcde1",
+    "description": "example network link endpoint",
+    "network_link_service": "nls-123456",
+    "phase": "READY"
+  },
+  {
+    "id": "nle-222222",
+    "name": "my-network-link-endpoint-2",
+    "network": "n-abcde1",
+    "description": "example network link endpoint",
+    "network_link_service": "nls-123456",
+    "phase": "READY"
+  },
+  {
+    "id": "nle-333333",
+    "name": "my-network-link-endpoint-3",
+    "network": "n-abcde1",
+    "description": "example network link endpoint",
+    "network_link_service": "nls-123456",
+    "phase": "READY"
+  }
+]

@@ -1,0 +1,5 @@
+nle-111111	my-network-link-endpoint-1
+nle-222222	my-network-link-endpoint-2
+nle-333333	my-network-link-endpoint-3
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

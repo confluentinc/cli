@@ -4,9 +4,15 @@ Usage:
   confluent network list [flags]
 
 Flags:
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --name strings               A comma-separated list of network names.
+      --cloud strings              A comma-separated list of cloud providers.
+      --region strings             A comma-separated list of cloud region IDs.
+      --cidr strings               A comma-separated list of /16 IPv4 CIDR blocks.
+      --phase strings              A comma-separated list of phases.
+      --connection-types strings   A comma-separated list of network access types: "privatelink", "peering", or "transitgateway".
+      --context string             CLI context name.
+      --environment string         Environment ID.
+  -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
