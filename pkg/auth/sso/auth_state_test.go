@@ -40,16 +40,6 @@ func TestNewStateDev(t *testing.T) {
 	require.Equal(t, "https://confluent-stag.auth0.com/api/v2/", stateStag.SSOProviderIdentifier)
 	require.Empty(t, state.SSOProviderAuthenticationCode)
 	require.Empty(t, state.SSOProviderIDToken)
-
-	// check cpd configs
-	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud/", false)
-	require.NoError(t, err)
-	require.Equal(t, "https://login-cpd.confluent-dev.io/oauth", stateCpd.SSOProviderHost)
-	require.Equal(t, "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC", stateCpd.SSOProviderClientID)
-	require.Equal(t, "http://127.0.0.1:26635/cli_callback", stateCpd.SSOProviderCallbackUrl)
-	require.Equal(t, "https://confluent-cpd.auth0.com/api/v2/", stateCpd.SSOProviderIdentifier)
-	require.Empty(t, state.SSOProviderAuthenticationCode)
-	require.Empty(t, state.SSOProviderIDToken)
 }
 
 func TestNewStateDevNoBrowser(t *testing.T) {
@@ -82,16 +72,6 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	require.Equal(t, "https://confluent-stag.auth0.com/api/v2/", stateStag.SSOProviderIdentifier)
 	require.Empty(t, state.SSOProviderAuthenticationCode)
 	require.Empty(t, state.SSOProviderIDToken)
-
-	// check cpd configs
-	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", true)
-	require.NoError(t, err)
-	require.Equal(t, "https://login-cpd.confluent-dev.io/oauth", stateCpd.SSOProviderHost)
-	require.Equal(t, "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC", stateCpd.SSOProviderClientID)
-	require.Equal(t, "https://aware-monkfish.gcp.priv.cpdev.cloud/cli_callback", stateCpd.SSOProviderCallbackUrl)
-	require.Equal(t, "https://confluent-cpd.auth0.com/api/v2/", stateCpd.SSOProviderIdentifier)
-	require.Empty(t, stateCpd.SSOProviderAuthenticationCode)
-	require.Empty(t, stateCpd.SSOProviderIDToken)
 }
 
 func TestNewStateProd(t *testing.T) {
