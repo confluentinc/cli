@@ -3,13 +3,11 @@ package sso
 import (
 	"net/url"
 	"slices"
-	"strings"
 
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 var auth0ClientIds = map[string]string{
-	"cpd":          "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
 	"devel":        "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
 	"infra-us-gov": "0oa73yrenxpdtNXEe4h7",
 	"prod-us-gov":  "0oa41ih4ms3TVVAT04h7",
@@ -28,10 +26,6 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 	u, err := url.Parse(baseUrl)
 	if err != nil {
 		return "prod"
-	}
-
-	if strings.HasSuffix(u.Host, "priv.cpdev.cloud") {
-		return "cpd"
 	}
 
 	switch u.Host {
