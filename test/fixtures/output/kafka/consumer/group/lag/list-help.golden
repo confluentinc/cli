@@ -1,4 +1,4 @@
-List consumer lags for a Kafka consumer group.
+List consumer lags for a Kafka consumer group. Only available for dedicated Kafka clusters.
 
 Usage:
   confluent kafka consumer group lag list <group> [flags]
