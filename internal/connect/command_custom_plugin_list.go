@@ -2,6 +2,7 @@ package connect
 
 import (
 	"github.com/spf13/cobra"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -41,6 +42,7 @@ func (c *customPluginCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cloud = strings.ToUpper(cloud)
 	plugins, err := c.V2Client.ListCustomPlugins(cloud)
 	if err != nil {
 		return err

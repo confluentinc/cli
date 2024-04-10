@@ -91,7 +91,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	if extension != "zip" && extension != "jar" {
 		return fmt.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
 	}
-	cloud = strings.ToLower(cloud)
+	cloud = strings.ToUpper(cloud)
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
 		ContentFormat: connectcustompluginv1.PtrString(extension),
@@ -103,7 +103,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	if cloud == "azure" {
+	if cloud == "AZURE" {
 		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), pluginFileName, strings.ToLower(resp.GetContentFormat())); err != nil {
 			return err
 		}
@@ -141,6 +141,6 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 }
 
 func (c *customPluginCommand) addCloudFlag(cmd *cobra.Command) {
-	cmd.Flags().String("cloud", "aws", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
+	cmd.Flags().String("cloud", "AWS", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return ccloudv2.ByocSupportClouds })
 }

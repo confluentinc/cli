@@ -368,7 +368,7 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:             connectcustompluginv1.PtrString("ccp-123456"),
 				DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
-				Cloud:          connectcustompluginv1.PtrString("aws"),
+				Cloud:          connectcustompluginv1.PtrString("AWS"),
 				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
 				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 			}
@@ -378,18 +378,18 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			plugin1 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:          connectcustompluginv1.PtrString("ccp-123456"),
 				DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
-				Cloud:       connectcustompluginv1.PtrString("aws"),
+				Cloud:       connectcustompluginv1.PtrString("AWS"),
 			}
 			plugin2 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:          connectcustompluginv1.PtrString("ccp-789012"),
 				DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
-				Cloud:       connectcustompluginv1.PtrString("aws"),
+				Cloud:       connectcustompluginv1.PtrString("AWS"),
 			}
 			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:             connectcustompluginv1.PtrString("ccp-789013"),
 				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
 				ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
-				Cloud:          connectcustompluginv1.PtrString("aws"),
+				Cloud:          connectcustompluginv1.PtrString("AWS"),
 				ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
 				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 			}
@@ -413,7 +413,7 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 					DisplayName:    connectcustompluginv1.PtrString("CliPluginTest"),
 					ConnectorType:  connectcustompluginv1.PtrString("source"),
 					ConnectorClass: connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
-					Cloud:          connectcustompluginv1.PtrString("aws"),
+					Cloud:          connectcustompluginv1.PtrString("AWS"),
 				}
 			} else if id == "ccp-789012" {
 				sensitiveProperties := []string{"aws.key", "aws.secret"}
@@ -423,7 +423,7 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 					Description:               connectcustompluginv1.PtrString("Source datagen plugin"),
 					ConnectorType:             connectcustompluginv1.PtrString("source"),
 					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
-					Cloud:                     connectcustompluginv1.PtrString("aws"),
+					Cloud:                     connectcustompluginv1.PtrString("AWS"),
 					SensitiveConfigProperties: &sensitiveProperties,
 				}
 			} else {
@@ -432,7 +432,7 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 					DisplayName:    connectcustompluginv1.PtrString("CliPluginTest"),
 					ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
 					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
-					Cloud:          connectcustompluginv1.PtrString("aws"),
+					Cloud:          connectcustompluginv1.PtrString("AWS"),
 					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 				}
 			}
@@ -458,7 +458,7 @@ func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
 		if r.Method == http.MethodPost {
 			uploadUrl := connectcustompluginv1.ConnectV1PresignedUrl{
 				ContentFormat: connectcustompluginv1.PtrString("ZIP"),
-				Cloud:         connectcustompluginv1.PtrString("aws"),
+				Cloud:         connectcustompluginv1.PtrString("AWS"),
 				UploadId:      connectcustompluginv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
 				UploadUrl:     connectcustompluginv1.PtrString(fmt.Sprintf("%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.String())),
 			}
