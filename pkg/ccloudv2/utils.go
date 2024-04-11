@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	ByocSupportClouds = []string{"AWS", "AZURE"}
+	ByocSupportClouds = []string{"aws", "azure"}
 )
 
 type NullableString interface {
