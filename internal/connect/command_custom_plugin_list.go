@@ -2,14 +2,15 @@ package connect
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/utils"
-	"github.com/spf13/cobra"
 	"strings"
 
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 type customPluginOutList struct {
