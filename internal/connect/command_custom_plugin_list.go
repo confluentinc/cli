@@ -30,7 +30,7 @@ func (c *customPluginCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	c.addCloudFlag(cmd, "list")
+	c.addCloudFlag(cmd, "")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
