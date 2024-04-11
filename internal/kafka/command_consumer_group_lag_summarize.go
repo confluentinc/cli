@@ -23,6 +23,7 @@ func (c *consumerCommand) newLagSummarizeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "summarize <group>",
 		Short:             "Summarize consumer lag for a Kafka consumer group.",
+		Long:              "Summarize consumer lag for a Kafka consumer group. Only available for dedicated Kafka clusters.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
 		RunE:              c.groupLagSummarize,
