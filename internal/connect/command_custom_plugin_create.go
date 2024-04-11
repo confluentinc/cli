@@ -140,12 +140,7 @@ func (c *customPluginCommand) createCustomPlugin(cmd *cobra.Command, args []stri
 	return table.Print()
 }
 
-func (c *customPluginCommand) addCloudFlag(cmd *cobra.Command, method string) {
-	switch method {
-	case "create":
-		cmd.Flags().String("cloud", "aws", fmt.Sprintf("Set cloud provider of custom plugin as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
-	case "list":
-		cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
-	}
+func (c *customPluginCommand) addCloudFlag(cmd *cobra.Command, value string) {
+	cmd.Flags().String("cloud", value, fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return ccloudv2.ByocSupportClouds })
 }
