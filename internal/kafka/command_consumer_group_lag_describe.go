@@ -38,6 +38,10 @@ func (c *consumerCommand) newLagDescribeCommand() *cobra.Command {
 }
 
 func (c *consumerCommand) groupLagDescribe(cmd *cobra.Command, args []string) error {
+	if err := c.checkIsDedicated(); err != nil {
+		return err
+	}
+
 	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err

@@ -1,9 +1,12 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 type lagOut struct {
@@ -36,4 +39,27 @@ func (c *consumerCommand) newLagCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	return cmd
+}
+
+func (c *consumerCommand) checkIsDedicated() error {
+	clusterId := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+	if clusterId == "" {
+		return errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	if err != nil {
+		return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+	}
+
+	if clusterType := getCmkClusterType(&cluster); clusterType != "DEDICATED" {
+		return fmt.Errorf(`Kafka cluster "%s" is type "%s" but must be type "DEDICATED"`, clusterId, clusterType)
+	}
+
+	return nil
 }

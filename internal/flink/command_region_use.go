@@ -18,7 +18,7 @@ func (c *command) newRegionUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use",
 		Short: "Use a Flink region in subsequent commands.",
-		Long:  "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
+		Long:  "Choose a Flink region to be used in subsequent commands which support passing a region with the `--region` flag.",
 		Args:  cobra.NoArgs,
 		RunE:  c.regionUse,
 		Example: examples.BuildExampleString(

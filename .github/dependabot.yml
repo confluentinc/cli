@@ -3,7 +3,10 @@
 
 version: 2
 updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
+  - directory: "/"
+    ignore:
+      - dependency-name: "github.com/confluentinc/*"
+    open-pull-requests-limit: 0
+    package-ecosystem: "gomod"
     schedule:
       interval: "weekly"

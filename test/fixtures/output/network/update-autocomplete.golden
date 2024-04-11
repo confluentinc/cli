@@ -1,6 +1,8 @@
 --name	Name of the network.
-n-abcde1	prod-aws-us-east1
-n-abcde2	prod-gcp-us-central1
-n-abcde3	prod-azure-eastus2
+n-abcde1	prod-gcp-us-central1
+n-abcde2	prod-azure-eastus2
+n-abcde3	prod-aws-us-east1
+n-abcde4	prod-aws-us-east1
+n-abcde5
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

@@ -180,9 +180,9 @@ update-muckrake:
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-redhat8.sh && \
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-redhat9.sh && \
 	$(SED) -i "s|get_cli .*|get_cli $${version}|" vagrant/base-ubuntu.sh && \
-	git commit -am "bump cli to v$${version}" && \
+	git commit -am "bump cli to v$${version}" || true && \
 	$(call dry-run,git push --force --set-upstream origin $$branch) && \
-	if gh pr view $$branch --json state --jq .state 2>&1 | grep -E "no pull requests found|MERGED"; then \
+	if gh pr view $$branch --json state --jq .state 2>&1 | grep -E "no pull requests found|CLOSED|MERGED"; then \
 		$(call dry-run,gh pr create --base $${base} --title "Bump CLI to v$${version}" --body "") && \
 		$(call dry-run,gh pr merge --squash --auto); \
 	fi
@@ -207,7 +207,7 @@ update-packaging:
 	$(SED) -i "s|CLI_VERSION=.*|CLI_VERSION=$${version}|" release_testing/bin/smoke_test.sh && \
 	git commit -am "bump cli to v$${version}" && \
 	$(call dry-run,git push --force --set-upstream origin $$branch) && \
-	if gh pr view $$branch --json state --jq .state 2>&1 | grep -E "no pull requests found|MERGED"; then \
+	if gh pr view $$branch --json state --jq .state 2>&1 | grep -E "no pull requests found|CLOSED|MERGED"; then \
 		$(call dry-run,gh pr create --base $${base} --title "Bump CLI to v$${version}" --body "") && \
 		$(call dry-run,gh pr merge --squash --auto); \
 	fi

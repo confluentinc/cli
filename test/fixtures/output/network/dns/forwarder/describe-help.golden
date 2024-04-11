@@ -1,0 +1,19 @@
+Describe a DNS forwarder.
+
+Usage:
+  confluent network dns forwarder describe <id> [flags]
+
+Examples:
+Describe DNS forwarder "dnsf-123456".
+
+  $ confluent network dns forwarder describe dnsf-123456
+
+Flags:
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

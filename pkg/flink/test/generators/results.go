@@ -7,12 +7,12 @@ import (
 
 	"pgregory.net/rapid"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
-func GetResultItemGeneratorForType(dataType flinkgatewayv1beta1.DataType) *rapid.Generator[any] {
+func GetResultItemGeneratorForType(dataType flinkgatewayv1.DataType) *rapid.Generator[any] {
 	fieldType := types.NewResultFieldType(dataType)
 	switch fieldType {
 	case types.Array:
@@ -20,7 +20,7 @@ func GetResultItemGeneratorForType(dataType flinkgatewayv1beta1.DataType) *rapid
 		return ArrayResultItem(elementType)
 	case types.Multiset:
 		keyType := dataType.GetElementType()
-		valueType := flinkgatewayv1beta1.DataType{
+		valueType := flinkgatewayv1.DataType{
 			Nullable: false,
 			Type:     "INTEGER",
 		}
@@ -80,7 +80,7 @@ func AtomicResultItem(fieldType types.StatementResultFieldType) *rapid.Generator
 }
 
 // ArrayResultItem generates a random ARRAY field
-func ArrayResultItem(elementDataType flinkgatewayv1beta1.DataType) *rapid.Generator[any] {
+func ArrayResultItem(elementDataType flinkgatewayv1.DataType) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
 		var arrayItems []any
 		arraySize := rapid.IntRange(1, 3).Draw(t, "array size")
@@ -93,7 +93,7 @@ func ArrayResultItem(elementDataType flinkgatewayv1beta1.DataType) *rapid.Genera
 }
 
 // MapResultItem generates a random MAP field
-func MapResultItem(keyType, valueType flinkgatewayv1beta1.DataType) *rapid.Generator[any] {
+func MapResultItem(keyType, valueType flinkgatewayv1.DataType) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
 		var mapItems []any
 		arraySize := rapid.IntRange(1, 3).Draw(t, "map size")
@@ -109,7 +109,7 @@ func MapResultItem(keyType, valueType flinkgatewayv1beta1.DataType) *rapid.Gener
 }
 
 // RowResultItem generates a random ROW field
-func RowResultItem(fieldTypes []flinkgatewayv1beta1.RowFieldType) *rapid.Generator[any] {
+func RowResultItem(fieldTypes []flinkgatewayv1.RowFieldType) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
 		var arrayItems []any
 		for i := range fieldTypes {
@@ -121,7 +121,7 @@ func RowResultItem(fieldTypes []flinkgatewayv1beta1.RowFieldType) *rapid.Generat
 }
 
 // MockResultRow creates a row with random fields adhering to the provided column schema
-func MockResultRow(columnDetails []flinkgatewayv1beta1.ColumnDetails) *rapid.Generator[any] {
+func MockResultRow(columnDetails []flinkgatewayv1.ColumnDetails) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
 		var items []any
 		for _, column := range columnDetails {
@@ -164,7 +164,7 @@ var AtomicResultFieldTypes = []types.StatementResultFieldType{
 	types.Null,
 }
 
-func getDataTypeGeneratorForType(fieldType types.StatementResultFieldType, maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.DataType] {
+func getDataTypeGeneratorForType(fieldType types.StatementResultFieldType, maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
 	if maxNestingDepth <= 0 {
 		return AtomicDataType()
 	}
@@ -183,24 +183,24 @@ func getDataTypeGeneratorForType(fieldType types.StatementResultFieldType, maxNe
 }
 
 // AtomicDataType generates a random atomic data type
-func AtomicDataType() *rapid.Generator[flinkgatewayv1beta1.DataType] {
-	return rapid.Custom(func(t *rapid.T) flinkgatewayv1beta1.DataType {
+func AtomicDataType() *rapid.Generator[flinkgatewayv1.DataType] {
+	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
 		resultFieldType := rapid.SampledFrom(AtomicResultFieldTypes).Draw(t, "atomic result field type")
 		dataTypeJson := fmt.Sprintf(`{"type": "%s"}`, string(resultFieldType))
-		dataType := flinkgatewayv1beta1.NewNullableDataType(nil)
+		dataType := flinkgatewayv1.NewNullableDataType(nil)
 		if err := dataType.UnmarshalJSON([]byte(dataTypeJson)); err != nil {
-			return flinkgatewayv1beta1.DataType{}
+			return flinkgatewayv1.DataType{}
 		}
 		return *dataType.Get()
 	})
 }
 
 // ArrayDataType generates a random array data type
-func ArrayDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.DataType] {
-	return rapid.Custom(func(t *rapid.T) flinkgatewayv1beta1.DataType {
+func ArrayDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
+	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, "result field type")
 		elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
-		return flinkgatewayv1beta1.DataType{
+		return flinkgatewayv1.DataType{
 			Nullable:    false,
 			Type:        "ARRAY",
 			ElementType: &elementType,
@@ -209,13 +209,13 @@ func ArrayDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.Dat
 }
 
 // MapDataType generates a random map data type
-func MapDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.DataType] {
-	return rapid.Custom(func(t *rapid.T) flinkgatewayv1beta1.DataType {
+func MapDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
+	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
 		resultFieldKeyType := GenResultFieldType().Draw(t, "result field type")
 		resultFieldValueType := GenResultFieldType().Draw(t, "result field type")
 		keyType := getDataTypeGeneratorForType(resultFieldKeyType, maxNestingDepth).Draw(t, "element type")
 		valueType := getDataTypeGeneratorForType(resultFieldValueType, maxNestingDepth).Draw(t, "element type")
-		return flinkgatewayv1beta1.DataType{
+		return flinkgatewayv1.DataType{
 			Nullable:  false,
 			Type:      "MAP",
 			KeyType:   &keyType,
@@ -225,11 +225,11 @@ func MapDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.DataT
 }
 
 // MultisetDataType generates a random map data type
-func MultisetDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.DataType] {
-	return rapid.Custom(func(t *rapid.T) flinkgatewayv1beta1.DataType {
+func MultisetDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
+	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, "result field type")
 		elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
-		return flinkgatewayv1beta1.DataType{
+		return flinkgatewayv1.DataType{
 			Nullable:    false,
 			Type:        "MULTISET",
 			ElementType: &elementType,
@@ -238,19 +238,19 @@ func MultisetDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.
 }
 
 // RowDataType generates a random row data type
-func RowDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.DataType] {
-	return rapid.Custom(func(t *rapid.T) flinkgatewayv1beta1.DataType {
-		var fieldTypes []flinkgatewayv1beta1.RowFieldType
+func RowDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
+	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
+		var fieldTypes []flinkgatewayv1.RowFieldType
 		rowSize := rapid.IntRange(1, 3).Draw(t, "array size")
 		for i := 0; i < rowSize; i++ {
 			resultFieldType := GenResultFieldType().Draw(t, "result field type")
 			elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
-			fieldTypes = append(fieldTypes, flinkgatewayv1beta1.RowFieldType{
+			fieldTypes = append(fieldTypes, flinkgatewayv1.RowFieldType{
 				Name:      strconv.Itoa(i),
 				FieldType: elementType,
 			})
 		}
-		return flinkgatewayv1beta1.DataType{
+		return flinkgatewayv1.DataType{
 			Nullable: false,
 			Type:     "ROW",
 			Fields:   &fieldTypes,
@@ -269,19 +269,19 @@ func GenResultFieldType() *rapid.Generator[types.StatementResultFieldType] {
 	})
 }
 
-func DataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1beta1.DataType] {
-	return rapid.Custom(func(t *rapid.T) flinkgatewayv1beta1.DataType {
+func DataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
+	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, "result field type")
 		return getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "data type")
 	})
 }
 
-func MockResultColumns(numColumns, maxNestingDepth int) *rapid.Generator[[]flinkgatewayv1beta1.ColumnDetails] {
-	return rapid.Custom(func(t *rapid.T) []flinkgatewayv1beta1.ColumnDetails {
-		var columnDetails []flinkgatewayv1beta1.ColumnDetails
+func MockResultColumns(numColumns, maxNestingDepth int) *rapid.Generator[[]flinkgatewayv1.ColumnDetails] {
+	return rapid.Custom(func(t *rapid.T) []flinkgatewayv1.ColumnDetails {
+		var columnDetails []flinkgatewayv1.ColumnDetails
 		for i := 0; i < numColumns; i++ {
 			dataType := DataType(maxNestingDepth).Draw(t, "column type")
-			columnDetails = append(columnDetails, flinkgatewayv1beta1.ColumnDetails{
+			columnDetails = append(columnDetails, flinkgatewayv1.ColumnDetails{
 				Name: string(types.NewResultFieldType(dataType)),
 				Type: dataType,
 			})
@@ -303,9 +303,9 @@ func MockResults(maxNumColumns, maxNestingDepth int) *rapid.Generator[types.Mock
 		resultData := rapid.SliceOfN(MockResultRow(columnDetails), 20, 50).Draw(t, "result data")
 
 		return types.MockStatementResult{
-			ResultSchema: flinkgatewayv1beta1.SqlV1beta1ResultSchema{Columns: &columnDetails},
-			StatementResults: flinkgatewayv1beta1.SqlV1beta1StatementResult{
-				Results: &flinkgatewayv1beta1.SqlV1beta1StatementResultResults{Data: &resultData},
+			ResultSchema: flinkgatewayv1.SqlV1ResultSchema{Columns: &columnDetails},
+			StatementResults: flinkgatewayv1.SqlV1StatementResult{
+				Results: &flinkgatewayv1.SqlV1StatementResultResults{Data: &resultData},
 			},
 		}
 	})

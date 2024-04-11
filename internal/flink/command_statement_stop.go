@@ -3,7 +3,7 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -42,7 +42,7 @@ func (c *command) statementStop(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	statement.Spec.Stopped = flinkgatewayv1beta1.PtrBool(true)
+	statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
 
 	if err := client.UpdateStatement(environmentId, args[0], c.Context.GetCurrentOrganization(), statement); err != nil {
 		return err

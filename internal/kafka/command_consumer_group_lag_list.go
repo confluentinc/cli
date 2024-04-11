@@ -32,6 +32,10 @@ func (c *consumerCommand) newLagListCommand() *cobra.Command {
 }
 
 func (c *consumerCommand) groupLagList(cmd *cobra.Command, args []string) error {
+	if err := c.checkIsDedicated(); err != nil {
+		return err
+	}
+
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
