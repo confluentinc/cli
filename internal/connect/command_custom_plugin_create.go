@@ -43,7 +43,7 @@ func (c *customPluginCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of custom plugin.")
 	cmd.Flags().String("documentation-link", "", "Document link of custom plugin.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
-	c.addCloudFlag(cmd, "create")
+	c.addCloudFlag(cmd, "aws")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
