@@ -18,6 +18,12 @@ type noopHandler struct{}
 
 func (noopHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {}
 
+type AuthenticationMessage struct {
+	OrganizationId string `json:"organizationId"`
+	EnvironmentId  string `json:"environmentId"`
+	Token          string `json:"token"`
+}
+
 type WebsocketLSPClient struct {
 	sync.Mutex
 
@@ -103,6 +109,13 @@ func newLSPConnection(baseUrl, authToken, organizationId, environmentId string) 
 		return nil, nil, err
 	}
 
+	authenticationMessage := AuthenticationMessage{
+		OrganizationId: organizationId,
+		EnvironmentId:  environmentId,
+		Token:          authToken,
+	}
+	stream.WriteObject(authenticationMessage)
+
 	conn := jsonrpc2.NewConn(
 		context.Background(),
 		stream,
@@ -132,6 +145,8 @@ func newWSObjectStream(socketUrl, authToken, organizationId, environmentId strin
 	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
 	requestHeaders.Add("Organization-ID", organizationId)
 	requestHeaders.Add("Environment-ID", environmentId)
+	requestHeaders.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36")
+
 	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, requestHeaders)
 	if err != nil {
 		return nil, err
