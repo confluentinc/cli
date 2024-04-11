@@ -27,7 +27,7 @@ func (c *customPluginCommand) newListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List custom connector plugins in the org",
-				Code: "confluent connect custom-plugin list --cloud aws",
+				Code: "confluent connect custom-plugin list --cloud AWS",
 			},
 		),
 	}
