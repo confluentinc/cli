@@ -1,6 +1,9 @@
 package connect
 
 import (
+	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 	"github.com/spf13/cobra"
 	"strings"
 
@@ -29,7 +32,7 @@ func (c *customPluginCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudFlag(cmd)
+	c.addListCloudFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -57,4 +60,9 @@ func (c *customPluginCommand) list(cmd *cobra.Command, _ []string) error {
 		})
 	}
 	return list.Print()
+}
+
+func (c *customPluginCommand) addListCloudFlag(cmd *cobra.Command) {
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ByocSupportClouds, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return ccloudv2.ByocSupportClouds })
 }
