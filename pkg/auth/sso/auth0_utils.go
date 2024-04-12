@@ -37,7 +37,7 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 		return "prod-us-gov"
 	case "infra.confluentgov-internal.com":
 		return "infra-us-gov"
-	case "devel.confluentgov-internal.com":
+	case "devel-1.confluentgov-internal.com":
 		return "devel-us-gov"
 	case testserver.TestCloudUrl.Host:
 		return "test"
