@@ -5,7 +5,7 @@
 | Compute Pool  | pool-123456                     |
 | Status        | COMPLETED                       |
 | Status Detail | SQL statement is completed      |
-| Properties    | sql.current-database=my-cluster |
-|               | sql.current-catalog=default     |
+| Properties    | sql.current-catalog=default     |
+|               | sql.current-database=my-cluster |
 | Principal     | u-123456                        |
 +---------------+---------------------------------+

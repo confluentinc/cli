@@ -232,6 +232,7 @@ func getTableValueString(value reflect.Value) string {
 		for i, k := range value.MapKeys() {
 			s[i] = fmt.Sprintf("%s=%s", k.String(), value.MapIndex(k).String())
 		}
+		sort.Strings(s)
 		return strings.Join(s, "\n")
 	default:
 		return fmt.Sprint(value)
