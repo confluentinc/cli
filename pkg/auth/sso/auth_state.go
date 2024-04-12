@@ -109,6 +109,8 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		env = "infra-us-gov"
 	} else if authURL == "https://devel.confluentgov-internal.com" {
 		env = "devel-us-gov"
+  } else if authURL == "https://devel-1.confluentgov-internal.com" {
+    env = "devel-us-gov"
 	} else if authURL == testserver.TestCloudUrl.String() {
 		env = "test"
 	} else {
