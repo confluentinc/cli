@@ -20,11 +20,6 @@ var (
 	ssoProviderCallbackLocalURL = fmt.Sprintf("http://127.0.0.1:%d", port) + ssoProviderCallbackEndpoint
 
 	ssoConfigs = map[string]ssoConfig{
-		"cpd": {
-			ssoProviderDomain:     "login-cpd.confluent-dev.io/oauth",
-			ssoProviderIdentifier: "https://confluent-cpd.auth0.com/api/v2/",
-			ssoProviderScope:      "email%20openid%20offline_access",
-		},
 		"devel": {
 			ssoProviderDomain:     "login.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
@@ -97,8 +92,6 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 	var env string
 	if authURL == "https://confluent.cloud" {
 		env = "prod"
-	} else if strings.HasSuffix(authURL, "priv.cpdev.cloud") {
-		env = "cpd"
 	} else if authURL == "https://devel.cpdev.cloud" {
 		env = "devel"
 	} else if authURL == "https://stag.cpdev.cloud" {

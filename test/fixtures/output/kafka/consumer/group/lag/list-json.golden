@@ -1,6 +1,6 @@
 [
   {
-    "cluster_id": "lkc-1234",
+    "cluster_id": "lkc-describe-dedicated",
     "consumer_group_id": "consumer-group-1",
     "lag": 10,
     "log_end_offset": 11,
@@ -12,7 +12,7 @@
     "partition_id": 2
   },
   {
-    "cluster_id": "lkc-1234",
+    "cluster_id": "lkc-describe-dedicated",
     "consumer_group_id": "consumer-group-1",
     "lag": 100,
     "log_end_offset": 101,
