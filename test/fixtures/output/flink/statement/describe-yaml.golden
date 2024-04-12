@@ -4,3 +4,7 @@ statement: CREATE TABLE test;
 compute_pool: pool-123456
 status: COMPLETED
 status_detail: SQL statement is completed
+properties:
+    sql.current-catalog: default
+    sql.current-database: my-cluster
+principal: u-123456
