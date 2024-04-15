@@ -12,7 +12,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 var (
@@ -82,38 +81,20 @@ type authState struct {
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
-func newState(authURL string, noBrowser bool) (*authState, error) {
-	authURL = strings.TrimSuffix(authURL, "/")
-
-	if authURL == "" {
-		authURL = "https://confluent.cloud"
+func newState(authUrl string, noBrowser bool) (*authState, error) {
+	if authUrl == "" {
+		authUrl = "https://confluent.cloud"
 	}
 
-	var env string
-	if authURL == "https://confluent.cloud" {
-		env = "prod"
-	} else if authURL == "https://devel.cpdev.cloud" {
-		env = "devel"
-	} else if authURL == "https://stag.cpdev.cloud" {
-		env = "stag"
-	} else if authURL == "https://confluentgov.com" {
-		env = "prod-us-gov"
-	} else if authURL == "https://infra.confluentgov-internal.com" {
-		env = "infra-us-gov"
-	} else if authURL == "https://devel.confluentgov-internal.com" {
-		env = "devel-us-gov"
-	} else if authURL == testserver.TestCloudUrl.String() {
-		env = "test"
-	} else {
-		return nil, fmt.Errorf("unrecognized auth url: %s", authURL)
-	}
+	env := GetCCloudEnvFromBaseUrl(authUrl)
 
-	state := &authState{}
-	state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint
-	state.SSOProviderHost = "https://" + ssoConfigs[env].ssoProviderDomain
-	state.SSOProviderClientID = GetAuth0CCloudClientIdFromBaseUrl(authURL)
-	state.SSOProviderIdentifier = ssoConfigs[env].ssoProviderIdentifier
-	state.SSOProviderScope = ssoConfigs[env].ssoProviderScope
+	state := &authState{
+		SSOProviderCallbackUrl: authUrl + ssoProviderCallbackEndpoint,
+		SSOProviderHost:        "https://" + ssoConfigs[env].ssoProviderDomain,
+		SSOProviderClientID:    GetAuth0CCloudClientIdFromBaseUrl(authUrl),
+		SSOProviderIdentifier:  ssoConfigs[env].ssoProviderIdentifier,
+		SSOProviderScope:       ssoConfigs[env].ssoProviderScope,
+	}
 
 	if !noBrowser {
 		// if we're not using the no browser flow, the callback will always be localhost regardless of environment
