@@ -29,17 +29,17 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 		return "prod"
 	}
 
-	if strings.HasSuffix(u.Host, "confluentgov-internal.com") {
-		if strings.Contains(u.Host, "devel") {
-			return "devel-us-gov"
-		} else if strings.Contains(u.Host, "infra") {
-			return "infra-us-gov"
-		}
-	} else if strings.HasSuffix(u.Host, "cpdev.cloud") {
+	if strings.HasSuffix(u.Host, "cpdev.cloud") {
 		if strings.Contains(u.Host, "devel") {
 			return "devel"
 		} else if strings.Contains(u.Host, "stag") {
 			return "stag"
+		}
+	} else if strings.HasSuffix(u.Host, "confluentgov-internal.com") {
+		if strings.Contains(u.Host, "devel") {
+			return "devel-us-gov"
+		} else if strings.Contains(u.Host, "infra") {
+			return "infra-us-gov"
 		}
 	}
 
