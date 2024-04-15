@@ -51,6 +51,10 @@ func (c *customPluginCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, plugin := range plugins {
+		// filter out flink artifacts
+		if strings.HasPrefix(plugin.GetConnectorType(), "flink") {
+			continue
+		}
 		list.Add(&customPluginOutList{
 			Name:  plugin.GetDisplayName(),
 			Id:    plugin.GetId(),
