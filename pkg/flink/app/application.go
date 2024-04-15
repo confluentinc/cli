@@ -63,7 +63,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	resultFetcher := results.NewResultFetcher(dataStore)
 
 	// Instantiate lsp
-	lspClient := lsp.NewLSPClientWS(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId())
+	lspClient := lsp.NewLSPClientWS(getAuthToken, appOptions.GetLSPBaseURL(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId())
 
 	stdinBefore := utils.GetStdin()
 	consoleParser, err := utils.GetConsoleParser()
