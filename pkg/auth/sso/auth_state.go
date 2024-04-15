@@ -82,6 +82,10 @@ type authState struct {
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
 func newState(authUrl string, noBrowser bool) (*authState, error) {
+	if authUrl == "" {
+		authUrl = "https://confluent.cloud"
+	}
+
 	env := GetCCloudEnvFromBaseUrl(authUrl)
 
 	state := &authState{
