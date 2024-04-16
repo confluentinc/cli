@@ -72,10 +72,15 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
-	// if config-keys were passed, we should enter local mode
-	configKeys, _ := cmd.Flags().GetStringSlice("config-key")
-	if len(configKeys) > 0 {
-		return c.startWithLocalMode(cmd)
+	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+		configKeys, err := cmd.Flags().GetStringSlice("config-key")
+		if err != nil {
+			return err
+		}
+		// if config-keys were passed, we should enter local mode
+		if len(configKeys) > 0 {
+			return c.startWithLocalMode(cmd)
+		}
 	}
 
 	environmentId, err := cmd.Flags().GetString("environment")
