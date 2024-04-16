@@ -34,8 +34,8 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
-		cmd.Flags().StringSlice("config-key", []string{}, "app option keys for local mode")
-		cmd.Flags().StringSlice("config-value", []string{}, "app option values for local mode")
+		cmd.Flags().StringSlice("config-key", []string{}, "App option keys for local mode.")
+		cmd.Flags().StringSlice("config-value", []string{}, "App option values for local mode.")
 	}
 
 	return cmd
