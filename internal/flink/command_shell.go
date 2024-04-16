@@ -73,13 +73,19 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
 	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+		// get config keys and values from flags
 		configKeys, err := cmd.Flags().GetStringSlice("config-key")
 		if err != nil {
 			return err
 		}
-		// if config-keys were passed, we should enter local mode
-		if len(configKeys) > 0 {
-			return c.startWithLocalMode(cmd)
+		configValues, err := cmd.Flags().GetStringSlice("config-value")
+		if err != nil {
+			return err
+		}
+
+		// if configs were passed, we should enter local mode
+		if len(configKeys) > 0 && len(configValues) > 0 {
+			return c.startWithLocalMode(configKeys, configValues)
 		}
 	}
 
@@ -171,17 +177,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
 }
 
-func (c *command) startWithLocalMode(cmd *cobra.Command) error {
-	// get config keys and values from flags
-	configKeys, err := cmd.Flags().GetStringSlice("config-key")
-	if err != nil {
-		return err
-	}
-	configValues, err := cmd.Flags().GetStringSlice("config-value")
-	if err != nil {
-		return err
-	}
-
+func (c *command) startWithLocalMode(configKeys, configValues []string) error {
 	// parse app options from given flags
 	appOptions, err := types.ParseApplicationOptionsFromSlices(configKeys, configValues)
 	if err != nil {
