@@ -11,15 +11,12 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
-
-// If we set this const useFakeGateway to true, we start the client with a simulated gateway client that returns fake data. This is used for debugging.
-const useFakeGateway = false
 
 func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
@@ -35,6 +32,11 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+		cmd.Flags().StringSlice("config-key", []string{}, "app option keys for local mode")
+		cmd.Flags().StringSlice("config-value", []string{}, "app option values for local mode")
+	}
 
 	return cmd
 }
@@ -70,14 +72,15 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
-	if useFakeGateway {
-		return client.StartApp(
-			mock.NewFakeFlinkGatewayClient(),
-			func() error { return nil },
-			types.ApplicationOptions{
-				Context:   c.Context,
-				UserAgent: c.Version.UserAgent,
-			}, func() {})
+	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+		configKeys, err := cmd.Flags().GetStringSlice("config-key")
+		if err != nil {
+			return err
+		}
+		// if config-keys were passed, we should enter local mode
+		if len(configKeys) > 0 {
+			return c.startWithLocalMode(cmd)
+		}
 	}
 
 	environmentId, err := cmd.Flags().GetString("environment")
@@ -166,6 +169,34 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 
 	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
+}
+
+func (c *command) startWithLocalMode(cmd *cobra.Command) error {
+	// get config keys and values from flags
+	configKeys, err := cmd.Flags().GetStringSlice("config-key")
+	if err != nil {
+		return err
+	}
+	configValues, err := cmd.Flags().GetStringSlice("config-value")
+	if err != nil {
+		return err
+	}
+
+	// parse app options from given flags
+	appOptions, err := types.ParseApplicationOptionsFromSlices(configKeys, configValues)
+	if err != nil {
+		return err
+	}
+
+	// validate app options
+	if err := appOptions.Validate(); err != nil {
+		return err
+	}
+
+	gatewayClient := ccloudv2.NewFlinkGatewayClient(appOptions.GetGatewayUrl(), c.Version.UserAgent, appOptions.GetUnsafeTrace(), "authToken")
+
+	appOptions.Context = c.Context
+	return client.StartApp(gatewayClient, func() error { return nil }, *appOptions, func() {})
 }
 
 func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewayClient) (string, error) {
