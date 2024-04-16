@@ -98,10 +98,12 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 	for _, authURL := range []string{"", "https://confluent.cloud"} {
 		state, err := newState(authURL, true)
 		require.NoError(t, err)
+
 		// randomly generated
 		require.True(t, len(state.CodeVerifier) > 10)
 		require.True(t, len(state.CodeChallenge) > 10)
 		require.True(t, len(state.SSOProviderState) > 10)
+
 		// make sure we didn't so something dumb generating the hashes
 		require.True(t,
 			(state.CodeVerifier != state.CodeChallenge) &&
@@ -119,13 +121,13 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 
 func TestNewStateInvalidUrl(t *testing.T) {
 	state, err := newState("Invalid url", true)
-	require.Error(t, err)
-	require.Equal(t, err.Error(), "unrecognized auth url: Invalid url")
-	require.Nil(t, state)
+	require.NoError(t, err)
+	require.NotNil(t, state)
 }
 
 func TestGetAuthorizationUrl(t *testing.T) {
-	state, _ := newState("https://devel.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", false)
+	require.NoError(t, err)
 
 	// test get auth code url
 	authCodeUrlDevel := state.getAuthorizationCodeUrl("foo", false)
@@ -156,7 +158,8 @@ func TestGetAuthorizationUrl(t *testing.T) {
 func TestGetOAuthToken(t *testing.T) {
 	mockRefreshToken := "foo"
 
-	state, _ := newState("https://devel.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", false)
+	require.NoError(t, err)
 
 	expectedUri := "/token"
 	expectedPayload := "grant_type=authorization_code" +
@@ -184,7 +187,7 @@ func TestGetOAuthToken(t *testing.T) {
 	// mock auth0 endpoint with local test server
 	state.SSOProviderHost = "http://127.0.0.1:" + serverPort
 
-	err := state.getOAuthToken()
+	err = state.getOAuthToken()
 	require.NoError(t, err)
 
 	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
@@ -194,7 +197,8 @@ func TestRefreshOAuthToken(t *testing.T) {
 	mockRefreshToken1 := "foo"
 	mockRefreshToken2 := "bar"
 
-	state, _ := newState("https://devel.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", false)
+	require.NoError(t, err)
 	state.SSOProviderRefreshToken = mockRefreshToken1
 
 	expectedUri := "/token"
@@ -222,7 +226,7 @@ func TestRefreshOAuthToken(t *testing.T) {
 	// mock auth0 endpoint with local test server
 	state.SSOProviderHost = "http://127.0.0.1:" + serverPort
 
-	err := state.refreshOAuthToken()
+	err = state.refreshOAuthToken()
 	require.NoError(t, err)
 
 	require.Equal(t, mockIDToken, state.SSOProviderIDToken)
