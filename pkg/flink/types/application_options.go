@@ -20,8 +20,8 @@ type ApplicationOptions struct {
 	ComputePoolId    string
 	ServiceAccountId string
 	Verbose          bool
-	LSPBaseURL       string
-	GatewayURL       string
+	LSPBaseUrl       string
+	GatewayUrl       string
 	Context          *config.Context
 }
 
@@ -104,7 +104,7 @@ func (a *ApplicationOptions) Validate() error {
 	if a.GetComputePoolId() == "" {
 		missingOptions = append(missingOptions, "ComputePoolId")
 	}
-	if a.GetGatewayURL() == "" {
+	if a.GetGatewayUrl() == "" {
 		missingOptions = append(missingOptions, "GatewayURL")
 	}
 	if len(missingOptions) > 0 {
@@ -183,16 +183,16 @@ func (a *ApplicationOptions) GetContext() *config.Context {
 	return nil
 }
 
-func (a *ApplicationOptions) GetLSPBaseURL() string {
+func (a *ApplicationOptions) GetLSPBaseUrl() string {
 	if a != nil {
-		return a.LSPBaseURL
+		return a.LSPBaseUrl
 	}
 	return ""
 }
 
-func (a *ApplicationOptions) GetGatewayURL() string {
+func (a *ApplicationOptions) GetGatewayUrl() string {
 	if a != nil {
-		return a.GatewayURL
+		return a.GatewayUrl
 	}
 	return ""
 }

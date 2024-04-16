@@ -160,7 +160,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		ComputePoolId:    computePool,
 		ServiceAccountId: serviceAccount,
 		Verbose:          verbose > 0,
-		LSPBaseURL:       lspBaseUrl,
+		LSPBaseUrl:       lspBaseUrl,
 	}
 
 	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
@@ -188,7 +188,7 @@ func (c *command) startWithLocalMode(cmd *cobra.Command) error {
 		return err
 	}
 
-	gatewayClient := ccloudv2.NewFlinkGatewayClient(appOptions.GetGatewayURL(), c.Version.UserAgent, appOptions.GetUnsafeTrace(), "authToken")
+	gatewayClient := ccloudv2.NewFlinkGatewayClient(appOptions.GetGatewayUrl(), c.Version.UserAgent, appOptions.GetUnsafeTrace(), "authToken")
 
 	appOptions.Context = c.Context
 	return client.StartApp(gatewayClient, func() error { return nil }, *appOptions, func() {})

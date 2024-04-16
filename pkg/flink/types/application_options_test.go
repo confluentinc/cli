@@ -40,7 +40,7 @@ func TestParseApplicationOptionsFromSlices(t *testing.T) {
 		},
 		{
 			name:         "TestParseAppOptionsSuccessfully",
-			configKeys:   []string{"UnsafeTrace", "UserAgent", "EnvironmentId", "EnvironmentName", "OrganizationId", "Database", "ComputePoolId", "ServiceAccountId", "Verbose", "LSPBaseURL", "GatewayURL"},
+			configKeys:   []string{"UnsafeTrace", "UserAgent", "EnvironmentId", "EnvironmentName", "OrganizationId", "Database", "ComputePoolId", "ServiceAccountId", "Verbose", "LSPBaseUrl", "GatewayUrl"},
 			configValues: []string{"true", "test", "env-123", "test-env", "org-123", "test-database", "lfcp-123", "sa-123", "true", "localhost:8080", "localhost:8000"},
 			expectedAppOptions: &ApplicationOptions{
 				UnsafeTrace:      true,
@@ -52,8 +52,8 @@ func TestParseApplicationOptionsFromSlices(t *testing.T) {
 				ComputePoolId:    "lfcp-123",
 				ServiceAccountId: "sa-123",
 				Verbose:          true,
-				LSPBaseURL:       "localhost:8080",
-				GatewayURL:       "localhost:8000",
+				LSPBaseUrl:       "localhost:8080",
+				GatewayUrl:       "localhost:8000",
 			},
 			expectedError: false,
 		},
