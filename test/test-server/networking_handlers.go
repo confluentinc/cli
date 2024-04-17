@@ -2485,6 +2485,35 @@ func getAwsEgressAccessPoint(id, environment, name string) networkingaccesspoint
 	}
 }
 
+func getAzureEgressAccessPoint(id, environment, name string) networkingaccesspointv1.NetworkingV1AccessPoint {
+	return networkingaccesspointv1.NetworkingV1AccessPoint{
+		Id: networkingaccesspointv1.PtrString(id),
+		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
+			DisplayName: networkingaccesspointv1.PtrString(name),
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+				NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
+					Kind:                         "AzureEgressPrivateLinkEndpoint",
+					PrivateLinkServiceResourceId: "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
+					PrivateLinkSubresourceName:   networkingaccesspointv1.PtrString("subresource"),
+				},
+			},
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
+			Gateway:     &networkingaccesspointv1.ObjectReference{Id: "gw-12345"},
+		},
+		Status: &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+			Phase: "READY",
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+				NetworkingV1AzureEgressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpointStatus{
+					Kind:                      "AzureEgressPrivateLinkEndpointStatus",
+					PrivateEndpointResourceId: "private-endpoint-id",
+					PrivateEndpointDomain:     networkingaccesspointv1.PtrString("domain.com"),
+					PrivateEndpointIpAddress:  "10.2.0.68",
+				},
+			},
+		},
+	}
+}
+
 func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var record networkingaccesspointv1.NetworkingV1AccessPoint
@@ -2493,6 +2522,8 @@ func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.H
 			w.WriteHeader(http.StatusNotFound)
 		case "ap-12345":
 			record = getAwsEgressAccessPoint(id, environment, "my-aws-egress-access-point")
+		case "ap-67890":
+			record = getAzureEgressAccessPoint(id, environment, "my-azure-egress-access-point")
 		}
 		err := json.NewEncoder(w).Encode(record)
 		require.NoError(t, err)
@@ -2515,6 +2546,8 @@ func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc
 		switch id {
 		case "ap-12345":
 			record = getAwsEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-aws-egress-access-point")
+		case "ap-67890":
+			record = getAzureEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-egress-access-point")
 		}
 
 		record.Spec.SetDisplayName(body.Spec.GetDisplayName())
@@ -2527,7 +2560,7 @@ func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc
 func handleNetworkingAccessPointList(t *testing.T, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accessPointOne := getAwsEgressAccessPoint("ap-12345", environment, "my-aws-egress-access-point")
-		accessPointTwo := getAwsEgressAccessPoint("ap-67890", environment, "my-aws-egress-access-point-2")
+		accessPointTwo := getAzureEgressAccessPoint("ap-67890", environment, "my-azure-egress-access-point")
 
 		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo}}
 		err := json.NewEncoder(w).Encode(recordList)
@@ -2550,6 +2583,19 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 						Kind:               "AwsEgressPrivateLinkEndpointStatus",
 						VpcEndpointId:      "vpc-endpoint-id",
 						VpcEndpointDnsName: "vpc-endpoint-dns-name",
+					},
+				},
+			}
+		} else if accessPoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint != nil {
+			accessPoint.SetId("ap-67890")
+			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+				Phase: "READY",
+				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+					NetworkingV1AzureEgressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpointStatus{
+						Kind:                      "AzureEgressPrivateLinkEndpointStatus",
+						PrivateEndpointResourceId: "private-endpoint-id",
+						PrivateEndpointDomain:     networkingaccesspointv1.PtrString("domain.com"),
+						PrivateEndpointIpAddress:  "10.2.0.68",
 					},
 				},
 			}
