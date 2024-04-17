@@ -77,7 +77,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 				},
 			},
 			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},
-			Gateway:     &networkingaccesspointv1.EnvScopedObjectReference{Id: gateway},
+			Gateway:     &networkingaccesspointv1.TypedEnvScopedObjectReference{Id: gateway},
 		},
 	}
 
