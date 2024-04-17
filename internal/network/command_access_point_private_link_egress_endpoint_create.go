@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *accessPointCommand) newCreateCommand() *cobra.Command {
@@ -29,10 +31,10 @@ func (c *accessPointCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("cloud", "", "Specify the cloud provider as aws or azure.")
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
 	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service or ID of an Azure Private Link service.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("subresource", "", "Name of an Azure Private Link subresource")
+	cmd.Flags().String("subresource", "", "Name of an Azure Private Link subresource.")
 	cmd.Flags().Bool("high-availability", false, "Enable high availability for AWS egress endpoint.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -103,18 +105,15 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 			},
 		}
 	case CloudAzure:
-		specConfig := &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
 				Kind:                         "AzureEgressPrivateLinkEndpoint",
 				PrivateLinkServiceResourceId: service,
 			},
 		}
-
 		if subresource != "" {
-			specConfig.NetworkingV1AzureEgressPrivateLinkEndpoint.PrivateLinkSubresourceName = networkingaccesspointv1.PtrString(subresource)
+			createEgressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.PrivateLinkSubresourceName = networkingaccesspointv1.PtrString(subresource)
 		}
-
-		createEgressEndpoint.Spec.Config = specConfig
 	}
 
 	egressEndpoint, err := c.V2Client.CreateAccessPoint(createEgressEndpoint)
