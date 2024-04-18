@@ -30,6 +30,10 @@ func (s *Store) GetCurrentCatalog() string {
 	return s.Properties.Get(config.KeyCatalog)
 }
 
+func (s *Store) GetOutputFormat() config.OutputFormat {
+	return config.OutputFormat(s.Properties.Get(config.KeyOutputFormat))
+}
+
 func (s *Store) GetCurrentDatabase() string {
 	return s.Properties.Get(config.KeyDatabase)
 }

@@ -5,28 +5,32 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
-type BasicOutputController struct {
+type StandardOutputController struct {
+	resultFetcher types.ResultFetcherInterface
+	getWindowSize func() int
+}
+
+type PlainTextOutputController struct {
 	resultFetcher types.ResultFetcherInterface
 	getWindowSize func() int
 }
 
 func NewBasicOutputController(resultFetcher types.ResultFetcherInterface, getWindowWidth func() int) types.OutputControllerInterface {
-	return &BasicOutputController{
+	return &StandardOutputController{
 		resultFetcher: resultFetcher,
 		getWindowSize: getWindowWidth,
 	}
 }
 
-func (c *BasicOutputController) VisualizeResults() {
+func (c *StandardOutputController) VisualizeResults() {
 	c.printResultToSTDOUT()
 }
 
-func (c *BasicOutputController) printResultToSTDOUT() {
+func (c *StandardOutputController) printResultToSTDOUT() {
 	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
 	rowsAreEmpty := len(materializedStatementResults.GetHeaders()) == 0 || materializedStatementResults.Size() == 0
 	if rowsAreEmpty {
@@ -57,12 +61,14 @@ func (c *BasicOutputController) getRows() [][]string {
 	return rows
 }
 
-func (c *BasicOutputController) createTable(rows [][]string) *tablewriter.Table {
+func (c *StandardOutputController) createTable(rows [][]string) *tablewriter.Table {
 	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
 	rawTable := tablewriter.NewWriter(os.Stdout)
 	rawTable.SetAutoFormatHeaders(false)
 	rawTable.SetHeader(materializedStatementResults.GetHeaders())
 	rawTable.SetAutoWrapText(true)
 	rawTable.AppendBulk(rows)
+	rawTable.SetBorder(false)
+	rawTable.SetColumnSeparator("")
 	return rawTable
 }

@@ -198,7 +198,7 @@ func (s *ApplicationTestSuite) TestReplUsesInteractiveOutput() {
 func (s *ApplicationTestSuite) TestShouldUseTView() {
 	app := Application{
 		interactiveOutputController: &controller.InteractiveOutputController{},
-		basicOutputController:       &controller.BasicOutputController{},
+		basicOutputController:       &controller.StandardOutputController{},
 	}
 	tests := []struct {
 		name          string
@@ -267,7 +267,7 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			if tt.isBasicOutput {
-				actual, ok := app.getOutputController(tt.statement).(*controller.BasicOutputController)
+				actual, ok := app.getOutputController(tt.statement).(*controller.StandardOutputController)
 				require.True(t, ok)
 				require.Equal(t, app.basicOutputController, actual)
 				return
