@@ -14,7 +14,7 @@ var rowViewShortcuts = []types.Shortcut{
 }
 
 func CreateRowView(textView *tview.TextView) *tview.Flex {
-	textView.SetDynamicColors(true).SetBorder(true).SetTitle(" Row details ")
+	textView.SetDynamicColors(true).SetBorder(false).SetTitle(" Row details ")
 
 	shortcuts := NewShortcuts(rowViewShortcuts)
 

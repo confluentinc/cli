@@ -58,7 +58,7 @@ func (s *ApplicationTestSuite) SetupTest() {
 		inputController:             s.inputController,
 		statementController:         s.statementController,
 		interactiveOutputController: s.interactiveOutputController,
-		basicOutputController:       s.basicOutputController,
+		standardOutputController:    s.basicOutputController,
 		refreshToken:                authenticated,
 		reportUsage:                 func() {},
 	}
@@ -198,7 +198,7 @@ func (s *ApplicationTestSuite) TestReplUsesInteractiveOutput() {
 func (s *ApplicationTestSuite) TestShouldUseTView() {
 	app := Application{
 		interactiveOutputController: &controller.InteractiveOutputController{},
-		basicOutputController:       &controller.BasicOutputController{},
+		standardOutputController:    &controller.BaseOutputController{},
 	}
 	tests := []struct {
 		name          string
@@ -267,9 +267,9 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			if tt.isBasicOutput {
-				actual, ok := app.getOutputController(tt.statement).(*controller.BasicOutputController)
+				actual, ok := app.getOutputController(tt.statement).(*controller.BaseOutputController)
 				require.True(t, ok)
-				require.Equal(t, app.basicOutputController, actual)
+				require.Equal(t, app.standardOutputController, actual)
 				return
 			}
 
