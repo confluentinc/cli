@@ -167,10 +167,10 @@ func (a *Application) isAuthenticated() bool {
 
 func (a *Application) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {
 	if processedStatementWithResults.IsLocalStatement {
-		if a.store.GetOutputFormat() == config.OutputFormatStandard {
-			return a.standardOutputController
+		if a.store.GetOutputFormat() == config.OutputFormatPlainText {
+			return a.plainTextOutputController
 		}
-		return a.plainTextOutputController
+		return a.standardOutputController
 	}
 	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement() {
 		return a.interactiveOutputController

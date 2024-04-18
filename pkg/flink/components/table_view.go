@@ -49,7 +49,6 @@ func (t *TableView) Init() {
 	t.infoBar = NewTableInfoBar()
 
 	t.table = tview.NewTable().SetFixed(1, 1)
-	t.table.SetBorder(false)
 	t.table.SetSelectionChangedFunc(func(row, column int) {
 		if t.isValidRowIdx(row) {
 			t.updateInfoBar()

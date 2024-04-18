@@ -64,10 +64,10 @@ func (c *BaseOutputController) getRows(totalAvailableChars int) [][]string {
 	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
 		formattedRow := make([]string, len(row.Fields))
 		for colIdx, field := range row.Fields {
-			if c.outputFormat == config.OutputFormatStandard {
-				formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
-			} else {
+			if c.outputFormat == config.OutputFormatPlainText {
 				formattedRow[colIdx] = field.ToString()
+			} else {
+				formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
 			}
 		}
 		rows[rowIdx] = formattedRow
@@ -76,10 +76,18 @@ func (c *BaseOutputController) getRows(totalAvailableChars int) [][]string {
 }
 
 func (c *BaseOutputController) withBorder() bool {
-	if c.outputFormat == config.OutputFormatStandard {
-		return true
-	} else {
+	if c.outputFormat == config.OutputFormatPlainText {
 		return false
+	} else {
+		return true
+	}
+}
+
+func (c *BaseOutputController) withColumnSeparator() string {
+	if c.outputFormat == config.OutputFormatPlainText {
+		return ""
+	} else {
+		return "|"
 	}
 }
 
@@ -91,6 +99,6 @@ func (c *BaseOutputController) createTable(rows [][]string) *tablewriter.Table {
 	rawTable.SetAutoWrapText(false)
 	rawTable.AppendBulk(rows)
 	rawTable.SetBorder(c.withBorder())
-	rawTable.SetColumnSeparator("")
+	rawTable.SetColumnSeparator(c.withColumnSeparator())
 	return rawTable
 }

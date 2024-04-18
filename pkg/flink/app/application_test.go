@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
@@ -199,6 +200,7 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 	app := Application{
 		interactiveOutputController: &controller.InteractiveOutputController{},
 		standardOutputController:    &controller.BaseOutputController{},
+		store:                       &store.Store{},
 	}
 	tests := []struct {
 		name          string
