@@ -5,32 +5,31 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
-type StandardOutputController struct {
+type BaseOutputController struct {
 	resultFetcher types.ResultFetcherInterface
 	getWindowSize func() int
+	outputFormat  config.OutputFormat
 }
 
-type PlainTextOutputController struct {
-	resultFetcher types.ResultFetcherInterface
-	getWindowSize func() int
-}
-
-func NewBasicOutputController(resultFetcher types.ResultFetcherInterface, getWindowWidth func() int) types.OutputControllerInterface {
-	return &StandardOutputController{
+func NewStandardOutputController(resultFetcher types.ResultFetcherInterface, getWindowWidth func() int) types.OutputControllerInterface {
+	return &BaseOutputController{
 		resultFetcher: resultFetcher,
 		getWindowSize: getWindowWidth,
+		outputFormat:  config.OutputFormatStandard,
 	}
 }
 
-func (c *StandardOutputController) VisualizeResults() {
+func (c *BaseOutputController) VisualizeResults() {
 	c.printResultToSTDOUT()
 }
 
-func (c *StandardOutputController) printResultToSTDOUT() {
+func (c *BaseOutputController) printResultToSTDOUT() {
 	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
 	rowsAreEmpty := len(materializedStatementResults.GetHeaders()) == 0 || materializedStatementResults.Size() == 0
 	if rowsAreEmpty {
@@ -47,7 +46,7 @@ func (c *StandardOutputController) printResultToSTDOUT() {
 	rawTable.Render()
 }
 
-func (c *BasicOutputController) calcTotalAvailableChars() int {
+func (c *BaseOutputController) calcTotalAvailableChars() int {
 	numColumns := len(c.resultFetcher.GetMaterializedStatementResults().GetHeaders())
 	tableBorderNumChars := 4
 	separatorCharsPerColumn := 3
@@ -55,7 +54,7 @@ func (c *BasicOutputController) calcTotalAvailableChars() int {
 	return c.getWindowSize() - alreadyOccupiedSpace
 }
 
-func (c *BasicOutputController) getRows(totalAvailableChars int) [][]string {
+func (c *BaseOutputController) getRows(totalAvailableChars int) [][]string {
 	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
 	columnWidths := materializedStatementResults.GetMaxWidthPerColumn()
 	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
@@ -65,21 +64,33 @@ func (c *BasicOutputController) getRows(totalAvailableChars int) [][]string {
 	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
 		formattedRow := make([]string, len(row.Fields))
 		for colIdx, field := range row.Fields {
-			formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
+			if c.outputFormat == config.OutputFormatStandard {
+				formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
+			} else {
+				formattedRow[colIdx] = field.ToString()
+			}
 		}
 		rows[rowIdx] = formattedRow
 	})
 	return rows
 }
 
-func (c *StandardOutputController) createTable(rows [][]string) *tablewriter.Table {
+func (c *BaseOutputController) withBorder() bool {
+	if c.outputFormat == config.OutputFormatStandard {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (c *BaseOutputController) createTable(rows [][]string) *tablewriter.Table {
 	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
 	rawTable := tablewriter.NewWriter(os.Stdout)
 	rawTable.SetAutoFormatHeaders(false)
 	rawTable.SetHeader(materializedStatementResults.GetHeaders())
 	rawTable.SetAutoWrapText(false)
 	rawTable.AppendBulk(rows)
-	rawTable.SetBorder(false)
+	rawTable.SetBorder(c.withBorder())
 	rawTable.SetColumnSeparator("")
 	return rawTable
 }
