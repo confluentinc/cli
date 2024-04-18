@@ -40,21 +40,32 @@ func (c *StandardOutputController) printResultToSTDOUT() {
 		return
 	}
 
-	rows := c.getRows()
+	totalAvailableChars := c.calcTotalAvailableChars()
+	rows := c.getRows(totalAvailableChars)
 	rawTable := c.createTable(rows)
 	rawTable.SetAlignment(tablewriter.ALIGN_LEFT)
 	rawTable.Render()
 }
 
-func (c *BasicOutputController) getRows() [][]string {
+func (c *BasicOutputController) calcTotalAvailableChars() int {
+	numColumns := len(c.resultFetcher.GetMaterializedStatementResults().GetHeaders())
+	tableBorderNumChars := 4
+	separatorCharsPerColumn := 3
+	alreadyOccupiedSpace := tableBorderNumChars + (numColumns-1)*separatorCharsPerColumn
+	return c.getWindowSize() - alreadyOccupiedSpace
+}
+
+func (c *BasicOutputController) getRows(totalAvailableChars int) [][]string {
 	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
+	columnWidths := materializedStatementResults.GetMaxWidthPerColumn()
+	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
 
 	// add actual row data
 	rows := make([][]string, materializedStatementResults.Size())
 	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
 		formattedRow := make([]string, len(row.Fields))
 		for colIdx, field := range row.Fields {
-			formattedRow[colIdx] = field.ToString()
+			formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
 		}
 		rows[rowIdx] = formattedRow
 	})
@@ -66,7 +77,7 @@ func (c *StandardOutputController) createTable(rows [][]string) *tablewriter.Tab
 	rawTable := tablewriter.NewWriter(os.Stdout)
 	rawTable.SetAutoFormatHeaders(false)
 	rawTable.SetHeader(materializedStatementResults.GetHeaders())
-	rawTable.SetAutoWrapText(true)
+	rawTable.SetAutoWrapText(false)
 	rawTable.AppendBulk(rows)
 	rawTable.SetBorder(false)
 	rawTable.SetColumnSeparator("")
