@@ -1,6 +1,10 @@
 package types
 
-import "context"
+import (
+	"context"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
+)
 
 type StoreInterface interface {
 	ProcessStatement(statement string) (*ProcessedStatement, *StatementError)
@@ -11,4 +15,5 @@ type StoreInterface interface {
 	WaitForTerminalStatementState(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
 	GetCurrentCatalog() string
 	GetCurrentDatabase() string
+	GetOutputFormat() config.OutputFormat
 }
