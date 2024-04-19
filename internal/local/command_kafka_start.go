@@ -13,6 +13,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -104,7 +105,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, types.ImagePullOptions{})
+	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, image.PullOptions{})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 	}
