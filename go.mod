@@ -8,7 +8,7 @@ require (
 	github.com/billgraziano/dpapi v0.5.0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/brianstrauch/cobra-shell v0.5.0
-	github.com/charmbracelet/lipgloss v0.9.1
+	github.com/charmbracelet/lipgloss v0.10.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -78,7 +78,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.1.0
-	github.com/ory/dockertest/v3 v3.10.0
 	github.com/panta/machineid v1.0.2
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -112,21 +111,17 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bufbuild/protocompile v0.8.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
-	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
-	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
-	github.com/docker/cli v25.0.3+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.0.2 // indirect
@@ -149,14 +144,12 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lyft/protoc-gen-star/v2 v2.0.3 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mattn/go-tty v0.0.4 // indirect
-	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -164,12 +157,11 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/runc v1.1.12 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rivo/uniseg v0.4.3 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
