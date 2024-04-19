@@ -1,0 +1,27 @@
+Manage Confluent Cloud networks.
+
+Usage:
+  confluent network [command]
+
+Available Commands:
+  access-point               Manage access points.
+  create                     Create a network.
+  delete                     Delete one or more networks.
+  describe                   Describe a network.
+  dns                        Manage DNS resources.
+  gateway                    Manage network gateways.
+  ip-address                 List Confluent Cloud egress public IP addresses.
+  link                       Manage network links.
+  list                       List networks.
+  peering                    Manage peerings.
+  private-link               Manage private links.
+  region                     Manage Confluent Cloud network regions.
+  transit-gateway-attachment Manage transit gateway attachments.
+  update                     Update an existing network.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network [command] --help" for more information about a command.

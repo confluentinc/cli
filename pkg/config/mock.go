@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -181,10 +182,14 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	}
 }
 
+// SetTempHomeDir temporarily changes the path of the home directory so the current configuration file isn't altered.
 func SetTempHomeDir() {
-	// Temporarily change $HOME, so the current configuration file isn't altered.
-	err := os.Setenv("HOME", os.TempDir())
-	if err != nil {
+	key := "HOME"
+	if runtime.GOOS == "windows" {
+		key = "USERPROFILE"
+	}
+
+	if err := os.Setenv(key, os.TempDir()); err != nil {
 		panic(err)
 	}
 }

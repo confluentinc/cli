@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -37,16 +36,4 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newUserCommand(prerunner))
 
 	return cmd
-}
-
-func WarnAddAndDeleteResource(resource string, color bool) {
-	output.ErrPrintf(color, "[WARN] %s is marked for addition and deletion\n", resource)
-}
-
-func WarnDeleteNonExistentResource(resource string, color bool) {
-	output.ErrPrintf(color, "[WARN] %s is marked for deletion but does not exist\n", resource)
-}
-
-func WarnAddDuplicateResource(resource string, color bool) {
-	output.ErrPrintf(color, "[WARN] %s is marked for addition but already exists\n", resource)
 }

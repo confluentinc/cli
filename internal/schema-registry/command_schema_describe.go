@@ -205,7 +205,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version string) (srsdk.SchemaString, []schema, error) {
 	root := srsdk.SchemaString{}
 	var schemaGraph []schema
-	var refs *[]srsdk.SchemaReference
+	var refs []srsdk.SchemaReference
 	subjectVersionString := strings.Join([]string{subject, version}, "#")
 
 	if id > 0 {
@@ -216,7 +216,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 		}
 
 		root = schemaString
-		refs = schemaString.References
+		refs = schemaString.GetReferences()
 	} else if subject == "" || version == "" || visited[subjectVersionString] {
 		// dedupe the call if already visited
 		return root, schemaGraph, nil
@@ -239,10 +239,10 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 		}
 
 		schemaGraph = append(schemaGraph, schema)
-		refs = srsdkSchema.References
+		refs = srsdkSchema.GetReferences()
 	}
 
-	for _, reference := range *refs {
+	for _, reference := range refs {
 		_, subGraph, err := traverseDAG(client, visited, 0, reference.GetSubject(), strconv.Itoa(int(reference.GetVersion())))
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err

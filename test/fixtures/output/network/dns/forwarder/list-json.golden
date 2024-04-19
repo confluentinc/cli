@@ -1,0 +1,35 @@
+[
+  {
+    "id": "dnsf-abcde1",
+    "name": "my-dns-forwarder-1",
+    "domains": [
+      "abc.com",
+      "def.com",
+      "example.domain",
+      "my.dns.forwarder.example.domain",
+      "xyz.com"
+    ],
+    "dns_server_ips": ["10.200.0.0, 10.206.0.0"],
+    "environment": "env-00000",
+    "gateway": "gw-111111",
+    "phase": "READY"
+  },
+  {
+    "id": "dnsf-abcde2",
+    "name": "my-dns-forwarder-2",
+    "domains": ["xyz.com"],
+    "dns_server_ips": ["10.201.0.0", "10.202.0.0"],
+    "environment": "env-00000",
+    "gateway": "gw-222222",
+    "phase": "READY"
+  },
+  {
+    "id": "dnsf-abcde3",
+    "name": "my-dns-forwarder-3",
+    "domains": ["ghi.com"],
+    "dns_server_ips": ["10.203.0.0", "10.204.0.0", "10.205.0.0"],
+    "environment": "env-00000",
+    "gateway": "gw-333333",
+    "phase": "READY"
+  }
+]

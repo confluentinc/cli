@@ -5,14 +5,15 @@ import (
 )
 
 type computePoolOut struct {
-	IsCurrent  bool   `human:"Current" serialized:"is_current"`
-	Id         string `human:"ID" serialized:"id"`
-	Name       string `human:"Name" serialized:"name"`
-	CurrentCfu int32  `human:"Current CFU" serialized:"currrent_cfu"`
-	MaxCfu     int32  `human:"Max CFU" serialized:"max_cfu"`
-	Cloud      string `human:"Cloud" serialized:"cloud"`
-	Region     string `human:"Region" serialized:"region"`
-	Status     string `human:"Status" serialized:"status"`
+	IsCurrent   bool   `human:"Current" serialized:"is_current"`
+	Id          string `human:"ID" serialized:"id"`
+	Name        string `human:"Name" serialized:"name"`
+	Environment string `human:"Environment" serialized:"environment"`
+	CurrentCfu  int32  `human:"Current CFU" serialized:"currrent_cfu"`
+	MaxCfu      int32  `human:"Max CFU" serialized:"max_cfu"`
+	Cloud       string `human:"Cloud" serialized:"cloud"`
+	Region      string `human:"Region" serialized:"region"`
+	Status      string `human:"Status" serialized:"status"`
 }
 
 func (c *command) newComputePoolCommand() *cobra.Command {

@@ -9,7 +9,7 @@ unrelease-prod: unrelease-warn
 unrelease-stag: unrelease-warn
 	$(MAKE) delete-release-notes
 	$(MAKE) reset-tag-and-commit
-	$(MAKE) clean-staging-folder
+	$(MAKE) clean-staging-folders
 
 .PHONY: reset-tag-and-commit
 reset-tag-and-commit:
@@ -62,7 +62,8 @@ restore-latest-archives-warn:
 	@echo -n "Warning: Overriding archives in the latest folder with archives from version v$(CLEAN_VERSION). Continue? (y/n): "
 	read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
 
-.PHONY: clean-staging-folder
-clean-staging-folder:
+.PHONY: clean-staging-folders
+clean-staging-folders:
 	$(aws-authenticate); \
-	$(call dry-run,aws s3 rm $(S3_STAG_PATH) --recursive)
+	$(call dry-run,aws s3 rm $(S3_STAG_PATH) --recursive); \
+	$(call dry-run,aws s3 rm $(S3_DEB_RPM_STAG_PATH) --recursive)

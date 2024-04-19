@@ -36,49 +36,6 @@ func TestRemoveStatementTerminator(t *testing.T) {
 	}
 }
 
-func TestRemoveWhiteSpaces(t *testing.T) {
-	type args struct {
-		str string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{name: "removeTabNewLineAndWhitesSpaces() removes all whitespaces", args: args{str: " key=value "}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all whitespaces", args: args{str: " key  =    value "}, want: "key=value"},
-
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: "key=\nvalue"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: " key\n=value "}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: "\nkey=\nvalue"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: "key=\nvalue\n"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: "\nkey=\nvalue\n"}, want: "key=value"},
-
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: "key=\r\nvalue"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: " key\r\n=value "}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: "\r\nkey=\r\nvalue"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: "key=\r\nvalue\r\n"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all newlines", args: args{str: "\r\nkey=\r\nvalue\r\n"}, want: "key=value"},
-
-		{name: "removeTabNewLineAndWhitesSpaces() removes all tabs", args: args{str: "key=\tvalue"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all tabs", args: args{str: " key\t=value "}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all tabs", args: args{str: "\tkey=\tvalue"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all tabs", args: args{str: "key=\tvalue\t"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all tabs", args: args{str: "\tkey=\tvalue\t"}, want: "key=value"},
-
-		{name: "removeTabNewLineAndWhitesSpaces() removes all new lines, tabs and whitespaces", args: args{str: "\n \tkey\n=\n\tvalue\n"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all new lines, tabs and whitespaces", args: args{str: "\r\n \tkey\t=\t\tvalue\n"}, want: "key=value"},
-		{name: "removeTabNewLineAndWhitesSpaces() removes all new lines, tabs and whitespaces", args: args{str: "\n \tkey\n = \n\tvalue\r\n"}, want: "key=value"},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			if got := removeTabNewLineAndWhitesSpaces(test.args.str); got != test.want {
-				require.Equal(t, test.want, got)
-			}
-		})
-	}
-}
-
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
@@ -141,6 +98,16 @@ func TestProcessSetStatement(t *testing.T) {
 			Message:    "cannot set an empty statement name",
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
 		}, err)
+	})
+
+	t.Run("should parse and identify sensitive set statement", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'sql.secrets.openai' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+
+		result, err = s.processSetStatement("set 'sql.secrets.opeenaai' = 'mysecret'")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
 	})
 }
 
@@ -285,25 +252,79 @@ func TestProcessUseStatement(t *testing.T) {
 	})
 }
 
-func TestStartsWithValidSQL(t *testing.T) {
-	require.True(t, startsWithValidSQL("SELECT * FROM users"))
-	require.True(t, startsWithValidSQL("INSERT INTO orders (customer_id, product_id) VALUES (1, 2)"))
-	require.False(t, startsWithValidSQL("asdasd"))
-	require.False(t, startsWithValidSQL(";"))
-	require.False(t, startsWithValidSQL(""))
-	require.False(t, startsWithValidSQL("This is not a valid SQL statement"))
-}
-
 func TestParseStatementType(t *testing.T) {
 	require.Equal(t, SetStatement, parseStatementType("set ..."))
 	require.Equal(t, UseStatement, parseStatementType("use ..."))
 	require.Equal(t, ResetStatement, parseStatementType("reset ..."))
 	require.Equal(t, ExitStatement, parseStatementType("exit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit"))
 	require.Equal(t, OtherStatement, parseStatementType("Some other statement"))
 }
 
 func hoursToSeconds(hours float32) int {
 	return int(hours * 60 * 60)
+}
+
+func TestIsUserSecretKey(t *testing.T) {
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.penaik"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.oopenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.oenaik"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.oppenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opnai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opeenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opeai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opennai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openi"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openaai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.opena"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openaii"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.secrets.openaiii"))
+
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.penaik"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.oopenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.oenaik"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.oppenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opnai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opeenai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opeai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opennai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openi"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openaai"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.opena"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openaii"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.openaiii"))
+
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.PENAIK"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OOPENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OENAIK"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPPENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPNAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPEENAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPEAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENNAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAAI"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENA"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAII"))
+	require.True(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.OPENAIII"))
+
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, ""))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "gustavo"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "sql.current-catalog"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "client.results-timeout"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "OPENAPI.KEY"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.NAME"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.SCERECETASDT"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SQL.SECRETS.SECCCCCCCCRET"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SEEEEECRET.OPENAPI.KEY"))
+	require.False(t, isKeySimilarToSensitiveKey(config.KeyOpenaiSecret, "SECRET.OPENAPI.KEY"))
 }
 
 func TestFormatUTCOffsetToTimezone(t *testing.T) {
@@ -337,4 +358,129 @@ func TestFormatUTCOffsetToTimezone(t *testing.T) {
 		actual := formatUTCOffsetToTimezone(tc.offsetSeconds)
 		require.Equal(t, tc.expected, actual)
 	}
+}
+
+func TestTokenizeSQL(t *testing.T) {
+	require := require.New(t)
+	// Test escaped backticks
+	input := "`a``b`"
+	expected := []string{"a`b"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test trailing whitespaces
+	input = "   The dog  "
+	expected = []string{"The", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test whitespaces inside backticks
+	input = "   `The dog`  "
+	expected = []string{"The dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test basic string with backticks
+	input = "   The  `quick`  `brown``fox`  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`fox", "jumps", "over", "the", "lazy", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with escaped backticks
+	input = "   The  `quick`  `brown``f``o``x`  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`f`o`x", "jumps", "over", "the", "lazy", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with unclosed backtick
+	input = "   The  `quick`  `brown``fox  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`fox  jumps over   the  lazy dog  "}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test closed closing backtick
+	input = "   The  `quick`  `brown``fox  jumps over   the  lazy dog `"
+	expected = []string{"The", "quick", "brown`fox  jumps over   the  lazy dog "}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG   `catalog`"
+	expected = []string{"USE", "CATALOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG catalog"
+	expected = []string{"USE", "CATALOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   UsE  CATalOG   `catalog`"
+	expected = []string{"UsE", "CATalOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG catAlog"
+	expected = []string{"USE", "CATALOG", "catAlog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  db"
+	expected = []string{"USE", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `db`"
+	expected = []string{"USE", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `my catalog`.`my db`"
+	expected = []string{"USE", "my catalog", ".", "my db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.`db`"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.`db.1`"
+	expected = []string{"USE", "catalog", ".", "db.1"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.`db`"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog   .  db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.  db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "USE catalog.`my database`"
+	expected = []string{"USE", "catalog", ".", "my database"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test empty string
+	input = ""
+	expected = []string{}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with only whitespace
+	input = "   \t\n\r "
+	expected = []string{}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with only backticks
+	input = "````"
+	expected = []string{"`"}
+	require.Equal(expected, TokenizeSQL(input))
+}
+
+func TestTokenizeSQLSpecialCharacters(t *testing.T) {
+	require := require.New(t)
+
+	input := "my clusté€r"
+	expected := []string{"my", "clusté€r"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "my cluster αβγбвг汉字あア한😀"
+	expected = []string{"my", "cluster", "αβγбвг汉字あア한😀"}
+	require.Equal(expected, TokenizeSQL(input))
 }

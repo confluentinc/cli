@@ -26,7 +26,23 @@ func fileToMap(filename string) (map[string]string, error) {
 		return nil, err
 	}
 
-	return toMap(parseLines(string(buf)))
+	return ConfigSliceToMap(parseLines(string(buf)))
+}
+
+// ConfigSliceToMap converts a list of key=value strings into a map.
+func ConfigSliceToMap(configs []string) (map[string]string, error) {
+	m := make(map[string]string)
+
+	for _, config := range configs {
+		x := strings.SplitN(config, "=", 2)
+		if len(x) < 2 {
+			return nil, fmt.Errorf(`failed to parse "key=value" pattern from configuration: %s`, config)
+		}
+
+		m[x[0]] = replaceSpecialCharacters(x[1])
+	}
+
+	return m, nil
 }
 
 func parseLines(content string) []string {
@@ -45,22 +61,6 @@ func parseLines(content string) []string {
 	return lines
 }
 
-// toMap converts a list of key=value strings into a map.
-func toMap(configs []string) (map[string]string, error) {
-	m := make(map[string]string)
-
-	for _, config := range configs {
-		x := strings.SplitN(config, "=", 2)
-		if len(x) < 2 {
-			return nil, fmt.Errorf(`failed to parse "key=value" pattern from configuration: %s`, config)
-		}
-
-		m[x[0]] = x[1]
-	}
-
-	return m, nil
-}
-
 // ConfigFlagToMap reads key=values pairs from the --config flag and supports configuration values containing commas.
 func ConfigFlagToMap(configs []string) (map[string]string, error) {
 	m := make(map[string]string)
@@ -69,7 +69,7 @@ func ConfigFlagToMap(configs []string) (map[string]string, error) {
 		if strings.Contains(configs[i], "=") {
 			x := strings.SplitN(configs[i], "=", 2)
 			if _, ok := m[x[0]]; !ok {
-				m[x[0]] = x[1]
+				m[x[0]] = replaceSpecialCharacters(x[1])
 			}
 		} else {
 			if i-1 >= 0 {
@@ -95,4 +95,11 @@ func CreateKeyValuePairs(m map[string]string) string {
 		fmt.Fprintf(b, "\"%s\"=\"%s\"\n", k, m[k])
 	}
 	return b.String()
+}
+
+func replaceSpecialCharacters(val string) string {
+	// Replace \\n, \\r and \\t with newline, carriage return and tab characters as specified in
+	// https://docs.oracle.com/cd/E23095_01/Platform.93/ATGProgGuide/html/s0204propertiesfileformat01.html.
+	return strings.ReplaceAll(strings.ReplaceAll(
+		strings.ReplaceAll(val, "\\n", "\n"), "\\r", "\r"), "\\t", "\t")
 }

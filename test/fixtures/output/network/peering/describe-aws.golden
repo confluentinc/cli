@@ -1,0 +1,11 @@
++---------------+-----------------------+
+| ID            | peer-111111           |
+| Name          | aws-peering           |
+| Network       | n-abcde1              |
+| Cloud         | AWS                   |
+| Phase         | READY                 |
+| Custom Region | us-east-1             |
+| AWS VPC       | vpc-00000000000000000 |
+| AWS Account   | 000000000000          |
+| AWS Routes    | 10.108.16.0/21        |
++---------------+-----------------------+

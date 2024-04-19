@@ -159,4 +159,7 @@ const (
 
 	// Special error types
 	GenericOpenApiErrorMsg = "metadata service backend error: %s: %s"
+
+	// Network commands
+	CorruptedNetworkResponseErrorMsg = "corrupted %s in response"
 )

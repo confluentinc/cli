@@ -108,7 +108,7 @@ func (c *command) newListCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	pcmd.AddRegionFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddRegionFlagKafka(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("availability", "", fmt.Sprintf("Filter by availability (%s).", strings.Join(availabilities, ", ")))
 	cmd.Flags().String("cluster-type", "", fmt.Sprintf("Filter by cluster type (%s).", strings.Join(clusterTypes, ", ")))
 	cmd.Flags().String("network-type", "", fmt.Sprintf("Filter by network type (%s).", strings.Join(networkTypes, ", ")))

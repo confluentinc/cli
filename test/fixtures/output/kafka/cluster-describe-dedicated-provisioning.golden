@@ -10,6 +10,7 @@
 | Provider             | aws                                 |
 | Region               | us-west-2                           |
 | Availability         | single-zone                         |
+| Network              | n-abcde1                            |
 | Status               | PROVISIONING                        |
 | Endpoint             |                                     |
 | REST Endpoint        |                                     |

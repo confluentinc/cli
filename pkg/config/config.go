@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -20,10 +19,7 @@ import (
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
-const (
-	defaultConfigFileFmt = "%s/.confluent/config.json"
-	emptyFieldIndicator  = "EMPTY"
-)
+const emptyFieldIndicator = "EMPTY"
 
 const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
@@ -65,15 +61,6 @@ var (
 		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Use the "--help" flag to see available commands.`,
 	)
 )
-
-// Whitelist is the configuration fields that are visible by the `config` subcommands.
-var Whitelist = []string{
-	"disable_feature_flags",
-	"disable_plugins",
-	"disable_update_check",
-	"disable_updates",
-	"enable_color",
-}
 
 // Config represents the CLI configuration.
 type Config struct {
@@ -312,12 +299,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 
 	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
 	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
-	environments := []string{
-		"confluentgov.com",
-		"devel.confluentgov-internal.com",
-		"infra.confluentgov-internal.com",
-	}
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && slices.Contains(environments, c.Context().PlatformName)
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
@@ -626,10 +608,14 @@ func (c *Config) HasBasicLogin() bool {
 
 func (c *Config) GetFilename() string {
 	if c.Filename == "" {
-		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir))
+		c.Filename = GetDefaultFilename()
 	}
 	return c.Filename
+}
+
+func GetDefaultFilename() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".confluent", "config.json")
 }
 
 func (c *Config) CheckIsOnPremLogin() error {
@@ -725,6 +711,21 @@ func (c *Config) CheckIsNonCloudLogin() error {
 
 func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
+}
+
+func (c *Config) HasGovHostname() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+
+	for _, hostname := range []string{"confluentgov-internal.com", "confluentgov.com"} {
+		if strings.Contains(ctx.PlatformName, hostname) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Config) IsOnPremLogin() bool {

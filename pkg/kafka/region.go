@@ -25,10 +25,6 @@ func ListRegions(client *ccloudv1.Client, cloud string) ([]*region, error) {
 		}
 
 		for _, r := range metadata.GetRegions() {
-			if !r.GetIsSchedulable() {
-				continue
-			}
-
 			regions = append(regions, &region{
 				CloudId:    metadata.GetId(),
 				CloudName:  metadata.GetName(),

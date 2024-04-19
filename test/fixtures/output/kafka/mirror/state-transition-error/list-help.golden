@@ -1,0 +1,21 @@
+Lists the mirror topic's state transition errors.
+
+Usage:
+  confluent kafka mirror state-transition-error list <destination-topic-name> [flags]
+
+Examples:
+Lists mirror topic "my-topic" state transition errors under the link "my-link":
+
+  $ confluent kafka mirror state-transition-error list my-topic --link my-link
+
+Flags:
+      --link string          REQUIRED: Name of cluster link.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

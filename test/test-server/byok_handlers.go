@@ -78,12 +78,11 @@ func handleByokKeysCreate(t *testing.T, byokStoreV1 map[string]*byokv1.ByokV1Key
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
 
-		byokKey := new(byokv1.ByokV1Key)
-		byokKey.Id = byokv1.PtrString(fmt.Sprintf("cck-%03d", 4))
-		byokKey.Metadata = &byokv1.ObjectMeta{
-			CreatedAt: byokv1.PtrTime(time.Date(2022, time.December, 24, 0, 0, 0, 0, time.UTC)),
+		byokKey := &byokv1.ByokV1Key{
+			Id:       byokv1.PtrString(fmt.Sprintf("cck-%03d", 4)),
+			Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.December, 24, 0, 0, 0, 0, time.UTC))},
+			State:    byokv1.PtrString("AVAILABLE"),
 		}
-		byokKey.State = byokv1.PtrString("AVAILABLE")
 
 		switch {
 		case req.Key.ByokV1AwsKey != nil:

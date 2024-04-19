@@ -1,0 +1,8 @@
++-----------------------+------------------------------+
+| ID                    | nls-abcde1                   |
+| Network               | n-123456                     |
+| Environment           | env-00000                    |
+| Description           | example network link service |
+| Accepted Environments | env-11111, env-22222         |
+| Phase                 | READY                        |
++-----------------------+------------------------------+

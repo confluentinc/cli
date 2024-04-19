@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --cloud string          REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string         REQUIRED: Cloud region ID for cluster (use "confluent kafka region list" to see all).
+      --region string         REQUIRED: Cloud region for Kafka (use "confluent kafka region list" to see all).
       --availability string   Filter by availability (high, low).
       --cluster-type string   Filter by cluster type (basic, basic-legacy, custom-legacy, dedicated, enterprise, standard).
       --network-type string   Filter by network type (internet, peered-vpc, private-link, transit-gateway).

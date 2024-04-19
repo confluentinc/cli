@@ -1,0 +1,4 @@
+Error: private link attachment "platt-invalid" not found
+
+Suggestions:
+    List available private link attachments with `confluent network private-link attachment list`.

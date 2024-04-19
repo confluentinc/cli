@@ -1,5 +1,4 @@
-[WARN] 1.2.3.4/12 is marked for addition and deletion
-[WARN] 1.2.3.4/12 is marked for deletion but does not exist
+[WARN] "1.2.3.4/12" is marked for addition and deletion
 +-------------+--------------------------------+
 | ID          | ipg-wjnde                      |
 | Name        | new-demo-group                 |

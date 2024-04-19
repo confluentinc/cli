@@ -1,4 +1,5 @@
 lkc-123	abc
 lkc-456	def
+lkc-789	ghi
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

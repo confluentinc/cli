@@ -44,7 +44,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Produce to topic "my_topic" in Confluent Cloud with a Confluent Cloud API key.`,
-				Code: "confluent kafka topic consume my_topic --api-key 0000000000000000 --api-secret <API_SECRET> --bootstrap SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --value-format avro --schema test.avsc --schema-registry-endpoint https://psrc-12345.us-west-2.aws.confluent.cloud --schema-registry-api-key 0000000000000000 --schema-registry-api-secret <SCHEMA_REGISTRY_API_SECRET>",
+				Code: "confluent kafka topic produce my_topic --api-key 0000000000000000 --api-secret <API_SECRET> --bootstrap SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --value-format avro --schema test.avsc --schema-registry-endpoint https://psrc-12345.us-west-2.aws.confluent.cloud --schema-registry-api-key 0000000000000000 --schema-registry-api-secret <SCHEMA_REGISTRY_API_SECRET>",
 			},
 		),
 	}
@@ -57,7 +57,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("references", "", "The path to the message value schema references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client. For a full list, see https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html`)
 	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 
@@ -93,28 +93,30 @@ func (c *command) newProduceCommand() *cobra.Command {
 }
 
 func (c *command) produce(cmd *cobra.Command, args []string) error {
-	if c.Context == nil || c.Context.State == nil {
-		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
-		}
+	if c.Config.IsCloudLogin() {
+		return c.produceCloud(cmd, args)
+	}
 
-		if err := c.prepareAnonymousContext(cmd); err != nil {
+	if !cmd.Flags().Changed("bootstrap") { // Required if the user isn't logged into Confluent Cloud
+		return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
+	}
+
+	if c.Context.GetState() == nil {
+		bootstrap, err := cmd.Flags().GetString("bootstrap")
+		if err != nil {
 			return err
 		}
-		return c.produceCloud(cmd, args)
-	} else if c.Context.Config.IsCloudLogin() {
-		return c.produceCloud(cmd, args)
-	} else {
-		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
-		}
 
-		if !cmd.Flags().Changed("ca-location") {
-			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "ca-location")
-		}
+		if strings.Contains(bootstrap, "confluent.cloud") {
+			if err := c.prepareAnonymousContext(cmd); err != nil {
+				return err
+			}
 
-		return c.produceOnPrem(cmd, args)
+			return c.produceCloud(cmd, args)
+		}
 	}
+
+	return c.produceOnPrem(cmd, args)
 }
 
 func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
@@ -488,9 +490,6 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	if err != nil {
 		return nil, nil, err
 	}
-	defer func() {
-		_ = os.RemoveAll(schemaDir)
-	}()
 
 	subject := topicNameStrategy(topic, mode)
 

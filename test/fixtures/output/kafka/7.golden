@@ -18,5 +18,16 @@
     "region": "us-central1",
     "availability": "multi-zone",
     "status": "PROVISIONING"
+  },
+  {
+    "is_current": false,
+    "id": "lkc-789",
+    "name": "ghi",
+    "type": "DEDICATED",
+    "provider": "aws",
+    "region": "us-west-2",
+    "availability": "single-zone",
+    "network": "n-abcde1",
+    "status": "UP"
   }
 ]

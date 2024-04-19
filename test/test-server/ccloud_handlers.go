@@ -51,7 +51,7 @@ var (
 const (
 	serviceAccountId                 = int32(12345)
 	serviceAccountResourceId         = "sa-12345"
-	groupMappingId                   = "pool-abc"
+	groupMappingId                   = "group-abc"
 	identityProviderId               = "op-12345"
 	identityPoolId                   = "pool-12345"
 	ipGroupId                        = "ipg-wjnde"
@@ -251,14 +251,34 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Google Cloud Platform",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "asia-southeast1",
-						Name:          "asia-southeast1 (Singapore)",
-						IsSchedulable: true,
+						Id:   "asia-southeast1",
+						Name: "asia-southeast1 (Singapore)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{
+										ccloudv1.NetworkType_VPC_PEERING,
+										ccloudv1.NetworkType_TRANSIT_GATEWAY,
+										ccloudv1.NetworkType_PRIVATE_LINK,
+									},
+								},
+							},
+						},
 					},
 					{
-						Id:            "asia-east2",
-						Name:          "asia-east2 (Hong Kong)",
-						IsSchedulable: true,
+						Id:   "asia-east2",
+						Name: "asia-east2 (Hong Kong)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{
+										ccloudv1.NetworkType_VPC_PEERING,
+										ccloudv1.NetworkType_TRANSIT_GATEWAY,
+										ccloudv1.NetworkType_PRIVATE_LINK,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -267,14 +287,30 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Amazon Web Services",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "ap-northeast-1",
-						Name:          "ap-northeast-1 (Tokyo)",
-						IsSchedulable: false,
+						Id:   "ap-northeast-1",
+						Name: "ap-northeast-1 (Tokyo)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{},
+								},
+							},
+						},
 					},
 					{
-						Id:            "us-east-1",
-						Name:          "us-east-1 (N. Virginia)",
-						IsSchedulable: true,
+						Id:   "us-east-1",
+						Name: "us-east-1 (N. Virginia)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{
+										ccloudv1.NetworkType_VPC_PEERING,
+										ccloudv1.NetworkType_TRANSIT_GATEWAY,
+										ccloudv1.NetworkType_PRIVATE_LINK,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -283,9 +319,15 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Azure",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "southeastasia",
-						Name:          "southeastasia (Singapore)",
-						IsSchedulable: false,
+						Id:   "southeastasia",
+						Name: "southeastasia (Singapore)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{},
+								},
+							},
+						},
 					},
 				},
 			},

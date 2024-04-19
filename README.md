@@ -1,7 +1,7 @@
 # Confluent CLI
 
 [![Release](https://img.shields.io/github/v/release/confluentinc/cli)](https://github.com/confluentinc/cli/releases/latest)
-[![Build Status](https://confluent-cli.semaphoreci.com/badges/cli/branches/main.svg?style=shields&key=d7163855-c2f5-40b9-a5d7-ff9e3e2214fe)](https://confluent-cli.semaphoreci.com/projects/cli)
+[![Build Status](https://semaphore.ci.confluent.io/badges/cli/branches/main.svg?style=shields&key=36d1298e-932a-4d04-8cd0-2483a2a6ab85)](https://semaphore.ci.confluent.io/projects/cli)
 
 The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
@@ -27,19 +27,23 @@ Install the latest version of `confluent` to `/usr/local/bin`:
 
     brew install confluentinc/tap/cli
 
-#### Scripted installation
+#### APT (Ubuntu and Debian)
 
-Install the latest version of `confluent` to `/usr/local/bin`:
+Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin
+    wget -qO - https://packages.confluent.io/confluent-cli/deb/archive.key | sudo apt-key add -
+    sudo apt install software-properties-common
+    sudo add-apt-repository "deb https://packages.confluent.io/confluent-cli/deb stable main"
+    sudo apt update && sudo apt install confluent-cli
 
-Print a complete list of versions available for download:
+#### YUM (RHEL and CentOS)
 
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -l
+Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
-Install `confluent` v3.6.0 to `/usr/local/bin`:
-
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin 3.6.0
+    sudo rpm --import https://packages.confluent.io/confluent-cli/rpm/archive.key
+    sudo yum install yum-utils
+    sudo yum-config-manager --add-repo https://packages.confluent.io/confluent-cli/rpm/confluent-cli.repo
+    sudo yum clean all && sudo yum install confluent-cli
 
 #### Windows
 
@@ -59,28 +63,32 @@ Pull `confluent` v3.6.0:
 
 ### Building from Source
 
-    make
+    make build
     dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 
 #### Cross Compile for Other Platforms
 
-Cross compilation from a Darwin/amd64 machine to Darwin/arm64, Linux/amd64 and Windows/amd64 platforms is supported.
-To build for Darwin/arm64, run the following:
+From darwin/amd64 or darwin/arm64, you can build the CLI for any other supported platform.
 
-    GOARCH=arm64 make cross-build
+To build for darwin/amd64 from darwin/arm64, run the following:
 
-To build for Linux (glibc or musl), install cross compiler `musl-cross` with Homebrew:
+    GOARCH=amd64 make build
+
+To build for darwin/arm64 from darwin/amd64, run the following:
+
+    GOARCH=arm64 make build
+
+To build for linux/amd64 (glibc or musl), run the following:
 
     brew install FiloSottile/musl-cross/musl-cross
-    GOOS=linux make cross-build
+    GOOS=linux GOARCH=amd64 make cross-build
 
-To build for Windows/amd64, install `mingw-w64` compilers with Homebrew:
+To build for linux/arm64 (glibc or musl), run the following:
+
+    brew install FiloSottile/musl-cross/musl-cross
+    GOOS=linux GOARCH=arm64 make cross-build
+
+To build for windows/amd64, run the following:
 
     brew install mingw-w64
-    GOOS=windows make cross-build
-
-Cross compilation from an M1 Macbook (Darwin/arm64) to other platforms is also supported.
-
-#### Troubleshooting
-
-Please update your system to MacOS 11.0 or later if you are building on Darwin/arm64.
+    GOOS=windows GOARCH=amd64 make cross-build

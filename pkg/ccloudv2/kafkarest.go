@@ -196,6 +196,22 @@ func (c *KafkaRestClient) UpdateKafkaMirrorTopicsResume(linkName string, validat
 	return res.GetData(), nil
 }
 
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsReverseAndStartMirror(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) ([]kafkarestv3.AlterMirrorStatusResponseData, error) {
+	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsReverseAndStartMirror(c.kafkaRestApiContext(), c.ClusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
+}
+
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsReverseAndPauseMirror(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) ([]kafkarestv3.AlterMirrorStatusResponseData, error) {
+	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsReverseAndPauseMirror(c.kafkaRestApiContext(), c.ClusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
+}
+
 func (c *KafkaRestClient) DeleteKafkaLink(linkName string) error {
 	httpResp, err := c.ClusterLinkingV3Api.DeleteKafkaLink(c.kafkaRestApiContext(), c.ClusterId, linkName).Execute()
 	return kafkarest.NewError(c.GetUrl(), err, httpResp)

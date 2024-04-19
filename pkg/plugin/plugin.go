@@ -29,11 +29,13 @@ type pluginInfo struct {
 func SearchPath(cfg *config.Config) map[string][]string {
 	if runtime.GOOS == "windows" {
 		log.CliLogger.Debugf(`Searching $PATH and %%USERPROFILE%%\.confluent\plugins for plugins. Plugins can be disabled in %s.`, cfg.GetFilename())
+	} else {
+		log.CliLogger.Debugf("Searching $PATH and ~/.confluent/plugins for plugins. Plugins can be disabled in %s.", cfg.GetFilename())
 	}
-	log.CliLogger.Debugf("Searching $PATH and ~/.confluent/plugins for plugins. Plugins can be disabled in %s.", cfg.GetFilename())
 
 	pathDirList := filepath.SplitList(os.Getenv("PATH"))
-	pluginDir := filepath.Join(os.Getenv("HOME"), ".confluent", "plugins")
+	home, _ := os.UserHomeDir()
+	pluginDir := filepath.Join(home, ".confluent", "plugins")
 	if !slices.Contains(pathDirList, pluginDir) {
 		pathDirList = append(pathDirList, pluginDir)
 	}

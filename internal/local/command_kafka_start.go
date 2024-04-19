@@ -57,7 +57,7 @@ func (c *command) newKafkaStartCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("kafka-rest-port", "8082", "Kafka REST port number.")
-	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, random free ports will be used.")
+	cmd.Flags().StringSlice("plaintext-ports", nil, "A comma-separated list of port numbers for plaintext producer and consumer clients for brokers. If not specified, a random free port is used.")
 	cmd.Flags().Int32("brokers", 1, "Number of brokers (between 1 and 4, inclusive) in the Confluent Local Kafka cluster.")
 	return cmd
 }
@@ -77,7 +77,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	containers, err := dockerClient.ContainerList(context.Background(), container.ListOptions{All: true})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 	}
@@ -198,7 +198,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 			return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 		}
 		log.CliLogger.Trace(fmt.Sprintf("Successfully created a Confluent Local container for broker %d", brokerId))
-		if err := dockerClient.ContainerStart(context.Background(), createResp.ID, types.ContainerStartOptions{}); err != nil {
+		if err := dockerClient.ContainerStart(context.Background(), createResp.ID, container.StartOptions{}); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 		}
 		containerIds = append(containerIds, getShortenedContainerId(createResp.ID))

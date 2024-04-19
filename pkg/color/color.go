@@ -12,3 +12,5 @@ const AccentColor = color.FgCyan
 
 const ErrorColor = color.FgHiRed
 const WarnColor = color.FgHiYellow
+
+const CyanHexCode = "#178e92"

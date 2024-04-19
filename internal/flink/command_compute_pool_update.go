@@ -21,7 +21,7 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update name and CFU count of a Flink compute pool.`,
-				Code: `confluent flink compute-pool update my-compute-pool --name "new name" --max-cfu 5`,
+				Code: `confluent flink compute-pool update lfcp-123456 --name "new name" --max-cfu 5`,
 			},
 		),
 	}
@@ -98,14 +98,15 @@ func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&computePoolOut{
-		IsCurrent:  computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
-		Id:         computePool.GetId(),
-		Name:       updatedComputePool.Spec.GetDisplayName(),
-		CurrentCfu: computePool.Status.GetCurrentCfu(),
-		MaxCfu:     updatedComputePool.Spec.GetMaxCfu(),
-		Cloud:      computePool.Spec.GetCloud(),
-		Region:     computePool.Spec.GetRegion(),
-		Status:     computePool.Status.GetPhase(),
+		IsCurrent:   computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
+		Id:          computePool.GetId(),
+		Name:        updatedComputePool.Spec.GetDisplayName(),
+		Environment: updatedComputePool.Spec.Environment.GetId(),
+		CurrentCfu:  computePool.Status.GetCurrentCfu(),
+		MaxCfu:      updatedComputePool.Spec.GetMaxCfu(),
+		Cloud:       computePool.Spec.GetCloud(),
+		Region:      computePool.Spec.GetRegion(),
+		Status:      computePool.Status.GetPhase(),
 	})
 	return table.Print()
 }

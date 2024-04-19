@@ -10,7 +10,7 @@ Create Flink compute pool "my-compute-pool" in AWS with 5 CFUs.
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string        REQUIRED: Cloud region for compute pool (use "confluent flink region list" to see all).
+      --region string        REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
       --max-cfu int32        Maximum number of Confluent Flink Units (CFU). (default 5)
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

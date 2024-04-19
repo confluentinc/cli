@@ -79,14 +79,14 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	// Note that if more resource types are added with no logical clusters, then additional logic
 	// needs to be added here to determine the resource type.
-	for _, res := range resources {
+	for _, resource := range resources {
 		list.Add(&out{
 			Key:          apiKey.GetId(),
 			Description:  apiKey.Spec.GetDescription(),
 			OwnerId:      ownerId,
 			OwnerEmail:   email,
-			ResourceType: resourceKindToType[res.GetKind()],
-			ResourceId:   getApiKeyResourceId(res.GetId()),
+			ResourceType: getResourceType(resource),
+			ResourceId:   getResourceId(resource.GetId()),
 			Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 		})
 	}

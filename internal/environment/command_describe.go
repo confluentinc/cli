@@ -9,9 +9,10 @@ import (
 )
 
 type out struct {
-	IsCurrent bool   `human:"Current" serialized:"is_current"`
-	Id        string `human:"ID" serialized:"id"`
-	Name      string `human:"Name" serialized:"name"`
+	IsCurrent               bool   `human:"Current" serialized:"is_current"`
+	Id                      string `human:"ID" serialized:"id"`
+	Name                    string `human:"Name" serialized:"name"`
+	StreamGovernancePackage string `human:"Stream Governance Package" serialized:"stream_governance_package"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -48,9 +49,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
-		Id:        environment.GetId(),
-		Name:      environment.GetDisplayName(),
+		IsCurrent:               environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:                      environment.GetId(),
+		Name:                    environment.GetDisplayName(),
+		StreamGovernancePackage: environment.StreamGovernanceConfig.GetPackage(),
 	})
 	return table.Print()
 }

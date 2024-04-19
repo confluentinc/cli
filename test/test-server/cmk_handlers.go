@@ -45,6 +45,9 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			if req.Spec.GetDisplayName() == "cck-byok-test" {
 				cluster.Spec.Byok = req.Spec.Byok
 			}
+			if req.Spec.GetDisplayName() == "cck-network-test" {
+				cluster.Spec.Network = req.Spec.Network
+			}
 			cluster.Status.Cku = cmkv2.PtrInt32(1)
 		} else if req.Spec.Config.CmkV2Enterprise != nil {
 			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
@@ -108,7 +111,9 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 				},
 				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
-			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone}}
+			clusterDedicated := getCmkDedicatedDescribeCluster("lkc-789", "ghi", 1)
+			clusterDedicated.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
+			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone, *clusterDedicated}}
 			err := json.NewEncoder(w).Encode(clusterList)
 			require.NoError(t, err)
 		}
@@ -191,6 +196,7 @@ func handleCmkKafkaClusterDescribeDedicatedProvisioning(t *testing.T) http.Handl
 		cluster.Status.Phase = "PROVISIONING"
 		cluster.Spec.KafkaBootstrapEndpoint = cmkv2.PtrString("")
 		cluster.Spec.HttpEndpoint = cmkv2.PtrString("")
+		cluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
 		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}

@@ -25,7 +25,7 @@ func (c *command) newUseCommand() *cobra.Command {
 	}
 
 	// Deprecated
-	c.addResourceFlag(cmd, true)
+	c.addResourceFlag(cmd, false)
 	cobra.CheckErr(cmd.Flags().MarkHidden("resource"))
 
 	return cmd
@@ -76,7 +76,7 @@ func (c *command) useAPIKey(apiKey, clusterId string) error {
 			return errors.CatchCCloudV2Error(err, httpResp)
 		}
 		// check if the key is for the right cluster
-		if key.Spec.Resource.Id != clusterId {
+		if key.Spec.GetResource().Id != clusterId {
 			return errors.NewErrorWithSuggestions(
 				fmt.Sprintf(errors.InvalidApiKeyErrorMsg, apiKey, clusterId),
 				fmt.Sprintf(errors.InvalidApiKeySuggestions, clusterId),

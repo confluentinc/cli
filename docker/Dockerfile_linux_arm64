@@ -8,6 +8,8 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
-RUN cd /cli && make gorelease-linux-arm64
-
-RUN cd /cli && rename 's/checksums/checksums_linux_arm64/' prebuilt/*.txt
+RUN --mount=type=secret,id=deb_gpg_secret_key --mount=type=secret,id=deb_gpg_passphrase --mount=type=secret,id=rpm_gpg_secret_key --mount=type=secret,id=rpm_gpg_passphrase \
+    export NFPM_DEFAULT_DEB_PASSPHRASE=$(cat /run/secrets/deb_gpg_passphrase) && \
+    export NFPM_DEFAULT_RPM_PASSPHRASE=$(cat /run/secrets/rpm_gpg_passphrase) && \
+    cd /cli && \
+    make gorelease-linux-arm64

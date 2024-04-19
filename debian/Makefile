@@ -56,7 +56,7 @@ install: apply-patches
 	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
 	cd $(DESTDIR)$(LIBPATH); \
-	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
+	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64; do \
 		mkdir -p $${dir}; \
 		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
 		filepath=$${dir}/confluent$${ext}; \
@@ -97,9 +97,15 @@ else
 	RPM_RELEASE_ID=$(REVISION)
 endif
 
-rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
-	echo "Building the RPM"
-	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb $< || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
+rpm: rpm-amd64-build rpm-arm64-build
+
+rpm-amd64-build: rpm-amd64-spec
+	echo "Building the amd64 RPM"
+	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
+
+rpm-arm64-build: rpm-arm64-spec
+	echo "Building the arm64 RPM"
+	rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 	echo
 	echo "================================================="
@@ -113,12 +119,20 @@ rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 # installed version to generate a new archive. Note that we always regenerate
 # the symlink because the RPM_VERSION doesn't include all the version info -- it
 # can leave of things like -beta, -rc1, etc.
-RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+rpm-amd64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
-	rm -f $@ && tar -czf $@ $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH##/arm64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+
+rpm-arm64-spec:
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH##/amd64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 
 rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS

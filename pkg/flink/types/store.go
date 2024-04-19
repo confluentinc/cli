@@ -9,4 +9,6 @@ type StoreInterface interface {
 	DeleteStatement(statementName string) bool
 	WaitPendingStatement(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
 	WaitForTerminalStatementState(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
+	GetCurrentCatalog() string
+	GetCurrentDatabase() string
 }

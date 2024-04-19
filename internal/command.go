@@ -32,6 +32,7 @@ import (
 	"github.com/confluentinc/cli/v3/internal/local"
 	"github.com/confluentinc/cli/v3/internal/login"
 	"github.com/confluentinc/cli/v3/internal/logout"
+	"github.com/confluentinc/cli/v3/internal/network"
 	"github.com/confluentinc/cli/v3/internal/organization"
 	"github.com/confluentinc/cli/v3/internal/pipeline"
 	"github.com/confluentinc/cli/v3/internal/plugin"
@@ -123,6 +124,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(network.New(prerunner))
 	cmd.AddCommand(organization.New(prerunner))
 	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
@@ -185,7 +187,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, u *usage.Usage) error {
-	if cfg.IsCloudLogin() && u.Command != nil && *u.Command != "" {
+	if cfg.IsCloudLogin() && !cfg.HasGovHostname() && u.Command != nil && *u.Command != "" {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return err

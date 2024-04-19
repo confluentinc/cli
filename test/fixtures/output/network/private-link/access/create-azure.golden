@@ -1,0 +1,8 @@
++--------------------+--------------------------------------+
+| ID                 | pla-123456                           |
+| Name               | azure-pla                            |
+| Network            | n-abcde1                             |
+| Cloud              | AZURE                                |
+| Azure Subscription | 1234abcd-12ab-34cd-1234-123456abcdef |
+| Phase              | PROVISIONING                         |
++--------------------+--------------------------------------+

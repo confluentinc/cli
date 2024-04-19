@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
@@ -74,47 +75,9 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		updateIpGroup.GroupName = &groupName
 	}
 
-	// Create a set of the current CIDR block values
-	currentCidrBlocksSet := make(types.Set[string])
-	for _, cidrBlock := range currentIpGroup.GetCidrBlocks() {
-		currentCidrBlocksSet.Add(cidrBlock)
-	}
-
-	// Create a set of the CIDR block values to add
-	addCidrBlocksSet := make(types.Set[string])
-	// Add each CIDR block to add to the set
-	for _, cidrBlock := range addCidrBlocks {
-		if currentCidrBlocksSet.Contains(cidrBlock) {
-			WarnAddDuplicateResource(cidrBlock, c.Config.EnableColor)
-		}
-		addCidrBlocksSet.Add(cidrBlock)
-	}
-
-	// Create a set of the CIDR block values to remove
-	removeCidrBlocksSet := make(types.Set[string])
-	for _, cidrBlock := range removeCidrBlocks {
-		if addCidrBlocksSet.Contains(cidrBlock) {
-			delete(addCidrBlocksSet, cidrBlock)
-			WarnAddAndDeleteResource(cidrBlock, c.Config.EnableColor)
-		}
-		if !currentCidrBlocksSet.Contains(cidrBlock) {
-			WarnDeleteNonExistentResource(cidrBlock, c.Config.EnableColor)
-		}
-		removeCidrBlocksSet.Add(cidrBlock)
-	}
-
-	// Combine the set of the current CIDR blocks and the CIDR blocks to add
-	for cidrBlock := range currentCidrBlocksSet {
-		// Ensure the IP group ID isn't being removed
-		if !removeCidrBlocksSet.Contains(cidrBlock) {
-			addCidrBlocksSet.Add(cidrBlock)
-		}
-	}
-
-	// Convert the map of CIDR blocks being added into an array to make the update request
-	newCidrBlocks := make([]string, 0, len(addCidrBlocksSet))
-	for cidrBlock := range addCidrBlocksSet {
-		newCidrBlocks = append(newCidrBlocks, cidrBlock)
+	newCidrBlocks, warnings := types.AddAndRemove(currentIpGroup.GetCidrBlocks(), addCidrBlocks, removeCidrBlocks)
+	for _, warning := range warnings {
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] %s\n", warning)
 	}
 
 	if len(newCidrBlocks) == 0 {

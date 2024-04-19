@@ -19,8 +19,12 @@ import (
 // This code is adapted from https://github.com/spf13/cobra/blob/master/doc/rest_docs.md
 
 func main() {
-	// Prevent printing the user's HOME in docs when generating confluent local services kafka
-	currentHOME := os.Getenv("HOME")
+	// Prevent printing the user's $HOME in docs when generating confluent local services kafka
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+
 	if err := os.Setenv("HOME", "$HOME"); err != nil {
 		panic(err)
 	}
@@ -50,7 +54,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := os.Setenv("HOME", currentHOME); err != nil {
+	if err := os.Setenv("HOME", home); err != nil {
 		panic(err)
 	}
 }

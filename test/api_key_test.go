@@ -152,6 +152,18 @@ func (s *CLITestSuite) TestApiKey() {
 	}
 }
 
+func (s *CLITestSuite) TestApiKeyCreate() {
+	tests := []CLITest{
+		{args: "api-key create --resource flink --cloud aws --region us-east-1", fixture: "api-key/create-flink.golden"},
+		{args: "api-key create --resource lkc-ab123 --service-account sa-123456", fixture: "api-key/55.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestApiKeyDescribe() {
 	resetConfiguration(s.T(), false)
 
@@ -171,7 +183,7 @@ func (s *CLITestSuite) TestApiKeyDelete() {
 	tests := []CLITest{
 		// delete multiple API keys
 		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
-		{args: "api-key delete MYKEY6 MYKEY17 MYKEY18", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
+		{args: "api-key delete MYKEY6 MYKEY18 MYKEY19", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "n\n", fixture: "api-key/delete/multiple-refuse.golden"},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
 	}
@@ -184,14 +196,15 @@ func (s *CLITestSuite) TestApiKeyDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestApiKeyCreate_ServiceAccountNotValid() {
-	test := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
-	s.runIntegrationTest(test)
-}
+func (s *CLITestSuite) TestApiKeyList() {
+	tests := []CLITest{
+		{args: "api-key list --resource lkc-dne", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1},
+	}
 
-func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
-	test := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
-	s.runIntegrationTest(test)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestApiKey_Autocomplete() {

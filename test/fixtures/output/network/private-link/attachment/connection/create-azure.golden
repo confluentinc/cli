@@ -1,0 +1,9 @@
++--------------------------------+-------------------+
+| ID                             | plattc-azure      |
+| Name                           | azure-plattc      |
+| Cloud                          | AZURE             |
+| Private Link Attachment ID     | platt-azure       |
+| Phase                          | PROVISIONING      |
+| Azure Private Endpoint         | azure-pl-endpoint |
+| Resource ID                    |                   |
++--------------------------------+-------------------+

@@ -87,8 +87,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 			cloudMeta := &ccloudv1.CloudMetadata{
 				Id: cloudId,
 				Regions: []*ccloudv1.Region{{
-					Id:            regionId,
-					IsSchedulable: true,
+					Id: regionId,
 				}},
 			}
 			return []*ccloudv1.CloudMetadata{cloudMeta}, nil

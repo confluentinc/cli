@@ -952,12 +952,12 @@ func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, organiz
 	}
 	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.GetPlatformServer())
 	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
-	req.Contains(cfg.Platforms, ctx.Platform.Name)
-	req.Equal(ctx.Platform, cfg.Platforms[ctx.PlatformName])
+	req.Contains(cfg.Platforms, ctx.GetPlatform().GetName())
+	req.Equal(ctx.Platform, cfg.Platforms[ctx.GetPlatform().GetName()])
 	req.Contains(cfg.Credentials, credName)
 	req.Equal(promptUser, cfg.Credentials[credName].Username)
 	req.Contains(cfg.Contexts, contextName)
-	req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
+	req.Equal(ctx.GetPlatform(), cfg.Contexts[contextName].GetPlatform())
 	req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
 	if isCloud {
 		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an ccloudv1 User

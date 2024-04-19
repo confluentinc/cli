@@ -28,6 +28,8 @@ var (
 			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("rb-12345", "sa-12345", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
+		buildRoleBinding("rb-123ab", "group-abc", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("rb-111aa", "u-11aaa", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-1111aaa"),
 		buildRoleBinding("rb-22bbb", "u-22bbb", "CloudClusterAdmin",
@@ -122,28 +124,42 @@ func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 
 func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := new(apikeysv2.IamV2ApiKey)
+		req := &apikeysv2.IamV2ApiKey{}
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
+
 		if req.Spec.Owner.Id == "sa-123456" {
 			err = writeServiceAccountInvalidError(w)
 			require.NoError(t, err)
 			return
 		}
+
 		apiKey := req
-		apiKey.Id = apikeysv2.PtrString(fmt.Sprintf("MYKEY%d", keyIndex))
-		apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
-			Owner:  req.Spec.Owner,
-			Secret: apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
-			Resource: &apikeysv2.ObjectReference{
-				Id:   req.Spec.Resource.GetId(),
-				Kind: apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
-			},
-			Description: req.Spec.Description,
+
+		switch req.Spec.Resource.GetKind() {
+		case "Region":
+			apiKey = &apikeysv2.IamV2ApiKey{
+				Id:         apikeysv2.PtrString("FLINKREGIONAPIKEY"),
+				ApiVersion: apikeysv2.PtrString("fcpm/v2"),
+				Spec:       &apikeysv2.IamV2ApiKeySpec{Secret: apikeysv2.PtrString("FLINKREGIONAPISECRET")},
+			}
+		default:
+			apiKey.Id = apikeysv2.PtrString(fmt.Sprintf("MYKEY%d", keyIndex))
+			apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
+				Owner:  req.Spec.Owner,
+				Secret: apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
+				Resource: &apikeysv2.ObjectReference{
+					Id:         req.Spec.Resource.GetId(),
+					ApiVersion: apikeysv2.PtrString("cmk/v2"),
+					Kind:       apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
+				},
+				Description: req.Spec.Description,
+			}
+			apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
+			keyIndex++
+			keyStoreV2[apiKey.GetId()] = apiKey
 		}
-		apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
-		keyIndex++
-		keyStoreV2[*apiKey.Id] = apiKey
+
 		err = json.NewEncoder(w).Encode(apiKey)
 		require.NoError(t, err)
 	}
@@ -575,7 +591,7 @@ func handleIamInvitations(t *testing.T) http.HandlerFunc {
 // Handler for "iam/v2/sso/group-mappings"
 func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		groupMapping := buildIamGroupMapping("pool-12345", "my-group-mapping", "new description", `"engineering" in claims.group || "marketing" in claims.group`)
+		groupMapping := buildIamGroupMapping("group-12345", "my-group-mapping", "new description", `"engineering" in claims.group || "marketing" in claims.group`)
 		switch r.Method {
 		case http.MethodGet:
 			anotherMapping := buildIamGroupMapping(groupMappingId, "another-group-mapping", "another description", "true")
@@ -595,7 +611,7 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != groupMappingId && id != "pool-def" {
+		if id != groupMappingId && id != "group-def" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return

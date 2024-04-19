@@ -1,0 +1,4 @@
+  Cloud |  Region   |   IP Prefix   | Address Type | Services  
+--------+-----------+---------------+--------------+-----------
+  AWS   | us-east-1 | 10.201.0.0/28 | EGRESS       | CONNECT   
+  AWS   | us-east-1 | 10.202.0.0/28 | EGRESS       | CONNECT   

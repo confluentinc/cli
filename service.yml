@@ -1,9 +1,13 @@
 name: cli
 lang: go
-lang_version: "1.21.4"
+lang_version: "1.21.7"
 git:
   enable: true
+  hooks:
+    enable: true
 github:
+  enable: true
+gitignore:
   enable: true
 semaphore:
   enable: true

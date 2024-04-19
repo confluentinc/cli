@@ -2,6 +2,7 @@
 | Current     | false             |
 | ID          | lfcp-123456       |
 | Name        | my-compute-pool-1 |
+| Environment | env-123           |
 | Current CFU | 0                 |
 | Max CFU     | 5                 |
 | Cloud       | AWS               |

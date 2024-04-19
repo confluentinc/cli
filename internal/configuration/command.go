@@ -57,17 +57,24 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
+	fields := []string{
+		"disable_feature_flags",
+		"disable_plugins",
+		"disable_update_check",
+		"disable_updates",
+		"enable_color",
+	}
 	if runtime.GOOS == "windows" {
-		config.Whitelist = append(config.Whitelist, "disable_plugins_once")
+		fields = append(fields, "disable_plugins_once")
 	}
 
-	whitelist := make(map[string]*fieldInfo, len(config.Whitelist))
+	whitelist := make(map[string]*fieldInfo, len(fields))
 	t := reflect.TypeOf(*cfg)
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		jsonTag := strings.Split(field.Tag.Get("json"), ",")[0]
-		if slices.Contains(config.Whitelist, jsonTag) {
+		if slices.Contains(fields, jsonTag) {
 			whitelist[jsonTag] = &fieldInfo{
 				kind:     field.Type.Kind(),
 				name:     field.Name,
@@ -75,6 +82,7 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 			}
 		}
 	}
+
 	return whitelist
 }
 

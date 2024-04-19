@@ -39,6 +39,13 @@ func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
 }
 
 func (s *CLITestSuite) TestKsql_Autocomplete() {
-	test := CLITest{args: `__complete ksql cluster describe ""`, login: "cloud", fixture: "ksql/cluster/describe-autocomplete.golden"}
-	s.runIntegrationTest(test)
+	tests := []CLITest{
+		{args: `__complete ksql cluster describe ""`, fixture: "ksql/cluster/describe-autocomplete.golden"},
+		{args: `__complete ksql cluster create my-cluster --credential-identity ""`, fixture: "ksql/cluster/create-credential-identity-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }

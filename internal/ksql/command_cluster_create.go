@@ -1,6 +1,7 @@
 package ksql
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -26,7 +27,7 @@ func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("credential-identity", "", `User account ID or service account ID to be associated with this cluster. An API key associated with this identity will be created and used to authenticate the ksqlDB cluster with Kafka.`)
+	c.addCredentialIdentityFlag(cmd)
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -37,6 +38,38 @@ func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("credential-identity"))
 
 	return cmd
+}
+
+func (c *ksqlCommand) addCredentialIdentityFlag(cmd *cobra.Command) {
+	cmd.Flags().String("credential-identity", "", "User account ID or service account ID to be associated with this cluster. An API key associated with this identity will be created and used to authenticate the ksqlDB cluster with Kafka.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "credential-identity", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		users, err := c.V2Client.ListIamUsers()
+		if err != nil {
+			return nil
+		}
+
+		serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(users)+len(serviceAccounts))
+
+		for i, user := range users {
+			suggestions[i] = fmt.Sprintf("%s\t%s", user.GetId(), user.GetFullName())
+		}
+
+		for i, serviceAccount := range serviceAccounts {
+			description := fmt.Sprintf("%s: %s", serviceAccount.GetDisplayName(), serviceAccount.GetDescription())
+			suggestions[len(users)+i] = fmt.Sprintf("%s\t%s", serviceAccount.GetId(), description)
+		}
+
+		return suggestions
+	})
 }
 
 func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
