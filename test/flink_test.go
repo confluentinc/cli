@@ -129,9 +129,10 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement list --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/list-yaml.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 --status completed", fixture: "flink/statement/list-completed.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 --status pending", fixture: "flink/statement/list-pending.golden"},
-		{args: "flink statement resume my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/resume.golden"},
 		{args: "flink statement stop my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/stop.golden"},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-12345", fixture: "flink/statement/update.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-123456", fixture: "flink/statement/update-compute-pool.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --principal sa-123456", fixture: "flink/statement/update-principal.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false", fixture: "flink/statement/update-stopped.golden"},
 	}
 
 	for _, test := range tests {
@@ -173,6 +174,7 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 		{args: `__complete flink compute-pool delete ""`, fixture: "flink/compute-pool/delete-autocomplete.golden"},
 		{args: `__complete flink compute-pool list --region ""`, fixture: "flink/compute-pool/list-region-autocomplete.golden"},
 		{args: `__complete flink statement create my-statement --database ""`, fixture: "flink/statement/create-database-autocomplete.golden"},
+		{args: `__complete flink statement update my-statement --principal ""`, fixture: "flink/statement/create-database-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
