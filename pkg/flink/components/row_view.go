@@ -13,8 +13,8 @@ var rowViewShortcuts = []types.Shortcut{
 	{KeyText: ExitRowViewShortcut, Text: "Quit"},
 }
 
-func CreateRowView(textView *tview.TextView) *tview.Flex {
-	textView.SetDynamicColors(true).SetBorder(false).SetTitle(" Row details ")
+func CreateRowView(textView *tview.TextView, withBorder bool) *tview.Flex {
+	textView.SetDynamicColors(true).SetBorder(withBorder).SetTitle(" Row details ")
 
 	shortcuts := NewShortcuts(rowViewShortcuts)
 
@@ -22,5 +22,6 @@ func CreateRowView(textView *tview.TextView) *tview.Flex {
 		SetDirection(tview.FlexRow).
 		AddItem(textView, 0, 1, false).
 		AddItem(shortcuts, 1, 1, false)
+
 	return flex
 }

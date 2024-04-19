@@ -93,7 +93,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 
 	inputController := controller.NewInputController(historyStore, lspCompleter)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
-	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
+	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, dataStore.GetOutputFormat, appOptions.GetVerbose())
 	standardOutputController := controller.NewStandardOutputController(resultFetcher, inputController.GetWindowWidth)
 	plainTextOutputController := controller.NewPlainTextOutputController(resultFetcher, inputController.GetWindowWidth)
 
@@ -152,7 +152,7 @@ func (a *Application) readEvalPrint() {
 func (a *Application) panicRecovery() {
 	log.CliLogger.Warn("Internal error occurred. Executing panic recovery.")
 	a.statementController.CleanupStatement()
-	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
+	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.store.GetOutputFormat, a.appOptions.GetVerbose())
 	a.reportUsage()
 }
 
