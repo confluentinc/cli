@@ -12,6 +12,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
@@ -28,12 +29,14 @@ func TestInteractiveOutputControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(InteractiveOutputControllerTestSuite))
 }
 
+var standardFormat = func() config.OutputFormat { return config.OutputFormatStandard }
+
 func (s *InteractiveOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.tableView = mock.NewMockTableViewInterface(ctrl)
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, false).(*InteractiveOutputController)
+	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, standardFormat, false).(*InteractiveOutputController)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -83,7 +86,7 @@ func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls(materialized
 	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatementName: "test-statement"}).Times(2)
 	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, &timestamp, types.Paused)
 	s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
-	s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
+	s.tableView.EXPECT().GetFocusableElement().AnyTimes().Return(tview.NewTable())
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
@@ -183,7 +186,6 @@ func (s *InteractiveOutputControllerTestSuite) TestCloseRowViewOnUserInput() {
 			s.interactiveOutputController.init()
 			s.interactiveOutputController.isRowViewOpen = true
 			s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
-			s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 
 			// When
 			result := s.interactiveOutputController.inputCapture(testCase.input)
