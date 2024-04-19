@@ -6,7 +6,7 @@ updates:
   - directory: "/"
     ignore:
       - dependency-name: "github.com/confluentinc/*"
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 100
     package-ecosystem: "gomod"
     schedule:
       interval: "weekly"
