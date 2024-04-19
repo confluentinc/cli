@@ -9,7 +9,9 @@ Available Commands:
   describe    Describe a Flink SQL statement.
   exception   Manage Flink SQL statement exceptions.
   list        List Flink SQL statements.
+  resume      Resume a Flink SQL statement.
   stop        Stop a Flink SQL statement.
+  update      Move a Flink SQL statement to another compute pool.
 
 Global Flags:
   -h, --help            Show help for this command.
