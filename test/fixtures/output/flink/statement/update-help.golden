@@ -1,4 +1,4 @@
-Request to update a Flink SQL statement.
+Update a Flink SQL statement.
 
 Usage:
   confluent flink statement update <name> [flags]

@@ -14,7 +14,7 @@ import (
 func (c *command) newStatementUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <name>",
-		Short:             "Request to update a Flink SQL statement.",
+		Short:             "Update a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
 		RunE:              c.statementUpdate,
