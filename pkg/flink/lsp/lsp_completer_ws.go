@@ -80,7 +80,7 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 	}
 }
 
-func NewLSPClientWS(getAuthToken func() string, baseUrl, organizationId, environmentId string) LspInterface {
+func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, environmentId string) LspInterface {
 	lspClient, conn, err := newLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId)
 	if err != nil {
 		return nil
