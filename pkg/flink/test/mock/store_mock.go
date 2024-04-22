@@ -7,7 +7,7 @@ package mock
 import (
 	context "context"
 	reflect "reflect"
-
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	types "github.com/confluentinc/cli/v3/pkg/flink/types"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -118,6 +118,22 @@ func (m *MockStoreInterface) GetCurrentDatabase() string {
 func (mr *MockStoreInterfaceMockRecorder) GetCurrentDatabase() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentDatabase", reflect.TypeOf((*MockStoreInterface)(nil).GetCurrentDatabase))
+}
+
+//GetOutputFormat() config.OutputFormat
+
+// GetOutputFormat mocks base method.
+func (m *MockStoreInterface) GetOutputFormat() config.OutputFormat {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOutputFormat")
+	ret0, _ := ret[0].(config.OutputFormat)
+	return ret0
+}
+
+// GetCurrentDatabase indicates an expected call of GetCurrentDatabase.
+func (mr *MockStoreInterfaceMockRecorder) GetOutputFormat() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOutputFormat", reflect.TypeOf((*MockStoreInterface)(nil).GetOutputFormat()))
 }
 
 // GetEnvironmentId mocks base method.
