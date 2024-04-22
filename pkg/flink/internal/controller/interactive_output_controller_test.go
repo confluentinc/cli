@@ -229,6 +229,21 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMo
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
+func (s *InteractiveOutputControllerTestSuite) TestStandardModeWithBorder() {
+	actual := s.interactiveOutputController.withBorder()
+
+	require.True(s.T(), actual)
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestPlainTextModeNoBorder() {
+	plainTextFormat := func() config.OutputFormat { return config.OutputFormatPlainText }
+	interactiveOutputController := NewInteractiveOutputController(s.tableView, s.resultFetcher, plainTextFormat, false).(*InteractiveOutputController)
+
+	actual := interactiveOutputController.withBorder()
+
+	require.False(s.T(), actual)
+}
+
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAndCacheSizeWithUnsafeTrace() {
 	executedStatementWithResults := getStatementWithResultsExample()
 	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10, nil)
