@@ -11,6 +11,7 @@ import (
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -30,12 +31,13 @@ func TestOutputControllerTestSuite(t *testing.T) {
 func (s *BasicOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
+
 	s.standardOutputController = NewBaseOutputController(s.resultFetcher, func() int {
 		return 10
-	}, func() config.OutputFormat { return config.OutputFormatStandard })
+	}, userPropsWithStandardOutput())
 	s.plainTextOutputController = NewBaseOutputController(s.resultFetcher, func() int {
 		return 10
-	}, func() config.OutputFormat { return config.OutputFormatPlainText })
+	}, userPropsWithPlainTextOutput())
 }
 
 func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintNoRows() {
@@ -109,4 +111,12 @@ func getStatementWithResultsExample() types.ProcessedStatement {
 		statement.StatementResults.Rows = append(statement.StatementResults.Rows, row)
 	}
 	return statement
+}
+
+func userPropsWithStandardOutput() types.UserPropertiesInterface {
+	return store.NewUserPropertiesWithDefaults(map[string]string{config.KeyOutputFormat: string(config.OutputFormatStandard)}, map[string]string{})
+}
+
+func userPropsWithPlainTextOutput() types.UserPropertiesInterface {
+	return store.NewUserPropertiesWithDefaults(map[string]string{config.KeyOutputFormat: string(config.OutputFormatPlainText)}, map[string]string{})
 }

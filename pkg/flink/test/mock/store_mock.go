@@ -7,7 +7,6 @@ package mock
 import (
 	context "context"
 	reflect "reflect"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	types "github.com/confluentinc/cli/v3/pkg/flink/types"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -90,50 +89,6 @@ func (m *MockStoreInterface) GetComputePool() string {
 func (mr *MockStoreInterfaceMockRecorder) GetComputePool() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComputePool", reflect.TypeOf((*MockStoreInterface)(nil).GetComputePool))
-}
-
-// GetCurrentCatalog mocks base method.
-func (m *MockStoreInterface) GetCurrentCatalog() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCurrentCatalog")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetCurrentCatalog indicates an expected call of GetCurrentCatalog.
-func (mr *MockStoreInterfaceMockRecorder) GetCurrentCatalog() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentCatalog", reflect.TypeOf((*MockStoreInterface)(nil).GetCurrentCatalog))
-}
-
-// GetCurrentDatabase mocks base method.
-func (m *MockStoreInterface) GetCurrentDatabase() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCurrentDatabase")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetCurrentDatabase indicates an expected call of GetCurrentDatabase.
-func (mr *MockStoreInterfaceMockRecorder) GetCurrentDatabase() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentDatabase", reflect.TypeOf((*MockStoreInterface)(nil).GetCurrentDatabase))
-}
-
-//GetOutputFormat() config.OutputFormat
-
-// GetOutputFormat mocks base method.
-func (m *MockStoreInterface) GetOutputFormat() config.OutputFormat {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOutputFormat")
-	ret0, _ := ret[0].(config.OutputFormat)
-	return ret0
-}
-
-// GetCurrentDatabase indicates an expected call of GetCurrentDatabase.
-func (mr *MockStoreInterfaceMockRecorder) GetOutputFormat() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOutputFormat", reflect.TypeOf((*MockStoreInterface)(nil).GetOutputFormat()))
 }
 
 // GetEnvironmentId mocks base method.

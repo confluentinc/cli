@@ -19,21 +19,21 @@ import (
 const errorDuringTableView = "Error: internal error occurred while in table view"
 
 type InteractiveOutputController struct {
-	app           *tview.Application
-	tableView     components.TableViewInterface
-	resultFetcher types.ResultFetcherInterface
-	isRowViewOpen bool
-	outputFormat  func() config.OutputFormat
-	debug         bool
+	app            *tview.Application
+	tableView      components.TableViewInterface
+	resultFetcher  types.ResultFetcherInterface
+	isRowViewOpen  bool
+	userProperties types.UserPropertiesInterface
+	debug          bool
 }
 
-func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, outputFormat func() config.OutputFormat, debug bool) types.OutputControllerInterface {
+func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, userProperties types.UserPropertiesInterface, debug bool) types.OutputControllerInterface {
 	return &InteractiveOutputController{
-		app:           tview.NewApplication(),
-		tableView:     tableView,
-		resultFetcher: resultFetcher,
-		outputFormat:  outputFormat,
-		debug:         debug,
+		app:            tview.NewApplication(),
+		tableView:      tableView,
+		resultFetcher:  resultFetcher,
+		userProperties: userProperties,
+		debug:          debug,
 	}
 }
 
@@ -199,7 +199,7 @@ func (t *InteractiveOutputController) handleKeyUpOrDownPress(event *tcell.EventK
 }
 
 func (t *InteractiveOutputController) withBorder() bool {
-	return t.outputFormat() != config.OutputFormatPlainText
+	return t.userProperties.GetOutputFormat() != config.OutputFormatPlainText
 }
 
 func (t *InteractiveOutputController) getTableTitle() string {

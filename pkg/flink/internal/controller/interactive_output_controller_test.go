@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
@@ -29,14 +30,14 @@ func TestInteractiveOutputControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(InteractiveOutputControllerTestSuite))
 }
 
-var standardFormat = func() config.OutputFormat { return config.OutputFormatStandard }
-
 func (s *InteractiveOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.tableView = mock.NewMockTableViewInterface(ctrl)
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, standardFormat, false).(*InteractiveOutputController)
+
+	userProperties := store.NewUserPropertiesWithDefaults(map[string]string{config.KeyOutputFormat: string(config.OutputFormatStandard)}, map[string]string{})
+	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, userProperties, false).(*InteractiveOutputController)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -236,8 +237,8 @@ func (s *InteractiveOutputControllerTestSuite) TestStandardModeWithBorder() {
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestPlainTextModeNoBorder() {
-	plainTextFormat := func() config.OutputFormat { return config.OutputFormatPlainText }
-	interactiveOutputController := NewInteractiveOutputController(s.tableView, s.resultFetcher, plainTextFormat, false).(*InteractiveOutputController)
+	userProperties := store.NewUserPropertiesWithDefaults(map[string]string{config.KeyOutputFormat: string(config.OutputFormatPlainText)}, map[string]string{})
+	interactiveOutputController := NewInteractiveOutputController(s.tableView, s.resultFetcher, userProperties, false).(*InteractiveOutputController)
 
 	actual := interactiveOutputController.withBorder()
 

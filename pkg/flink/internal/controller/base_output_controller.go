@@ -12,17 +12,17 @@ import (
 )
 
 type BaseOutputController struct {
-	resultFetcher types.ResultFetcherInterface
-	getWindowSize func() int
-	outputFormat  func() config.OutputFormat
+	resultFetcher  types.ResultFetcherInterface
+	getWindowSize  func() int
+	userProperties types.UserPropertiesInterface
 }
 
 // This controller is responsible for both Standard and Plain Text output formats
-func NewBaseOutputController(resultFetcher types.ResultFetcherInterface, getWindowWidth func() int, outputFormat func() config.OutputFormat) types.OutputControllerInterface {
+func NewBaseOutputController(resultFetcher types.ResultFetcherInterface, getWindowWidth func() int, userProperties types.UserPropertiesInterface) types.OutputControllerInterface {
 	return &BaseOutputController{
-		resultFetcher: resultFetcher,
-		getWindowSize: getWindowWidth,
-		outputFormat:  outputFormat,
+		resultFetcher:  resultFetcher,
+		getWindowSize:  getWindowWidth,
+		userProperties: userProperties,
 	}
 }
 
@@ -65,7 +65,7 @@ func (c *BaseOutputController) getRows(totalAvailableChars int) [][]string {
 	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
 		formattedRow := make([]string, len(row.Fields))
 		for colIdx, field := range row.Fields {
-			if c.outputFormat() == config.OutputFormatPlainText {
+			if c.userProperties.GetOutputFormat() == config.OutputFormatPlainText {
 				formattedRow[colIdx] = field.ToString()
 			} else {
 				formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
@@ -77,11 +77,11 @@ func (c *BaseOutputController) getRows(totalAvailableChars int) [][]string {
 }
 
 func (c *BaseOutputController) withBorder() bool {
-	return c.outputFormat() != config.OutputFormatPlainText
+	return c.userProperties.GetOutputFormat() != config.OutputFormatPlainText
 }
 
 func (c *BaseOutputController) withColumnSeparator() string {
-	if c.outputFormat() == config.OutputFormatPlainText {
+	if c.userProperties.GetOutputFormat() == config.OutputFormatPlainText {
 		return ""
 	}
 
