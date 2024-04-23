@@ -199,11 +199,7 @@ func (t *InteractiveOutputController) handleKeyUpOrDownPress(event *tcell.EventK
 }
 
 func (t *InteractiveOutputController) withBorder() bool {
-	if t.outputFormat() == config.OutputFormatPlainText {
-		return false
-	} else {
-		return true
-	}
+	return t.outputFormat() != config.OutputFormatPlainText
 }
 
 func (t *InteractiveOutputController) getTableTitle() string {

@@ -14,14 +14,15 @@ import (
 type BaseOutputController struct {
 	resultFetcher types.ResultFetcherInterface
 	getWindowSize func() int
-	outputFormat  config.OutputFormat
+	outputFormat  func() config.OutputFormat
 }
 
-func NewStandardOutputController(resultFetcher types.ResultFetcherInterface, getWindowWidth func() int) types.OutputControllerInterface {
+// This controller is responsible for both Standard and Plain Text output formats
+func NewBaseOutputController(resultFetcher types.ResultFetcherInterface, getWindowWidth func() int, outputFormat func() config.OutputFormat) types.OutputControllerInterface {
 	return &BaseOutputController{
 		resultFetcher: resultFetcher,
 		getWindowSize: getWindowWidth,
-		outputFormat:  config.OutputFormatStandard,
+		outputFormat:  outputFormat,
 	}
 }
 
@@ -64,7 +65,7 @@ func (c *BaseOutputController) getRows(totalAvailableChars int) [][]string {
 	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
 		formattedRow := make([]string, len(row.Fields))
 		for colIdx, field := range row.Fields {
-			if c.outputFormat == config.OutputFormatPlainText {
+			if c.outputFormat() == config.OutputFormatPlainText {
 				formattedRow[colIdx] = field.ToString()
 			} else {
 				formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
@@ -76,19 +77,15 @@ func (c *BaseOutputController) getRows(totalAvailableChars int) [][]string {
 }
 
 func (c *BaseOutputController) withBorder() bool {
-	if c.outputFormat == config.OutputFormatPlainText {
-		return false
-	} else {
-		return true
-	}
+	return c.outputFormat() != config.OutputFormatPlainText
 }
 
 func (c *BaseOutputController) withColumnSeparator() string {
-	if c.outputFormat == config.OutputFormatPlainText {
+	if c.outputFormat() == config.OutputFormatPlainText {
 		return ""
-	} else {
-		return "|"
 	}
+
+	return "|"
 }
 
 func (c *BaseOutputController) createTable(rows [][]string) *tablewriter.Table {

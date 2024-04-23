@@ -10,6 +10,7 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -29,12 +30,12 @@ func TestOutputControllerTestSuite(t *testing.T) {
 func (s *BasicOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
-	s.standardOutputController = NewStandardOutputController(s.resultFetcher, func() int {
+	s.standardOutputController = NewBaseOutputController(s.resultFetcher, func() int {
 		return 10
-	})
-	s.plainTextOutputController = NewPlainTextOutputController(s.resultFetcher, func() int {
+	}, func() config.OutputFormat { return config.OutputFormatStandard })
+	s.plainTextOutputController = NewBaseOutputController(s.resultFetcher, func() int {
 		return 10
-	})
+	}, func() config.OutputFormat { return config.OutputFormatPlainText })
 }
 
 func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintNoRows() {

@@ -7,7 +7,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
@@ -26,8 +25,7 @@ type Application struct {
 	inputController             types.InputControllerInterface
 	statementController         types.StatementControllerInterface
 	interactiveOutputController types.OutputControllerInterface
-	standardOutputController    types.OutputControllerInterface
-	plainTextOutputController   types.OutputControllerInterface
+	baseOutputController        types.OutputControllerInterface
 	refreshToken                func() error
 	reportUsage                 func()
 	appOptions                  types.ApplicationOptions
@@ -94,8 +92,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	inputController := controller.NewInputController(historyStore, lspCompleter)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, dataStore.GetOutputFormat, appOptions.GetVerbose())
-	standardOutputController := controller.NewStandardOutputController(resultFetcher, inputController.GetWindowWidth)
-	plainTextOutputController := controller.NewPlainTextOutputController(resultFetcher, inputController.GetWindowWidth)
+	baseOutputController := controller.NewBaseOutputController(resultFetcher, inputController.GetWindowWidth, dataStore.GetOutputFormat)
 
 	app := Application{
 		history:                     historyStore,
@@ -105,8 +102,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 		inputController:             inputController,
 		statementController:         statementController,
 		interactiveOutputController: interactiveOutputController,
-		standardOutputController:    standardOutputController,
-		plainTextOutputController:   plainTextOutputController,
+		baseOutputController:        baseOutputController,
 		refreshToken:                synchronizedTokenRefreshFunc,
 		reportUsage:                 reportUsageFunc,
 		appOptions:                  appOptions,
@@ -167,14 +163,11 @@ func (a *Application) isAuthenticated() bool {
 
 func (a *Application) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {
 	if processedStatementWithResults.IsLocalStatement {
-		if a.store.GetOutputFormat() == config.OutputFormatPlainText {
-			return a.plainTextOutputController
-		}
-		return a.standardOutputController
+		return a.baseOutputController
 	}
 	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement() {
 		return a.interactiveOutputController
 	}
 
-	return a.standardOutputController
+	return a.baseOutputController
 }

@@ -29,7 +29,6 @@ type OutputFormat string
 const (
 	OutputFormatStandard  OutputFormat = "standard"
 	OutputFormatPlainText OutputFormat = "plain-text"
-	//OutputFormatJson  = "json"
 )
 
 var SensitiveKeys = []string{KeyOpenaiSecret}
