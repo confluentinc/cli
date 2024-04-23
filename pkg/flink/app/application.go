@@ -7,6 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
@@ -19,13 +20,14 @@ import (
 
 type Application struct {
 	history                     *history.History
+	userProperties              types.UserPropertiesInterface
 	store                       types.StoreInterface
 	resultFetcher               types.ResultFetcherInterface
 	appController               types.ApplicationControllerInterface
 	inputController             types.InputControllerInterface
 	statementController         types.StatementControllerInterface
 	interactiveOutputController types.OutputControllerInterface
-	basicOutputController       types.OutputControllerInterface
+	baseOutputController        types.OutputControllerInterface
 	refreshToken                func() error
 	reportUsage                 func()
 	appOptions                  types.ApplicationOptions
@@ -59,7 +61,8 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	appController := controller.NewApplicationController(historyStore)
 
 	// Store used to process statements and store local properties
-	dataStore := store.NewStore(gatewayClient, appController.ExitApplication, &appOptions, synchronizedTokenRefreshFunc)
+	userProperties := store.NewUserProperties(&appOptions)
+	dataStore := store.NewStore(gatewayClient, appController.ExitApplication, userProperties, &appOptions, synchronizedTokenRefreshFunc)
 	resultFetcher := results.NewResultFetcher(dataStore)
 
 	// Instantiate LSP
@@ -83,26 +86,27 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	lspCompleter := lsp.LspCompleter(lspClient, func() lsp.CliContext {
 		return lsp.CliContext{
 			AuthToken:     getAuthToken(),
-			Catalog:       dataStore.GetCurrentCatalog(),
-			Database:      dataStore.GetCurrentDatabase(),
+			Catalog:       userProperties.Get(config.KeyCatalog),
+			Database:      userProperties.Get(config.KeyDatabase),
 			ComputePoolId: appOptions.GetComputePoolId(),
 		}
 	})
 
 	inputController := controller.NewInputController(historyStore, lspCompleter)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
-	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
-	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
+	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
+	baseOutputController := controller.NewBaseOutputController(resultFetcher, inputController.GetWindowWidth, userProperties)
 
 	app := Application{
 		history:                     historyStore,
+		userProperties:              userProperties,
 		store:                       dataStore,
 		resultFetcher:               resultFetcher,
 		appController:               appController,
 		inputController:             inputController,
 		statementController:         statementController,
 		interactiveOutputController: interactiveOutputController,
-		basicOutputController:       basicOutputController,
+		baseOutputController:        baseOutputController,
 		refreshToken:                synchronizedTokenRefreshFunc,
 		reportUsage:                 reportUsageFunc,
 		appOptions:                  appOptions,
@@ -148,7 +152,7 @@ func (a *Application) readEvalPrint() {
 func (a *Application) panicRecovery() {
 	log.CliLogger.Warn("Internal error occurred. Executing panic recovery.")
 	a.statementController.CleanupStatement()
-	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
+	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.userProperties, a.appOptions.GetVerbose())
 	a.reportUsage()
 }
 
@@ -163,11 +167,11 @@ func (a *Application) isAuthenticated() bool {
 
 func (a *Application) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {
 	if processedStatementWithResults.IsLocalStatement {
-		return a.basicOutputController
+		return a.baseOutputController
 	}
 	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement() {
 		return a.interactiveOutputController
 	}
 
-	return a.basicOutputController
+	return a.baseOutputController
 }
