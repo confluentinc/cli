@@ -10,6 +10,7 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -17,8 +18,9 @@ import (
 
 type BasicOutputControllerTestSuite struct {
 	suite.Suite
-	basicOutputController types.OutputControllerInterface
-	resultFetcher         *mock.MockResultFetcherInterface
+	standardOutputController  types.OutputControllerInterface
+	plainTextOutputController types.OutputControllerInterface
+	resultFetcher             *mock.MockResultFetcherInterface
 }
 
 func TestOutputControllerTestSuite(t *testing.T) {
@@ -28,16 +30,19 @@ func TestOutputControllerTestSuite(t *testing.T) {
 func (s *BasicOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
-	s.basicOutputController = NewBasicOutputController(s.resultFetcher, func() int {
+	s.standardOutputController = NewBaseOutputController(s.resultFetcher, func() int {
 		return 10
-	})
+	}, func() config.OutputFormat { return config.OutputFormatStandard })
+	s.plainTextOutputController = NewBaseOutputController(s.resultFetcher, func() int {
+		return 10
+	}, func() config.OutputFormat { return config.OutputFormatPlainText })
 }
 
 func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintNoRows() {
 	mat := types.NewMaterializedStatementResults([]string{}, 10, nil)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat)
 	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{})
-	stdout := test.RunAndCaptureSTDOUT(s.T(), s.basicOutputController.VisualizeResults)
+	stdout := test.RunAndCaptureSTDOUT(s.T(), s.standardOutputController.VisualizeResults)
 
 	cupaloy.SnapshotT(s.T(), stdout)
 }
@@ -46,7 +51,7 @@ func (s *BasicOutputControllerTestSuite) TestRunInteractiveInputShouldNotPrintNo
 	mat := types.NewMaterializedStatementResults([]string{}, 10, nil)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat)
 	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatusDetail: "Created table 'test'"})
-	stdout := test.RunAndCaptureSTDOUT(s.T(), s.basicOutputController.VisualizeResults)
+	stdout := test.RunAndCaptureSTDOUT(s.T(), s.standardOutputController.VisualizeResults)
 
 	cupaloy.SnapshotT(s.T(), stdout)
 }
@@ -57,7 +62,27 @@ func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintTable() 
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(4)
 
-	stdout := test.RunAndCaptureSTDOUT(s.T(), s.basicOutputController.VisualizeResults)
+	stdout := test.RunAndCaptureSTDOUT(s.T(), s.standardOutputController.VisualizeResults)
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintNoRowsInPlainText() {
+	mat := types.NewMaterializedStatementResults([]string{}, 10, nil)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat)
+	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{})
+	stdout := test.RunAndCaptureSTDOUT(s.T(), s.plainTextOutputController.VisualizeResults)
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintPlainTextTable() {
+	executedStatementWithResults := getStatementWithResultsExample()
+	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10, nil)
+	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(4)
+
+	stdout := test.RunAndCaptureSTDOUT(s.T(), s.plainTextOutputController.VisualizeResults)
 
 	cupaloy.SnapshotT(s.T(), stdout)
 }

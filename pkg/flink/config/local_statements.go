@@ -21,6 +21,14 @@ const (
 	KeyResultsTimeout = "client.results-timeout"
 	KeyServiceAccount = "client.service-account"
 	KeyStatementName  = "client.statement-name"
+	KeyOutputFormat   = "client.output-format"
+)
+
+type OutputFormat string
+
+const (
+	OutputFormatStandard  OutputFormat = "standard"
+	OutputFormatPlainText OutputFormat = "plain-text"
 )
 
 var SensitiveKeys = []string{KeyOpenaiSecret}

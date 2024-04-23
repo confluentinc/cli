@@ -72,6 +72,16 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		}
 	}
 
+	if configKey == config.KeyOutputFormat {
+		outputFormat := config.OutputFormat(configVal)
+		if outputFormat != config.OutputFormatStandard && outputFormat != config.OutputFormatPlainText {
+			return nil, &types.StatementError{
+				Message:    fmt.Sprintf(`invalid output format for "%s"`, config.KeyOutputFormat),
+				Suggestion: fmt.Sprintf(`please provide a valid output format: "%s" or "%s"`, config.OutputFormatStandard, config.OutputFormatPlainText),
+			}
+		}
+	}
+
 	hasSensitiveKey := lo.SomeBy(config.SensitiveKeys, func(sensitiveKey string) bool {
 		return isKeySimilarToSensitiveKey(sensitiveKey, configKey)
 	})
