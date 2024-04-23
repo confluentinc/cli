@@ -10,13 +10,14 @@ import (
 	"pgregory.net/rapid"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
 type UserPropertiesTestSuite struct {
 	suite.Suite
 	defaultKey     string
 	defaultValue   string
-	userProperties UserProperties
+	userProperties types.UserPropertiesInterface
 }
 
 func TestUserPropertiesTestSuite(t *testing.T) {
@@ -26,7 +27,7 @@ func TestUserPropertiesTestSuite(t *testing.T) {
 func (s *UserPropertiesTestSuite) SetupTest() {
 	s.defaultKey = "default-key"
 	s.defaultValue = "default-value"
-	s.userProperties = NewUserProperties(map[string]string{s.defaultKey: s.defaultValue}, map[string]string{})
+	s.userProperties = NewUserPropertiesWithDefaults(map[string]string{s.defaultKey: s.defaultValue}, map[string]string{})
 	require.Equal(s.T(), s.defaultValue, s.userProperties.Get(s.defaultKey))
 }
 
@@ -151,14 +152,14 @@ func (s *UserPropertiesTestSuite) TestToSortedSlice() {
 		cupaloy.SnapshotT(t, s.userProperties.ToSortedSlice(false))
 	})
 	s.T().Run("with annotated empty default value", func(t *testing.T) {
-		userPropertiesWithEmptyDefault := NewUserProperties(map[string]string{
+		userPropertiesWithEmptyDefault := NewUserPropertiesWithDefaults(map[string]string{
 			s.defaultKey:                 s.defaultValue,
 			"default-key-with-empty-val": "",
 		}, map[string]string{})
 		cupaloy.SnapshotT(t, userPropertiesWithEmptyDefault.ToSortedSlice(true))
 	})
 	s.T().Run("with initial values", func(t *testing.T) {
-		userPropertiesWithInitialValues := NewUserProperties(map[string]string{
+		userPropertiesWithInitialValues := NewUserPropertiesWithDefaults(map[string]string{
 			s.defaultKey: s.defaultValue,
 		}, map[string]string{
 			"initial.key.1": "value1",
