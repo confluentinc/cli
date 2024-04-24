@@ -17,6 +17,7 @@ Statement phase is COMPLETED.
 |          Key           |        Value        |
 +------------------------+---------------------+
 | cli.a-key              | a value             |
+| client.output-format   | standard (default)  |
 | client.service-account | <unset> (default)   |
 | sql.current-catalog    | default             |
 | sql.current-database   | db1                 |

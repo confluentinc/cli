@@ -16,6 +16,7 @@ Statement phase is COMPLETED.
 +------------------------+---------------------+
 |          Key           |        Value        |
 +------------------------+---------------------+
+| client.output-format   | standard (default)  |
 | client.service-account | <unset> (default)   |
 | sql.current-catalog    | default             |
 | sql.local-time-zone    | GMT+00:00 (default) |
