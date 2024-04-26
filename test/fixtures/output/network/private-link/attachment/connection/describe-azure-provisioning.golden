@@ -1,0 +1,9 @@
++--------------------------------+---------------------------+
+| ID                             | plattc-azure-2            |
+| Name                           | my-azure-platt-connection |
+| Cloud                          | AZURE                     |
+| Private Link Attachment ID     | platt-111111              |
+| Phase                          | PROVISIONING              |
+| Azure Private Endpoint         | azure-private-endpoint-id |
+| Resource ID                    |                           |
++--------------------------------+---------------------------+

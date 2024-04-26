@@ -24,5 +24,15 @@
     "phase": "READY",
     "aws_vpc_endpoint_id": "vpce-01234567890abcdef",
     "aws_vpc_endpoint_service_name": "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef"
+  },
+  {
+    "id": "plattc-azure",
+    "name": "azure-plattc-1",
+    "cloud": "AZURE",
+    "private_link_attachment_id": "platt-111111",
+    "phase": "READY",
+    "azure_private_endpoint_resource_id": "azure-private-endpoint-id",
+    "azure_private_link_service_alias": "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice",
+    "azure_private_link_service_id": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1"
   }
 ]

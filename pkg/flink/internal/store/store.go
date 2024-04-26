@@ -19,19 +19,11 @@ import (
 )
 
 type Store struct {
-	Properties       UserProperties
+	Properties       types.UserPropertiesInterface
 	exitApplication  func()
 	client           ccloudv2.GatewayClientInterface
 	appOptions       *types.ApplicationOptions
 	tokenRefreshFunc func() error
-}
-
-func (s *Store) GetCurrentCatalog() string {
-	return s.Properties.Get(config.KeyCatalog)
-}
-
-func (s *Store) GetCurrentDatabase() string {
-	return s.Properties.Get(config.KeyDatabase)
 }
 
 func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
@@ -50,7 +42,7 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 		return s.processResetStatement(statement)
 	case UseStatement:
 		return s.processUseStatement(statement)
-	case ExitStatement:
+	case QuitStatement, ExitStatement:
 		s.exitApplication()
 		return nil, nil
 	default:
@@ -321,36 +313,14 @@ func extractPageToken(nextUrl string) (string, error) {
 	return params.Get("page_token"), nil
 }
 
-func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
+func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), userProperties types.UserPropertiesInterface, appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
 	return &Store{
-		Properties:       NewUserProperties(getDefaultProperties(appOptions), getInitialProperties(appOptions)),
+		Properties:       userProperties,
 		client:           client,
 		exitApplication:  exitApplication,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
-}
-
-func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
-	properties := map[string]string{
-		config.KeyServiceAccount: appOptions.GetServiceAccountId(),
-		config.KeyLocalTimeZone:  getLocalTimezone(),
-	}
-
-	return properties
-}
-
-func getInitialProperties(appOptions *types.ApplicationOptions) map[string]string {
-	properties := map[string]string{}
-
-	if appOptions.GetEnvironmentName() != "" {
-		properties[config.KeyCatalog] = appOptions.GetEnvironmentName()
-	}
-	if appOptions.GetDatabase() != "" {
-		properties[config.KeyDatabase] = appOptions.GetDatabase()
-	}
-
-	return properties
 }
 
 func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {

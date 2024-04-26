@@ -60,13 +60,13 @@ func (c *command) newPeeringCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) getPeerings() ([]networkingv1.NetworkingV1Peering, error) {
+func (c *command) getPeerings(name, network, phase []string) ([]networkingv1.NetworkingV1Peering, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.V2Client.ListPeerings(environmentId)
+	return c.V2Client.ListPeerings(environmentId, name, network, phase)
 }
 
 func (c *command) validPeeringArgs(cmd *cobra.Command, args []string) []string {
@@ -85,7 +85,7 @@ func (c *command) validPeeringArgsMultiple(cmd *cobra.Command, args []string) []
 }
 
 func (c *command) autocompletePeerings() []string {
-	peerings, err := c.getPeerings()
+	peerings, err := c.getPeerings(nil, nil, nil)
 	if err != nil {
 		return nil
 	}

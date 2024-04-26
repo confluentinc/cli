@@ -39,7 +39,9 @@ func TestRemoveStatementTerminator(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, &types.ApplicationOptions{EnvironmentName: "env-123"}, tokenRefreshFunc).(*Store)
+	appOptions := &types.ApplicationOptions{EnvironmentName: "env-123"}
+	userProperties := NewUserProperties(appOptions)
+	s := NewStore(client, nil, userProperties, &types.ApplicationOptions{EnvironmentName: "env-123"}, tokenRefreshFunc).(*Store)
 	// This is just a string, so really doesn't matter
 	s.Properties.Set(config.KeyLocalTimeZone, "London/GMT")
 
@@ -120,12 +122,15 @@ func TestProcessResetStatement(t *testing.T) {
 		Database:         "database",
 		ServiceAccountId: "sa-123",
 	}
-	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
+
+	userProperties := NewUserProperties(&appOptions)
+	s := NewStore(client, nil, userProperties, &appOptions, tokenRefreshFunc).(*Store)
 	s.Properties.Set(config.KeyLocalTimeZone, "London/GMT")
 
 	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
 		{config.KeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
 		{config.KeyServiceAccount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
+		{config.KeyOutputFormat, fmt.Sprintf("%s (default)", config.OutputFormatStandard)},
 	})
 
 	t.Run("should return all keys and values including default and initial values before reseting", func(t *testing.T) {
@@ -188,7 +193,8 @@ func TestProcessUseStatement(t *testing.T) {
 		EnvironmentName: "envName",
 		Database:        "database",
 	}
-	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
+	userProperties := NewUserProperties(&appOptions)
+	s := NewStore(client, nil, userProperties, &appOptions, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processUseStatement("us")
@@ -257,6 +263,8 @@ func TestParseStatementType(t *testing.T) {
 	require.Equal(t, UseStatement, parseStatementType("use ..."))
 	require.Equal(t, ResetStatement, parseStatementType("reset ..."))
 	require.Equal(t, ExitStatement, parseStatementType("exit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit"))
 	require.Equal(t, OtherStatement, parseStatementType("Some other statement"))
 }
 
@@ -468,5 +476,17 @@ func TestTokenizeSQL(t *testing.T) {
 	// Test string with only backticks
 	input = "````"
 	expected = []string{"`"}
+	require.Equal(expected, TokenizeSQL(input))
+}
+
+func TestTokenizeSQLSpecialCharacters(t *testing.T) {
+	require := require.New(t)
+
+	input := "my clusté€r"
+	expected := []string{"my", "clusté€r"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "my cluster αβγбвг汉字あア한😀"
+	expected = []string{"my", "cluster", "αβγбвг汉字あア한😀"}
 	require.Equal(expected, TokenizeSQL(input))
 }

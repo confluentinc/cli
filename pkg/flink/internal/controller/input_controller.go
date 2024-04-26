@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/autocomplete"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
@@ -136,7 +137,9 @@ func (c *InputController) initPrompt() (prompt.IPrompt, error) {
 			if text == "" {
 				return false
 			}
-			return text == "exit" || strings.HasSuffix(text, ";") || lastKeyStroke == prompt.AltEnter
+
+			text = strings.ToUpper(text)
+			return text == config.OpExit || text == config.OpQuit || strings.HasSuffix(text, ";") || lastKeyStroke == prompt.AltEnter
 		}),
 	}
 	options = append(options, c.getKeyBindings()...)

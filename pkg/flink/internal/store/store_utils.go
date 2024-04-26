@@ -23,6 +23,7 @@ const (
 	UseStatement   StatementType = config.OpUse
 	ResetStatement StatementType = config.OpReset
 	ExitStatement  StatementType = config.OpExit
+	QuitStatement  StatementType = config.OpQuit
 	OtherStatement StatementType = "OTHER"
 )
 
@@ -68,6 +69,16 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		return nil, &types.StatementError{
 			Message:    "cannot set an empty statement name",
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
+		}
+	}
+
+	if configKey == config.KeyOutputFormat {
+		outputFormat := config.OutputFormat(configVal)
+		if outputFormat != config.OutputFormatStandard && outputFormat != config.OutputFormatPlainText {
+			return nil, &types.StatementError{
+				Message:    fmt.Sprintf(`invalid output format for "%s"`, config.KeyOutputFormat),
+				Suggestion: fmt.Sprintf(`please provide a valid output format: "%s" or "%s"`, config.OutputFormatStandard, config.OutputFormatPlainText),
+			}
 		}
 	}
 
@@ -274,14 +285,15 @@ func parseSetStatement(statement string) (string, string, error) {
 	return key, value, nil
 }
 
-func TokenizeSQL(input string) []string {
+func TokenizeSQL(statement string) []string {
 	var tokens []string
 	var buffer bytes.Buffer
 	var inBacktick bool
+	input := []rune(statement)
 
 	// Iterate over each character in the input string
 	for i := 0; i < len(input); i++ {
-		c := rune(input[i])
+		c := input[i]
 
 		// Ignore whitespace
 		if unicode.IsSpace(c) && !inBacktick {
@@ -471,6 +483,8 @@ func parseStatementType(statement string) StatementType {
 		return ResetStatement
 	} else if statementStartsWithOp(statement, string(ExitStatement)) {
 		return ExitStatement
+	} else if statementStartsWithOp(statement, string(QuitStatement)) {
+		return QuitStatement
 	} else {
 		return OtherStatement
 	}

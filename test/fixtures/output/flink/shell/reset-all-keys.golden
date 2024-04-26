@@ -1,0 +1,44 @@
+Welcome!
+To exit, press Ctrl-Q or type "exit".
+[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion
+> set 'cli.a-key'='a value';
+Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++-----------+---------+
+|    Key    |  Value  |
++-----------+---------+
+| cli.a-key | a value |
++-----------+---------+
+> set 'cli.another-key'='another value';
+Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration updated successfully.
++-----------------+---------------+
+|       Key       |     Value     |
++-----------------+---------------+
+| cli.another-key | another value |
++-----------------+---------------+
+> reset;
+Statement successfully submitted.
+Statement phase is COMPLETED.
+configuration has been reset successfully.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.output-format   | standard (default)  |
+| client.service-account | <unset> (default)   |
+| sql.local-time-zone    | GMT+00:00 (default) |
++------------------------+---------------------+
+> set;
+Statement successfully submitted.
+Statement phase is COMPLETED.
++------------------------+---------------------+
+|          Key           |        Value        |
++------------------------+---------------------+
+| client.output-format   | standard (default)  |
+| client.service-account | <unset> (default)   |
+| sql.local-time-zone    | GMT+00:00 (default) |
++------------------------+---------------------+
+> exit
+

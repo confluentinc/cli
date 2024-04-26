@@ -12,6 +12,8 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
@@ -33,7 +35,9 @@ func (s *InteractiveOutputControllerTestSuite) SetupTest() {
 	s.tableView = mock.NewMockTableViewInterface(ctrl)
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, false).(*InteractiveOutputController)
+
+	userProperties := store.NewUserPropertiesWithDefaults(map[string]string{config.KeyOutputFormat: string(config.OutputFormatStandard)}, map[string]string{})
+	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, userProperties, false).(*InteractiveOutputController)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -83,7 +87,7 @@ func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls(materialized
 	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatementName: "test-statement"}).Times(2)
 	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, &timestamp, types.Paused)
 	s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
-	s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
+	s.tableView.EXPECT().GetFocusableElement().AnyTimes().Return(tview.NewTable())
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
@@ -154,7 +158,7 @@ func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 
 func getResultsExample() *types.MaterializedStatementResults {
 	executedStatementWithResults := getStatementWithResultsExample()
-	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
+	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10, nil)
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 	return &mat
 }
@@ -183,7 +187,6 @@ func (s *InteractiveOutputControllerTestSuite) TestCloseRowViewOnUserInput() {
 			s.interactiveOutputController.init()
 			s.interactiveOutputController.isRowViewOpen = true
 			s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
-			s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 
 			// When
 			result := s.interactiveOutputController.inputCapture(testCase.input)
@@ -227,9 +230,24 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMo
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
+func (s *InteractiveOutputControllerTestSuite) TestStandardModeWithBorder() {
+	actual := s.interactiveOutputController.withBorder()
+
+	require.True(s.T(), actual)
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestPlainTextModeNoBorder() {
+	userProperties := store.NewUserPropertiesWithDefaults(map[string]string{config.KeyOutputFormat: string(config.OutputFormatPlainText)}, map[string]string{})
+	interactiveOutputController := NewInteractiveOutputController(s.tableView, s.resultFetcher, userProperties, false).(*InteractiveOutputController)
+
+	actual := interactiveOutputController.withBorder()
+
+	require.False(s.T(), actual)
+}
+
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAndCacheSizeWithUnsafeTrace() {
 	executedStatementWithResults := getStatementWithResultsExample()
-	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
+	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10, nil)
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)

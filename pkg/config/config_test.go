@@ -44,7 +44,6 @@ var (
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"confluent.cloud",
-		"premium-oryx.gcp.priv.cpdev.cloud",
 		"confluentgov-internal.com",
 	}
 	regularOrgContextState = &ContextState{
