@@ -47,14 +47,6 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	// Deprecated
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-	// Deprecated
-	pcmd.AddApiSecretFlag(cmd)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-
 	return cmd
 }
 
