@@ -1,15 +1,15 @@
-Describe cluster-wide or per-broker configuration values.
+Update cluster-wide Kafka broker configurations.
 
 Usage:
-  confluent kafka broker describe <id> [flags]
+  confluent kafka cluster configuration update [flags]
 
 Examples:
-Describe the "min.insync.replicas" configuration for broker 1.
+Update configuration values for all brokers in the cluster.
 
-  $ confluent kafka broker describe 1 --config-name min.insync.replicas
+  $ confluent kafka broker update --config min.insync.replicas=2,num.partitions=2
 
 Flags:
-      --config-name string        Get a specific configuration value.
+      --config strings            REQUIRED: A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy. Include for mTLS authentication.
