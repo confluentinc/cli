@@ -40,7 +40,7 @@ func (c *accessPointCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.AccessPoint); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.AccessPoint); err != nil {
 		return err
 	}
 
