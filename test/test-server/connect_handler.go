@@ -2,8 +2,11 @@ package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -53,6 +56,141 @@ func handleConnectorResume(_ *testing.T) http.HandlerFunc {
 	}
 }
 
+func handleConnectorOffsets(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		connectorName := strings.Split(r.URL.Path, "/")[8]
+		currTime := time.Unix(1712046213, 123).UTC()
+		connectorOffset := connectv1.ConnectV1ConnectorOffsets{
+			Name: connectv1.PtrString(connectorName),
+			Id:   connectv1.PtrString("lcc-123"),
+			Offsets: &[]map[string]any{
+				0: {
+					"partition": map[string]any{
+						"server": "dbzv2",
+					},
+					"offset": map[string]any{
+						"event":          2,
+						"file":           "mysql-bin.000600",
+						"pos":            2001,
+						"row":            1,
+						"server_id":      1,
+						"transaction_id": nil,
+						"ts_sec":         1711788870,
+					},
+				},
+			},
+			Metadata: &connectv1.ConnectV1ConnectorOffsetsMetadata{
+				ObservedAt: &currTime,
+			},
+		}
+
+		err := json.NewEncoder(w).Encode(connectorOffset)
+		require.NoError(t, err)
+	}
+}
+
+func handleAlterConnectorOffsets(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var request connectv1.ConnectV1AlterOffsetRequest
+		err := json.NewDecoder(r.Body).Decode(&request)
+		if err != nil {
+			return
+		}
+		connectorOffsetRequestInfo := connectv1.ConnectV1AlterOffsetRequestInfo{
+			Id:          "lcc-123",
+			Name:        "GcsSink",
+			Type:        request.Type,
+			RequestedAt: time.Unix(1712046213, 123).UTC(),
+			Offsets: &[]map[string]any{
+				0: {
+					"partition": map[string]any{
+						"server": "dbzv2",
+					},
+					"offset": map[string]any{
+						"event":          2,
+						"file":           "mysql-bin.000600",
+						"pos":            2001,
+						"row":            1,
+						"server_id":      1,
+						"transaction_id": nil,
+						"ts_sec":         1711788870,
+					},
+				},
+			},
+		}
+
+		err = json.NewEncoder(w).Encode(connectorOffsetRequestInfo)
+		require.NoError(t, err)
+	}
+}
+
+func handleAlterConnectorOffsetsStatus(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		connectorName := strings.Split(r.URL.Path, "/")[8]
+		currTime := time.Unix(1712046213, 123).UTC()
+		var request connectv1.ConnectV1AlterOffsetRequestInfo
+		if connectorName == "az-connector" {
+			request = connectv1.ConnectV1AlterOffsetRequestInfo{
+				Id:          "lcc-123",
+				Name:        connectorName,
+				Type:        "PATCH",
+				RequestedAt: currTime,
+				Offsets: &[]map[string]any{
+					0: {
+						"partition": map[string]any{
+							"server": "dbzv2",
+						},
+						"offset": map[string]any{
+							"event":          2,
+							"file":           "mysql-bin.000700",
+							"pos":            2003,
+							"row":            9,
+							"server_id":      0,
+							"transaction_id": nil,
+							"ts_sec":         1711788870,
+						},
+					},
+				},
+			}
+		} else {
+			request = connectv1.ConnectV1AlterOffsetRequestInfo{
+				Id:          "lcc-111",
+				Name:        connectorName,
+				Type:        "DELETE",
+				RequestedAt: currTime,
+			}
+		}
+
+		connectorOffsetStatus := connectv1.ConnectV1AlterOffsetStatus{
+			Request: request,
+			Status: connectv1.ConnectV1AlterOffsetStatusStatus{
+				Phase:   "APPLIED",
+				Message: connectv1.PtrString("Offset Updated"),
+			},
+			PreviousOffsets: &[]map[string]any{
+				0: {
+					"partition": map[string]any{
+						"server": "dbzv2",
+					},
+					"offset": map[string]any{
+						"event":          2,
+						"file":           "mysql-bin.000600",
+						"pos":            2001,
+						"row":            1,
+						"server_id":      1,
+						"transaction_id": nil,
+						"ts_sec":         1711788870,
+					},
+				},
+			},
+			AppliedAt: *connectv1.NewNullableTime(&currTime),
+		}
+
+		err := json.NewEncoder(w).Encode(connectorOffsetStatus)
+		require.NoError(t, err)
+	}
+}
+
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors"
 func handleConnectors(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +202,7 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
 						State: "RUNNING",
 					},
-					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{{Id: 1, State: "RUNNING"}},
+					Tasks: &[]connectv1.InlineResponse2001Tasks{{Id: 1, State: "RUNNING"}},
 					Type:  "Sink",
 				},
 				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
@@ -79,7 +217,7 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
 						State: "RUNNING",
 					},
-					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{{Id: 1, State: "RUNNING"}},
+					Tasks: &[]connectv1.InlineResponse2001Tasks{{Id: 1, State: "RUNNING"}},
 					Type:  "Sink",
 				},
 				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
@@ -223,68 +361,91 @@ func handlePluginValidate(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/connect/v1/custom-connector-plugins"
-func handleCustomPlugin(t *testing.T) http.HandlerFunc {
+func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
+		switch r.Method {
+		case http.MethodPost:
 			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          PtrString("ccp-123456"),
-				DisplayName: PtrString("my-custom-plugin"),
+				Id:             connectcustompluginv1.PtrString("ccp-123456"),
+				DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
+				Cloud:          connectcustompluginv1.PtrString("AWS"),
+				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
-		}
-		if r.Method == http.MethodGet {
+		case http.MethodGet:
 			plugin1 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          PtrString("ccp-123456"),
-				DisplayName: PtrString("CliPluginTest1"),
+				Id:          connectcustompluginv1.PtrString("ccp-123456"),
+				DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
+				Cloud:       connectcustompluginv1.PtrString("AWS"),
 			}
 			plugin2 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          PtrString("ccp-789012"),
-				DisplayName: PtrString("CliPluginTest2"),
+				Id:          connectcustompluginv1.PtrString("ccp-789012"),
+				DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
+				Cloud:       connectcustompluginv1.PtrString("AWS"),
 			}
-			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2}})
+			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+				Id:             connectcustompluginv1.PtrString("ccp-789013"),
+				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
+				ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
+				Cloud:          connectcustompluginv1.PtrString("AWS"),
+				ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
+				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+			}
+			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3}})
 			require.NoError(t, err)
 		}
 	}
 }
 
 // Handler for: "/connect/v1/custom-connector-plugins/{id}"
-func handleCustomPluginWithId(t *testing.T) http.HandlerFunc {
+func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			vars := mux.Vars(r)
 			id := vars["id"]
 			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
 			if id == "ccp-123456" {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-					Id:             PtrString("ccp-123456"),
-					DisplayName:    PtrString("CliPluginTest"),
-					ConnectorType:  PtrString("source"),
-					ConnectorClass: PtrString("io.confluent.kafka.connect.test"),
+					Id:             connectcustompluginv1.PtrString("ccp-123456"),
+					DisplayName:    connectcustompluginv1.PtrString("CliPluginTest"),
+					ConnectorType:  connectcustompluginv1.PtrString("source"),
+					ConnectorClass: connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
+					Cloud:          connectcustompluginv1.PtrString("AWS"),
 				}
-			} else {
+			} else if id == "ccp-789012" {
 				sensitiveProperties := []string{"aws.key", "aws.secret"}
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-					Id:                        PtrString("ccp-123456"),
-					DisplayName:               PtrString("CliPluginTest"),
-					Description:               PtrString("Source datagen plugin"),
-					ConnectorType:             PtrString("source"),
-					ConnectorClass:            PtrString("io.confluent.kafka.connect.test"),
+					Id:                        connectcustompluginv1.PtrString("ccp-789012"),
+					DisplayName:               connectcustompluginv1.PtrString("CliPluginTest"),
+					Description:               connectcustompluginv1.PtrString("Source datagen plugin"),
+					ConnectorType:             connectcustompluginv1.PtrString("source"),
+					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
+					Cloud:                     connectcustompluginv1.PtrString("AWS"),
 					SensitiveConfigProperties: &sensitiveProperties,
+				}
+			} else {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:             connectcustompluginv1.PtrString("ccp-789013"),
+					DisplayName:    connectcustompluginv1.PtrString("CliPluginTest"),
+					ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
+					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+					Cloud:          connectcustompluginv1.PtrString("AWS"),
+					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 				}
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
-		}
-		if r.Method == http.MethodPatch {
+		case http.MethodPatch:
 			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          PtrString("ccp-123456"),
-				DisplayName: PtrString("CliPluginTestUpdate"),
+				Id:          connectcustompluginv1.PtrString("ccp-123456"),
+				DisplayName: connectcustompluginv1.PtrString("CliPluginTestUpdate"),
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
-		}
-		if r.Method == http.MethodDelete {
+		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPlugin{})
 			require.NoError(t, err)
 		}
@@ -296,9 +457,10 @@ func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			uploadUrl := connectcustompluginv1.ConnectV1PresignedUrl{
-				ContentFormat: PtrString("ZIP"),
-				UploadId:      PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
-				UploadUrl:     PtrString("https://api.confluent.cloud/connect/v1/dummy-presigned-url"),
+				ContentFormat: connectcustompluginv1.PtrString("ZIP"),
+				Cloud:         connectcustompluginv1.PtrString("AWS"),
+				UploadId:      connectcustompluginv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl:     connectcustompluginv1.PtrString(fmt.Sprintf("%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.String())),
 			}
 			err := json.NewEncoder(w).Encode(uploadUrl)
 			require.NoError(t, err)
@@ -310,7 +472,7 @@ func handleCustomPluginUploadUrl(t *testing.T) http.HandlerFunc {
 func handleCustomPluginUploadFile(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			err := json.NewEncoder(w).Encode(PtrString("Success"))
+			err := json.NewEncoder(w).Encode(connectcustompluginv1.PtrString("Success"))
 			require.NoError(t, err)
 		}
 	}

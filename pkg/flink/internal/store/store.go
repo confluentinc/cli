@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
@@ -19,19 +19,11 @@ import (
 )
 
 type Store struct {
-	Properties       UserProperties
+	Properties       types.UserPropertiesInterface
 	exitApplication  func()
 	client           ccloudv2.GatewayClientInterface
 	appOptions       *types.ApplicationOptions
 	tokenRefreshFunc func() error
-}
-
-func (s *Store) GetCurrentCatalog() string {
-	return s.Properties.Get(config.KeyCatalog)
-}
-
-func (s *Store) GetCurrentDatabase() string {
-	return s.Properties.Get(config.KeyDatabase)
 }
 
 func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
@@ -50,7 +42,7 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 		return s.processResetStatement(statement)
 	case UseStatement:
 		return s.processUseStatement(statement)
-	case ExitStatement:
+	case QuitStatement, ExitStatement:
 		s.exitApplication()
 		return nil, nil
 	default:
@@ -100,7 +92,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
-		createSqlV1beta1Statement(statement, statementName, computePoolId, properties),
+		createSqlV1Statement(statement, statementName, computePoolId, properties),
 		principal,
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrganizationId(),
@@ -112,10 +104,10 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	return types.NewProcessedStatement(statementObj), nil
 }
 
-func createSqlV1beta1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1beta1.SqlV1beta1Statement {
-	return flinkgatewayv1beta1.SqlV1beta1Statement{
+func createSqlV1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1.SqlV1Statement {
+	return flinkgatewayv1.SqlV1Statement{
 		Name: &statementName,
-		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
+		Spec: &flinkgatewayv1.SqlV1StatementSpec{
 			Statement:     &statement,
 			ComputePoolId: &computePoolId,
 			Properties:    &properties,
@@ -159,7 +151,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	statementResults := statementResultObj.GetResults()
-	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
+	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.Traits.GetSchema())
 	if err != nil {
 		return nil, types.NewStatementError(err)
 	}
@@ -287,7 +279,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	}
 }
 
-func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1Statement) string {
+func (s *Store) getStatusDetail(statementObj flinkgatewayv1.SqlV1Statement) string {
 	status := statementObj.GetStatus()
 	if status.GetDetail() != "" {
 		return status.GetDetail()
@@ -303,7 +295,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1beta1.SqlV1beta1State
 	}
 
 	// most recent exception is on top of the returned list
-	return exceptions[0].GetStacktrace()
+	return exceptions[0].GetMessage()
 }
 
 func extractPageToken(nextUrl string) (string, error) {
@@ -321,36 +313,14 @@ func extractPageToken(nextUrl string) (string, error) {
 	return params.Get("page_token"), nil
 }
 
-func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
+func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), userProperties types.UserPropertiesInterface, appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
 	return &Store{
-		Properties:       NewUserProperties(getDefaultProperties(appOptions), getInitialProperties(appOptions)),
+		Properties:       userProperties,
 		client:           client,
 		exitApplication:  exitApplication,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
-}
-
-func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
-	properties := map[string]string{
-		config.KeyServiceAccount: appOptions.GetServiceAccountId(),
-		config.KeyLocalTimeZone:  getLocalTimezone(),
-	}
-
-	return properties
-}
-
-func getInitialProperties(appOptions *types.ApplicationOptions) map[string]string {
-	properties := map[string]string{}
-
-	if appOptions.GetEnvironmentName() != "" {
-		properties[config.KeyCatalog] = appOptions.GetEnvironmentName()
-	}
-	if appOptions.GetDatabase() != "" {
-		properties[config.KeyDatabase] = appOptions.GetDatabase()
-	}
-
-	return properties
 }
 
 func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
@@ -371,12 +341,15 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 				}
 			}
 
+			statement.Status = types.PHASE(statementObj.Status.GetPhase())
+			statement.StatusDetail = statusDetail
+			if statement.IsTerminalState() {
+				break
+			}
+
 			if statusDetail != "" {
 				output.Println(false, statusDetail)
 			}
-
-			statement.Status = types.PHASE(statementObj.Status.GetPhase())
-			statement.StatusDetail = statusDetail
 
 			time.Sleep(time.Second)
 		}

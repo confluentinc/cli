@@ -296,13 +296,13 @@ func (s *CLITestSuite) TestIamPool() {
 func (s *CLITestSuite) TestIamGroupMapping() {
 	tests := []CLITest{
 		{args: `iam group-mapping create group_mapping --description new-group-description --filter '"engineering" in claims.group || "marketing" in claims.group'`, fixture: "iam/group-mapping/create.golden"},
-		{args: "iam group-mapping delete pool-abc --force", fixture: "iam/group-mapping/delete.golden"},
-		{args: "iam group-mapping delete pool-abc", input: "y\n", fixture: "iam/group-mapping/delete-prompt.golden"},
-		{args: "iam group-mapping delete pool-abc pool-def", input: "n\n", fixture: "iam/group-mapping/delete-multiple-refuse.golden"},
-		{args: "iam group-mapping delete pool-abc pool-def", input: "y\n", fixture: "iam/group-mapping/delete-multiple-success.golden"},
-		{args: "iam group-mapping delete pool-dne --force", fixture: "iam/group-mapping/delete-dne.golden", exitCode: 1},
-		{args: "iam group-mapping describe pool-abc", fixture: "iam/group-mapping/describe.golden"},
-		{args: `iam group-mapping update pool-abc --name updated-group-mapping --description "updated description" --filter claims.principal.startsWith("user")`, fixture: "iam/group-mapping/update.golden"},
+		{args: "iam group-mapping delete group-abc --force", fixture: "iam/group-mapping/delete.golden"},
+		{args: "iam group-mapping delete group-abc", input: "y\n", fixture: "iam/group-mapping/delete-prompt.golden"},
+		{args: "iam group-mapping delete group-abc group-def", input: "n\n", fixture: "iam/group-mapping/delete-multiple-refuse.golden"},
+		{args: "iam group-mapping delete group-abc group-def", input: "y\n", fixture: "iam/group-mapping/delete-multiple-success.golden"},
+		{args: "iam group-mapping delete group-dne --force", fixture: "iam/group-mapping/delete-dne.golden", exitCode: 1},
+		{args: "iam group-mapping describe group-abc", fixture: "iam/group-mapping/describe.golden"},
+		{args: `iam group-mapping update group-abc --name updated-group-mapping --description "updated description" --filter claims.principal.startsWith("user")`, fixture: "iam/group-mapping/update.golden"},
 		{args: "iam group-mapping list", fixture: "iam/group-mapping/list.golden"},
 	}
 

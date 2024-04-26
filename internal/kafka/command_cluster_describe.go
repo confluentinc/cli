@@ -90,12 +90,12 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 		return args[0], nil
 	}
 
-	lkc := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
-	if lkc == "" {
+	clusterId := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+	if clusterId == "" {
 		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
 	}
 
-	return lkc, nil
+	return clusterId, nil
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {

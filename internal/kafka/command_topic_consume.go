@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -52,7 +53,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client. For a full list, see https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html`)
 	pcmd.AddConsumerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 
@@ -80,24 +81,30 @@ func (c *command) newConsumeCommand() *cobra.Command {
 }
 
 func (c *command) consume(cmd *cobra.Command, args []string) error {
-	if c.Context.GetState() == nil {
-		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
-		}
+	if c.Config.IsCloudLogin() {
+		return c.consumeCloud(cmd, args)
+	}
 
-		if err := c.prepareAnonymousContext(cmd); err != nil {
+	if !cmd.Flags().Changed("bootstrap") { // Required if the user isn't logged into Confluent Cloud
+		return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
+	}
+
+	if c.Context.GetState() == nil {
+		bootstrap, err := cmd.Flags().GetString("bootstrap")
+		if err != nil {
 			return err
 		}
-		return c.consumeCloud(cmd, args)
-	} else if c.Context.Config.IsCloudLogin() {
-		return c.consumeCloud(cmd, args)
-	} else {
-		if !cmd.Flags().Changed("bootstrap") {
-			return fmt.Errorf(errors.RequiredFlagNotSetErrorMsg, "bootstrap")
-		}
 
-		return c.consumeOnPrem(cmd, args)
+		if strings.Contains(bootstrap, "confluent.cloud") {
+			if err := c.prepareAnonymousContext(cmd); err != nil {
+				return err
+			}
+
+			return c.consumeCloud(cmd, args)
+		}
 	}
+
+	return c.consumeOnPrem(cmd, args)
 }
 
 func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {

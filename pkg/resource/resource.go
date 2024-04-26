@@ -13,6 +13,7 @@ import (
 
 const (
 	Unknown                         = "unknown"
+	AccessPoint                     = "access point"
 	ACL                             = "ACL"
 	ApiKey                          = "API key"
 	Broker                          = "broker"
@@ -25,6 +26,8 @@ const (
 	ConsumerShare                   = "consumer share"
 	Context                         = "context"
 	Dek                             = "DEK"
+	DnsForwarder                    = "DNS forwarder"
+	DnsRecord                       = "DNS record"
 	Environment                     = "environment"
 	Flink                           = "flink"
 	FlinkComputePool                = "Flink compute pool"
@@ -39,6 +42,9 @@ const (
 	KsqlCluster                     = "KSQL cluster"
 	MirrorTopic                     = "mirror topic"
 	Network                         = "network"
+	NetworkLinkEndpoint             = "network link endpoint"
+	NetworkLinkService              = "network link service"
+	NetworkLinkServiceAssociation   = "network link service association"
 	Organization                    = "organization"
 	Peering                         = "peering"
 	PrivateLinkAccess               = "private link access"
@@ -57,7 +63,9 @@ const (
 )
 
 const (
+	AccessPointPrefix           = "ap"
 	ConnectorPrefix             = "lcc"
+	DnsRecordPrefix             = "dnsrec"
 	EnvironmentPrefix           = "env"
 	IdentityPoolPrefix          = "pool"
 	IdentityProviderPrefix      = "op"
@@ -66,11 +74,14 @@ const (
 	KsqlClusterPrefix           = "lksqlc"
 	SchemaRegistryClusterPrefix = "lsrc"
 	ServiceAccountPrefix        = "sa"
+	SsoGroupMappingPrefix       = "group"
 	UserPrefix                  = "u"
 )
 
 var prefixToResource = map[string]string{
+	AccessPointPrefix:           AccessPoint,
 	ConnectorPrefix:             Connector,
+	DnsRecordPrefix:             DnsRecord,
 	EnvironmentPrefix:           Environment,
 	IdentityPoolPrefix:          IdentityPool,
 	IdentityProviderPrefix:      IdentityProvider,
@@ -79,10 +90,13 @@ var prefixToResource = map[string]string{
 	KsqlClusterPrefix:           KsqlCluster,
 	SchemaRegistryClusterPrefix: SchemaRegistryCluster,
 	ServiceAccountPrefix:        ServiceAccount,
+	SsoGroupMappingPrefix:       SsoGroupMapping,
 	UserPrefix:                  User,
 }
 
 var resourceToPrefix = map[string]string{
+	AccessPoint:           AccessPointPrefix,
+	DnsRecord:             DnsRecordPrefix,
 	Environment:           EnvironmentPrefix,
 	IdentityPool:          IdentityPoolPrefix,
 	IdentityProvider:      IdentityProviderPrefix,
@@ -90,6 +104,7 @@ var resourceToPrefix = map[string]string{
 	KsqlCluster:           KsqlClusterPrefix,
 	SchemaRegistryCluster: SchemaRegistryClusterPrefix,
 	ServiceAccount:        ServiceAccountPrefix,
+	SsoGroupMapping:       SsoGroupMappingPrefix,
 	User:                  UserPrefix,
 }
 
@@ -111,6 +126,12 @@ func LookupType(id string) string {
 func ValidatePrefixes(resourceType string, args []string) error {
 	prefix, ok := resourceToPrefix[resourceType]
 	if !ok {
+		return nil
+	}
+
+	// old group mappings may still have "pool-" instead of "group-"
+	// so we must skip the check for this resource
+	if prefix == SsoGroupMappingPrefix {
 		return nil
 	}
 

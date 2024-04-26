@@ -21,7 +21,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
-	c.addStreamGovernancePackageFlag(cmd, "essentials")
+	c.addStreamGovernancePackageFlag(cmd, "")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -37,7 +37,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
 	if governancePackage != "" {
 		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
-			Package: orgv2.PtrString(strings.ToUpper(governancePackage)),
+			Package: strings.ToUpper(governancePackage),
 		})
 	}
 
@@ -65,5 +65,5 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func (c *command) addStreamGovernancePackageFlag(cmd *cobra.Command, defaultValue string) {
 	values := utils.ArrayToCommaDelimitedString([]string{"essentials", "advanced"}, "or")
-	cmd.Flags().String("governance-package", defaultValue, fmt.Sprintf("Specify the Stream Governance package as %s.", values))
+	cmd.Flags().String("governance-package", defaultValue, fmt.Sprintf(`Specify the Stream Governance package as %s. Downgrading the package from "advanced" to "essentials" is not allowed once the Schema Registry cluster is provisioned.`, values))
 }

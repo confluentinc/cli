@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	flinkgatewayv1beta1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1beta1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -88,12 +88,12 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		properties[config.KeyDatabase] = database
 	}
 
-	statement := flinkgatewayv1beta1.SqlV1beta1Statement{
-		Name: flinkgatewayv1beta1.PtrString(name),
-		Spec: &flinkgatewayv1beta1.SqlV1beta1StatementSpec{
-			Statement:     flinkgatewayv1beta1.PtrString(sql),
+	statement := flinkgatewayv1.SqlV1Statement{
+		Name: flinkgatewayv1.PtrString(name),
+		Spec: &flinkgatewayv1.SqlV1StatementSpec{
+			Statement:     flinkgatewayv1.PtrString(sql),
 			Properties:    &properties,
-			ComputePoolId: flinkgatewayv1beta1.PtrString(computePool),
+			ComputePoolId: flinkgatewayv1.PtrString(computePool),
 		},
 	}
 
@@ -109,7 +109,6 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	principal := serviceAccount
 	if serviceAccount == "" {
-		output.ErrPrintln(c.Config.EnableColor, serviceAccountWarning)
 		principal = c.Context.GetUser().GetResourceId()
 	}
 

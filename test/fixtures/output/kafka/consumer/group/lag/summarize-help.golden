@@ -1,4 +1,4 @@
-Summarize consumer lag for a Kafka consumer group.
+Summarize consumer lag for a Kafka consumer group. Only available for dedicated Kafka clusters.
 
 Usage:
   confluent kafka consumer group lag summarize <group> [flags]

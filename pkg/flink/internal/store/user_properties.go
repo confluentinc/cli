@@ -8,6 +8,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
 const emptyStringTag = "<unset>"
@@ -17,14 +18,41 @@ type UserProperties struct {
 	properties        map[string]string
 }
 
+func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
+	properties := map[string]string{
+		config.KeyServiceAccount: appOptions.GetServiceAccountId(),
+		config.KeyLocalTimeZone:  getLocalTimezone(),
+		config.KeyOutputFormat:   string(config.OutputFormatStandard),
+	}
+
+	return properties
+}
+
+func getInitialProperties(appOptions *types.ApplicationOptions) map[string]string {
+	properties := map[string]string{}
+
+	if appOptions.GetEnvironmentName() != "" {
+		properties[config.KeyCatalog] = appOptions.GetEnvironmentName()
+	}
+	if appOptions.GetDatabase() != "" {
+		properties[config.KeyDatabase] = appOptions.GetDatabase()
+	}
+
+	return properties
+}
+
+func NewUserProperties(appOptions *types.ApplicationOptions) types.UserPropertiesInterface {
+	return NewUserPropertiesWithDefaults(getDefaultProperties(appOptions), getInitialProperties(appOptions))
+}
+
 // add initial props
-func NewUserProperties(defaultProperties map[string]string, initialProperties map[string]string) UserProperties {
+func NewUserPropertiesWithDefaults(defaultProperties map[string]string, initialProperties map[string]string) types.UserPropertiesInterface {
 	userProperties := UserProperties{
 		defaultProperties: defaultProperties,
 		properties:        initialProperties,
 	}
 	userProperties.addDefaultProperties()
-	return userProperties
+	return &userProperties
 }
 
 func (p *UserProperties) addDefaultProperties() {
@@ -93,6 +121,10 @@ func (p *UserProperties) ToSortedSlice(annotateDefaultValues bool) [][]string {
 		return props[i][0] < props[j][0]
 	})
 	return props
+}
+
+func (p *UserProperties) GetOutputFormat() config.OutputFormat {
+	return config.OutputFormat(p.Get(config.KeyOutputFormat))
 }
 
 func (p *UserProperties) createKeyValuePair(key, val string, annotateDefaultValues bool) []string {

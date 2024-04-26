@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -13,40 +14,45 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/network"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 type humanOut struct {
-	Id                                         string `human:"ID"`
-	EnvironmentId                              string `human:"Environment"`
-	Name                                       string `human:"Name,omitempty"`
-	Cloud                                      string `human:"Cloud"`
-	Region                                     string `human:"Region"`
-	Cidr                                       string `human:"CIDR,omitempty"`
-	Zones                                      string `human:"Zones,omitempty"`
-	Phase                                      string `human:"Phase"`
-	SupportedConnectionTypes                   string `human:"Supported Connection Types"`
-	ActiveConnectionTypes                      string `human:"Active Connection Types,omitempty"`
-	AwsVpc                                     string `human:"AWS VPC,omitempty"`
-	AwsAccount                                 string `human:"AWS Account,omitempty"`
-	AwsPrivateLinkEndpointService              string `human:"AWS Private Link Endpoint Service,omitempty"`
-	GcpProject                                 string `human:"GCP Project,omitempty"`
-	GcpVpcNetwork                              string `human:"GCP VPC Network,omitempty"`
-	GcpPrivateServiceConnectServiceAttachments string `human:"GCP Private Service Connect Service Attachments,omitempty"`
-	AzureVNet                                  string `human:"Azure VNet,omitempty"`
-	AzureSubscription                          string `human:"Azure Subscription,omitempty"`
-	AzurePrivateLinkServiceAliases             string `human:"Azure Private Link Service Aliases,omitempty"`
-	AzurePrivateLinkServiceResourceIds         string `human:"Azure Private Link Service Resources,omitempty"`
-	DnsResolution                              string `human:"DNS Resolution,omitempty"`
-	DnsDomain                                  string `human:"DNS Domain,omitempty"`
-	ZonalSubdomains                            string `human:"Zonal Subdomains,omitempty"`
+	Id                                         string    `human:"ID"`
+	EnvironmentId                              string    `human:"Environment"`
+	Name                                       string    `human:"Name,omitempty"`
+	Gateway                                    string    `human:"Gateway,omitempty"`
+	Cloud                                      string    `human:"Cloud"`
+	Region                                     string    `human:"Region"`
+	Cidr                                       string    `human:"CIDR,omitempty"`
+	Zones                                      string    `human:"Zones,omitempty"`
+	Phase                                      string    `human:"Phase"`
+	SupportedConnectionTypes                   string    `human:"Supported Connection Types"`
+	ActiveConnectionTypes                      string    `human:"Active Connection Types,omitempty"`
+	AwsVpc                                     string    `human:"AWS VPC,omitempty"`
+	AwsAccount                                 string    `human:"AWS Account,omitempty"`
+	AwsPrivateLinkEndpointService              string    `human:"AWS Private Link Endpoint Service,omitempty"`
+	GcpProject                                 string    `human:"GCP Project,omitempty"`
+	GcpVpcNetwork                              string    `human:"GCP VPC Network,omitempty"`
+	GcpPrivateServiceConnectServiceAttachments string    `human:"GCP Private Service Connect Service Attachments,omitempty"`
+	AzureVNet                                  string    `human:"Azure VNet,omitempty"`
+	AzureSubscription                          string    `human:"Azure Subscription,omitempty"`
+	AzurePrivateLinkServiceAliases             string    `human:"Azure Private Link Service Aliases,omitempty"`
+	AzurePrivateLinkServiceResourceIds         string    `human:"Azure Private Link Service Resources,omitempty"`
+	DnsResolution                              string    `human:"DNS Resolution,omitempty"`
+	DnsDomain                                  string    `human:"DNS Domain,omitempty"`
+	ZonalSubdomains                            string    `human:"Zonal Subdomains,omitempty"`
+	IdleSince                                  time.Time `human:"Idle Since,omitempty"`
 }
 
 type serializedOut struct {
 	Id                                         string            `serialized:"id"`
 	EnvironmentId                              string            `serialized:"environment_id"`
 	Name                                       string            `serialized:"name,omitempty"`
+	Gateway                                    string            `serialized:"gateway,omitempty"`
 	Cloud                                      string            `serialized:"cloud"`
 	Region                                     string            `serialized:"region"`
 	Cidr                                       string            `serialized:"cidr,omitempty"`
@@ -67,6 +73,7 @@ type serializedOut struct {
 	DnsResolution                              string            `serialized:"dns_resolution,omitempty"`
 	DnsDomain                                  string            `serialized:"dns_domain,omitempty"`
 	ZonalSubdomains                            map[string]string `serialized:"zonal_subdomains,omitempty"`
+	IdleSince                                  time.Time         `serialized:"idle_since,omitempty"`
 }
 
 type command struct {
@@ -93,13 +100,18 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	cmd.AddCommand(newAccessPointCommand(prerunner))
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newDnsCommand())
+	cmd.AddCommand(c.newGatewayCommand())
 	cmd.AddCommand(c.newIpAddressCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newNetworkLinkCommand())
 	cmd.AddCommand(c.newPeeringCommand())
 	cmd.AddCommand(c.newPrivateLinkCommand())
+	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newTransitGatewayAttachmentCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 
@@ -130,6 +142,7 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 		Id:                       network.GetId(),
 		EnvironmentId:            network.Spec.Environment.GetId(),
 		Name:                     network.Spec.GetDisplayName(),
+		Gateway:                  network.Spec.GetGateway().Id,
 		Cloud:                    cloud,
 		Region:                   network.Spec.GetRegion(),
 		Zones:                    strings.Join(network.Spec.GetZones(), ", "),
@@ -138,7 +151,7 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 		ActiveConnectionTypes:    strings.Join(network.Status.GetActiveConnectionTypes().Items, ", "),
 	}
 
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		human.DnsResolution = network.Spec.DnsConfig.GetResolution()
@@ -188,6 +201,11 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 		}
 	}
 
+	if !network.Status.GetIdleSince().IsZero() {
+		human.IdleSince = network.Status.GetIdleSince()
+		describeFields = append(describeFields, "IdleSince")
+	}
+
 	table := output.NewTable(cmd)
 	table.Add(human)
 	table.Filter(describeFields)
@@ -203,6 +221,7 @@ func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1N
 		Id:                       network.GetId(),
 		EnvironmentId:            network.Spec.Environment.GetId(),
 		Name:                     network.Spec.GetDisplayName(),
+		Gateway:                  network.Spec.GetGateway().Id,
 		Cloud:                    network.Spec.GetCloud(),
 		Region:                   network.Spec.GetRegion(),
 		Zones:                    network.Spec.GetZones(),
@@ -211,7 +230,7 @@ func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1N
 		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
 	}
 
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		serialized.DnsResolution = network.Spec.DnsConfig.GetResolution()
@@ -261,6 +280,11 @@ func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1N
 		}
 	}
 
+	if !network.Status.GetIdleSince().IsZero() {
+		serialized.IdleSince = network.Status.GetIdleSince()
+		describeFields = append(describeFields, "IdleSince")
+	}
+
 	table := output.NewTable(cmd)
 	table.Add(serialized)
 
@@ -289,7 +313,7 @@ func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string 
 }
 
 func autocompleteNetworks(client *ccloudv2.Client, environmentId string) []string {
-	networks, err := getNetworks(client, environmentId)
+	networks, err := getNetworks(client, environmentId, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		return nil
 	}
@@ -301,8 +325,8 @@ func autocompleteNetworks(client *ccloudv2.Client, environmentId string) []strin
 	return suggestions
 }
 
-func getNetworks(client *ccloudv2.Client, environmentId string) ([]networkingv1.NetworkingV1Network, error) {
-	return client.ListNetworks(environmentId)
+func getNetworks(client *ccloudv2.Client, environmentId string, name, cloud, region, cidr, phase, connectionType []string) ([]networkingv1.NetworkingV1Network, error) {
+	return client.ListNetworks(environmentId, name, cloud, region, cidr, phase, connectionType)
 }
 
 func addConnectionTypesFlag(cmd *cobra.Command) {
@@ -317,6 +341,22 @@ func addDnsResolutionFlag(cmd *cobra.Command) {
 
 func addNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
 	cmd.Flags().String("network", "", "Network ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteNetworks(c.V2Client, environmentId)
+	})
+}
+
+func addListNetworkFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("network", nil, "A comma-separated list of network IDs.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
@@ -347,4 +387,137 @@ func convertMapToString(m map[string]string) string {
 
 	sort.Strings(items)
 	return strings.Join(items, ", ")
+}
+
+func addAcceptedNetworksFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("accepted-networks", nil, "A comma-separated list of networks from which connections can be accepted.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "accepted-networks", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteNetworks(c.V2Client, environmentId)
+	})
+}
+
+func addAcceptedEnvironmentsFlag(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("accepted-environments", nil, "A comma-separated list of environments from which connections can be accepted.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "accepted-environments", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return pcmd.AutocompleteEnvironments(command.Client, command.V2Client)
+	})
+}
+
+func (c *command) addNetworkLinkServiceFlag(cmd *cobra.Command) {
+	cmd.Flags().String("network-link-service", "", "Network link service ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
+}
+
+func (c *command) addListNetworkLinkServiceFlag(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("network-link-service", nil, "A comma-separated list of network link service IDs.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "network-link-service", c.validNetworkLinkServicesArgsMultiple)
+}
+
+func (c *command) addRegionFlagNetwork(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().String("region", "", "Cloud region ID for this network.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		cloud, _ := cmd.Flags().GetString("cloud")
+		regions, err := network.ListRegions(command.Client, cloud)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.RegionId
+		}
+		return suggestions
+	})
+}
+
+func (c *command) addListRegionFlagNetwork(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().StringSlice("region", nil, "A comma-separated list of cloud region IDs.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		cloud, _ := cmd.Flags().GetString("cloud")
+		regions, err := network.ListRegions(command.Client, cloud)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(regions))
+		for i, region := range regions {
+			suggestions[i] = region.RegionId
+		}
+		return suggestions
+	})
+}
+
+func addPhaseFlag(cmd *cobra.Command, resourceType string) {
+	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of phases.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "phase", func(_ *cobra.Command, _ []string) []string {
+		switch resourceType {
+		case resource.NetworkLinkService:
+			return []string{"ready"}
+		case resource.NetworkLinkEndpoint:
+			return []string{"provisioning", "pending-accept", "ready", "failed", "deprovisioning", "expired", "disconnected", "disconnecting", "inactive"}
+		case resource.PrivateLinkAccess:
+			return []string{"provisioning", "ready", "failed", "deprovisioning"}
+		case resource.Peering:
+			return []string{"provisioning", "pending-accept", "ready", "failed", "deprovisioning", "disconnected"}
+		case resource.PrivateLinkAttachment:
+			return []string{"provisioning", "waiting-for-connections", "ready", "failed", "expired", "deprovisioning"}
+		case resource.TransitGatewayAttachment:
+			return []string{"provisioning", "ready", "pending-accept", "failed", "deprovisioning", "disconnected", "error"}
+		case resource.Network:
+			return []string{"provisioning", "ready", "failed", "deprovisioning"}
+		case resource.NetworkLinkServiceAssociation:
+			return []string{"provisioning", "pending-accept", "ready", "failed", "deprovisioning", "expired", "disconnected", "disconnecting", "inactive"}
+		default:
+			return nil
+		}
+	})
+}
+
+func toUpper(strSlice []string) []string {
+	for i, str := range strSlice {
+		strSlice[i] = ccloudv2.ToUpper(str)
+	}
+	return strSlice
+}
+
+func addForwarderFlags(cmd *cobra.Command) {
+	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
+	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
+}
+
+func addGatewayFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
+	cmd.Flags().String("gateway", "", "Gateway ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "gateway", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		return autocompleteGateways(c.V2Client, environmentId)
+	})
 }

@@ -51,13 +51,13 @@ func (c *command) newTransitGatewayAttachmentCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) getTransitGatewayAttachments() ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+func (c *command) getTransitGatewayAttachments(name, network, phase []string) ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
 
-	return c.V2Client.ListTransitGatewayAttachments(environmentId)
+	return c.V2Client.ListTransitGatewayAttachments(environmentId, name, network, phase)
 }
 
 func (c *command) validTransitGatewayAttachmentArgs(cmd *cobra.Command, args []string) []string {
@@ -76,7 +76,7 @@ func (c *command) validTransitGatewayAttachmentArgsMultiple(cmd *cobra.Command, 
 }
 
 func (c *command) autocompleteTransitGatewayAttachments() []string {
-	attachments, err := c.getTransitGatewayAttachments()
+	attachments, err := c.getTransitGatewayAttachments(nil, nil, nil)
 	if err != nil {
 		return nil
 	}

@@ -232,8 +232,18 @@ flycheck_*.el
 /network-security.data
 
 
+/mk-include/
+/.mk-include-timestamp
+
+/coverage.txt
+/vendor/
+
 # ServiceBot work directory
 .servicebot/*
 
 !/.github/
 !/.github/**
+
+# Chart dependencies
+**/charts/*.tgz
+charts/package/

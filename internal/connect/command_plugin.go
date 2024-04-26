@@ -25,13 +25,11 @@ func newPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comma
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
+		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
 	} else {
-		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
-		cmd.AddCommand(c.newInstallCommand())
+		cmd.AddCommand(newInstallCommand(prerunner))
 	}
-
-	cmd.AddCommand(c.newDescribeCommand())
 
 	return cmd
 }

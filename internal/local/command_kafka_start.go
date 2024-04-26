@@ -13,6 +13,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -77,7 +78,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	containers, err := dockerClient.ContainerList(context.Background(), container.ListOptions{All: true})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 	}
@@ -104,7 +105,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, types.ImagePullOptions{})
+	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, image.PullOptions{})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 	}
@@ -198,7 +199,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 			return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 		}
 		log.CliLogger.Trace(fmt.Sprintf("Successfully created a Confluent Local container for broker %d", brokerId))
-		if err := dockerClient.ContainerStart(context.Background(), createResp.ID, types.ContainerStartOptions{}); err != nil {
+		if err := dockerClient.ContainerStart(context.Background(), createResp.ID, container.StartOptions{}); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 		}
 		containerIds = append(containerIds, getShortenedContainerId(createResp.ID))

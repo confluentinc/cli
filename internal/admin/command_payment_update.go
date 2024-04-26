@@ -3,9 +3,9 @@ package admin
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v3/pkg/admin"
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -36,7 +36,7 @@ func (c *command) update(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	stripeToken, err := utils.NewStripeToken(f.Responses["card number"].(string), f.Responses["expiration"].(string), f.Responses["cvc"].(string), f.Responses["name"].(string), c.isTest)
+	stripeToken, err := admin.NewStripeToken(c.Config, f.Responses["card number"].(string), f.Responses["expiration"].(string), f.Responses["cvc"].(string), f.Responses["name"].(string))
 	if err != nil {
 		return err
 	}

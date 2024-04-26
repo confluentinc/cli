@@ -7,5 +7,6 @@
   "zones": ["use1-az1", "use1-az2", "use1-az3"],
   "phase": "PROVISIONING",
   "supported_connection_types": ["PRIVATELINK"],
-  "dns_resolution": "PRIVATE"
+  "dns_resolution": "PRIVATE",
+  "idle_since": "2021-01-01T00:00:00Z"
 }

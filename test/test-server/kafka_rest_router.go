@@ -244,7 +244,7 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 	}
 }
 
-func PtrString(v string) *string { return &v }
+func ptrString(v string) *string { return &v }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
@@ -259,16 +259,16 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "cleanup.policy",
-							Value: PtrString("delete"),
+							Value: ptrString("delete"),
 						},
 						{
 							Name:       "compression.type",
-							Value:      PtrString("producer"),
+							Value:      ptrString("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: PtrString("604800000"),
+							Value: ptrString("604800000"),
 						},
 					},
 				}
@@ -281,12 +281,12 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:       "compression.type",
-							Value:      PtrString("producer"),
+							Value:      ptrString("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: PtrString("1"),
+							Value: ptrString("1"),
 						},
 					},
 				}
@@ -672,7 +672,7 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
 						Kind:                 "",
 						Metadata:             cpkafkarestv3.ResourceMetadata{},
-						DestinationClusterId: PtrString("cluster-2"),
+						DestinationClusterId: ptrString("cluster-2"),
 						LinkName:             link,
 						ClusterLinkId:        "LINKID1",
 						TopicNames:           []string{"link-1-topic-1", "link-1-topic-2"},
@@ -1796,7 +1796,19 @@ func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs:alter"
 func handleKafkaBrokerConfigsAlter(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusCreated)
+		if r.Method == http.MethodPost {
+			var req cckafkarestv3.AlterConfigBatchRequestData
+			_ = json.NewDecoder(r.Body).Decode(&req)
+
+			dataMap := make(map[cckafkarestv3.AlterConfigBatchRequestDataData]bool)
+			for _, data := range req.Data {
+				dataMap[data] = true
+			}
+
+			if len(dataMap) < len(req.Data) {
+				w.WriteHeader(http.StatusBadRequest)
+			}
+		}
 	}
 }
 
