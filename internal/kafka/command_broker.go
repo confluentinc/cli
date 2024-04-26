@@ -22,8 +22,8 @@ func newBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newGetTasksCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newTaskCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd

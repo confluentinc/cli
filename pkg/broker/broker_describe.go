@@ -11,8 +11,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, checkAll bool) error {
-	brokerId, all, err := CheckAllOrIdSpecified(cmd, args, checkAll)
+func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
+	brokerId, err := GetId(cmd, args)
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClie
 
 	// Get Broker Configs
 	var data []*ConfigOut
-	if all { // fetch cluster-wide configs
+	if len(args) == 0 { // fetch cluster-wide configs
 		clusterConfig, err := GetClusterWideConfigs(restClient, restContext, clusterId, configName)
 		if err != nil {
 			return err
