@@ -65,20 +65,16 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 }
 
 func confirmDeletionString(name, id string) string {
-	deletionString := fmt.Sprintf("Are you sure you want to delete the compute pool \"%s\"?"+
+	return fmt.Sprintf("Are you sure you want to delete the compute pool \"%s\"?"+
 		" All statements leveraging the compute pool will be STOPPED immediately and be available for 30 days in the statement list history.\n"+
 		"After that, they will be permanently deleted. \n"+
 		"To confirm, type \"%s\". To cancel, press Ctrl-C", id, name)
-
-	return deletionString
 }
 
 func confirmMultipleDeletionString(idList []string) string {
-	deletionString := fmt.Sprintf("Are you sure you want to delete compute pools %s?"+
+	return fmt.Sprintf("Are you sure you want to delete compute pools %s?"+
 		" All statements leveraging the compute pools will be STOPPED immediately and be available for 30 days in the statement list history.\n"+
 		"After that, they will be permanently deleted. \n", utils.ArrayToCommaDelimitedString(idList, "and"))
-
-	return deletionString
 }
 
 func validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
