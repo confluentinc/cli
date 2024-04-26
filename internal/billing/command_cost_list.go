@@ -14,19 +14,19 @@ import (
 )
 
 type costOut struct {
-	StartDate           string `human:"Start Date" serialized:"start_date"`
-	EndDate             string `human:"End Date" serialized:"end_date"`
-	Granularity         string `human:"Granularity" serialized:"granularity"`
-	LineType            string `human:"Line Type" serialized:"line_type"`
-	Product             string `human:"Product,omitempty" serialized:"product,omitempty"`
-	ResourceId          string `human:"Resource ID,omitempty" serialized:"resource_id,omitempty"`
-	ResourceDisplayName string `human:"Resource Display Name,omitempty" serialized:"resource_display_name,omitempty"`
-	EnvironmentId       string `human:"Environment ID,omitempty" serialized:"environment_id,omitempty"`
-	NetworkAccessType   string `human:"Network Access Type,omitempty" serialized:"network_access_type,omitempty"`
-	Price               string `human:"Price,omitempty" serialized:"price,omitempty"`
-	OriginalAmount      string `human:"Original Amount" serialized:"original_amount"`
-	DiscountAmount      string `human:"Discount Amount,omitempty" serialized:"discount_amount,omitempty"`
-	Amount              string `human:"Amount,omitempty" serialized:"amount,omitempty"`
+	StartDate         string `human:"Start Date" serialized:"start_date"`
+	EndDate           string `human:"End Date" serialized:"end_date"`
+	Granularity       string `human:"Granularity" serialized:"granularity"`
+	LineType          string `human:"Line Type" serialized:"line_type"`
+	Product           string `human:"Product,omitempty" serialized:"product,omitempty"`
+	ResourceId        string `human:"Resource ID,omitempty" serialized:"resource_id,omitempty"`
+	ResourceName      string `human:"Resource Name,omitempty" serialized:"resource_name,omitempty"`
+	EnvironmentId     string `human:"Environment ID,omitempty" serialized:"environment_id,omitempty"`
+	NetworkAccessType string `human:"Network Access Type,omitempty" serialized:"network_access_type,omitempty"`
+	Price             string `human:"Price,omitempty" serialized:"price,omitempty"`
+	OriginalAmount    string `human:"Original Amount" serialized:"original_amount"`
+	DiscountAmount    string `human:"Discount Amount,omitempty" serialized:"discount_amount,omitempty"`
+	Amount            string `human:"Amount,omitempty" serialized:"amount,omitempty"`
 }
 
 func (c *command) newCostListCommand() *cobra.Command {
@@ -116,7 +116,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		if resource, ok := cost.GetResourceOk(); ok {
 			out.ResourceId = resource.GetId()
-			out.ResourceDisplayName = resource.GetDisplayName()
+			out.ResourceName = resource.GetDisplayName()
 			if environment, ok := resource.GetEnvironmentOk(); ok {
 				out.EnvironmentId = environment.GetId()
 			}
