@@ -10,7 +10,7 @@ import (
 
 func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe [id]",
+		Use:   "describe <id>",
 		Short: "Describe a Kafka broker.",
 		Long:  "Describe cluster-wide or per-broker configuration values.",
 		Args:  cobra.MaximumNArgs(1),
@@ -20,14 +20,10 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 				Text: `Describe the "min.insync.replicas" configuration for broker 1.`,
 				Code: "confluent kafka broker describe 1 --config-name min.insync.replicas",
 			},
-			examples.Example{
-				Text: "Describe the non-default cluster-wide broker configuration values.",
-				Code: "confluent kafka broker describe",
-			},
 		),
 	}
 
-	cmd.Flags().String("config-name", "", `Get a specific configuration value (pair with "--all" to see a cluster-wide configuration).`)
+	cmd.Flags().String("config-name", "", "Get a specific configuration value.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 

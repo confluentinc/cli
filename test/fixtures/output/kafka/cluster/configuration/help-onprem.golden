@@ -4,6 +4,7 @@ Usage:
   confluent kafka cluster configuration [command]
 
 Available Commands:
+  list        List cluster-wide Kafka broker configurations.
   update      Update cluster-wide Kafka broker configurations.
 
 Global Flags:

@@ -27,6 +27,7 @@ func (c *clusterCommand) newConfigurationCommand(cfg *config.Config, prerunner p
 	} else {
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
+		cmd.AddCommand(c.newConfigurationListCommandOnPrem())
 		cmd.AddCommand(c.newConfigurationUpdateCommandOnPrem())
 	}
 
