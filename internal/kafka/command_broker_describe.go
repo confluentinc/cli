@@ -13,7 +13,7 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe <id>",
 		Short: "Describe a Kafka broker.",
 		Long:  "Describe cluster-wide or per-broker configuration values.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{

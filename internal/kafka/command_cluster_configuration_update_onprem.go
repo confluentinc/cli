@@ -23,7 +23,7 @@ func (c *clusterCommand) newConfigurationUpdateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for all brokers in the cluster.",
-				Code: "confluent kafka broker update --config min.insync.replicas=2,num.partitions=2",
+				Code: "confluent kafka cluster configuration update --config min.insync.replicas=2,num.partitions=2",
 			},
 		),
 	}

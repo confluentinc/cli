@@ -6,7 +6,7 @@ Usage:
 Examples:
 Update configuration values for all brokers in the cluster.
 
-  $ confluent kafka broker update --config min.insync.replicas=2,num.partitions=2
+  $ confluent kafka cluster configuration update --config min.insync.replicas=2,num.partitions=2
 
 Flags:
       --config strings            REQUIRED: A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
