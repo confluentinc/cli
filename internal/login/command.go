@@ -229,7 +229,6 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization str
 		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, url),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization),
 	)
 }
@@ -332,7 +331,6 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(false, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
 }

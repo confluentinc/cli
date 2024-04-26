@@ -294,7 +294,6 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId stri
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
 		r.LoginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 	)
 	if err != nil {
@@ -475,14 +474,8 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 }
 
 func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachineName string) (string, *pauth.Credentials, error) {
-	filterParams := netrc.NetrcMachineParams{
-		Name:    netrcMachineName,
-		IsCloud: false,
-	}
-
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
-		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(filterParams),
 	)
 	if err != nil {
 		return "", nil, err
@@ -702,7 +695,6 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 			r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
 			r.LoginCredentialsManager.GetCredentialsFromKeychain(true, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 		)
 		if err != nil {
@@ -715,7 +707,6 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 			r.LoginCredentialsManager.GetCredentialsFromKeychain(false, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 		)
 		if err != nil {

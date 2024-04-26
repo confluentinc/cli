@@ -74,13 +74,11 @@ type LoginCredentialsManager interface {
 	GetSsoCredentialsFromConfig(*config.Config, string) func() (*Credentials, error)
 	GetCredentialsFromConfig(*config.Config, netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
-	GetCredentialsFromNetrc(netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
 	GetPrerunCredentialsFromConfig(*config.Config) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error)
-	GetOnPremPrerunCredentialsFromNetrc(netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Needed SSO login for non-prod accounts
 	SetCloudClient(*ccloudv1.Client)
@@ -235,31 +233,6 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
-	return func() (*Credentials, error) {
-		netrcMachine, err := h.getNetrcMachine(filterParams)
-		if err != nil {
-			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
-			return nil, err
-		}
-
-		log.CliLogger.Debugf(foundCredentialsForUserFromKeychainMessage, netrcMachine.User, h.netrcHandler.GetFileName())
-		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
-	}
-}
-
-func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMachineParams) (*netrc.Machine, error) {
-	log.CliLogger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
-	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
-	if err != nil {
-		return nil, err
-	}
-	if netrcMachine == nil {
-		return nil, fmt.Errorf("found no netrc machine using the filter: %+v", filterParams)
-	}
-	return netrcMachine, err
-}
-
 func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(organizationId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		output.Println(false, "Enter your Confluent Cloud credentials:")
@@ -348,25 +321,6 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 		creds.PrerunLoginCaCertPath = GetEnvWithFallback(ConfluentPlatformCACertPath, DeprecatedConfluentPlatformCACertPath)
 
 		return creds, nil
-	}
-}
-
-// Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
-// URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
-// URL and ca-cert-path (if exists) are returned in addition to username and password
-func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(netrcMachineParams netrc.NetrcMachineParams) func() (*Credentials, error) {
-	return func() (*Credentials, error) {
-		netrcMachine, err := h.getNetrcMachine(netrcMachineParams)
-		if err != nil {
-			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
-			return nil, err
-		}
-		machineContextInfo, err := netrc.ParseNetrcMachineName(netrcMachine.Name)
-		if err != nil {
-			return nil, err
-		}
-		log.CliLogger.Debugf(foundCredentialsForUserFromKeychainMessage, netrcMachine.User, h.netrcHandler.GetFileName())
-		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, PrerunLoginURL: machineContextInfo.URL, PrerunLoginCaCertPath: machineContextInfo.CaCertPath}, nil
 	}
 }
 

@@ -233,27 +233,6 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromEn
 	suite.compareCredentials(envCredentials, creds)
 }
 
-func (suite *LoginCredentialsManagerTestSuite) TestCCloudUsernamePasswordGetCredentialsFromNetrc() {
-	cmd := &cobra.Command{}
-	cmd.Flags().Bool("save", false, "test")
-	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
-		IsCloud: true,
-	})()
-	suite.require.NoError(err)
-	suite.compareCredentials(netrcCredentials, creds)
-}
-
-func (suite *LoginCredentialsManagerTestSuite) TestConfluentGetCredentialsFromNetrc() {
-	cmd := &cobra.Command{}
-	cmd.Flags().Bool("save", false, "test")
-	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
-		IsCloud: false,
-		URL:     "http://hi",
-	})()
-	suite.require.NoError(err)
-	suite.compareCredentials(netrcCredentials, creds)
-}
-
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromPrompt() {
 	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromPrompt("")()
 	suite.require.NoError(err)
@@ -302,38 +281,6 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	suite.compareCredentials(envPrerunCredentialsWithCaCertPath, creds)
 }
 
-func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentialsFromNetrc() {
-	var params netrc.NetrcMachineParams
-
-	// no cacertpath
-	netrcHandler := &mock.NetrcHandler{
-		GetMatchingNetrcMachineFunc: func(_ netrc.NetrcMachineParams) (*netrc.Machine, error) {
-			return confluentNetrcPrerunMachine, nil
-		},
-		GetFileNameFunc: func() string {
-			return netrcFileName
-		},
-	}
-	loginCredentialsManager := NewLoginCredentialsManager(netrcHandler, suite.prompt, suite.ccloudClient)
-	creds, err := loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(params)()
-	suite.require.NoError(err)
-	suite.compareCredentials(netrcPrerunCredentials, creds)
-
-	// with cacertpath
-	netrcHandler = &mock.NetrcHandler{
-		GetMatchingNetrcMachineFunc: func(_ netrc.NetrcMachineParams) (*netrc.Machine, error) {
-			return confluentNetrcPrerunMachineWithCaCertPath, nil
-		},
-		GetFileNameFunc: func() string {
-			return netrcFileName
-		},
-	}
-	loginCredentialsManager = NewLoginCredentialsManager(netrcHandler, suite.prompt, suite.ccloudClient)
-	creds, err = loginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(params)()
-	suite.require.NoError(err)
-	suite.compareCredentials(netrcPrerunCredentialsWithCaCertPath, creds)
-}
-
 func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	noCredentialsNetrcHandler := &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(params netrc.NetrcMachineParams) (*netrc.Machine, error) {
@@ -345,33 +292,21 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	}
 	cmd := &cobra.Command{}
 	cmd.Flags().Bool("save", false, "test")
-	// No credentials in env var and netrc so should look for prompt
+	// No credentials in env var so should look for prompt
 	loginCredentialsManager := NewLoginCredentialsManager(noCredentialsNetrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err := GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
-		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{IsCloud: true}),
 		loginCredentialsManager.GetCloudCredentialsFromPrompt(""),
 	)
 	fmt.Println("") // HACK: Newline needed to parse test output
 	suite.require.NoError(err)
 	suite.compareCredentials(promptCredentials, creds)
 
-	// No credentials in env var but credentials in netrc so netrc credentials should be returned
-	loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
-	creds, err = GetLoginCredentials(
-		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
-		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{IsCloud: true}),
-		loginCredentialsManager.GetCloudCredentialsFromPrompt(""),
-	)
-	suite.require.NoError(err)
-	suite.compareCredentials(netrcCredentials, creds)
-
 	// Credentials in environment variables has highest order of precedence
 	suite.setCCEnvVars()
 	loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err = GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
-		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{IsCloud: true}),
 		loginCredentialsManager.GetCloudCredentialsFromPrompt(""),
 	)
 	suite.require.NoError(err)
