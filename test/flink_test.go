@@ -39,7 +39,7 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 		{args: "flink artifact describe ccp-789013", fixture: "flink/artifact/describe.golden"},
 		{args: "flink artifact list", fixture: "flink/artifact/list.golden"},
 		{args: "flink artifact delete ccp-123456 --force", fixture: "flink/artifact/delete.golden"},
-		{args: "flink artifact delete ccp-123456", input: "CliPluginTest1\n", fixture: "flink/artifact/delete-prompt.golden"},
+		{args: "flink artifact delete ccp-123456", input: "y\n", fixture: "flink/artifact/delete-prompt.golden"},
 	}
 
 	for _, test := range tests {
