@@ -15,11 +15,11 @@ func (c *clusterCommand) newConfigurationListCommandOnPrem() *cobra.Command {
 		Use:   "list",
 		Short: "List cluster-wide Kafka broker configurations.",
 		Args:  cobra.NoArgs,
-		RunE:  c.configurationUpdateOnPrem,
+		RunE:  c.configurationListOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List configuration values for all brokers in the cluster.",
-				Code: "confluent kafka broker list",
+				Code: "confluent kafka cluster configuration list",
 			},
 		),
 	}

@@ -6,7 +6,7 @@ Usage:
 Examples:
 List configuration values for all brokers in the cluster.
 
-  $ confluent kafka broker list
+  $ confluent kafka cluster configuration list
 
 Flags:
       --config string             Get a specific configuration value.

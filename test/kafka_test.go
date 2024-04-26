@@ -191,6 +191,8 @@ func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests = []CLITest{
 		{args: "kafka cluster configuration update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/cluster/configuration/update-onprem.golden"},
+		{args: "kafka cluster configuration list", fixture: "kafka/cluster/configuration/list-onprem.golden"},
+		{args: "kafka cluster configuration list --config compression.type", fixture: "kafka/cluster/configuration/list-specific-config-onprem.golden"},
 	}
 
 	for _, test := range tests {
