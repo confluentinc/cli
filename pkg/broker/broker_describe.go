@@ -24,19 +24,11 @@ func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClie
 
 	// Get Broker Configs
 	var data []*ConfigOut
-	if len(args) == 0 { // fetch cluster-wide configs
-		clusterConfig, err := GetClusterWideConfigs(restClient, restContext, clusterId, configName)
-		if err != nil {
-			return err
-		}
-		data = ParseClusterConfigData(clusterConfig)
-	} else { // fetch individual broker configs
-		brokerConfig, err := getIndividualBrokerConfigs(restClient, restContext, clusterId, brokerId, configName)
-		if err != nil {
-			return err
-		}
-		data = parseBrokerConfigData(brokerConfig)
+	brokerConfig, err := getIndividualBrokerConfigs(restClient, restContext, clusterId, brokerId, configName)
+	if err != nil {
+		return err
 	}
+	data = parseBrokerConfigData(brokerConfig)
 
 	list := output.NewList(cmd)
 	for _, entry := range data {
