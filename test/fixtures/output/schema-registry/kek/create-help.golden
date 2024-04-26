@@ -11,7 +11,7 @@ Create a KEK with an AWS KMS key:
 Flags:
       --name string              REQUIRED: Name of the Key Encryption Key (KEK).
       --kms-type string          REQUIRED: The type of Key Management Service (KMS), typically one of "aws-kms", "azure-kms", or "gcp-kms".
-      --kms-key-id string        REQUIRED: The key ID of the Key Management Service (KMS).
+      --kms-key string           REQUIRED: The key ID of the Key Management Service (KMS).
       --kms-properties strings   A comma-separated list of additional properties (key=value) used to access the Key Management Service (KMS).
       --doc string               An optional user-friendly description for the Key Encryption Key (KEK).
       --shared                   If the DEK Registry has shared access to the Key Management Service (KMS).
