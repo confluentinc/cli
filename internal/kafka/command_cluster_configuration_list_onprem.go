@@ -24,7 +24,7 @@ func (c *clusterCommand) newConfigurationListCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config-name", "", "Get a specific configuration value.")
+	cmd.Flags().String("config", "", "Get a specific configuration value.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
@@ -32,7 +32,7 @@ func (c *clusterCommand) newConfigurationListCommandOnPrem() *cobra.Command {
 }
 
 func (c *clusterCommand) configurationListOnPrem(cmd *cobra.Command, _ []string) error {
-	configName, err := cmd.Flags().GetString("config-name")
+	configName, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}

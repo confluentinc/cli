@@ -18,12 +18,12 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the "min.insync.replicas" configuration for broker 1.`,
-				Code: "confluent kafka broker describe 1 --config-name min.insync.replicas",
+				Code: "confluent kafka broker describe 1 --config min.insync.replicas",
 			},
 		),
 	}
 
-	cmd.Flags().String("config-name", "", "Get a specific configuration value.")
+	cmd.Flags().String("config", "", "Get a specific configuration value.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 

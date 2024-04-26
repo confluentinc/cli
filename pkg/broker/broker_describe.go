@@ -17,7 +17,7 @@ func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClie
 		return err
 	}
 
-	configName, err := cmd.Flags().GetString("config-name")
+	configName, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}

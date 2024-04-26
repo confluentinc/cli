@@ -250,7 +250,7 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker describe 1", fixture: "kafka/broker/describe-1.golden"},
 		{args: "kafka broker describe 1 -o json", fixture: "kafka/broker/describe-1-json.golden"},
 		{args: "kafka broker describe 1 -o yaml", fixture: "kafka/broker/describe-1-yaml.golden"},
-		{args: "kafka broker describe 1 --config-name compression.type", fixture: "kafka/broker/describe-1-config.golden"},
+		{args: "kafka broker describe 1 --config compression.type", fixture: "kafka/broker/describe-1-config.golden"},
 
 		{args: "kafka broker update 1 --config test/fixtures/input/kafka/broker/update.properties", fixture: "kafka/broker/update-1.golden"},
 
