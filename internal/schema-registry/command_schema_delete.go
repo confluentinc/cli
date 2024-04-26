@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -98,11 +97,11 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	subjectWithVersion := fmt.Sprintf("%s (version %s)", subject, version)
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, "schema", subjectWithVersion, subject)
+	promptMsg := fmt.Sprintf("Are you sure you want to delete schema \"%s\"?", subjectWithVersion)
 	if permanent {
-		promptMsg = fmt.Sprintf("Are you sure you want to permanently delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C", "schema", subjectWithVersion, subject)
+		promptMsg = fmt.Sprintf("Are you sure you want to permanently delete schema \"%s\"?", subjectWithVersion)
 	}
-	if err := deletion.ConfirmDeletionWithString(cmd, promptMsg, subject); err != nil {
+	if err := deletion.ConfirmPrompt(cmd, promptMsg); err != nil {
 		return err
 	}
 
