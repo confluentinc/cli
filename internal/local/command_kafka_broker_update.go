@@ -40,5 +40,5 @@ func (c *command) brokerUpdate(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
-	return broker.Update(cmd, args, restClient, context.Background(), clusterId, false)
+	return broker.Update(cmd, args, restClient, context.Background(), clusterId, c.Config.EnableColor)
 }
