@@ -14,7 +14,7 @@ import (
 	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
-	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
 	"github.com/confluentinc/cli/v3/internal/kafka"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"

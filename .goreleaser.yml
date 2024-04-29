@@ -162,7 +162,7 @@ builds:
     env:
       - CC=x86_64-w64-mingw32-gcc
       - CXX=x86_64-w64-mingw32-g++
-      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -fstack-protector -static
     goos:
       - windows
     goarch:
