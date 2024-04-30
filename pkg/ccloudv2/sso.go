@@ -2,11 +2,9 @@ package ccloudv2
 
 import (
 	"context"
-	"net/http"
-
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
-
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"net/http"
 )
 
 func newSsoClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *ssov2.APIClient {
@@ -25,7 +23,7 @@ func (c *Client) ssoApiContext() context.Context {
 
 func (c *Client) CreateGroupMapping(groupMapping ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {
 	resp, httpResp, err := c.SsoClient.GroupMappingsIamV2SsoApi.CreateIamV2SsoGroupMapping(c.ssoApiContext()).IamV2SsoGroupMapping(groupMapping).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
+	return resp, errors.CatchPaymentRequiredError(err, httpResp)
 }
 
 func (c *Client) DeleteGroupMapping(id string) error {

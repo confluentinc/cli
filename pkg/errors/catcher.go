@@ -303,6 +303,24 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 	return err
 }
 
+func CatchPaymentRequiredError(err error, httpResp *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if httpResp == nil {
+		return err
+	}
+
+	errorPayment := CatchCCloudV2Error(err, httpResp)
+	if strings.Contains(errorPayment.Error(), "402 Payment Required") {
+		message := strings.TrimSpace(errorPayment.Error()[0 : len(errorPayment.Error())-len(": 402 Payment Required")])
+		return fmt.Errorf("%s", message)
+	}
+
+	return errorPayment
+}
+
 func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
 	if err == nil {
 		return nil
