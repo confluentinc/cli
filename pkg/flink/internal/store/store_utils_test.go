@@ -111,6 +111,18 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, true, result.IsSensitiveStatement)
 	})
+
+	t.Run("should parse set statements with equal signs in the value", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'sql.secrets.openai' = 'b64encodedABCD=='")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+	})
+
+	t.Run("should parse set statements with equal signs in the key", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'sql.secrets.openai==' = 'b64encodedABCD=='")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+	})
 }
 
 func TestProcessResetStatement(t *testing.T) {
