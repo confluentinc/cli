@@ -92,3 +92,80 @@ To build for windows/amd64, run the following:
 
     brew install mingw-w64
     GOOS=windows GOARCH=amd64 make cross-build
+
+#### Building in FIPS-140 mode
+
+Linux is built in FIPS-140 mode by default. To build the CLI for macOS in FIPS-140 mode, set the `GOLANG_FIPS` environment variable to "1":
+
+```bash
+GOLANG_FIPS=1 make build
+```
+
+Then, build an OpenSSL FIPS provider:
+
+```bash
+wget "https://www.openssl.org/source/openssl-3.0.9.tar.gz"
+tar -xvf openssl-3.0.9.tar.gz
+cd openssl-3.0.9/
+./Configure enable-fips
+make install_fips DESTDIR=install
+```
+
+Copy the generated files into the Homebrew OpenSSL directory:
+
+```bash
+cp install/usr/local/lib/ossl-modules/fips.dylib /opt/homebrew/Cellar/openssl@3/3.2.1/lib/ossl-modules
+cp install/usr/local/ssl/fipsmodule.cnf /opt/homebrew/etc/openssl@3/
+```
+
+Create a new OpenSSL configuration file for FIPS mode:
+
+```bash
+cp /opt/homebrew/etc/openssl@3/openssl.cnf /opt/homebrew/etc/openssl@3/openssl-fips.cnf
+```
+
+Append the following to `openssl-fips.cnf`:
+
+```
+config_diagnostics = 1
+openssl_conf = openssl_init
+
+.include /opt/homebrew/etc/openssl@3/fipsmodule.cnf
+
+[openssl_init]
+providers = provider_sect
+ssl_conf = ssl_module
+alg_section = algorithm_sect
+
+[provider_sect]
+fips = fips_sect
+default = default_sect
+
+[default_sect]
+activate = 1
+
+[algorithm_sect]
+default_properties = fips=yes
+
+[ssl_module]
+system_default = crypto_policy
+
+[crypto_policy]
+CipherString = @SECLEVEL=2:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384
+Ciphersuites = TLS_AES_256_GCM_SHA384
+TLS.MinProtocol = TLSv1.2
+TLS.MaxProtocol = TLSv1.3
+DTLS.MinProtocol = DTLSv1.2
+DTLS.MaxProtocol = DTLSv1.2
+SignatureAlgorithms = ECDSA+SHA256:ECDSA+SHA384:ECDSA+SHA512:rsa_pss_pss_sha256:rsa_pss_pss_sha384:rsa_pss_pss_sha512:rsa_pss_rsae_sha256:rsa_pss_rsae_sha384:rsa_pss_rsae_sha512:RSA+SHA256:RSA+SHA384:RSA+SHA512:ECDSA+SHA224:RSA+SHA224
+```
+
+Run the Confluent CLI in FIPS-140 mode:
+
+```bash
+env \
+ DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/openssl@3/3.2.1/lib \
+ OPENSSL_CONF=/opt/homebrew/etc/openssl@3/openssl-fips.cnf \
+ GOLANG_FIPS=1 \
+ confluent version
+```

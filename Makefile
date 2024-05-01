@@ -37,8 +37,25 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
+
+ifeq ($(GOLANG_FIPS),1)
+	wget "https://go.dev/dl/go$$(cat .go-version).src.tar.gz" && \
+	tar -xf go$$(cat .go-version).src.tar.gz && \
+	git clone --branch go$$(cat .go-version)-1-openssl-fips --depth 1 https://github.com/golang-fips/go.git go-openssl && \
+	cd go/ && \
+	cat ../go-openssl/patches/*.patch | patch -p1 && \
+	sed -i '' 's/linux/darwin/' src/crypto/internal/backend/nobackend.go && \
+    sed -i '' 's/linux/darwin/' src/crypto/internal/backend/openssl.go && \
+    sed -i '' 's/"libcrypto.so.%s"/"libcrypto.%s.dylib"/' src/crypto/internal/backend/openssl.go && \
+    cd src/ && \
+    ./make.bash && \
+    cd ../../
+	PATH=$$(pwd)/go/bin:$$PATH GOROOT=$$(pwd)/go TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+	rm -rf go go-openssl go$$(cat .go-version).src.tar.gz
+else
 	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+endif
 
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
