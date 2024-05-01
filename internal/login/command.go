@@ -30,13 +30,12 @@ type command struct {
 	cfg                      *config.Config
 	ccloudClientFactory      pauth.CCloudClientFactory
 	mdsClientManager         pauth.MDSClientManager
-	netrcHandler             netrc.NetrcHandler
 	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
 	authTokenHandler         pauth.AuthTokenHandler
 }
 
-func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -68,7 +67,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 		cfg:                      cfg,
 		mdsClientManager:         mdsClientManager,
 		ccloudClientFactory:      ccloudClientFactory,
-		netrcHandler:             netrcHandler,
 		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: loginOrganizationManager,
 		authTokenHandler:         authTokenHandler,
@@ -201,7 +199,7 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 	}
 }
 
-// Order of precedence: env vars > config file > netrc file > prompt
+// Order of precedence: env vars > config file > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization string) (*pauth.Credentials, error) {
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
@@ -307,7 +305,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
 }
 
-// Order of precedence: env vars > netrc > prompt
+// Order of precedence: env vars > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
 	prompt, err := cmd.Flags().GetBool("prompt")

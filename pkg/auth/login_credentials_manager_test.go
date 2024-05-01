@@ -131,18 +131,6 @@ func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
 			},
 		},
 	}
-	suite.netrcHandler = &mock.NetrcHandler{
-		GetMatchingNetrcMachineFunc: func(params netrc.NetrcMachineParams) (*netrc.Machine, error) {
-			if params.IsCloud {
-				return ccloudCredMachine, nil
-			} else {
-				return confluentMachine, nil
-			}
-		},
-		GetFileNameFunc: func() string {
-			return netrcFileName
-		},
-	}
 	suite.prompt = &mock.Prompt{
 		ReadLineFunc: func() (string, error) {
 			return promptUsername, nil
@@ -157,7 +145,7 @@ func (suite *LoginCredentialsManagerTestSuite) SetupTest() {
 	suite.require = require.New(suite.T())
 	suite.clearCCEnvVars()
 	suite.clearCPEnvVars()
-	suite.loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
+	suite.loginCredentialsManager = NewLoginCredentialsManager(suite.prompt, suite.ccloudClient)
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVar() {
@@ -282,18 +270,10 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
-	noCredentialsNetrcHandler := &mock.NetrcHandler{
-		GetMatchingNetrcMachineFunc: func(params netrc.NetrcMachineParams) (*netrc.Machine, error) {
-			return nil, nil
-		},
-		GetFileNameFunc: func() string {
-			return netrcFileName
-		},
-	}
 	cmd := &cobra.Command{}
 	cmd.Flags().Bool("save", false, "test")
 	// No credentials in env var so should look for prompt
-	loginCredentialsManager := NewLoginCredentialsManager(noCredentialsNetrcHandler, suite.prompt, suite.ccloudClient)
+	loginCredentialsManager := NewLoginCredentialsManager(suite.prompt, suite.ccloudClient)
 	creds, err := GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
 		loginCredentialsManager.GetCloudCredentialsFromPrompt(""),
@@ -304,7 +284,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 
 	// Credentials in environment variables has highest order of precedence
 	suite.setCCEnvVars()
-	loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
+	loginCredentialsManager = NewLoginCredentialsManager(suite.prompt, suite.ccloudClient)
 	creds, err = GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
 		loginCredentialsManager.GetCloudCredentialsFromPrompt(""),

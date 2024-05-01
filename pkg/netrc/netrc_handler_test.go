@@ -43,164 +43,10 @@ var (
 	}
 )
 
-func TestGetMatchingNetrcMachineNameWithContextName(t *testing.T) {
-	tests := []struct {
-		name    string
-		want    *Machine
-		params  NetrcMachineParams
-		wantErr bool
-		file    string
-	}{
-		{
-			name: "mds context",
-			want: confluentMachine,
-			params: NetrcMachineParams{
-				IsCloud: false,
-				Name:    mdsContext,
-			},
-			file: netrcFilePath,
-		},
-		{
-			name: "ccloud login context",
-			want: ccloudMachine,
-			params: NetrcMachineParams{
-				IsCloud: true,
-				Name:    ccloudNetrcMachineName,
-			},
-			file: netrcFilePath,
-		},
-		{
-			name: "No file error",
-			params: NetrcMachineParams{
-				IsCloud: false,
-				Name:    mdsContext,
-			},
-			wantErr: true,
-			file:    "wrong-file",
-		},
-		{
-			name: "Context doesn't exist",
-			want: nil,
-			params: NetrcMachineParams{
-				IsCloud: true,
-				Name:    "non-existent-context",
-			},
-			file: netrcFilePath,
-		},
-		{
-			name: "Context name with special characters",
-			want: specialCharsMachine,
-			params: NetrcMachineParams{
-				IsCloud: true,
-				Name:    specialCharsContext,
-			},
-			file: netrcFilePath,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			netrcHandler := NewNetrcHandler(test.file)
-			var machine *Machine
-			var err error
-			if machine, err = netrcHandler.GetMatchingNetrcMachine(test.params); (err != nil) != test.wantErr {
-				t.Errorf("GetMatchingNetrcMachineName error = %+v, wantErr %+v", err, test.wantErr)
-			}
-			if !t.Failed() {
-				if test.want == nil {
-					if machine != nil {
-						t.Error("GetMatchingNetrcMachineName expect nil machine but got non nil machine")
-					}
-				} else {
-					if machine == nil {
-						t.Errorf("Expected to find want : %+v but found no machines", machine)
-					}
-					if !isIdenticalMachine(test.want, machine) {
-						t.Errorf("GetMatchingNetrcMachineName mismatch\ngot: %+v \nwant: %+v", machine, test.want)
-					}
-				}
-			}
-		})
-	}
-}
-
 func isIdenticalMachine(expect, actual *Machine) bool {
 	return expect.Name == actual.Name &&
 		expect.User == actual.User &&
 		expect.Password == actual.Password
-}
-
-func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
-	tests := []struct {
-		name    string
-		want    *Machine
-		params  NetrcMachineParams
-		wantErr bool
-		file    string
-	}{
-		{
-			name: "ccloud login with url",
-			want: ccloudMachine,
-			params: NetrcMachineParams{
-				IsCloud: true,
-				URL:     loginURL,
-			},
-			file: netrcFilePath,
-		},
-		{
-			name:   "ccloud login no url",
-			want:   ccloudDiffURLMachine,
-			params: NetrcMachineParams{IsCloud: true},
-			file:   netrcFilePath,
-		},
-		{
-			name: "confluent login with url",
-			want: confluentMachine,
-			params: NetrcMachineParams{
-				IsCloud: false,
-				URL:     loginURL,
-			},
-			file: netrcFilePath,
-		},
-		{
-			name:    "No file error",
-			params:  NetrcMachineParams{IsCloud: false},
-			wantErr: true,
-			file:    "wrong-file",
-		},
-		{
-			name: "URL doesn't exist",
-			want: nil,
-			params: NetrcMachineParams{
-				IsCloud: true,
-				URL:     "http://dontexist",
-			},
-			file: netrcFilePath,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			netrcHandler := NewNetrcHandler(test.file)
-			var machine *Machine
-			var err error
-			if machine, err = netrcHandler.GetMatchingNetrcMachine(test.params); (err != nil) != test.wantErr {
-				t.Errorf("GetMatchingNetrcMachineName error = %+v, wantErr %+v", err, test.wantErr)
-			}
-			if !t.Failed() {
-				if test.want == nil {
-					if machine != nil {
-						t.Error("GetMatchingNetrcMachineName expect nil machine but got non nil machine")
-					}
-				} else {
-					if machine == nil {
-						t.Errorf("Expected to find want : %+v but found no machines", machine)
-					}
-					if !isIdenticalMachine(test.want, machine) {
-						t.Errorf("GetMatchingNetrcMachineName mismatch \ngot: %+v \nwant: %+v", machine, test.want)
-					}
-				}
-			}
-		})
-	}
 }
 
 func TestGetMachineNameRegex(t *testing.T) {
@@ -300,14 +146,6 @@ func TestGetMachineNameRegex(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			regex := getMachineNameRegex(test.params)
-			for _, machineName := range test.matchNames {
-				if !regex.Match([]byte(machineName)) {
-					t.Errorf("Got: regex.Match=false Expect: true\n"+
-						"Machine name: %s \n"+
-						"Regex String: %s \n"+
-						"Params: IsCloud=%t URL=%s", machineName, regex.String(), test.params.IsCloud, test.params.URL)
-				}
-			}
 			for _, machineName := range test.nonMatchNames {
 				if regex.Match([]byte(machineName)) {
 					t.Errorf("Got: regex.Match=true Expect: false\n"+

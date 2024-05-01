@@ -85,14 +85,12 @@ type LoginCredentialsManager interface {
 }
 
 type LoginCredentialsManagerImpl struct {
-	netrcHandler netrc.NetrcHandler
 	prompt       form.Prompt
 	client       *ccloudv1.Client
 }
 
-func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Prompt, client *ccloudv1.Client) LoginCredentialsManager {
+func NewLoginCredentialsManager(prompt form.Prompt, client *ccloudv1.Client) LoginCredentialsManager {
 	return &LoginCredentialsManagerImpl{
-		netrcHandler: netrcHandler,
 		prompt:       prompt,
 		client:       client,
 	}

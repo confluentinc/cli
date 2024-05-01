@@ -30,9 +30,6 @@ type LoginCredentialsManager struct {
 	lockGetCredentialsFromKeychain sync.Mutex
 	GetCredentialsFromKeychainFunc func(arg0 bool, arg1, arg2 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
-	lockGetCredentialsFromNetrc sync.Mutex
-	GetCredentialsFromNetrcFunc func(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
-
 	lockGetCloudCredentialsFromPrompt sync.Mutex
 	GetCloudCredentialsFromPromptFunc func(arg0 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
@@ -44,9 +41,6 @@ type LoginCredentialsManager struct {
 
 	lockGetOnPremPrerunCredentialsFromEnvVar sync.Mutex
 	GetOnPremPrerunCredentialsFromEnvVarFunc func() func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
-
-	lockGetOnPremPrerunCredentialsFromNetrc sync.Mutex
-	GetOnPremPrerunCredentialsFromNetrcFunc func(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockSetCloudClient sync.Mutex
 	SetCloudClientFunc func(arg0 *github_com_confluentinc_ccloud_sdk_go_v1_public.Client)
@@ -70,9 +64,6 @@ type LoginCredentialsManager struct {
 			Arg1 string
 			Arg2 string
 		}
-		GetCredentialsFromNetrc []struct {
-			Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
-		}
 		GetCloudCredentialsFromPrompt []struct {
 			Arg0 string
 		}
@@ -82,9 +73,6 @@ type LoginCredentialsManager struct {
 			Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
 		}
 		GetOnPremPrerunCredentialsFromEnvVar []struct {
-		}
-		GetOnPremPrerunCredentialsFromNetrc []struct {
-			Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
 		}
 		SetCloudClient []struct {
 			Arg0 *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
@@ -290,44 +278,6 @@ func (m *LoginCredentialsManager) GetCredentialsFromKeychainCalls() []struct {
 	return m.calls.GetCredentialsFromKeychain
 }
 
-// GetCredentialsFromNetrc mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCredentialsFromNetrc(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
-	m.lockGetCredentialsFromNetrc.Lock()
-	defer m.lockGetCredentialsFromNetrc.Unlock()
-
-	if m.GetCredentialsFromNetrcFunc == nil {
-		panic("mocker: LoginCredentialsManager.GetCredentialsFromNetrcFunc is nil but LoginCredentialsManager.GetCredentialsFromNetrc was called.")
-	}
-
-	call := struct {
-		Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
-	}{
-		Arg0: arg0,
-	}
-
-	m.calls.GetCredentialsFromNetrc = append(m.calls.GetCredentialsFromNetrc, call)
-
-	return m.GetCredentialsFromNetrcFunc(arg0)
-}
-
-// GetCredentialsFromNetrcCalled returns true if GetCredentialsFromNetrc was called at least once.
-func (m *LoginCredentialsManager) GetCredentialsFromNetrcCalled() bool {
-	m.lockGetCredentialsFromNetrc.Lock()
-	defer m.lockGetCredentialsFromNetrc.Unlock()
-
-	return len(m.calls.GetCredentialsFromNetrc) > 0
-}
-
-// GetCredentialsFromNetrcCalls returns the calls made to GetCredentialsFromNetrc.
-func (m *LoginCredentialsManager) GetCredentialsFromNetrcCalls() []struct {
-	Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
-} {
-	m.lockGetCredentialsFromNetrc.Lock()
-	defer m.lockGetCredentialsFromNetrc.Unlock()
-
-	return m.calls.GetCredentialsFromNetrc
-}
-
 // GetCloudCredentialsFromPrompt mocks base method by wrapping the associated func.
 func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(arg0 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetCloudCredentialsFromPrompt.Lock()
@@ -472,44 +422,6 @@ func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromEnvVarCalls() []
 	return m.calls.GetOnPremPrerunCredentialsFromEnvVar
 }
 
-// GetOnPremPrerunCredentialsFromNetrc mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrc(arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
-	m.lockGetOnPremPrerunCredentialsFromNetrc.Lock()
-	defer m.lockGetOnPremPrerunCredentialsFromNetrc.Unlock()
-
-	if m.GetOnPremPrerunCredentialsFromNetrcFunc == nil {
-		panic("mocker: LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrcFunc is nil but LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc was called.")
-	}
-
-	call := struct {
-		Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
-	}{
-		Arg0: arg0,
-	}
-
-	m.calls.GetOnPremPrerunCredentialsFromNetrc = append(m.calls.GetOnPremPrerunCredentialsFromNetrc, call)
-
-	return m.GetOnPremPrerunCredentialsFromNetrcFunc(arg0)
-}
-
-// GetOnPremPrerunCredentialsFromNetrcCalled returns true if GetOnPremPrerunCredentialsFromNetrc was called at least once.
-func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrcCalled() bool {
-	m.lockGetOnPremPrerunCredentialsFromNetrc.Lock()
-	defer m.lockGetOnPremPrerunCredentialsFromNetrc.Unlock()
-
-	return len(m.calls.GetOnPremPrerunCredentialsFromNetrc) > 0
-}
-
-// GetOnPremPrerunCredentialsFromNetrcCalls returns the calls made to GetOnPremPrerunCredentialsFromNetrc.
-func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrcCalls() []struct {
-	Arg0 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
-} {
-	m.lockGetOnPremPrerunCredentialsFromNetrc.Lock()
-	defer m.lockGetOnPremPrerunCredentialsFromNetrc.Unlock()
-
-	return m.calls.GetOnPremPrerunCredentialsFromNetrc
-}
-
 // SetCloudClient mocks base method by wrapping the associated func.
 func (m *LoginCredentialsManager) SetCloudClient(arg0 *github_com_confluentinc_ccloud_sdk_go_v1_public.Client) {
 	m.lockSetCloudClient.Lock()
@@ -565,9 +477,6 @@ func (m *LoginCredentialsManager) Reset() {
 	m.lockGetCredentialsFromKeychain.Lock()
 	m.calls.GetCredentialsFromKeychain = nil
 	m.lockGetCredentialsFromKeychain.Unlock()
-	m.lockGetCredentialsFromNetrc.Lock()
-	m.calls.GetCredentialsFromNetrc = nil
-	m.lockGetCredentialsFromNetrc.Unlock()
 	m.lockGetCloudCredentialsFromPrompt.Lock()
 	m.calls.GetCloudCredentialsFromPrompt = nil
 	m.lockGetCloudCredentialsFromPrompt.Unlock()
@@ -580,9 +489,6 @@ func (m *LoginCredentialsManager) Reset() {
 	m.lockGetOnPremPrerunCredentialsFromEnvVar.Lock()
 	m.calls.GetOnPremPrerunCredentialsFromEnvVar = nil
 	m.lockGetOnPremPrerunCredentialsFromEnvVar.Unlock()
-	m.lockGetOnPremPrerunCredentialsFromNetrc.Lock()
-	m.calls.GetOnPremPrerunCredentialsFromNetrc = nil
-	m.lockGetOnPremPrerunCredentialsFromNetrc.Unlock()
 	m.lockSetCloudClient.Lock()
 	m.calls.SetCloudClient = nil
 	m.lockSetCloudClient.Unlock()

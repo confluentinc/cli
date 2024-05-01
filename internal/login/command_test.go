@@ -32,7 +32,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	pmock "github.com/confluentinc/cli/v3/pkg/mock"
 	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -103,11 +102,6 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
 		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -135,17 +129,6 @@ var (
 		},
 		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials) (string, error) {
 			return testToken1, nil
-		},
-	}
-	mockNetrcHandler = &pmock.NetrcHandler{
-		GetFileNameFunc: func() string {
-			return netrcFile
-		},
-		RemoveNetrcCredentialsFunc: func(_ bool, _ string) (string, error) {
-			return "", nil
-		},
-		CheckCredentialExistFunc: func(_ bool, _ string) (bool, error) {
-			return false, nil
 		},
 	}
 )
@@ -185,11 +168,6 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
 		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -202,7 +180,7 @@ func TestCredentialsOverride(t *testing.T) {
 		},
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
@@ -239,7 +217,7 @@ func TestOrgIdOverride(t *testing.T) {
 			return func() string { return organizationId2 }
 		},
 	}
-	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
+	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
@@ -314,7 +292,7 @@ func TestLoginSuccess(t *testing.T) {
 			org2 = s.orgId == organizationId2
 			s.args = append(s.args, "--organization", s.orgId)
 		}
-		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
@@ -331,11 +309,6 @@ func TestLoginSuccess(t *testing.T) {
 func TestLoginOrderOfPrecedence(t *testing.T) {
 	req := require.New(t)
 	netrcUser := "netrc@confleunt.io"
-	netrcPassword := "netrcpassword"
-	netrcCreds := &pauth.Credentials{
-		Username: netrcUser,
-		Password: netrcPassword,
-	}
 
 	tests := []struct {
 		name         string
@@ -424,11 +397,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
 				GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -437,11 +405,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 			}
 			if test.setNetrcUser {
-				loginCredentialsManager.GetCredentialsFromNetrcFunc = func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return netrcCreds, nil
-					}
-				}
 			}
 			if test.isCloud {
 				if test.setEnvVar {
@@ -461,7 +424,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				}
 			}
 
-			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, mockNetrcHandler, AuthTokenHandler, loginCredentialsManager, LoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, AuthTokenHandler, loginCredentialsManager, LoginOrganizationManager)
 			var loginArgs []string
 			if !test.isCloud {
 				loginArgs = []string{"--url", "http://localhost:8090"}
@@ -522,14 +485,9 @@ func TestPromptLoginFlag(t *testing.T) {
 						}, nil
 					}
 				},
-				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return wrongCreds, nil
-					}
-				},
 				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 			loginArgs := []string{"--prompt"}
 			if !test.isCloud {
 				loginArgs = append(loginArgs, "--url", "http://localhost:8090")
@@ -539,7 +497,6 @@ func TestPromptLoginFlag(t *testing.T) {
 
 			req.False(mockLoginCredentialsManager.GetCloudCredentialsFromEnvVarCalled())
 			req.False(mockLoginCredentialsManager.GetOnPremCredentialsFromEnvVarCalled())
-			req.False(mockLoginCredentialsManager.GetCredentialsFromNetrcCalled())
 
 			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		})
@@ -564,11 +521,6 @@ func TestLoginFail(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
-			}
-		},
 		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, &ccloudv1.InvalidLoginError{}
@@ -581,7 +533,7 @@ func TestLoginFail(t *testing.T) {
 		},
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+	loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, true, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.Error(err)
 	req.Equal(new(ccloudv1.InvalidLoginError), err)
@@ -742,7 +694,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, LoginOrganizationManager, AuthTokenHandler)
+	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockLoginCredentialsManager, LoginOrganizationManager, AuthTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -797,7 +749,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 
 		// Login to the CLI control plane
 		_, err := pcmd.ExecuteCommand(loginCmd, s.args...)
@@ -810,7 +762,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
+		logoutCmd, _ := newLogoutCmd(cfg)
 		_, err = pcmd.ExecuteCommand(logoutCmd)
 		req.NoError(err)
 		verifyLoggedOutState(t, cfg, ctx.Name)
@@ -895,7 +847,7 @@ func TestValidateUrl(t *testing.T) {
 	}
 }
 
-func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
+func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.New()
 	var mdsClient *mdsv1.APIClient
@@ -931,13 +883,13 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 		},
 	}
 	prerunner := climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
+	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cfg *config.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *config.Config) {
-	logoutCmd := logout.New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
+func newLogoutCmd(cfg *config.Config) (*cobra.Command, *config.Config) {
+	logoutCmd := logout.New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg))
 	return logoutCmd, cfg
 }
 
