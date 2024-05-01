@@ -97,24 +97,32 @@ To build for windows/amd64, run the following:
 
 Linux is built in FIPS-140 mode by default. To build the CLI for MacOS in FIPS-140 mode, set the `GOLANG_FIPS` environment variable to `1`:
 
-    GOLANG_FIPS=1 make build
+```bash
+GOLANG_FIPS=1 make build
+```
 
 Then, build an OpenSSL FIPS provider:
 
+```bash
 wget "https://www.openssl.org/source/openssl-3.0.9.tar.gz"
 tar -xvf openssl-3.0.9.tar.gz
 cd openssl-3.0.9/
 ./Configure enable-fips
 make install_fips DESTDIR=install
+```
 
 Copy the generated files into the Homebrew OpenSSL directory:
 
+```bash
 cp install/usr/local/lib/ossl-modules/fips.dylib /opt/homebrew/Cellar/openssl@3/3.2.1/lib/ossl-modules
 cp install/usr/local/ssl/fipsmodule.cnf /opt/homebrew/etc/openssl@3/
+```
 
 Create a new OpenSSL configuration file for FIPS mode:
 
+```bash
 cp /opt/homebrew/etc/openssl@3/openssl.cnf /opt/homebrew/etc/openssl@3/openssl-fips.cnf
+```
 
 Append the following to `openssl-fips.cnf`:
 
@@ -154,8 +162,10 @@ SignatureAlgorithms = ECDSA+SHA256:ECDSA+SHA384:ECDSA+SHA512:rsa_pss_pss_sha256:
 
 Run the Confluent CLI in FIPS-140 mode:
 
+```bash
 env \
  DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/openssl@3/3.2.1/lib \
  OPENSSL_CONF=/opt/homebrew/etc/openssl@3/openssl-fips.cnf \
  GOLANG_FIPS=1 \
  confluent version
+```
