@@ -2,11 +2,9 @@ package ccloudv2
 
 import (
 	"context"
-	"net/http"
-
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
-
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"net/http"
 )
 
 func newSsoClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *ssov2.APIClient {
