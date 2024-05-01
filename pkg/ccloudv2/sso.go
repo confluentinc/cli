@@ -23,7 +23,7 @@ func (c *Client) ssoApiContext() context.Context {
 
 func (c *Client) CreateGroupMapping(groupMapping ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {
 	resp, httpResp, err := c.SsoClient.GroupMappingsIamV2SsoApi.CreateIamV2SsoGroupMapping(c.ssoApiContext()).IamV2SsoGroupMapping(groupMapping).Execute()
-	return resp, errors.CatchPaymentRequiredError(err, httpResp)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteGroupMapping(id string) error {

@@ -2,6 +2,7 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -178,14 +179,14 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 
 	if resBody.Message != "" {
 		message := strings.TrimRight(resBody.Message, "\n")
-		return fmt.Errorf("%s: %w", message, err)
+		return errors.New(message)
 	}
 
 	if resBody.Error.Message != "" {
 		message := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
 			return c == '.' || c == '\n'
 		})
-		return fmt.Errorf("%s: %w", message, err)
+		return errors.New(message)
 	}
 
 	return err
@@ -301,24 +302,6 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 	}
 
 	return err
-}
-
-func CatchPaymentRequiredError(err error, httpResp *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if httpResp == nil {
-		return err
-	}
-
-	errorPayment := CatchCCloudV2Error(err, httpResp)
-	if strings.Contains(errorPayment.Error(), "402 Payment Required") {
-		message := strings.TrimSpace(errorPayment.Error()[0 : len(errorPayment.Error())-len(": 402 Payment Required")])
-		return fmt.Errorf("%s", message)
-	}
-
-	return errorPayment
 }
 
 func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
