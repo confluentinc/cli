@@ -2,6 +2,7 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -178,14 +179,14 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 
 	if resBody.Message != "" {
 		message := strings.TrimRight(resBody.Message, "\n")
-		return fmt.Errorf("%s: %w", message, err)
+		return errors.New(message)
 	}
 
 	if resBody.Error.Message != "" {
 		message := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
 			return c == '.' || c == '\n'
 		})
-		return fmt.Errorf("%s: %w", message, err)
+		return errors.New(message)
 	}
 
 	return err
