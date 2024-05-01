@@ -95,7 +95,7 @@ To build for windows/amd64, run the following:
 
 #### Building in FIPS-140 mode
 
-Linux is built in FIPS-140 mode by default. To build the CLI for MacOS in FIPS-140 mode, set the `GOLANG_FIPS` environment variable to `1`:
+Linux is built in FIPS-140 mode by default. To build the CLI for MacOS in FIPS-140 mode, set the `GOLANG_FIPS` environment variable to "1":
 
 ```bash
 GOLANG_FIPS=1 make build

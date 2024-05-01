@@ -1,4 +1,4 @@
---- cli/Makefile	2024-04-30 16:59:07.338802450 -0700
+--- cli/Makefile	2024-05-01 14:14:29.882471940 -0700
 +++ debian/Makefile	2024-04-19 15:12:44.087477824 -0700
 @@ -1,149 +1,144 @@
 -SHELL := /bin/bash
@@ -55,7 +55,7 @@
 -    cd src/ && \
 -    ./make.bash && \
 -    cd ../../
--	PATH=$(pwd)/go/bin:$$PATH GOROOT=$$(pwd)/go TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+-	PATH=$$(pwd)/go/bin:$$PATH GOROOT=$$(pwd)/go TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 -	rm -rf go go-openssl go$$(cat .go-version).src.tar.gz
 -else
 -	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
