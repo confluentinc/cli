@@ -218,70 +218,62 @@ func parseSetStatement(statement string) (string, string, error) {
 		}
 	}
 
-	keyValuePair := strings.Split(strAfterSet, "=")
+	// Trim whitespace
+	strAfterSet = strings.TrimSpace(strAfterSet)
 
-	if len(keyValuePair) != 2 {
-		return "", "", &types.StatementError{
-			Message: `"=" should only appear once`,
-			Usage:   []string{"SET 'key'='value'"},
-		}
-	}
-
-	keyWithQuotes := strings.TrimSpace(keyValuePair[0])
-	valueWithQuotes := strings.TrimSpace(keyValuePair[1])
-
-	if keyWithQuotes != "" && valueWithQuotes == "" {
-		return "", "", &types.StatementError{
-			Message:    "value for key not present",
-			Suggestion: `if you want to reset a key, use "RESET 'key'"`,
-		}
-	}
-
-	if keyWithQuotes == "" && valueWithQuotes != "" {
-		return "", "", &types.StatementError{
-			Message: "key not present",
-			Usage:   []string{"SET 'key'='value'"},
-		}
-	}
-
-	if keyWithQuotes == "" && valueWithQuotes == "" {
+	// Checks to give helpful suggestions to the users.
+	// Contains only an equal sign
+	if strAfterSet == "=" {
 		return "", "", &types.StatementError{
 			Message: "key and value not present",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	if !strings.HasPrefix(keyWithQuotes, "'") || !strings.HasSuffix(keyWithQuotes, "'") ||
-		!strings.HasPrefix(valueWithQuotes, "'") || !strings.HasSuffix(valueWithQuotes, "'") {
+	// Check that the string doesn't end in an equal sign (+ optional whitespace),
+	// and suggest using RESET to remove a key
+	if strings.HasSuffix(strAfterSet, "=") {
+		return "", "", &types.StatementError{
+			Message:    "value for key not present",
+			Suggestion: `if you want to reset a key, use "RESET 'key'"`,
+		}
+	}
+
+	// Check that it doesn't begin with an equal sign (+ optional whitespace),
+	if strings.HasPrefix(strAfterSet, "=") {
+		return "", "", &types.StatementError{
+			Message: "key not present",
+			Usage:   []string{"SET 'key'='value'"},
+		}
+	}
+
+	// The key and value must be enclosed by single quotes
+	checkquotes := regexp.MustCompile(`^'.+'\s*=\s*'.*'$`)
+	if !checkquotes.MatchString(strAfterSet) {
 		return "", "", &types.StatementError{
 			Message: "key and value must be enclosed by single quotes (')",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	// remove enclosing quotes
-	keyWithQuotes = keyWithQuotes[1 : len(keyWithQuotes)-1]
-	valueWithQuotes = valueWithQuotes[1 : len(valueWithQuotes)-1]
-
-	if containsUnescapedSingleQuote(keyWithQuotes) {
+	// The actual final regex for parsing the key and value
+	// The only possible error left is an unescaped single quote
+	re := regexp.MustCompile(`^'(([^']|'')*?)'\s*=\s*'(([^']|'')*?)'$`)
+	matches := re.FindStringSubmatch(strAfterSet)
+	if len(matches) != 5 {
 		return "", "", &types.StatementError{
-			Message:    "key contains unescaped single quotes (')",
+			Message:    "key or value contains unescaped single quotes (')",
 			Usage:      []string{"SET 'key'='value'"},
 			Suggestion: `please escape all single quotes with another single quote "''key''"`,
 		}
 	}
 
-	if containsUnescapedSingleQuote(valueWithQuotes) {
-		return "", "", &types.StatementError{
-			Message:    "value contains unescaped single quotes (')",
-			Usage:      []string{"SET 'key'='value'"},
-			Suggestion: `please escape all single quotes with another single quote "''key''"`,
-		}
-	}
+	key := matches[1]
+	value := matches[3]
 
 	// replace escaped quotes
-	key := strings.ReplaceAll(keyWithQuotes, "''", "'")
-	value := strings.ReplaceAll(valueWithQuotes, "''", "'")
+	key = strings.ReplaceAll(key, "''", "'")
+	value = strings.ReplaceAll(value, "''", "'")
 	return key, value, nil
 }
 
