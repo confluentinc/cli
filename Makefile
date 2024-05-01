@@ -7,11 +7,11 @@ build:
 ifneq "" "$(findstring NT,$(shell uname))" # windows
 	CC=gcc CXX=g++ $(MAKE) cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-    ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
+	ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
 		CC=gcc CXX=g++ TAGS=musl $(MAKE) cli-builder
-    else # linux (glibc)
+	else # linux (glibc)
 		CC=gcc CXX=g++ $(MAKE) cli-builder
-    endif
+	endif
 else # darwin
 	$(MAKE) cli-builder
 endif
@@ -20,19 +20,19 @@ endif
 .PHONY: cross-build
 cross-build:
 ifeq ($(GOARCH),arm64)
-    ifeq ($(GOOS),linux) # linux/arm64
+	ifeq ($(GOOS),linux) # linux/arm64
 		CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
-    else # darwin/arm64
+	else # darwin/arm64
 		$(MAKE) cli-builder
-    endif
+	endif
 else
-    ifeq ($(GOOS),windows) # windows/amd64
+	ifeq ($(GOOS),windows) # windows/amd64
 		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
-    else ifeq ($(GOOS),linux) # linux/amd64
+	else ifeq ($(GOOS),linux) # linux/amd64
 		CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
-    else # darwin/amd64
+	else # darwin/amd64
 		$(MAKE) cli-builder
-    endif
+	endif
 endif
 
 .PHONY: cli-builder
@@ -46,11 +46,11 @@ ifeq ($(GOLANG_FIPS),1)
 	cd go/ && \
 	cat ../go-openssl/patches/*.patch | patch -p1 && \
 	sed -i '' 's/linux/darwin/' src/crypto/internal/backend/nobackend.go && \
-    sed -i '' 's/linux/darwin/' src/crypto/internal/backend/openssl.go && \
-    sed -i '' 's/"libcrypto.so.%s"/"libcrypto.%s.dylib"/' src/crypto/internal/backend/openssl.go && \
-    cd src/ && \
-    ./make.bash && \
-    cd ../../
+	sed -i '' 's/linux/darwin/' src/crypto/internal/backend/openssl.go && \
+	sed -i '' 's/"libcrypto.so.%s"/"libcrypto.%s.dylib"/' src/crypto/internal/backend/openssl.go && \
+	cd src/ && \
+	./make.bash && \
+	cd ../../
 	PATH=$$(pwd)/go/bin:$$PATH GOROOT=$$(pwd)/go TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 	rm -rf go go-openssl go$$(cat .go-version).src.tar.gz
 else
