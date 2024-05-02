@@ -114,7 +114,7 @@ make install_fips DESTDIR=install
 Copy the generated files into the Homebrew OpenSSL directory:
 
 ```bash
-cp install/usr/local/lib/ossl-modules/fips.dylib /opt/homebrew/Cellar/openssl@3/3.2.1/lib/ossl-modules
+cp install/usr/local/lib/ossl-modules/fips.dylib /opt/homebrew/Cellar/openssl@3/<version>/lib/ossl-modules
 cp install/usr/local/ssl/fipsmodule.cnf /opt/homebrew/etc/openssl@3/
 ```
 
