@@ -1,4 +1,4 @@
-Error: Flink compute pool "lfcp-999999" not found or access forbidden: resource not found: 403 Forbidden
+Error: Flink compute pool "lfcp-999999" not found or access forbidden: resource not found
 
 Suggestions:
     List available Flink compute pools with `confluent flink compute-pool list`.
