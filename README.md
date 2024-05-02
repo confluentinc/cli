@@ -164,7 +164,7 @@ Run the Confluent CLI in FIPS-140 mode:
 
 ```bash
 env \
- DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/openssl@3/3.2.1/lib \
+ DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/openssl@3/<version>/lib \
  OPENSSL_CONF=/opt/homebrew/etc/openssl@3/openssl-fips.cnf \
  GOLANG_FIPS=1 \
  confluent version
