@@ -178,14 +178,12 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	}
 
 	if resBody.Message != "" {
-		message := strings.TrimRight(resBody.Message, "\n")
+		message := strings.TrimRight(resBody.Message, ".\n")
 		return errors.New(message)
 	}
 
 	if resBody.Error.Message != "" {
-		message := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
-			return c == '.' || c == '\n'
-		})
+		message := strings.TrimRight(resBody.Error.Message, ".\n")
 		return errors.New(message)
 	}
 
