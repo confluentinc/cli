@@ -2,25 +2,21 @@ package logout
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type command struct {
 	*pcmd.CLICommand
-	cfg          *config.Config
-	netrcHandler netrc.NetrcHandler
+	cfg *config.Config
 }
 
-func New(cfg *config.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandler) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "logout",
 		Args: cobra.NoArgs,
@@ -36,9 +32,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcH
 	cmd.Short = fmt.Sprintf("Log out of %s.", context)
 
 	c := &command{
-		CLICommand:   pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		cfg:          cfg,
-		netrcHandler: netrcHandler,
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:        cfg,
 	}
 	cmd.RunE = c.logout
 
@@ -46,16 +41,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcH
 }
 
 func (c *command) logout(_ *cobra.Command, _ []string) error {
-	if c.Config.Context() != nil {
-		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Context().GetNetrcMachineName())
-		if err == nil {
-			log.CliLogger.Warnf(`Removed credentials for user "%s" from netrc file "%s"`, username, c.netrcHandler.GetFileName())
-		} else if !strings.Contains(err.Error(), "login credentials not found") && !strings.Contains(err.Error(), "keyword expected") {
-			// return err when other than NetrcCredentialsNotFoundErrorMsg or parsing error
-			return err
-		}
-	}
-
 	if err := pauth.PersistLogout(c.Config); err != nil {
 		return err
 	}
