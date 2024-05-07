@@ -22,8 +22,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
+	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/update"
 	"github.com/confluentinc/cli/v3/pkg/utils"
@@ -190,7 +190,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
-					netrcMachineName = ctx.GetNetrcMachineName()
+					netrcMachineName = ctx.GetMachineName()
 				}
 
 				if err := r.ccloudAutoLogin(netrcMachineName); err != nil {
@@ -285,7 +285,7 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 }
 
 func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId string) (*pauth.Credentials, error) {
-	filterParams := netrc.NetrcMachineParams{
+	filterParams := keychain.MachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 		URL:     url,
@@ -294,7 +294,6 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId stri
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
 		r.LoginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 	)
 	if err != nil {
@@ -393,7 +392,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
-					netrcMachineName = ctx.GetNetrcMachineName()
+					netrcMachineName = ctx.GetMachineName()
 				}
 
 				if err := r.confluentAutoLogin(cmd, netrcMachineName); err != nil {
@@ -475,14 +474,8 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 }
 
 func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachineName string) (string, *pauth.Credentials, error) {
-	filterParams := netrc.NetrcMachineParams{
-		Name:    netrcMachineName,
-		IsCloud: false,
-	}
-
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
-		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(filterParams),
 	)
 	if err != nil {
 		return "", nil, err
@@ -686,9 +679,9 @@ func (r *PreRun) updateToken(tokenErr error, ctx *config.Context, unsafeTrace bo
 }
 
 func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (string, string, error) {
-	filterParams := netrc.NetrcMachineParams{
+	filterParams := keychain.MachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
-		Name:    ctx.GetNetrcMachineName(),
+		Name:    ctx.GetMachineName(),
 	}
 
 	if r.Config.IsCloudLogin() {
@@ -702,7 +695,6 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 			r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
 			r.LoginCredentialsManager.GetCredentialsFromKeychain(true, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 		)
 		if err != nil {
@@ -715,7 +707,6 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 			r.LoginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 			r.LoginCredentialsManager.GetCredentialsFromKeychain(false, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-			r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 		)
 		if err != nil {

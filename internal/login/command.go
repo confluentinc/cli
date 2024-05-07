@@ -21,7 +21,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -30,13 +29,12 @@ type command struct {
 	cfg                      *config.Config
 	ccloudClientFactory      pauth.CCloudClientFactory
 	mdsClientManager         pauth.MDSClientManager
-	netrcHandler             netrc.NetrcHandler
 	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
 	authTokenHandler         pauth.AuthTokenHandler
 }
 
-func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -68,7 +66,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 		cfg:                      cfg,
 		mdsClientManager:         mdsClientManager,
 		ccloudClientFactory:      ccloudClientFactory,
-		netrcHandler:             netrcHandler,
 		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: loginOrganizationManager,
 		authTokenHandler:         authTokenHandler,
@@ -201,7 +198,7 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 	}
 }
 
-// Order of precedence: env vars > config file > netrc file > prompt
+// Order of precedence: environment variables > configuration file / macOS keychain > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization string) (*pauth.Credentials, error) {
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
@@ -215,13 +212,13 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization str
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization))
 	}
 
-	filterParams := netrc.NetrcMachineParams{
+	filterParams := keychain.MachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	ctx := c.Config.Context()
-	if strings.Contains(ctx.GetNetrcMachineName(), url) {
-		filterParams.Name = ctx.GetNetrcMachineName()
+	if strings.Contains(ctx.GetMachineName(), url) {
+		filterParams.Name = ctx.GetMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
@@ -229,7 +226,6 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization str
 		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, url),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization),
 	)
 }
@@ -308,7 +304,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
 }
 
-// Order of precedence: env vars > netrc > prompt
+// Order of precedence: env vars > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
 	prompt, err := cmd.Flags().GetBool("prompt")
@@ -319,20 +315,19 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt())
 	}
 
-	netrcFilterParams := netrc.NetrcMachineParams{
+	filterParams := keychain.MachineParams{
 		IgnoreCert: true,
 		URL:        url,
 	}
 	ctx := c.Config.Context()
-	if strings.Contains(ctx.GetNetrcMachineName(), url) {
-		netrcFilterParams.Name = ctx.GetNetrcMachineName()
+	if strings.Contains(ctx.GetMachineName(), url) {
+		filterParams.Name = ctx.GetMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(false, netrcFilterParams.Name, url),
-		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(false, filterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
 }
@@ -380,7 +375,7 @@ func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pau
 		return nil
 	}
 
-	ctxName := c.Config.Context().GetNetrcMachineName()
+	ctxName := c.Config.Context().GetMachineName()
 	if err := keychain.Write(isCloud, ctxName, url, credentials.Username, credentials.Password); err != nil {
 		return err
 	}
