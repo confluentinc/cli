@@ -198,7 +198,7 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 	}
 }
 
-// Order of precedence: env vars > config file > prompt
+// Order of precedence: environment variables > configuration file / macOS keychain > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization string) (*pauth.Credentials, error) {
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
