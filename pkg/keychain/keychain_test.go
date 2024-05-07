@@ -7,12 +7,6 @@ import (
 	"testing"
 )
 
-func isIdenticalMachine(expect, actual *Machine) bool {
-	return expect.Name == actual.Name &&
-		expect.User == actual.User &&
-		expect.Password == actual.Password
-}
-
 func TestGetMachineNameRegex(t *testing.T) {
 	url := "https://confluent.cloud"
 	ccloudCtxName := "login-csreesangkom@confleunt.io-https://confluent.cloud"

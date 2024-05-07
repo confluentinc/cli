@@ -22,8 +22,6 @@ import (
 
 const stopNonInteractiveMsg = "remove these credentials or use the `--prompt` flag to bypass non-interactive login"
 
-var foundCredentialsForUserFromKeychainMessage = fmt.Sprintf(`Found credentials for user "%%s" from keychain (%s).`, stopNonInteractiveMsg)
-
 type Credentials struct {
 	Username string
 	Password string

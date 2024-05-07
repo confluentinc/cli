@@ -13,7 +13,7 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	cfg          *config.Config
+	cfg *config.Config
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -32,8 +32,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Short = fmt.Sprintf("Log out of %s.", context)
 
 	c := &command{
-		CLICommand:   pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		cfg:          cfg,
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:        cfg,
 	}
 	cmd.RunE = c.logout
 

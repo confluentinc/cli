@@ -25,50 +25,6 @@ const (
 )
 
 var (
-	mockLoginCredentialsManager = &climock.LoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return &pauth.Credentials{
-					Username: promptUser,
-					Password: promptPassword,
-				}, nil
-			}
-		},
-		GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetOnPremCredentialsFromPromptFunc: func() func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return &pauth.Credentials{
-					Username: promptUser,
-					Password: promptPassword,
-				}, nil
-			}
-		},
-		GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
-	}
 	orgManagerImpl           = pauth.NewLoginOrganizationManagerImpl()
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
