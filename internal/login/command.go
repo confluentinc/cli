@@ -21,7 +21,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -213,13 +212,13 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization str
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization))
 	}
 
-	filterParams := netrc.NetrcMachineParams{
+	filterParams := keychain.MachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	ctx := c.Config.Context()
-	if strings.Contains(ctx.GetNetrcMachineName(), url) {
-		filterParams.Name = ctx.GetNetrcMachineName()
+	if strings.Contains(ctx.GetMachineName(), url) {
+		filterParams.Name = ctx.GetMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
@@ -316,19 +315,19 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt())
 	}
 
-	netrcFilterParams := netrc.NetrcMachineParams{
+	filterParams := keychain.MachineParams{
 		IgnoreCert: true,
 		URL:        url,
 	}
 	ctx := c.Config.Context()
-	if strings.Contains(ctx.GetNetrcMachineName(), url) {
-		netrcFilterParams.Name = ctx.GetNetrcMachineName()
+	if strings.Contains(ctx.GetMachineName(), url) {
+		filterParams.Name = ctx.GetMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(false, netrcFilterParams.Name, url),
-		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(false, filterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
 }
@@ -376,7 +375,7 @@ func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pau
 		return nil
 	}
 
-	ctxName := c.Config.Context().GetNetrcMachineName()
+	ctxName := c.Config.Context().GetMachineName()
 	if err := keychain.Write(isCloud, ctxName, url, credentials.Username, credentials.Password); err != nil {
 		return err
 	}

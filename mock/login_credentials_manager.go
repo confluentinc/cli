@@ -10,7 +10,7 @@ import (
 	github_com_confluentinc_ccloud_sdk_go_v1_public "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	github_com_confluentinc_cli_v3_pkg_auth "github.com/confluentinc/cli/v3/pkg/auth"
 	github_com_confluentinc_cli_v3_pkg_config "github.com/confluentinc/cli/v3/pkg/config"
-	github_com_confluentinc_cli_v3_pkg_netrc "github.com/confluentinc/cli/v3/pkg/netrc"
+	github_com_confluentinc_cli_v3_pkg_keychain "github.com/confluentinc/cli/v3/pkg/keychain"
 )
 
 // LoginCredentialsManager is a mock of LoginCredentialsManager interface
@@ -25,7 +25,7 @@ type LoginCredentialsManager struct {
 	GetSsoCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromConfig sync.Mutex
-	GetCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
+	GetCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 github_com_confluentinc_cli_v3_pkg_keychain.MachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromKeychain sync.Mutex
 	GetCredentialsFromKeychainFunc func(arg0 bool, arg1, arg2 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
@@ -57,7 +57,7 @@ type LoginCredentialsManager struct {
 		}
 		GetCredentialsFromConfig []struct {
 			Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
-			Arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
+			Arg1 github_com_confluentinc_cli_v3_pkg_keychain.MachineParams
 		}
 		GetCredentialsFromKeychain []struct {
 			Arg0 bool
@@ -194,7 +194,7 @@ func (m *LoginCredentialsManager) GetSsoCredentialsFromConfigCalls() []struct {
 }
 
 // GetCredentialsFromConfig mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCredentialsFromConfig(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetCredentialsFromConfig(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 github_com_confluentinc_cli_v3_pkg_keychain.MachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
 	m.lockGetCredentialsFromConfig.Lock()
 	defer m.lockGetCredentialsFromConfig.Unlock()
 
@@ -204,7 +204,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromConfig(arg0 *github_com_conf
 
 	call := struct {
 		Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
-		Arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
+		Arg1 github_com_confluentinc_cli_v3_pkg_keychain.MachineParams
 	}{
 		Arg0: arg0,
 		Arg1: arg1,
@@ -226,7 +226,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromConfigCalled() bool {
 // GetCredentialsFromConfigCalls returns the calls made to GetCredentialsFromConfig.
 func (m *LoginCredentialsManager) GetCredentialsFromConfigCalls() []struct {
 	Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
-	Arg1 github_com_confluentinc_cli_v3_pkg_netrc.NetrcMachineParams
+	Arg1 github_com_confluentinc_cli_v3_pkg_keychain.MachineParams
 } {
 	m.lockGetCredentialsFromConfig.Lock()
 	defer m.lockGetCredentialsFromConfig.Unlock()

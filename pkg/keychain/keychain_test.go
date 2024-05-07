@@ -1,46 +1,10 @@
-package netrc
+package keychain
 
 import (
+	"fmt"
+	"regexp"
+	"strings"
 	"testing"
-)
-
-const (
-	netrcFilePath          = "test_files/netrc"
-	mdsContext             = "login-mds-user-http://test"
-	ccloudNetrcMachineName = "login-ccloud-login-user@confluent.io-http://test"
-	specialCharsContext    = `login-chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io-http://the-special-one`
-
-	loginURL          = "http://test"
-	ccloudLogin       = "ccloud-login-user@confluent.io"
-	ccloudDiffLogin   = "ccloud-login-user-diff-url@confluent.io"
-	ccloudDiffURL     = "http://differenturl"
-	mdsLogin          = "mds-user"
-	mockPassword      = "mock-password"
-	specialCharsLogin = `chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io`
-)
-
-var (
-	ccloudMachine = &Machine{
-		Name:     "confluent-cli:ccloud-username-password:" + ccloudNetrcMachineName,
-		User:     ccloudLogin,
-		Password: mockPassword,
-	}
-
-	ccloudDiffURLMachine = &Machine{
-		Name:     "confluent-cli:ccloud-username-password:login-" + ccloudDiffLogin + "-" + ccloudDiffURL,
-		User:     ccloudDiffLogin,
-		Password: mockPassword,
-	}
-	confluentMachine = &Machine{
-		Name:     "confluent-cli:mds-username-password:" + mdsContext,
-		User:     mdsLogin,
-		Password: mockPassword,
-	}
-	specialCharsMachine = &Machine{
-		Name:     "confluent-cli:ccloud-username-password:" + specialCharsContext,
-		User:     specialCharsLogin,
-		Password: mockPassword,
-	}
 )
 
 func isIdenticalMachine(expect, actual *Machine) bool {
@@ -56,13 +20,13 @@ func TestGetMachineNameRegex(t *testing.T) {
 	specialCharsCtxName := `login-csreesangkom+adoooo+\/@-+\^${}[]().*+?|<>-&@confleunt.io-https://confluent.cloud`
 	tests := []struct {
 		name          string
-		params        NetrcMachineParams
+		params        MachineParams
 		matchNames    []string
 		nonMatchNames []string
 	}{
 		{
 			name: "ccloud-ctx-name-regex",
-			params: NetrcMachineParams{
+			params: MachineParams{
 				IsCloud: true,
 				Name:    ccloudCtxName,
 			},
@@ -76,7 +40,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "ccloud-all-regex",
-			params: NetrcMachineParams{
+			params: MachineParams{
 				IsCloud: true,
 				URL:     url,
 			},
@@ -90,7 +54,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "confluent-ctx-name-regex",
-			params: NetrcMachineParams{
+			params: MachineParams{
 				IsCloud: false,
 				Name:    confluentCtxName,
 			},
@@ -104,7 +68,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "confluent-regex",
-			params: NetrcMachineParams{
+			params: MachineParams{
 				IsCloud: false,
 				URL:     url,
 			},
@@ -118,7 +82,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "ccloud-special-chars",
-			params: NetrcMachineParams{
+			params: MachineParams{
 				IsCloud: true,
 				Name:    specialCharsCtxName,
 			},
@@ -131,7 +95,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 		{
 			name: "confluent-special-chars",
-			params: NetrcMachineParams{
+			params: MachineParams{
 				IsCloud: false,
 				Name:    specialCharsCtxName,
 			},
@@ -156,4 +120,44 @@ func TestGetMachineNameRegex(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getMachineNameRegex(params MachineParams) *regexp.Regexp {
+	var contextNameRegex string
+	if params.Name != "" {
+		contextNameRegex = escapeSpecialRegexChars(params.Name)
+	} else if params.URL != "" {
+		url := strings.ReplaceAll(params.URL, ".", `\.`)
+		contextNameRegex = fmt.Sprintf(".*-%s", url)
+	} else {
+		contextNameRegex = ".*"
+	}
+
+	if params.IgnoreCert {
+		if idx := strings.Index(contextNameRegex, `\?cacertpath=`); idx != -1 {
+			contextNameRegex = contextNameRegex[:idx] + ".*"
+		}
+	}
+
+	var regexString string
+	if params.IsCloud {
+		credTypeRegex := fmt.Sprintf("(%s)", ccloudUsernamePasswordString)
+		regexString = "^" + fmt.Sprintf(localCredentialStringFormat, credTypeRegex, contextNameRegex)
+	} else {
+		regexString = "^" + fmt.Sprintf(localCredentialStringFormat, mdsUsernamePasswordString, contextNameRegex)
+	}
+
+	return regexp.MustCompile(regexString)
+}
+
+func escapeSpecialRegexChars(s string) string {
+	specialChars := `\^${}[]().*+?|<>-&`
+	res := ""
+	for _, c := range s {
+		if strings.ContainsRune(specialChars, c) {
+			res += `\`
+		}
+		res += string(c)
+	}
+	return res
 }

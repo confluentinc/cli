@@ -16,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
 )
@@ -72,7 +71,7 @@ type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
 	GetSsoCredentialsFromConfig(*config.Config, string) func() (*Credentials, error)
-	GetCredentialsFromConfig(*config.Config, netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetCredentialsFromConfig(*config.Config, keychain.MachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
@@ -85,14 +84,14 @@ type LoginCredentialsManager interface {
 }
 
 type LoginCredentialsManagerImpl struct {
-	prompt       form.Prompt
-	client       *ccloudv1.Client
+	prompt form.Prompt
+	client *ccloudv1.Client
 }
 
 func NewLoginCredentialsManager(prompt form.Prompt, client *ccloudv1.Client) LoginCredentialsManager {
 	return &LoginCredentialsManagerImpl{
-		prompt:       prompt,
-		client:       client,
+		prompt: prompt,
+		client: client,
 	}
 }
 
@@ -156,7 +155,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar() func() (*
 	return h.getCredentialsFromEnvVarFunc(envVars, "")
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *config.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *config.Config, filterParams keychain.MachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		var loginCredential *config.LoginCredential
 		ctx := cfg.Context()
@@ -340,7 +339,7 @@ func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
 	h.client = client
 }
 
-func matchLoginCredentialWithFilter(loginCredential *config.LoginCredential, filterParams netrc.NetrcMachineParams) bool {
+func matchLoginCredentialWithFilter(loginCredential *config.LoginCredential, filterParams keychain.MachineParams) bool {
 	if loginCredential == nil {
 		return false
 	}

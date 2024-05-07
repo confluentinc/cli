@@ -32,7 +32,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
+	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -43,7 +43,6 @@ const (
 	testToken2      = "org-2-y0ur.jwt.T0kEn"
 	promptUser      = "prompt-user@confluent.io"
 	promptPassword  = " prompt-password "
-	netrcFile       = "netrc-file"
 	ccloudURL       = "https://confluent.cloud"
 	organizationId1 = "o-001"
 	organizationId2 = "o-002"
@@ -97,7 +96,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -163,7 +162,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -308,53 +307,34 @@ func TestLoginSuccess(t *testing.T) {
 
 func TestLoginOrderOfPrecedence(t *testing.T) {
 	req := require.New(t)
-	netrcUser := "netrc@confleunt.io"
 
 	tests := []struct {
-		name         string
-		isCloud      bool
-		setEnvVar    bool
-		setNetrcUser bool
-		wantUser     string
+		name      string
+		isCloud   bool
+		setEnvVar bool
+		wantUser  string
 	}{
 		{
-			name:         "cloud env var over all other credentials",
-			isCloud:      true,
-			setEnvVar:    true,
-			setNetrcUser: true,
-			wantUser:     envUser,
+			name:      "cloud env var over all other credentials",
+			isCloud:   true,
+			setEnvVar: true,
+			wantUser:  envUser,
 		},
 		{
-			name:         "cloud netrc credential over prompt",
-			isCloud:      true,
-			setEnvVar:    false,
-			setNetrcUser: true,
-			wantUser:     netrcUser,
+			name:      "cloud prompt",
+			isCloud:   true,
+			setEnvVar: false,
+			wantUser:  promptUser,
 		},
 		{
-			name:         "cloud prompt",
-			isCloud:      true,
-			setEnvVar:    false,
-			setNetrcUser: false,
-			wantUser:     promptUser,
+			name:      "on-prem env var over all other credentials",
+			setEnvVar: true,
+			wantUser:  envUser,
 		},
 		{
-			name:         "on-prem env var over all other credentials",
-			setEnvVar:    true,
-			setNetrcUser: true,
-			wantUser:     envUser,
-		},
-		{
-			name:         "on-prem netrc credential over prompt",
-			setEnvVar:    false,
-			setNetrcUser: true,
-			wantUser:     netrcUser,
-		},
-		{
-			name:         "on-prem prompt",
-			setEnvVar:    false,
-			setNetrcUser: false,
-			wantUser:     promptUser,
+			name:      "on-prem prompt",
+			setEnvVar: false,
+			wantUser:  promptUser,
 		},
 	}
 
@@ -392,7 +372,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -403,8 +383,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 					}
 				},
 				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
-			}
-			if test.setNetrcUser {
 			}
 			if test.isCloud {
 				if test.setEnvVar {
@@ -516,7 +494,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}

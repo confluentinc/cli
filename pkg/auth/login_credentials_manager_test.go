@@ -14,7 +14,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/mock"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 )
 
 const (
@@ -24,16 +23,8 @@ const (
 	envUsername = "env-username"
 	envPassword = "env-password"
 
-	netrcUsername = "netrc-username"
-	netrcPassword = "netrc-password"
-
 	promptUsername = "prompt-chrissy"
 	promptPassword = "  prompt-password  "
-
-	netrcFileName = ".netrc"
-
-	prerunNetrcUsername = "csreesangkom"
-	prerunNetrPassword  = "password"
 
 	prerunURL  = "http://test"
 	caCertPath = "cert-path"
@@ -47,11 +38,6 @@ var (
 	deprecateEnvCredentials = &Credentials{
 		Username: deprecatedEnvUser,
 		Password: deprecatedEnvPassword,
-	}
-	netrcCredentials = &Credentials{
-		Username: netrcUsername,
-		Password: netrcPassword,
-		IsSSO:    false,
 	}
 	promptCredentials = &Credentials{
 		Username: promptUsername,
@@ -69,40 +55,6 @@ var (
 		PrerunLoginURL:        prerunURL,
 		PrerunLoginCaCertPath: caCertPath,
 	}
-	netrcPrerunCredentials = &Credentials{
-		Username:              prerunNetrcUsername,
-		Password:              prerunNetrPassword,
-		PrerunLoginURL:        prerunURL,
-		PrerunLoginCaCertPath: "",
-	}
-	netrcPrerunCredentialsWithCaCertPath = &Credentials{
-		Username:              prerunNetrcUsername,
-		Password:              prerunNetrPassword,
-		PrerunLoginURL:        prerunURL,
-		PrerunLoginCaCertPath: caCertPath,
-	}
-
-	ccloudCredMachine = &netrc.Machine{
-		Name:     "ccloud-cred",
-		User:     netrcUsername,
-		Password: netrcPassword,
-	}
-	confluentMachine = &netrc.Machine{
-		Name:     "confluent",
-		User:     netrcUsername,
-		Password: netrcPassword,
-	}
-
-	confluentNetrcPrerunMachine = &netrc.Machine{
-		Name:     fmt.Sprintf("confluent-cli:mds-username-password:login-%s-%s", prerunNetrcUsername, prerunURL),
-		User:     prerunNetrcUsername,
-		Password: prerunNetrPassword,
-	}
-	confluentNetrcPrerunMachineWithCaCertPath = &netrc.Machine{
-		Name:     fmt.Sprintf("confluent-cli:mds-username-password:login-%s-%s?cacertpath=%s", prerunNetrcUsername, prerunURL, caCertPath),
-		User:     prerunNetrcUsername,
-		Password: prerunNetrPassword,
-	}
 )
 
 type LoginCredentialsManagerTestSuite struct {
@@ -110,7 +62,6 @@ type LoginCredentialsManagerTestSuite struct {
 	require *require.Assertions
 
 	ccloudClient *ccloudv1.Client
-	netrcHandler netrc.NetrcHandler
 	prompt       *mock.Prompt
 
 	loginCredentialsManager LoginCredentialsManager

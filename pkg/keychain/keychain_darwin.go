@@ -9,16 +9,44 @@ import (
 	"github.com/keybase/go-keychain"
 
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 )
+
+type Machine struct {
+	Name     string
+	User     string
+	Password string
+}
+
+type MachineParams struct {
+	IgnoreCert bool
+	IsCloud    bool
+	Name       string
+	URL        string
+}
 
 const (
-	accessGroup = "cli"
-	separator   = "?"
+	accessGroup                  = "cli"
+	separator                    = "?"
+	localCredentialsPrefix       = "confluent-cli"
+	localCredentialStringFormat  = localCredentialsPrefix + ":%s:%s"
+	mdsUsernamePasswordString    = "mds-username-password"
+	ccloudUsernamePasswordString = "ccloud-username-password"
 )
 
+type credentialType int
+
+const (
+	mdsUsernamePassword credentialType = iota
+	ccloudUsernamePassword
+)
+
+func (c credentialType) String() string {
+	credTypes := [...]string{mdsUsernamePasswordString, ccloudUsernamePasswordString}
+	return credTypes[c]
+}
+
 func Write(isCloud bool, ctxName, url, username, password string) error {
-	service := netrc.GetLocalCredentialName(isCloud, ctxName)
+	service := GetLocalCredentialName(isCloud, ctxName)
 
 	item := keychain.NewGenericPassword(service, url, fmt.Sprintf("%s-%s", username, url), []byte(username+separator+password), accessGroup)
 	item.SetSynchronizable(keychain.SynchronizableNo)
@@ -33,7 +61,7 @@ func Write(isCloud bool, ctxName, url, username, password string) error {
 }
 
 func Delete(isCloud bool, ctxName string) error {
-	service := netrc.GetLocalCredentialName(isCloud, ctxName)
+	service := GetLocalCredentialName(isCloud, ctxName)
 
 	item := keychain.NewItem()
 	item.SetSecClass(keychain.SecClassGenericPassword)
@@ -68,7 +96,7 @@ func Read(isCloud bool, ctxName, url string) (string, string, error) {
 	item.SetReturnData(true)
 
 	if ctxName != "" {
-		service := netrc.GetLocalCredentialName(isCloud, ctxName)
+		service := GetLocalCredentialName(isCloud, ctxName)
 		item.SetService(service)
 	}
 
@@ -88,4 +116,12 @@ func parseCredentialsFromKeychain(data []byte) (string, string, error) {
 		return "", "", fmt.Errorf("unable to parse credentials in keychain access")
 	}
 	return substrings[0], substrings[1], nil
+}
+
+func GetLocalCredentialName(isCloud bool, ctxName string) string {
+	credType := mdsUsernamePassword
+	if isCloud {
+		credType = ccloudUsernamePassword
+	}
+	return fmt.Sprintf(localCredentialStringFormat, credType.String(), ctxName)
 }

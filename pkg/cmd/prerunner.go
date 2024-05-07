@@ -22,8 +22,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
+	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/update"
 	"github.com/confluentinc/cli/v3/pkg/utils"
@@ -190,7 +190,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
-					netrcMachineName = ctx.GetNetrcMachineName()
+					netrcMachineName = ctx.GetMachineName()
 				}
 
 				if err := r.ccloudAutoLogin(netrcMachineName); err != nil {
@@ -285,7 +285,7 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 }
 
 func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId string) (*pauth.Credentials, error) {
-	filterParams := netrc.NetrcMachineParams{
+	filterParams := keychain.MachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 		URL:     url,
@@ -392,7 +392,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
-					netrcMachineName = ctx.GetNetrcMachineName()
+					netrcMachineName = ctx.GetMachineName()
 				}
 
 				if err := r.confluentAutoLogin(cmd, netrcMachineName); err != nil {
@@ -679,9 +679,9 @@ func (r *PreRun) updateToken(tokenErr error, ctx *config.Context, unsafeTrace bo
 }
 
 func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (string, string, error) {
-	filterParams := netrc.NetrcMachineParams{
+	filterParams := keychain.MachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
-		Name:    ctx.GetNetrcMachineName(),
+		Name:    ctx.GetMachineName(),
 	}
 
 	if r.Config.IsCloudLogin() {

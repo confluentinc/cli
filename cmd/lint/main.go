@@ -240,7 +240,6 @@ var vocabWords = []string{
 	"lz4",
 	"md",
 	"mds",
-	"netrc",
 	"nodejs",
 	"pem",
 	"plaintext",
