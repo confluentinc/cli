@@ -62,7 +62,6 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 			examples.Example{
 				Code: "confluent connect cluster create --config-file config.json --cluster lkc-123456",
 			},
-
 		),
 	}
 
