@@ -24,7 +24,7 @@ func (c *Client) connectApiContext() context.Context {
 	return context.WithValue(context.Background(), connectv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-func (c *Client) CreateConnector(environmentId, kafkaClusterId string, connect connectv1.InlineObject) (connectv1.ConnectV1Connector, error) {
+func (c *Client) CreateConnector(environmentId, kafkaClusterId string, connect connectv1.InlineObject) (connectv1.ConnectV1ConnectorWithOffsets, error) {
 	resp, httpResp, err := c.ConnectClient.ConnectorsConnectV1Api.CreateConnectv1Connector(c.connectApiContext(), environmentId, kafkaClusterId).InlineObject(connect).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }

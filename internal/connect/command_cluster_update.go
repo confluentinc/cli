@@ -66,7 +66,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		}
 		userConfigs = &currentConfigs
 	} else if cmd.Flags().Changed("config-file") {
-		userConfigs, err = getConfig(cmd)
+		userConfigs, _, err = getConfig(cmd, true)
 		if err != nil {
 			return err
 		}
