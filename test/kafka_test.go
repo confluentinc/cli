@@ -264,7 +264,7 @@ func (s *CLITestSuite) TestKafkaBroker() {
 func (s *CLITestSuite) TestKafkaBrokerList() {
 	tests := []CLITest{
 		{args: fmt.Sprintf("kafka broker list --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/broker/list.golden"},
-		{args: "kafka broker list --url https://pkc-12345.us-west-2.aws.confluent.cloud:443", fixture: "kafka/broker/list-warning-cloud-url.golden", exitCode: 1},
+		{args: fmt.Sprintf("kafka broker list --url %s", s.TestBackend.GetCloudUrl()), fixture: "kafka/broker/list-warning-cloud-url.golden", exitCode: 1},
 		{args: fmt.Sprintf("kafka broker list --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/broker/list-json.golden"},
 		{args: fmt.Sprintf("kafka broker list --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/broker/list-yaml.golden"},
 	}

@@ -1,2 +1,5 @@
 [WARN] This is a Confluent Platform command. Confluent Cloud URLs are not supported.
-Error: unable to establish Kafka REST connection: https://pkc-12345.us-west-2.aws.confluent.cloud:44/v3: dial tcp: lookup pkc-12345.us-west-2.aws.confluent.cloud: no such host
+Error: Kafka REST request failed: GET http://127.0.0.1:1024/v3/clusters: 404 Not Found
+
+Suggestions:
+    Please check the status of your Kafka cluster or submit a support ticket.
