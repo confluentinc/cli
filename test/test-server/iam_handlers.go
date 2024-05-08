@@ -601,8 +601,14 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 			var req ssov2.IamV2SsoGroupMapping
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			err = json.NewEncoder(w).Encode(&groupMapping)
-			require.NoError(t, err)
+			if req.GetDisplayName() == "group-mapping-rate-limit" {
+				w.WriteHeader(http.StatusPaymentRequired)
+				err = writeErrorJson(w, "Group mapping reached limit 12")
+				require.NoError(t, err)
+			} else {
+				err = json.NewEncoder(w).Encode(&groupMapping)
+				require.NoError(t, err)
+			}
 		}
 	}
 }
