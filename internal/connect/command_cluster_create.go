@@ -28,19 +28,19 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 			examples.Example{
 				Text: "The configuration file contains configs including offsets for the connector.",
 				Code: `{
-  "name": "az-connector",
+  "name": "MyGcsLogsBucketConnector",
   "config": {
-    "name": "az-connector",
-    "azblob.account.name": "azsink",
-    "azblob.account.key": "key",
-    "azblob.container.name": "azsink",
-    "data.format": "JSON",
-    "kafka.api.key": "key",
-    "kafka.api.secret": "key",
-    "tasks.max": "1",
-    "time.interval": "HOURLY",
-    "topics": "apples",
-    "connector.class": "AzureBlobSink"
+    "connector.class": "GcsSink",
+    "data.format": "BYTES",
+    "flush.size": "1000",
+    "gcs.bucket.name": "APILogsBucket",
+    "gcs.credentials.config": "****************",
+    "kafka.api.key": "****************",
+    "kafka.api.secret": "****************",
+    "name": "MyGcsLogsBucketConnector",
+    "tasks.max": "2",
+    "time.interval": "DAILY",
+    "topics": "APILogsTopic"
   },
   "offsets": [
 	{
