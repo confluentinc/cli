@@ -36,7 +36,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, *[]map[string]any, error
 	return &options, &offsets, nil
 }
 
-func parseConfigFile(filename string) (map[string]string, []map[string]interface{}, error) {
+func parseConfigFile(filename string) (map[string]string, []map[string]any, error) {
 	jsonFile, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
