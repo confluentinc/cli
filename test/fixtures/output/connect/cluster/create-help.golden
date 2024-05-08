@@ -4,6 +4,36 @@ Usage:
   confluent connect cluster create [flags]
 
 Examples:
+Create a configuration file with connector configs and offsets.
+
+  {
+    "name": "MyGcsLogsBucketConnector",
+    "config": {
+      "connector.class": "GcsSink",
+      "data.format": "BYTES",
+      "flush.size": "1000",
+      "gcs.bucket.name": "APILogsBucket",
+      "gcs.credentials.config": "****************",
+      "kafka.api.key": "****************",
+      "kafka.api.secret": "****************",
+      "name": "MyGcsLogsBucketConnector",
+      "tasks.max": "2",
+      "time.interval": "DAILY",
+      "topics": "APILogsTopic"
+    },
+    "offsets": [
+  	{
+  	  "partition": {
+  		"kafka_partition": 0,
+  		"kafka_topic": "topic_A"
+  	  },
+  	  "offset": {
+  		"kafka_offset": 1000
+  	  }
+  	}
+    ]
+  }
+
 Create a connector in the current or specified Kafka cluster context.
 
   $ confluent connect cluster create --config-file config.json
