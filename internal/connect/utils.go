@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func getConfig(cmd *cobra.Command, isUpdate bool) (*map[string]string, *[]map[string]any, error) {
+func getConfigAndOffsets(cmd *cobra.Command, isUpdate bool) (*map[string]string, *[]map[string]any, error) {
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return nil, nil, err
@@ -34,6 +34,13 @@ func getConfig(cmd *cobra.Command, isUpdate bool) (*map[string]string, *[]map[st
 	}
 
 	return &options, &offsets, nil
+}
+
+func getConfig(cmd *cobra.Command, isUpdate bool) (*map[string]string, error) {
+
+	options, _, err := getConfigAndOffsets(cmd, isUpdate)
+
+	return options, err
 }
 
 func parseConfigFile(filename string, isUpdate bool) (map[string]string, []map[string]any, error) {
@@ -71,15 +78,15 @@ func parseConfigFile(filename string, isUpdate bool) (map[string]string, []map[s
 			}
 		} else if key == "offsets" {
 			if isUpdate {
-				return nil, nil, fmt.Errorf(`offsets are not allowed in configuration file for update`)
+				return nil, nil, fmt.Errorf("offsets are not allowed in configuration file for `confluent connect cluster update`")
 			}
 			var request *[]map[string]any
 			valBytes, err := json.Marshal(val)
 			if err != nil {
-				return nil, nil, fmt.Errorf(`error while marshallling offsets :- value for the configuration "offsets" is malformed`)
+				return nil, nil, fmt.Errorf(`error while marshalling offsets, value for the configuration "offsets" is malformed`)
 			}
 			if err := json.Unmarshal(valBytes, &request); err != nil {
-				return nil, nil, fmt.Errorf(`error while unmarshallling offsets :- value for the configuration "offsets" is malformed`)
+				return nil, nil, fmt.Errorf(`error while unmarshalling offsets, value for the configuration "offsets" is malformed`)
 			}
 
 			offsets = *request

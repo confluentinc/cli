@@ -4,7 +4,7 @@ Usage:
   confluent connect cluster create [flags]
 
 Examples:
-The configuration file contains configs including offsets for the connector.
+Create a configuration file with connector configs and offsets.
 
   {
     "name": "MyGcsLogsBucketConnector",

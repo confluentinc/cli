@@ -26,7 +26,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "The configuration file contains configs including offsets for the connector.",
+				Text: "Create a configuration file with connector configs and offsets.",
 				Code: `{
   "name": "MyGcsLogsBucketConnector",
   "config": {
@@ -84,7 +84,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userConfigs, offsets, err := getConfig(cmd, false)
+	userConfigs, offsets, err := getConfigAndOffsets(cmd, false)
 	if err != nil {
 		return err
 	}
