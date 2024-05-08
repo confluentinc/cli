@@ -94,7 +94,7 @@ func (c *offsetCommand) statusDescribe(cmd *cobra.Command, args []string) error 
 
 func printHumanDescribeOffsetStatus(cmd *cobra.Command, offsetStatus connectv1.ConnectV1AlterOffsetStatus, id string) error {
 	var appliedAt string
-	if offsetStatus.AppliedAt.IsSet() {
+	if offsetStatus.AppliedAt.Get() != nil {
 		appliedAt = offsetStatus.AppliedAt.Get().String()
 	}
 
@@ -147,7 +147,7 @@ func printHumanDescribeOffsetStatus(cmd *cobra.Command, offsetStatus connectv1.C
 
 func printSerializedDescribeOffsetStatus(cmd *cobra.Command, offsetStatus connectv1.ConnectV1AlterOffsetStatus, id string) error {
 	var appliedAt string
-	if offsetStatus.AppliedAt.IsSet() {
+	if offsetStatus.AppliedAt.Get() != nil {
 		appliedAt = offsetStatus.AppliedAt.Get().String()
 	}
 
