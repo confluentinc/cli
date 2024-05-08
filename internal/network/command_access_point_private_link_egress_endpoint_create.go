@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *accessPointCommand) newCreateCommand() *cobra.Command {
@@ -22,12 +24,17 @@ func (c *accessPointCommand) newCreateCommand() *cobra.Command {
 				Text: "Create an AWS private link egress endpoint with high availability.",
 				Code: "confluent network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability",
 			},
+			examples.Example{
+				Text: "Create a named Azure private link egress endpoint.",
+				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
+			},
 		),
 	}
 
-	cmd.Flags().String("cloud", "", "Specify the cloud provider as aws.")
-	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service.")
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
+	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service or ID of an Azure Private Link service.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("subresource", "", "Name of an Azure Private Link subresource.")
 	cmd.Flags().Bool("high-availability", false, "Enable high availability for AWS egress endpoint.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -72,6 +79,11 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	subresource, err := cmd.Flags().GetString("subresource")
+	if err != nil {
+		return err
+	}
+
 	createEgressEndpoint := networkingaccesspointv1.NetworkingV1AccessPoint{
 		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
 			Environment: &networkingaccesspointv1.ObjectReference{Id: environmentId},
@@ -91,6 +103,16 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 				VpcEndpointServiceName: service,
 				EnableHighAvailability: networkingaccesspointv1.PtrBool(highAvailability),
 			},
+		}
+	case CloudAzure:
+		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+			NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
+				Kind:                         "AzureEgressPrivateLinkEndpoint",
+				PrivateLinkServiceResourceId: service,
+			},
+		}
+		if subresource != "" {
+			createEgressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.PrivateLinkSubresourceName = networkingaccesspointv1.PtrString(subresource)
 		}
 	}
 
