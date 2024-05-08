@@ -26,12 +26,43 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
+				Text: "The configuration file contains configs including offsets for the connector.",
+				Code: `{
+  "name": "az-connector",
+  "config": {
+    "name": "az-connector",
+    "azblob.account.name": "azsink",
+    "azblob.account.key": "key",
+    "azblob.container.name": "azsink",
+    "data.format": "JSON",
+    "kafka.api.key": "key",
+    "kafka.api.secret": "key",
+    "tasks.max": "1",
+    "time.interval": "HOURLY",
+    "topics": "apples",
+    "connector.class": "AzureBlobSink"
+  },
+  "offsets": [
+	{
+	  "partition": {
+		"kafka_partition": 0,
+		"kafka_topic": "topic_A"
+	  },
+	  "offset": {
+		"kafka_offset": 1000
+	  }
+	}
+  ]
+}`,
+			},
+			examples.Example{
 				Text: "Create a connector in the current or specified Kafka cluster context.",
 				Code: "confluent connect cluster create --config-file config.json",
 			},
 			examples.Example{
 				Code: "confluent connect cluster create --config-file config.json --cluster lkc-123456",
 			},
+
 		),
 	}
 
@@ -54,14 +85,15 @@ func (c *clusterCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userConfigs, err := getConfig(cmd)
+	userConfigs, offsets, err := getConfig(cmd)
 	if err != nil {
 		return err
 	}
 
 	connectConfig := connectv1.InlineObject{
-		Name:   connectv1.PtrString((*userConfigs)["name"]),
-		Config: userConfigs,
+		Name:    connectv1.PtrString((*userConfigs)["name"]),
+		Config:  userConfigs,
+		Offsets: offsets,
 	}
 
 	environmentId, err := c.Context.EnvironmentId()
