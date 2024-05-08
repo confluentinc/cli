@@ -10,13 +10,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func getConfig(cmd *cobra.Command) (*map[string]string, *[]map[string]any, error) {
+func getConfig(cmd *cobra.Command, isUpdate bool) (*map[string]string, *[]map[string]any, error) {
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return nil, nil, err
 	}
 
-	options, offsets, err := parseConfigFile(configFile)
+	options, offsets, err := parseConfigFile(configFile, isUpdate)
 	if err != nil {
 		return nil, nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, configFile, err)
 	}
@@ -36,7 +36,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, *[]map[string]any, error
 	return &options, &offsets, nil
 }
 
-func parseConfigFile(filename string) (map[string]string, []map[string]any, error) {
+func parseConfigFile(filename string, isUpdate bool) (map[string]string, []map[string]any, error) {
 	jsonFile, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
@@ -70,6 +70,9 @@ func parseConfigFile(filename string) (map[string]string, []map[string]any, erro
 				kvPairs[configKey] = value
 			}
 		} else if key == "offsets" {
+			if isUpdate {
+				return nil, nil, fmt.Errorf(`offsets are not allowed in configuration file for update`)
+			}
 			var request *[]map[string]any
 			valBytes, err := json.Marshal(val)
 			if err != nil {

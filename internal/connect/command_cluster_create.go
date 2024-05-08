@@ -85,7 +85,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userConfigs, offsets, err := getConfig(cmd)
+	userConfigs, offsets, err := getConfig(cmd, false)
 	if err != nil {
 		return err
 	}
