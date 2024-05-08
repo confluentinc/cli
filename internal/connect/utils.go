@@ -37,9 +37,7 @@ func getConfigAndOffsets(cmd *cobra.Command, isUpdate bool) (*map[string]string,
 }
 
 func getConfig(cmd *cobra.Command, isUpdate bool) (*map[string]string, error) {
-
 	options, _, err := getConfigAndOffsets(cmd, isUpdate)
-
 	return options, err
 }
 
