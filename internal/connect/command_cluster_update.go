@@ -44,7 +44,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var userConfigs *map[string]string
+	var userConfigs map[string]string
 	if cmd.Flags().Changed("config") {
 		configs, err := cmd.Flags().GetStringSlice("config")
 		if err != nil {
@@ -64,7 +64,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		for name, value := range configMap {
 			currentConfigs[name] = value
 		}
-		userConfigs = &currentConfigs
+		userConfigs = currentConfigs
 	} else if cmd.Flags().Changed("config-file") {
 		userConfigs, err = getConfig(cmd, true)
 		if err != nil {
@@ -79,7 +79,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connector.Info.GetName(), environmentId, kafkaCluster.ID, *userConfigs); err != nil {
+	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connector.Info.GetName(), environmentId, kafkaCluster.ID, userConfigs); err != nil {
 		return err
 	}
 

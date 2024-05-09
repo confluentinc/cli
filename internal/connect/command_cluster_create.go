@@ -90,9 +90,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	connectConfig := connectv1.InlineObject{
-		Name:    connectv1.PtrString((*userConfigs)["name"]),
-		Config:  userConfigs,
-		Offsets: offsets,
+		Name:    connectv1.PtrString((userConfigs)["name"]),
+		Config:  &userConfigs,
+		Offsets: &offsets,
 	}
 
 	environmentId, err := c.Context.EnvironmentId()
