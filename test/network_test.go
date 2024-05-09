@@ -119,6 +119,7 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 	tests := []CLITest{
 		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
+		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
 	}
 
@@ -1044,6 +1045,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDelete() {
 func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointCreate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability", fixture: "network/access-point/private-link/egress-endpoint/create-aws.golden"},
+		{args: "network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName --subresource subresource1", fixture: "network/access-point/private-link/egress-endpoint/create-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -1055,6 +1057,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointCreate() {
 func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDescribe() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint describe ap-12345", fixture: "network/access-point/private-link/egress-endpoint/describe-aws.golden"},
+		{args: "network access-point private-link egress-endpoint describe ap-67890", fixture: "network/access-point/private-link/egress-endpoint/describe-azure.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-12345 --output json", fixture: "network/access-point/private-link/egress-endpoint/describe-aws-json.golden"},
 	}
 
@@ -1079,6 +1082,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointList() {
 func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointUpdate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint update ap-12345 --name my-new-aws-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-aws.golden"},
+		{args: "network access-point private-link egress-endpoint update ap-67890 --name my-new-azure-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-azure.golden"},
 	}
 
 	for _, test := range tests {
