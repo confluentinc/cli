@@ -41,8 +41,7 @@ const (
 )
 
 func (c credentialType) String() string {
-	credTypes := [...]string{mdsUsernamePasswordString, ccloudUsernamePasswordString}
-	return credTypes[c]
+	return []string{mdsUsernamePasswordString, ccloudUsernamePasswordString}[c]
 }
 
 func Write(isCloud bool, ctxName, url, username, password string) error {
