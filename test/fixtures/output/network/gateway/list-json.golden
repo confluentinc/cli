@@ -1,5 +1,12 @@
 [
   {
+    "id": "gw-09876",
+    "name": "my-azure-peering-gateway",
+    "environment": "env-596",
+    "region": "eastus2",
+    "phase": "READY"
+  },
+  {
     "id": "gw-12345",
     "name": "my-aws-gateway",
     "environment": "env-596",
@@ -12,6 +19,14 @@
     "name": "my-aws-peering-gateway",
     "environment": "env-596",
     "region": "us-east-2",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-67890",
+    "name": "my-azure-gateway",
+    "environment": "env-596",
+    "region": "eastus",
+    "azure_subscription": "aa000000-a000-0a00-00aa-0000aaa0a0a0",
     "phase": "READY"
   }
 ]
