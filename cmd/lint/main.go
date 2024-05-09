@@ -263,6 +263,7 @@ var vocabWords = []string{
 	"sql",
 	"ssl",
 	"sso",
+	"subresource",
 	"stdin",
 	"systest",
 	"tcp",
