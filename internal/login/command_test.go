@@ -32,7 +32,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -96,7 +95,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -162,7 +161,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -372,7 +371,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -494,7 +493,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ keychain.MachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -740,7 +739,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd, _ := newLogoutCmd(cfg)
+		logoutCmd := logout.New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg))
 		_, err = pcmd.ExecuteCommand(logoutCmd)
 		req.NoError(err)
 		verifyLoggedOutState(t, cfg, ctx.Name)
@@ -864,11 +863,6 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
-}
-
-func newLogoutCmd(cfg *config.Config) (*cobra.Command, *config.Config) {
-	logoutCmd := logout.New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg))
-	return logoutCmd, cfg
 }
 
 func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, organizationId string) {

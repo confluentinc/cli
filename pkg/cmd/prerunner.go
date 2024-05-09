@@ -22,7 +22,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/update"
@@ -285,7 +284,7 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 }
 
 func (r *PreRun) getCCloudCredentials(netrcMachineName, url, organizationId string) (*pauth.Credentials, error) {
-	filterParams := keychain.MachineParams{
+	filterParams := config.MachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 		URL:     url,
@@ -679,7 +678,7 @@ func (r *PreRun) updateToken(tokenErr error, ctx *config.Context, unsafeTrace bo
 }
 
 func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (string, string, error) {
-	filterParams := keychain.MachineParams{
+	filterParams := config.MachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
 		Name:    ctx.GetMachineName(),
 	}

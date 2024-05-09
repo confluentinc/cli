@@ -69,7 +69,7 @@ type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
 	GetSsoCredentialsFromConfig(*config.Config, string) func() (*Credentials, error)
-	GetCredentialsFromConfig(*config.Config, keychain.MachineParams) func() (*Credentials, error)
+	GetCredentialsFromConfig(*config.Config, config.MachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
@@ -153,7 +153,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar() func() (*
 	return h.getCredentialsFromEnvVarFunc(envVars, "")
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *config.Config, filterParams keychain.MachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *config.Config, filterParams config.MachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		var loginCredential *config.LoginCredential
 		ctx := cfg.Context()
@@ -337,7 +337,7 @@ func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
 	h.client = client
 }
 
-func matchLoginCredentialWithFilter(loginCredential *config.LoginCredential, filterParams keychain.MachineParams) bool {
+func matchLoginCredentialWithFilter(loginCredential *config.LoginCredential, filterParams config.MachineParams) bool {
 	if loginCredential == nil {
 		return false
 	}

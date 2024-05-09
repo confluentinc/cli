@@ -212,7 +212,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization str
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization))
 	}
 
-	filterParams := keychain.MachineParams{
+	filterParams := config.MachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
@@ -315,7 +315,7 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt())
 	}
 
-	filterParams := keychain.MachineParams{
+	filterParams := config.MachineParams{
 		IgnoreCert: true,
 		URL:        url,
 	}

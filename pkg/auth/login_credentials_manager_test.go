@@ -223,7 +223,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	cmd := &cobra.Command{}
 	cmd.Flags().Bool("save", false, "test")
-	// No credentials in env var so should look for prompt
+	// No credentials in CONFLUENT_CLOUD_EMAIL and CONFLUENT_CLOUD_PASSWORD env vars, so should look for prompt
 	loginCredentialsManager := NewLoginCredentialsManager(suite.prompt, suite.ccloudClient)
 	creds, err := GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
@@ -233,7 +233,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	suite.require.NoError(err)
 	suite.compareCredentials(promptCredentials, creds)
 
-	// Credentials in environment variables has highest order of precedence
+	// Credentials in CONFLUENT_CLOUD_EMAIL and CONFLUENT_CLOUD_PASSWORD environment variables has highest order of precedence
 	suite.setCCEnvVars()
 	loginCredentialsManager = NewLoginCredentialsManager(suite.prompt, suite.ccloudClient)
 	creds, err = GetLoginCredentials(

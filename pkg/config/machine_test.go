@@ -1,4 +1,4 @@
-package keychain
+package config
 
 import (
 	"fmt"
@@ -9,9 +9,9 @@ import (
 
 func TestGetMachineNameRegex(t *testing.T) {
 	url := "https://confluent.cloud"
-	ccloudCtxName := "login-csreesangkom@confleunt.io-https://confluent.cloud"
+	ccloudCtxName := "login-csreesangkom@confluent.io-https://confluent.cloud"
 	confluentCtxName := "login-csreesangkom@confluent.io-http://localhost:8090"
-	specialCharsCtxName := `login-csreesangkom+adoooo+\/@-+\^${}[]().*+?|<>-&@confleunt.io-https://confluent.cloud`
+	specialCharsCtxName := `login-csreesangkom+adoooo+\/@-+\^${}[]().*+?|<>-&@confluent.io-https://confluent.cloud`
 	tests := []struct {
 		name          string
 		params        MachineParams
@@ -28,7 +28,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 				GetLocalCredentialName(true, ccloudCtxName),
 			},
 			nonMatchNames: []string{
-				GetLocalCredentialName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName(true, "login-csreesangkom@confluent.io-"+"https://wassup"),
 				GetLocalCredentialName(false, ccloudCtxName),
 			},
 		},
@@ -39,11 +39,11 @@ func TestGetMachineNameRegex(t *testing.T) {
 				URL:     url,
 			},
 			matchNames: []string{
-				GetLocalCredentialName(true, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName(true, "login-csreesangkom@confluent.io-"+url),
 			},
 			nonMatchNames: []string{
-				GetLocalCredentialName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				GetLocalCredentialName(false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName(true, "login-csreesangkom@confluent.io-"+"https://wassup"),
+				GetLocalCredentialName(false, "login-csreesangkom@confluent.io-"+url),
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 				GetLocalCredentialName(false, confluentCtxName),
 			},
 			nonMatchNames: []string{
-				GetLocalCredentialName(false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName(false, "login-csreesangkom@confluent.io-"+"https://wassup"),
 				GetLocalCredentialName(true, confluentCtxName),
 			},
 		},
@@ -67,11 +67,11 @@ func TestGetMachineNameRegex(t *testing.T) {
 				URL:     url,
 			},
 			matchNames: []string{
-				GetLocalCredentialName(false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName(false, "login-csreesangkom@confluent.io-"+url),
 			},
 			nonMatchNames: []string{
-				GetLocalCredentialName(false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				GetLocalCredentialName(true, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName(false, "login-csreesangkom@confluent.io-"+"https://wassup"),
+				GetLocalCredentialName(true, "login-csreesangkom@confluent.io-"+url),
 			},
 		},
 		{
