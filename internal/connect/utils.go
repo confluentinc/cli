@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func getConfigAndOffsets(cmd *cobra.Command, isUpdate bool) (*map[string]string, *[]map[string]any, error) {
+func getConfigAndOffsets(cmd *cobra.Command, isUpdate bool) (map[string]string, []map[string]any, error) {
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return nil, nil, err
