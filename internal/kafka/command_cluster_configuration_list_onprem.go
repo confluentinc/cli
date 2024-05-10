@@ -1,50 +1,48 @@
-package local
+package kafka
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func (c *command) newKafkaClusterConfigurationListCommand() *cobra.Command {
+func (c *clusterCommand) newConfigurationListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List local Kafka cluster configurations.",
+		Short: "List cluster-wide Kafka broker configurations.",
 		Args:  cobra.NoArgs,
-		RunE:  c.configurationList,
+		RunE:  c.configurationListOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List configuration values for the Kafka cluster.",
-				Code: "confluent local kafka cluster configuration list",
+				Text: "List configuration values for all brokers in the cluster.",
+				Code: "confluent kafka cluster configuration list",
 			},
 		),
 	}
 
 	cmd.Flags().String("config", "", "Get a specific configuration value.")
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) configurationList(cmd *cobra.Command, _ []string) error {
+func (c *clusterCommand) configurationListOnPrem(cmd *cobra.Command, _ []string) error {
 	configName, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
 
-	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
+	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
+		return err
 	}
 
-	clusterConfig, err := broker.GetClusterWideConfigs(restClient, context.Background(), clusterId, configName)
+	clusterConfig, err := broker.GetClusterWideConfigs(restClient, restContext, clusterId, configName)
 	if err != nil {
 		return err
 	}
