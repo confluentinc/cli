@@ -59,7 +59,6 @@ func (s *CLITestSuite) TestLogout_RemoveUsernamePassword() {
 }
 
 func (s *CLITestSuite) TestLogout_RemoveUsernamePasswordFail() {
-	// fail to parse the netrc file should leave it unchanged
 	type saveTest struct {
 		isCloud  bool
 		loginURL string
@@ -80,7 +79,6 @@ func (s *CLITestSuite) TestLogout_RemoveUsernamePasswordFail() {
 		},
 	}
 	for _, test := range tests {
-		// store existing credentials in a temp netrc to check that they are not corrupted
 		var env []string
 		if test.isCloud {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
@@ -93,7 +91,7 @@ func (s *CLITestSuite) TestLogout_RemoveUsernamePasswordFail() {
 		s.Require().NotContains(utils.NormalizeNewLines(string(got)), "saved_credentials")
 
 		// run login to provide context, then logout command and check output
-		runCommand(s.T(), test.bin, env, "login --url "+test.loginURL, 0, "") // without save flag so the netrc file won't be modified
+		runCommand(s.T(), test.bin, env, "login --url "+test.loginURL, 0, "")
 		output := runCommand(s.T(), test.bin, env, "logout", 0, "")
 		s.Contains(output, "You are now logged out.")
 
