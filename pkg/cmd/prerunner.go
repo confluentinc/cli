@@ -456,7 +456,7 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 }
 
 func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, machineName string) error {
-	token, credentials, err := r.getConfluentTokenAndCredentials(cmd, machineName)
+	token, credentials, err := r.getConfluentTokenAndCredentials(cmd)
 	if err != nil {
 		return err
 	}
@@ -472,7 +472,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, machineName string) erro
 	return nil
 }
 
-func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, machineName string) (string, *pauth.Credentials, error) {
+func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
 	)
