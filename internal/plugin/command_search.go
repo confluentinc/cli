@@ -16,13 +16,13 @@ import (
 )
 
 type ManifestOut struct {
-	Name         string `human:"Name" serialized:"name"`
+	Id           string `human:"Id" serialized:"name"`
 	Description  string `human:"Description" serialized:"description"`
 	Dependencies string `human:"Dependencies" serialized:"dependencies"`
 }
 
 type Manifest struct {
-	Name         string
+	Id           string
 	Description  string       `yaml:"description"`
 	Dependencies []Dependency `yaml:"dependencies"`
 }
@@ -103,7 +103,7 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 				return nil, err
 			}
 			manifestOut := ManifestOut{
-				Name:         file.Name(),
+				Id:           file.Name(),
 				Description:  manifest.Description,
 				Dependencies: strings.Join(dependenciesToStrings(manifest.Dependencies), ", "),
 			}
