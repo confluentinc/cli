@@ -120,8 +120,6 @@ github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0 h1:OOFNqtZN3Spuzz4TX6K6JfDM7
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0/go.mod h1:Mv0WTsBXUfKjmF+r2t2Dv/xJzZf17shhf5J1cttU2Qo=
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0 h1:YQEcSvhX5ODllg0mhxLivckKU3f5OF7s6zgABZporgA=
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0/go.mod h1:357Zo3HvVAe5iQgUFxUbQPAKJasGm8vFMkOB+krVmR8=
-github.com/confluentinc/ccloud-sdk-go-v2/connect v0.6.0 h1:KNd/u0jWJAGHZUQFt+7Kepp+uNkxa2kOuMSZsdqD+Co=
-github.com/confluentinc/ccloud-sdk-go-v2/connect v0.6.0/go.mod h1:rnFq6HGTig8wXRXWQ23bYwtIvhy9uzRk/rjPswh4Mto=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0 h1:ISrVOX9qJ2Sxiu/fGBqqHeaA0SRJQujc8yP7qAZRL3Y=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0/go.mod h1:zHG/3DzsnoHC81B1AY9K/8bMX3mxbIp5/nHHdypa//w=
 github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.2 h1:NSiuOYjZOKxHTRGYI7X9wFvf57ZNzWpZaChmWv7/UQw=
@@ -228,8 +226,8 @@ github.com/envoyproxy/protoc-gen-validate v1.0.2 h1:QkIBuU5k+x7/QXPvPPnWXWlCdaBF
 github.com/envoyproxy/protoc-gen-validate v1.0.2/go.mod h1:GpiZQP3dDbg4JouG/NNS7QWXpgx6x8QiMKdmN72jogE=
 github.com/evanphx/json-patch v4.2.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
-github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
-github.com/fatih/color v1.16.0/go.mod h1:fL2Sau1YI5c0pdGEVCbKQbLXB6edEj1ZgiY4NijnWvE=
+github.com/fatih/color v1.17.0 h1:GlRw1BRJxkpqUCBKzKOw098ed57fEsKeNjpTe3cSjK4=
+github.com/fatih/color v1.17.0/go.mod h1:YZ7TlrGPkiz6ku9fK3TLD/pl3CpsiFyu8N92HLgmosI=
 github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/frankban/quicktest v1.2.2/go.mod h1:Qh/WofXFeiAFII1aEBu529AtJo6Zg2VHscnEsbBnJ20=
