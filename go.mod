@@ -52,7 +52,7 @@ require (
 	github.com/dghubble/sling v1.4.2
 	github.com/docker/docker v26.1.2+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/fatih/color v1.16.0
+	github.com/fatih/color v1.17.0
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/go-jose/go-jose/v3 v3.0.3
