@@ -1,0 +1,9 @@
+Uninstall official Confluent CLI plugins from the confluentinc/cli-plugins repository.
+
+Usage:
+  confluent plugin uninstall <plugin-id-1> [plugin-id-2] ... [plugin-id-n] [flags]
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
