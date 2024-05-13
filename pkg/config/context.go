@@ -27,7 +27,7 @@ type Context struct {
 	FeatureFlags        *FeatureFlags                  `json:"feature_flags,omitempty"`
 
 	// Deprecated
-	NetrcMachineName       string                            `json:"netrc_machine_name"`
+	NetrcMachineName       string                            `json:"netrc_machine_name,omitempty"`
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters,omitempty"`
 
 	Platform   *Platform     `json:"-"`
