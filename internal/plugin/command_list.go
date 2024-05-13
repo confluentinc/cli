@@ -16,6 +16,7 @@ import (
 
 type out struct {
 	PluginName string `human:"Plugin Name" serialized:"plugin_name"`
+	PluginId   string `human:"Plugin Id" serialized:"plugin_id"`
 	FilePath   string `human:"File Path" serialized:"file_path"`
 }
 
@@ -59,6 +60,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		pluginInfo := &out{
 			PluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
+			PluginId:   name,
 			FilePath:   path,
 		}
 

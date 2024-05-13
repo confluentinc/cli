@@ -64,6 +64,7 @@ Naming collisions with existing CLI commands and other plugins:
 	cmd.AddCommand(c.newInstallCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newSearchCommand())
+	cmd.AddCommand(c.newUninstallCommand())
 
 	return cmd
 }
