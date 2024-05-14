@@ -31,10 +31,7 @@ func (c *command) uninstall(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(name string) error {
-		if err := os.Remove(pluginMap[name][0]); err != nil {
-			return err
-		}
-		return nil
+		return os.Remove(pluginMap[name][0])
 	}
 
 	_, err := deletion.Delete(args, deleteFunc, resource.Plugin)
