@@ -56,7 +56,7 @@ func (c *command) install(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, "Installed plugin `%s`.\n", plugin.ToCommandName(manifest.Name))
+	output.Printf(c.Config.EnableColor, "Installed plugin `%s`.\n", plugin.ToCommandName(manifest.Id))
 
 	return nil
 }
@@ -86,7 +86,7 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 		if err := yaml.Unmarshal(manifestFile, manifest); err != nil {
 			return nil, err
 		}
-		manifest.Name = file.Name()
+		manifest.Id = file.Name()
 
 		return manifest, nil
 	}
@@ -103,16 +103,16 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	var pluginInstaller plugin.PluginInstaller
 	switch language {
 	case "go":
-		pluginInstaller = &plugin.GoPluginInstaller{Name: manifest.Name}
+		pluginInstaller = &plugin.GoPluginInstaller{Name: manifest.Id}
 	case "python":
 		pluginInstaller = &plugin.PythonPluginInstaller{
-			Name:          manifest.Name,
+			Name:          manifest.Id,
 			RepositoryDir: repositoryDir,
 			InstallDir:    installDir,
 		}
 	case "bash":
 		pluginInstaller = &plugin.BashPluginInstaller{
-			Name:          manifest.Name,
+			Name:          manifest.Id,
 			RepositoryDir: repositoryDir,
 			InstallDir:    installDir,
 		}
