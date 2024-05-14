@@ -13,7 +13,6 @@ func (c *command) newUninstallCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "uninstall <plugin-id-1> [plugin-id-2] ... [plugin-id-n]",
 		Short: "Uninstall official Confluent CLI plugins.",
-		Long:  "Uninstall official Confluent CLI plugins from the confluentinc/cli-plugins repository.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.uninstall,
 	}

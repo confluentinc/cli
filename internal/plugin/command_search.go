@@ -16,7 +16,7 @@ import (
 )
 
 type ManifestOut struct {
-	Id           string `human:"Id" serialized:"name"`
+	Id           string `human:"ID" serialized:"ID"`
 	Description  string `human:"Description" serialized:"description"`
 	Dependencies string `human:"Dependencies" serialized:"dependencies"`
 }
