@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	"github.com/stretchr/testify/require"
+	"io/fs"
 	"os"
 	"runtime"
 	"strings"
@@ -43,7 +44,9 @@ func (s *CLITestSuite) TestPlugin() {
 func (s *CLITestSuite) TestPluginUninstall() {
 	req := require.New(s.T())
 	filename := "test/fixtures/input/plugin/confluent-test-plugin-uninstall.sh"
-	_, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
+	file, err := os.Create(filename)
+	req.NoError(err)
+	err = file.Chmod(fs.ModePerm)
 	req.NoError(err)
 	defer func() {
 		if utils.FileExists(filename) {
