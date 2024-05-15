@@ -42,6 +42,7 @@ Available Commands:
   install     Install or update official Confluent CLI plugins.
   list        List Confluent CLI plugins in $PATH.
   search      Search for Confluent CLI plugins.
+  uninstall   Uninstall official Confluent CLI plugins.
 
 Global Flags:
   -h, --help            Show help for this command.
