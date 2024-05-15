@@ -1,13 +1,18 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newComputePoolDeleteCommand() *cobra.Command {
@@ -41,7 +46,7 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
+	if err := c.validateAndConfirmComputePoolDeletion(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
 		return err
 	}
 
@@ -54,6 +59,33 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 	errs := multierror.Append(err, c.removePoolFromConfigIfCurrent(deletedIds))
 
 	return errs.ErrorOrNil()
+}
+
+func confirmComputePoolDeletionString(idList []string) string {
+	retentionTimeMsg := "All statements leveraging the compute pool will be STOPPED immediately and be available for 30 days in the statement list history.\n" +
+		"After that, they will be permanently deleted."
+
+	if len(idList) == 1 {
+		return fmt.Sprintf("Are you sure you want to delete %s \"%s\"?\n"+retentionTimeMsg, resource.FlinkComputePool, idList[0])
+	} else {
+		return fmt.Sprintf("Are you sure you want to delete %ss %s?\n"+retentionTimeMsg, resource.FlinkComputePool, utils.ArrayToCommaDelimitedString(idList, "and"))
+	}
+}
+
+func (c *command) validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
+	if !featureflags.Manager.BoolVariation("flink.statement.30_days_retention_time", c.Context, config.CliLaunchDarklyClient, true, true) {
+		return deletion.ValidateAndConfirm(cmd, args, checkExistence, resourceType)
+	}
+
+	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
+		return err
+	}
+
+	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
+		return err
+	}
+
+	return deletion.ConfirmPrompt(cmd, confirmComputePoolDeletionString(args))
 }
 
 func (c *command) removePoolFromConfigIfCurrent(deletedIds []string) error {

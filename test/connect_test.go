@@ -27,7 +27,7 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster list --cluster lkc-123 -o json", fixture: "connect/cluster/list-json.golden"},
 		{args: "connect cluster list --cluster lkc-123 -o yaml", fixture: "connect/cluster/list-yaml.golden"},
 		{args: "connect cluster list --cluster lkc-123", fixture: "connect/cluster/list.golden"},
-		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/update.golden"},
+		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/update-config.yaml", fixture: "connect/cluster/update.golden"},
 		{args: "connect event describe", fixture: "connect/event-describe.golden"},
 
 		// Tests based on new config
@@ -35,7 +35,8 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json -o yaml", fixture: "connect/cluster/create-yaml.golden"},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-malformed-new.json", fixture: "connect/cluster/create-malformed-new.golden", exitCode: 1},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-malformed-old.json", fixture: "connect/cluster/create-malformed-old.golden", exitCode: 1},
-		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json", fixture: "connect/cluster/update.golden"},
+		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/update-config-new-format.json", fixture: "connect/cluster/update.golden"},
+		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/update-config-malformed.json", fixture: "connect/cluster/update-error.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

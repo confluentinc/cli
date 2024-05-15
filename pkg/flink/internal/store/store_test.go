@@ -528,7 +528,7 @@ func (s *StoreTestSuite) TestParseSetStatementError() {
 
 	_, _, err = parseSetStatement("SET key=value=as")
 	assert.Equal(s.T(), &types.StatementError{
-		Message: `"=" should only appear once`,
+		Message: `key and value must be enclosed by single quotes (')`,
 		Usage:   []string{"SET 'key'='value'"},
 	}, err)
 
@@ -540,14 +540,14 @@ func (s *StoreTestSuite) TestParseSetStatementError() {
 
 	_, _, err = parseSetStatement(`set ''key'''=''value''`)
 	assert.Equal(s.T(), &types.StatementError{
-		Message:    "key contains unescaped single quotes (')",
+		Message:    "key or value contains unescaped single quotes (')",
 		Usage:      []string{"SET 'key'='value'"},
 		Suggestion: `please escape all single quotes with another single quote "''key''"`,
 	}, err)
 
 	_, _, err = parseSetStatement(`set 'key'=''value''`)
 	assert.Equal(s.T(), &types.StatementError{
-		Message:    "value contains unescaped single quotes (')",
+		Message:    "key or value contains unescaped single quotes (')",
 		Usage:      []string{"SET 'key'='value'"},
 		Suggestion: `please escape all single quotes with another single quote "''key''"`,
 	}, err)
