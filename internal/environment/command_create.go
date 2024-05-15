@@ -37,7 +37,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
 	if governancePackage != "" {
 		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
-			Package: orgv2.PtrString(strings.ToUpper(governancePackage)),
+			Package: strings.ToUpper(governancePackage),
 		})
 	}
 
