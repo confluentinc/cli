@@ -66,9 +66,9 @@ func confirmComputePoolDeletionString(idList []string) string {
 		"After that, they will be permanently deleted."
 
 	if len(idList) == 1 {
-		return fmt.Sprintf("Are you sure you want to delete %s \"%s\"?\n"+retentionTimeMsg, resource.FlinkComputePool, idList[0])
+		return fmt.Sprintf("Are you sure you want to delete %s \"%s\"? "+retentionTimeMsg, resource.FlinkComputePool, idList[0])
 	} else {
-		return fmt.Sprintf("Are you sure you want to delete %ss %s?\n"+retentionTimeMsg, resource.FlinkComputePool, utils.ArrayToCommaDelimitedString(idList, "and"))
+		return fmt.Sprintf("Are you sure you want to delete %ss %s? "+retentionTimeMsg, resource.FlinkComputePool, utils.ArrayToCommaDelimitedString(idList, "and"))
 	}
 }
 
