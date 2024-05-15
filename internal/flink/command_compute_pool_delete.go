@@ -41,17 +41,12 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	computePool, err := c.V2Client.DescribeFlinkComputePool(args[0], environmentId)
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.FlinkComputePool, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.DescribeFlinkComputePool(id, environmentId)
 		return err == nil
 	}
 
-	if err := c.validateAndConfirmComputePoolDeletion(cmd, args, existenceFunc, resource.FlinkComputePool, computePool.Spec.GetDisplayName()); err != nil {
+	if err := c.validateAndConfirmComputePoolDeletion(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
 		return err
 	}
 
@@ -66,22 +61,20 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 	return errs.ErrorOrNil()
 }
 
-func confirmDeletionString(name, id string) string {
-	return fmt.Sprintf("Are you sure you want to delete the compute pool \"%s\"?"+
-		" All statements leveraging the compute pool will be STOPPED immediately and be available for 30 days in the statement list history.\n"+
-		"After that, they will be permanently deleted. \n"+
-		"To confirm, type \"%s\". To cancel, press Ctrl-C", id, name)
+func confirmComputePoolDeletionString(idList []string) string {
+	retentionTimeMsg := "All statements leveraging the compute pool will be STOPPED immediately and be available for 30 days in the statement list history.\n" +
+		"After that, they will be permanently deleted."
+
+	if len(idList) == 1 {
+		return fmt.Sprintf("Are you sure you want to delete %s \"%s\"?\n"+retentionTimeMsg, resource.FlinkComputePool, idList[0])
+	} else {
+		return fmt.Sprintf("Are you sure you want to delete %ss %s?\n"+retentionTimeMsg, resource.FlinkComputePool, utils.ArrayToCommaDelimitedString(idList, "and"))
+	}
 }
 
-func confirmMultipleDeletionString(idList []string) string {
-	return fmt.Sprintf("Are you sure you want to delete compute pools %s?"+
-		" All statements leveraging the compute pools will be STOPPED immediately and be available for 30 days in the statement list history.\n"+
-		"After that, they will be permanently deleted. \n", utils.ArrayToCommaDelimitedString(idList, "and"))
-}
-
-func (c *command) validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
+func (c *command) validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
 	if !featureflags.Manager.BoolVariation("flink.statement.30_days_retention_time", c.Context, config.CliLaunchDarklyClient, true, true) {
-		return deletion.ValidateAndConfirmDeletion(cmd, args, checkExistence, resourceType, name)
+		return deletion.ValidateAndConfirm(cmd, args, checkExistence, resourceType)
 	}
 
 	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
@@ -92,16 +85,7 @@ func (c *command) validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args
 		return err
 	}
 
-	if len(args) > 1 {
-		return deletion.ConfirmPromptYesOrNo(cmd, confirmMultipleDeletionString(args))
-	}
-
-	promptString := confirmDeletionString(name, args[0])
-	if err := deletion.ConfirmDeletionWithString(cmd, promptString, name); err != nil {
-		return err
-	}
-
-	return nil
+	return deletion.ConfirmPrompt(cmd, confirmComputePoolDeletionString(args))
 }
 
 func (c *command) removePoolFromConfigIfCurrent(deletedIds []string) error {

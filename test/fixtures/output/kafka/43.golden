@@ -3,8 +3,8 @@ id: lkc-describe-infinite
 name: kafka-cluster
 type: DEDICATED
 cluster_size: 1
-ingress: 50
-egress: 150
+ingress_limit: 50
+egress_limit: 150
 storage: Infinite
 provider: aws
 region: us-west-2

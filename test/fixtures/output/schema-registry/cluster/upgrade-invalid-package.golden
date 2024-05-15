@@ -1,4 +1,0 @@
-Error: "invalid-package" is an invalid package type
-
-Suggestions:
-    Allowed values for `--package` flag are: "essentials" or "advanced".
