@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/plugin"
 	"os"
 	"path/filepath"
 	"strings"
@@ -105,7 +106,7 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 				return nil, err
 			}
 			manifestOut := ManifestOut{
-				Name:         strings.ReplaceAll(strings.ReplaceAll(file.Name(), "-", " "), "_", "-"),
+				Name:         plugin.ToCommandName(file.Name()),
 				Id:           file.Name(),
 				Description:  manifest.Description,
 				Dependencies: strings.Join(dependenciesToStrings(manifest.Dependencies), ", "),

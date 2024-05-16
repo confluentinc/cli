@@ -59,7 +59,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		pluginInfo := &out{
-			PluginName: strings.ReplaceAll(strings.ReplaceAll(id, "-", " "), "_", "-"),
+			PluginName: plugin.ToCommandName(id),
 			PluginId:   id,
 			FilePath:   path,
 		}

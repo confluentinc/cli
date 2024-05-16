@@ -26,7 +26,7 @@ func (c *command) uninstall(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.Plugin); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.Plugin); err != nil {
 		return err
 	}
 

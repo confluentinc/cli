@@ -103,16 +103,16 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	var pluginInstaller plugin.PluginInstaller
 	switch language {
 	case "go":
-		pluginInstaller = &plugin.GoPluginInstaller{Name: manifest.Id}
+		pluginInstaller = &plugin.GoPluginInstaller{Id: manifest.Id}
 	case "python":
 		pluginInstaller = &plugin.PythonPluginInstaller{
-			Name:          manifest.Id,
+			Id:            manifest.Id,
 			RepositoryDir: repositoryDir,
 			InstallDir:    installDir,
 		}
 	case "bash":
 		pluginInstaller = &plugin.BashPluginInstaller{
-			Name:          manifest.Id,
+			Id:            manifest.Id,
 			RepositoryDir: repositoryDir,
 			InstallDir:    installDir,
 		}
