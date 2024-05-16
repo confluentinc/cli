@@ -24,7 +24,12 @@ const (
 )
 
 var (
-	ByocSupportClouds = []string{"aws", "azure"}
+	ByocSupportClouds            = []string{"aws", "azure"}
+	SupportFlinkArtifactRuntime  = []string{"java", "python"}
+	FlinkArtifactRuntimeSuffixes = map[string]string{
+		"_java": "java",
+		"_py":   "python",
+	}
 )
 
 type NullableString interface {

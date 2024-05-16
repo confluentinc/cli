@@ -1,3 +1,4 @@
-      ID     |      Name       
--------------+-----------------
-  ccp-789013 | CliPluginTest3  
+      ID     |      Name      | Runtime Language  
+-------------+----------------+-------------------
+  ccp-789013 | CliPluginTest3 | java              
+  ccp-789014 | CliPluginTest4 | python            

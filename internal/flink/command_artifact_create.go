@@ -2,6 +2,7 @@ package flink
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"path/filepath"
 	"strings"
 
@@ -20,6 +21,7 @@ type pluginCreateOut struct {
 	PluginId      string `human:"Plugin ID" serialized:"plugin_id"`
 	VersionId     string `human:"Version ID" serialized:"version_id"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
+	RuntimeLang   string `human:"Runtime Language" serialized:"runtime_language"`
 	ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
@@ -32,18 +34,20 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink artifact "my-flink-artifact".`,
-				Code: "confluent flink artifact create my-flink-artifact --artifact-file plugin.jar",
+				Code: "confluent flink artifact create my-flink-artifact --artifact-file plugin.jar --runtime-language java",
 			},
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "Flink artifact JAR file.")
+	cmd.Flags().String("artifact-file", "", "Flink artifact JAR/ZIP file.")
+	c.addRuntimeLanguage(cmd)
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("artifact-file"))
-	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "jar"))
+	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "jar", "zip"))
+	cobra.CheckErr(cmd.MarkFlagRequired("runtime-language"))
 
 	return cmd
 }
@@ -58,10 +62,27 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	runtimeLanguage, err := cmd.Flags().GetString("runtime-language")
+	if err != nil {
+		return err
+	}
 
-	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	if strings.ToLower(extension) != "jar" {
-		return fmt.Errorf(`only ".jar" file extensions are allowed`)
+	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(artifactFile), "."))
+	runtimeLanguage = strings.ToLower(runtimeLanguage)
+	if extension != "jar" && extension != "zip" {
+		return fmt.Errorf(`only ".jar" and ".zip" file extensions are allowed`)
+	}
+	if extension == "jar" && runtimeLanguage != "java" {
+		return fmt.Errorf(`only "java" runtime language is allowed for ".jar" artifacts`)
+	} else if extension == "zip" && runtimeLanguage != "python" {
+		return fmt.Errorf(`only "python" runtime language is allowed for ".zip" artifacts`)
+	}
+
+	for suffix, lang := range ccloudv2.FlinkArtifactRuntimeSuffixes {
+		if runtimeLanguage == lang {
+			displayName = fmt.Sprintf("%s%s", displayName, suffix)
+			break
+		}
 	}
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
@@ -94,12 +115,21 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	displayName = plugin.GetDisplayName()
+	runtimeLang, name := getRuntimeLangAndName(displayName, ccloudv2.FlinkArtifactRuntimeSuffixes)
+
 	table := output.NewTable(cmd)
 	table.Add(&pluginCreateOut{
-		Name:          plugin.GetDisplayName(),
+		Name:          name,
 		PluginId:      plugin.GetId(),
 		VersionId:     plugin.GetConnectorClass(),
 		ContentFormat: plugin.GetContentFormat(),
+		RuntimeLang:   runtimeLang,
 	})
 	return table.Print()
+}
+
+func (c *command) addRuntimeLanguage(cmd *cobra.Command) {
+	cmd.Flags().String("runtime-language", "", fmt.Sprintf("Specify the artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.SupportFlinkArtifactRuntime, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "runtime-language", func(_ *cobra.Command, _ []string) []string { return ccloudv2.SupportFlinkArtifactRuntime })
 }
