@@ -387,13 +387,21 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			}
 			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 				Id:             connectcustompluginv1.PtrString("ccp-789013"),
-				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
+				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3_java"),
 				ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
 				Cloud:          connectcustompluginv1.PtrString("AWS"),
 				ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
 				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 			}
-			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3}})
+			plugin4 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+				Id:             connectcustompluginv1.PtrString("ccp-789014"),
+				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest4_py"),
+				ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
+				Cloud:          connectcustompluginv1.PtrString("AWS"),
+				ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
+				ContentFormat:  connectcustompluginv1.PtrString("ZIP"),
+			}
+			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3, plugin4}})
 			require.NoError(t, err)
 		}
 	}

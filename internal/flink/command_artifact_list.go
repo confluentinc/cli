@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -10,8 +11,9 @@ import (
 )
 
 type customPluginOutList struct {
-	Id   string `human:"ID" serialized:"id"`
-	Name string `human:"Name" serialized:"name"`
+	Id          string `human:"ID" serialized:"id"`
+	Name        string `human:"Name" serialized:"name"`
+	RuntimeLang string `human:"Runtime Language" serialized:"runtime_language"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -37,9 +39,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, plugin := range plugins {
 		if strings.HasPrefix(plugin.GetConnectorType(), "flink") {
+			displayName := plugin.GetDisplayName()
+			runtimeLang, name := getRuntimeLangAndName(displayName, ccloudv2.FlinkArtifactRuntimeSuffixes)
 			list.Add(&customPluginOutList{
-				Name: plugin.GetDisplayName(),
-				Id:   plugin.GetId(),
+				Name:        name,
+				Id:          plugin.GetId(),
+				RuntimeLang: runtimeLang,
 			})
 		}
 	}

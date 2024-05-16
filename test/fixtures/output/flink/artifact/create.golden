@@ -1,6 +1,7 @@
-+----------------+------------------+
-| Name           | my-custom-plugin |
-| Plugin ID      | ccp-123456       |
-| Version ID     | ver-123456       |
-| Content Format | JAR              |
-+----------------+------------------+
++------------------+------------------+
+| Name             | my-custom-plugin |
+| Plugin ID        | ccp-123456       |
+| Version ID       | ver-123456       |
+| Content Format   | JAR              |
+| Runtime Language | java             |
++------------------+------------------+
