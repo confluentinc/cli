@@ -1,8 +1,9 @@
 name: cli
 lang: go
+lang_version: "1.22.2"
 git:
   enable: true
-  hook:
+  hooks:
     enable: true
 github:
   enable: true

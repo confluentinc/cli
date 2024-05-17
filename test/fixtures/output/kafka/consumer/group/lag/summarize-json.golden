@@ -1,5 +1,5 @@
 {
-  "cluster_id": "lkc-1234",
+  "cluster_id": "lkc-describe-dedicated",
   "consumer_group_id": "consumer-group-1",
   "total_lag": 110,
   "max_lag": 100,

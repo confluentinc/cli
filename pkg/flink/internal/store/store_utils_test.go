@@ -39,7 +39,9 @@ func TestRemoveStatementTerminator(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, &types.ApplicationOptions{EnvironmentName: "env-123"}, tokenRefreshFunc).(*Store)
+	appOptions := &types.ApplicationOptions{EnvironmentName: "env-123"}
+	userProperties := NewUserProperties(appOptions)
+	s := NewStore(client, nil, userProperties, &types.ApplicationOptions{EnvironmentName: "env-123"}, tokenRefreshFunc).(*Store)
 	// This is just a string, so really doesn't matter
 	s.Properties.Set(config.KeyLocalTimeZone, "London/GMT")
 
@@ -109,6 +111,18 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, true, result.IsSensitiveStatement)
 	})
+
+	t.Run("should parse set statements with equal signs in the value", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'sql.secrets.openai' = 'b64encodedABCD=='")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+	})
+
+	t.Run("should parse set statements with equal signs in the key", func(t *testing.T) {
+		result, err := s.processSetStatement("set 'sql.secrets.openai==' = 'b64encodedABCD=='")
+		assert.Nil(t, err)
+		assert.EqualValues(t, true, result.IsSensitiveStatement)
+	})
 }
 
 func TestProcessResetStatement(t *testing.T) {
@@ -120,12 +134,15 @@ func TestProcessResetStatement(t *testing.T) {
 		Database:         "database",
 		ServiceAccountId: "sa-123",
 	}
-	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
+
+	userProperties := NewUserProperties(&appOptions)
+	s := NewStore(client, nil, userProperties, &appOptions, tokenRefreshFunc).(*Store)
 	s.Properties.Set(config.KeyLocalTimeZone, "London/GMT")
 
 	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
 		{config.KeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
 		{config.KeyServiceAccount, fmt.Sprintf("%s (default)", appOptions.ServiceAccountId)},
+		{config.KeyOutputFormat, fmt.Sprintf("%s (default)", config.OutputFormatStandard)},
 	})
 
 	t.Run("should return all keys and values including default and initial values before reseting", func(t *testing.T) {
@@ -188,7 +205,8 @@ func TestProcessUseStatement(t *testing.T) {
 		EnvironmentName: "envName",
 		Database:        "database",
 	}
-	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
+	userProperties := NewUserProperties(&appOptions)
+	s := NewStore(client, nil, userProperties, &appOptions, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processUseStatement("us")
@@ -257,6 +275,8 @@ func TestParseStatementType(t *testing.T) {
 	require.Equal(t, UseStatement, parseStatementType("use ..."))
 	require.Equal(t, ResetStatement, parseStatementType("reset ..."))
 	require.Equal(t, ExitStatement, parseStatementType("exit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit;"))
+	require.Equal(t, QuitStatement, parseStatementType("quit"))
 	require.Equal(t, OtherStatement, parseStatementType("Some other statement"))
 }
 
@@ -356,4 +376,129 @@ func TestFormatUTCOffsetToTimezone(t *testing.T) {
 		actual := formatUTCOffsetToTimezone(tc.offsetSeconds)
 		require.Equal(t, tc.expected, actual)
 	}
+}
+
+func TestTokenizeSQL(t *testing.T) {
+	require := require.New(t)
+	// Test escaped backticks
+	input := "`a``b`"
+	expected := []string{"a`b"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test trailing whitespaces
+	input = "   The dog  "
+	expected = []string{"The", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test whitespaces inside backticks
+	input = "   `The dog`  "
+	expected = []string{"The dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test basic string with backticks
+	input = "   The  `quick`  `brown``fox`  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`fox", "jumps", "over", "the", "lazy", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with escaped backticks
+	input = "   The  `quick`  `brown``f``o``x`  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`f`o`x", "jumps", "over", "the", "lazy", "dog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with unclosed backtick
+	input = "   The  `quick`  `brown``fox  jumps over   the  lazy dog  "
+	expected = []string{"The", "quick", "brown`fox  jumps over   the  lazy dog  "}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test closed closing backtick
+	input = "   The  `quick`  `brown``fox  jumps over   the  lazy dog `"
+	expected = []string{"The", "quick", "brown`fox  jumps over   the  lazy dog "}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG   `catalog`"
+	expected = []string{"USE", "CATALOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG catalog"
+	expected = []string{"USE", "CATALOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   UsE  CATalOG   `catalog`"
+	expected = []string{"UsE", "CATalOG", "catalog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  CATALOG catAlog"
+	expected = []string{"USE", "CATALOG", "catAlog"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  db"
+	expected = []string{"USE", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `db`"
+	expected = []string{"USE", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `my catalog`.`my db`"
+	expected = []string{"USE", "my catalog", ".", "my db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.`db`"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.`db.1`"
+	expected = []string{"USE", "catalog", ".", "db.1"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  `catalog`.db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.`db`"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog   .  db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "   USE  catalog.  db"
+	expected = []string{"USE", "catalog", ".", "db"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "USE catalog.`my database`"
+	expected = []string{"USE", "catalog", ".", "my database"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test empty string
+	input = ""
+	expected = []string{}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with only whitespace
+	input = "   \t\n\r "
+	expected = []string{}
+	require.Equal(expected, TokenizeSQL(input))
+
+	// Test string with only backticks
+	input = "````"
+	expected = []string{"`"}
+	require.Equal(expected, TokenizeSQL(input))
+}
+
+func TestTokenizeSQLSpecialCharacters(t *testing.T) {
+	require := require.New(t)
+
+	input := "my clusté€r"
+	expected := []string{"my", "clusté€r"}
+	require.Equal(expected, TokenizeSQL(input))
+
+	input = "my cluster αβγбвг汉字あア한😀"
+	expected = []string{"my", "cluster", "αβγбвг汉字あア한😀"}
+	require.Equal(expected, TokenizeSQL(input))
 }

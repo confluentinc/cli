@@ -1,5 +1,5 @@
 Secret: 
-Error: error getting API key: resource not found: unknown API key UNKNOWN
+Error: error getting API key: resource not found
 
 Suggestions:
     Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`.

@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -300,12 +299,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 
 	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
 	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
-	environments := []string{
-		"confluentgov.com",
-		"devel.confluentgov-internal.com",
-		"infra.confluentgov-internal.com",
-	}
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && slices.Contains(environments, c.Context().PlatformName)
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)

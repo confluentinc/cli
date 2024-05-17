@@ -32,7 +32,7 @@ func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
 
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client. For a full list, see https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html`)
 	pcmd.AddProducerConfigFileFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))

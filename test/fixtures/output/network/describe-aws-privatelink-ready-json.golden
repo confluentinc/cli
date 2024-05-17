@@ -17,5 +17,6 @@
     "use1-az1": "use1-az1.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud",
     "use1-az2": "use1-az2.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud",
     "use1-az3": "use1-az3.abcdef1gh2i.us-east-1.aws.devel.cpdev.cloud"
-  }
+  },
+  "idle_since": "2021-01-01T00:00:00Z"
 }

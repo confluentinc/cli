@@ -12,7 +12,7 @@ func (c *consumerCommand) newLagDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <group>",
 		Short:             "Describe consumer lag for a Kafka topic partition.",
-		Long:              "Describe consumer lag for a Kafka topic partition consumed by a consumer group.",
+		Long:              "Describe consumer lag for a Kafka topic partition consumed by a consumer group. Only available for dedicated Kafka clusters.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
 		RunE:              c.groupLagDescribe,
@@ -38,6 +38,10 @@ func (c *consumerCommand) newLagDescribeCommand() *cobra.Command {
 }
 
 func (c *consumerCommand) groupLagDescribe(cmd *cobra.Command, args []string) error {
+	if err := c.checkIsDedicated(); err != nil {
+		return err
+	}
+
 	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err

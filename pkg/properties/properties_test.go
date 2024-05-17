@@ -82,6 +82,24 @@ func TestConfigFlagToMap_ValueWithEquals(t *testing.T) {
 	require.Equal(t, map[string]string{"key": "val1=val2"}, m)
 }
 
+func TestConfigFlagToMap_NewLine(t *testing.T) {
+	m, err := ConfigFlagToMap([]string{"key=val1\\nval2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1\nval2"}, m)
+}
+
+func TestConfigFlagToMap_CarriageReturn(t *testing.T) {
+	m, err := ConfigFlagToMap([]string{"key=val1\\rval2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1\rval2"}, m)
+}
+
+func TestConfigFlagToMap_Tab(t *testing.T) {
+	m, err := ConfigFlagToMap([]string{"key=val1\\tval2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1\tval2"}, m)
+}
+
 func TestCreateKeyValuePairsEmptyMap(t *testing.T) {
 	m := make(map[string]string)
 	require.Equal(t, "", CreateKeyValuePairs(m))

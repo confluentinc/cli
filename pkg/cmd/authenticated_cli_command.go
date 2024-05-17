@@ -17,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/hub"
 	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
@@ -33,7 +32,6 @@ type AuthenticatedCLICommand struct {
 	V2Client          *ccloudv2.Client
 
 	flinkGatewayClient   *ccloudv2.FlinkGatewayClient
-	hubClient            *hub.Client
 	metricsClient        *ccloudv2.MetricsClient
 	schemaRegistryClient *schemaregistry.Client
 
@@ -59,7 +57,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 
 		if computePoolOnly {
 			if computePoolId := c.Context.GetCurrentFlinkComputePool(); computePoolId != "" {
-				url, err = c.getGatewayUrlForComputePool(computePoolId, c.Context)
+				url, err = c.getGatewayUrlForComputePool(computePoolId)
 				if err != nil {
 					return nil, err
 				}
@@ -91,18 +89,22 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 	return c.flinkGatewayClient, nil
 }
 
-func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(computePoolId string, ctx *config.Context) (string, error) {
-	computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
+func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(id string) (string, error) {
+	if c.Config.IsTest {
+		return testserver.TestFlinkGatewayUrl.String(), nil
+	}
+
+	computePool, err := c.V2Client.DescribeFlinkComputePool(id, c.Context.GetCurrentEnvironment())
 	if err != nil {
 		return "", err
 	}
 
-	u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
+	u, err := url.Parse(c.Context.GetPlatformServer())
 	if err != nil {
 		return "", err
 	}
-	u.Path = ""
-	return u.String(), nil
+
+	return fmt.Sprintf("https://flink.%s.%s.%s", computePool.Spec.GetRegion(), strings.ToLower(computePool.Spec.GetCloud()), u.Host), nil
 }
 
 func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string) (string, error) {
@@ -129,19 +131,6 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string
 	u.Path = ""
 
 	return u.String(), nil
-}
-
-func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
-	if c.hubClient == nil {
-		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-		if err != nil {
-			return nil, err
-		}
-
-		c.hubClient = hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace)
-	}
-
-	return c.hubClient, nil
 }
 
 func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {

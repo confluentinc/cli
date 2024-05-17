@@ -10,6 +10,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -21,6 +22,11 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 	if err != nil { // require the flag
 		return nil, nil, "", err
 	}
+
+	if ccloudv2.IsCCloudURL(url, c.Config.IsTest) {
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] This is a Confluent Platform command. Confluent Cloud URLs are not supported.\n")
+	}
+
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, nil, "", err
