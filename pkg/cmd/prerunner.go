@@ -389,12 +389,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 		setContextErr := r.setAuthenticatedWithMDSContext(command)
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
-				var machineName string
-				if ctx := command.Config.Context(); ctx != nil {
-					machineName = ctx.GetMachineName()
-				}
-
-				if err := r.confluentAutoLogin(cmd, machineName); err != nil {
+				if err := r.confluentAutoLogin(cmd); err != nil {
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedWithMDSContext(command)
@@ -455,7 +450,7 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 	return nil
 }
 
-func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, machineName string) error {
+func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
 	token, credentials, err := r.getConfluentTokenAndCredentials(cmd)
 	if err != nil {
 		return err
