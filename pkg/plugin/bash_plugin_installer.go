@@ -12,7 +12,7 @@ import (
 )
 
 type BashPluginInstaller struct {
-	Name          string
+	Id            string
 	RepositoryDir string
 	InstallDir    string
 }
@@ -51,5 +51,5 @@ func (b *BashPluginInstaller) CheckVersion(ver *version.Version) error {
 }
 
 func (b *BashPluginInstaller) Install() error {
-	return installSimplePlugin(b.Name, b.RepositoryDir, b.InstallDir, "bash")
+	return installSimplePlugin(b.Id, b.RepositoryDir, b.InstallDir, "bash")
 }
