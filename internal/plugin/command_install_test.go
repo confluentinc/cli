@@ -51,7 +51,7 @@ func TestInstallPythonPlugin(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	pluginInstaller := &plugin.PythonPluginInstaller{
-		Name:          "confluent-test_plugin",
+		Id:            "confluent-test_plugin",
 		RepositoryDir: filepath.Join("..", "..", "test", "fixtures", "input", "plugin"),
 		InstallDir:    dir,
 	}

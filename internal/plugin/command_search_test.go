@@ -86,6 +86,7 @@ func TestGetPluginManifests(t *testing.T) {
 	referenceManifests := []*ManifestOut{
 		{
 			Id:           "confluent-test_plugin",
+			Name:         "confluent test-plugin",
 			Description:  "Does nothing",
 			Dependencies: "Python 3",
 		},
