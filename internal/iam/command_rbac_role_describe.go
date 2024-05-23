@@ -64,6 +64,10 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		namespacesList = append(namespacesList, flinkNamespace.Value(), workloadNamespace.Value())
 	}
 
+	if featureflags.Manager.BoolVariation("flink.model.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
+		namespacesList = append(namespacesList, flinkModelNamespace.Value())
+	}
+
 	namespaces := optional.NewString(strings.Join(namespacesList, ","))
 
 	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: namespaces}
