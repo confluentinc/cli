@@ -538,6 +538,12 @@ func (r *PreRun) createMDSClient(ctx *config.Context, ver *version.Version, unsa
 // Initializes a default KafkaRestClient
 func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		// ErrIfMissingRunRequirement is called inside of AuthenticatedWithMDS but we don't return that error
+		// So call it in this func too to avoid skipping the annotation check
+		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
+			return err
+		}
+
 		// pass mds token as bearer token otherwise use http basic auth
 		// no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		err := r.AuthenticatedWithMDS(command)(cmd, args)
