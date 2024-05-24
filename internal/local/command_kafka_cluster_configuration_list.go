@@ -27,14 +27,14 @@ func (c *command) newKafkaClusterConfigurationListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config-name", "", "Get a specific configuration value.")
+	cmd.Flags().String("config", "", "Get a specific configuration value.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) configurationList(cmd *cobra.Command, _ []string) error {
-	configName, err := cmd.Flags().GetString("config-name")
+	configName, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}

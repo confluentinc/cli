@@ -501,20 +501,17 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, listRo
 		if user, ok := principalToUser[principal]; ok {
 			row.Email = user.GetEmail()
 			row.Name = user.GetFullName()
-			list.Add(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
 			row.Name = name
-			list.Add(row)
 		}
 		if name, ok := poolToNameMap[principal]; ok {
 			row.Name = name
-			list.Add(row)
 		}
 		if name, ok := groupMappingToNameMap[principal]; ok {
 			row.Name = name
-			list.Add(row)
 		}
+		list.Add(row)
 	}
 
 	return list.Print()
