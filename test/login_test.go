@@ -14,7 +14,6 @@ import (
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 )
 
 var (
@@ -198,10 +197,9 @@ func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 
 		require.NotNil(s.T(), cfg.SavedCredentials["login-good@user.com-"+test.loginURL])
 	}
-	_ = os.Remove(netrc.IntegrationTestFile)
 }
 
-func (s *CLITestSuite) TestLogin_UpdateNetrcPassword() {
+func (s *CLITestSuite) TestLogin_UpdateSavedPassword() {
 	tests := []struct {
 		isCloud  bool
 		loginURL string
@@ -251,7 +249,6 @@ func (s *CLITestSuite) TestLogin_UpdateNetrcPassword() {
 
 		s.NotEqual(oldData.SavedCredentials, data.SavedCredentials)
 	}
-	_ = os.Remove(netrc.IntegrationTestFile)
 }
 
 func (s *CLITestSuite) TestLogin_MdsUrl() {
