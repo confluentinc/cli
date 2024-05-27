@@ -31,13 +31,15 @@ import (
 const (
 	missingKeyOrValueErrorMsg     = "missing key or value in message"
 	missingOrMalformedKeyErrorMsg = "missing or malformed key in message"
+	missingHeadersErrorMsg        = "missing headers, please specify comma-separated headers (key%svalue)"
+	invalidHeadersErrorMsg        = "invalid header format, headers should be in the format (key%svalue)"
 )
 
 func (c *command) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "produce <topic>",
 		Short:             "Produce messages to a Kafka topic.",
-		Long:              "Produce messages to a Kafka topic.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
+		Long:              "Produce messages to a Kafka topic.\n\nWhen using this command, you can specify the message header using the --header flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.produce,
@@ -60,6 +62,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client. For a full list, see https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html`)
 	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().StringSlice("headers", nil, `A comma-separated list of headers ("key:value") for the message. Example: "key:value,key1:value1"`)
 
 	// cloud-only flags
 	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
@@ -417,6 +420,16 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 		return nil, err
 	}
 
+	headers, err := cmd.Flags().GetStringSlice("headers")
+	if err != nil {
+		return nil, err
+	}
+
+	parsedHeaders, err := parseHeaders(headers, delimiter)
+	if err != nil {
+		return nil, err
+	}
+
 	key, value, err := serializeMessage(keyMetaInfo, valueMetaInfo, data, delimiter, parseKey, keySerializer, valueSerializer)
 	if err != nil {
 		return nil, err
@@ -427,8 +440,9 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 			Topic:     &topic,
 			Partition: ckafka.PartitionAny,
 		},
-		Key:   key,
-		Value: value,
+		Key:     key,
+		Value:   value,
+		Headers: parsedHeaders,
 	}
 
 	return message, nil
@@ -631,4 +645,27 @@ func setSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, sche
 		return "", nil, err
 	}
 	return tempStorePath, referencePathMap, nil
+}
+
+func parseHeaders(headers []string, delimiter string) ([]ckafka.Header, error) {
+	if len(headers) == 0 {
+		return nil, fmt.Errorf(missingHeadersErrorMsg, delimiter)
+	}
+
+	var kafkaHeaders []ckafka.Header
+
+	for _, header := range headers {
+		parts := strings.SplitN(header, delimiter, 2)
+
+		key := strings.TrimSpace(parts[0])
+		if key == "" {
+			return nil, fmt.Errorf(invalidHeadersErrorMsg, delimiter)
+		}
+
+		if len(parts) == 2 {
+			kafkaHeaders = append(kafkaHeaders, ckafka.Header{Key: key, Value: []byte(strings.TrimSpace(parts[1]))})
+		}
+
+	}
+	return kafkaHeaders, nil
 }
