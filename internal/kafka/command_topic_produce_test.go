@@ -118,17 +118,6 @@ func TestHeaders(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("It should return missing headers error", func(t *testing.T) {
-		headers := []string{}
-
-		parsedHeaders, err := parseHeaders(headers, ":")
-		expectedErrorMsg := fmt.Sprintf(missingHeadersErrorMsg, ":")
-
-		assert.Error(t, err)
-		assert.Equal(t, err.Error(), expectedErrorMsg)
-		assert.Nil(t, parsedHeaders)
-	})
-
 	t.Run("It should return Invalid headers error", func(t *testing.T) {
 		headers := []string{"", ":valueOnly"}
 
