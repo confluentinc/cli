@@ -127,6 +127,7 @@ func New() *Config {
 		ContextStates:    make(map[string]*ContextState),
 		SavedCredentials: make(map[string]*LoginCredential),
 		Version:          new(pversion.Version),
+		EnableColor:      true,
 	}
 }
 
