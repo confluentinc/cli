@@ -12,7 +12,7 @@ import (
 )
 
 type PythonPluginInstaller struct {
-	Name          string
+	Id            string
 	RepositoryDir string
 	InstallDir    string
 }
@@ -64,5 +64,5 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 }
 
 func (p *PythonPluginInstaller) Install() error {
-	return installSimplePlugin(p.Name, p.RepositoryDir, p.InstallDir, "python")
+	return installSimplePlugin(p.Id, p.RepositoryDir, p.InstallDir, "python")
 }
