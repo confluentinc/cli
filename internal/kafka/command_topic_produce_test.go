@@ -1,8 +1,10 @@
 package kafka
 
 import (
+	"fmt"
 	"testing"
 
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -99,4 +101,31 @@ func TestGetKeyAndValue_Fail(t *testing.T) {
 func TestGetMetaInfoFromSchemaId(t *testing.T) {
 	metaInfo := getMetaInfoFromSchemaId(100004)
 	require.Equal(t, []byte{0x0, 0x0, 0x1, 0x86, 0xa4}, metaInfo)
+}
+
+func TestHeaders(t *testing.T) {
+	t.Run("It should return valid kafka headers", func(t *testing.T) {
+		headers := []string{"contenttype:application/json", "x-request-id:12345"}
+
+		expected := []ckafka.Header{
+			{Key: "contenttype", Value: []byte("application/json")},
+			{Key: "x-request-id", Value: []byte("12345")},
+		}
+
+		parsedHeaders, err := parseHeaders(headers, ":")
+
+		assert.Equal(t, parsedHeaders, expected)
+		assert.NoError(t, err)
+	})
+
+	t.Run("It should return Invalid headers error", func(t *testing.T) {
+		headers := []string{"", ":valueOnly"}
+
+		parsedHeaders, err := parseHeaders(headers, ":")
+		expectedErrorMsg := fmt.Sprintf(invalidHeadersErrorMsg, ":")
+
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), expectedErrorMsg)
+		assert.Nil(t, parsedHeaders)
+	})
 }
