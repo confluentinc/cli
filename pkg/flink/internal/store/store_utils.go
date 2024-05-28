@@ -9,7 +9,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/samber/lo"
 	"github.com/texttheater/golang-levenshtein/levenshtein"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
@@ -82,19 +81,14 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		}
 	}
 
-	hasSensitiveKey := lo.SomeBy(config.SensitiveKeys, func(sensitiveKey string) bool {
-		return isKeySimilarToSensitiveKey(sensitiveKey, configKey)
-	})
-
 	s.Properties.Set(configKey, configVal)
-
 	return &types.ProcessedStatement{
 		Kind:                 config.OpSet,
 		StatusDetail:         "configuration updated successfully",
 		Status:               types.COMPLETED,
 		StatementResults:     createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
 		IsLocalStatement:     true,
-		IsSensitiveStatement: hasSensitiveKey,
+		IsSensitiveStatement: hasSensitiveKey(configKey),
 	}, nil
 }
 
@@ -444,11 +438,34 @@ func parseResetStatement(statement string) (string, error) {
 	return key, nil
 }
 
-func isKeySimilarToSensitiveKey(sensitiveKeyName string, key string) bool {
-	key = strings.ToLower(key)
-	distance := levenshtein.DistanceForStrings([]rune(sensitiveKeyName), []rune(key), levenshtein.DefaultOptions)
+func hasSensitiveKey(key string) bool {
+	secretsPrefix := getSubstUpToSecondDot(key)
+	if secretsPrefix == "" {
+		return false
+	}
+
+	secretsPrefix = strings.ToLower(secretsPrefix)
+	distance := levenshtein.DistanceForStrings([]rune(config.KeySqlSecrets), []rune(secretsPrefix), levenshtein.DefaultOptions)
 
 	return distance <= 2
+}
+
+func getSubstUpToSecondDot(s string) string {
+	firstDot := strings.Index(s, ".")
+	if firstDot == -1 {
+		return ""
+	}
+	if len(s) <= firstDot+2 {
+		return ""
+	}
+
+	secondDot := strings.Index(s[firstDot+1:], ".")
+	if secondDot == -1 {
+		return ""
+	}
+	secondDot += firstDot + 1
+
+	return s[:secondDot+1]
 }
 
 // Removes leading, trailling spaces, and semicolon from end, if present
