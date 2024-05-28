@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v3/pkg/plugin"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +12,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/plugin"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 

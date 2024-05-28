@@ -2,13 +2,14 @@ package test
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 	"io/fs"
 	"os"
 	"runtime"
 	"strings"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (s *CLITestSuite) TestPlugin() {

@@ -1,12 +1,14 @@
 package plugin
 
 import (
+	"os"
+
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/plugin"
 	"github.com/confluentinc/cli/v3/pkg/resource"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 func (c *command) newUninstallCommand() *cobra.Command {
