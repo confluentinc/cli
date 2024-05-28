@@ -2,14 +2,13 @@ package test
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 	"io/fs"
 	"os"
 	"runtime"
 	"strings"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (s *CLITestSuite) TestPlugin() {
@@ -49,6 +48,8 @@ func (s *CLITestSuite) TestPluginUninstall() {
 	file, err := os.Create(filename)
 	req.NoError(err)
 	err = file.Chmod(fs.ModePerm)
+	req.NoError(err)
+	err = file.Close()
 	req.NoError(err)
 	defer func() {
 		if utils.FileExists(filename) {
