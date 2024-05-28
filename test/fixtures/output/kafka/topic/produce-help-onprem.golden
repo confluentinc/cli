@@ -1,6 +1,6 @@
 Produce messages to a Kafka topic.
 
-When using this command, you can specify the message header using the --header flag.
+When using this command, you can specify the message header using the "--headers" flag.
 
 Usage:
   confluent kafka topic produce <topic> [flags]
