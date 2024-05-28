@@ -107,8 +107,6 @@ require (
 	pgregory.net/rapid v1.1.0
 )
 
-require github.com/charmbracelet/x/ansi v0.1.1 // indirect
-
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -119,6 +117,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bufbuild/protocompile v0.10.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
+	github.com/charmbracelet/x/ansi v0.1.1 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
