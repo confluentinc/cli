@@ -31,7 +31,6 @@ import (
 const (
 	missingKeyOrValueErrorMsg     = "missing key or value in message"
 	missingOrMalformedKeyErrorMsg = "missing or malformed key in message"
-	missingHeadersErrorMsg        = "missing headers, please specify comma-separated headers (key%svalue)"
 	invalidHeadersErrorMsg        = "invalid header format, headers should be in the format (key%svalue)"
 )
 
@@ -648,10 +647,6 @@ func setSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, sche
 }
 
 func parseHeaders(headers []string, delimiter string) ([]ckafka.Header, error) {
-	if len(headers) == 0 {
-		return nil, fmt.Errorf(missingHeadersErrorMsg, delimiter)
-	}
-
 	var kafkaHeaders []ckafka.Header
 
 	for _, header := range headers {
