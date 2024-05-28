@@ -27,7 +27,7 @@ func (s *CLITestSuite) TestPipeline() {
 		{args: `pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secret name1=value1 --secret name2=value-with,and= --secret name3=value-with\"and\' --secret a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet=value`, fixture: "pipeline/create-with-secret-names.golden"},
 		// secret value with space (e.g. name="some value") also works but cannot be integration tested, due to cli_test.runCommand() is splitting these args by space character
 		{args: "pipeline delete pipe-12345 --force", fixture: "pipeline/delete.golden"},
-		{args: "pipeline delete pipe-12345", input: "testPipeline\n", fixture: "pipeline/delete-prompt.golden"},
+		{args: "pipeline delete pipe-12345", input: "y\n", fixture: "pipeline/delete-prompt.golden"},
 		{args: "pipeline delete pipe-12345 pipe-12346", fixture: "pipeline/delete-multiple-fail.golden", exitCode: 1},
 		{args: "pipeline delete pipe-12345 pipe-54321", input: "n\n", fixture: "pipeline/delete-multiple-refuse.golden"},
 		{args: "pipeline delete pipe-12345 pipe-54321", input: "y\n", fixture: "pipeline/delete-multiple-success.golden"},

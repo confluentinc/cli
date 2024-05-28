@@ -236,6 +236,7 @@ func TestConfig_Load(t *testing.T) {
 				Filename:           "test_json/load_disable_update.json",
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
+				EnableColor:        true,
 				Platforms:          map[string]*Platform{},
 				Credentials:        map[string]*Credential{},
 				Contexts:           map[string]*Context{},
