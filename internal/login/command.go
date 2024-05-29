@@ -60,6 +60,10 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 				Text: "Log in to Confluent Platform with a MDS URL and CA certificate.",
 				Code: "confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt",
 			},
+			examples.Example{
+				Text: "Log in to Confluent Platform with SSO and ignore any saved credentials.",
+				Code: "CONFLUENT_PLATFORM_SSO=true confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt",
+			},
 		),
 	}
 
