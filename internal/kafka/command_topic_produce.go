@@ -647,20 +647,20 @@ func setSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, sche
 }
 
 func parseHeaders(headers []string, delimiter string) ([]ckafka.Header, error) {
-	var kafkaHeaders []ckafka.Header
+	kafkaHeaders := make([]ckafka.Header, len(headers))
 
-	for _, header := range headers {
+	for i, header := range headers {
 		parts := strings.SplitN(header, delimiter, 2)
 
 		if len(parts) < 2 || strings.TrimSpace(parts[0]) == "" {
 			return nil, fmt.Errorf(invalidHeadersErrorMsg, delimiter)
 		}
 
-		kafkaHeader := ckafka.Header{
+		kafkaHeaders[i] = ckafka.Header{
 			Key:   strings.TrimSpace(parts[0]),
 			Value: []byte(strings.TrimSpace(parts[1])),
 		}
-		kafkaHeaders = append(kafkaHeaders, kafkaHeader)
 	}
+	
 	return kafkaHeaders, nil
 }
