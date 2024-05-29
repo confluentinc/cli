@@ -507,7 +507,7 @@ func TestTokenizeSQLSpecialCharacters(t *testing.T) {
 	require.Equal(expected, TokenizeSQL(input))
 }
 
-func TestGetSubstUpToSecondDot(t *testing.T) {
+func TestGetSubstringUpToSecondDot(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
@@ -567,7 +567,7 @@ func TestGetSubstUpToSecondDot(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getSubstUpToSecondDot(tt.input)
+			result := getSubstringUpToSecondDot(tt.input)
 			require.Equal(t, tt.expected, result)
 		})
 	}

@@ -439,7 +439,7 @@ func parseResetStatement(statement string) (string, error) {
 }
 
 func hasSensitiveKey(key string) bool {
-	secretsPrefix := getSubstUpToSecondDot(key)
+	secretsPrefix := getSubstringUpToSecondDot(key)
 	if secretsPrefix == "" {
 		return false
 	}
