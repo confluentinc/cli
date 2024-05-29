@@ -33,10 +33,6 @@ import (
 
 const autoLoginMsg = "Successful auto-login with non-interactive credentials."
 
-var wrongLoginCommandsMap = map[string]string{
-	"confluent cluster": "confluent kafka cluster",
-}
-
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
 	Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error
@@ -409,17 +405,6 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 
 		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
-			if err == config.RunningOnPremCommandInCloudErr {
-				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
-					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
-						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
-						return errors.NewErrorWithSuggestions(
-							fmt.Sprintf("`%s` is not a Confluent Cloud command. Did you mean `%s`?", cmd.CommandPath(), suggestCmdPath),
-							fmt.Sprintf("If you are a Confluent Cloud user, run `%s` instead.\nIf you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`.", suggestCmdPath, cmd.CommandPath()),
-						)
-					}
-				}
-			}
 			return err
 		}
 
@@ -547,6 +532,9 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		// pass mds token as bearer token otherwise use http basic auth
 		// no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		err := r.AuthenticatedWithMDS(command)(cmd, args)
+		if _, ok := err.(*errors.RunRequirementError); ok {
+			return err
+		}
 		useMdsToken := err == nil
 
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
