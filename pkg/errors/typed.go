@@ -206,3 +206,16 @@ func (e *MDSV2Alpha1ErrorType2Array) Error() string {
 func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error {
 	return fmt.Errorf(parsedGenericOpenApiErrorMsg, e.Error())
 }
+
+type RunRequirementError struct {
+	ErrorMsg       string
+	SuggestionsMsg string
+}
+
+func (e *RunRequirementError) Error() string {
+	return e.ErrorMsg
+}
+
+func (e *RunRequirementError) UserFacingError() error {
+	return NewErrorWithSuggestions(e.ErrorMsg, e.SuggestionsMsg)
+}
