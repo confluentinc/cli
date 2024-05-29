@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
@@ -17,6 +19,10 @@ const (
 	RequireNonCloudLogin                    = "non-cloud-login"
 	RequireOnPremLogin                      = "on-prem-login"
 )
+
+var wrongLoginCommandsMap = map[string]string{
+	"confluent cluster": "confluent kafka cluster",
+}
 
 // ErrIfMissingRunRequirement returns an error when a command or its parent doesn't meet a requirement;
 // for example, an on-prem command shouldn't be used by a cloud user.
@@ -46,6 +52,14 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *config.Config) error {
 		}
 
 		if err := f(); err != nil {
+			if err == config.RunningOnPremCommandInCloudErr {
+				for topLevelCmd, suggestedCmd := range wrongLoginCommandsMap {
+					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
+						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestedCmd, 1)
+						return config.RunningSimilarOnPremCommandInCloudErr(cmd.CommandPath(), suggestCmdPath)
+					}
+				}
+			}
 			return err
 		}
 	}
