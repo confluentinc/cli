@@ -33,7 +33,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newProviderCommand(prerunner))
 	cmd.AddCommand(newRbacCommand(cfg, prerunner))
 	cmd.AddCommand(newServiceAccountCommand(prerunner))
-	cmd.AddCommand(newUserCommand(prerunner))
+	cmd.AddCommand(newUserCommand(cfg, prerunner))
 
 	return cmd
 }
