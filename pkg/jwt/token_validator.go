@@ -39,7 +39,7 @@ func (v *ValidatorImpl) Validate(context *config.Context) error {
 
 	exp, ok := expClaim.(float64)
 	if !ok {
-		return fmt.Errorf("malformed token: exp claim has the wrong type")
+		return fmt.Errorf(errors.MalformedTokenErrorMsg, "exp")
 	}
 
 	// Add a time buffer of 1 minute to the token validator

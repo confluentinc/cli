@@ -87,7 +87,7 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 
 		sub, ok := subClaim.(string)
 		if !ok {
-			return fmt.Errorf("malformed token: sub claim has the wrong type")
+			return fmt.Errorf(errors.MalformedTokenErrorMsg, "sub")
 		}
 
 		credentials.Username = sub

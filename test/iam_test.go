@@ -196,6 +196,16 @@ func (s *CLITestSuite) TestIamUserDescribe() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+
+	tests = []CLITest{
+		{args: "iam user describe", fixture: "iam/user/describe-onprem.golden"},
+		{args: "iam user describe -o json", fixture: "iam/user/describe-onprem-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestIamUserDelete() {
