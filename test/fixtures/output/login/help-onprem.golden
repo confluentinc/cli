@@ -40,6 +40,10 @@ Log in to Confluent Platform with a MDS URL and CA certificate.
 
   $ confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt
 
+Log in to Confluent Platform with SSO and ignore any saved credentials.
+
+  CONFLUENT_PLATFORM_SSO=true confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt
+
 Flags:
       --url string               Metadata Service (MDS) URL, for on-premises deployments.
       --ca-cert-path string      Self-signed certificate chain in PEM format, for on-premises deployments.
