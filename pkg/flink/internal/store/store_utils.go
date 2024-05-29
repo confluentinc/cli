@@ -450,7 +450,7 @@ func hasSensitiveKey(key string) bool {
 	return distance <= 2
 }
 
-func getSubstUpToSecondDot(s string) string {
+func getSubstringUpToSecondDot(s string) string {
 	firstDot := strings.Index(s, ".")
 	if firstDot == -1 {
 		return ""
