@@ -229,7 +229,7 @@ func generateCredentialName(username string) string {
 }
 
 func GetDataplaneToken(ctx *config.Context) (string, error) {
-	endpoint := strings.Trim(ctx.GetPlatformServer(), "/") + "/api/access_tokens"
+	endpoint := strings.TrimSuffix(ctx.GetPlatformServer(), "/") + "/api/access_tokens"
 
 	res := &struct {
 		Token string `json:"token"`

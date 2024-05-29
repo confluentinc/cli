@@ -49,8 +49,8 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 // Embedded KafkaRest uses /kafka/v3 and standalone uses /v3
 // Relying on users to include the /kafka in the url for embedded instances
 func SetServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string) {
-	url = strings.Trim(url, "/")   // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
-	url = strings.Trim(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
+	url = strings.TrimSuffix(url, "/")   // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
+	url = strings.TrimSuffix(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
 	protocolRgx := regexp.MustCompile(`(\w+)://`)
 	protocolMatch := protocolRgx.MatchString(url)
 	if !protocolMatch {
@@ -66,7 +66,7 @@ func SetServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 			output.ErrPrintf(false, protocolMsg)
 		}
 	}
-	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
+	client.ChangeBasePath(strings.TrimSuffix(url, "/") + "/v3")
 }
 
 // getKafkaRestUrl tries to fetch the Kafka REST URL from the --url flag or from the CONFLUENT_REST_URL environment variable.
