@@ -89,7 +89,7 @@ func newState(authUrl string, noBrowser bool) (*authState, error) {
 	env := GetCCloudEnvFromBaseUrl(authUrl)
 
 	state := &authState{
-		SSOProviderCallbackUrl: authUrl + ssoProviderCallbackEndpoint,
+		SSOProviderCallbackUrl: strings.TrimSuffix(authUrl, "/") + ssoProviderCallbackEndpoint,
 		SSOProviderHost:        "https://" + ssoConfigs[env].ssoProviderDomain,
 		SSOProviderClientID:    GetAuth0CCloudClientIdFromBaseUrl(authUrl),
 		SSOProviderIdentifier:  ssoConfigs[env].ssoProviderIdentifier,
