@@ -14,11 +14,10 @@ import (
 
 func (c *userCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe",
-		Short:             "Describe the current user.",
-		Args:              cobra.NoArgs,
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.describeOnPrem,
+		Use:   "describe",
+		Short: "Describe the current user.",
+		Args:  cobra.NoArgs,
+		RunE:  c.describeOnPrem,
 	}
 
 	pcmd.AddOutputFlag(cmd)
