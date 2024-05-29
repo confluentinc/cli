@@ -58,7 +58,7 @@ var (
 	}
 	RunningOnPremCommandInCloudErr = &errors.RunRequirementError{
 		ErrorMsg:       "this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
-		SuggestionsMsg: "Log in to Confluent Platform with `confluent login --url <mds-url>`.\n" + "See available commands with `--help`.",
+		SuggestionsMsg: "Log in to Confluent Platform with `confluent login --url <mds-url>`.\nSee available commands with `--help`.",
 	}
 	RunningSimilarOnPremCommandInCloudErr = func(cmdPath, suggestedCmdPath string) errors.CLITypedError {
 		return &errors.RunRequirementError{
