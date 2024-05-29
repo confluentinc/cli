@@ -17,7 +17,7 @@ const (
 	KeyCatalog        = "sql.current-catalog"
 	KeyDatabase       = "sql.current-database"
 	KeyLocalTimeZone  = "sql.local-time-zone"
-	KeyOpenaiSecret   = "sql.secrets.openai"
+	KeySqlSecrets     = "sql.secrets."
 	KeyResultsTimeout = "client.results-timeout"
 	KeyServiceAccount = "client.service-account"
 	KeyStatementName  = "client.statement-name"
@@ -30,5 +30,3 @@ const (
 	OutputFormatStandard  OutputFormat = "standard"
 	OutputFormatPlainText OutputFormat = "plain-text"
 )
-
-var SensitiveKeys = []string{KeyOpenaiSecret}
