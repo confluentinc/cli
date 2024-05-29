@@ -118,7 +118,7 @@ func TestHeaders(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("It should return Invalid headers error", func(t *testing.T) {
+	t.Run("It should return an invalid headers error", func(t *testing.T) {
 		headers := []string{"", ":valueOnly"}
 
 		parsedHeaders, err := parseHeaders(headers, ":")
