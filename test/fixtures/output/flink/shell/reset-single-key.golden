@@ -17,6 +17,7 @@ configuration key "cli.a-key" has been reset successfully.
 +------------------------+---------------------+
 |          Key           |        Value        |
 +------------------------+---------------------+
+| client.output-format   | standard (default)  |
 | client.service-account | <unset> (default)   |
 | sql.current-catalog    | default             |
 | sql.current-database   | db1                 |
@@ -28,6 +29,7 @@ Statement phase is COMPLETED.
 +------------------------+---------------------+
 |          Key           |        Value        |
 +------------------------+---------------------+
+| client.output-format   | standard (default)  |
 | client.service-account | <unset> (default)   |
 | sql.current-catalog    | default             |
 | sql.current-database   | db1                 |

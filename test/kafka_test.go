@@ -227,10 +227,6 @@ func getCreateBidirectionalLinkConfigFile() string {
 func (s *CLITestSuite) TestKafkaBroker() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka broker list", fixture: "kafka/broker/list.golden"},
-		{args: "kafka broker list -o json", fixture: "kafka/broker/list-json.golden"},
-		{args: "kafka broker list -o yaml", fixture: "kafka/broker/list-yaml.golden"},
-
 		{args: "kafka broker describe 1", fixture: "kafka/broker/describe-1.golden"},
 		{args: "kafka broker describe 1 -o json", fixture: "kafka/broker/describe-1-json.golden"},
 		{args: "kafka broker describe 1 -o yaml", fixture: "kafka/broker/describe-1-yaml.golden"},
@@ -261,6 +257,20 @@ func (s *CLITestSuite) TestKafkaBroker() {
 	for _, test := range tests {
 		test.login = "onprem"
 		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaBrokerList() {
+	tests := []CLITest{
+		{args: fmt.Sprintf("kafka broker list --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/broker/list.golden"},
+		{args: fmt.Sprintf("kafka broker list --url %s", s.TestBackend.GetCloudUrl()), fixture: "kafka/broker/list-warning-cloud-url.golden", exitCode: 1},
+		{args: fmt.Sprintf("kafka broker list --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/broker/list-json.golden"},
+		{args: fmt.Sprintf("kafka broker list --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/broker/list-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
 		s.runIntegrationTest(test)
 	}
 }

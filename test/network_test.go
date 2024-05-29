@@ -69,6 +69,9 @@ func (s *CLITestSuite) TestNetworkList() {
 	tests := []CLITest{
 		{args: "network list", fixture: "network/list.golden"},
 		{args: "network list --output json", fixture: "network/list-json.golden"},
+		{args: "network list --name prod-gcp-us-central1,prod-aws-us-east1 --cloud aws", fixture: "network/list-name-cloud.golden"},
+		{args: "network list --region eastus2 --cidr 10.0.0.0/16", fixture: "network/list-region-cidr.golden"},
+		{args: "network list --phase ready --connection-types transitgateway,peering", fixture: "network/list-phase-connection.golden"},
 	}
 
 	for _, test := range tests {
@@ -103,6 +106,8 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 		{args: `__complete network delete ""`, login: "cloud", fixture: "network/delete-autocomplete.golden"},
 		{args: `__complete network create new-network --connection-types ""`, login: "cloud", fixture: "network/create-autocomplete-connection-types.golden"},
 		{args: `__complete network create new-network --dns-resolution ""`, login: "cloud", fixture: "network/create-autocomplete-dns-resolution.golden"},
+		{args: `__complete network create new-network --region ""`, login: "cloud", fixture: "network/create-autocomplete-region.golden"},
+		{args: `__complete network create new-network --cloud aws --region ""`, login: "cloud", fixture: "network/create-autocomplete-region-with-cloud.golden"},
 	}
 
 	for _, test := range tests {
@@ -114,6 +119,7 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 	tests := []CLITest{
 		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
+		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
 	}
 
@@ -150,6 +156,8 @@ func (s *CLITestSuite) TestNetworkPeeringList() {
 	tests := []CLITest{
 		{args: "network peering list", fixture: "network/peering/list.golden"},
 		{args: "network peering list --output json", fixture: "network/peering/list-json.golden"},
+		{args: "network peering list --network n-abcde1 --name aws-peering", fixture: "network/peering/list-network-name.golden"},
+		{args: "network peering list --phase ready --name gcp-peering,azure-peering", fixture: "network/peering/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -243,6 +251,8 @@ func (s *CLITestSuite) TestNetworkTransitGatewayAttachmentList() {
 		{args: "network tgwa list", fixture: "network/transit-gateway-attachment/list.golden"},
 		{args: "network transit-gateway-attachment list", fixture: "network/transit-gateway-attachment/list.golden"},
 		{args: "network transit-gateway-attachment list --output json", fixture: "network/transit-gateway-attachment/list-json.golden"},
+		{args: "network transit-gateway-attachment list --network n-abcde1 --name aws-tgwa1,aws-tgwa2", fixture: "network/transit-gateway-attachment/list-network-name.golden"},
+		{args: "network transit-gateway-attachment list --phase ready --name aws-tgwa3", fixture: "network/transit-gateway-attachment/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -332,6 +342,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAccessList() {
 		{args: "network pl access list", fixture: "network/private-link/access/list.golden"},
 		{args: "network private-link access list", fixture: "network/private-link/access/list.golden"},
 		{args: "network private-link access list --output json", fixture: "network/private-link/access/list-json.golden"},
+		{args: "network private-link access list --network n-abcde1 --name aws-pla", fixture: "network/private-link/access/list-network-name.golden"},
+		{args: "network private-link access list --phase ready --name gcp-pla,azure-pla", fixture: "network/private-link/access/list-phase-name.golden"},
 	}
 
 	for _, test := range tests {
@@ -424,6 +436,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentList() {
 		{args: "network pl attachment list", fixture: "network/private-link/attachment/list.golden"},
 		{args: "network private-link attachment list", fixture: "network/private-link/attachment/list.golden"},
 		{args: "network private-link attachment list --output json", fixture: "network/private-link/attachment/list-json.golden"},
+		{args: "network private-link attachment list --name aws-platt-1,aws-platt-2 --cloud aws", fixture: "network/private-link/attachment/list-name-cloud.golden"},
+		{args: "network private-link attachment list --region us-west-2 --phase provisioning ", fixture: "network/private-link/attachment/list-region-phase.golden"},
 	}
 
 	for _, test := range tests {
@@ -440,6 +454,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDescribe() {
 		{args: "network private-link attachment describe platt-111111 --output json", fixture: "network/private-link/attachment/describe-aws-json.golden"},
 		{args: "network private-link attachment describe", fixture: "network/private-link/attachment/describe-missing-id.golden", exitCode: 1},
 		{args: "network private-link attachment describe platt-invalid", fixture: "network/private-link/attachment/describe-invalid.golden", exitCode: 1},
+		{args: "network private-link attachment describe platt-azure", fixture: "network/private-link/attachment/describe-azure.golden"},
+		{args: "network private-link attachment describe platt-azure-2", fixture: "network/private-link/attachment/describe-azure-provisioning.golden"},
 	}
 
 	for _, test := range tests {
@@ -485,7 +501,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentCreate() {
 		{args: "network private-link attachment create --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-no-name.golden", exitCode: 1},
 		{args: "network private-link attachment create aws-platt --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-aws.golden"},
 		{args: "network private-link attachment create gcp-platt --cloud gcp --region us-central1", fixture: "network/private-link/attachment/create-gcp-fail.golden", exitCode: 1},
-		{args: "network private-link attachment create azure-platt --cloud azure --region eastus2", fixture: "network/private-link/attachment/create-azure-fail.golden", exitCode: 1},
+		{args: "network private-link attachment create azure-platt --cloud azure --region eastus2", fixture: "network/private-link/attachment/create-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -530,6 +546,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDescribe() {
 		{args: "network private-link attachment connection describe plattc-111111 --output json", fixture: "network/private-link/attachment/connection/describe-aws-json.golden"},
 		{args: "network private-link attachment connection describe", fixture: "network/private-link/attachment/connection/describe-missing-id.golden", exitCode: 1},
 		{args: "network private-link attachment connection describe plattc-invalid", fixture: "network/private-link/attachment/connection/describe-invalid.golden", exitCode: 1},
+		{args: "network private-link attachment connection describe plattc-azure", fixture: "network/private-link/attachment/connection/describe-azure.golden"},
+		{args: "network private-link attachment connection describe plattc-azure-2", fixture: "network/private-link/attachment/connection/describe-azure-provisioning.golden"},
 	}
 
 	for _, test := range tests {
@@ -578,6 +596,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionCreate() {
 		{args: "network private-link attachment connection create aws-plattc-wrong-endpoint --cloud aws --endpoint vpce-invalid --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-aws-invalid-endpoint.golden", exitCode: 1},
 		{args: "network private-link attachment connection create aws-plattc-invalid-platt --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-invalid", fixture: "network/private-link/attachment/connection/create-aws-platt-not-found.golden", exitCode: 1},
 		{args: "network private-link attachment connection create gcp-plattc-wrong-platt-cloud --cloud gcp --endpoint vpce-1234567890abcdef0 --attachment platt-aws123", fixture: "network/private-link/attachment/connection/create-wrong-platt-cloud.golden", exitCode: 1},
+		{args: "network private-link attachment connection create azure-plattc --cloud azure --endpoint azure-pl-endpoint --attachment platt-azure", fixture: "network/private-link/attachment/connection/create-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -598,10 +617,248 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnection_Autocomplete()
 	}
 }
 
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceDescribe() {
+	tests := []CLITest{
+		{args: "network link service describe nls-123456", fixture: "network/link/service/describe.golden"},
+		{args: "network link service describe nls-123456 --output json", fixture: "network/link/service/describe-json.golden"},
+		{args: "network link service describe", fixture: "network/link/service/describe-missing-id.golden", exitCode: 1},
+		{args: "network link service describe nls-invalid", fixture: "network/link/service/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceList() {
+	tests := []CLITest{
+		{args: "network link service list", fixture: "network/link/service/list.golden"},
+		{args: "network link service list --output json", fixture: "network/link/service/list-json.golden"},
+		{args: "network link service list --network n-abcde1 --name my-network-link-service-1", fixture: "network/link/service/list-network-name.golden"},
+		{args: "network link service list --phase ready --name my-network-link-service-2,my-network-link-service-3", fixture: "network/link/service/list-phase-name.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceDelete() {
+	tests := []CLITest{
+		{args: "network link service delete nls-111111 --force", fixture: "network/link/service/delete.golden"},
+		{args: "network link service delete nls-111111", input: "y\n", fixture: "network/link/service/delete-prompt.golden"},
+		{args: "network link service delete nls-111111 nls-222222", input: "n\n", fixture: "network/link/service/delete-multiple-refuse.golden"},
+		{args: "network link service delete nls-111111 nls-222222", input: "y\n", fixture: "network/link/service//delete-multiple-success.golden"},
+		{args: "network link service delete nls-111111 nls-invalid", fixture: "network/link/service/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network link service delete nls-invalid --force", fixture: "network/link/service/delete-nls-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceCreate() {
+	tests := []CLITest{
+		{args: "network link service create", fixture: "network/link/service/create-missing-network.golden", exitCode: 1},
+		{args: "network link service create --network n-123456", fixture: "network/link/service/create-missing-flag.golden", exitCode: 1},
+		{args: "network link service create --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/link/service/create-no-name.golden"},
+		{args: "network link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-environments env-11111,env-22222", fixture: "network/link/service/create-accepted-environments.golden"},
+		{args: "network link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222", fixture: "network/link/service/create-accepted-networks.golden"},
+		{args: "network link service create my-network-link-service --network n-123456 --description 'example network link service' --accepted-networks n-111111,n-222222 --accepted-environments env-11111,env-22222", fixture: "network/link/service/create.golden"},
+		{args: "network link service create nls-duplicate --network n-123455 --accepted-networks n-111111", fixture: "network/link/service/create-duplicate.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceUpdate() {
+	tests := []CLITest{
+		{args: "network link service update", fixture: "network/link/service/update-missing-args.golden", exitCode: 1},
+		{args: "network link service update nls-111111", fixture: "network/link/service/update-missing-flags.golden", exitCode: 1},
+		{args: "network link service update nls-111111 --name my-new-network-link-service --description 'example new network link service'", fixture: "network/link/service/update.golden"},
+		{args: "network link service update nls-111111 --accepted-environments env-22222 --accepted-networks n-111111", fixture: "network/link/service/update-accept-policy.golden"},
+		{args: "network link service update nls-111111 --accepted-environments env-11111,env-22222 --accepted-networks n-111111,n-222222", fixture: "network/link/service/update-accept-policy-multiple.golden"},
+		{args: "network link service update nls-invalid --name 'my-network-link-service'", fixture: "network/link/service/update-nls-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkService_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network link service describe ""`, login: "cloud", fixture: "network/link/service/describe-autocomplete.golden"},
+		{args: `__complete network link service delete ""`, login: "cloud", fixture: "network/link/service/delete-autocomplete.golden"},
+		{args: `__complete network link service create my-network-link-service --network ""`, login: "cloud", fixture: "network/link/service/create-autocomplete.golden"},
+		{args: `__complete network link service update ""`, login: "cloud", fixture: "network/link/service/update-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDescribe() {
+	tests := []CLITest{
+		{args: "network link endpoint describe nle-123456", fixture: "network/link/endpoint/describe.golden"},
+		{args: "network link endpoint describe nle-123456 --output json", fixture: "network/link/endpoint/describe-json.golden"},
+		{args: "network link endpoint describe", fixture: "network/link/endpoint/describe-missing-id.golden", exitCode: 1},
+		{args: "network link endpoint describe nle-invalid", fixture: "network/link/endpoint/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointList() {
+	tests := []CLITest{
+		{args: "network link endpoint list", fixture: "network/link/endpoint/list.golden"},
+		{args: "network link endpoint list --output json", fixture: "network/link/endpoint/list-json.golden"},
+		{args: "network link endpoint list --network n-abcde1 --name my-network-link-endpoint-1", fixture: "network/link/endpoint/list-network-name.golden"},
+		{args: "network link endpoint list --phase ready --name my-network-link-endpoint-2,my-network-link-endpoint-3", fixture: "network/link/endpoint/list-phase-name.golden"},
+		{args: "network link endpoint list --network-link-service nls-123456", fixture: "network/link/endpoint/list-service.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointDelete() {
+	tests := []CLITest{
+		{args: "network link endpoint delete nle-111111 --force", fixture: "network/link/endpoint/delete.golden"},
+		{args: "network link endpoint delete nle-111111", input: "y\n", fixture: "network/link/endpoint/delete-prompt.golden"},
+		{args: "network link endpoint delete nle-111111 nle-222222", input: "n\n", fixture: "network/link/endpoint/delete-multiple-refuse.golden"},
+		{args: "network link endpoint delete nle-111111 nle-222222", input: "y\n", fixture: "network/link/endpoint/delete-multiple-success.golden"},
+		{args: "network link endpoint delete nle-111111 nle-invalid", fixture: "network/link/endpoint/delete-multiple-fail.golden", exitCode: 1},
+		{args: "network link endpoint delete nle-invalid --force", fixture: "network/link/endpoint/delete-nle-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointCreate() {
+	tests := []CLITest{
+		{args: "network link endpoint create", fixture: "network/link/endpoint/create-missing-flags.golden", exitCode: 1},
+		{args: "network link endpoint create --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/link/endpoint/create-no-name.golden"},
+		{args: "network link endpoint create my-network-link-endpoint --network n-123456 --description 'example network link endpoint' --network-link-service nls-abcde1", fixture: "network/link/endpoint/create.golden"},
+		{args: "network link endpoint create nle-duplicate --network n-123455 --network-link-service nls-abcde1", fixture: "network/link/endpoint/create-duplicate.golden", exitCode: 1},
+		{args: "network link endpoint create nle-same-id --network n-123455 --network-link-service nls-abcde1", fixture: "network/link/endpoint/create-same-id.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpointUpdate() {
+	tests := []CLITest{
+		{args: "network link endpoint update", fixture: "network/link/endpoint/update-missing-args.golden", exitCode: 1},
+		{args: "network link endpoint update nle-111111", fixture: "network/link/endpoint/update-missing-flags.golden", exitCode: 1},
+		{args: "network link endpoint update nle-111111 --name my-new-network-link-endpoint", fixture: "network/link/endpoint/update.golden"},
+		{args: "network link endpoint update nle-111111 --name my-new-network-link-endpoint --description 'example new network link endpoint'", fixture: "network/link/endpoint/update-name-description.golden"},
+		{args: "network link endpoint update nle-invalid --name 'my-network-link-endpoint'", fixture: "network/link/endpoint/update-nle-not-exist.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkEndpoint_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network link endpoint describe ""`, login: "cloud", fixture: "network/link/endpoint/describe-autocomplete.golden"},
+		{args: `__complete network link endpoint delete ""`, login: "cloud", fixture: "network/link/endpoint/delete-autocomplete.golden"},
+		{args: `__complete network link endpoint create my-network-link-endpoint --network ""`, login: "cloud", fixture: "network/link/endpoint/create-autocomplete.golden"},
+		{args: `__complete network link endpoint update ""`, login: "cloud", fixture: "network/link/endpoint/update-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkRegionList() {
+	tests := []CLITest{
+		{args: "network region list", fixture: "network/region/list.golden"},
+		{args: "network region list --output json", fixture: "network/region/list-json.golden"},
+		{args: "network region list --cloud aws", fixture: "network/region/list-cloud.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkIpAddressList() {
 	tests := []CLITest{
 		{args: "network ip-address list", fixture: "network/ip-address/list.golden"},
 		{args: "network ip-address list --output json", fixture: "network/ip-address/list-json.golden"},
+		{args: "network ip-address list --cloud aws --region us-east-1", fixture: "network/ip-address/list-cloud-region.golden"},
+		{args: "network ip-address list --services kafka --address-type egress", fixture: "network/ip-address/list-services-address.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationDescribe() {
+	tests := []CLITest{
+		{args: "network link service association describe nle-123456 --network-link-service nls-123456", fixture: "network/link/service/association/describe.golden"},
+		{args: "network link service association describe nle-123456 --network-link-service nls-123456 --output json", fixture: "network/link/service/association/describe-json.golden"},
+		{args: "network link service association describe nle-123456", fixture: "network/link/service/association/describe-missing-flag.golden", exitCode: 1},
+		{args: "network link service association describe", fixture: "network/link/service/association/describe-missing-id.golden", exitCode: 1},
+		{args: "network link service association describe nle-invalid --network-link-service nls-123456", fixture: "network/link/service/association/describe-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociationList() {
+	tests := []CLITest{
+		{args: "network link service association list --network-link-service nls-123456", fixture: "network/link/service/association/list.golden"},
+		{args: "network link service association list --network-link-service nls-123456 --output json", fixture: "network/link/service/association/list-json.golden"},
+		{args: "network link service association list --network-link-service nls-invalid", fixture: "network/link/service/association/list-nls-invalid.golden", exitCode: 1},
+		{args: "network link service association list --network-link-service nls-no-endpoints", fixture: "network/link/service/association/list-no-endpoints.golden", exitCode: 1},
+		{args: "network link service association list ", fixture: "network/link/service/association/list-missing-flag.golden", exitCode: 1},
+		{args: "network link service association list --network-link-service nls-123456 --phase pending-accept", fixture: "network/link/service/association/list-phase.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkNetworkLinkServiceAssociation_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network link service association describe ""`, login: "cloud", fixture: "network/link/service/association/describe-autocomplete.golden"},
+		{args: `__complete network link service association list --network-link-service ""`, login: "cloud", fixture: "network/link/service/association/list-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
@@ -788,6 +1045,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDelete() {
 func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointCreate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability", fixture: "network/access-point/private-link/egress-endpoint/create-aws.golden"},
+		{args: "network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName --subresource subresource1", fixture: "network/access-point/private-link/egress-endpoint/create-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -799,6 +1057,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointCreate() {
 func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDescribe() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint describe ap-12345", fixture: "network/access-point/private-link/egress-endpoint/describe-aws.golden"},
+		{args: "network access-point private-link egress-endpoint describe ap-67890", fixture: "network/access-point/private-link/egress-endpoint/describe-azure.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-12345 --output json", fixture: "network/access-point/private-link/egress-endpoint/describe-aws-json.golden"},
 	}
 
@@ -823,6 +1082,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointList() {
 func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointUpdate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint update ap-12345 --name my-new-aws-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-aws.golden"},
+		{args: "network access-point private-link egress-endpoint update ap-67890 --name my-new-azure-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-azure.golden"},
 	}
 
 	for _, test := range tests {

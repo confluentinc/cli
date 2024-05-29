@@ -9,7 +9,6 @@ import (
 )
 
 var auth0ClientIds = map[string]string{
-	"cpd":          "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
 	"devel":        "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
 	"infra-us-gov": "0oa73yrenxpdtNXEe4h7",
 	"prod-us-gov":  "0oa41ih4ms3TVVAT04h7",
@@ -30,21 +29,23 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 		return "prod"
 	}
 
-	if strings.HasSuffix(u.Host, "priv.cpdev.cloud") {
-		return "cpd"
+	if strings.HasSuffix(u.Host, "cpdev.cloud") {
+		if strings.Contains(u.Host, "devel") {
+			return "devel"
+		} else if strings.Contains(u.Host, "stag") {
+			return "stag"
+		}
+	} else if strings.HasSuffix(u.Host, "confluentgov-internal.com") {
+		if strings.Contains(u.Host, "devel") {
+			return "devel-us-gov"
+		} else if strings.Contains(u.Host, "infra") {
+			return "infra-us-gov"
+		}
 	}
 
 	switch u.Host {
-	case "stag.cpdev.cloud":
-		return "stag"
-	case "devel.cpdev.cloud":
-		return "devel"
 	case "confluentgov.com":
 		return "prod-us-gov"
-	case "infra.confluentgov-internal.com":
-		return "infra-us-gov"
-	case "devel.confluentgov-internal.com":
-		return "devel-us-gov"
 	case testserver.TestCloudUrl.Host:
 		return "test"
 	default:

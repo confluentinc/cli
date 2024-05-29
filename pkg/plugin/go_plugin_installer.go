@@ -48,7 +48,7 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 }
 
 func (g *GoPluginInstaller) Install() error {
-	packageName := fmt.Sprintf("github.com/confluentinc/cli/v3-plugins/%s@latest", g.Name)
+	packageName := fmt.Sprintf("github.com/confluentinc/cli-plugins/%s@latest", g.Name)
 	installCmd := exec.NewCommand("go", "install", packageName)
 
 	if _, err := installCmd.Output(); err != nil {

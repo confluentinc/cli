@@ -205,6 +205,7 @@ update-packaging:
 	git checkout -b $$branch && \
 	$(SED) -i "s|cli_BRANCH=\".*\"|cli_BRANCH=\"v$${version}\"|" settings.sh && \
 	$(SED) -i "s|CLI_VERSION=.*|CLI_VERSION=$${version}|" release_testing/bin/smoke_test.sh && \
+	$(SED) -i "s|cli: \".*\"|cli: \"v$${version}\"|" packaging/resources/packaging-run-config.yml && \
 	git commit -am "bump cli to v$${version}" && \
 	$(call dry-run,git push --force --set-upstream origin $$branch) && \
 	if gh pr view $$branch --json state --jq .state 2>&1 | grep -E "no pull requests found|CLOSED|MERGED"; then \

@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -28,7 +30,7 @@ func (c *customPluginCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudFlag(cmd)
+	c.addCloudFlag(cmd, "")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -41,6 +43,7 @@ func (c *customPluginCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cloud = strings.ToUpper(cloud)
 	plugins, err := c.V2Client.ListCustomPlugins(cloud)
 	if err != nil {
 		return err
@@ -48,6 +51,10 @@ func (c *customPluginCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, plugin := range plugins {
+		// filter out flink artifacts
+		if strings.HasPrefix(plugin.GetConnectorType(), "flink") {
+			continue
+		}
 		list.Add(&customPluginOutList{
 			Name:  plugin.GetDisplayName(),
 			Id:    plugin.GetId(),

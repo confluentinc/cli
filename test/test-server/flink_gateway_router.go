@@ -98,8 +98,13 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 		statement := flinkgatewayv1.SqlV1Statement{
 			Name: flinkgatewayv1.PtrString(mux.Vars(r)["statement"]),
 			Spec: &flinkgatewayv1.SqlV1StatementSpec{
-				Statement:     flinkgatewayv1.PtrString("CREATE TABLE test;"),
+				Statement: flinkgatewayv1.PtrString("CREATE TABLE test;"),
+				Properties: &map[string]string{
+					"sql.current-catalog":  "default",
+					"sql.current-database": "my-cluster",
+				},
 				ComputePoolId: flinkgatewayv1.PtrString("pool-123456"),
+				Principal:     flinkgatewayv1.PtrString("u-123456"),
 			},
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
