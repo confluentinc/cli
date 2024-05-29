@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 type splitTest struct {
