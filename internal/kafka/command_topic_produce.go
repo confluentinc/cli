@@ -38,7 +38,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "produce <topic>",
 		Short:             "Produce messages to a Kafka topic.",
-		Long:              "Produce messages to a Kafka topic.\n\nWhen using this command, you can specify the message header using the \"--headers\" flag.",
+		Long:              "Produce messages to a Kafka topic.\n\nWhen using this command, you can specify the message header using the `--headers` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.produce,
