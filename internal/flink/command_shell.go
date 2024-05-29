@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
@@ -41,7 +42,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator pcmd.JWTValidator) func() error {
+func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator jwt.Validator) func() error {
 	return func() error {
 		authToken := c.Context.GetAuthToken()
 		authRefreshToken := c.Context.GetAuthRefreshToken()
@@ -156,7 +157,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	jwtValidator := pcmd.NewJWTValidator()
+	jwtValidator := jwt.NewValidator()
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
