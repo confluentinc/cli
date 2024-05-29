@@ -238,7 +238,7 @@ func RequireValidExamples() CommandRule {
 			}
 
 			for _, match := range regexp.MustCompile(`--[a-z\-]+=`).FindAllString(example, -1) {
-				errs = multierror.Append(errs, fmt.Errorf("%s: flag `%s` must not use \"=\" in example %d", cmd.CommandPath(), strings.TrimRight(match, "="), i+1))
+				errs = multierror.Append(errs, fmt.Errorf("%s: flag `%s` must not use \"=\" in example %d", cmd.CommandPath(), strings.TrimSuffix(match, "="), i+1))
 			}
 		}
 
