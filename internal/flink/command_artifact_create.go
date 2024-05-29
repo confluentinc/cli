@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -37,13 +36,15 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "Flink artifact JAR file.")
+	cmd.Flags().String("artifact-file", "", "Flink artifact")
+	cmd.Flags().String("runtime-lang", "java", "Flink artifact language runtime python/java.")
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("artifact-file"))
-	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "jar"))
+	// TO DO: Update the validation for particular files after confirmation.
+	// cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip"))
 
 	return cmd
 }
@@ -58,11 +59,16 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	runtimeLang, err := cmd.Flags().GetString("runtime-lang")
+	if err != nil {
+		return err
+	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	if strings.ToLower(extension) != "jar" {
-		return fmt.Errorf(`only ".jar" file extensions are allowed`)
-	}
+	// TO DO: Update the validation for particular files after confirmation.
+	// if strings.ToLower(extension) != "jar" {
+	// 	return fmt.Errorf(`only ".jar" file extensions are allowed`)
+	// }
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
 		ContentFormat: connectcustompluginv1.PtrString(extension),
@@ -87,6 +93,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 				UploadId: resp.GetUploadId(),
 			},
 		},
+		RuntimeLanguage: connectcustompluginv1.PtrString(runtimeLang),
 	}
 
 	plugin, err := c.V2Client.CreateCustomPlugin(createArtifactRequest)
