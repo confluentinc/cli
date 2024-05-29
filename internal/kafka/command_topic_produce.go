@@ -656,13 +656,11 @@ func parseHeaders(headers []string, delimiter string) ([]ckafka.Header, error) {
 			return nil, fmt.Errorf(invalidHeadersErrorMsg, delimiter)
 		}
 
-		if len(parts) == 2 {
-			kafkaHeader := ckafka.Header{
-				Key:   strings.TrimSpace(parts[0]),
-				Value: []byte(strings.TrimSpace(parts[1])),
-			}
-			kafkaHeaders = append(kafkaHeaders, kafkaHeader)
+		kafkaHeader := ckafka.Header{
+			Key:   strings.TrimSpace(parts[0]),
+			Value: []byte(strings.TrimSpace(parts[1])),
 		}
+		kafkaHeaders = append(kafkaHeaders, kafkaHeader)
 	}
 	return kafkaHeaders, nil
 }
