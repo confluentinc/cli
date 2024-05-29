@@ -12,17 +12,20 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/plugin"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 type ManifestOut struct {
-	Name         string `human:"Name" serialized:"name"`
+	Name         string `human:"Name" serialized:"Name"`
+	Id           string `human:"ID" serialized:"ID"`
 	Description  string `human:"Description" serialized:"description"`
 	Dependencies string `human:"Dependencies" serialized:"dependencies"`
 }
 
 type Manifest struct {
 	Name         string
+	Id           string
 	Description  string       `yaml:"description"`
 	Dependencies []Dependency `yaml:"dependencies"`
 }
@@ -103,7 +106,8 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 				return nil, err
 			}
 			manifestOut := ManifestOut{
-				Name:         file.Name(),
+				Name:         plugin.ToCommandName(file.Name()),
+				Id:           file.Name(),
 				Description:  manifest.Description,
 				Dependencies: strings.Join(dependenciesToStrings(manifest.Dependencies), ", "),
 			}
