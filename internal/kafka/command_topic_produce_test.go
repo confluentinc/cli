@@ -1,10 +1,13 @@
 package kafka
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
 type splitTest struct {
@@ -99,4 +102,41 @@ func TestGetKeyAndValue_Fail(t *testing.T) {
 func TestGetMetaInfoFromSchemaId(t *testing.T) {
 	metaInfo := getMetaInfoFromSchemaId(100004)
 	require.Equal(t, []byte{0x0, 0x0, 0x1, 0x86, 0xa4}, metaInfo)
+}
+
+func TestHeaders(t *testing.T) {
+	t.Run("It should return valid Kafka headers", func(t *testing.T) {
+		headers := []string{"contenttype:application/json", "x-request-id:12345"}
+
+		expected := []ckafka.Header{
+			{Key: "contenttype", Value: []byte("application/json")},
+			{Key: "x-request-id", Value: []byte("12345")},
+		}
+
+		parsedHeaders, err := parseHeaders(headers, ":")
+		assert.Equal(t, parsedHeaders, expected)
+		assert.NoError(t, err)
+	})
+
+	t.Run("It should return an invalid headers error when key is missing", func(t *testing.T) {
+		headers := []string{":valueOnly"}
+
+		parsedHeaders, err := parseHeaders(headers, ":")
+		expectedErrorMsg := fmt.Sprintf(invalidHeadersErrorMsg, ":")
+
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), expectedErrorMsg)
+		assert.Nil(t, parsedHeaders)
+	})
+
+	t.Run("It should return an invalid headers error when delimiter is incorrect", func(t *testing.T) {
+		headers := []string{"asdasdas:valueOnly", "sadsad=sdsadasd"}
+
+		parsedHeaders, err := parseHeaders(headers, ":")
+		expectedErrorMsg := fmt.Sprintf(invalidHeadersErrorMsg, ":")
+
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), expectedErrorMsg)
+		assert.Nil(t, parsedHeaders)
+	})
 }
