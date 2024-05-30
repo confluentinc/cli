@@ -36,6 +36,29 @@ func TestRemoveStatementTerminator(t *testing.T) {
 	}
 }
 
+func TestMaybeCreateAlterModelStatement(t *testing.T) {
+	require.True(t, maybeCreateAlterModelStatement("CrEate MODEL abc"))
+	// space before and newline and tab
+	require.True(t, maybeCreateAlterModelStatement("   CrEate MODEL\t\nabc\nbcd'"))
+	// Carriage return
+	require.True(t, maybeCreateAlterModelStatement("   CrEate MODEL\rabc\nbcd'"))
+	require.True(t, maybeCreateAlterModelStatement("AlteR MODEL abc"))
+	require.True(t, maybeCreateAlterModelStatement(";alteR MODEL abc"))
+
+	// Not inside quote
+	require.True(t, maybeCreateAlterModelStatement("'' AlteR MODEL abc"))
+	// Not inside invalid escape
+	require.True(t, maybeCreateAlterModelStatement("''' AlteR MODEL abc"))
+
+	// Inside quote
+	require.False(t, maybeCreateAlterModelStatement("'Create model abc'"))
+	// Inside quote with escaped quote
+	require.False(t, maybeCreateAlterModelStatement("'''Create model abc'"))
+	// Inside quote with more escaped quote
+	require.False(t, maybeCreateAlterModelStatement("'''''Create model abc'"))
+
+}
+
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")

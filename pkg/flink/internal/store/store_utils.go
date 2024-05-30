@@ -392,6 +392,39 @@ func useError() *types.StatementError {
 	}
 }
 
+func maybeCreateAlterModelStatement(statement string) bool {
+	regex := regexp.MustCompile(config.CreateAlterModelRegex)
+	matches := regex.FindAllStringSubmatch(statement, -1)
+	names := regex.SubexpNames()
+	fmt.Println(names)
+	//return match != nil && len(match) == 2 && len(match[1]) != 0
+	fmt.Println(matches)
+	for _, match := range matches {
+		for groupIndex, group := range match {
+			name := names[groupIndex]
+			if name == "query" {
+				if group != "" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func removeSecretProperties(properties map[string]string) map[string]string {
+	if properties == nil {
+		return properties
+	}
+	cleanProperties := make(map[string]string)
+	for key, value := range properties {
+		if !strings.HasPrefix(key, config.KeySqlSecrets) {
+			cleanProperties[key] = value
+		}
+	}
+	return cleanProperties
+}
+
 /* Expected statement: "RESET 'pipeline.name'" */
 func parseResetStatement(statement string) (string, error) {
 	statement = removeStatementTerminator(statement)

@@ -105,6 +105,9 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 }
 
 func createSqlV1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1.SqlV1Statement {
+	if !maybeCreateAlterModelStatement(statement) {
+		properties = removeSecretProperties(properties)
+	}
 	return flinkgatewayv1.SqlV1Statement{
 		Name: &statementName,
 		Spec: &flinkgatewayv1.SqlV1StatementSpec{
