@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
@@ -14,6 +15,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
+
+
+var  allowedRuntimeLanguages = map[string]any {
+	"python" : struct{}{},
+	"java" : struct{}{},
+}
 
 type pluginCreateOut struct {
 	Name          string `human:"Name" serialized:"name"`
@@ -29,6 +36,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Short: "Create a Flink UDF artifact.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.createArtifact,
+		PreRunE: c.validateCreateArtifact,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink artifact "my-flink-artifact".`,
@@ -37,13 +45,15 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "Flink artifact JAR file.")
+	cmd.Flags().String("artifact-file", "", "Flink artifact")
+	cmd.Flags().String("runtime-lang", "java", "Flink artifact language runtime python/java.")
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("artifact-file"))
-	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "jar"))
+	// TO DO: Update the validation for particular files after confirmation.
+	// cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip"))
 
 	return cmd
 }
@@ -58,11 +68,16 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	runtimeLang, err := cmd.Flags().GetString("runtime-lang")
+	if err != nil {
+		return err
+	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	if strings.ToLower(extension) != "jar" {
-		return fmt.Errorf(`only ".jar" file extensions are allowed`)
-	}
+	// TO DO: Update the validation for particular files after confirmation.
+	// if strings.ToLower(extension) != "jar" {
+	// 	return fmt.Errorf(`only ".jar" file extensions are allowed`)
+	// }
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
 		ContentFormat: connectcustompluginv1.PtrString(extension),
@@ -87,6 +102,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 				UploadId: resp.GetUploadId(),
 			},
 		},
+		RuntimeLanguage: connectcustompluginv1.PtrString(runtimeLang),
 	}
 
 	plugin, err := c.V2Client.CreateCustomPlugin(createArtifactRequest)
@@ -102,4 +118,18 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		ContentFormat: plugin.GetContentFormat(),
 	})
 	return table.Print()
+}
+
+func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) error {
+	// validate --runtime-lang param
+	if cmd.Flags().Changed("runtime-lang") {
+		runtimeLang, err := cmd.Flags().GetString("runtime-lang")
+		if err != nil {
+			return err
+		}
+		if _, ok := allowedRuntimeLanguages[runtimeLang]; !ok {
+			return fmt.Errorf("invalid value for --runtime-lang: %s. Allowed values are %v", runtimeLang, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
+		}
+	}
+	return nil
 }
