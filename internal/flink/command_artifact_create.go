@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
@@ -16,7 +17,10 @@ import (
 )
 
 
-var ALLOWED_RUNTIME_LANG = []string{"python", "java"}
+var  allowedRuntimeLanguages = map[string]any {
+	"python" : struct{}{},
+	"java" : struct{}{},
+}
 
 type pluginCreateOut struct {
 	Name          string `human:"Name" serialized:"name"`
@@ -123,12 +127,9 @@ func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) erro
 		if err != nil {
 			return err
 		}
-		for _, v :=  range ALLOWED_RUNTIME_LANG {
-			if runtimeLang == v {
-				return nil
-			}
+		if _, ok := allowedRuntimeLanguages[runtimeLang]; !ok {
+			return fmt.Errorf("invalid value for --runtime-lang: %s. Allowed values are %v", runtimeLang, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
 		}
-		return fmt.Errorf("invalid value for --runtime-lang: %s. Allowed values are %v", runtimeLang, utils.ArrayToCommaDelimitedString(ALLOWED_RUNTIME_LANG, "or"))
 	}
 	return nil
 }
