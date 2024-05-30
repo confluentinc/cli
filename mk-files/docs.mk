@@ -47,12 +47,6 @@ publish-docs:
 
 	rm -rf $(DIR)
 
-# NB: When releasing a new version, the -post branch is updated to the current state of the .x branch,
-# whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.
-# If this is a patch release, we don't have to update master.
-# The .x branch has been updated to ignore [pint skip] for minor branches since it is a pure upstream branch of minor branches.
-# To ensure pint merge will work correctly, we will manually merge the -post branch into the .x branch using `-s ours`. Then, these
-# branches will be pushed at the same time. This ensure there are no errors with pint merge.
 .PHONY: release-docs
 release-docs:
 	$(eval DIR=$(shell mktemp -d))
@@ -65,7 +59,7 @@ release-docs:
 		git checkout master && \
 		git checkout -b $(STAGING_BRANCH) && \
 		$(call dry-run,git push -u origin $(STAGING_BRANCH)); \
-		git checkout -B $(CURRENT_SHORT_MINOR_VERSION)-post origin/$(STAGING_BRANCH) && \
+		git checkout -b $(CURRENT_SHORT_MINOR_VERSION)-post origin/$(STAGING_BRANCH) && \
 		$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
 		git checkout master && \
 		git checkout -b release-docs-$(CLEAN_VERSION) && \
