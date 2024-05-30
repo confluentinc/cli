@@ -9,7 +9,8 @@ Create Flink artifact "my-flink-artifact".
   $ confluent flink artifact create my-flink-artifact --artifact-file plugin.jar
 
 Flags:
-      --artifact-file string   REQUIRED: Flink artifact JAR file.
+      --artifact-file string   REQUIRED: Flink artifact file zip, jar or py.
+      --runtime-language string    Flink artifact language runtime python/java. (default "java")
       --description string     Description of Flink artifact.
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
