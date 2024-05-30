@@ -661,6 +661,5 @@ func parseHeaders(headers []string, delimiter string) ([]ckafka.Header, error) {
 			Value: []byte(strings.TrimSpace(parts[1])),
 		}
 	}
-	
 	return kafkaHeaders, nil
 }
