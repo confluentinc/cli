@@ -30,6 +30,6 @@ RUN chown $USER:$USER /etc
 # This symbolic link exists for backwards compatibility reasons
 RUN ln -s /bin/confluent /confluent
 
-RUN mkdir /etc/bash_completion.d && confluent completion bash > /etc/bash_completion.d/confluent
+RUN mkdir -p /etc/bash_completion.d/ && confluent completion bash > /etc/bash_completion.d/confluent
 
 USER $USER
