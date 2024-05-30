@@ -23,7 +23,6 @@ var (
 	}
 	allowedFileExtensions = map[string]any{
 		"zip": struct{}{},
-		"py":  "python",
 		"jar": "java",
 	}
 )
@@ -51,7 +50,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "Flink artifact")
+	cmd.Flags().String("artifact-file", "", "Flink artifact file zip, jar or py.")
 	cmd.Flags().String("runtime-lang", "java", "Flink artifact language runtime python/java.")
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
