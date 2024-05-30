@@ -10,13 +10,14 @@ import (
 
 func TestGetCCloudEnvFromBaseUrl(t *testing.T) {
 	for url, expected := range map[string]string{
-		"":                         "prod",
-		":no-scheme-error.com":     "prod",
-		"confluent.cloud":          "prod",
-		"default-to-prod.com":      "prod",
-		"https://confluent.cloud":  "prod",
-		"https://confluent.cloud/": "prod",
-		"https://confluentgov.com": "prod-us-gov",
+		"":                                               "prod",
+		":no-scheme-error.com":                           "prod",
+		"confluent.cloud":                                "prod",
+		"default-to-prod.com":                            "prod",
+		"https://confluent.cloud":                        "prod",
+		"https://confluent.cloud/":                       "prod",
+		"https://confluentgov.com":                       "prod-us-gov",
+		"https://us-east-1.confluentgov.com":             "prod-us-gov",
 		"https://devel-1.confluentgov-internal.com":      "devel-us-gov",
 		"https://devel.confluentgov-internal.com":        "devel-us-gov",
 		"https://devel.cpdev.cloud":                      "devel",

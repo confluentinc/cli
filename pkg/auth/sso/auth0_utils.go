@@ -35,22 +35,19 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 		} else if strings.Contains(u.Host, "stag") {
 			return "stag"
 		}
+	} else if strings.HasSuffix(u.Host, "confluentgov.com") {
+		return "prod-us-gov"
 	} else if strings.HasSuffix(u.Host, "confluentgov-internal.com") {
 		if strings.Contains(u.Host, "devel") {
 			return "devel-us-gov"
 		} else if strings.Contains(u.Host, "infra") {
 			return "infra-us-gov"
 		}
+	} else if u.Host == testserver.TestCloudUrl.Host {
+		return "test"
 	}
 
-	switch u.Host {
-	case "confluentgov.com":
-		return "prod-us-gov"
-	case testserver.TestCloudUrl.Host:
-		return "test"
-	default:
-		return "prod"
-	}
+	return "prod"
 }
 
 func IsOkta(url string) bool {
