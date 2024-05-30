@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +14,9 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
+
+
+var ALLOWED_RUNTIME_LANG = []string{"python", "java"}
 
 type pluginCreateOut struct {
 	Name          string `human:"Name" serialized:"name"`
@@ -28,6 +32,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Short: "Create a Flink UDF artifact.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.createArtifact,
+		PreRunE: c.validateCreateArtifact,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink artifact "my-flink-artifact".`,
@@ -109,4 +114,21 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		ContentFormat: plugin.GetContentFormat(),
 	})
 	return table.Print()
+}
+
+func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) error {
+	// validate --runtime-lang param
+	if cmd.Flags().Changed("runtime-lang") {
+		runtimeLang, err := cmd.Flags().GetString("runtime-lang")
+		if err != nil {
+			return err
+		}
+		for _, v :=  range ALLOWED_RUNTIME_LANG {
+			if runtimeLang == v {
+				return nil
+			}
+		}
+		return fmt.Errorf("invalid value for --runtime-lang: %s. Allowed values are %v", runtimeLang, utils.ArrayToCommaDelimitedString(ALLOWED_RUNTIME_LANG, "or"))
+	}
+	return nil
 }
