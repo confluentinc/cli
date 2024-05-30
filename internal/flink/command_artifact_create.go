@@ -52,7 +52,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("artifact-file", "", "Flink artifact file zip, jar or py.")
-	cmd.Flags().String("runtime-lang", "java", "Flink artifact language runtime python/java.")
+	cmd.Flags().String("runtime-language", "java", "Flink artifact language runtime python/java.")
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -73,7 +73,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	runtimeLang, err := cmd.Flags().GetString("runtime-lang")
+	runtimeLang, err := cmd.Flags().GetString("runtime-language")
 	if err != nil {
 		return err
 	}
@@ -122,15 +122,15 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) error {
-	// validate --runtime-lang param
+	// validate --runtime-language param
 	runtimeLang := "java"
-	if cmd.Flags().Changed("runtime-lang") {
-		rl, err := cmd.Flags().GetString("runtime-lang")
+	if cmd.Flags().Changed("runtime-language") {
+		rl, err := cmd.Flags().GetString("runtime-language")
 		if err != nil {
 			return err
 		}
 		if _, ok := allowedRuntimeLanguages[rl]; !ok {
-			return fmt.Errorf("invalid value for --runtime-lang %s. Allowed values are %v", rl, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
+			return fmt.Errorf("invalid value for --runtime-language %s. Allowed values are %v", rl, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
 		}
 		runtimeLang = rl
 	}
@@ -147,7 +147,7 @@ func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) erro
 			return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
 		}
 		if requiredLang != runtimeLang {
-			return fmt.Errorf("provided value for --runtime-lang %v and --artifact-file extension %v are mis matched", runtimeLang, extension)
+			return fmt.Errorf("provided value for --runtime-language %v and --artifact-file extension %v are mis matched", runtimeLang, extension)
 		}
 	}
 	return nil
