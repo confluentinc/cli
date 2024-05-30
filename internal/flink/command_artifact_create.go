@@ -58,8 +58,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("artifact-file"))
-	// TO DO: Update the validation for particular files after confirmation.
-	// cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip"))
+	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip", "jar", "py"))
 
 	return cmd
 }
@@ -131,7 +130,7 @@ func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) erro
 			return err
 		}
 		if _, ok := allowedRuntimeLanguages[rl]; !ok {
-			return fmt.Errorf("invalid value for --runtime-lang: %s. Allowed values are %v", rl, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
+			return fmt.Errorf("invalid value for --runtime-lang %s. Allowed values are %v", rl, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
 		}
 		runtimeLang = rl
 	}
@@ -145,10 +144,10 @@ func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) erro
 	if extension != "zip" {
 		requiredLang, ok := allowedFileExtensions[extension]
 		if !ok {
-			return fmt.Errorf("%v only extensions are allowed for --artifact-file", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
+			return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
 		}
 		if requiredLang != runtimeLang {
-			return fmt.Errorf("provided value for --runtime-lang: %v and --artifact-file extension: %v are mis matched", runtimeLang, extension)
+			return fmt.Errorf("provided value for --runtime-lang %v and --artifact-file extension %v are mis matched", runtimeLang, extension)
 		}
 	}
 	return nil
