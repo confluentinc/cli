@@ -16,11 +16,17 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-
-var  allowedRuntimeLanguages = map[string]any {
-	"python" : struct{}{},
-	"java" : struct{}{},
-}
+var (
+	allowedRuntimeLanguages = map[string]any{
+		"python": struct{}{},
+		"java":   struct{}{},
+	}
+	allowedFileExtensions = map[string]any{
+		"zip": struct{}{},
+		"py":  "python",
+		"jar": "java",
+	}
+)
 
 type pluginCreateOut struct {
 	Name          string `human:"Name" serialized:"name"`
@@ -32,10 +38,10 @@ type pluginCreateOut struct {
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create a Flink UDF artifact.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.createArtifact,
+		Use:     "create <name>",
+		Short:   "Create a Flink UDF artifact.",
+		Args:    cobra.ExactArgs(1),
+		RunE:    c.createArtifact,
 		PreRunE: c.validateCreateArtifact,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -74,10 +80,6 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	// TO DO: Update the validation for particular files after confirmation.
-	// if strings.ToLower(extension) != "jar" {
-	// 	return fmt.Errorf(`only ".jar" file extensions are allowed`)
-	// }
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
 		ContentFormat: connectcustompluginv1.PtrString(extension),
@@ -122,13 +124,31 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 
 func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) error {
 	// validate --runtime-lang param
+	runtimeLang := "java"
 	if cmd.Flags().Changed("runtime-lang") {
-		runtimeLang, err := cmd.Flags().GetString("runtime-lang")
+		rl, err := cmd.Flags().GetString("runtime-lang")
 		if err != nil {
 			return err
 		}
-		if _, ok := allowedRuntimeLanguages[runtimeLang]; !ok {
-			return fmt.Errorf("invalid value for --runtime-lang: %s. Allowed values are %v", runtimeLang, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
+		if _, ok := allowedRuntimeLanguages[rl]; !ok {
+			return fmt.Errorf("invalid value for --runtime-lang: %s. Allowed values are %v", rl, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
+		}
+		runtimeLang = rl
+	}
+
+	// validate extension for --artifact-file
+	artifactFile, err := cmd.Flags().GetString("artifact-file")
+	if err != nil {
+		return err
+	}
+	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
+	if extension != "zip" {
+		requiredLang, ok := allowedFileExtensions[extension]
+		if !ok {
+			return fmt.Errorf("%v only extensions are allowed for --artifact-file", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
+		}
+		if requiredLang != runtimeLang {
+			return fmt.Errorf("provided value for --runtime-lang: %v and --artifact-file extension: %v are mis matched", runtimeLang, extension)
 		}
 	}
 	return nil
