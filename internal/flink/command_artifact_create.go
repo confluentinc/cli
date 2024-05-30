@@ -23,7 +23,6 @@ var (
 	}
 	allowedFileExtensions = map[string]any{
 		"zip": struct{}{},
-		"py":  "python",
 		"jar": "java",
 	}
 )
@@ -51,14 +50,14 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "Flink artifact file zip, jar or py.")
+	cmd.Flags().String("artifact-file", "", "Flink artifact file zip or jar.")
 	cmd.Flags().String("runtime-language", "java", "Flink artifact language runtime python/java.")
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("artifact-file"))
-	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip", "jar", "py"))
+	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip", "jar"))
 
 	return cmd
 }
@@ -141,14 +140,15 @@ func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) erro
 		return err
 	}
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	if extension != "zip" {
-		requiredLang, ok := allowedFileExtensions[extension]
-		if !ok {
-			return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
-		}
-		if requiredLang != runtimeLang {
-			return fmt.Errorf("provided value for --runtime-language %v and --artifact-file extension %v are mis matched", runtimeLang, extension)
-		}
+	_, ok := allowedFileExtensions[extension]
+	if !ok {
+		return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
 	}
+
+	// make sure if runtime lang is python, only zip is allowed
+	if runtimeLang == "python" && extension != "zip" {
+		return fmt.Errorf("for --runtime-language python, --artifact-file with only .zip extension are allowed")
+	}
+
 	return nil
 }
