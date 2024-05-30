@@ -61,7 +61,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client. For a full list, see https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html`)
 	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
-	cmd.Flags().StringSlice("headers", nil, `A comma-separated list of headers ("key:value") for the message. Example: "key:value,key1:value1"`)
+	cmd.Flags().StringSlice("headers", nil, `A comma-separated list of headers formatted as "key:value".`)
 
 	// cloud-only flags
 	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
