@@ -23,6 +23,7 @@ var (
 	}
 	allowedFileExtensions = map[string]any{
 		"zip": struct{}{},
+		"py":  "python",
 		"jar": "java",
 	}
 )
