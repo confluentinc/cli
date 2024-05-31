@@ -363,7 +363,6 @@ func handlePluginValidate(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/custom-connector-plugins"
 func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		switch r.Method {
 		case http.MethodPost:
 			vars := mux.Vars(r)
