@@ -16,9 +16,8 @@ type partitionCommand struct {
 
 func newPartitionCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "partition",
-		Short:       "Manage Kafka partitions.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+		Use:   "partition",
+		Short: "Manage Kafka partitions.",
 	}
 
 	c := &partitionCommand{}
