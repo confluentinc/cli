@@ -49,7 +49,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", fmt.Sprintf("Specify the Flink artifact file as %s.", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or")))
+	cmd.Flags().String("artifact-file", "", "Flink artifact JAR file or ZIP file.")
 	cmd.Flags().String("runtime-language", "java", fmt.Sprintf("Specify the Flink artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or")))
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -74,9 +74,6 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	runtimeLanguage, err := cmd.Flags().GetString("runtime-language")
 	if err != nil {
 		return err
-	}
-	if _, ok := allowedRuntimeLanguages[runtimeLanguage]; !ok {
-		return fmt.Errorf("invalid value for --runtime-language %s. Allowed values are %v", runtimeLanguage, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
 	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
