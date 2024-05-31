@@ -41,7 +41,7 @@ func (c *userCommand) describeOnPrem(cmd *cobra.Command, _ []string) error {
 	table.Add(&userOutOnPrem{
 		Username:            c.Context.Credential.Username,
 		AuthenticationToken: token,
-		ExpiresAt:           time.Unix(0, int64(exp)).UTC(),
+		ExpiresAt:           time.Unix(int64(exp), 0).UTC(),
 	})
 	return table.Print()
 }
