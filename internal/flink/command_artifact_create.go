@@ -3,10 +3,10 @@ package flink
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
@@ -17,14 +17,8 @@ import (
 )
 
 var (
-	allowedRuntimeLanguages = map[string]any{
-		"python": struct{}{},
-		"java":   struct{}{},
-	}
-	allowedFileExtensions = map[string]any{
-		"zip": struct{}{},
-		"jar": struct{}{},
-	}
+	allowedRuntimeLanguages = []string{"python", "java"}
+	allowedFileExtensions   = []string{"jar", "zip"}
 )
 
 type pluginCreateOut struct {
@@ -50,7 +44,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("artifact-file", "", "Flink artifact JAR file or ZIP file.")
-	cmd.Flags().String("runtime-language", "java", fmt.Sprintf("Specify the Flink artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or")))
+	cmd.Flags().String("runtime-language", "java", fmt.Sprintf("Specify the Flink artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(allowedRuntimeLanguages, "or")))
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -77,9 +71,9 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	_, ok := allowedFileExtensions[extension]
+	ok := slices.Contains(allowedFileExtensions, extension)
 	if !ok {
-		return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
+		return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(allowedFileExtensions, "or"))
 	}
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
