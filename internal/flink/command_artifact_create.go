@@ -71,14 +71,9 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-<<<<<<< HEAD
-	if !slices.Contains(allowedFileExtensions, extension) {
-		return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(allowedFileExtensions, "or"))
-=======
 	ok := slices.Contains(allowedFileExtensions, extension)
 	if !ok {
 		return fmt.Errorf("only extensions allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(allowedFileExtensions, "or"))
->>>>>>> 1634bda8 (typo)
 	}
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
