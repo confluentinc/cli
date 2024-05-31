@@ -37,11 +37,10 @@ type pluginCreateOut struct {
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "create <name>",
-		Short:   "Create a Flink UDF artifact.",
-		Args:    cobra.ExactArgs(1),
-		RunE:    c.createArtifact,
-		PreRunE: c.validateCreateArtifact,
+		Use:   "create <name>",
+		Short: "Create a Flink UDF artifact.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.createArtifact,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink artifact "my-flink-artifact".`,
@@ -50,8 +49,8 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "Flink artifact ZIP file or JAR file.")
-	cmd.Flags().String("runtime-language", "java", "Flink artifact language runtime python/java.")
+	cmd.Flags().String("artifact-file", "", "Flink artifact file zip or jar.")
+	cmd.Flags().String("runtime-language", "java", fmt.Sprintf("Specify the Flink artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or")))
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -72,12 +71,19 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	runtimeLang, err := cmd.Flags().GetString("runtime-language")
+	runtimeLanguage, err := cmd.Flags().GetString("runtime-language")
 	if err != nil {
 		return err
 	}
+	if _, ok := allowedRuntimeLanguages[runtimeLanguage]; !ok {
+		return fmt.Errorf("invalid value for --runtime-language %s. Allowed values are %v", runtimeLanguage, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
+	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
+	_, ok := allowedFileExtensions[extension]
+	if !ok {
+		return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
+	}
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
 		ContentFormat: connectcustompluginv1.PtrString(extension),
@@ -102,7 +108,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 				UploadId: resp.GetUploadId(),
 			},
 		},
-		RuntimeLanguage: connectcustompluginv1.PtrString(runtimeLang),
+		RuntimeLanguage: connectcustompluginv1.PtrString(runtimeLanguage),
 	}
 
 	plugin, err := c.V2Client.CreateCustomPlugin(createArtifactRequest)
@@ -118,37 +124,4 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		ContentFormat: plugin.GetContentFormat(),
 	})
 	return table.Print()
-}
-
-func (c *command) validateCreateArtifact(cmd *cobra.Command, args []string) error {
-	// validate --runtime-language param
-	runtimeLang := "java"
-	if cmd.Flags().Changed("runtime-language") {
-		rl, err := cmd.Flags().GetString("runtime-language")
-		if err != nil {
-			return err
-		}
-		if _, ok := allowedRuntimeLanguages[rl]; !ok {
-			return fmt.Errorf("invalid value for --runtime-language %s. Allowed values are %v", rl, utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or"))
-		}
-		runtimeLang = rl
-	}
-
-	// validate extension for --artifact-file
-	artifactFile, err := cmd.Flags().GetString("artifact-file")
-	if err != nil {
-		return err
-	}
-	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	_, ok := allowedFileExtensions[extension]
-	if !ok {
-		return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or"))
-	}
-
-	// make sure if runtime lang is python, only zip is allowed
-	if runtimeLang == "python" && extension != "zip" {
-		return fmt.Errorf("for --runtime-language python, --artifact-file with only .zip extension are allowed")
-	}
-
-	return nil
 }
