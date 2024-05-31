@@ -71,8 +71,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	ok := slices.Contains(allowedFileExtensions, extension)
-	if !ok {
+	if !slices.Contains(allowedFileExtensions, strings.ToLower(extension)) {
 		return fmt.Errorf("only extensions allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(allowedFileExtensions, "or"))
 	}
 
