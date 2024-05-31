@@ -3,6 +3,7 @@ package flink
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,6 +14,11 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
+)
+
+var (
+	allowedRuntimeLanguages = []string{"python", "java"}
+	allowedFileExtensions   = []string{"jar", "zip"}
 )
 
 type pluginCreateOut struct {
@@ -37,13 +43,14 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", "Flink artifact JAR file.")
+	cmd.Flags().String("artifact-file", "", "Flink artifact JAR file or ZIP file.")
+	cmd.Flags().String("runtime-language", "java", fmt.Sprintf("Specify the Flink artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(allowedRuntimeLanguages, "or")))
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("artifact-file"))
-	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "jar"))
+	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip", "jar"))
 
 	return cmd
 }
@@ -58,10 +65,15 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	runtimeLanguage, err := cmd.Flags().GetString("runtime-language")
+	if err != nil {
+		return err
+	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
-	if strings.ToLower(extension) != "jar" {
-		return fmt.Errorf(`only ".jar" file extensions are allowed`)
+	ok := slices.Contains(allowedFileExtensions, extension)
+	if !ok {
+		return fmt.Errorf("only extensions are allowed for --artifact-file are %v", utils.ArrayToCommaDelimitedString(allowedFileExtensions, "or"))
 	}
 
 	request := connectcustompluginv1.ConnectV1PresignedUrlRequest{
@@ -87,6 +99,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 				UploadId: resp.GetUploadId(),
 			},
 		},
+		RuntimeLanguage: connectcustompluginv1.PtrString(runtimeLanguage),
 	}
 
 	plugin, err := c.V2Client.CreateCustomPlugin(createArtifactRequest)
