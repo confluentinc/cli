@@ -49,7 +49,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("artifact-file", "", fmt.Sprintf("Specify the Flink artifact file as %s ", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or")))
+	cmd.Flags().String("artifact-file", "", fmt.Sprintf("Specify the Flink artifact file as %s.", utils.ArrayToCommaDelimitedString(maps.Keys(allowedFileExtensions), "or")))
 	cmd.Flags().String("runtime-language", "java", fmt.Sprintf("Specify the Flink artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(maps.Keys(allowedRuntimeLanguages), "or")))
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
