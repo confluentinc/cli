@@ -368,8 +368,7 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			var decodeRespone connectcustompluginv1.ConnectV1CustomConnectorPlugin
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&decodeRespone))
 			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
-			switch decodeRespone.GetRuntimeLanguage() {
-			case "java":
+			if decodeRespone.GetRuntimeLanguage() == "java" || decodeRespone.GetRuntimeLanguage() == "" {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 					Id:             connectcustompluginv1.PtrString("ccp-123456"),
 					DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
@@ -377,7 +376,7 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
 					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
 				}
-			case "python":
+			} else {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 					Id:             connectcustompluginv1.PtrString("ccp-789012"),
 					DisplayName:    connectcustompluginv1.PtrString("my-custom-python-plugin"),
