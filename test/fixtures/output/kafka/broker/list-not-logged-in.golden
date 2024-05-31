@@ -1,4 +1,4 @@
-Error: you must log in to Confluent Platform to use this command
+Error: Kafka REST URL not found
 
 Suggestions:
-    Log in to Confluent Platform with `confluent login --url <mds-url>`.
+    Use the `--url` flag or set `CONFLUENT_REST_URL`.
