@@ -363,14 +363,28 @@ func handlePluginValidate(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/custom-connector-plugins"
 func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		switch r.Method {
 		case http.MethodPost:
-			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:             connectcustompluginv1.PtrString("ccp-123456"),
-				DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
-				Cloud:          connectcustompluginv1.PtrString("AWS"),
-				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
-				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+			vars := mux.Vars(r)
+			id := vars["id"]
+			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
+			if id == "ccp-123456" {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:             connectcustompluginv1.PtrString("ccp-123456"),
+					DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
+					Cloud:          connectcustompluginv1.PtrString("AWS"),
+					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+				}
+			} else if id == "ccp-789012" {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:             connectcustompluginv1.PtrString("ccp-789012"),
+					DisplayName:    connectcustompluginv1.PtrString("my-custom-python-udf"),
+					Cloud:          connectcustompluginv1.PtrString("AWS"),
+					ConnectorClass: connectcustompluginv1.PtrString("ver-789012"),
+					ContentFormat:  connectcustompluginv1.PtrString("ZIP"),
+				}
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)

@@ -1,6 +1,6 @@
-+----------------+---------------------+
-| Name           | my-custom-plugin    |
-| Plugin ID      | ccp-123456          |
-| Version ID     | ver-123456          |
-| Content Format | ZIP                 |
-+----------------+---------------------+
++----------------+-------------------------+
+| Name           | my-custom-python-udf    |
+| Plugin ID      | ccp-789012              |
+| Version ID     | ver-789012              |
+| Content Format | ZIP                     |
++----------------+-------------------------+
