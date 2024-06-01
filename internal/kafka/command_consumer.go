@@ -20,9 +20,8 @@ type consumerOut struct {
 
 func newConsumerCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "consumer",
-		Short:       "Manage Kafka consumers.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+		Use:   "consumer",
+		Short: "Manage Kafka consumers.",
 	}
 
 	c := &consumerCommand{}
