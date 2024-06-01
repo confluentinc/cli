@@ -14,7 +14,7 @@ func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "replica",
 		Short:       "Manage Kafka replicas.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNotCloudLogin},
 	}
 
 	c := &replicaCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
