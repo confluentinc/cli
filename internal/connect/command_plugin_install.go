@@ -51,7 +51,7 @@ func newInstallCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest --plugin-directory $CONFLUENT_HOME/plugins --worker-configurations $CONFLUENT_HOME/etc/kafka/connect-distributed.properties",
 			},
 		),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNotCloudLogin},
 	}
 
 	cmd.Flags().String("plugin-directory", "", "The plugin installation directory. If not specified, a default will be selected based on your Confluent Platform installation.")
