@@ -176,8 +176,6 @@ github.com/confluentinc/go-ps1 v1.0.2 h1:+4cKOzWs3AWmxL2s96oHu0QutZESDRXECnhFzm2
 github.com/confluentinc/go-ps1 v1.0.2/go.mod h1:qmgG9xQgFd4u7/CS6eA9nNP8eQqOtXuRHmZ4+w7Vprs=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18 h1:M9/yzpG+eOTp/peiHNHRQWax0If6+GAJIC/NcvbzAOI=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18/go.mod h1:qJAUraWU9BERQWyalrPsxt+ECELWPV+qsyOaP00VidY=
-github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240404070529-d5081dacb556 h1:67hKL8Tu8CwfZUL7ofV2H33ui5YzpQOAMuUITDyGKUY=
-github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240404070529-d5081dacb556/go.mod h1:2Ug8TKPkJXnazoTwlf72RawtttFZYNB3WB/8w3Hgfro=
 github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240529004927-6f65a722cf3b h1:a/LF6cTznibU/TLWFCuw1lh+rTKMLH8gZ1CHJ6ow2JI=
 github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240529004927-6f65a722cf3b/go.mod h1:2Ug8TKPkJXnazoTwlf72RawtttFZYNB3WB/8w3Hgfro=
 github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20230117192233-7e6d894d74a9 h1:O3xty/V/9T3uMH3RAWsBSeh+Qo1lUKh4v1BgfHRjLvo=
@@ -386,8 +384,8 @@ github.com/hashicorp/go-hclog v1.6.3 h1:Qr2kF+eVWjTiYmU7Y31tYlP1h0q/X3Nl3tPGdaB1
 github.com/hashicorp/go-hclog v1.6.3/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
-github.com/hashicorp/go-retryablehttp v0.7.6 h1:TwRYfx2z2C4cLbXmT8I5PgP/xmuqASDyiVuGYfs9GZM=
-github.com/hashicorp/go-retryablehttp v0.7.6/go.mod h1:pkQpWZeYWskR+D1tR2O5OcBFOxfA7DoAO6xtkuQnHTk=
+github.com/hashicorp/go-retryablehttp v0.7.7 h1:C8hUCYzor8PIfXHa4UrZkU4VvK8o9ISHxT2Q8+VepXU=
+github.com/hashicorp/go-retryablehttp v0.7.7/go.mod h1:pkQpWZeYWskR+D1tR2O5OcBFOxfA7DoAO6xtkuQnHTk=
 github.com/hashicorp/go-version v1.7.0 h1:5tqGy27NaOTB8yJKUZELlFAS/LTKJkrmONwQKeRZfjY=
 github.com/hashicorp/go-version v1.7.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
