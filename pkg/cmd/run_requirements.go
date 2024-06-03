@@ -16,7 +16,7 @@ const (
 	RequireCloudLoginOrOnPremLogin          = "cloud-login-or-on-prem-login"
 	RequireNonAPIKeyCloudLogin              = "non-api-key-cloud-login"
 	RequireNonAPIKeyCloudLoginOrOnPremLogin = "non-api-key-cloud-login-or-on-prem-login"
-	RequireNotCloudLogin                    = "not-cloud-login"
+	RequireCloudLogout                      = "cloud-logout"
 	RequireOnPremLogin                      = "on-prem-login"
 )
 
@@ -45,8 +45,8 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *config.Config) error {
 			f = cfg.CheckIsNonAPIKeyCloudLogin
 		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
 			f = cfg.CheckIsNonAPIKeyCloudLoginOrOnPremLogin
-		case RequireNotCloudLogin:
-			f = cfg.CheckIsNotCloudLogin
+		case RequireCloudLogout:
+			f = cfg.CheckIsCloudLogout
 		case RequireOnPremLogin:
 			f = cfg.CheckIsOnPremLogin
 		}

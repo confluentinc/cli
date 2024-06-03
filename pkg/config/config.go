@@ -48,7 +48,7 @@ var (
 		ErrorMsg:       "you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
 		SuggestionsMsg: "Log in with `confluent login` or `confluent login --url <mds-url>`.\n" + signupSuggestion,
 	}
-	RequireNotCloudLogin = &errors.RunRequirementError{
+	RequireCloudLogout = &errors.RunRequirementError{
 		ErrorMsg:       "you must log out of Confluent Cloud to use this command",
 		SuggestionsMsg: "Log out with `confluent logout`.\n",
 	}
@@ -710,9 +710,9 @@ func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
 	return nil
 }
 
-func (c *Config) CheckIsNotCloudLogin() error {
+func (c *Config) CheckIsCloudLogout() error {
 	if c.isCloud() {
-		return RequireNotCloudLogin
+		return RequireCloudLogout
 	}
 	return nil
 }
