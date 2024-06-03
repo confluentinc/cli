@@ -17,7 +17,7 @@ func New(prerunner pcmd.PreRunner, flagResolver pcmd.FlagResolver, plugin secret
 	cmd := &cobra.Command{
 		Use:         "secret",
 		Short:       "Manage secrets for Confluent Platform.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNotCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
 	c := &command{
