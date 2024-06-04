@@ -45,6 +45,12 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 }
 
 func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) error {
+	// TODO refactor so we don't have this circular dependency
+	var inputController types.InputControllerInterface
+	currInputController := func() types.InputControllerInterface {
+		return inputController
+	}
+
 	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
 	getAuthToken := func() string {
 		if authErr := synchronizedTokenRefreshFunc(); authErr != nil {
@@ -66,7 +72,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	resultFetcher := results.NewResultFetcher(dataStore)
 
 	// Instantiate LSP
-	lspClient := lsp.NewWebsocketClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId())
+	lspClient := lsp.NewWebsocketClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), currInputController)
 
 	stdinBefore := utils.GetStdin()
 	consoleParser, err := utils.GetConsoleParser()
@@ -92,7 +98,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 		}
 	})
 
-	inputController := controller.NewInputController(historyStore, lspCompleter)
+	inputController = controller.NewInputController(historyStore, lspCompleter)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
 	baseOutputController := controller.NewBaseOutputController(resultFetcher, inputController.GetWindowWidth, userProperties)

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/go-prompt"
+	"github.com/sourcegraph/go-lsp"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
@@ -54,6 +55,10 @@ func (c *InputController) GetUserInput() string {
 		c.InitialBuffer = ""
 	}
 	return c.prompt.Input()
+}
+
+func (c *InputController) SetDiagnostics(diagnostics []lsp.Diagnostic) {
+	c.prompt.SetDiagnostics(diagnostics)
 }
 
 func (c *InputController) clearBuffer() {
