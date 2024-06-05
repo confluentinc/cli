@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ai/v1"
+	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )

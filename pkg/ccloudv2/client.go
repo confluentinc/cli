@@ -1,7 +1,7 @@
 package ccloudv2
 
 import (
-	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ai/v1"
+	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
