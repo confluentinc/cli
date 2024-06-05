@@ -5,6 +5,8 @@ Usage:
 
 Available Commands:
   admin           Perform administrative tasks for the current organization.
+  ai              Start an interactive AI shell.
+  ai              Start an interactive AI shell.
   api-key         Manage API keys.
   asyncapi        Manage AsyncAPI document tooling.
   audit-log       Manage audit log configuration.
