@@ -74,6 +74,10 @@ else
 	goreleaser release --clean --config .goreleaser-linux-arm64.yml
 endif
 
+.PHONY: update-package-managers
+update-package-managers:
+	scripts/build_linux.sh
+
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease
 gorelease:
