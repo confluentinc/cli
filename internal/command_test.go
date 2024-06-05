@@ -123,7 +123,7 @@ func TestHelp_Cloud(t *testing.T) {
 	require.NoError(t, err)
 
 	commands := []string{
-		"admin", "api-key", "audit-log", "cloud-signup", "completion", "context", "connect", "environment", "help",
+		"admin", "ai", "api-key", "audit-log", "cloud-signup", "completion", "context", "connect", "environment", "help",
 		"iam", "kafka", "ksql", "login", "logout", "price", "prompt", "schema-registry", "shell", "update", "version",
 	}
 
