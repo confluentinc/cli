@@ -21,7 +21,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -30,17 +29,16 @@ type command struct {
 	cfg                      *config.Config
 	ccloudClientFactory      pauth.CCloudClientFactory
 	mdsClientManager         pauth.MDSClientManager
-	netrcHandler             netrc.NetrcHandler
 	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
 	authTokenHandler         pauth.AuthTokenHandler
 }
 
-func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
-		Long: fmt.Sprintf("Confluent Cloud:\n\nLog in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.\n\nEmail and password login can be accomplished non-interactively using the `%s` and `%s` environment variables.\n\nEmail and password can also be stored locally for non-interactive re-authentication with the `--save` flag.\n\nSSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.\n\nLog in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword, pauth.ConfluentCloudOrganizationId) +
+		Long: fmt.Sprintf("Confluent Cloud:\n\nLog in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.\n\nEmail and password login can be accomplished non-interactively using the `%s` and `%s` environment variables.\n\nEmail and password can also be stored locally for non-interactive re-authentication with the `--save` flag.\n\nSSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.\n\nLog in to a specific Confluent Cloud organization using the `--organization` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword, pauth.ConfluentCloudOrganizationId) +
 			fmt.Sprintf("Confluent Platform:\n\nLog in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.\n\nLogin can be accomplished non-interactively using the `%s`, `%s`, `%s`, and `%s` environment variables.\n\nIn a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\nEven with the environment variables set, you can force an interactive login using the `--prompt` flag.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
 		Args: cobra.NoArgs,
 		Example: examples.BuildExampleString(
@@ -50,7 +48,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 			},
 			examples.Example{
 				Text: "Log in to a specific organization in Confluent Cloud.",
-				Code: "confluent login --organization-id 00000000-0000-0000-0000-000000000000",
+				Code: "confluent login --organization 00000000-0000-0000-0000-000000000000",
 			},
 			examples.Example{
 				Text: "Log in to Confluent Platform with a MDS URL.",
@@ -72,7 +70,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 		cfg:                      cfg,
 		mdsClientManager:         mdsClientManager,
 		ccloudClientFactory:      ccloudClientFactory,
-		netrcHandler:             netrcHandler,
 		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: loginOrganizationManager,
 		authTokenHandler:         authTokenHandler,
@@ -83,7 +80,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 	cmd.Flags().Bool("us-gov", false, "Log in to the Confluent Cloud US Gov environment.")
 	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format, for on-premises deployments.")
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating using Single Sign-On (SSO).")
-	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
+	cmd.Flags().String("organization", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
 	cmd.Flags().Bool("save", false, "Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable. You will be logged back in when your token expires, after one hour for Confluent Cloud, or after six hours for Confluent Platform.")
 
@@ -118,19 +115,19 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
-	organizationId := c.getOrganizationId(cmd)
+	organization := c.getOrganizationId(cmd)
 
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
 	}
 
-	credentials, err := c.getCCloudCredentials(cmd, url, organizationId)
+	credentials, err := c.getCCloudCredentials(cmd, url, organization)
 	if err != nil {
 		return err
 	}
 
-	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, organizationId)
+	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, organization)
 
 	endOfFreeTrialErr, isEndOfFreeTrialErr := err.(*errors.EndOfFreeTrialError)
 
@@ -205,9 +202,9 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 	}
 }
 
-// Order of precedence: env vars > config file > netrc file > prompt
+// Order of precedence: environment variables > configuration file / macOS keychain > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organizationId string) (*pauth.Credentials, error) {
+func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization string) (*pauth.Credentials, error) {
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
 	c.loginCredentialsManager.SetCloudClient(client)
 
@@ -216,25 +213,24 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organizationId s
 		return nil, err
 	}
 	if prompt {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organizationId))
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization))
 	}
 
-	filterParams := netrc.NetrcMachineParams{
+	filterParams := config.MachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	ctx := c.Config.Context()
-	if strings.Contains(ctx.GetNetrcMachineName(), url) {
-		filterParams.Name = ctx.GetNetrcMachineName()
+	if strings.Contains(ctx.GetMachineName(), url) {
+		filterParams.Name = ctx.GetMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(organizationId),
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(organization),
 		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, url),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
-		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organizationId),
+		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization),
 	)
 }
 
@@ -323,7 +319,7 @@ func (c *command) getCaCertPath(cmd *cobra.Command, username, url string) (strin
 	return caCertPath, isLegacyContext, nil
 }
 
-// Order of precedence: prompt flag > environment variables (SSO > LDAP) > LDAP (keychain > config > netrc) > SSO > LDAP (prompt)
+// Order of precedence: prompt flag > environment variables (SSO > LDAP) > LDAP (keychain > config) > SSO > LDAP (prompt)
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 // SSO and LDAP (basic auth) can be enabled simultaneously
 func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
@@ -352,20 +348,19 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		)
 	}
 
-	netrcFilterParams := netrc.NetrcMachineParams{
+	filterParams := config.MachineParams{
 		IgnoreCert: true,
 		URL:        url,
 	}
 	ctx := c.Config.Context()
-	if strings.Contains(ctx.GetNetrcMachineName(), url) {
-		netrcFilterParams.Name = ctx.GetNetrcMachineName()
+	if strings.Contains(ctx.GetMachineName(), url) {
+		filterParams.Name = ctx.GetMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(false, netrcFilterParams.Name, url),
-		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(false, filterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
@@ -414,7 +409,7 @@ func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pau
 		return nil
 	}
 
-	ctxName := c.Config.Context().GetNetrcMachineName()
+	ctxName := c.Config.Context().GetMachineName()
 	if err := keychain.Write(isCloud, ctxName, url, credentials.Username, credentials.Password); err != nil {
 		return err
 	}

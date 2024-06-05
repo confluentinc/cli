@@ -133,6 +133,7 @@ func New() *Config {
 		ContextStates:    make(map[string]*ContextState),
 		SavedCredentials: make(map[string]*LoginCredential),
 		Version:          new(pversion.Version),
+		EnableColor:      true,
 	}
 }
 
@@ -186,6 +187,7 @@ func (c *Config) Load() error {
 		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
+	var save bool
 	for _, context := range c.Contexts {
 		// Some "pre-validation"
 		if context.Name == "" {
@@ -205,11 +207,21 @@ func (c *Config) Load() error {
 		}
 		context.KafkaClusterContext.Context = context
 		context.State = c.ContextStates[context.Name]
+
+		if context.NetrcMachineName != "" && context.MachineName == "" {
+			context.MachineName = context.NetrcMachineName
+			context.NetrcMachineName = ""
+			save = true
+		}
 	}
 
 	if runtime.GOOS == "windows" && !c.DisablePluginsOnce {
 		c.DisablePlugins = true
 		c.DisablePluginsOnce = true
+		save = true
+	}
+
+	if save {
 		_ = c.Save()
 	}
 

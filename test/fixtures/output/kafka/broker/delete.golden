@@ -1,1 +1,1 @@
-Started deletion of broker "1". To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.
+Started deletion of broker "1". To monitor a remove-broker task run `confluent kafka broker task list <id> --task-type remove-broker`.
