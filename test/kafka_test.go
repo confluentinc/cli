@@ -283,6 +283,15 @@ func (s *CLITestSuite) TestKafkaBrokerList() {
 		test.login = "onprem"
 		s.runIntegrationTest(test)
 	}
+
+	tests = []CLITest{
+		{args: "kafka broker list", fixture: "kafka/broker/list-not-logged-in.golden", exitCode: 1},
+		{args: "kafka broker list", login: "cloud", fixture: "kafka/broker/list-cloud-login.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestKafkaLink() {

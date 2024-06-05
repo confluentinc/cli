@@ -66,6 +66,14 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		roles = append(roles, workloadRoles...)
 	}
 
+	if featureflags.Manager.BoolVariation("flink.model.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
+		flinkModelRoles, err := c.namespaceRoles(flinkModelNamespace)
+		if err != nil {
+			return err
+		}
+		roles = append(roles, flinkModelRoles...)
+	}
+
 	if output.GetFormat(cmd).IsSerialized() {
 		return output.SerializedOutput(cmd, roles)
 	}

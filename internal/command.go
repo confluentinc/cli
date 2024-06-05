@@ -52,6 +52,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/help"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 	pplugin "github.com/confluentinc/cli/v3/pkg/plugin"
@@ -78,7 +79,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(), Out: os.Stdout}
-	jwtValidator := pcmd.NewJWTValidator()
+	jwtValidator := jwt.NewValidator()
 	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(form.NewPrompt(), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()

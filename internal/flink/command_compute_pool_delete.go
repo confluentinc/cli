@@ -7,10 +7,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -46,7 +44,7 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := c.validateAndConfirmComputePoolDeletion(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
+	if err := validateAndConfirmComputePoolDeletion(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
 		return err
 	}
 
@@ -72,11 +70,7 @@ func confirmComputePoolDeletionString(idList []string) string {
 	}
 }
 
-func (c *command) validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
-	if !featureflags.Manager.BoolVariation("flink.statement.30_days_retention_time", c.Context, config.CliLaunchDarklyClient, true, true) {
-		return deletion.ValidateAndConfirm(cmd, args, checkExistence, resourceType)
-	}
-
+func validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
 	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
 		return err
 	}

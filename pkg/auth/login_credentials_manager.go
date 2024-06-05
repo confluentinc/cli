@@ -2,6 +2,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime"
@@ -14,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -71,6 +73,8 @@ type LoginCredentialsManager interface {
 	GetSsoCredentialsFromConfig(*config.Config, string) func() (*Credentials, error)
 	GetCredentialsFromConfig(*config.Config, config.MachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
+	GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error)
+	GetOnPremSsoCredentialsFromConfig(*config.Config, bool) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
@@ -228,6 +232,52 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config
 	}
 }
 
+func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *config.Config, unsafeTrace bool) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		ctx := cfg.Context()
+		if ctx == nil {
+			return nil, nil
+		}
+
+		url := ctx.GetPlatform().GetServer()
+		caCertPath := ctx.GetPlatform().GetCaCertPath()
+
+		// on-prem SSO login does not use a username or email
+		// the sub claim is used in place of a username since it is a unique identifier
+		subClaim, err := jwt.GetClaim(ctx.GetAuthToken(), "sub")
+		if err != nil {
+			return nil, nil
+		}
+
+		sub, ok := subClaim.(string)
+		if !ok {
+			return nil, nil
+		}
+
+		if GenerateContextName(sub, url, caCertPath) == ctx.Name {
+			return &Credentials{
+				Username:         sub,
+				IsSSO:            h.isOnPremSSOUser(url, caCertPath, unsafeTrace),
+				AuthToken:        ctx.GetAuthToken(),
+				AuthRefreshToken: ctx.GetAuthRefreshToken(),
+			}, nil
+		}
+
+		return nil, nil
+	}
+}
+
+func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		// For on-prem SSO logins, the sub claim of the Confluent Token is used in place of the Username
+		// A placeholder is used here since we don't have the token yet
+		return &Credentials{
+			Username: "placeholder",
+			IsSSO:    h.isOnPremSSOUser(url, caCertPath, unsafeTrace),
+		}, nil
+	}
+}
+
 func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(organizationId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		output.Println(false, "Enter your Confluent Cloud credentials:")
@@ -289,6 +339,20 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, organizationId string) bo
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
 	return err == nil && res.GetIsSso()
+}
+
+func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath string, unsafeTrace bool) bool {
+	clientManager := &MDSClientManagerImpl{}
+	client, err := clientManager.GetMDSClient(url, caCertPath, unsafeTrace)
+	if err != nil {
+		return false
+	}
+
+	featuresInfo, _, err := client.MetadataServiceOperationsApi.Features(context.Background())
+	if err != nil {
+		return false
+	}
+	return featuresInfo.Features["oidc.login.device.1.enabled"]
 }
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)

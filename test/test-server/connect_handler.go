@@ -365,12 +365,26 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			plugin := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:             connectcustompluginv1.PtrString("ccp-123456"),
-				DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
-				Cloud:          connectcustompluginv1.PtrString("AWS"),
-				ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
-				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+			var decodeRespone connectcustompluginv1.ConnectV1CustomConnectorPlugin
+			require.NoError(t, json.NewDecoder(r.Body).Decode(&decodeRespone))
+			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
+			switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
+			case "java", "":
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:             connectcustompluginv1.PtrString("ccp-123456"),
+					DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
+					Cloud:          connectcustompluginv1.PtrString("AWS"),
+					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+				}
+			case "python":
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:             connectcustompluginv1.PtrString("ccp-789012"),
+					DisplayName:    connectcustompluginv1.PtrString("my-custom-python-plugin"),
+					Cloud:          connectcustompluginv1.PtrString("AWS"),
+					ConnectorClass: connectcustompluginv1.PtrString("ver-789012"),
+					ContentFormat:  connectcustompluginv1.PtrString("ZIP"),
+				}
 			}
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)

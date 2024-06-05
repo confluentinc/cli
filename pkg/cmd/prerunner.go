@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/form"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -30,10 +31,6 @@ import (
 )
 
 const autoLoginMsg = "Successful auto-login with non-interactive credentials."
-
-var wrongLoginCommandsMap = map[string]string{
-	"confluent cluster": "confluent kafka cluster",
-}
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
@@ -54,7 +51,7 @@ type PreRun struct {
 	MDSClientManager        pauth.MDSClientManager
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
-	JWTValidator            JWTValidator
+	JWTValidator            jwt.Validator
 }
 
 type KafkaRESTProvider func() (*KafkaREST, error)
@@ -401,17 +398,6 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 
 		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
-			if err == config.RunningOnPremCommandInCloudErr {
-				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
-					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
-						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
-						return errors.NewErrorWithSuggestions(
-							fmt.Sprintf("`%s` is not a Confluent Cloud command. Did you mean `%s`?", cmd.CommandPath(), suggestCmdPath),
-							fmt.Sprintf("If you are a Confluent Cloud user, run `%s` instead.\nIf you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`.", suggestCmdPath, cmd.CommandPath()),
-						)
-					}
-				}
-			}
 			return err
 		}
 
@@ -451,7 +437,7 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 }
 
 func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
-	token, credentials, err := r.getConfluentTokenAndCredentials(cmd)
+	token, refreshToken, credentials, err := r.getConfluentTokenAndCredentials(cmd)
 	if err != nil {
 		return err
 	}
@@ -459,7 +445,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false); err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, refreshToken, credentials.PrerunLoginCaCertPath, false, false); err != nil {
 		return err
 	}
 	log.CliLogger.Debug(autoLoginMsg)
@@ -467,29 +453,34 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
 	return nil
 }
 
-func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
+func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, string, *pauth.Credentials, error) {
+	if pauth.IsOnPremSSOEnv() {
+		// Skip auto-login when CONFLUENT_PLATFORM_SSO=true
+		return "", "", nil, nil
+	}
+
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
 	)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath, unsafeTrace)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
-	token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
+	token, refreshToken, err := r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
-	return token, credentials, err
+	return token, refreshToken, credentials, err
 }
 
 func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand, unsafeTrace bool) {
@@ -528,6 +519,9 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		// pass mds token as bearer token otherwise use http basic auth
 		// no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		err := r.AuthenticatedWithMDS(command)(cmd, args)
+		if _, ok := err.(*errors.RunRequirementError); ok {
+			return err
+		}
 		useMdsToken := err == nil
 
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
@@ -702,6 +696,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 			r.LoginCredentialsManager.GetCredentialsFromKeychain(false, ctx.Name, ctx.GetPlatformServer()),
 			r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 			r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
+			r.LoginCredentialsManager.GetOnPremSsoCredentialsFromConfig(r.Config, unsafeTrace),
 		)
 		if err != nil {
 			return "", "", err
@@ -712,8 +707,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 		if err != nil {
 			return "", "", err
 		}
-		token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
-		return token, "", err
+		return r.AuthTokenHandler.GetConfluentToken(client, credentials, false)
 	}
 }
 

@@ -156,6 +156,7 @@ const (
 		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
 	FailedToReadInputErrorMsg        = "failed to read input"
+	MalformedTokenErrorMsg           = "malformed token: %s claim has the wrong type"
 
 	// Special error types
 	GenericOpenApiErrorMsg = "metadata service backend error: %s: %s"

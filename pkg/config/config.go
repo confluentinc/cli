@@ -24,42 +24,48 @@ const emptyFieldIndicator = "EMPTY"
 const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
 var (
-	RequireCloudLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud to use this command",
-		"Log in with `confluent login`.\n"+signupSuggestion,
-	)
-	RequireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
-		"you must unsuspend your organization to use this command",
-		errors.SuspendedOrganizationSuggestions,
-	)
-	RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
-		"you must unsuspend your organization to use this command",
-		errors.EndOfFreeTrialSuggestions,
-	)
-	RequireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
-		"you must log in to use this command",
-		"Log in with `confluent login`.\n"+signupSuggestion,
-	)
-	RequireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud with a username and password to use this command",
-		"Log in with `confluent login`.\n"+signupSuggestion,
-	)
-	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
-		"Log in with `confluent login` or `confluent login --url <mds-url>`.\n"+signupSuggestion,
-	)
-	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
-		"you must log out of Confluent Cloud to use this command",
-		"Log out with `confluent logout`.\n",
-	)
-	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Platform to use this command",
-		"Log in to Confluent Platform with `confluent login --url <mds-url>`.",
-	)
-	RunningOnPremCommandInCloudErr = errors.NewErrorWithSuggestions(
-		"this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
-		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Use the "--help" flag to see available commands.`,
-	)
+	RequireCloudLoginErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to Confluent Cloud to use this command",
+		SuggestionsMsg: "Log in with `confluent login`.\n" + signupSuggestion,
+	}
+	RequireCloudLoginOrgUnsuspendedErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must unsuspend your organization to use this command",
+		SuggestionsMsg: errors.SuspendedOrganizationSuggestions,
+	}
+	RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must unsuspend your organization to use this command",
+		SuggestionsMsg: errors.EndOfFreeTrialSuggestions,
+	}
+	RequireCloudLoginOrOnPremErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to use this command",
+		SuggestionsMsg: "Log in with `confluent login`.\n" + signupSuggestion,
+	}
+	RequireNonAPIKeyCloudLoginErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to Confluent Cloud with a username and password to use this command",
+		SuggestionsMsg: "Log in with `confluent login`.\n" + signupSuggestion,
+	}
+	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
+		SuggestionsMsg: "Log in with `confluent login` or `confluent login --url <mds-url>`.\n" + signupSuggestion,
+	}
+	RequireCloudLogout = &errors.RunRequirementError{
+		ErrorMsg:       "you must log out of Confluent Cloud to use this command",
+		SuggestionsMsg: "Log out with `confluent logout`.\n",
+	}
+	RequireOnPremLoginErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to Confluent Platform to use this command",
+		SuggestionsMsg: "Log in to Confluent Platform with `confluent login --url <mds-url>`.",
+	}
+	RunningOnPremCommandInCloudErr = &errors.RunRequirementError{
+		ErrorMsg:       "this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
+		SuggestionsMsg: "Log in to Confluent Platform with `confluent login --url <mds-url>`.\nSee available commands with `--help`.",
+	}
+	RunningSimilarOnPremCommandInCloudErr = func(cmdPath, suggestedCmdPath string) errors.CLITypedError {
+		return &errors.RunRequirementError{
+			ErrorMsg:       fmt.Sprintf("`%s` is not a Confluent Cloud command. Did you mean `%s`?", cmdPath, suggestedCmdPath),
+			SuggestionsMsg: fmt.Sprintf("If you are a Confluent Cloud user, run `%s` instead.\nIf you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`.", suggestedCmdPath, cmdPath),
+		}
+	}
 )
 
 // Config represents the CLI configuration.
@@ -309,11 +315,13 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
 
-	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
+	// The Confluent Gov environment and the Confluent Platform MDS return a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
 	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
 	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
 
-	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
+	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && !c.Context().IsCloud(c.IsTest)
+
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
@@ -714,9 +722,9 @@ func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
 	return nil
 }
 
-func (c *Config) CheckIsNonCloudLogin() error {
+func (c *Config) CheckIsCloudLogout() error {
 	if c.isCloud() {
-		return RequireNonCloudLogin
+		return RequireCloudLogout
 	}
 	return nil
 }

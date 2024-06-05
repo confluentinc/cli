@@ -14,6 +14,7 @@ import (
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 var (
@@ -280,6 +281,22 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 			fixture: "login/1.golden",
 			regex:   true,
 		},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestLogin_MdsSso() {
+	resetConfiguration(s.T(), false)
+	testserver.IsSsoEnabled = true
+	defer func() { testserver.IsSsoEnabled = false }()
+
+	tests := []CLITest{
+		{args: fmt.Sprintf("login --no-browser --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl())},
+		{args: "context list -o yaml", fixture: "login/mds-sso.golden", regex: true},
 	}
 
 	for _, test := range tests {

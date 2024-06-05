@@ -14,7 +14,7 @@ func newBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "broker",
 		Short:       "Manage Kafka brokers.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
 	c := &brokerCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}

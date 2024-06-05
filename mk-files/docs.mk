@@ -43,19 +43,10 @@ publish-docs:
 	git commit --allow-empty -m "[pint skip] chore: update CLI docs for v$(CLEAN_VERSION)" && \
 	$(call dry-run,git push origin publish-docs-v$(CLEAN_VERSION)) && \
 	base="master" && \
-	if [[ $(CLEAN_VERSION) != *.0 ]]; then \
-		base=$(STAGING_BRANCH); \
-	fi && \
 	$(call dry-run,gh pr create --base $${base} --title "chore: update CLI docs for v$(CLEAN_VERSION)" --body "")
 
 	rm -rf $(DIR)
 
-# NB: When releasing a new version, the -post branch is updated to the current state of the .x branch,
-# whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.
-# If this is a patch release, we don't have to update master.
-# The .x branch has been updated to ignore [pint skip] for minor branches since it is a pure upstream branch of minor branches.
-# To ensure pint merge will work correctly, we will manually merge the -post branch into the .x branch using `-s ours`. Then, these
-# branches will be pushed at the same time. This ensure there are no errors with pint merge.
 .PHONY: release-docs
 release-docs:
 	$(eval DIR=$(shell mktemp -d))
@@ -68,10 +59,8 @@ release-docs:
 		git checkout master && \
 		git checkout -b $(STAGING_BRANCH) && \
 		$(call dry-run,git push -u origin $(STAGING_BRANCH)); \
-	fi && \
-	git checkout -B $(CURRENT_SHORT_MINOR_VERSION)-post origin/$(STAGING_BRANCH) && \
-	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
-	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
+		git checkout -b $(CURRENT_SHORT_MINOR_VERSION)-post origin/$(STAGING_BRANCH) && \
+		$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
 		git checkout master && \
 		git checkout -b release-docs-$(CLEAN_VERSION) && \
 		$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
@@ -81,6 +70,17 @@ release-docs:
 		git commit -am "[pint skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 		$(call dry-run,git push origin release-docs-$(CLEAN_VERSION)) && \
 		$(call dry-run,gh pr create --base master --title "Release docs for v$(CLEAN_VERSION)" --body ""); \
+	else \
+		git checkout -b release-docs-$(STAGING_BRANCH_DASH) origin/$(STAGING_BRANCH) && \
+		git checkout origin/master -- command-reference release-notes.rst && \
+		git commit -am "Pull updated command-reference and release-notes.rst from master" && \
+		$(call dry-run,git push origin release-docs-$(STAGING_BRANCH_DASH)) && \
+		$(call dry-run,gh pr create --base $(STAGING_BRANCH) --title "Release docs for v$(CLEAN_VERSION)" --body ""); \
+		git checkout -b release-docs-$(CURRENT_SHORT_MINOR_VERSION_DASH) origin/$(CURRENT_SHORT_MINOR_VERSION)-post && \
+		git checkout origin/master -- command-reference release-notes.rst && \
+		git commit -am "Pull updated command-reference and release-notes.rst from master" && \
+		$(call dry-run,git push origin release-docs-$(CURRENT_SHORT_MINOR_VERSION_DASH)) && \
+		$(call dry-run,gh pr create --base $(CURRENT_SHORT_MINOR_VERSION)-post --title "Release docs for v$(CLEAN_VERSION)" --body ""); \
 	fi
 
 	rm -rf $(DIR)
