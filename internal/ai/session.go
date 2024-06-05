@@ -3,8 +3,9 @@ package ai
 import (
 	"time"
 
-	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	"github.com/google/uuid"
+
+	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 )
 
 type session struct {

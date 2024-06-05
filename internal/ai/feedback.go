@@ -2,6 +2,7 @@ package ai
 
 import (
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
+
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 )
 
@@ -10,10 +11,9 @@ import (
 // 2. The user reacts to the answer with +1 or -1
 // 3. The user provides a comment or skips with enter
 type feedback struct {
-	sessionId string
-	answerId  string
-	reaction  string
-	comment   string
+	answerId string
+	reaction string
+	comment  string
 }
 
 func newFeedback(answerId string) *feedback {

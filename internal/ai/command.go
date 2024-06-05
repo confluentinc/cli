@@ -3,15 +3,15 @@ package ai
 import (
 	"os"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
 	"github.com/confluentinc/go-prompt"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 type command struct {
@@ -21,7 +21,7 @@ type command struct {
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "ai",
-		Short:       "Start an interactive AI shell",
+		Short:       "Start an interactive AI shell.",
 		Args:        cobra.NoArgs,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
