@@ -31,7 +31,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-const message = `Hi, I’m the Confluent AI Assistant. I can help you with questions and tasks related to Confluent Cloud. Ask me things like:
+const message = `Hi, I’m the Confluent AI Assistant. I can help you with questions and tasks related to Confluent Cloud. You can ask me things like:
 - How many Kafka clusters do I have?
 - What is an enterprise Kafka cluster?
 - How do I get started with Flink on Confluent Cloud?
