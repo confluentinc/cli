@@ -1,10 +1,14 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
+
+	"github.com/sourcegraph/go-lsp"
+	"github.com/sourcegraph/jsonrpc2"
 
 	"github.com/confluentinc/go-prompt"
 
@@ -31,7 +35,7 @@ type InputController struct {
 
 const defaultWindowSize = 100
 
-func NewInputController(history *history.History, lspCompleter prompt.Completer) types.InputControllerInterface {
+func NewInputController(history *history.History, lspCompleter prompt.Completer, handlerCh chan *jsonrpc2.Request) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
@@ -43,6 +47,8 @@ func NewInputController(history *history.History, lspCompleter prompt.Completer)
 	if prompt, err := inputController.initPrompt(); err == nil {
 		inputController.prompt = prompt
 	}
+	startLspRequestHandler(inputController, handlerCh)
+
 	return inputController
 }
 
@@ -54,6 +60,10 @@ func (c *InputController) GetUserInput() string {
 		c.InitialBuffer = ""
 	}
 	return c.prompt.Input()
+}
+
+func (c *InputController) SetDiagnostics(diagnostics []lsp.Diagnostic) {
+	c.prompt.SetDiagnostics(diagnostics)
 }
 
 func (c *InputController) clearBuffer() {
@@ -267,4 +277,25 @@ func getWindowsBindings() []prompt.Option {
 			},
 		),
 	}
+}
+
+func startLspRequestHandler(c types.InputControllerInterface, handlerCh chan *jsonrpc2.Request) {
+	if handlerCh == nil {
+		return
+	}
+
+	go func() {
+		for req := range handlerCh {
+			switch req.Method {
+			case "textDocument/publishDiagnostics":
+				var params lsp.PublishDiagnosticsParams
+				if err := json.Unmarshal(*req.Params, &params); err != nil {
+					log.CliLogger.Error("Not able to unmarshal diagnostics from language server", err)
+					return
+				}
+
+				c.SetDiagnostics(params.Diagnostics)
+			}
+		}
+	}()
 }
