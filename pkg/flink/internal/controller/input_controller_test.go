@@ -1,9 +1,13 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/sourcegraph/go-lsp"
+	"github.com/sourcegraph/jsonrpc2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -21,6 +25,7 @@ type InputControllerTestSuite struct {
 	history         *history.History
 	prompt          *mock.MockIPrompt
 	reverseISearch  *mock.MockReverseISearch
+	handlerCh       chan *jsonrpc2.Request
 }
 
 func TestInputControllerTestSuite(t *testing.T) {
@@ -33,9 +38,11 @@ func (s *InputControllerTestSuite) SetupTest() {
 	s.history = &history.History{Data: []string{}}
 	s.prompt = mock.NewMockIPrompt(ctrl)
 	s.reverseISearch = mock.NewMockReverseISearch(ctrl)
-	s.inputController = NewInputController(s.history, nil).(*InputController)
+	s.handlerCh = make(chan *jsonrpc2.Request)
+	s.inputController = NewInputController(s.history, nil, s.handlerCh).(*InputController)
 	s.inputController.reverseISearch = s.reverseISearch
 	s.inputController.prompt = s.prompt
+
 }
 
 func (s *InputControllerTestSuite) TestGetUserInput() {
@@ -85,6 +92,34 @@ func (s *InputControllerTestSuite) TestStartReverseSearch() {
 
 	require.False(s.T(), s.inputController.reverseISearchEnabled)
 	require.Equal(s.T(), searchResult, s.inputController.InitialBuffer)
+}
+
+func (s *InputControllerTestSuite) TestSetDiagnostics() {
+	diagnostics := []lsp.Diagnostic{{
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 10},
+			End:   lsp.Position{Line: 0, Character: 13},
+		},
+		Severity: 1,
+		Code:     "1234",
+		Source:   "mock source",
+		Message:  "Error: this is a lsp diagnostic",
+	}}
+	publishDiagnosticsParams := lsp.PublishDiagnosticsParams{
+		URI:         "file:///tmp/test.sql",
+		Diagnostics: diagnostics,
+	}
+
+	diagnosticsParams, _ := json.Marshal(publishDiagnosticsParams)
+	rawParams := json.RawMessage(diagnosticsParams)
+	req := &jsonrpc2.Request{
+		Method: "textDocument/publishDiagnostics",
+		Params: &rawParams,
+	}
+
+	s.prompt.EXPECT().SetDiagnostics(diagnostics)
+	s.handlerCh <- req
+	time.Sleep(100 * time.Millisecond)
 }
 
 func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeTrueWhenShouldExitIsTrue() {
