@@ -34,27 +34,6 @@ type InputController struct {
 
 const defaultWindowSize = 100
 
-func NewLSPHandler(c types.InputControllerInterface, handlerCh chan *jsonrpc2.Request) {
-	if handlerCh == nil {
-		return
-	}
-
-	go func() {
-		for req := range handlerCh {
-			switch req.Method {
-			case "textDocument/publishDiagnostics":
-				var params lsp.PublishDiagnosticsParams
-				if err := json.Unmarshal(*req.Params, &params); err != nil {
-					log.CliLogger.Error("Not able to unmarshal diagnostics from language server", err)
-					return
-				}
-
-				c.SetDiagnostics(params.Diagnostics)
-			}
-		}
-	}()
-}
-
 func NewInputController(history *history.History, lspCompleter prompt.Completer, handlerCh chan *jsonrpc2.Request) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
@@ -67,7 +46,7 @@ func NewInputController(history *history.History, lspCompleter prompt.Completer,
 	if prompt, err := inputController.initPrompt(); err == nil {
 		inputController.prompt = prompt
 	}
-	NewLSPHandler(inputController, handlerCh)
+	startLspRequestHandler(inputController, handlerCh)
 
 	return inputController
 }
@@ -297,4 +276,25 @@ func getWindowsBindings() []prompt.Option {
 			},
 		),
 	}
+}
+
+func startLspRequestHandler(c types.InputControllerInterface, handlerCh chan *jsonrpc2.Request) {
+	if handlerCh == nil {
+		return
+	}
+
+	go func() {
+		for req := range handlerCh {
+			switch req.Method {
+			case "textDocument/publishDiagnostics":
+				var params lsp.PublishDiagnosticsParams
+				if err := json.Unmarshal(*req.Params, &params); err != nil {
+					log.CliLogger.Error("Not able to unmarshal diagnostics from language server", err)
+					return
+				}
+
+				c.SetDiagnostics(params.Diagnostics)
+			}
+		}
+	}()
 }
