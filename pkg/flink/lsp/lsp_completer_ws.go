@@ -25,9 +25,9 @@ type WebsocketLSPClient struct {
 	getAuthToken   func() string
 	organizationId string
 	environmentId  string
-
-	conn      *jsonrpc2.Conn
-	lspClient LspInterface
+	handlerCh      chan *jsonrpc2.Request
+	conn           *jsonrpc2.Conn
+	lspClient      LspInterface
 }
 
 func (w *WebsocketLSPClient) Initialize() (*lsp.InitializeResult, error) {
@@ -71,7 +71,7 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 		}
 
 		// we only update client and conn if there was no error, otherwise we leave them as is
-		if lspClient, conn, err := newLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId, nil); err == nil { //todo - replace nil at the end
+		if lspClient, conn, err := newLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId, w.handlerCh); err == nil {
 			w.lspClient = lspClient
 			w.conn = conn
 		}
@@ -90,6 +90,7 @@ func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, env
 		getAuthToken:   getAuthToken,
 		organizationId: organizationId,
 		environmentId:  environmentId,
+		handlerCh:      handlerCh,
 		lspClient:      lspClient,
 		conn:           conn,
 	}
