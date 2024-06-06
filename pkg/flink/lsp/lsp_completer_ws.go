@@ -11,7 +11,6 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 	websocket2 "github.com/sourcegraph/jsonrpc2/websocket"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
@@ -81,8 +80,8 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 	}
 }
 
-func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, inputController func() types.InputControllerInterface) LspInterface {
-	lspClient, conn, err := newLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId, inputController)
+func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) LspInterface {
+	lspClient, conn, err := newLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId, handlerCh)
 	if err != nil {
 		return nil
 	}
@@ -97,14 +96,14 @@ func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, env
 	return websocketClient
 }
 
-func newLSPConnection(baseUrl, authToken, organizationId, environmentId string, inputController func() types.InputControllerInterface) (LspInterface, *jsonrpc2.Conn, error) {
+func newLSPConnection(baseUrl, authToken, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (LspInterface, *jsonrpc2.Conn, error) {
 	stream, err := newWSObjectStream(baseUrl, authToken, organizationId, environmentId)
 	if err != nil {
 		log.CliLogger.Debugf("Error dialing websocket: %v\n", err)
 		return nil, nil, err
 	}
 
-	lspHandler := NewLspHandler(inputController)
+	lspHandler := NewLspHandler(handlerCh)
 
 	conn := jsonrpc2.NewConn(
 		context.Background(),
