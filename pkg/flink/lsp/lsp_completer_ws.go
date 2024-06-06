@@ -52,6 +52,7 @@ func (w *WebsocketLSPClient) Completion(position lsp.Position) (lsp.CompletionLi
 
 func (w *WebsocketLSPClient) ShutdownAndExit() {
 	w.client().ShutdownAndExit()
+	close(w.handlerCh)
 }
 
 func (w *WebsocketLSPClient) client() LspInterface {
