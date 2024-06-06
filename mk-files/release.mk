@@ -74,6 +74,13 @@ else
 	goreleaser release --clean --config .goreleaser-linux-arm64.yml
 endif
 
+.PHONY: update-package-managers
+update-package-managers:
+	VERSION=$(VERSION) scripts/build_linux.sh && \
+	$(call dry-run, aws s3 sync deb $(S3_DEB_RPM_PROD_PATH)/deb) && \
+	$(call dry-run, aws s3 sync rpm $(S3_DEB_RPM_PROD_PATH)/rpm) && \
+	$(call dry-run, s3-repo-utils -v website index --fake-index --prefix $(S3_DEB_RPM_PROD_PREFIX)/ $(S3_DEB_RPM_BUCKET_NAME))
+
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease
 gorelease:
