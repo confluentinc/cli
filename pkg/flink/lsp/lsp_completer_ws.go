@@ -14,10 +14,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
-type noopHandler struct{}
-
-func (noopHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {}
-
 type WebsocketLSPClient struct {
 	sync.Mutex
 

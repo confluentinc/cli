@@ -7,9 +7,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/confluentinc/go-prompt"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/sourcegraph/jsonrpc2"
+
+	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"

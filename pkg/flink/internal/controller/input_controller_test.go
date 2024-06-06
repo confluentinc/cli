@@ -42,7 +42,6 @@ func (s *InputControllerTestSuite) SetupTest() {
 	s.inputController = NewInputController(s.history, nil, s.handlerCh).(*InputController)
 	s.inputController.reverseISearch = s.reverseISearch
 	s.inputController.prompt = s.prompt
-
 }
 
 func (s *InputControllerTestSuite) TestGetUserInput() {

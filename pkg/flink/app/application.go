@@ -4,6 +4,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sourcegraph/jsonrpc2"
+
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
@@ -16,7 +18,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/sourcegraph/jsonrpc2"
 )
 
 type Application struct {
