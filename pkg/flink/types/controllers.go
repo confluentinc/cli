@@ -1,5 +1,7 @@
 package types
 
+import "github.com/sourcegraph/go-lsp"
+
 type ApplicationControllerInterface interface {
 	ExitApplication()
 	AddCleanupFunction(func()) ApplicationControllerInterface
@@ -11,6 +13,7 @@ type InputControllerInterface interface {
 	HasUserEnabledReverseSearch() bool
 	StartReverseSearch()
 	GetWindowWidth() int
+	SetDiagnostics(diagnostics []lsp.Diagnostic)
 }
 
 type StatementControllerInterface interface {
