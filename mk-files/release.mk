@@ -76,7 +76,9 @@ endif
 
 .PHONY: update-package-managers
 update-package-managers:
-	scripts/build_linux.sh
+	VERSION=$(VERSION) scripts/build_linux.sh && \
+	$(call dry-run,aws s3 sync deb $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/deb) && \
+	$(call dry-run,aws s3 sync rpm $(S3_DEB_RPM_STAG_PATH)/$(VERSION_NO_V)/rpm)
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease

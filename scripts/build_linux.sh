@@ -13,8 +13,7 @@ mkdir prebuilt/ deb/ rpm/
 aws s3 cp s3://confluent-cli-release/confluent-cli/deb deb --recursive --exclude '*index.html' --exclude '' --exclude '*/' --exclude '*.deb'
 aws s3 cp s3://confluent-cli-release/confluent-cli/rpm rpm --recursive --exclude '*index.html' --exclude '' --exclude '*/' --exclude '*.rpm'
 
-version=$(git rev-parse --is-inside-work-tree > /dev/null && git describe --tags --always)
-gh release download $version -p '*.deb' -p '*.rpm' --dir prebuilt/
+gh release download $VERSION -p '*.deb' -p '*.rpm' --dir prebuilt/
 
 export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud
 vault login -method=oidc -path=okta
