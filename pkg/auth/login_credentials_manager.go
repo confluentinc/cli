@@ -44,10 +44,8 @@ func (c *Credentials) IsFullSet() bool {
 }
 
 type environmentVariables struct {
-	username           string
-	password           string
-	deprecatedUsername string
-	deprecatedPassword string
+	username string
+	password string
 }
 
 // Get login credentials using the functions from LoginCredentialsManager
@@ -99,10 +97,8 @@ func NewLoginCredentialsManager(prompt form.Prompt, client *ccloudv1.Client) Log
 
 func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromEnvVar(organizationId string) func() (*Credentials, error) {
 	envVars := environmentVariables{
-		username:           ConfluentCloudEmail,
-		password:           ConfluentCloudPassword,
-		deprecatedUsername: DeprecatedConfluentCloudEmail,
-		deprecatedPassword: DeprecatedConfluentCloudPassword,
+		username: ConfluentCloudEmail,
+		password: ConfluentCloudPassword,
 	}
 	return h.getCredentialsFromEnvVarFunc(envVars, organizationId)
 }
@@ -113,16 +109,6 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars envir
 		if h.isSSOUser(email, organizationId) {
 			log.CliLogger.Debugf("%s=%s belongs to an SSO user.", ConfluentCloudEmail, email)
 			return &Credentials{Username: email, IsSSO: true}, nil
-		}
-
-		if email == "" {
-			email, password = h.getEnvVarCredentials(envVars.deprecatedUsername, envVars.deprecatedPassword)
-			if email != "" {
-				output.ErrPrintf(false, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedUsername, envVars.username)
-			}
-			if password != "" {
-				output.ErrPrintf(false, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedPassword, envVars.password)
-			}
 		}
 
 		if password == "" {
@@ -149,10 +135,8 @@ func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(userEnvVar, passwordE
 
 func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar() func() (*Credentials, error) {
 	envVars := environmentVariables{
-		username:           ConfluentPlatformUsername,
-		password:           ConfluentPlatformPassword,
-		deprecatedUsername: DeprecatedConfluentPlatformUsername,
-		deprecatedPassword: DeprecatedConfluentPlatformPassword,
+		username: ConfluentPlatformUsername,
+		password: ConfluentPlatformPassword,
 	}
 	return h.getCredentialsFromEnvVarFunc(envVars, "")
 }
@@ -360,16 +344,14 @@ func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath string, un
 // URL and ca-cert-path (if exists) are returned in addition to username and password
 func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		url := GetEnvWithFallback(ConfluentPlatformMDSURL, DeprecatedConfluentPlatformMDSURL)
+		url := os.Getenv(ConfluentPlatformMDSURL)
 		if url == "" {
 			return nil, fmt.Errorf(errors.NoUrlEnvVarErrorMsg)
 		}
 
 		envVars := environmentVariables{
-			username:           ConfluentPlatformUsername,
-			password:           ConfluentPlatformPassword,
-			deprecatedUsername: DeprecatedConfluentPlatformUsername,
-			deprecatedPassword: DeprecatedConfluentPlatformPassword,
+			username: ConfluentPlatformUsername,
+			password: ConfluentPlatformPassword,
 		}
 
 		creds, _ := h.getCredentialsFromEnvVarFunc(envVars, "")()
@@ -377,7 +359,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 			return nil, fmt.Errorf(errors.NoCredentialsFoundErrorMsg)
 		}
 		creds.PrerunLoginURL = url
-		creds.PrerunLoginCaCertPath = GetEnvWithFallback(ConfluentPlatformCACertPath, DeprecatedConfluentPlatformCACertPath)
+		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentPlatformCACertPath)
 
 		return creds, nil
 	}

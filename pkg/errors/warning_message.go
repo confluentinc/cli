@@ -4,9 +4,6 @@ const (
 	// secret commands
 	SaveTheMasterKeyMsg = "Save the master key. It cannot be retrieved later."
 
-	// login command
-	DeprecatedEnvVarWarningMsg = "`%s` has been deprecated and replaced by `%s`.\n"
-
 	// audit log migration
 	OtherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +
 		"for cluster %q has been dropped because it contains a MANAGEMENT event category. The OTHER event " +

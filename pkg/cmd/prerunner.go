@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"slices"
 	"strings"
 
@@ -133,7 +134,7 @@ func isOnPremLoginCmd(command *CLICommand, isTest bool) bool {
 	if command.CommandPath() != "confluent login" {
 		return false
 	}
-	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
+	mdsEnvUrl := os.Getenv(pauth.ConfluentPlatformMDSURL)
 	url, _ := command.Flags().GetString("url")
 	return (url == "" && mdsEnvUrl != "") || !ccloudv2.IsCCloudURL(url, isTest)
 }
@@ -142,7 +143,7 @@ func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
 	if command.CommandPath() != "confluent login" {
 		return false
 	}
-	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
+	mdsEnvUrl := os.Getenv(pauth.ConfluentPlatformMDSURL)
 	url, _ := command.Flags().GetString("url")
 	return (url == "" && mdsEnvUrl == "") || ccloudv2.IsCCloudURL(url, isTest)
 }
@@ -610,7 +611,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 
 func createOnPremKafkaRestClient(ctx *config.Context, caCertPath, clientCertPath, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
 	if caCertPath == "" {
-		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+		caCertPath = os.Getenv(pauth.ConfluentPlatformCACertPath)
 		logger.Debugf("Found CA cert path: %s", caCertPath)
 	}
 	// use cert path flag or env var if it was passed
