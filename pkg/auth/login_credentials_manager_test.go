@@ -35,10 +35,6 @@ var (
 		Username: envUsername,
 		Password: envPassword,
 	}
-	deprecateEnvCredentials = &Credentials{
-		Username: deprecatedEnvUser,
-		Password: deprecatedEnvPassword,
-	}
 	promptCredentials = &Credentials{
 		Username: promptUsername,
 		Password: promptPassword,
