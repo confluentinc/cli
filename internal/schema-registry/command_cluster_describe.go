@@ -51,14 +51,6 @@ func (c *command) newClusterDescribeCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	// Deprecated
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-	// Deprecated
-	pcmd.AddApiSecretFlag(cmd)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-
 	return cmd
 }
 
@@ -79,11 +71,6 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		return errors.NewSRNotEnabledError()
 	}
 	cluster := clusters[0]
-
-	region, err := c.V2Client.GetStreamGovernanceRegionById(cluster.Spec.Region.GetId())
-	if err != nil {
-		return err
-	}
 
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
@@ -122,7 +109,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 			if err != nil {
 				return err
 			}
-			priceKey := getMaxSchemaLimitPriceKey(region.Spec.GetCloud(), region.Spec.GetRegionName(), internalPackageName)
+			priceKey := getMaxSchemaLimitPriceKey(cluster.Spec.GetCloud(), cluster.Spec.GetRegion(), internalPackageName)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
 		}
 	} else {
@@ -152,8 +139,8 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		Name:                  cluster.Spec.GetDisplayName(),
 		ClusterId:             cluster.GetId(),
 		EndpointUrl:           cluster.Spec.GetHttpEndpoint(),
-		ServiceProvider:       region.Spec.GetCloud(),
-		ServiceProviderRegion: region.Spec.GetRegionName(),
+		ServiceProvider:       cluster.Spec.GetCloud(),
+		ServiceProviderRegion: cluster.Spec.GetRegion(),
 		Package:               cluster.Spec.GetPackage(),
 		UsedSchemas:           numSchemas,
 		AvailableSchemas:      availableSchemas,
