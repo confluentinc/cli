@@ -11,6 +11,7 @@ package mock
 import (
 	reflect "reflect"
 
+	"github.com/sourcegraph/go-lsp"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -103,4 +104,16 @@ func (m *MockInputControllerInterface) StartReverseSearch() {
 func (mr *MockInputControllerInterfaceMockRecorder) StartReverseSearch() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartReverseSearch", reflect.TypeOf((*MockInputControllerInterface)(nil).StartReverseSearch))
+}
+
+// SetDiagnostics mocks base method.
+func (m *MockInputControllerInterface) SetDiagnostics(arg0 []lsp.Diagnostic) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDiagnostics")
+}
+
+// SetDiagnostics indicates an expected call of SetDiagnostics.
+func (mr *MockInputControllerInterfaceMockRecorder) SetDiagnostics(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDiagnostics", reflect.TypeOf((*MockInputControllerInterface)(nil).SetDiagnostics))
 }

@@ -14,10 +14,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
-type noopHandler struct{}
-
-func (noopHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {}
-
 type WebsocketLSPClient struct {
 	sync.Mutex
 
@@ -25,9 +21,9 @@ type WebsocketLSPClient struct {
 	getAuthToken   func() string
 	organizationId string
 	environmentId  string
-
-	conn      *jsonrpc2.Conn
-	lspClient LspInterface
+	handlerCh      chan *jsonrpc2.Request
+	conn           *jsonrpc2.Conn
+	lspClient      LspInterface
 }
 
 func (w *WebsocketLSPClient) Initialize() (*lsp.InitializeResult, error) {
@@ -52,6 +48,7 @@ func (w *WebsocketLSPClient) Completion(position lsp.Position) (lsp.CompletionLi
 
 func (w *WebsocketLSPClient) ShutdownAndExit() {
 	w.client().ShutdownAndExit()
+	close(w.handlerCh)
 }
 
 func (w *WebsocketLSPClient) client() LspInterface {
@@ -71,7 +68,7 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 		}
 
 		// we only update client and conn if there was no error, otherwise we leave them as is
-		if lspClient, conn, err := newLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId); err == nil {
+		if lspClient, conn, err := newLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId, w.handlerCh); err == nil {
 			w.lspClient = lspClient
 			w.conn = conn
 		}
@@ -80,8 +77,8 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 	}
 }
 
-func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, environmentId string) LspInterface {
-	lspClient, conn, err := newLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId)
+func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) LspInterface {
+	lspClient, conn, err := newLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId, handlerCh)
 	if err != nil {
 		return nil
 	}
@@ -90,23 +87,26 @@ func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, env
 		getAuthToken:   getAuthToken,
 		organizationId: organizationId,
 		environmentId:  environmentId,
+		handlerCh:      handlerCh,
 		lspClient:      lspClient,
 		conn:           conn,
 	}
 	return websocketClient
 }
 
-func newLSPConnection(baseUrl, authToken, organizationId, environmentId string) (LspInterface, *jsonrpc2.Conn, error) {
+func newLSPConnection(baseUrl, authToken, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (LspInterface, *jsonrpc2.Conn, error) {
 	stream, err := newWSObjectStream(baseUrl, authToken, organizationId, environmentId)
 	if err != nil {
 		log.CliLogger.Debugf("Error dialing websocket: %v\n", err)
 		return nil, nil, err
 	}
 
+	lspHandler := NewLspHandler(handlerCh)
+
 	conn := jsonrpc2.NewConn(
 		context.Background(),
 		stream,
-		noopHandler{},
+		lspHandler,
 		nil,
 	)
 	lspClient := NewLSPClient(conn)

@@ -131,6 +131,7 @@ var flagRules = []linter.FlagRule{
 // properNouns are words that don't obey normal capitalization rules
 var properNouns = []string{
 	"ACLs",
+	"AI",
 	"Apache",
 	"Async",
 	"AsyncAPI",
@@ -177,6 +178,7 @@ var vocabWords = []string{
 	"acks",
 	"acl",
 	"acls",
+	"ai",
 	"apac",
 	"api",
 	"arn",
