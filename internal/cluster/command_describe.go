@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -83,7 +84,7 @@ func getURL(cmd *cobra.Command) (string, error) {
 		return url, err
 	}
 
-	if url := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL); url != "" {
+	if url := os.Getenv(pauth.ConfluentPlatformMDSURL); url != "" {
 		return url, nil
 	}
 
@@ -96,7 +97,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 		return caCertPath, err
 	}
 
-	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
+	return os.Getenv(pauth.ConfluentPlatformCACertPath), nil
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
