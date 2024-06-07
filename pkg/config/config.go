@@ -85,11 +85,6 @@ type Config struct {
 	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 	LocalPorts       *LocalPorts                 `json:"local_ports,omitempty"`
 
-	// Deprecated
-	AnonymousId string `json:"anonymous_id,omitempty"`
-	NoBrowser   bool   `json:"no_browser,omitempty"`
-	Ver         string `json:"version,omitempty"`
-
 	// The following configurations are not persisted between runs
 
 	IsTest   bool              `json:"-"`
