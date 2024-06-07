@@ -4,13 +4,14 @@ Usage:
   confluent kafka topic [command]
 
 Available Commands:
-  consume     Consume messages from a Kafka topic.
-  create      Create a Kafka topic.
-  delete      Delete one or more Kafka topics.
-  describe    Describe a Kafka topic.
-  list        List Kafka topics.
-  produce     Produce messages to a Kafka topic.
-  update      Update a Kafka topic.
+  configuration Manage topic configuration.
+  consume       Consume messages from a Kafka topic.
+  create        Create a Kafka topic.
+  delete        Delete one or more Kafka topics.
+  describe      Describe a Kafka topic.
+  list          List Kafka topics.
+  produce       Produce messages to a Kafka topic.
+  update        Update a Kafka topic.
 
 Global Flags:
   -h, --help            Show help for this command.

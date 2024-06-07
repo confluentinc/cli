@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
@@ -42,8 +40,4 @@ func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 
 func getCommaDelimitedPackagesString() string {
 	return utils.ArrayToCommaDelimitedString(packageDisplayNames, "or")
-}
-
-func addPackageFlag(cmd *cobra.Command, defaultPackage string) {
-	cmd.Flags().String("package", defaultPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }

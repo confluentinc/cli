@@ -30,7 +30,7 @@
   "contexts": {
     "my-context": {
       "name": "my-context",
-      "netrc_machine_name": "",
+      "machine_name": "",
       "platform": "http://test",
       "credential": "username-test-user",
       "current_environment": "env-123456",

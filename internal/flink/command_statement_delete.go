@@ -42,7 +42,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.FlinkStatement); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkStatement); err != nil {
 		return err
 	}
 

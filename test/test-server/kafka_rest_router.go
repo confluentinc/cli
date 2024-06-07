@@ -537,7 +537,10 @@ func handleKafkaRestTopic(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
-			data := cckafkarestv3.TopicData{PartitionsCount: 3}
+			data := cckafkarestv3.TopicData{
+				TopicName:       topic,
+				PartitionsCount: 3,
+			}
 			err := json.NewEncoder(w).Encode(data)
 			require.NoError(t, err)
 		case http.MethodPatch:
