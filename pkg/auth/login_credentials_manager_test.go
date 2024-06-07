@@ -35,10 +35,6 @@ var (
 		Username: envUsername,
 		Password: envPassword,
 	}
-	deprecateEnvCredentials = &Credentials{
-		Username: deprecatedEnvUser,
-		Password: deprecatedEnvPassword,
-	}
 	promptCredentials = &Credentials{
 		Username: promptUsername,
 		Password: promptPassword,
@@ -117,22 +113,8 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVa
 	suite.compareCredentials(envCredentials, creds)
 }
 
-func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromDeprecatedEnvVar() {
-	// incomplete credentials, setting on username but not password
-	suite.require.NoError(os.Setenv(DeprecatedConfluentCloudEmail, deprecatedEnvUser))
-	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar("")()
-	suite.require.NoError(err)
-	suite.require.Nil(creds)
-
-	suite.setDeprecatedCCEnvVars()
-	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar("")()
-	suite.require.NoError(err)
-	suite.compareCredentials(deprecateEnvCredentials, creds)
-}
-
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVarOrderOfPrecedence() {
 	suite.setCCEnvVars()
-	suite.setDeprecatedCCEnvVars()
 	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar("")()
 	suite.require.NoError(err)
 	suite.compareCredentials(envCredentials, creds)
@@ -151,22 +133,8 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentTokenAndCredentia
 	suite.compareCredentials(envCredentials, creds)
 }
 
-func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromDeprecatedEnvVar() {
-	// incomplete credentials, setting on username but not password
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformUsername, deprecatedEnvUser))
-	creds, err := suite.loginCredentialsManager.GetOnPremCredentialsFromEnvVar()()
-	suite.require.NoError(err)
-	suite.require.Nil(creds)
-
-	suite.setDeprecatedCPEnvVars()
-	creds, err = suite.loginCredentialsManager.GetOnPremCredentialsFromEnvVar()()
-	suite.require.NoError(err)
-	suite.compareCredentials(deprecateEnvCredentials, creds)
-}
-
 func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromEnvVarOrderOfPrecedence() {
 	suite.setCPEnvVars()
-	suite.setDeprecatedCPEnvVars()
 	creds, err := suite.loginCredentialsManager.GetOnPremCredentialsFromEnvVar()()
 	suite.require.NoError(err)
 	suite.compareCredentials(envCredentials, creds)
@@ -259,16 +227,9 @@ func (suite *LoginCredentialsManagerTestSuite) setCCEnvVars() {
 	suite.require.NoError(os.Setenv(ConfluentCloudPassword, envPassword))
 }
 
-func (suite *LoginCredentialsManagerTestSuite) setDeprecatedCCEnvVars() {
-	suite.require.NoError(os.Setenv(DeprecatedConfluentCloudEmail, deprecatedEnvUser))
-	suite.require.NoError(os.Setenv(DeprecatedConfluentCloudPassword, deprecatedEnvPassword))
-}
-
 func (suite *LoginCredentialsManagerTestSuite) clearCCEnvVars() {
 	suite.require.NoError(os.Unsetenv(ConfluentCloudEmail))
 	suite.require.NoError(os.Unsetenv(ConfluentCloudPassword))
-	suite.require.NoError(os.Unsetenv(DeprecatedConfluentCloudEmail))
-	suite.require.NoError(os.Unsetenv(DeprecatedConfluentCloudPassword))
 }
 
 func (suite *LoginCredentialsManagerTestSuite) setCPEnvVars() {
@@ -276,16 +237,9 @@ func (suite *LoginCredentialsManagerTestSuite) setCPEnvVars() {
 	suite.require.NoError(os.Setenv(ConfluentPlatformPassword, envPassword))
 }
 
-func (suite *LoginCredentialsManagerTestSuite) setDeprecatedCPEnvVars() {
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformUsername, deprecatedEnvUser))
-	suite.require.NoError(os.Setenv(DeprecatedConfluentPlatformPassword, deprecatedEnvPassword))
-}
-
 func (suite *LoginCredentialsManagerTestSuite) clearCPEnvVars() {
 	suite.require.NoError(os.Unsetenv(ConfluentPlatformUsername))
 	suite.require.NoError(os.Unsetenv(ConfluentPlatformPassword))
-	suite.require.NoError(os.Unsetenv(DeprecatedConfluentPlatformUsername))
-	suite.require.NoError(os.Unsetenv(DeprecatedConfluentPlatformPassword))
 }
 
 func TestLoginCredentialsManager(t *testing.T) {

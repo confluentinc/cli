@@ -1,7 +1,6 @@
 package logout
 
 import (
-	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -44,7 +43,6 @@ var (
 
 func TestLogout(t *testing.T) {
 	req := require.New(t)
-	clearCCloudDeprecatedEnvVar(req)
 	cfg := config.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
 	logoutCmd, cfg := newLogoutCmd(cfg)
@@ -63,8 +61,4 @@ func verifyLoggedOutState(t *testing.T, cfg *config.Config, loggedOutContext str
 	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)
 	req.Empty(state.Auth)
-}
-
-func clearCCloudDeprecatedEnvVar(req *require.Assertions) {
-	req.NoError(os.Unsetenv(pauth.DeprecatedConfluentCloudEmail))
 }

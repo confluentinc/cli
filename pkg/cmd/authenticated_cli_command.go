@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -193,7 +194,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				return nil, err
 			}
 			if caLocation == "" {
-				caLocation = auth.GetEnvWithFallback(auth.ConfluentPlatformCACertPath, auth.DeprecatedConfluentPlatformCACertPath)
+				caLocation = os.Getenv(auth.ConfluentPlatformCACertPath)
 			}
 			if caLocation != "" {
 				caClient, err := utils.GetCAClient(caLocation)

@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -299,7 +300,7 @@ func (c *command) getCaCertPath(cmd *cobra.Command, username, url string) (strin
 	}
 
 	if caCertPath == "" {
-		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+		caCertPath = os.Getenv(pauth.ConfluentPlatformCACertPath)
 	}
 
 	var isLegacyContext bool
@@ -396,7 +397,7 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 		return "https://confluentgov.com", nil
 	}
 
-	if url := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL); url != "" {
+	if url := os.Getenv(pauth.ConfluentPlatformMDSURL); url != "" {
 		return url, nil
 	}
 
