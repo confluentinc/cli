@@ -74,7 +74,6 @@ type Config struct {
 	DisablePlugins      bool `json:"disable_plugins"`
 	DisablePluginsOnce  bool `json:"disable_plugins_once,omitempty"`
 	DisableUpdateCheck  bool `json:"disable_update_check"`
-	DisableUpdates      bool `json:"disable_updates,omitempty"`
 	EnableColor         bool `json:"enable_color"`
 
 	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
@@ -85,11 +84,11 @@ type Config struct {
 	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 	LocalPorts       *LocalPorts                 `json:"local_ports,omitempty"`
 
-	// The following configurations are not persisted between runs
-
-	IsTest   bool              `json:"-"`
-	Version  *pversion.Version `json:"-"`
-	Filename string            `json:"-"`
+	// The following configurations are not persisted between runs or are read-only
+	DisableUpdates bool              `json:"-"`
+	Filename       string            `json:"-"`
+	IsTest         bool              `json:"-"`
+	Version        *pversion.Version `json:"-"`
 
 	overwrittenCurrentContext      string
 	overwrittenCurrentEnvironment  string
