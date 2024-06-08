@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/internal/update"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -61,11 +60,10 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 		"disable_feature_flags",
 		"disable_plugins",
 		"disable_update_check",
-		"disable_updates",
 		"enable_color",
 	}
 	if runtime.GOOS == "windows" {
-		fields = append(fields, "disable_plugins_once")
+		fields = append(fields, "disable_plugins_once_windows")
 	}
 
 	whitelist := make(map[string]*fieldInfo, len(fields))
@@ -86,8 +84,8 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 	return whitelist
 }
 
-func isReadOnly(jsonField string) bool {
-	return jsonField == "disable_updates" && update.IsHomebrew()
+func isReadOnly(_ string) bool {
+	return false
 }
 
 func (c *command) newFieldOut(field string, whitelist map[string]*fieldInfo) *fieldOut {
