@@ -63,7 +63,7 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 		"enable_color",
 	}
 	if runtime.GOOS == "windows" {
-		fields = append(fields, "disable_plugins_once")
+		fields = append(fields, "disable_plugins_once_windows")
 	}
 
 	whitelist := make(map[string]*fieldInfo, len(fields))
