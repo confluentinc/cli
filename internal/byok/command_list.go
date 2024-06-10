@@ -18,7 +18,7 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	pcmd.AddByokProviderFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	pcmd.AddByokStateFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -26,17 +26,17 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	provider, err := cmd.Flags().GetString("provider")
+	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
 	}
-	switch provider {
+	switch cloud {
 	case "aws":
-		provider = "AWS"
+		cloud = "AWS"
 	case "azure":
-		provider = "Azure"
+		cloud = "Azure"
 	case "gcp":
-		provider = "GCP"
+		cloud = "GCP"
 	}
 
 	state, err := cmd.Flags().GetString("state")
@@ -50,7 +50,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		state = "AVAILABLE"
 	}
 
-	keys, err := c.V2Client.ListByokKeys(provider, state)
+	keys, err := c.V2Client.ListByokKeys(cloud, state)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			list.Add(&humanOut{
 				Id:        key.GetId(),
 				Key:       keyString,
-				Provider:  key.GetProvider(),
+				Cloud:     key.GetProvider(),
 				State:     key.GetState(),
 				CreatedAt: key.Metadata.CreatedAt.String(),
 			})
@@ -81,7 +81,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			list.Add(&serializedOut{
 				Id:        key.GetId(),
 				Key:       keyString,
-				Provider:  key.GetProvider(),
+				Cloud:     key.GetProvider(),
 				State:     key.GetState(),
 				CreatedAt: key.Metadata.CreatedAt.String(),
 			})
@@ -90,7 +90,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	// The API returns a list sorted by creation date already
 	list.Sort(false)
-	list.Filter([]string{"Id", "Key", "Provider", "State", "CreatedAt"})
+	list.Filter([]string{"Id", "Key", "Cloud", "State", "CreatedAt"})
 
 	return list.Print()
 }
