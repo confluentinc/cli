@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Provider", "Availability", "Region", "Network", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Cloud", "Availability", "Region", "Network", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
@@ -29,7 +29,7 @@ type describeStruct struct {
 	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress_limit"`
 	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress_limit"`
 	Storage            string `human:"Storage" serialized:"storage"`
-	Provider           string `human:"Provider" serialized:"provider"`
+	Cloud              string `human:"Cloud" serialized:"cloud"`
 	Region             string `human:"Region" serialized:"region"`
 	Availability       string `human:"Availability" serialized:"availability"`
 	Network            string `human:"Network,omitempty" serialized:"network,omitempty"`
@@ -130,7 +130,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		IngressLimit:       ingress,
 		EgressLimit:        egress,
 		Storage:            clusterStorage,
-		Provider:           strings.ToLower(cluster.Spec.GetCloud()),
+		Cloud:              strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
 		Network:            cluster.Spec.Network.GetId(),
