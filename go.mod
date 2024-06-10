@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.53.14
+	github.com/aws/aws-sdk-go v1.53.19
 	github.com/billgraziano/dpapi v0.5.0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/brianstrauch/cobra-shell v0.5.0
@@ -120,7 +120,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bufbuild/protocompile v0.10.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
-	github.com/charmbracelet/bubbles v0.16.1
+	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.26.4
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/x/ansi v0.1.2 // indirect
