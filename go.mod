@@ -99,7 +99,7 @@ require (
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.23.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	golang.org/x/oauth2 v0.20.0
+	golang.org/x/oauth2 v0.21.0
 	golang.org/x/term v0.21.0
 	golang.org/x/text v0.15.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
