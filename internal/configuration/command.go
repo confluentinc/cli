@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/internal/update"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -28,13 +27,11 @@ type command struct {
 type fieldInfo struct {
 	kind     reflect.Kind
 	name     string
-	readOnly bool
 }
 
 type fieldOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
-	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -60,12 +57,13 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 	fields := []string{
 		"disable_feature_flags",
 		"disable_plugins",
-		"disable_update_check",
-		"disable_updates",
 		"enable_color",
 	}
 	if runtime.GOOS == "windows" {
-		fields = append(fields, "disable_plugins_once")
+		fields = append(fields, "disable_plugins_once_windows")
+	}
+	if !cfg.DisableUpdates {
+		fields = append(fields, "disable_update_check")
 	}
 
 	whitelist := make(map[string]*fieldInfo, len(fields))
@@ -78,7 +76,6 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 			whitelist[jsonTag] = &fieldInfo{
 				kind:     field.Type.Kind(),
 				name:     field.Name,
-				readOnly: isReadOnly(jsonTag),
 			}
 		}
 	}
@@ -86,16 +83,11 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 	return whitelist
 }
 
-func isReadOnly(jsonField string) bool {
-	return jsonField == "disable_updates" && update.IsHomebrew()
-}
-
 func (c *command) newFieldOut(field string, whitelist map[string]*fieldInfo) *fieldOut {
 	value := reflect.ValueOf(c.cfg).Elem().FieldByName(whitelist[field].name)
 	return &fieldOut{
 		Name:     field,
 		Value:    fmt.Sprintf("%v", value),
-		ReadOnly: whitelist[field].readOnly,
 	}
 }
 
