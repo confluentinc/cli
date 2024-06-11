@@ -38,7 +38,7 @@ func (c *command) dekVersionList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("kek-name")
+	kekName, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (c *command) dekVersionList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	versions, err := client.GetDeKVersions(name, subject, algorithm, all)
+	versions, err := client.GetDeKVersions(kekName, subject, algorithm, all)
 	if err != nil {
 		return err
 	}
