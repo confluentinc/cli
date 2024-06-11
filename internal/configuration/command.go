@@ -78,16 +78,12 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 			whitelist[jsonTag] = &fieldInfo{
 				kind:     field.Type.Kind(),
 				name:     field.Name,
-				readOnly: isReadOnly(jsonTag),
+				readOnly: false,
 			}
 		}
 	}
 
 	return whitelist
-}
-
-func isReadOnly(_ string) bool {
-	return false
 }
 
 func (c *command) newFieldOut(field string, whitelist map[string]*fieldInfo) *fieldOut {
