@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
 )
 
@@ -29,28 +28,7 @@ const (
 	ConfluentPlatformMDSURL      = "CONFLUENT_PLATFORM_MDS_URL"
 	ConfluentPlatformCACertPath  = "CONFLUENT_PLATFORM_CA_CERT_PATH"
 	ConfluentPlatformSSO         = "CONFLUENT_PLATFORM_SSO"
-
-	DeprecatedConfluentCloudEmail         = "CCLOUD_EMAIL"
-	DeprecatedConfluentCloudPassword      = "CCLOUD_PASSWORD"
-	DeprecatedConfluentPlatformUsername   = "CONFLUENT_USERNAME"
-	DeprecatedConfluentPlatformPassword   = "CONFLUENT_PASSWORD"
-	DeprecatedConfluentPlatformMDSURL     = "CONFLUENT_MDS_URL"
-	DeprecatedConfluentPlatformCACertPath = "CONFLUENT_CA_CERT_PATH"
 )
-
-// GetEnvWithFallback calls os.GetEnv() twice, once for the current var and once for the deprecated var.
-func GetEnvWithFallback(current, deprecated string) string {
-	if val := os.Getenv(current); val != "" {
-		return val
-	}
-
-	if val := os.Getenv(deprecated); val != "" {
-		output.ErrPrintf(false, errors.DeprecatedEnvVarWarningMsg, deprecated, current)
-		return val
-	}
-
-	return ""
-}
 
 func IsOnPremSSOEnv() bool {
 	return strings.ToLower(os.Getenv(ConfluentPlatformSSO)) == "true"
@@ -63,7 +41,7 @@ func PersistLogout(config *config.Config) error {
 	}
 
 	if runtime.GOOS == "darwin" && !config.IsTest {
-		if err := keychain.Delete(config.IsCloudLogin(), ctx.GetNetrcMachineName()); err != nil {
+		if err := keychain.Delete(config.IsCloudLogin(), ctx.GetMachineName()); err != nil {
 			return err
 		}
 	}

@@ -26,6 +26,8 @@ var (
 			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderId),
 		buildRoleBinding("rb-11aaa", "u-11aaa", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
+		buildRoleBinding("rb-11111", "u-11111", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("rb-12345", "sa-12345", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("rb-123ab", "group-abc", "OrganizationAdmin",
