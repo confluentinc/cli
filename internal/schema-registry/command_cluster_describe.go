@@ -18,17 +18,17 @@ import (
 )
 
 type clusterOut struct {
-	Name                  string `human:"Name" serialized:"name"`
-	ClusterId             string `human:"Cluster" serialized:"cluster_id"`
-	EndpointUrl           string `human:"Endpoint URL" serialized:"endpoint_url"`
-	UsedSchemas           string `human:"Used Schemas" serialized:"used_schemas"`
-	AvailableSchemas      string `human:"Available Schemas" serialized:"available_schemas"`
-	FreeSchemasLimit      int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
-	GlobalCompatibility   string `human:"Global Compatibility" serialized:"global_compatibility"`
-	Mode                  string `human:"Mode" serialized:"mode"`
-	ServiceProvider       string `human:"Service Provider" serialized:"service_provider"`
-	ServiceProviderRegion string `human:"Service Provider Region" serialized:"service_provider_region"`
-	Package               string `human:"Package" serialized:"package"`
+	Name                string `human:"Name" serialized:"name"`
+	ClusterId           string `human:"Cluster" serialized:"cluster_id"`
+	EndpointUrl         string `human:"Endpoint URL" serialized:"endpoint_url"`
+	UsedSchemas         string `human:"Used Schemas" serialized:"used_schemas"`
+	AvailableSchemas    string `human:"Available Schemas" serialized:"available_schemas"`
+	FreeSchemasLimit    int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
+	GlobalCompatibility string `human:"Global Compatibility" serialized:"global_compatibility"`
+	Mode                string `human:"Mode" serialized:"mode"`
+	Cloud               string `human:"Cloud" serialized:"cloud"`
+	Region              string `human:"Region" serialized:"region"`
+	Package             string `human:"Package" serialized:"package"`
 }
 
 const (
@@ -136,17 +136,17 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&clusterOut{
-		Name:                  cluster.Spec.GetDisplayName(),
-		ClusterId:             cluster.GetId(),
-		EndpointUrl:           cluster.Spec.GetHttpEndpoint(),
-		ServiceProvider:       cluster.Spec.GetCloud(),
-		ServiceProviderRegion: cluster.Spec.GetRegion(),
-		Package:               cluster.Spec.GetPackage(),
-		UsedSchemas:           numSchemas,
-		AvailableSchemas:      availableSchemas,
-		FreeSchemasLimit:      freeSchemasLimit,
-		GlobalCompatibility:   config.GetCompatibilityLevel(),
-		Mode:                  mode.GetMode(),
+		Name:                cluster.Spec.GetDisplayName(),
+		ClusterId:           cluster.GetId(),
+		EndpointUrl:         cluster.Spec.GetHttpEndpoint(),
+		Cloud:               cluster.Spec.GetCloud(),
+		Region:              cluster.Spec.GetRegion(),
+		Package:             cluster.Spec.GetPackage(),
+		UsedSchemas:         numSchemas,
+		AvailableSchemas:    availableSchemas,
+		FreeSchemasLimit:    freeSchemasLimit,
+		GlobalCompatibility: config.GetCompatibilityLevel(),
+		Mode:                mode.GetMode(),
 	})
 	return table.Print()
 }

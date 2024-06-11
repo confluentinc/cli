@@ -60,7 +60,7 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key byokv1.ByokV1
 			Id:        key.GetId(),
 			Key:       keyString,
 			Roles:     strings.Join(roles, ", "),
-			Provider:  key.GetProvider(),
+			Cloud:     key.GetProvider(),
 			State:     key.GetState(),
 			CreatedAt: key.Metadata.CreatedAt.String(),
 		})
@@ -69,7 +69,7 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key byokv1.ByokV1
 			Id:        key.GetId(),
 			Key:       keyString,
 			Roles:     roles,
-			Provider:  key.GetProvider(),
+			Cloud:     key.GetProvider(),
 			State:     key.GetState(),
 			CreatedAt: key.Metadata.CreatedAt.String(),
 		})
