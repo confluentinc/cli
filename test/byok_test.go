@@ -8,7 +8,7 @@ func (s *CLITestSuite) TestByok() {
 		{args: "byok list", fixture: "byok/list_1.golden", login: "cloud"},
 		{args: "byok list --state in-use", fixture: "byok/list_2.golden"},
 		{args: "byok list --cloud aws", fixture: "byok/list_3.golden"},
-		{args: "byok list --state in-use --cloud Azure", fixture: "byok/list_4.golden"},
+		{args: "byok list --state in-use --cloud azure", fixture: "byok/list_4.golden"},
 		// create tests
 		{args: "byok create arn:aws:kms:us-west-2:037803949979:key/0e2609e3-a0bf-4f39-aedf-8b1f63b16d81", fixture: "byok/create_1.golden"},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000 --key-vault /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault", fixture: "byok/create_2.golden"},
