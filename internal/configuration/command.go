@@ -25,13 +25,13 @@ type command struct {
 }
 
 type fieldInfo struct {
-	kind     reflect.Kind
-	name     string
+	kind reflect.Kind
+	name string
 }
 
 type fieldOut struct {
-	Name     string `human:"Name" serialized:"name"`
-	Value    string `human:"Value" serialized:"value"`
+	Name  string `human:"Name" serialized:"name"`
+	Value string `human:"Value" serialized:"value"`
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -74,8 +74,8 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 		jsonTag := strings.Split(field.Tag.Get("json"), ",")[0]
 		if slices.Contains(fields, jsonTag) {
 			whitelist[jsonTag] = &fieldInfo{
-				kind:     field.Type.Kind(),
-				name:     field.Name,
+				kind: field.Type.Kind(),
+				name: field.Name,
 			}
 		}
 	}
@@ -86,8 +86,8 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 func (c *command) newFieldOut(field string, whitelist map[string]*fieldInfo) *fieldOut {
 	value := reflect.ValueOf(c.cfg).Elem().FieldByName(whitelist[field].name)
 	return &fieldOut{
-		Name:     field,
-		Value:    fmt.Sprintf("%v", value),
+		Name:  field,
+		Value: fmt.Sprintf("%v", value),
 	}
 }
 
