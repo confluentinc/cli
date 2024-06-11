@@ -46,7 +46,7 @@ func (c *command) dekDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("kek-name")
+	kekName, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}
@@ -77,9 +77,9 @@ func (c *command) dekDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	if version == "" {
-		err = client.DeleteDekVersions(name, subject, algorithm, permanent)
+		err = client.DeleteDekVersions(kekName, subject, algorithm, permanent)
 	} else {
-		err = client.DeleteDekVersion(name, subject, version, algorithm, permanent)
+		err = client.DeleteDekVersion(kekName, subject, version, algorithm, permanent)
 	}
 	if err != nil {
 		return err
