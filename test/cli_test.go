@@ -239,6 +239,7 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// probably don't really want to do this or devs will get mad
 	cfg := config.New()
 	cfg.DisablePlugins = !arePluginsEnabled
+	cfg.EnableColor = false
 	err := cfg.Save()
 	require.NoError(t, err)
 }
