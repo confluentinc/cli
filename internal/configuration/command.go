@@ -59,11 +59,13 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 	fields := []string{
 		"disable_feature_flags",
 		"disable_plugins",
-		"disable_update_check",
 		"enable_color",
 	}
 	if runtime.GOOS == "windows" {
 		fields = append(fields, "disable_plugins_once_windows")
+	}
+	if !cfg.DisableUpdates {
+		fields = append(fields, "disable_update_check")
 	}
 
 	whitelist := make(map[string]*fieldInfo, len(fields))
