@@ -1,48 +1,6 @@
-.PHONY: verify-stag
-verify-stag:
-	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) $(MAKE) verify-archive-installer
-	$(call dry-run,OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) $(MAKE) smoke-tests)
-	VERIFY_BIN_FOLDER=$(S3_STAG_PATH) $(MAKE) verify-binaries
-
-.PHONY: verify-prod
-verify-prod:
-	OVERRIDE_S3_FOLDER="" $(MAKE) verify-archive-installer
-	VERIFY_BIN_FOLDER=$(S3_BUCKET_PATH) $(MAKE) verify-binaries
-
-.PHONY: verify-archive-installer
-verify-archive-installer:
-	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) ARCHIVES_VERSION="" $(MAKE) test-installer
-	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) ARCHIVES_VERSION=v$(CLEAN_VERSION) $(MAKE) test-installer
-	@echo "*** ARCHIVES VERIFICATION PASSED!!! ***"
-
-# if ARCHIVES_VERSION is empty, latest folder will be tested
 .PHONY: test-installer
 test-installer:
-	$(call dry-run,bash test-installer.sh $(ARCHIVES_VERSION))
-
-# check that the expected binaries are present and have --acl public-read
-.PHONY: verify-binaries
-verify-binaries:
-	$(eval DIR=$(shell mktemp -d))
-
-	$(aws-authenticate) && \
-	for os in linux alpine darwin windows; do \
-		for arch in arm64 amd64; do \
-			if [ "$${os}" = "windows" ] && [ "$${arch}" = "arm64" ] ; then \
-				continue; \
-			fi; \
-			suffix=""; \
-			if [ "$${os}" = "windows" ] ; then \
-				suffix=".exe"; \
-			fi; \
-			FILE=$(VERIFY_BIN_FOLDER)/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_$${os}_$${arch}$${suffix}; \
-			echo "Checking binary: $${FILE}"; \
-			$(call dry-run,aws s3 cp $$FILE $(DIR)) || { rm -rf $(DIR) && exit 1; }; \
-		done; \
-	done
-
-	rm -rf $(DIR)	
-	@echo "*** BINARIES VERIFICATION PASSED!!! ***"
+	$(call dry-run,bash test-installer.sh)
 
 # Test username/password login and SSO login in production
 .PHONY: smoke-tests

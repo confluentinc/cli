@@ -27,6 +27,12 @@ Install the latest version of `confluent` to `/usr/local/bin`:
 
     brew install confluentinc/tap/cli
 
+Or, optionally install the FIPS-140 compatible version of `confluent`:
+
+    brew install confluentinc/tap/cli-fips
+
+Then, follow the instructions below in the section titled "Build an OpenSSL FIPS Provider for FIPS-140 Mode".
+
 #### APT (Ubuntu and Debian)
 
 Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
@@ -93,7 +99,7 @@ To build for windows/amd64, run the following:
     brew install mingw-w64
     GOOS=windows GOARCH=amd64 make cross-build
 
-#### Building in FIPS-140 mode
+#### Building for macOS in FIPS-140 mode
 
 Linux is built in FIPS-140 mode by default. To build the CLI for macOS in FIPS-140 mode, set the `GOLANG_FIPS` environment variable to "1":
 
@@ -101,7 +107,9 @@ Linux is built in FIPS-140 mode by default. To build the CLI for macOS in FIPS-1
 GOLANG_FIPS=1 make build
 ```
 
-Then, build an OpenSSL FIPS provider:
+Then, follow the instructions in the next section to build an OpenSSL FIPS provider.
+
+### Build an OpenSSL FIPS Provider for FIPS-140 Mode
 
 ```bash
 wget "https://www.openssl.org/source/openssl-3.0.9.tar.gz"
@@ -118,7 +126,7 @@ cp install/usr/local/lib/ossl-modules/fips.dylib /opt/homebrew/Cellar/openssl@3/
 cp install/usr/local/ssl/fipsmodule.cnf /opt/homebrew/etc/openssl@3/
 ```
 
-Create a new OpenSSL configuration file for FIPS mode:
+Create a new OpenSSL configuration file for FIPS-140 mode:
 
 ```bash
 cp /opt/homebrew/etc/openssl@3/openssl.cnf /opt/homebrew/etc/openssl@3/openssl-fips.cnf
