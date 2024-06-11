@@ -65,8 +65,6 @@ func convertValue(field, value string, whitelist map[string]*fieldInfo) (any, er
 	info, ok := whitelist[field]
 	if !ok {
 		return nil, fmt.Errorf(fieldDoesNotExistError, field)
-	} else if info.readOnly {
-		return nil, fmt.Errorf(fieldReadOnlyError, field)
 	}
 	switch info.kind {
 	case reflect.Bool:

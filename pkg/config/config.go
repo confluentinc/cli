@@ -70,12 +70,11 @@ var (
 
 // Config represents the CLI configuration.
 type Config struct {
-	DisableFeatureFlags bool `json:"disable_feature_flags"`
-	DisablePlugins      bool `json:"disable_plugins"`
-	DisablePluginsOnce  bool `json:"disable_plugins_once,omitempty"`
-	DisableUpdateCheck  bool `json:"disable_update_check"`
-	DisableUpdates      bool `json:"disable_updates,omitempty"`
-	EnableColor         bool `json:"enable_color"`
+	DisableFeatureFlags       bool `json:"disable_feature_flags"`
+	DisablePlugins            bool `json:"disable_plugins"`
+	DisablePluginsOnceWindows bool `json:"disable_plugins_once_windows,omitempty"`
+	DisableUpdateCheck        bool `json:"disable_update_check"`
+	EnableColor               bool `json:"enable_color"`
 
 	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
@@ -85,20 +84,18 @@ type Config struct {
 	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 	LocalPorts       *LocalPorts                 `json:"local_ports,omitempty"`
 
-	// Deprecated
-	AnonymousId string `json:"anonymous_id,omitempty"`
-	NoBrowser   bool   `json:"no_browser,omitempty"`
-	Ver         string `json:"version,omitempty"`
-
-	// The following configurations are not persisted between runs
-
-	IsTest   bool              `json:"-"`
-	Version  *pversion.Version `json:"-"`
-	Filename string            `json:"-"`
+	// The following configurations are not persisted between runs or are read-only
+	DisableUpdates bool              `json:"-"`
+	Filename       string            `json:"-"`
+	IsTest         bool              `json:"-"`
+	Version        *pversion.Version `json:"-"`
 
 	overwrittenCurrentContext      string
 	overwrittenCurrentEnvironment  string
 	overwrittenCurrentKafkaCluster string
+
+	// Deprecated
+	DisablePluginsOnce bool `json:"disable_plugins_once,omitempty"`
 }
 
 func (c *Config) SetOverwrittenCurrentContext(context string) {
@@ -208,6 +205,7 @@ func (c *Config) Load() error {
 		context.KafkaClusterContext.Context = context
 		context.State = c.ContextStates[context.Name]
 
+		// Migrate deprecated NetrcMachineName to MachineName
 		if context.NetrcMachineName != "" && context.MachineName == "" {
 			context.MachineName = context.NetrcMachineName
 			context.NetrcMachineName = ""
@@ -215,9 +213,16 @@ func (c *Config) Load() error {
 		}
 	}
 
-	if runtime.GOOS == "windows" && !c.DisablePluginsOnce {
+	// Migrate deprecated DisablePluginsOnce to DisablePluginsOnceWindows
+	if c.DisablePluginsOnce && !c.DisablePluginsOnceWindows {
+		c.DisablePluginsOnceWindows = true
+		c.DisablePluginsOnce = false
+		save = true
+	}
+
+	if runtime.GOOS == "windows" && !c.DisablePluginsOnceWindows {
 		c.DisablePlugins = true
-		c.DisablePluginsOnce = true
+		c.DisablePluginsOnceWindows = true
 		save = true
 	}
 
