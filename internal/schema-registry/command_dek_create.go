@@ -51,7 +51,7 @@ func (c *command) dekCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("kek-name")
+	kekName, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}
@@ -79,11 +79,14 @@ func (c *command) dekCreate(cmd *cobra.Command, _ []string) error {
 	createReq := srsdk.CreateDekRequest{
 		Subject:              srsdk.PtrString(subject),
 		Version:              srsdk.PtrInt32(version),
-		Algorithm:            srsdk.PtrString(algorithm),
 		EncryptedKeyMaterial: srsdk.PtrString(encryptedKeyMaterial),
 	}
 
-	dek, err := client.CreateDek(name, createReq)
+	if cmd.Flags().Changed("algorithm") {
+		createReq.Algorithm = srsdk.PtrString(algorithm)
+	}
+
+	dek, err := client.CreateDek(kekName, createReq)
 	if err != nil {
 		return err
 	}
