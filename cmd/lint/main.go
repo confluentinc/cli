@@ -87,7 +87,7 @@ var flagRules = []linter.FlagRule{
 		linter.RequireFlagNameLength(2, 20),
 		linter.ExcludeFlag(
 			"accepted-environments",
-			"azure-subscription-id",
+			"azure-subscription",
 			"destination-api-key",
 			"destination-api-secret",
 			"destination-bootstrap-server",
@@ -242,7 +242,6 @@ var vocabWords = []string{
 	"lz4",
 	"md",
 	"mds",
-	"netrc",
 	"nodejs",
 	"pem",
 	"plaintext",

@@ -26,8 +26,8 @@ type describeStruct struct {
 	Type               string `human:"Type" serialized:"type"`
 	ClusterSize        int32  `human:"Cluster Size" serialized:"cluster_size"`
 	PendingClusterSize int32  `human:"Pending Cluster Size" serialized:"pending_cluster_size"`
-	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress"`
-	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress"`
+	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress_limit"`
+	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress_limit"`
 	Storage            string `human:"Storage" serialized:"storage"`
 	Provider           string `human:"Provider" serialized:"provider"`
 	Region             string `human:"Region" serialized:"region"`
