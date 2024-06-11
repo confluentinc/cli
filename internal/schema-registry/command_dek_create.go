@@ -77,16 +77,13 @@ func (c *command) dekCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	createReq := srsdk.CreateDekRequest{
-		Subject: srsdk.PtrString(subject),
-		Version: srsdk.PtrInt32(version),
+		Subject:              srsdk.PtrString(subject),
+		Version:              srsdk.PtrInt32(version),
+		EncryptedKeyMaterial: srsdk.PtrString(encryptedKeyMaterial),
 	}
 
 	if cmd.Flags().Changed("algorithm") {
 		createReq.Algorithm = srsdk.PtrString(algorithm)
-	}
-
-	if cmd.Flags().Changed("encrypted-key-material") {
-		createReq.EncryptedKeyMaterial = srsdk.PtrString(encryptedKeyMaterial)
 	}
 
 	dek, err := client.CreateDek(kekName, createReq)
