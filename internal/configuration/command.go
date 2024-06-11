@@ -27,13 +27,11 @@ type command struct {
 type fieldInfo struct {
 	kind     reflect.Kind
 	name     string
-	readOnly bool
 }
 
 type fieldOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
-	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -78,7 +76,6 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 			whitelist[jsonTag] = &fieldInfo{
 				kind:     field.Type.Kind(),
 				name:     field.Name,
-				readOnly: false,
 			}
 		}
 	}
@@ -91,7 +88,6 @@ func (c *command) newFieldOut(field string, whitelist map[string]*fieldInfo) *fi
 	return &fieldOut{
 		Name:     field,
 		Value:    fmt.Sprintf("%v", value),
-		ReadOnly: whitelist[field].readOnly,
 	}
 }
 
