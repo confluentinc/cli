@@ -40,7 +40,7 @@ func (c *command) networkLinkEndpointDelete(cmd *cobra.Command, args []string) e
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.NetworkLinkEndpoint); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.NetworkLinkEndpoint); err != nil {
 		return err
 	}
 

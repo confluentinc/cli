@@ -35,7 +35,7 @@ func NewLoginOrganizationManagerImpl() *LoginOrganizationManagerImpl {
 
 func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromFlag(cmd *cobra.Command) func() string {
 	return func() string {
-		organizationId, _ := cmd.Flags().GetString("organization-id")
+		organizationId, _ := cmd.Flags().GetString("organization")
 		return organizationId
 	}
 }
