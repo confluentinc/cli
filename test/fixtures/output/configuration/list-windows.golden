@@ -1,7 +1,7 @@
-              Name             | Value | Read-Only  
--------------------------------+-------+------------
-  disable_feature_flags        | false | false      
-  disable_plugins              | true  | false      
-  disable_plugins_once_windows | true  | false      
-  disable_update_check         | false | false      
-  enable_color                 | false | false      
+              Name             | Value  
+-------------------------------+--------
+  disable_feature_flags        | false  
+  disable_plugins              | true   
+  disable_plugins_once_windows | true   
+  disable_update_check         | false  
+  enable_color                 | false  
