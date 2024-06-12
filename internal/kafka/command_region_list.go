@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -44,7 +42,7 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, region := range regions {
 		out := &regionOut{
-			Cloud:  strings.ToUpper(region.CloudId),
+			Cloud:  region.CloudId,
 			Region: region.RegionId,
 			Name:   region.RegionName,
 		}
