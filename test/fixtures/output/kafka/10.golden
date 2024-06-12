@@ -1,4 +1,4 @@
-  Cloud ID |     Cloud Name      |   Region ID    |       Region Name        
------------+---------------------+----------------+--------------------------
-  aws      | Amazon Web Services | ap-northeast-1 | ap-northeast-1 (Tokyo)   
-  aws      | Amazon Web Services | us-east-1      | us-east-1 (N. Virginia)  
+           Name           | Cloud |     Region      
+--------------------------+-------+-----------------
+  ap-northeast-1 (Tokyo)  | AWS   | ap-northeast-1  
+  us-east-1 (N. Virginia) | AWS   | us-east-1       
