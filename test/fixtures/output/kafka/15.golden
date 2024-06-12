@@ -1,32 +1,27 @@
 [
   {
-    "cloud_id": "aws",
-    "cloud_name": "Amazon Web Services",
-    "region_id": "ap-northeast-1",
-    "region_name": "ap-northeast-1 (Tokyo)"
+    "name": "ap-northeast-1 (Tokyo)",
+    "cloud": "aws",
+    "region": "ap-northeast-1"
   },
   {
-    "cloud_id": "aws",
-    "cloud_name": "Amazon Web Services",
-    "region_id": "us-east-1",
-    "region_name": "us-east-1 (N. Virginia)"
+    "name": "asia-east2 (Hong Kong)",
+    "cloud": "gcp",
+    "region": "asia-east2"
   },
   {
-    "cloud_id": "azure",
-    "cloud_name": "Azure",
-    "region_id": "southeastasia",
-    "region_name": "southeastasia (Singapore)"
+    "name": "asia-southeast1 (Singapore)",
+    "cloud": "gcp",
+    "region": "asia-southeast1"
   },
   {
-    "cloud_id": "gcp",
-    "cloud_name": "Google Cloud Platform",
-    "region_id": "asia-east2",
-    "region_name": "asia-east2 (Hong Kong)"
+    "name": "southeastasia (Singapore)",
+    "cloud": "azure",
+    "region": "southeastasia"
   },
   {
-    "cloud_id": "gcp",
-    "cloud_name": "Google Cloud Platform",
-    "region_id": "asia-southeast1",
-    "region_name": "asia-southeast1 (Singapore)"
+    "name": "us-east-1 (N. Virginia)",
+    "cloud": "aws",
+    "region": "us-east-1"
   }
 ]
