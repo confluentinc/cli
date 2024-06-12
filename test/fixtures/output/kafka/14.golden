@@ -1,7 +1,7 @@
-  Cloud ID |      Cloud Name       |    Region ID    |         Region Name          
------------+-----------------------+-----------------+------------------------------
-  aws      | Amazon Web Services   | ap-northeast-1  | ap-northeast-1 (Tokyo)       
-  aws      | Amazon Web Services   | us-east-1       | us-east-1 (N. Virginia)      
-  azure    | Azure                 | southeastasia   | southeastasia (Singapore)    
-  gcp      | Google Cloud Platform | asia-east2      | asia-east2 (Hong Kong)       
-  gcp      | Google Cloud Platform | asia-southeast1 | asia-southeast1 (Singapore)  
+             Name             | Cloud |     Region       
+------------------------------+-------+------------------
+  ap-northeast-1 (Tokyo)      | AWS   | ap-northeast-1   
+  asia-east2 (Hong Kong)      | GCP   | asia-east2       
+  asia-southeast1 (Singapore) | GCP   | asia-southeast1  
+  southeastasia (Singapore)   | AZURE | southeastasia    
+  us-east-1 (N. Virginia)     | AWS   | us-east-1        
