@@ -20,7 +20,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create client quotas for service accounts "sa-1234" and "sa-5678" on cluster "lkc-1234".`,
-				Code: `confluent kafka quota create clientQuota --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234`,
+				Code: `confluent kafka quota create my-client-quota --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234`,
 			},
 			examples.Example{
 				Text: `Create a default client quota for all principals without an explicit quota assignment.`,
