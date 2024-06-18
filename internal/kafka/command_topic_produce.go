@@ -408,23 +408,13 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 	}
 }
 
-func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckafka.Message, error) {
+func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckafka.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return nil, err
 	}
 
 	delimiter, err := cmd.Flags().GetString("delimiter")
-	if err != nil {
-		return nil, err
-	}
-
-	headers, err := cmd.Flags().GetStringSlice("headers")
-	if err != nil {
-		return nil, err
-	}
-
-	parsedHeaders, err := parseHeaders(headers, delimiter)
 	if err != nil {
 		return nil, err
 	}
@@ -439,9 +429,18 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 			Topic:     &topic,
 			Partition: ckafka.PartitionAny,
 		},
-		Key:     key,
-		Value:   value,
-		Headers: parsedHeaders,
+		Key:   key,
+		Value: value,
+	}
+
+	// This error is intentionally ignored because `confluent local kafka topic produce` does not define this flag
+	headers, _ := cmd.Flags().GetStringSlice("headers")
+	if headers != nil {
+		parsedHeaders, err := parseHeaders(headers, delimiter)
+		if err != nil {
+			return nil, err
+		}
+		message.Headers = parsedHeaders
 	}
 
 	return message, nil
