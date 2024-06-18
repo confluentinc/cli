@@ -249,6 +249,7 @@ func (t *Table) isMap() bool {
 }
 
 func isZero(value reflect.Value) bool {
+	// special case: value.IsZero() doesn't evaluate to true for maps that are empty but not nil
 	if value.Kind() == reflect.Map {
 		return len(value.MapKeys()) == 0
 	}
