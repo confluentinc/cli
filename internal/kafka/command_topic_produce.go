@@ -433,6 +433,7 @@ func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 		Value: value,
 	}
 
+	// This error is intentionally ignored because `confluent local kafka topic produce` does not define this flag
 	headers, _ := cmd.Flags().GetStringSlice("headers")
 	if headers != nil {
 		parsedHeaders, err := parseHeaders(headers, delimiter)
