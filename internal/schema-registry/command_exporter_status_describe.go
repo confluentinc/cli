@@ -15,7 +15,7 @@ type statusOut struct {
 	State      string `human:"State" serialized:"state"`
 	Offset     string `human:"Offset" serialized:"offset"`
 	Timestamp  string `human:"Timestamp" serialized:"timestamp"`
-	ErrorTrace string `human:"Error Trace" serialized:"error_trace"`
+	ErrorTrace string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
 func (c *command) newExporterStatusDescribeCommand(cfg *config.Config) *cobra.Command {
