@@ -22,9 +22,6 @@ func (c *clusterCommand) newUseCommand() *cobra.Command {
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-
 	return cmd
 }
 
