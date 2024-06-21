@@ -29,7 +29,6 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newUpdateCommand())
 	cmd.AddCommand(c.newUseCommand())
 
 	return cmd
