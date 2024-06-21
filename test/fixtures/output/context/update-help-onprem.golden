@@ -4,8 +4,7 @@ Usage:
   confluent context update [context] [flags]
 
 Flags:
-      --name string            Set the name of the context.
-      --kafka-cluster string   Set the active Kafka cluster for the context.
+      --kafka-cluster string   REQUIRED: Set the active Kafka cluster for the context.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
