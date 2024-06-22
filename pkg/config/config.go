@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -70,12 +71,13 @@ var (
 
 // Config represents the CLI configuration.
 type Config struct {
-	DisableFeatureFlags bool `json:"disable_feature_flags"`
-	DisablePlugins      bool `json:"disable_plugins"`
-	DisablePluginsOnce  bool `json:"disable_plugins_once,omitempty"`
-	DisableUpdateCheck  bool `json:"disable_update_check"`
-	DisableUpdates      bool `json:"disable_updates,omitempty"`
-	EnableColor         bool `json:"enable_color"`
+	DisableFeatureFlags bool       `json:"disable_feature_flags"`
+	DisablePlugins      bool       `json:"disable_plugins"`
+	DisablePluginsOnce  bool       `json:"disable_plugins_once,omitempty"`
+	DisableUpdateCheck  bool       `json:"disable_update_check"`
+	DisableUpdates      bool       `json:"disable_updates,omitempty"`
+	EnableColor         bool       `json:"enable_color"`
+	LastUpdateCheckAt   *time.Time `json:"last_update_check_at,omitempty"`
 
 	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
