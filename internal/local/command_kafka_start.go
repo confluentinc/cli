@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -158,10 +158,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 	natPlaintextPorts := getNatPlaintextPorts(ports)
 	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
 
-	options := types.NetworkCreate{
-		CheckDuplicate: true,
-		Driver:         "bridge",
-	}
+	options := network.CreateOptions{Driver: "bridge"}
 	if _, err := dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, options); err != nil && !strings.Contains(err.Error(), "already exists") {
 		return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 	}
