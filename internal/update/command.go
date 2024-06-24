@@ -62,7 +62,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, client update.Client) *co
 }
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, cfg *config.Config) update.Client {
+func NewClient(cfg *config.Config) update.Client {
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion:             S3BinRegion,
 		S3BinBucket:             S3BinBucket,

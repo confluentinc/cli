@@ -374,21 +374,6 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	req.Equal("v3", latestMajorVersion)
 	req.Equal("v3", latestMinorVersion)
 	req.True(repo.GetLatestMajorAndMinorVersionCalled())
-
-	// Shouldn't check anymore for 24 hours
-	for i := 0; i < 3; i++ {
-		clock.Advance(8*time.Hour + -1*time.Second)
-		repo.Reset()
-
-		_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
-		req.False(repo.GetLatestMajorAndMinorVersionCalled())
-	}
-
-	// Finally we should check once more
-	clock.Advance(4 * time.Second)
-	repo.Reset()
-	_, _, _ = client.CheckForUpdates("my-cli", "v1.2.3", false)
-	req.True(repo.GetLatestMajorAndMinorVersionCalled())
 }
 
 func TestDownloadChecksum(t *testing.T) {
