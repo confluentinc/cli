@@ -12,7 +12,7 @@ import (
 
 const (
 	subjectUsage              = "Subject of the schema."
-	onPremAuthenticationMsg   = "--ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>"
+	onPremAuthenticationMsg   = "--certificate-authority-path <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>"
 	essentialsPackage         = "essentials"
 	advancedPackage           = "advanced"
 	essentialsPackageInternal = "free"

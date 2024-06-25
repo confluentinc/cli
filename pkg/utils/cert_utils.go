@@ -20,7 +20,7 @@ func GetCAClient(caCertPath string) (*http.Client, error) {
 	if err != nil {
 		return nil, errors.NewErrorWithSuggestions(
 			"no CA certificate specified",
-			"Please specify `--ca-location` to enable Schema Registry client.",
+			"Please specify `--certificate-authority-path` to enable Schema Registry client.",
 		)
 	}
 	caCertPool := x509.NewCertPool()
