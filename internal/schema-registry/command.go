@@ -81,7 +81,7 @@ func addModeFlag(cmd *cobra.Command) {
 }
 
 func addCaLocationFlag(cmd *cobra.Command) {
-	cmd.Flags().String("ca-location", "", "File or directory path to CA certificates to authenticate the Schema Registry client.")
+	cmd.Flags().String("certificate-authority-path", "", "File or directory path to Certificate Authority certificates to authenticate the Schema Registry client.")
 }
 
 func addSchemaRegistryEndpointFlag(cmd *cobra.Command) {

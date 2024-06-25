@@ -24,7 +24,7 @@ func TestParseNetrcMachineName(t *testing.T) {
 			},
 		},
 		{
-			name:        "confluent username password login no ca-cert-path",
+			name:        "confluent username password login no certificate-authority-path",
 			machineName: "confluent-cli:mds-username-password:login-alice-http://localhost:8090",
 			want: &MachineContextInfo{
 				CredentialType: mdsUsernamePasswordString,
@@ -34,7 +34,7 @@ func TestParseNetrcMachineName(t *testing.T) {
 			},
 		},
 		{
-			name:        "confluent username password login with ca-cert-path",
+			name:        "confluent username password login with certificate-authority-path",
 			machineName: "confluent-cli:mds-username-password:login-alice-http://localhost:8090?cacertpath=path",
 			want: &MachineContextInfo{
 				CredentialType: mdsUsernamePasswordString,
