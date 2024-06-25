@@ -389,7 +389,7 @@ func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath string, un
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)
 // Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables.
-// URL and ca-cert-path (if exists) are returned in addition to username and password
+// URL and certificate-authority-path (if exists) are returned in addition to username and password
 func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		url := GetEnvWithFallback(ConfluentPlatformMDSURL, DeprecatedConfluentPlatformMDSURL)
@@ -415,9 +415,9 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 	}
 }
 
-// Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
+// Prerun login for Confluent will extract URL and certificate-authority-path (if available) from the netrc machine name
 // URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
-// URL and ca-cert-path (if exists) are returned in addition to username and password
+// URL and certificate-authority-path (if exists) are returned in addition to username and password
 func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(netrcMachineParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(netrcMachineParams)
