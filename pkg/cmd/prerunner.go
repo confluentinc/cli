@@ -515,10 +515,10 @@ func (r *PreRun) createMDSClient(ctx *config.Context, ver *version.Version, unsa
 	}
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
-	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+	// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
 	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
 	if err != nil {
-		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
 	} else {
 		mdsConfig.HTTPClient = client
 	}
@@ -599,7 +599,7 @@ type onPremKafkaRestFlagValues struct {
 
 func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues, error) {
 	url, _ := cmd.Flags().GetString("url")
-	caCertPath, _ := cmd.Flags().GetString("ca-cert-path")
+	caCertPath, _ := cmd.Flags().GetString("certificate-authority-path")
 	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
 	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
 	noAuthentication, _ := cmd.Flags().GetBool("no-authentication")
@@ -796,10 +796,10 @@ func (r *PreRun) createMDSv2Client(ctx *config.Context, ver *version.Version, un
 	}
 	caCertPath := ctx.Platform.CaCertPath
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
-	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+	// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
 	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
 	if err != nil {
-		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
+		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
 	} else {
 		mdsv2Config.HTTPClient = client
 	}

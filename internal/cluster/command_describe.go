@@ -35,7 +35,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe a Kafka cluster.",
-		Long:  fmt.Sprintf("Describe a Kafka cluster. Environment variable `%s` can replace the `--url` flag, and `%s` can replace the `--ca-cert-path` flag.", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
+		Long:  fmt.Sprintf("Describe a Kafka cluster. Environment variable `%s` can replace the `--url` flag, and `%s` can replace the `--certificate-authority-path` flag.", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -52,7 +52,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 	cmd.RunE = c.describe
 
 	cmd.Flags().String("url", "", "URL to a Confluent cluster.")
-	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
+	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -92,7 +92,7 @@ func getURL(cmd *cobra.Command) (string, error) {
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
 	// Order of precedence: flags > env vars
-	if caCertPath, err := cmd.Flags().GetString("ca-cert-path"); caCertPath != "" || err != nil {
+	if caCertPath, err := cmd.Flags().GetString("certificate-authority-path"); caCertPath != "" || err != nil {
 		return caCertPath, err
 	}
 

@@ -107,7 +107,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 	if protocol == "SSL" || protocol == "SASL_SSL" {
-		caLocation, err := cmd.Flags().GetString("ca-location")
+		caLocation, err := cmd.Flags().GetString("certificate-authority-path")
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +147,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 	if protocol == "SSL" || protocol == "SASL_SSL" {
-		caLocation, err := cmd.Flags().GetString("ca-location")
+		caLocation, err := cmd.Flags().GetString("certificate-authority-path")
 		if err != nil {
 			return nil, err
 		}

@@ -6,18 +6,18 @@ Usage:
 Examples:
 Describe the configuration of subject "payments".
 
-  $ confluent schema-registry config describe --subject payments --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+  $ confluent schema-registry config describe --subject payments --certificate-authority-path <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 
 Describe the top-level configuration.
 
-  $ confluent schema-registry config describe --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+  $ confluent schema-registry config describe --certificate-authority-path <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 
 Flags:
-      --subject string                    Subject of the schema.
-      --context string                    CLI context name.
-      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
-      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
-  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+      --subject string                      Subject of the schema.
+      --context string                      CLI context name.
+      --certificate-authority-path string   File or directory path to CA certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string     The URL of the Schema Registry cluster.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

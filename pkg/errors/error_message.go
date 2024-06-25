@@ -126,7 +126,7 @@ const (
 	InternalServerErrorSuggestions    = "Please check the status of your Kafka cluster or submit a support ticket."
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
-	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--ca-cert-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."
+	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--certificate-authority-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set `CONFLUENT_REST_URL`."
 	KafkaRestProvisioningErrorMsg     = `Kafka REST unavailable: Kafka cluster "%s" is still provisioning`

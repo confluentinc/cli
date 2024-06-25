@@ -9,11 +9,11 @@ List subjects for the Data Encryption Key (DEK) created with a KEK named "test":
   $ confluent schema-registry dek subject list --kek-name test
 
 Flags:
-      --kek-name string                   REQUIRED: Name of the Key Encryption Key (KEK).
-      --context string                    CLI context name.
-      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
-      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
-  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+      --kek-name string                     REQUIRED: Name of the Key Encryption Key (KEK).
+      --context string                      CLI context name.
+      --certificate-authority-path string   File or directory path to CA certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string     The URL of the Schema Registry cluster.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
