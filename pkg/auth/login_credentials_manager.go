@@ -409,7 +409,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 			return nil, fmt.Errorf(errors.NoCredentialsFoundErrorMsg)
 		}
 		creds.PrerunLoginURL = url
-		creds.PrerunLoginCaCertPath = GetEnvWithFallback(ConfluentPlatformCACertPath, DeprecatedConfluentPlatformCACertPath)
+		creds.PrerunLoginCaCertPath = GetEnvWithFallback(ConfluentPlatformCertificateAuthorityPath, DeprecatedConfluentPlatformCACertPath)
 
 		return creds, nil
 	}

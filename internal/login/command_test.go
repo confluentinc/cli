@@ -637,7 +637,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if test.setEnv {
-				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
+				os.Setenv(pauth.ConfluentPlatformCertificateAuthorityPath, "testcert.pem")
 			}
 			config.SetTempHomeDir()
 			cfg := config.New()
@@ -666,7 +666,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 				req.Equal(test.expectedContextName, ctx.Name)
 			}
 			if test.setEnv {
-				os.Unsetenv(pauth.ConfluentPlatformCACertPath)
+				os.Unsetenv(pauth.ConfluentPlatformCertificateAuthorityPath)
 			}
 		})
 	}

@@ -1,4 +1,4 @@
-Describe a Kafka cluster. Environment variable `CONFLUENT_PLATFORM_MDS_URL` can replace the `--url` flag, and `CONFLUENT_PLATFORM_CA_CERT_PATH` can replace the `--certificate-authority-path` flag.
+Describe a Kafka cluster. Environment variable `CONFLUENT_PLATFORM_MDS_URL` can replace the `--url` flag, and `CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH` can replace the `--certificate-authority-path` flag.
 
 Usage:
   confluent cluster describe [flags]

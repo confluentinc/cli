@@ -35,7 +35,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe a Kafka cluster.",
-		Long:  fmt.Sprintf("Describe a Kafka cluster. Environment variable `%s` can replace the `--url` flag, and `%s` can replace the `--certificate-authority-path` flag.", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
+		Long:  fmt.Sprintf("Describe a Kafka cluster. Environment variable `%s` can replace the `--url` flag, and `%s` can replace the `--certificate-authority-path` flag.", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCertificateAuthorityPath),
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -96,7 +96,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 		return certificateAuthorityPath, err
 	}
 
-	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
+	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCertificateAuthorityPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId) error {

@@ -14,9 +14,9 @@ Confluent Platform:
 
 Log in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--certificate-authority-path` flag to identify your self-signed certificate chain.
 
-Login can be accomplished non-interactively using the `CONFLUENT_PLATFORM_USERNAME`, `CONFLUENT_PLATFORM_PASSWORD`, `CONFLUENT_PLATFORM_MDS_URL`, and `CONFLUENT_PLATFORM_CA_CERT_PATH` environment variables.
+Login can be accomplished non-interactively using the `CONFLUENT_PLATFORM_USERNAME`, `CONFLUENT_PLATFORM_PASSWORD`, `CONFLUENT_PLATFORM_MDS_URL`, and `CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH` environment variables.
 
-In a non-interactive login, `CONFLUENT_PLATFORM_MDS_URL` replaces the `--url` flag, and `CONFLUENT_PLATFORM_CA_CERT_PATH` replaces the `--certificate-authority-path` flag.
+In a non-interactive login, `CONFLUENT_PLATFORM_MDS_URL` replaces the `--url` flag, and `CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH` replaces the `--certificate-authority-path` flag.
 
 Even with the environment variables set, you can force an interactive login using the `--prompt` flag.
 

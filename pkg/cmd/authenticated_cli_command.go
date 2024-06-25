@@ -193,7 +193,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				return nil, err
 			}
 			if certificateAuthorityPath == "" {
-				certificateAuthorityPath = auth.GetEnvWithFallback(auth.ConfluentPlatformCACertPath, auth.DeprecatedConfluentPlatformCACertPath)
+				certificateAuthorityPath = auth.GetEnvWithFallback(auth.ConfluentPlatformCertificateAuthorityPath, auth.DeprecatedConfluentPlatformCACertPath)
 			}
 			if certificateAuthorityPath != "" {
 				caClient, err := utils.GetCAClient(certificateAuthorityPath)

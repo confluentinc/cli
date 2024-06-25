@@ -623,7 +623,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 
 func createOnPremKafkaRestClient(ctx *config.Context, caCertPath, clientCertPath, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
 	if caCertPath == "" {
-		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCertificateAuthorityPath, pauth.DeprecatedConfluentPlatformCACertPath)
 		logger.Debugf("Found CA cert path: %s", caCertPath)
 	}
 	// use cert path flag or env var if it was passed
