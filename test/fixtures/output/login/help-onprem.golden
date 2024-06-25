@@ -36,7 +36,7 @@ Log in to Confluent Platform with a MDS URL.
 
   $ confluent login --url http://localhost:8090
 
-Log in to Confluent Platform with a MDS URL and CA certificate.
+Log in to Confluent Platform with a MDS URL and Certification Authority certificate.
 
   $ confluent login --url https://localhost:8090 --certificate-authority-path certs/my-cert.crt
 

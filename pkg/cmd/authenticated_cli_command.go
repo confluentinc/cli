@@ -188,15 +188,15 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			}
 			configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
 
-			caLocation, err := cmd.Flags().GetString("certificate-authority-path")
+			certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
 			if err != nil {
 				return nil, err
 			}
-			if caLocation == "" {
-				caLocation = auth.GetEnvWithFallback(auth.ConfluentPlatformCACertPath, auth.DeprecatedConfluentPlatformCACertPath)
+			if certificateAuthorityPath == "" {
+				certificateAuthorityPath = auth.GetEnvWithFallback(auth.ConfluentPlatformCACertPath, auth.DeprecatedConfluentPlatformCACertPath)
 			}
-			if caLocation != "" {
-				caClient, err := utils.GetCAClient(caLocation)
+			if certificateAuthorityPath != "" {
+				caClient, err := utils.GetCAClient(certificateAuthorityPath)
 				if err != nil {
 					return nil, err
 				}

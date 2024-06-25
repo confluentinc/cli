@@ -57,7 +57,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 				Code: "confluent login --url http://localhost:8090",
 			},
 			examples.Example{
-				Text: "Log in to Confluent Platform with a MDS URL and CA certificate.",
+				Text: "Log in to Confluent Platform with a MDS URL and Certification Authority certificate.",
 				Code: "confluent login --url https://localhost:8090 --certificate-authority-path certs/my-cert.crt",
 			},
 			examples.Example{
@@ -297,30 +297,30 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 // if user passes empty string for certificate-authority-path flag then reset the certificate-authority-path value in config for the context
 // (only for legacy contexts is it still possible for the context name without certificate-authority-path to have certificate-authority-path)
 func (c *command) getCaCertPath(cmd *cobra.Command, username, url string) (string, bool, error) {
-	caCertPath, err := cmd.Flags().GetString("certificate-authority-path")
+	certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
 	if err != nil {
 		return "", false, err
 	}
 
-	if caCertPath == "" {
-		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+	if certificateAuthorityPath == "" {
+		certificateAuthorityPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
 	}
 
 	var isLegacyContext bool
-	if caCertPath == "" {
+	if certificateAuthorityPath == "" {
 		contextName := pauth.GenerateContextName(username, url, "")
-		caCertPath = c.checkLegacyContextCACertPath(cmd, contextName)
-		isLegacyContext = caCertPath != ""
+		certificateAuthorityPath = c.checkLegacyContextCACertPath(cmd, contextName)
+		isLegacyContext = certificateAuthorityPath != ""
 	}
 
-	if caCertPath != "" {
-		caCertPath, err = filepath.Abs(caCertPath)
+	if certificateAuthorityPath != "" {
+		certificateAuthorityPath, err = filepath.Abs(certificateAuthorityPath)
 		if err != nil {
 			return "", false, err
 		}
 	}
 
-	return caCertPath, isLegacyContext, nil
+	return certificateAuthorityPath, isLegacyContext, nil
 }
 
 // Order of precedence: prompt flag > environment variables (SSO > LDAP) > LDAP (keychain > config > netrc) > SSO > LDAP (prompt)
@@ -372,9 +372,8 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 }
 
 func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName string) string {
-	changed := cmd.Flags().Changed("certificate-authority-path")
 	// if flag used but empty string is passed then user intends to reset the certificate-authority-path
-	if changed {
+	if cmd.Flags().Changed("certificate-authority-path") {
 		return ""
 	}
 	ctx, ok := c.Config.Contexts[contextName]

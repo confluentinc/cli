@@ -92,8 +92,8 @@ func getURL(cmd *cobra.Command) (string, error) {
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
 	// Order of precedence: flags > env vars
-	if caCertPath, err := cmd.Flags().GetString("certificate-authority-path"); caCertPath != "" || err != nil {
-		return caCertPath, err
+	if certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path"); certificateAuthorityPath != "" || err != nil {
+		return certificateAuthorityPath, err
 	}
 
 	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
