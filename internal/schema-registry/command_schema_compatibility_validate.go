@@ -21,10 +21,10 @@ type validateOut struct {
 
 func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validate",
+		Use:   "validate <schema-file>",
 		Short: "Validate a schema with a subject version.",
 		Long:  "Validate that a schema is compatible against a given subject version.",
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		RunE:  c.compatibilityValidate,
 	}
 
@@ -37,9 +37,8 @@ func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cob
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
-	cmd.Flags().String("schema", "", "The path to the schema file.")
-	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("subject", "", subjectUsage)
+	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -51,13 +50,17 @@ func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cob
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+
+	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
+	if cfg.IsCloudLogin() {
+		cobra.CheckErr(cmd.MarkFlagRequired("type"))
+	}
 
 	return cmd
 }
 
-func (c *command) compatibilityValidate(cmd *cobra.Command, _ []string) error {
+func (c *command) compatibilityValidate(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -68,18 +71,13 @@ func (c *command) compatibilityValidate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
-	if err != nil {
-		return err
-	}
-
 	schemaType, err := cmd.Flags().GetString("type")
 	if err != nil {
 		return err
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	schema, err := os.ReadFile(schemaPath)
+	schema, err := os.ReadFile(args[0])
 	if err != nil {
 		return err
 	}
