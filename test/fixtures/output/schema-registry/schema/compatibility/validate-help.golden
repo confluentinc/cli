@@ -1,7 +1,7 @@
 Validate that a schema is compatible against a given subject version.
 
 Usage:
-  confluent schema-registry schema compatibility validate [flags]
+  confluent schema-registry schema compatibility validate <schema-file> [flags]
 
 Examples:
 Validate the compatibility of schema "payments" against the latest version of subject "records".
@@ -9,9 +9,8 @@ Validate the compatibility of schema "payments" against the latest version of su
   $ confluent schema-registry schema compatibility validate --schema payments.avsc --type avro --subject records --version latest
 
 Flags:
-      --schema string        The path to the schema file.
-      --type string          Specify the schema type as "avro", "json", or "protobuf".
-      --subject string       Subject of the schema.
+      --subject string       REQUIRED: Subject of the schema.
+      --type string          REQUIRED: Specify the schema type as "avro", "json", or "protobuf".
       --version string       Version of the schema. Can be a specific version or "latest".
       --references string    The path to the references file.
       --context string       CLI context name.
