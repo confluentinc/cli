@@ -53,7 +53,9 @@ func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cob
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
-	cobra.CheckErr(cmd.MarkFlagRequired("type"))
+	if cfg.IsCloudLogin() {
+		cobra.CheckErr(cmd.MarkFlagRequired("type"))
+	}
 
 	return cmd
 }
