@@ -127,7 +127,7 @@ func NewCorruptedConfigError(format, contextName, configFile string) CLITypedErr
 	return &CorruptedConfigError{
 		errorMsg: fmt.Sprintf("corrupted CLI config: %v", errorWithStackTrace),
 		suggestionsMsg: fmt.Sprintf("Your configuration file \"%s\" is corrupted.\n"+
-			"Remove config file, and run `confluent login` or `confluent context create`.\n"+
+			"Remove it, and run `confluent login`.\n"+
 			"Unfortunately, your active CLI state will be lost as a result.\n"+
 			"Please file a support ticket with details about your configuration file to help us address this issue.\n"+
 			"Please rerun the command with `--unsafe-trace` and attach the output with the support ticket.", configFile),

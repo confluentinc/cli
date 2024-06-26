@@ -3,35 +3,38 @@ package test
 import (
 	"fmt"
 
+	"github.com/stretchr/testify/require"
+
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
+	"github.com/confluentinc/cli/v3/pkg/config"
 )
 
-func (s *CLITestSuite) contextCreateArgs(name string) string {
+func (s *CLITestSuite) contextCreateArgs(name string) {
 	var (
 		bootstrap = s.TestBackend.GetCloudUrl()
 		apiKey    = "test"
 		apiSecret = "@test/fixtures/input/context/api-secret.txt"
 	)
 
-	return fmt.Sprintf("context create %s --bootstrap %s --api-key %s --api-secret %s", name, bootstrap, apiKey, apiSecret)
-}
+	cfg := config.New()
+	err := cfg.Load()
+	require.NoError(s.T(), err)
 
-func (s *CLITestSuite) TestContextCreate() {
-	resetConfiguration(s.T(), false)
-	test := CLITest{fixture: "context/create/0.golden", args: s.contextCreateArgs("0")}
-	s.runIntegrationTest(test)
+	err = cfg.CreateContext(name, bootstrap, apiKey, apiSecret)
+	require.NoError(s.T(), err)
 }
 
 func (s *CLITestSuite) TestContextDelete() {
 	resetConfiguration(s.T(), false)
 
+	s.contextCreateArgs("0")
+	s.contextCreateArgs("2")
+	s.contextCreateArgs("3")
+	s.contextCreateArgs("4")
+	s.contextCreateArgs("5")
+	s.contextCreateArgs("0-prompt")
+
 	tests := []CLITest{
-		{args: s.contextCreateArgs("0")},
-		{args: s.contextCreateArgs("2")},
-		{args: s.contextCreateArgs("3")},
-		{args: s.contextCreateArgs("4")},
-		{args: s.contextCreateArgs("5")},
-		{args: s.contextCreateArgs("0-prompt")},
 		{args: "context delete 0 --force", fixture: "context/delete/success.golden"},
 		{args: "context delete 0-prompt", input: "y\n", fixture: "context/delete/success-prompt.golden"},
 		{args: "context delete 1", fixture: "context/delete/fail.golden", exitCode: 1},
@@ -50,8 +53,9 @@ func (s *CLITestSuite) TestContextDelete() {
 func (s *CLITestSuite) TestContextDescribe() {
 	resetConfiguration(s.T(), false)
 
+	s.contextCreateArgs("0")
+
 	tests := []CLITest{
-		{args: s.contextCreateArgs("0")},
 		{args: "context use 0"},
 		{args: "context describe", fixture: "context/describe/0.golden"},
 		{args: "context describe --api-key", fixture: "context/describe/1.golden"},
@@ -69,9 +73,10 @@ func (s *CLITestSuite) TestContextDescribe() {
 func (s *CLITestSuite) TestContextList() {
 	resetConfiguration(s.T(), false)
 
+	s.contextCreateArgs("0")
+	s.contextCreateArgs("1")
+
 	tests := []CLITest{
-		{args: s.contextCreateArgs("0")},
-		{args: s.contextCreateArgs("1")},
 		{fixture: "context/list/0.golden", args: "context list"},
 	}
 
@@ -106,12 +111,13 @@ func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 func (s *CLITestSuite) TestContextUpdate() {
 	resetConfiguration(s.T(), false)
 
+	s.contextCreateArgs("0")
+	s.contextCreateArgs("2")
+
 	tests := []CLITest{
-		{args: s.contextCreateArgs("0")},
 		{fixture: "context/update/0.golden", args: "context update 0 --name 1"},
 		{fixture: "context/update/0.golden", args: "context describe 1"},
 		{fixture: "context/update/1.golden", args: "context update 1", exitCode: 1},
-		{args: s.contextCreateArgs("2")},
 		{fixture: "context/update/2.golden", args: "context update 1 --name 2", exitCode: 1},
 	}
 
@@ -124,8 +130,9 @@ func (s *CLITestSuite) TestContextUpdate() {
 func (s *CLITestSuite) TestContextUse() {
 	resetConfiguration(s.T(), false)
 
+	s.contextCreateArgs("0")
+
 	tests := []CLITest{
-		{args: s.contextCreateArgs("0")},
 		{fixture: "context/use/0.golden", args: "context describe", exitCode: 1},
 		{fixture: "context/use/1.golden", args: "context use 0"},
 		{fixture: "context/use/2.golden", args: "context describe"},
@@ -138,8 +145,9 @@ func (s *CLITestSuite) TestContextUse() {
 }
 
 func (s *CLITestSuite) TestContextAutocomplete() {
+	s.contextCreateArgs("0")
+
 	tests := []CLITest{
-		{args: s.contextCreateArgs("0")},
 		{args: `__complete context describe ""`, fixture: "context/describe/describe-autocomplete.golden"},
 	}
 
