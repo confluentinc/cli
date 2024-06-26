@@ -277,7 +277,7 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 	tests := []CLITest{
 		{
 			env:  []string{"CONFLUENT_PLATFORM_USERNAME=on-prem@example.com", "CONFLUENT_PLATFORM_PASSWORD=password"},
-			args: fmt.Sprintf("login --url %s --certificate-authority-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl()),
+			args: fmt.Sprintf("login --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl()),
 		},
 		{
 			args:    "context list -o yaml",
@@ -298,7 +298,7 @@ func (s *CLITestSuite) TestLogin_MdsSso() {
 	defer func() { testserver.IsSsoEnabled = false }()
 
 	tests := []CLITest{
-		{args: fmt.Sprintf("login --no-browser --url %s --certificate-authority-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl())},
+		{args: fmt.Sprintf("login --no-browser --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl())},
 		{args: "context list -o yaml", fixture: "login/mds-sso.golden", regex: true},
 	}
 
