@@ -36,7 +36,7 @@ func (suite *KafkaRestTestSuite) TestSetServerURL() {
 	req.Equal("https://localhost:8090/kafka/v3", client.GetConfig().BasePath)
 
 	_ = cmd.Flags().Set("client-cert-path", "")
-	_ = cmd.Flags().Set("certificate-authority-path", "path")
+	_ = cmd.Flags().Set("ca-cert-path", "path")
 	SetServerURL(&cmd, client, "localhost:8090/kafka")
 	req.Equal("https://localhost:8090/kafka/v3", client.GetConfig().BasePath)
 }

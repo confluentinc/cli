@@ -295,8 +295,8 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	suite.require.NoError(err)
 	suite.compareCredentials(envPrerunCredentials, creds)
 
-	// Set certificate-authority-path
-	suite.require.NoError(os.Setenv(ConfluentPlatformCertificateAuthorityPath, caCertPath))
+	// Set ca-cert-path
+	suite.require.NoError(os.Setenv(ConfluentPlatformCACertPath, caCertPath))
 	creds, err = suite.loginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar()()
 	suite.require.NoError(err)
 	suite.compareCredentials(envPrerunCredentialsWithCaCertPath, creds)

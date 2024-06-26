@@ -31,7 +31,7 @@ Flags:
       --cluster string                      Kafka cluster ID.
       --context string                      CLI context name.
       --environment string                  Environment ID.
-      --certificate-authority-path string   File or directory path to one or more Certificate Authority certificates for verifying the broker's key with SSL.
+      --ca-location string                  File or directory path to one or more CA certificates for verifying the broker's key with SSL.
       --username string                     SASL_SSL username for use with PLAIN mechanism.
       --password string                     SASL_SSL password for use with PLAIN mechanism.
       --cert-location string                Path to client's public key (PEM) used for SSL authentication.
