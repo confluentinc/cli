@@ -102,7 +102,7 @@ func (s *CLITestSuite) TestClusterDescribe_ScopedId() {
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL1), fixture: "cluster/scoped-id1.golden"},
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL2), fixture: "cluster/scoped-id2.golden"},
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL3), fixture: "cluster/scoped-id3.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s --certificate-authority-path %s", cpIdURL3TLS, caCertPath), fixture: "cluster/scoped-id3.golden"},
+		{args: fmt.Sprintf("cluster describe --url %s --ca-cert-path %s", cpIdURL3TLS, caCertPath), fixture: "cluster/scoped-id3.golden"},
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), fixture: "cluster/scoped-id4.golden", exitCode: 1},
 	}
 	for _, test := range tests {
