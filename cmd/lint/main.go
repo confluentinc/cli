@@ -112,6 +112,7 @@ var flagRules = []linter.FlagRule{
 			"source-bootstrap-server",
 			"update-schema-registry",
 			"worker-configurations",
+			"certificate-authority-path",
 		),
 	),
 	linter.FlagFilter(
