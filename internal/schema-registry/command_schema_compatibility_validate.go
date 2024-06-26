@@ -37,8 +37,8 @@ func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cob
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
-	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("subject", "", subjectUsage)
+	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
