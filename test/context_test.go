@@ -108,6 +108,25 @@ func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 	}
 }
 
+func (s *CLITestSuite) TestContextUpdate() {
+	resetConfiguration(s.T(), false)
+
+	s.contextCreateArgs("0")
+	s.contextCreateArgs("2")
+
+	tests := []CLITest{
+		{fixture: "context/update/0.golden", args: "context update 0 --name 1"},
+		{fixture: "context/update/0.golden", args: "context describe 1"},
+		{fixture: "context/update/1.golden", args: "context update 1", exitCode: 1},
+		{fixture: "context/update/2.golden", args: "context update 1 --name 2", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestContextUse() {
 	resetConfiguration(s.T(), false)
 
