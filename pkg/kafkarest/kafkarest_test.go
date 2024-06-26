@@ -37,7 +37,7 @@ func TestNewError(t *testing.T) {
 	req.Contains(r.Error(), url)
 	e, ok := r.(errors.ErrorWithSuggestions)
 	req.True(ok)
-	req.Contains(e.GetSuggestionsMsg(), "CONFLUENT_PLATFORM_CA_CERT_PATH")
+	req.Contains(e.GetSuggestionsMsg(), "CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH")
 
 	openAPIError := kafkarestv3.GenericOpenAPIError{}
 

@@ -55,7 +55,7 @@ func SetServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 	protocolMatch := protocolRgx.MatchString(url)
 	if !protocolMatch {
 		var protocolMsg string
-		if cmd.Flags().Changed("client-cert-path") || cmd.Flags().Changed("ca-cert-path") { // assume https if client-cert is set since this means we want to use mTLS auth
+		if cmd.Flags().Changed("client-cert-path") || cmd.Flags().Changed("certificate-authority-path") { // assume https if client-cert is set since this means we want to use mTLS auth
 			url = "https://" + url
 			protocolMsg = "Assuming https protocol.\n"
 		} else {
