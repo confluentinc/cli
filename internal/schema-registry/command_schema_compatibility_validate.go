@@ -21,7 +21,7 @@ type validateOut struct {
 
 func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validate <schema-file>",
+		Use:   "validate <schema-path>",
 		Short: "Validate a schema with a subject version.",
 		Long:  "Validate that a schema is compatible against a given subject version.",
 		Args:  cobra.ExactArgs(1),
