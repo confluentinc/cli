@@ -6,7 +6,7 @@ Usage:
 Examples:
 Register a new Avro schema.
 
-  $ confluent schema-registry schema create --subject employee --schema employee.avsc --type avro --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+  $ confluent schema-registry schema create --subject employee --schema employee.avsc --type avro --certificate-authority-path <certification-authority-location> --schema-registry-endpoint <schema-registry-endpoint>
 
 Where "employee.avsc" may include the following content:
 
@@ -23,17 +23,17 @@ Where "employee.avsc" may include the following content:
 For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html.
 
 Flags:
-      --schema string                     REQUIRED: The path to the schema file.
-      --subject string                    REQUIRED: Subject of the schema.
-      --type string                       Specify the schema type as "avro", "json", or "protobuf".
-      --references string                 The path to the references file.
-      --metadata string                   The path to metadata file.
-      --ruleset string                    The path to schema ruleset file.
-      --normalize                         Alphabetize the list of schema fields.
-      --context string                    CLI context name.
-      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
-      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
-  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+      --schema string                       REQUIRED: The path to the schema file.
+      --subject string                      REQUIRED: Subject of the schema.
+      --type string                         Specify the schema type as "avro", "json", or "protobuf".
+      --references string                   The path to the references file.
+      --metadata string                     The path to metadata file.
+      --ruleset string                      The path to schema ruleset file.
+      --normalize                           Alphabetize the list of schema fields.
+      --context string                      CLI context name.
+      --certificate-authority-path string   File or directory path to Certificate Authority certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string     The URL of the Schema Registry cluster.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -6,14 +6,14 @@ Usage:
 Examples:
 Retrieve all versions registered under subject "payments" and its compatibility level.
 
-  $ confluent schema-registry subject describe payments --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+  $ confluent schema-registry subject describe payments --certificate-authority-path <certification-authority-location> --schema-registry-endpoint <schema-registry-endpoint>
 
 Flags:
-      --all                               Include deleted versions.
-      --context string                    CLI context name.
-      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
-      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
-  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+      --all                                 Include deleted versions.
+      --context string                      CLI context name.
+      --certificate-authority-path string   File or directory path to Certificate Authority certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string     The URL of the Schema Registry cluster.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

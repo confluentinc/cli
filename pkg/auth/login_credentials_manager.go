@@ -341,7 +341,7 @@ func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath string, un
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)
 // Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables.
-// URL and ca-cert-path (if exists) are returned in addition to username and password
+// URL and certificate-authority-path (if exists) are returned in addition to username and password
 func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		url := os.Getenv(ConfluentPlatformMDSURL)
@@ -359,7 +359,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar() fun
 			return nil, fmt.Errorf(errors.NoCredentialsFoundErrorMsg)
 		}
 		creds.PrerunLoginURL = url
-		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentPlatformCACertPath)
+		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentPlatformCertificateAuthorityPath)
 
 		return creds, nil
 	}
