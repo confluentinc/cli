@@ -47,10 +47,10 @@ func TestFlagKebabCase(t *testing.T) {
 
 	t.Run("valid flag name", func(t *testing.T) {
 		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
-		cmd.Flags().String("ca-cert-path", "", "tis a valid kebab-case name")
+		cmd.Flags().String("certificate-authority-path", "", "tis a valid kebab-case name")
 		err := cmd.Execute()
 		require.NoError(t, err)
-		err = rule(cmd.Flag("ca-cert-path"), cmd)
+		err = rule(cmd.Flag("certificate-authority-path"), cmd)
 		require.NoError(t, err)
 	})
 }
