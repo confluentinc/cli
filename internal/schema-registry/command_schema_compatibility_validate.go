@@ -30,7 +30,7 @@ func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cob
 
 	example := examples.Example{
 		Text: `Validate the compatibility of schema "payments" against the latest version of subject "records".`,
-		Code: "confluent schema-registry schema compatibility validate --schema payments.avsc --type avro --subject records --version latest",
+		Code: "confluent schema-registry schema compatibility validate payments.avsc --type avro --subject records --version latest",
 	}
 	if cfg.IsOnPremLogin() {
 		example.Code += " " + onPremAuthenticationMsg

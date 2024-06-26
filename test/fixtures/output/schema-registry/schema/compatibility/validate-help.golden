@@ -6,7 +6,7 @@ Usage:
 Examples:
 Validate the compatibility of schema "payments" against the latest version of subject "records".
 
-  $ confluent schema-registry schema compatibility validate --schema payments.avsc --type avro --subject records --version latest
+  $ confluent schema-registry schema compatibility validate payments.avsc --type avro --subject records --version latest
 
 Flags:
       --subject string       REQUIRED: Subject of the schema.
