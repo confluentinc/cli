@@ -40,7 +40,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
 		Long: fmt.Sprintf("Confluent Cloud:\n\nLog in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.\n\nEmail and password login can be accomplished non-interactively using the `%s` and `%s` environment variables.\n\nEmail and password can also be stored locally for non-interactive re-authentication with the `--save` flag.\n\nSSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.\n\nLog in to a specific Confluent Cloud organization using the `--organization` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword, pauth.ConfluentCloudOrganizationId) +
-			fmt.Sprintf("Confluent Platform:\n\nLog in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.\n\nLogin can be accomplished non-interactively using the `%s`, `%s`, `%s`, and `%s` environment variables.\n\nIn a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\nEven with the environment variables set, you can force an interactive login using the `--prompt` flag.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
+			fmt.Sprintf("Confluent Platform:\n\nLog in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--certificate-authority-path` flag to identify your self-signed certificate chain.\n\nLogin can be accomplished non-interactively using the `%s`, `%s`, `%s`, and `%s` environment variables.\n\nIn a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--certificate-authority-path` flag.\n\nEven with the environment variables set, you can force an interactive login using the `--prompt` flag.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCertificateAuthorityPath, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCertificateAuthorityPath),
 		Args: cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -56,12 +56,12 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 				Code: "confluent login --url http://localhost:8090",
 			},
 			examples.Example{
-				Text: "Log in to Confluent Platform with a MDS URL and CA certificate.",
-				Code: "confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt",
+				Text: "Log in to Confluent Platform with a MDS URL and Certification Authority certificate.",
+				Code: "confluent login --url https://localhost:8090 --certificate-authority-path certs/my-cert.crt",
 			},
 			examples.Example{
 				Text: "Log in to Confluent Platform with SSO and ignore any saved credentials.",
-				Code: "CONFLUENT_PLATFORM_SSO=true confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt",
+				Code: "CONFLUENT_PLATFORM_SSO=true confluent login --url https://localhost:8090 --certificate-authority-path certs/my-cert.crt",
 			},
 		),
 	}
@@ -79,7 +79,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 
 	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-premises deployments.")
 	cmd.Flags().Bool("us-gov", false, "Log in to the Confluent Cloud US Gov environment.")
-	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format, for on-premises deployments.")
+	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format, for on-premises deployments.")
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating using Single Sign-On (SSO).")
 	cmd.Flags().String("organization", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
@@ -286,38 +286,38 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 }
 
 // Current functionality:
-// empty ca-cert-path is equivalent to not using ca-cert-path flag
-// if users want to login with ca-cert-path they must explicitly use the flag every time they login
+// empty certificate-authority-path is equivalent to not using certificate-authority-path flag
+// if users want to login with certificate-authority-path they must explicitly use the flag every time they login
 //
 // For legacy users:
-// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
-// if user passes empty string for ca-cert-path flag then reset the ca-cert-path value in config for the context
-// (only for legacy contexts is it still possible for the context name without ca-cert-path to have ca-cert-path)
+// if certificate-authority-path flag is not used, then return caCertPath value stored in config for the login context
+// if user passes empty string for certificate-authority-path flag then reset the certificate-authority-path value in config for the context
+// (only for legacy contexts is it still possible for the context name without certificate-authority-path to have certificate-authority-path)
 func (c *command) getCaCertPath(cmd *cobra.Command, username, url string) (string, bool, error) {
-	caCertPath, err := cmd.Flags().GetString("ca-cert-path")
+	certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
 	if err != nil {
 		return "", false, err
 	}
 
-	if caCertPath == "" {
-		caCertPath = os.Getenv(pauth.ConfluentPlatformCACertPath)
+	if certificateAuthorityPath == "" {
+		certificateAuthorityPath = os.Getenv(pauth.ConfluentPlatformCertificateAuthorityPath)
 	}
 
 	var isLegacyContext bool
-	if caCertPath == "" {
+	if certificateAuthorityPath == "" {
 		contextName := pauth.GenerateContextName(username, url, "")
-		caCertPath = c.checkLegacyContextCACertPath(cmd, contextName)
-		isLegacyContext = caCertPath != ""
+		certificateAuthorityPath = c.checkLegacyContextCACertPath(cmd, contextName)
+		isLegacyContext = certificateAuthorityPath != ""
 	}
 
-	if caCertPath != "" {
-		caCertPath, err = filepath.Abs(caCertPath)
+	if certificateAuthorityPath != "" {
+		certificateAuthorityPath, err = filepath.Abs(certificateAuthorityPath)
 		if err != nil {
 			return "", false, err
 		}
 	}
 
-	return caCertPath, isLegacyContext, nil
+	return certificateAuthorityPath, isLegacyContext, nil
 }
 
 // Order of precedence: prompt flag > environment variables (SSO > LDAP) > LDAP (keychain > config) > SSO > LDAP (prompt)
@@ -368,8 +368,8 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 }
 
 func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName string) string {
-	changed := cmd.Flags().Changed("ca-cert-path")
-	// if flag used but empty string is passed then user intends to reset the ca-cert-path
+	changed := cmd.Flags().Changed("certificate-authority-path")
+	// if flag used but empty string is passed then user intends to reset the certificate-authority-path
 	if changed {
 		return ""
 	}

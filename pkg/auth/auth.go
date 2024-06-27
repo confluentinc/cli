@@ -20,14 +20,14 @@ import (
 const (
 	CCloudURL = "https://confluent.cloud"
 
-	ConfluentCloudEmail          = "CONFLUENT_CLOUD_EMAIL"
-	ConfluentCloudPassword       = "CONFLUENT_CLOUD_PASSWORD"
-	ConfluentCloudOrganizationId = "CONFLUENT_CLOUD_ORGANIZATION_ID"
-	ConfluentPlatformUsername    = "CONFLUENT_PLATFORM_USERNAME"
-	ConfluentPlatformPassword    = "CONFLUENT_PLATFORM_PASSWORD"
-	ConfluentPlatformMDSURL      = "CONFLUENT_PLATFORM_MDS_URL"
-	ConfluentPlatformCACertPath  = "CONFLUENT_PLATFORM_CA_CERT_PATH"
-	ConfluentPlatformSSO         = "CONFLUENT_PLATFORM_SSO"
+	ConfluentCloudEmail                       = "CONFLUENT_CLOUD_EMAIL"
+	ConfluentCloudPassword                    = "CONFLUENT_CLOUD_PASSWORD"
+	ConfluentCloudOrganizationId              = "CONFLUENT_CLOUD_ORGANIZATION_ID"
+	ConfluentPlatformUsername                 = "CONFLUENT_PLATFORM_USERNAME"
+	ConfluentPlatformPassword                 = "CONFLUENT_PLATFORM_PASSWORD"
+	ConfluentPlatformMDSURL                   = "CONFLUENT_PLATFORM_MDS_URL"
+	ConfluentPlatformCertificateAuthorityPath = "CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH"
+	ConfluentPlatformSSO                      = "CONFLUENT_PLATFORM_SSO"
 )
 
 func IsOnPremSSOEnv() bool {
