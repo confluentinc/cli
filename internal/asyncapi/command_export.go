@@ -84,7 +84,7 @@ func (c *command) newExportCommand() *cobra.Command {
 	cmd.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	cmd.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
-	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
+	cmd.Flags().String("schema-registry-context", "", "Use a specific Schema Registry context.")
 	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -117,7 +117,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	log.CliLogger.Debug("Generating AsyncAPI specification")
 	messages := make(map[string]spec.Message)
 	var schemaContextPrefix string
-	if flags.schemaContext != "default" {
+	if flags.schemaContext != "" {
 		log.CliLogger.Debugf(`Using schema context "%s"`, flags.schemaContext)
 		schemaContextPrefix = fmt.Sprintf(":.%s:", flags.schemaContext)
 	}
@@ -466,7 +466,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
-	schemaContext, err := cmd.Flags().GetString("schema-context")
+	schemaRegistryContext, err := cmd.Flags().GetString("schema-registry-context")
 	if err != nil {
 		return nil, err
 	}
@@ -481,7 +481,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		specVersion:     specVersion,
 		kafkaApiKey:     kafkaApiKey,
 		valueFormat:     valueFormat,
-		schemaContext:   schemaContext,
+		schemaContext:   schemaRegistryContext,
 		topics:          topics,
 	}, nil
 }
