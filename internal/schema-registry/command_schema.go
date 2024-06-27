@@ -23,6 +23,7 @@ func (c *command) newSchemaCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(c.newSchemaDeleteCommand(cfg))
 	cmd.AddCommand(c.newSchemaDescribeCommand(cfg))
 	cmd.AddCommand(c.newSchemaListCommand(cfg))
+	cmd.AddCommand(c.newSchemaReferenceCommand(cfg))
 
 	return cmd
 }
