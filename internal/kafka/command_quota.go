@@ -87,7 +87,7 @@ func printTable(cmd *cobra.Command, quota kafkaquotasv1.KafkaQuotasV1ClientQuota
 }
 
 func principalsToStringSlice(principals []kafkaquotasv1.GlobalObjectReference) []string {
-	principalIds := make([]string, len(principals))
+	ids := make([]string, len(principals))
 	for i, principal := range principals {
 		principalIds[i] = principal.GetId()
 	}
