@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *quotaCommand) newCreateCommand() *cobra.Command {
@@ -92,10 +91,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	format := output.GetFormat(cmd)
-	table.Add(quotaToPrintable(quota, format))
-	return table.Print()
+	return printTable(cmd, quota)
 }
 
 func sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.GlobalObjectReference {
