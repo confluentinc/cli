@@ -24,7 +24,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Create a default client quota for all principals without an explicit quota assignment.`,
-				Code: `confluent kafka quota create defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234`,
+				Code: `confluent kafka quota create my-default-quota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234`,
 			},
 		),
 	}
