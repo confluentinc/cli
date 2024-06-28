@@ -10,7 +10,7 @@ Create client quotas for service accounts "sa-1234" and "sa-5678" on cluster "lk
 
 Create a default client quota for all principals without an explicit quota assignment.
 
-  $ confluent kafka quota create defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234
+  $ confluent kafka quota create my-default-quota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234
 
 Flags:
       --description string   Description of quota.
