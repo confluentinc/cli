@@ -546,17 +546,17 @@ func Test_SelfSignedCerts(t *testing.T) {
 		envCertPath         string
 	}{
 		{
-			name:                "specified ca-cert-path",
+			name:                "specified certificate-authority-path",
 			caCertPathFlag:      "testcert.pem",
 			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=%s",
 		},
 		{
-			name:                "no ca-cert-path flag",
+			name:                "no certificate-authority-path flag",
 			caCertPathFlag:      "",
 			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090",
 		},
 		{
-			name:                "env var ca-cert-path flag",
+			name:                "env var certificate-authority-path flag",
 			setEnv:              true,
 			envCertPath:         "testcert.pem",
 			expectedContextName: "login-prompt-user@confluent.io-http://localhost:8090?cacertpath=%s",
@@ -566,7 +566,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if test.setEnv {
-				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
+				os.Setenv(pauth.ConfluentPlatformCertificateAuthorityPath, "testcert.pem")
 			}
 			config.SetTempHomeDir()
 			cfg := config.New()
@@ -577,7 +577,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 				expectedCaCert = test.caCertPathFlag
 			}
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, expectedCaCert)
-			_, err := pcmd.ExecuteCommand(loginCmd, "--url", "http://localhost:8090", "--ca-cert-path", test.caCertPathFlag)
+			_, err := pcmd.ExecuteCommand(loginCmd, "--url", "http://localhost:8090", "--certificate-authority-path", test.caCertPathFlag)
 			req.NoError(err)
 
 			ctx := cfg.Context()
@@ -595,7 +595,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 				req.Equal(test.expectedContextName, ctx.Name)
 			}
 			if test.setEnv {
-				os.Unsetenv(pauth.ConfluentPlatformCACertPath)
+				os.Unsetenv(pauth.ConfluentPlatformCertificateAuthorityPath)
 			}
 		})
 	}
@@ -615,7 +615,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 			expectedCaCertPath: originalCaCertPath,
 		},
 		{
-			name:              "reset ca-cert-path",
+			name:              "reset certificate-authority-path",
 			useCaCertPathFlag: true,
 		},
 	}
@@ -629,7 +629,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, test.expectedCaCertPath)
 			args := []string{"--url", "http://localhost:8090"}
 			if test.useCaCertPathFlag {
-				args = append(args, "--ca-cert-path", "")
+				args = append(args, "--certificate-authority-path", "")
 			}
 			fmt.Println(args)
 			_, err := pcmd.ExecuteCommand(loginCmd, args...)

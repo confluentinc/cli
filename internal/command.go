@@ -75,8 +75,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.")
 
-	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
-	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
+	updateClient := update.NewClient(cfg)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(), Out: os.Stdout}
