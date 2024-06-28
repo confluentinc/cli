@@ -563,9 +563,9 @@ func (s *CLITestSuite) TestKafkaAcl() {
 func (s *CLITestSuite) TestKafkaQuota() {
 	tests := []CLITest{
 		// Client Quotas
-		{args: "kafka quota create --name clientQuota --description description --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", fixture: "kafka/quota/create.golden"},
-		{args: "kafka quota create --name clientQuota --description description --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", exitCode: 1, fixture: "kafka/quota/create-no-ingress.golden"},
-		{args: "kafka quota create --name clientQuota --ingress 500 --egress 100 --principals \"<default>\" --cluster lkc-1234 -o yaml", fixture: "kafka/quota/create-default-yaml.golden"},
+		{args: "kafka quota create clientQuota --description description --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", fixture: "kafka/quota/create.golden"},
+		{args: "kafka quota create clientQuota --description description --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", exitCode: 1, fixture: "kafka/quota/create-no-ingress.golden"},
+		{args: "kafka quota create clientQuota --ingress 500 --egress 100 --principals \"<default>\" --cluster lkc-1234 -o yaml", fixture: "kafka/quota/create-default-yaml.golden"},
 		{args: "kafka quota list --cluster lkc-1234", fixture: "kafka/quota/list.golden"},
 		{args: "kafka quota list --cluster lkc-1234 --principal sa-5678 -o json", fixture: "kafka/quota/list-json.golden"},
 		{args: "kafka quota list --cluster lkc-1234 -o yaml", fixture: "kafka/quota/list-yaml.golden"},
