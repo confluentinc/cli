@@ -10,9 +10,10 @@ import (
 )
 
 type out struct {
-	IsCurrent bool   `human:"Current" serialized:"is_current"`
-	Id        string `human:"ID" serialized:"id"`
-	Name      string `human:"Name" serialized:"name"`
+	IsCurrent  bool   `human:"Current" serialized:"is_current"`
+	Id         string `human:"ID" serialized:"id"`
+	Name       string `human:"Name" serialized:"name"`
+	JitEnabled bool   `human:"JIT Enabled" serialized:"jit_enabled"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -28,7 +29,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describe(cmd *cobra.Command, _ []string) error {
 	organization, httpResp, err := c.V2Client.GetOrgOrganization(c.Context.GetCurrentOrganization())
 	if err != nil {
 		return errors.CatchCCloudV2ResourceNotFoundError(err, resource.Organization, httpResp)
@@ -36,9 +37,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: organization.GetId() == c.Context.GetCurrentOrganization(),
-		Id:        organization.GetId(),
-		Name:      organization.GetDisplayName(),
+		IsCurrent:  organization.GetId() == c.Context.GetCurrentOrganization(),
+		Id:         organization.GetId(),
+		Name:       organization.GetDisplayName(),
+		JitEnabled: organization.GetJitEnabled(),
 	})
 	return table.Print()
 }

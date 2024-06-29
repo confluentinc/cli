@@ -1,10 +1,15 @@
 package iam
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/config"
 )
+
+const badResourceIdErrorMsg = `failed parsing resource ID: missing prefix "%s-" is required`
 
 var authMethodFormats = map[string]string{
 	"AUTH_TYPE_LOCAL":   "Username/Password",
@@ -23,20 +28,30 @@ type userOut struct {
 	AuthenticationMethod string `human:"Authentication Method" serialized:"authentication_method"`
 }
 
-func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
+type userOutOnPrem struct {
+	Username            string    `human:"Username" serialized:"username"`
+	AuthenticationToken string    `human:"Authentication Token" serialized:"authentication_token"`
+	ExpiresAt           time.Time `human:"Expires At" serialized:"expires_at"`
+}
+
+func newUserCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "user",
 		Short:       "Manage users.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
 	c := &userCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newDeleteCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(newInvitationCommand(prerunner))
-	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newUpdateCommand())
+	if cfg.IsCloudLogin() {
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(newInvitationCommand(prerunner))
+		cmd.AddCommand(c.newListCommand())
+		cmd.AddCommand(c.newUpdateCommand())
+	} else {
+		cmd.AddCommand(c.newDescribeCommandOnPrem())
+	}
 
 	return cmd
 }

@@ -1,0 +1,11 @@
+{
+  "id": "n-abcde12",
+  "environment_id": "env-00000",
+  "name": "dev-azure-eastus2",
+  "cloud": "AZURE",
+  "region": "eastus2",
+  "zones": ["1", "2", "3"],
+  "phase": "PROVISIONING",
+  "supported_connection_types": ["PRIVATELINK"],
+  "dns_resolution": "PRIVATE"
+}

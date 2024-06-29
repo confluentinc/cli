@@ -1,16 +1,15 @@
 package store
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
-	"io"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	"github.com/texttheater/golang-levenshtein/levenshtein"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -19,10 +18,11 @@ import (
 type StatementType string
 
 const (
-	SetStatement   StatementType = config.ConfigOpSet
-	UseStatement   StatementType = config.ConfigOpUse
-	ResetStatement StatementType = config.ConfigOpReset
-	ExitStatement  StatementType = config.ConfigOpExit
+	SetStatement   StatementType = config.OpSet
+	UseStatement   StatementType = config.OpUse
+	ResetStatement StatementType = config.OpReset
+	ExitStatement  StatementType = config.OpExit
+	QuitStatement  StatementType = config.OpQuit
 	OtherStatement StatementType = "OTHER"
 )
 
@@ -32,7 +32,7 @@ func createStatementResults(columnNames []string, rows [][]string) *types.Statem
 		var statementResultRow types.StatementResultRow
 		for _, field := range row {
 			statementResultRow.Fields = append(statementResultRow.Fields, types.AtomicStatementResultField{
-				Type:  types.VARCHAR,
+				Type:  types.Varchar,
 				Value: field,
 			})
 		}
@@ -52,20 +52,43 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 	}
 	if configKey == "" {
 		return &types.ProcessedStatement{
-			Kind:             config.ConfigOpSet,
+			Kind:             config.OpSet,
 			Status:           types.COMPLETED,
 			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	}
-	s.Properties.Set(configKey, configVal)
+	if configKey == config.KeyDatabase || configKey == config.KeyCatalog {
+		return nil, &types.StatementError{
+			Message:    "cannot set a catalog or a database with SET command",
+			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
+		}
+	}
+	if configKey == config.KeyStatementName && strings.TrimSpace(configVal) == "" {
+		return nil, &types.StatementError{
+			Message:    "cannot set an empty statement name",
+			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
+		}
+	}
 
+	if configKey == config.KeyOutputFormat {
+		outputFormat := config.OutputFormat(configVal)
+		if outputFormat != config.OutputFormatStandard && outputFormat != config.OutputFormatPlainText {
+			return nil, &types.StatementError{
+				Message:    fmt.Sprintf(`invalid output format for "%s"`, config.KeyOutputFormat),
+				Suggestion: fmt.Sprintf(`please provide a valid output format: "%s" or "%s"`, config.OutputFormatStandard, config.OutputFormatPlainText),
+			}
+		}
+	}
+
+	s.Properties.Set(configKey, configVal)
 	return &types.ProcessedStatement{
-		Kind:             config.ConfigOpSet,
-		StatusDetail:     "configuration updated successfully",
-		Status:           types.COMPLETED,
-		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
-		IsLocalStatement: true,
+		Kind:                 config.OpSet,
+		StatusDetail:         "configuration updated successfully",
+		Status:               types.COMPLETED,
+		StatementResults:     createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		IsLocalStatement:     true,
+		IsSensitiveStatement: hasSensitiveKey(configKey),
 	}, nil
 }
 
@@ -77,41 +100,74 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 	if configKey == "" {
 		s.Properties.Clear()
 		return &types.ProcessedStatement{
-			Kind:             config.ConfigOpReset,
+			Kind:             config.OpReset,
 			StatusDetail:     "configuration has been reset successfully",
 			Status:           types.COMPLETED,
 			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
-	} else {
-		if !s.Properties.HasKey(configKey) {
-			return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
-		}
-
-		s.Properties.Delete(configKey)
-		return &types.ProcessedStatement{
-			Kind:             config.ConfigOpReset,
-			StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
-			Status:           types.COMPLETED,
-			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
-			IsLocalStatement: true,
-		}, nil
 	}
+	if !s.Properties.HasKey(configKey) {
+		return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
+	}
+	// if catalog is reset, also reset the database
+	if configKey == config.KeyCatalog {
+		s.Properties.Delete(config.KeyDatabase)
+	}
+
+	s.Properties.Delete(configKey)
+	return &types.ProcessedStatement{
+		Kind:             config.OpReset,
+		StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
+		Status:           types.COMPLETED,
+		StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
+		IsLocalStatement: true,
+	}, nil
 }
 
 func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
-	configKey, configVal, err := parseUseStatement(statement)
+	catalog, database, err := parseUseStatement(statement)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
+	addedConfig := [][]string{}
 
-	s.Properties.Set(configKey, configVal)
+	// "USE CATALOG catalog_name" statement
+	if catalog != "" && database == "" {
+		// USE CATALOG <catalog> will remove the current database
+		s.Properties.Delete(config.KeyDatabase)
+
+		s.Properties.Set(config.KeyCatalog, catalog)
+		addedConfig = append(addedConfig, []string{config.KeyCatalog, catalog})
+
+		// "USE database" statement
+	} else if catalog == "" && database != "" {
+		// require catalog to be set before running USE <database>
+		if !s.Properties.HasKey(config.KeyCatalog) {
+			return nil, &types.StatementError{
+				Message:    "no catalog was set",
+				Suggestion: `please set a catalog first with "USE CATALOG catalog-name" or  before setting a database`,
+			}
+		}
+
+		s.Properties.Set(config.KeyDatabase, database)
+		addedConfig = append(addedConfig, []string{config.KeyDatabase, database})
+
+		// "USE `catalog_name`.`database_name`" statement
+	} else if catalog != "" && database != "" {
+		s.Properties.Set(catalog, database)
+		s.Properties.Set(catalog, database)
+		addedConfig = append(addedConfig, []string{config.KeyCatalog, catalog})
+		addedConfig = append(addedConfig, []string{config.KeyDatabase, database})
+	} else {
+		return nil, useError()
+	}
 
 	return &types.ProcessedStatement{
-		Kind:             config.ConfigOpUse,
+		Kind:             config.OpUse,
 		StatusDetail:     "configuration updated successfully",
 		Status:           types.COMPLETED,
-		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		StatementResults: createStatementResults([]string{"Key", "Value"}, addedConfig),
 		IsLocalStatement: true,
 	}, nil
 }
@@ -130,14 +186,14 @@ Steps to parse:
 func parseSetStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 
-	indexOfSet := strings.Index(strings.ToUpper(statement), config.ConfigOpSet)
+	indexOfSet := strings.Index(strings.ToUpper(statement), config.OpSet)
 	if indexOfSet == -1 {
 		return "", "", &types.StatementError{
 			Message: "invalid syntax for SET",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
-	startOfStrAfterSet := indexOfSet + len(config.ConfigOpSet)
+	startOfStrAfterSet := indexOfSet + len(config.OpSet)
 	// This is the case when the statement is simply "SET", which is used to display current config.
 	if startOfStrAfterSet >= len(statement) {
 		return "", "", nil
@@ -156,116 +212,183 @@ func parseSetStatement(statement string) (string, string, error) {
 		}
 	}
 
-	keyValuePair := strings.Split(strAfterSet, "=")
+	// Trim whitespace
+	strAfterSet = strings.TrimSpace(strAfterSet)
 
-	if len(keyValuePair) != 2 {
-		return "", "", &types.StatementError{
-			Message: `"=" should only appear once`,
-			Usage:   []string{"SET 'key'='value'"},
-		}
-	}
-
-	keyWithQuotes := strings.TrimSpace(keyValuePair[0])
-	valueWithQuotes := strings.TrimSpace(keyValuePair[1])
-
-	if keyWithQuotes != "" && valueWithQuotes == "" {
-		return "", "", &types.StatementError{
-			Message:    "value for key not present",
-			Suggestion: `if you want to reset a key, use "RESET 'key'"`,
-		}
-	}
-
-	if keyWithQuotes == "" && valueWithQuotes != "" {
-		return "", "", &types.StatementError{
-			Message: "key not present",
-			Usage:   []string{"SET 'key'='value'"},
-		}
-	}
-
-	if keyWithQuotes == "" && valueWithQuotes == "" {
+	// Checks to give helpful suggestions to the users.
+	// Contains only an equal sign
+	if strAfterSet == "=" {
 		return "", "", &types.StatementError{
 			Message: "key and value not present",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	if !strings.HasPrefix(keyWithQuotes, "'") || !strings.HasSuffix(keyWithQuotes, "'") ||
-		!strings.HasPrefix(valueWithQuotes, "'") || !strings.HasSuffix(valueWithQuotes, "'") {
+	// Check that the string doesn't end in an equal sign (+ optional whitespace),
+	// and suggest using RESET to remove a key
+	if strings.HasSuffix(strAfterSet, "=") {
+		return "", "", &types.StatementError{
+			Message:    "value for key not present",
+			Suggestion: `if you want to reset a key, use "RESET 'key'"`,
+		}
+	}
+
+	// Check that it doesn't begin with an equal sign (+ optional whitespace),
+	if strings.HasPrefix(strAfterSet, "=") {
+		return "", "", &types.StatementError{
+			Message: "key not present",
+			Usage:   []string{"SET 'key'='value'"},
+		}
+	}
+
+	// The key and value must be enclosed by single quotes
+	checkquotes := regexp.MustCompile(`^'.+'\s*=\s*'.*'$`)
+	if !checkquotes.MatchString(strAfterSet) {
 		return "", "", &types.StatementError{
 			Message: "key and value must be enclosed by single quotes (')",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	// remove enclosing quotes
-	keyWithQuotes = keyWithQuotes[1 : len(keyWithQuotes)-1]
-	valueWithQuotes = valueWithQuotes[1 : len(valueWithQuotes)-1]
-
-	if containsUnescapedSingleQuote(keyWithQuotes) {
+	// The actual final regex for parsing the key and value
+	// The only possible error left is an unescaped single quote
+	re := regexp.MustCompile(`^'(([^']|'')*?)'\s*=\s*'(([^']|'')*?)'$`)
+	matches := re.FindStringSubmatch(strAfterSet)
+	if len(matches) != 5 {
 		return "", "", &types.StatementError{
-			Message:    "key contains unescaped single quotes (')",
+			Message:    "key or value contains unescaped single quotes (')",
 			Usage:      []string{"SET 'key'='value'"},
 			Suggestion: `please escape all single quotes with another single quote "''key''"`,
 		}
 	}
 
-	if containsUnescapedSingleQuote(valueWithQuotes) {
-		return "", "", &types.StatementError{
-			Message:    "value contains unescaped single quotes (')",
-			Usage:      []string{"SET 'key'='value'"},
-			Suggestion: `please escape all single quotes with another single quote "''key''"`,
-		}
-	}
+	key := matches[1]
+	value := matches[3]
 
 	// replace escaped quotes
-	key := strings.ReplaceAll(keyWithQuotes, "''", "'")
-	value := strings.ReplaceAll(valueWithQuotes, "''", "'")
+	key = strings.ReplaceAll(key, "''", "'")
+	value = strings.ReplaceAll(value, "''", "'")
 	return key, value, nil
 }
 
+func TokenizeSQL(statement string) []string {
+	var tokens []string
+	var buffer bytes.Buffer
+	var inBacktick bool
+	input := []rune(statement)
+
+	// Iterate over each character in the input string
+	for i := 0; i < len(input); i++ {
+		c := input[i]
+
+		// Ignore whitespace
+		if unicode.IsSpace(c) && !inBacktick {
+			tokens = appendToTokens(tokens, &buffer)
+			continue
+		}
+
+		// Dot is a separator
+		if input[i] == '.' && !inBacktick {
+			tokens = appendToTokens(tokens, &buffer)
+			tokens = append(tokens, ".")
+			continue
+		}
+
+		// Handle backticks
+		if c == '`' {
+			if inBacktick {
+				// escaped backtick
+				if i+1 < len(input) && input[i+1] == '`' {
+					i++
+					buffer.WriteRune(c)
+					continue
+				}
+
+				// End of backtick
+				tokens = append(tokens, buffer.String())
+				buffer.Reset()
+				inBacktick = false
+			} else {
+				// Start of backtick
+				tokens = appendToTokens(tokens, &buffer)
+				inBacktick = true
+			}
+			continue
+		}
+
+		buffer.WriteRune(c)
+	}
+
+	// Add last token if in backtick
+	if inBacktick {
+		tokens = append(tokens, buffer.String())
+	} else if buffer.Len() > 0 {
+		tokens = append(tokens, buffer.String())
+	}
+
+	if len(tokens) == 0 {
+		return []string{}
+	}
+
+	return tokens
+}
+
+func appendToTokens(tokens []string, buffer *bytes.Buffer) []string {
+	if str := buffer.String(); len(str) > 0 {
+		tokens = append(tokens, str)
+		buffer.Reset()
+	}
+	return tokens
+}
+
 /*
-Expected statement: "USE CATALOG catalog_name" or "USE database_name"
-Steps to parse:
-1. Remove semicolon if present
-2. Split into words
-3. If resulting array length is smaller than 2 directly return
-4. If word length is 2, first word is "use" and second word IS NOT "catalog", second word is the database name
-5. If word length is 3, first word is "use" and second word IS "catalog", third word is the catalog name
-6. Otherwise, return empty
+Expected statement: "USE CATALOG `catalog_name`" or "USE `database_name` or "USE `catalog_name`.`database_name`"
+Returns the catalog and database extracted if the present, otherwise returns an error
 */
 func parseUseStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
-	words := strings.Fields(statement)
-	if len(words) < 2 {
-		return "", "", &types.StatementError{
-			Message: "missing database/catalog name",
-			Usage:   []string{"USE CATALOG my_catalog", "USE my_database"},
-		}
+	tokens := TokenizeSQL(statement)
+	if len(tokens) < 2 {
+		return "", "", useError()
 	}
 
-	isFirstWordUse := strings.ToUpper(words[0]) == config.ConfigOpUse
-	isSecondWordCatalog := strings.ToUpper(words[1]) == config.ConfigOpUseCatalog
-	// handle "USE database_name" statement
-	if len(words) == 2 && isFirstWordUse {
-		if isSecondWordCatalog {
-			// handle empty catalog name -> "USE CATALOG "
-			return "", "", &types.StatementError{
-				Message: "missing catalog name",
-				Usage:   []string{"USE CATALOG my_catalog"},
-			}
-		} else {
-			return config.ConfigKeyDatabase, words[1], nil
-		}
-	}
+	isFirstWordUse := strings.ToUpper(tokens[0]) == config.OpUse
+	isSecondWordCatalog := strings.ToUpper(tokens[1]) == config.OpUseCatalog
 
 	// handle "USE CATALOG catalog_name" statement
-	if len(words) == 3 && isFirstWordUse && isSecondWordCatalog {
-		return config.ConfigKeyCatalog, words[2], nil
+	if isFirstWordUse && isSecondWordCatalog {
+		if len(tokens) == 3 {
+			return tokens[2], "", nil
+		} else {
+			return "", "", &types.StatementError{
+				Message: "invalid syntax for USE CATALOG",
+				Usage:   []string{"USE CATALOG `my_catalog`"},
+			}
+		}
 	}
 
-	return "", "", &types.StatementError{
+	if isFirstWordUse {
+		switch len(tokens) {
+		// handle "USE database_name" statement
+		case 2:
+			return "", tokens[1], nil
+		// handle "USE `catalog_name`.`database_name`" statement
+		case 4:
+			if tokens[2] == "." {
+				return tokens[1], tokens[3], nil
+			}
+		default:
+			return "", "", useError()
+		}
+	}
+
+	return "", "", useError()
+}
+
+func useError() *types.StatementError {
+	return &types.StatementError{
 		Message: "invalid syntax for USE",
-		Usage:   []string{"USE CATALOG my_catalog", "USE my_database"},
+		Usage:   []string{"USE CATALOG `my_catalog`", "USE `my_database`", "USE `my_catalog`.`my_database`"},
 	}
 }
 
@@ -273,14 +396,14 @@ func parseUseStatement(statement string) (string, string, error) {
 func parseResetStatement(statement string) (string, error) {
 	statement = removeStatementTerminator(statement)
 
-	indexOfReset := strings.Index(strings.ToUpper(statement), config.ConfigOpReset)
+	indexOfReset := strings.Index(strings.ToUpper(statement), config.OpReset)
 	if indexOfReset == -1 {
 		return "", &types.StatementError{
 			Message: "invalid syntax for RESET",
 			Usage:   []string{"RESET 'key'"},
 		}
 	}
-	startOfStrAfterReset := indexOfReset + len(config.ConfigOpReset)
+	startOfStrAfterReset := indexOfReset + len(config.OpReset)
 	// This is the case where we reset the entire config (e.g. "RESET")
 	if startOfStrAfterReset >= len(statement) {
 		return "", nil
@@ -315,63 +438,42 @@ func parseResetStatement(statement string) (string, error) {
 	return key, nil
 }
 
-func processHttpErrors(resp *http.Response, err error) error {
-	if err != nil {
-		return &types.StatementError{Message: err.Error()}
-	}
-
-	if resp != nil && resp.StatusCode >= 400 {
-		if resp.StatusCode == http.StatusUnauthorized {
-			return &types.StatementError{
-				Message:    "unauthorized",
-				Suggestion: `Please run "confluent login"`,
-				StatusCode: resp.StatusCode,
-			}
-		}
-
-		statementErr := flinkgatewayv1alpha1.NewError()
-		body, err := io.ReadAll(resp.Body)
-
-		if err != nil {
-			return &types.StatementError{Message: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
-		}
-
-		err = json.Unmarshal(body, &statementErr)
-
-		if err != nil || statementErr == nil || statementErr.Title == nil || statementErr.Detail == nil {
-			return &types.StatementError{Message: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
-		}
-
-		return &types.StatementError{Message: fmt.Sprintf("%s: %s", statementErr.GetTitle(), statementErr.GetDetail())}
-	}
-
-	return nil
-}
-
-// Used to help mocking answers for now - will be removed in the future
-//  Or replaced with a call to a /validate endpoint
-func startsWithValidSQL(statement string) bool {
-	if statement == "" {
+func hasSensitiveKey(key string) bool {
+	secretsPrefix := getSubstringUpToSecondDot(key)
+	if secretsPrefix == "" {
 		return false
 	}
 
-	words := strings.Fields(statement)
-	firstWord := strings.ToUpper(words[0])
-	return config.SQLKeywords.Contains(firstWord)
+	secretsPrefix = strings.ToLower(secretsPrefix)
+	distance := levenshtein.DistanceForStrings([]rune(config.KeySqlSecrets), []rune(secretsPrefix), levenshtein.DefaultOptions)
+
+	return distance <= 2
+}
+
+func getSubstringUpToSecondDot(s string) string {
+	firstDot := strings.Index(s, ".")
+	if firstDot == -1 {
+		return ""
+	}
+	if len(s) <= firstDot+2 {
+		return ""
+	}
+
+	secondDot := strings.Index(s[firstDot+1:], ".")
+	if secondDot == -1 {
+		return ""
+	}
+	secondDot += firstDot + 1
+
+	return s[:secondDot+1]
 }
 
 // Removes leading, trailling spaces, and semicolon from end, if present
 func removeStatementTerminator(s string) string {
-	for strings.HasSuffix(s, config.ConfigStatementTerminator) {
-		s = strings.TrimSuffix(s, config.ConfigStatementTerminator)
+	for strings.HasSuffix(s, config.StatementTerminator) {
+		s = strings.TrimSuffix(s, config.StatementTerminator)
 	}
 	return s
-}
-
-// Removes spaces, tabs and newlines
-func removeTabNewLineAndWhitesSpaces(str string) string {
-	replacer := strings.NewReplacer(" ", "", "\t", "", "\n", "", "\r\n", "")
-	return replacer.Replace(str)
 }
 
 func statementStartsWithOp(statement, op string) bool {
@@ -390,6 +492,8 @@ func parseStatementType(statement string) StatementType {
 		return ResetStatement
 	} else if statementStartsWithOp(statement, string(ExitStatement)) {
 		return ExitStatement
+	} else if statementStartsWithOp(statement, string(QuitStatement)) {
+		return QuitStatement
 	} else {
 		return OtherStatement
 	}
@@ -424,8 +528,8 @@ func calcWaitTime(retries int) time.Duration {
 // Function to extract timeout for waiting for results.
 // We either use the value set by user using set or use a default value of 10 minutes (as of today)
 func (s *Store) getTimeout() time.Duration {
-	if s.Properties.HasKey(config.ConfigKeyResultsTimeout) {
-		timeoutInMilliseconds, err := strconv.Atoi(s.Properties.Get(config.ConfigKeyResultsTimeout))
+	if s.Properties.HasKey(config.KeyResultsTimeout) {
+		timeoutInMilliseconds, err := strconv.Atoi(s.Properties.Get(config.KeyResultsTimeout))
 		if err == nil {
 			// TODO - check for error when setting the property so user knows he hasn't set the results-timeout property properly
 			return time.Duration(timeoutInMilliseconds) * time.Millisecond

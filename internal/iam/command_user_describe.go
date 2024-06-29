@@ -6,12 +6,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c userCommand) newDescribeCommand() *cobra.Command {
+func (c *userCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a user.",
@@ -25,9 +24,9 @@ func (c userCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c userCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *userCommand) describe(cmd *cobra.Command, args []string) error {
 	if resource.LookupType(args[0]) != resource.User {
-		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
+		return fmt.Errorf(badResourceIdErrorMsg, resource.UserPrefix)
 	}
 
 	user, err := c.V2Client.GetIamUserById(args[0])

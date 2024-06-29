@@ -1,0 +1,58 @@
+FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-linux-repo-base-amd64:latest
+
+SHELL ["/bin/bash", "-c"]
+
+COPY . /cli/
+
+# Create rpm repo
+# To update the repo without syncing all prior rpm packages, we use --update and --skip-stat.
+# The --update flag leaves package metadata alone if the file exists and has the same size and mtime.
+# The --skip-stat flag tells createrepo to not check the size or mtime.
+# We use this to trick createrepo by creating empty files with the correct file names so that it thinks the other packages are there:
+# 1. Use xmllint to parse repomd.xml and get the filename of the current <hash>-primary.xml.gz, and then unzip this file with gzip,
+# 2. Use xmllint to parse primary.xml to get the package names,
+# 3. Create empty text files sharing these package names.
+RUN mkdir /rpm-temp && \
+    if [[ -d /cli/rpm/repodata ]]; then \
+        cp -r /cli/rpm/repodata /rpm-temp/ && \
+        gzip -k -c -d /rpm-temp/$(xmllint --xpath "string(//*[local-name()='data'][@type='primary']/*[local-name()='location']/@href)" /rpm-temp/repodata/repomd.xml) > /primary.xml && \
+        for ((i=1; i<=$(xmllint --xpath "string(//*[local-name()='metadata']/@packages)" /primary.xml); i++)); do \
+            touch /rpm-temp/$(xmllint --xpath "string((//*[local-name()='location'])[$i]/@href)" /primary.xml); \
+        done; \
+    fi && \
+    cp /cli/prebuilt/*.rpm /rpm-temp/ && \
+    createrepo_c --update --skip-stat /rpm-temp && \
+    mv /cli/prebuilt/*.rpm /cli/rpm/ && \
+    cp -r /rpm-temp/repodata /cli/rpm
+
+# Sign rpm repo
+RUN --mount=type=secret,id=rpm_gpg_secret_key --mount=type=secret,id=rpm_gpg_passphrase \
+    gpg --batch --import /run/secrets/rpm_gpg_secret_key && \
+    echo allow-preset-passphrase > ~/.gnupg/gpg-agent.conf && \
+    gpg-connect-agent reloadagent /bye && \
+    export KEY_GRIP=$(gpg --with-keygrip -K --with-colons | grep '^grp' | head -1 | cut -d: -f10) && \
+    /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $(cat /run/secrets/rpm_gpg_passphrase) $KEY_GRIP && \
+    gpg --yes --batch --detach-sign --armor --output /cli/rpm/repodata/repomd.xml.asc /cli/rpm/repodata/repomd.xml && \
+    gpg --yes --batch --armor --export --output /cli/rpm/archive.key && \
+    cp /cli/confluent-cli.repo /cli/rpm && \
+    gpg --yes --batch --delete-secret-keys $(gpg --with-keygrip -K --with-colons | grep '^fpr' | head -1 | cut -d: -f10) && \
+    gpg --batch --delete-keys $(gpg --with-keygrip -k --with-colons | grep '^fpr' | head -1 | cut -d: -f10)
+
+# Create deb repo
+RUN aptly -config=/cli/.aptly.conf repo create -distribution=stable -component=main confluent-cli && \
+    aptly -config=/cli/.aptly.conf repo add confluent-cli /cli/prebuilt/*.deb && \
+    aptly -config=/cli/.aptly.conf snapshot create confluent-cli-snapshot from repo confluent-cli && \
+    aptly -config=/cli/.aptly.conf publish snapshot -distribution=stable -component=main confluent-cli-snapshot "filesystem:deploy:" && \
+    /cli/scripts/update_deb_repo_metadata.sh /cli/deb /deb
+
+# Sign deb repo
+RUN --mount=type=secret,id=deb_gpg_secret_key --mount=type=secret,id=deb_gpg_passphrase \
+    gpg --batch --import /run/secrets/deb_gpg_secret_key && \
+    export KEY_GRIP=$(gpg --with-keygrip -K --with-colons | grep '^grp' | head -1 | cut -d: -f10) && \
+    /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase $(cat /run/secrets/deb_gpg_passphrase) $KEY_GRIP && \
+    gpg --yes --batch --clear-sign --digest-algo SHA256 --output /deb/dists/stable/InRelease /deb/dists/stable/Release && \
+    gpg --yes --batch --detach-sign --armor --digest-algo SHA256 --output /deb/dists/stable/Release.gpg /deb/dists/stable/Release && \
+    gpg --yes --batch --armor --export --output /deb/archive.key && \
+    cp -r /deb/. /cli/deb && \
+    gpg --yes --batch --delete-secret-keys $(gpg --with-keygrip -K --with-colons | grep '^fpr' | head -1 | cut -d: -f10) && \
+    gpg --batch --delete-keys $(gpg --with-keygrip -k --with-colons | grep '^fpr' | head -1 | cut -d: -f10)

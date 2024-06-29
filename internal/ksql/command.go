@@ -25,7 +25,7 @@ type ksqlCluster struct {
 	Id                    string `human:"ID" serialized:"id"`
 	Name                  string `human:"Name" serialized:"name"`
 	OutputTopicPrefix     string `human:"Topic Prefix" serialized:"topic_prefix"`
-	KafkaClusterId        string `human:"Kafka" serialized:"kafka"`
+	KafkaCluster          string `human:"Kafka Cluster" serialized:"kafka_cluster"`
 	Storage               int32  `human:"Storage" serialized:"storage"`
 	Endpoint              string `human:"Endpoint" serialized:"endpoint"`
 	Status                string `human:"Status" serialized:"status"`
@@ -54,7 +54,7 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2C
 		Id:                    cluster.GetId(),
 		Name:                  cluster.Spec.GetDisplayName(),
 		OutputTopicPrefix:     cluster.Status.GetTopicPrefix(),
-		KafkaClusterId:        cluster.Spec.KafkaCluster.GetId(),
+		KafkaCluster:          cluster.Spec.KafkaCluster.GetId(),
 		Storage:               cluster.Status.GetStorage(),
 		Endpoint:              cluster.Status.GetHttpEndpoint(),
 		Status:                c.getClusterStatus(cluster),
@@ -78,13 +78,7 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 }
 
 func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
-	ctx := c.Config.Context()
-	state, err := ctx.AuthenticatedState()
-	if err != nil {
-		return false, err
-	}
-
-	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+	dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 	if err != nil {
 		return false, err
 	}

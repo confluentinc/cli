@@ -1,0 +1,5 @@
+[WARN] This is a Confluent Platform command. Confluent Cloud URLs are not supported.
+Error: Kafka REST request failed: GET http://127.0.0.1:1024/v3/clusters: 404 Not Found
+
+Suggestions:
+    Please check the status of your Kafka cluster or submit a support ticket.

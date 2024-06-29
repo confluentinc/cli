@@ -14,19 +14,19 @@ import (
 )
 
 type costOut struct {
-	StartDate           string `human:"Start Date" serialized:"start_date"`
-	EndDate             string `human:"End Date" serialized:"end_date"`
-	Granularity         string `human:"Granularity" serialized:"granularity"`
-	LineType            string `human:"Line Type" serialized:"line_type"`
-	Product             string `human:"Product,omitempty" serialized:"product,omitempty"`
-	ResourceId          string `human:"Resource ID,omitempty" serialized:"resource_id,omitempty"`
-	ResourceDisplayName string `human:"Resource Display Name,omitempty" serialized:"resource_display_name,omitempty"`
-	EnvironmentId       string `human:"Environment ID,omitempty" serialized:"environment_id,omitempty"`
-	NetworkAccessType   string `human:"Network Access Type,omitempty" serialized:"network_access_type,omitempty"`
-	Price               string `human:"Price,omitempty" serialized:"price,omitempty"`
-	OriginalAmount      string `human:"Original Amount" serialized:"original_amount"`
-	DiscountAmount      string `human:"Discount Amount,omitempty" serialized:"discount_amount,omitempty"`
-	Amount              string `human:"Amount,omitempty" serialized:"amount,omitempty"`
+	StartDate         string `human:"Start Date" serialized:"start_date"`
+	EndDate           string `human:"End Date" serialized:"end_date"`
+	Granularity       string `human:"Granularity" serialized:"granularity"`
+	LineType          string `human:"Line Type" serialized:"line_type"`
+	Product           string `human:"Product,omitempty" serialized:"product,omitempty"`
+	ResourceId        string `human:"Resource ID,omitempty" serialized:"resource_id,omitempty"`
+	ResourceName      string `human:"Resource Name,omitempty" serialized:"resource_name,omitempty"`
+	EnvironmentId     string `human:"Environment ID,omitempty" serialized:"environment_id,omitempty"`
+	NetworkAccessType string `human:"Network Access Type,omitempty" serialized:"network_access_type,omitempty"`
+	Price             string `human:"Price,omitempty" serialized:"price,omitempty"`
+	OriginalAmount    string `human:"Original Amount" serialized:"original_amount"`
+	DiscountAmount    string `human:"Discount Amount,omitempty" serialized:"discount_amount,omitempty"`
+	Amount            string `human:"Amount,omitempty" serialized:"amount,omitempty"`
 }
 
 func (c *command) newCostListCommand() *cobra.Command {
@@ -62,7 +62,7 @@ func (c *command) checkDateFormat(date string) error {
 	return nil
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	startDate, err := cmd.Flags().GetString("start-date")
 	if err != nil {
 		return err
@@ -73,12 +73,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err = c.checkDateFormat(startDate); err != nil {
-		return fmt.Errorf("invalid start date: %v", err)
+	if err := c.checkDateFormat(startDate); err != nil {
+		return fmt.Errorf("invalid start date: %w", err)
 	}
 
-	if err = c.checkDateFormat(startDate); err != nil {
-		return fmt.Errorf("invalid end date: %v", err)
+	if err := c.checkDateFormat(startDate); err != nil {
+		return fmt.Errorf("invalid end date: %w", err)
 	}
 
 	costs, err := c.V2Client.ListBillingCosts(startDate, endDate)
@@ -116,7 +116,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 		if resource, ok := cost.GetResourceOk(); ok {
 			out.ResourceId = resource.GetId()
-			out.ResourceDisplayName = resource.GetDisplayName()
+			out.ResourceName = resource.GetDisplayName()
 			if environment, ok := resource.GetEnvironmentOk(); ok {
 				out.EnvironmentId = environment.GetId()
 			}

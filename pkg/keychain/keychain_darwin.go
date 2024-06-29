@@ -8,9 +8,8 @@ import (
 
 	"github.com/keybase/go-keychain"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 )
 
 const (
@@ -19,7 +18,7 @@ const (
 )
 
 func Write(isCloud bool, ctxName, url, username, password string) error {
-	service := netrc.GetLocalCredentialName(isCloud, ctxName)
+	service := config.GetLocalCredentialName(isCloud, ctxName)
 
 	item := keychain.NewGenericPassword(service, url, fmt.Sprintf("%s-%s", username, url), []byte(username+separator+password), accessGroup)
 	item.SetSynchronizable(keychain.SynchronizableNo)
@@ -34,7 +33,7 @@ func Write(isCloud bool, ctxName, url, username, password string) error {
 }
 
 func Delete(isCloud bool, ctxName string) error {
-	service := netrc.GetLocalCredentialName(isCloud, ctxName)
+	service := config.GetLocalCredentialName(isCloud, ctxName)
 
 	item := keychain.NewItem()
 	item.SetSecClass(keychain.SecClassGenericPassword)
@@ -54,7 +53,7 @@ func Delete(isCloud bool, ctxName string) error {
 				return err
 			}
 
-			log.CliLogger.Warnf(errors.RemoveKeychainCredentialsMsg, username)
+			log.CliLogger.Warnf(`Removed credentials for user "%s" from keychain`, username)
 			break
 		}
 	}
@@ -69,7 +68,7 @@ func Read(isCloud bool, ctxName, url string) (string, string, error) {
 	item.SetReturnData(true)
 
 	if ctxName != "" {
-		service := netrc.GetLocalCredentialName(isCloud, ctxName)
+		service := config.GetLocalCredentialName(isCloud, ctxName)
 		item.SetService(service)
 	}
 
@@ -86,7 +85,7 @@ func Read(isCloud bool, ctxName, url string) (string, string, error) {
 func parseCredentialsFromKeychain(data []byte) (string, string, error) {
 	substrings := strings.Split(string(data), separator)
 	if len(substrings) < 2 {
-		return "", "", errors.New(errors.ParseKeychainCredentialsErrorMsg)
+		return "", "", fmt.Errorf("unable to parse credentials in keychain access")
 	}
 	return substrings[0], substrings[1], nil
 }

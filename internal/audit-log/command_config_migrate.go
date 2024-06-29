@@ -74,13 +74,13 @@ func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	combinedSpec, warnings, err := AuditLogConfigTranslation(clusterConfigs, bootstrapServers, authority)
+	combinedSpec, warnings, err := configTranslation(clusterConfigs, bootstrapServers, authority)
 	if err != nil {
 		return err
 	}
 	for _, warning := range warnings {
-		output.ErrPrintln(warning)
-		output.ErrPrintln()
+		output.ErrPrintln(c.Config.EnableColor, warning)
+		output.ErrPrintln(c.Config.EnableColor, "")
 	}
 
 	enc := json.NewEncoder(c.OutOrStdout())

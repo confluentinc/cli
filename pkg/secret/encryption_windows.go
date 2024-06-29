@@ -4,6 +4,7 @@ package secret
 
 import (
 	"github.com/billgraziano/dpapi"
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 func generateRandomBytes(_ int) ([]byte, error) {
@@ -27,6 +28,7 @@ func Encrypt(_, password string, _, _ []byte) (string, error) {
 }
 
 func Decrypt(_, encrypted string, _, _ []byte) (string, error) {
+	log.CliLogger.Tracef("Decrypting secret: %s", encrypted)
 	decryptedPassword, err := dpapi.Decrypt(encrypted)
 	if err != nil {
 		return "", err

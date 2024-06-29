@@ -3,7 +3,6 @@ package streamshare
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -20,6 +19,6 @@ func (c *command) optIn(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(errors.OptInMsg)
+	output.Println(c.Config.EnableColor, "Successfully opted in to Stream Sharing.")
 	return nil
 }

@@ -15,6 +15,10 @@ import (
 
 var mdsRoutes = []route{
 	{"/security/1.0/authenticate", handleAuthenticate},
+	{"/security/1.0/features", handleFeatures},
+	{"/security/1.0/oidc/device/authenticate", handleDeviceAuthenticate},
+	{"/security/1.0/oidc/device/check-auth", handleDeviceCheckAuth},
+	{"/security/1.0/oidc/device/extend-auth", handleDeviceExtendAuth},
 	{"/security/1.0/registry/clusters", handleRegistryClusters},
 }
 

@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -11,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/cluster"
 	pcluster "github.com/confluentinc/cli/v3/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -55,7 +55,7 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return cluster.ClusterName == clusterName
 	})
 	if !found {
-		return errors.Errorf(errors.UnknownClusterErrorMsg, clusterName)
+		return fmt.Errorf(`unknown cluster "%s"`, clusterName)
 	}
 
 	httpResp, err = c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(ctx, clusterName)
@@ -63,6 +63,6 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return cluster.HandleClusterError(err, httpResp)
 	}
 
-	output.Printf(errors.UnregisteredClusterMsg, clusterName)
+	output.Printf(c.Config.EnableColor, "Successfully unregistered cluster \"%s\" from the Cluster Registry.\n", clusterName)
 	return nil
 }

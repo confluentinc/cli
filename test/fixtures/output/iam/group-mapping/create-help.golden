@@ -6,12 +6,12 @@ Usage:
 Examples:
 Create a group mapping named "demo-group-mapping".
 
-  $ confluent iam group-mapping create demo-group-mapping --description "new description" --filter "\"demo\" in claims.group"
+  $ confluent iam group-mapping create demo-group-mapping --description "new description" --filter "\"demo\" in groups"
 
 Flags:
       --description string   Description of the group mapping.
-      --context string       CLI context name.
       --filter string        A supported Common Expression Language (CEL) filter expression for group mappings. (default "true")
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

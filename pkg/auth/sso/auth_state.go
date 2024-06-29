@@ -12,7 +12,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 var (
@@ -20,11 +19,6 @@ var (
 	ssoProviderCallbackLocalURL = fmt.Sprintf("http://127.0.0.1:%d", port) + ssoProviderCallbackEndpoint
 
 	ssoConfigs = map[string]ssoConfig{
-		"cpd": {
-			ssoProviderDomain:     "login-cpd.confluent-dev.io/oauth",
-			ssoProviderIdentifier: "https://confluent-cpd.auth0.com/api/v2/",
-			ssoProviderScope:      "email%20openid%20offline_access",
-		},
 		"devel": {
 			ssoProviderDomain:     "login.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
@@ -35,7 +29,7 @@ var (
 			ssoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"infra-us-gov": {
-			ssoProviderDomain: "confluent-infra-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderDomain: "confluent-infra-us-gov.okta.com/oauth2/v1",
 			ssoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"prod": {
@@ -87,40 +81,20 @@ type authState struct {
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
-func newState(authURL string, noBrowser bool) (*authState, error) {
-	authURL = strings.TrimSuffix(authURL, "/")
-
-	if authURL == "" {
-		authURL = "https://confluent.cloud"
+func newState(authUrl string, noBrowser bool) (*authState, error) {
+	if authUrl == "" {
+		authUrl = "https://confluent.cloud"
 	}
 
-	var env string
-	if authURL == "https://confluent.cloud" {
-		env = "prod"
-	} else if strings.HasSuffix(authURL, "priv.cpdev.cloud") {
-		env = "cpd"
-	} else if authURL == "https://devel.cpdev.cloud" {
-		env = "devel"
-	} else if authURL == "https://stag.cpdev.cloud" {
-		env = "stag"
-	} else if authURL == "https://confluentgov.com" {
-		env = "prod-us-gov"
-	} else if authURL == "https://infra.confluentgov-internal.com" {
-		env = "infra-us-gov"
-	} else if authURL == "https://devel.confluentgov-internal.com" {
-		env = "devel-us-gov"
-	} else if authURL == testserver.TestCloudUrl.String() {
-		env = "test"
-	} else {
-		return nil, fmt.Errorf("unrecognized auth url: %s", authURL)
-	}
+	env := GetCCloudEnvFromBaseUrl(authUrl)
 
-	state := &authState{}
-	state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint
-	state.SSOProviderHost = "https://" + ssoConfigs[env].ssoProviderDomain
-	state.SSOProviderClientID = GetAuth0CCloudClientIdFromBaseUrl(authURL)
-	state.SSOProviderIdentifier = ssoConfigs[env].ssoProviderIdentifier
-	state.SSOProviderScope = ssoConfigs[env].ssoProviderScope
+	state := &authState{
+		SSOProviderCallbackUrl: strings.TrimSuffix(authUrl, "/") + ssoProviderCallbackEndpoint,
+		SSOProviderHost:        "https://" + ssoConfigs[env].ssoProviderDomain,
+		SSOProviderClientID:    GetAuth0CCloudClientIdFromBaseUrl(authUrl),
+		SSOProviderIdentifier:  ssoConfigs[env].ssoProviderIdentifier,
+		SSOProviderScope:       ssoConfigs[env].ssoProviderScope,
+	}
 
 	if !noBrowser {
 		// if we're not using the no browser flow, the callback will always be localhost regardless of environment
@@ -139,20 +113,20 @@ func (s *authState) generateCodes() error {
 	randomBytes := make([]byte, 32)
 
 	if _, err := rand.Read(randomBytes); err != nil {
-		return errors.Wrap(err, errors.GenerateRandomSSOProviderErrorMsg)
+		return fmt.Errorf("unable to generate random bytes for SSO provider state: %w", err)
 	}
 
 	s.SSOProviderState = base64.RawURLEncoding.EncodeToString(randomBytes)
 
 	if _, err := rand.Read(randomBytes); err != nil {
-		return errors.Wrap(err, errors.GenerateRandomCodeVerifierErrorMsg)
+		return fmt.Errorf("unable to generate random bytes for code verifier: %w", err)
 	}
 
 	s.CodeVerifier = base64.RawURLEncoding.EncodeToString(randomBytes)
 
 	hasher := sha256.New()
 	if _, err := hasher.Write([]byte(s.CodeVerifier)); err != nil {
-		return errors.Wrap(err, errors.ComputeHashErrorMsg)
+		return fmt.Errorf("unable to compute hash for code challenge: %w", err)
 	}
 	s.CodeChallenge = base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
 
@@ -194,13 +168,13 @@ func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 	if token, ok := data["id_token"]; ok {
 		s.SSOProviderIDToken = token.(string)
 	} else {
-		return errors.Errorf(errors.FmtMissingOAuthFieldErrorMsg, "id_token")
+		return fmt.Errorf(errors.FmtMissingOauthFieldErrorMsg, "id_token")
 	}
 
 	if token, ok := data["refresh_token"]; ok {
 		s.SSOProviderRefreshToken = token.(string)
 	} else {
-		return errors.Errorf(errors.FmtMissingOAuthFieldErrorMsg, "refresh_token")
+		return fmt.Errorf(errors.FmtMissingOauthFieldErrorMsg, "refresh_token")
 	}
 
 	return nil
@@ -212,19 +186,19 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 	log.CliLogger.Debug("OAuth token request payload: ", payload)
 	req, err := http.NewRequest(http.MethodPost, url, payload)
 	if err != nil {
-		return nil, errors.Wrap(err, errors.ConstructOAuthRequestErrorMsg)
+		return nil, fmt.Errorf("failed to construct oauth token re, errquest: %w", err)
 	}
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get oauth token")
+		return nil, fmt.Errorf("failed to get oauth token: %w", err)
 	}
 	defer res.Body.Close()
 	errorResponseBody, _ := io.ReadAll(res.Body)
 	var data map[string]any
 	if err := json.Unmarshal(errorResponseBody, &data); err != nil {
 		log.CliLogger.Debugf("Failed oauth token response body: %s", errorResponseBody)
-		return nil, errors.Wrap(err, errors.UnmarshalOAuthTokenErrorMsg)
+		return nil, fmt.Errorf("failed to unmarshal response body in oauth token request: %w", err)
 	}
 	return data, nil
 }

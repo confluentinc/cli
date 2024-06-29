@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newMdsClient(url, userAgent string, unsafeTrace bool) *mdsv2.APIClient {
+func newMdsClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *mdsv2.APIClient {
 	cfg := mdsv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = mdsv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -20,7 +20,7 @@ func newMdsClient(url, userAgent string, unsafeTrace bool) *mdsv2.APIClient {
 }
 
 func (c *Client) mdsApiContext() context.Context {
-	return context.WithValue(context.Background(), mdsv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), mdsv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateIamRoleBinding(iamV2RoleBinding *mdsv2.IamV2RoleBinding) (mdsv2.IamV2RoleBinding, error) {

@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -26,16 +25,6 @@ func (c *command) newExporterResumeCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	return cmd
 }
 
@@ -49,6 +38,6 @@ func (c *command) exporterResume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.ExporterActionMsg, "Resumed", args[0])
+	output.Printf(c.Config.EnableColor, exporterActionMsg, "Resumed", args[0])
 	return nil
 }

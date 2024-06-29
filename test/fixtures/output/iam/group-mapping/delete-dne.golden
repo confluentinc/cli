@@ -1,4 +1,4 @@
-Error: SSO group mapping "pool-dne" not found
+Error: SSO group mapping "group-dne" not found
 
 Suggestions:
     List available SSO group mappings with `confluent iam group-mapping list`.

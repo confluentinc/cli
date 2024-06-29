@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newOrgClient(url, userAgent string, unsafeTrace bool) *orgv2.APIClient {
+func newOrgClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *orgv2.APIClient {
 	cfg := orgv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = orgv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -20,7 +20,7 @@ func newOrgClient(url, userAgent string, unsafeTrace bool) *orgv2.APIClient {
 }
 
 func (c *Client) orgApiContext() context.Context {
-	return context.WithValue(context.Background(), orgv2.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), orgv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) CreateOrgEnvironment(environment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, error) {

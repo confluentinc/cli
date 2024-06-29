@@ -1,0 +1,12 @@
+id: pipe-12345
+name: testPipeline
+description: description
+ksql_cluster: lksqlc-12345
+schema_registry_cluster: ""
+secret_names:
+    - name1
+    - name2
+activation_privilege: false
+state: draft
+created_at: 2022-10-04T06:00:00Z
+updated_at: 2022-10-06T06:00:00Z

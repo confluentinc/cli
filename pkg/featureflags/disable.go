@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
 
@@ -22,7 +21,7 @@ func DisableHelpText(command *cobra.Command, flags []string) {
 	}
 }
 
-func GetLDDisableMap(ctx *dynamicconfig.DynamicContext) map[string]any {
+func GetLDDisableMap(ctx *config.Context) map[string]any {
 	ldDisableJson := Manager.JsonVariation("cli.disable", ctx, config.CliLaunchDarklyClient, true, nil)
 	ldDisable, ok := ldDisableJson.(map[string]any)
 	if !ok {

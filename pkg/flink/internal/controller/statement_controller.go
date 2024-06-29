@@ -67,7 +67,9 @@ func (c *StatementController) waitForStatementToBeReadyOrError(processedStatemen
 	ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 	defer cancelWaitPendingStatement()
 
-	go c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isCancelEvent), cancelWaitPendingStatement)
+	go utils.WithPanicRecovery(func() {
+		c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isCancelEvent), cancelWaitPendingStatement)
+	})()
 
 	readyStatement, err := c.store.WaitPendingStatement(ctx, processedStatement)
 	if err != nil {
@@ -104,11 +106,13 @@ func (c *StatementController) waitForStatementToBeInTerminalStateOrError(process
 	ctx, cancelWaitForTerminalStatementState := context.WithCancel(context.Background())
 	defer cancelWaitForTerminalStatementState()
 
-	go c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isDetachEvent, isCancelEvent), cancelWaitForTerminalStatementState)
+	go utils.WithPanicRecovery(func() {
+		c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isDetachEvent, isCancelEvent), cancelWaitForTerminalStatementState)
+	})()
 
-	output.Printf("Statement phase is %s.\n", readyStatementWithResults.Status)
+	output.Printf(false, "Statement phase is %s.\n", readyStatementWithResults.Status)
 	col := fColor.New(color.AccentColor)
-	output.Printf("Listening for execution errors. %s.\n", col.Sprint("Press Enter to detach"))
+	output.Printf(false, "Listening for execution errors. %s.\n", col.Sprint("Press Enter to detach"))
 	terminalStatement, err := c.store.WaitForTerminalStatementState(ctx, *readyStatementWithResults)
 	if err != nil {
 		return nil, err
@@ -132,7 +136,7 @@ func (c *StatementController) userInputIsOneOf(keyEvents ...func(key prompt.Key)
 }
 
 func isCancelEvent(key prompt.Key) bool {
-	return lo.Contains([]prompt.Key{prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.Escape}, key)
+	return lo.Contains([]prompt.Key{prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.ControlSpace}, key)
 }
 
 func isDetachEvent(key prompt.Key) bool {

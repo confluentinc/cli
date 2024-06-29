@@ -2,8 +2,8 @@
 | ID                      | lksqlc-12345             |
 | Name                    | account ksql             |
 | Topic Prefix            | pksqlc-zxcvb             |
-| Kafka                   | lkc-abcde                |
-| Storage                 |                      130 |
+| Kafka Cluster           | lkc-abcde                |
+| Storage                 | 130                      |
 | Endpoint                | SASL_SSL://ksql-endpoint |
 | Status                  | PROVISIONING             |
 | Detailed Processing Log | true                     |

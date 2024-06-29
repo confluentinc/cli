@@ -4,15 +4,15 @@ Usage:
   confluent iam group-mapping update <id> [flags]
 
 Examples:
-Update the description of group mapping "pool-123456".
+Update the description of group mapping "group-123456".
 
-  $ confluent iam group-mapping update pool-123456 --description "updated description"
+  $ confluent iam group-mapping update group-123456 --description "updated description"
 
 Flags:
       --name string          Name of the group mapping.
       --description string   Description of the group mapping.
-      --context string       CLI context name.
       --filter string        A supported Common Expression Language (CEL) filter expression for group mappings. (default "true")
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

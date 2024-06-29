@@ -85,7 +85,7 @@ func New() *cobra.Command {
 				return err
 			}
 
-			output.Println(out)
+			output.Println(false, out)
 			return nil
 		},
 	}

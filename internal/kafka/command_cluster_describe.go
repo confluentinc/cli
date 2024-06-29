@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Cloud", "Availability", "Region", "Network", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
@@ -25,18 +26,19 @@ type describeStruct struct {
 	Type               string `human:"Type" serialized:"type"`
 	ClusterSize        int32  `human:"Cluster Size" serialized:"cluster_size"`
 	PendingClusterSize int32  `human:"Pending Cluster Size" serialized:"pending_cluster_size"`
-	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress"`
-	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress"`
+	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress_limit"`
+	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress_limit"`
 	Storage            string `human:"Storage" serialized:"storage"`
-	ServiceProvider    string `human:"Provider" serialized:"provider"`
+	Cloud              string `human:"Cloud" serialized:"cloud"`
 	Region             string `human:"Region" serialized:"region"`
 	Availability       string `human:"Availability" serialized:"availability"`
+	Network            string `human:"Network,omitempty" serialized:"network,omitempty"`
 	Status             string `human:"Status" serialized:"status"`
 	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
-	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count"`
+	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
 }
 
 func (c *clusterCommand) newDescribeCommand() *cobra.Command {
@@ -83,27 +85,27 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
 		if resource.LookupType(args[0]) != resource.KafkaCluster {
-			return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
+			return "", fmt.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
 		}
 		return args[0], nil
 	}
 
-	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
-	if lkc == "" {
+	clusterId := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+	if clusterId == "" {
 		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions)
 	}
 
-	return lkc, nil
+	return clusterId, nil
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	out := convertClusterToDescribeStruct(cluster, c.Context.Context)
+	out := convertClusterToDescribeStruct(cluster, c.Context)
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
 		// topicCount is 0 when err != nil, and will be omitted by `omitempty`
 		if err != nil {
-			log.CliLogger.Infof(errors.OmitTopicCountMsg, err)
+			log.CliLogger.Infof("The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v", err)
 		}
 		out.TopicCount = topicCount
 	}
@@ -128,9 +130,10 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		IngressLimit:       ingress,
 		EgressLimit:        egress,
 		Storage:            clusterStorage,
-		ServiceProvider:    strings.ToLower(cluster.Spec.GetCloud()),
+		Cloud:              strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
+		Network:            cluster.Spec.Network.GetId(),
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),

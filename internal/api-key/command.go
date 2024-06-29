@@ -7,17 +7,19 @@ import (
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/keystore"
 	presource "github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	keystore     keystore.KeyStore
+	keystore     *keystore.ConfigKeyStore
 	flagResolver pcmd.FlagResolver
 }
 
@@ -27,7 +29,16 @@ const (
 	updateOperation = "updating"
 )
 
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
+const (
+	apiKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
+	apiKeyUseFailedErrorMsg             = "unable to set active API key"
+	apiKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
+	nonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
+	refuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use the `--force` flag."
+	unableToStoreApiKeyErrorMsg         = "unable to store API key locally: %w"
+)
+
+func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
 		Short:       "Manage API keys.",
@@ -36,7 +47,6 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 
 	c := &command{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-		keystore:                keystore,
 		flagResolver:            resolver,
 	}
 
@@ -51,10 +61,10 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 	return cmd
 }
 
-func (c *command) addResourceFlag(cmd *cobra.Command, addCloud bool) {
+func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
 	description := "The ID of the resource the API key is for."
-	if addCloud {
-		description += ` Use "cloud" for a Cloud API key.`
+	if !isStore {
+		description += ` Use "cloud" for a Cloud API key, or "flink" for a Flink API key.`
 	}
 
 	cmd.Flags().String("resource", "", description)
@@ -102,8 +112,9 @@ func (c *command) addResourceFlag(cmd *cobra.Command, addCloud bool) {
 			i++
 		}
 
-		if addCloud {
+		if !isStore {
 			suggestions = append(suggestions, "cloud")
+			suggestions = append(suggestions, "flink")
 		}
 
 		return suggestions
@@ -191,10 +202,10 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	var apiKey string
 
 	switch resourceType {
-	case presource.Cloud:
+	case presource.Cloud, presource.Flink:
 		break
 	case presource.KafkaCluster:
-		cluster, err := c.Context.FindKafkaCluster(resource)
+		cluster, err := kafka.FindCluster(c.V2Client, c.Context, resource)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
@@ -225,4 +236,29 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	}
 
 	return resourceType, clusterId, apiKey, nil
+}
+
+func getResourceType(resource apikeysv2.ObjectReference) string {
+	switch resource.GetKind() {
+	case "Cloud":
+		return "cloud"
+	case "Cluster":
+		if getResourceApi(resource) == "cmk" {
+			return "kafka"
+		}
+	case "ksqlDB":
+		return "ksql"
+	case "Region":
+		if getResourceApi(resource) == "fcpm" {
+			return "flink-region"
+		}
+	case "SchemaRegistry":
+		return "schema-registry"
+	}
+
+	return ""
+}
+
+func getResourceApi(resource apikeysv2.ObjectReference) string {
+	return strings.Split(resource.GetApiVersion(), "/")[0]
 }

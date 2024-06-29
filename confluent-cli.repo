@@ -1,0 +1,6 @@
+[Confluent-CLI]
+name=Confluent CLI Repository
+baseurl=https://packages.confluent.io/confluent-cli/rpm
+gpgcheck=1
+gpgkey=https://packages.confluent.io/confluent-cli/rpm/archive.key
+enabled=1

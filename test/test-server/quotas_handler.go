@@ -32,7 +32,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 		quota2 := servicequotav1.ServiceQuotaV1AppliedQuota{
 			Id:           servicequotav1.PtrString("quota_a"),
 			Scope:        servicequotav1.PtrString("kafka_cluster"),
-			DisplayName:  servicequotav1.PtrString("Qutoa A"),
+			DisplayName:  servicequotav1.PtrString("Quota A"),
 			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
 			KafkaCluster: servicequotav1.NewObjectReference("lkc-2", "", ""),
 			Environment:  servicequotav1.NewObjectReference("env-2", "", ""),

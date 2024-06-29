@@ -10,6 +10,7 @@ is_supported_platform() {
   found=1
   case "$platform" in
     linux/amd64) found=0 ;;
+    linux/arm64) found=0 ;;
     darwin/amd64) found=0 ;;
     darwin/arm64) found=0 ;;
     windows/amd64) found=0 ;;
@@ -56,9 +57,6 @@ check_executable() {
 
 init_config() {
   mkdir -p ${HOME}/.confluent
-  if [[ ! -f "${HOME}/.confluent/config.json" ]] ; then
-    echo '{"disable_updates": true}' > "${HOME}/.confluent/config.json"
-  fi
 }
 
 cat /dev/null <<EOF

@@ -4,8 +4,8 @@ Usage:
   confluent flink [command]
 
 Available Commands:
+  artifact     Manage Flink UDF artifacts.
   compute-pool Manage Flink compute pools.
-  iam-binding  Manage Flink IAM bindings.
   region       List Flink regions.
   shell        Start Flink interactive SQL client.
   statement    Manage Flink SQL statements.

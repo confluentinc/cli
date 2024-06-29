@@ -9,12 +9,12 @@ Add "sa-12345" to an existing quota and remove "sa-67890".
   $ confluent kafka quota update cq-123ab --add-principals sa-12345 --remove-principals sa-67890
 
 Flags:
+      --name string                 Update name.
+      --description string          Update description.
       --ingress string              Update ingress limit for quota.
       --egress string               Update egress limit for quota.
       --add-principals strings      A comma-separated list of service accounts to add to the quota.
       --remove-principals strings   A comma-separated list of service accounts to remove from the quota.
-      --description string          Update description.
-      --name string                 Update display name.
       --context string              CLI context name.
   -o, --output string               Specify the output format as "human", "json", or "yaml". (default "human")
 

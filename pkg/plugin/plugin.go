@@ -28,12 +28,14 @@ type pluginInfo struct {
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
 func SearchPath(cfg *config.Config) map[string][]string {
 	if runtime.GOOS == "windows" {
-		log.CliLogger.Debugf("Searching $PATH and %%USERPROFILE%%\\.confluent\\plugins for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
+		log.CliLogger.Debugf(`Searching $PATH and %%USERPROFILE%%\.confluent\plugins for plugins. Plugins can be disabled in %s.`, cfg.GetFilename())
+	} else {
+		log.CliLogger.Debugf("Searching $PATH and ~/.confluent/plugins for plugins. Plugins can be disabled in %s.", cfg.GetFilename())
 	}
-	log.CliLogger.Debugf("Searching $PATH and ~/.confluent/plugins for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 
 	pathDirList := filepath.SplitList(os.Getenv("PATH"))
-	pluginDir := filepath.Join(os.Getenv("HOME"), ".confluent", "plugins")
+	home, _ := os.UserHomeDir()
+	pluginDir := filepath.Join(home, ".confluent", "plugins")
 	if !slices.Contains(pathDirList, pluginDir) {
 		pathDirList = append(pathDirList, pluginDir)
 	}
@@ -47,7 +49,7 @@ func SearchPath(cfg *config.Config) map[string][]string {
 		}
 
 		for _, entry := range entries {
-			if name := PluginFromEntry(entry); name != "" {
+			if name := nameFromEntry(entry); name != "" {
 				path := filepath.Join(dir, entry.Name())
 				plugins[name] = append(plugins[name], path)
 			}
@@ -57,7 +59,7 @@ func SearchPath(cfg *config.Config) map[string][]string {
 	return plugins
 }
 
-func PluginFromEntry(entry os.DirEntry) string {
+func nameFromEntry(entry os.DirEntry) string {
 	if !isExecutable(entry) {
 		return ""
 	}
@@ -74,8 +76,15 @@ func PluginFromEntry(entry os.DirEntry) string {
 
 func isExecutable(entry fs.DirEntry) bool {
 	if runtime.GOOS == "windows" {
+		executableExtensions := filepath.SplitList(os.Getenv("PATHEXT"))
 		extension := strings.ToUpper(filepath.Ext(entry.Name()))
-		return slices.Contains(filepath.SplitList(os.Getenv("PATHEXT")), extension)
+
+		// Hardcode supported plugin types that may not show up in this list
+		if !slices.Contains(executableExtensions, ".PY") {
+			executableExtensions = append(executableExtensions, ".PY")
+		}
+
+		return slices.Contains(executableExtensions, extension)
 	}
 
 	fileInfo, err := entry.Info()
@@ -94,7 +103,7 @@ func FindPlugin(cmd *cobra.Command, args []string, cfg *config.Config) *pluginIn
 	for len(plugin.name) > len(pversion.CLIName) {
 		if pluginPathList, ok := pluginMap[plugin.name]; ok {
 			if cmd, _, _ := cmd.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.name {
-				log.CliLogger.Warnf("[WARN] User plugin %s is ignored because its command line invocation matches existing CLI command `%s`.\n", pluginPathList[0], cmd.CommandPath())
+				log.CliLogger.Warnf("[WARN] User plugin %s is ignored because its command line invocation matches existing CLI command `%s`.", pluginPathList[0], cmd.CommandPath())
 				break
 			}
 			plugin.args = append([]string{pluginPathList[0]}, plugin.args...)
@@ -136,4 +145,8 @@ func ExecPlugin(info *pluginInfo) error {
 		Stderr: os.Stderr,
 	}
 	return plugin.Run()
+}
+
+func ToCommandName(name string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-")
 }

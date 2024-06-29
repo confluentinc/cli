@@ -1,0 +1,4 @@
+Error: private link access "pla-invalid" not found
+
+Suggestions:
+    List available private link accesss with `confluent network private-link access list`.

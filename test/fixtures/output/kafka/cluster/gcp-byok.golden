@@ -15,9 +15,9 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 | ID                   | lkc-def963                |
 | Name                 | gcp-byok-test             |
 | Type                 | DEDICATED                 |
-| Cluster Size         |                         1 |
-| Ingress Limit (MB/s) |                        50 |
-| Egress Limit (MB/s)  |                       150 |
+| Cluster Size         | 1                         |
+| Ingress Limit (MB/s) | 50                        |
+| Egress Limit (MB/s)  | 150                       |
 | Storage              | Infinite                  |
 | Provider             | gcp                       |
 | Region               | asia-southeast1           |

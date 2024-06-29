@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockReverseISearch is a mock of ReverseISearch interface.
@@ -34,15 +34,15 @@ func (m *MockReverseISearch) EXPECT() *MockReverseISearchMockRecorder {
 }
 
 // ReverseISearch mocks base method.
-func (m *MockReverseISearch) ReverseISearch(arg0 []string) string {
+func (m *MockReverseISearch) ReverseISearch(arg0 []string, arg1 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReverseISearch", arg0)
+	ret := m.ctrl.Call(m, "ReverseISearch", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // ReverseISearch indicates an expected call of ReverseISearch.
-func (mr *MockReverseISearchMockRecorder) ReverseISearch(arg0 interface{}) *gomock.Call {
+func (mr *MockReverseISearchMockRecorder) ReverseISearch(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseISearch", reflect.TypeOf((*MockReverseISearch)(nil).ReverseISearch), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseISearch", reflect.TypeOf((*MockReverseISearch)(nil).ReverseISearch), arg0, arg1)
 }

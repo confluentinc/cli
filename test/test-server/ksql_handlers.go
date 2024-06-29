@@ -17,9 +17,9 @@ var ksqlCluster1 = ksqlv2.KsqldbcmV2Cluster{
 		DisplayName: ksqlv2.PtrString("account ksql"),
 		KafkaCluster: &ksqlv2.ObjectReference{
 			Id:          "lkc-qwert",
-			Environment: ksqlv2.PtrString("25"),
+			Environment: ksqlv2.PtrString("env-12345"),
 		},
-		Environment:              &ksqlv2.ObjectReference{Id: "25"},
+		Environment:              &ksqlv2.ObjectReference{Id: "env-12345"},
 		UseDetailedProcessingLog: ksqlv2.PtrBool(true),
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
@@ -36,9 +36,9 @@ var ksqlCluster2 = ksqlv2.KsqldbcmV2Cluster{
 		DisplayName: ksqlv2.PtrString("kay cee queue elle"),
 		KafkaCluster: &ksqlv2.ObjectReference{
 			Id:          "lkc-zxcvb",
-			Environment: ksqlv2.PtrString("25"),
+			Environment: ksqlv2.PtrString("env-12345"),
 		},
-		Environment: &ksqlv2.ObjectReference{Id: "25"},
+		Environment: &ksqlv2.ObjectReference{Id: "env-12345"},
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 		HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
@@ -54,9 +54,9 @@ var ksqlClusterForDetailedProcessingLogFalse = ksqlv2.KsqldbcmV2Cluster{
 		DisplayName: ksqlv2.PtrString("kay cee queue elle"),
 		KafkaCluster: &ksqlv2.ObjectReference{
 			Id:          "lkc-zxcvb",
-			Environment: ksqlv2.PtrString("25"),
+			Environment: ksqlv2.PtrString("env-12345"),
 		},
-		Environment:              &ksqlv2.ObjectReference{Id: "25"},
+		Environment:              &ksqlv2.ObjectReference{Id: "env-12345"},
 		UseDetailedProcessingLog: ksqlv2.PtrBool(false),
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
@@ -122,9 +122,10 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 						DisplayName: ksqlv2.PtrString("account ksql"),
 						KafkaCluster: &ksqlv2.ObjectReference{
 							Id:          "lkc-12345",
-							Environment: ksqlv2.PtrString("25"),
+							Environment: ksqlv2.PtrString("env-12345"),
 						},
-						Environment: &ksqlv2.ObjectReference{Id: "25"},
+						CredentialIdentity: &ksqlv2.ObjectReference{Id: "u-123456"},
+						Environment:        &ksqlv2.ObjectReference{Id: "env-12345"},
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 						HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
@@ -140,9 +141,9 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 						DisplayName: ksqlv2.PtrString("account ksql"),
 						KafkaCluster: &ksqlv2.ObjectReference{
 							Id:          "lkc-abcde",
-							Environment: ksqlv2.PtrString("25"),
+							Environment: ksqlv2.PtrString("env-12345"),
 						},
-						Environment:        &ksqlv2.ObjectReference{Id: "25"},
+						Environment:        &ksqlv2.ObjectReference{Id: "env-12345"},
 						CredentialIdentity: ksqlv2.NewObjectReference("sa-12345", "", ""),
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{

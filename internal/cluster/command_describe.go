@@ -2,12 +2,12 @@ package cluster
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -36,7 +36,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe a Kafka cluster.",
-		Long:  fmt.Sprintf("Describe a Kafka cluster. Environment variable `%s` can replace the `--url` flag, and `%s` can replace the `--ca-cert-path` flag.", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
+		Long:  fmt.Sprintf("Describe a Kafka cluster. Environment variable `%s` can replace the `--url` flag, and `%s` can replace the `--certificate-authority-path` flag.", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCertificateAuthorityPath),
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -53,7 +53,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 	cmd.RunE = c.describe
 
 	cmd.Flags().String("url", "", "URL to a Confluent cluster.")
-	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
+	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -84,20 +84,20 @@ func getURL(cmd *cobra.Command) (string, error) {
 		return url, err
 	}
 
-	if url := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL); url != "" {
+	if url := os.Getenv(pauth.ConfluentPlatformMDSURL); url != "" {
 		return url, nil
 	}
 
-	return "", errors.New(errors.MdsUrlNotFoundSuggestions)
+	return "", fmt.Errorf("pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable")
 }
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
 	// Order of precedence: flags > env vars
-	if caCertPath, err := cmd.Flags().GetString("ca-cert-path"); caCertPath != "" || err != nil {
-		return caCertPath, err
+	if certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path"); certificateAuthorityPath != "" || err != nil {
+		return certificateAuthorityPath, err
 	}
 
-	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
+	return os.Getenv(pauth.ConfluentPlatformCertificateAuthorityPath), nil
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
@@ -118,10 +118,11 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
 	}
 
 	if meta.ID != "" {
-		output.Printf("Confluent Resource Name: %s\n\n", meta.ID)
+		output.Printf(false, "Confluent Resource Name: %s\n", meta.ID)
+		output.Println(false, "")
 	}
 
-	output.Println("Scope:")
+	output.Println(false, "Scope:")
 	list := output.NewList(cmd)
 	for _, name := range types {
 		list.Add(&scopeOut{

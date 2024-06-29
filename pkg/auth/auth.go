@@ -12,42 +12,26 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
 )
 
 const (
 	CCloudURL = "https://confluent.cloud"
 
-	ConfluentCloudEmail          = "CONFLUENT_CLOUD_EMAIL"
-	ConfluentCloudPassword       = "CONFLUENT_CLOUD_PASSWORD"
-	ConfluentCloudOrganizationId = "CONFLUENT_CLOUD_ORGANIZATION_ID"
-	ConfluentPlatformUsername    = "CONFLUENT_PLATFORM_USERNAME"
-	ConfluentPlatformPassword    = "CONFLUENT_PLATFORM_PASSWORD"
-	ConfluentPlatformMDSURL      = "CONFLUENT_PLATFORM_MDS_URL"
-	ConfluentPlatformCACertPath  = "CONFLUENT_PLATFORM_CA_CERT_PATH"
-
-	DeprecatedConfluentCloudEmail         = "CCLOUD_EMAIL"
-	DeprecatedConfluentCloudPassword      = "CCLOUD_PASSWORD"
-	DeprecatedConfluentPlatformUsername   = "CONFLUENT_USERNAME"
-	DeprecatedConfluentPlatformPassword   = "CONFLUENT_PASSWORD"
-	DeprecatedConfluentPlatformMDSURL     = "CONFLUENT_MDS_URL"
-	DeprecatedConfluentPlatformCACertPath = "CONFLUENT_CA_CERT_PATH"
+	ConfluentCloudEmail                       = "CONFLUENT_CLOUD_EMAIL"
+	ConfluentCloudPassword                    = "CONFLUENT_CLOUD_PASSWORD"
+	ConfluentCloudOrganizationId              = "CONFLUENT_CLOUD_ORGANIZATION_ID"
+	ConfluentPlatformUsername                 = "CONFLUENT_PLATFORM_USERNAME"
+	ConfluentPlatformPassword                 = "CONFLUENT_PLATFORM_PASSWORD"
+	ConfluentPlatformMDSURL                   = "CONFLUENT_PLATFORM_MDS_URL"
+	ConfluentPlatformCertificateAuthorityPath = "CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH"
+	ConfluentPlatformSSO                      = "CONFLUENT_PLATFORM_SSO"
 )
 
-// GetEnvWithFallback calls os.GetEnv() twice, once for the current var and once for the deprecated var.
-func GetEnvWithFallback(current, deprecated string) string {
-	if val := os.Getenv(current); val != "" {
-		return val
-	}
-
-	if val := os.Getenv(deprecated); val != "" {
-		output.ErrPrintf(errors.DeprecatedEnvVarWarningMsg, deprecated, current)
-		return val
-	}
-
-	return ""
+func IsOnPremSSOEnv() bool {
+	return strings.ToLower(os.Getenv(ConfluentPlatformSSO)) == "true"
 }
 
 func PersistLogout(config *config.Config) error {
@@ -57,7 +41,7 @@ func PersistLogout(config *config.Config) error {
 	}
 
 	if runtime.GOOS == "darwin" && !config.IsTest {
-		if err := keychain.Delete(config.IsCloudLogin(), ctx.GetNetrcMachineName()); err != nil {
+		if err := keychain.Delete(config.IsCloudLogin(), ctx.GetMachineName()); err != nil {
 			return err
 		}
 	}
@@ -70,9 +54,28 @@ func PersistLogout(config *config.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
+func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, isLegacyContext, save bool) error {
+	if credentials.IsSSO {
+		// on-prem SSO login does not use a username or email
+		// the sub claim is used in place of a username since it is a unique identifier
+		subClaim, err := jwt.GetClaim(token, "sub")
+		if err != nil {
+			return err
+		}
+
+		sub, ok := subClaim.(string)
+		if !ok {
+			return fmt.Errorf(errors.MalformedTokenErrorMsg, "sub")
+		}
+
+		credentials.Username = sub
+	}
 	username := credentials.Username
-	state := &config.ContextState{AuthToken: token}
+
+	state := &config.ContextState{
+		AuthToken:        token,
+		AuthRefreshToken: refreshToken,
+	}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
@@ -107,9 +110,9 @@ func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Cl
 	return ctx.CurrentEnvironment, user.GetOrganization(), nil
 }
 
-func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, orgResourceId string, save bool) error {
+func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, organizationId string, save bool) error {
 	platform := &config.Platform{
-		Name:       strings.TrimPrefix(url, "https://"),
+		Name:       strings.TrimSuffix(strings.TrimPrefix(url, "https://"), "/"),
 		Server:     url,
 		CaCertPath: caCertPath,
 	}
@@ -165,9 +168,9 @@ func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentia
 
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
-		ctx.LastOrgId = orgResourceId
+		ctx.LastOrgId = organizationId
 	} else {
-		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, orgResourceId, ""); err != nil {
+		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, organizationId, ""); err != nil {
 			return err
 		}
 	}
@@ -203,19 +206,19 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-func GetDataplaneToken(authenticatedState *config.ContextState, server string) (string, error) {
-	endpoint := strings.Trim(server, "/") + "/api/access_tokens"
+func GetDataplaneToken(ctx *config.Context) (string, error) {
+	endpoint := strings.TrimSuffix(ctx.GetPlatformServer(), "/") + "/api/access_tokens"
 
 	res := &struct {
 		Token string `json:"token"`
 		Error string `json:"error"`
 	}{}
 
-	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+authenticatedState.AuthToken).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
+	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
 		return "", err
 	}
 	if res.Error != "" {
-		return "", errors.New(res.Error)
+		return "", fmt.Errorf(res.Error)
 	}
 	return res.Token, nil
 }

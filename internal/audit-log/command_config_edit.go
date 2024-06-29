@@ -28,10 +28,10 @@ func (c *configCommand) newEditCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
+func (c *configCommand) edit(_ *cobra.Command, _ []string) error {
 	gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
-		return HandleMdsAuditLogApiError(cmd, err, response)
+		return HandleMdsAuditLogApiError(err, response)
 	}
 	gotSpecBytes, err := json.MarshalIndent(gotSpec, "", "  ")
 	if err != nil {
@@ -44,7 +44,7 @@ func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	putSpec := mdsv1.AuditLogConfigSpec{}
-	if err = json.Unmarshal(edited, &putSpec); err != nil {
+	if err := json.Unmarshal(edited, &putSpec); err != nil {
 		return err
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
@@ -57,7 +57,7 @@ func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 			// We expected a payload we could display as JSON, but got something unexpected.
 			// That's OK though, we'll still handle and show the API error message.
 		}
-		return HandleMdsAuditLogApiError(cmd, err, httpResp)
+		return HandleMdsAuditLogApiError(err, httpResp)
 	}
 
 	return enc.Encode(result)

@@ -1,22 +1,22 @@
 [
   {
     "principal": "User:u-11aaa",
-    "name": "",
+    "name": "11 Aaa",
     "email": "u-11aaa@confluent.io"
   },
   {
     "principal": "User:u-22bbb",
-    "name": "",
+    "name": "22 Bbb",
     "email": "u-22bbb@confluent.io"
   },
   {
     "principal": "User:u-33ccc",
-    "name": "",
+    "name": "33 Ccc",
     "email": "u-33ccc@confluent.io"
   },
   {
     "principal": "User:u-44ddd",
-    "name": "",
+    "name": "Muwei He",
     "email": "mhe@confluent.io"
   }
 ]

@@ -9,10 +9,10 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func newBillingClient(url, userAgent string, unsafeTrace bool) *billingv1.APIClient {
+func newBillingClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *billingv1.APIClient {
 	cfg := billingv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = httpClient
 	cfg.Servers = billingv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -20,7 +20,7 @@ func newBillingClient(url, userAgent string, unsafeTrace bool) *billingv1.APICli
 }
 
 func (c *Client) billingApiContext() context.Context {
-	return context.WithValue(context.Background(), billingv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), billingv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
 func (c *Client) ListBillingCosts(startDate, endDate string) ([]billingv1.BillingV1Cost, error) {

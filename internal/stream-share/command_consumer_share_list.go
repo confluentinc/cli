@@ -23,7 +23,6 @@ func (c *command) newConsumerShareListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("shared-resource", "", "Filter the results by a shared resource.")
-
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -42,7 +41,23 @@ func (c *command) listConsumerShares(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, share := range consumerShares {
-		list.Add(c.buildConsumerShare(share))
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&consumerShareHumanOut{
+				Id:                       share.GetId(),
+				ProviderName:             share.GetProviderUserName(),
+				ProviderOrganizationName: share.GetProviderOrganizationName(),
+				Status:                   share.Status.GetPhase(),
+				InviteExpiresAt:          share.GetInviteExpiresAt(),
+			})
+		} else {
+			list.Add(&consumerShareSerializedOut{
+				Id:                       share.GetId(),
+				ProviderName:             share.GetProviderUserName(),
+				ProviderOrganizationName: share.GetProviderOrganizationName(),
+				Status:                   share.Status.GetPhase(),
+				InviteExpiresAt:          share.GetInviteExpiresAt(),
+			})
+		}
 	}
 	list.Filter([]string{"Id", "ProviderName", "ProviderOrganizationName", "Status", "InviteExpiresAt"})
 	return list.Print()

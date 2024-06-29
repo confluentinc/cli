@@ -18,7 +18,7 @@ func (c *command) newStatementDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	c.addRegionFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -32,22 +32,22 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	client, err := c.GetFlinkGatewayClient()
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
+		_, err := client.GetStatement(environmentId, id, c.Context.GetCurrentOrganization())
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.FlinkStatement); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkStatement); err != nil {
 		return err
 	}
 
 	deleteFunc := func(id string) error {
-		return client.DeleteStatement(environmentId, id, c.Context.LastOrgId)
+		return client.DeleteStatement(environmentId, id, c.Context.GetCurrentOrganization())
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkStatement)

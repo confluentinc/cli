@@ -1,0 +1,6 @@
+     ID    |           Name           | Environment |  Region   |       AWS Principal ARN        |          Azure Subscription          | Phase  
+-----------+--------------------------+-------------+-----------+--------------------------------+--------------------------------------+--------
+  gw-09876 | my-azure-peering-gateway | env-596     | eastus2   |                                |                                      | READY  
+  gw-12345 | my-aws-gateway           | env-596     | us-east-1 | arn:aws:iam::123456789012:role |                                      | READY  
+  gw-67890 | my-aws-peering-gateway   | env-596     | us-east-2 |                                |                                      | READY  
+  gw-67890 | my-azure-gateway         | env-596     | eastus    |                                | aa000000-a000-0a00-00aa-0000aaa0a0a0 | READY  

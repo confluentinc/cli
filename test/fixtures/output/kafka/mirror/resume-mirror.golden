@@ -1,5 +1,5 @@
   Mirror Topic Name | Partition | Partition Mirror Lag | Last Source Fetch Offset | Error Message  | Error Code  
 --------------------+-----------+----------------------+--------------------------+----------------+-------------
-  topic 2           |        -1 |                   -1 |                       -1 | Not authorized |        401  
+  topic 2           |        -1 |                   -1 |                       -1 | Not authorized | 401         
   topic-1           |         0 |               142857 |                     1000 |                |             
   topic-1           |         1 |               285714 |                    10000 |                |             

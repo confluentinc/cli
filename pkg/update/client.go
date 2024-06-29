@@ -15,6 +15,7 @@ import (
 	"github.com/inconshreveable/go-update"
 	"github.com/jonboulle/clockwork"
 
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	pio "github.com/confluentinc/cli/v3/pkg/io"
 	"github.com/confluentinc/cli/v3/pkg/log"
@@ -25,7 +26,7 @@ type Client interface {
 	CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error)
 	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool
-	UpdateBinary(cliName, version, path string, noVerify bool) error
+	UpdateBinary(cliName, version string, noVerify bool) error
 }
 
 type client struct {
@@ -33,7 +34,8 @@ type client struct {
 	// @VisibleForTesting, defaults to the system clock
 	clock clockwork.Clock
 	// @VisibleForTesting, defaults to the OS filesystem
-	fs pio.FileSystem
+	fs  pio.FileSystem
+	cfg *config.Config
 }
 
 var _ Client = (*client)(nil)
@@ -46,15 +48,13 @@ type ClientParams struct {
 	Out        pio.File
 	// Optional, if you want to disable checking for updates
 	DisableCheck bool
-	// Optional, if you wish to rate limit your update checks. The parent directories must exist.
-	CheckFile string
 	// Optional, defaults to checking once every 24h
 	CheckInterval time.Duration
 	OS            string
 }
 
 // NewClient returns a client for updating CLI binaries
-func NewClient(params *ClientParams) *client {
+func NewClient(cfg *config.Config, params *ClientParams) *client {
 	if params.CheckInterval == 0 {
 		params.CheckInterval = 24 * time.Hour
 	}
@@ -65,6 +65,7 @@ func NewClient(params *ClientParams) *client {
 		ClientParams: params,
 		clock:        clockwork.NewRealClock(),
 		fs:           &pio.RealFileSystem{},
+		cfg:          cfg,
 	}
 }
 
@@ -74,17 +75,16 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 		return "", "", nil
 	}
 
-	shouldCheck, err := c.readCheckFile()
-	if err != nil {
-		return "", "", err
-	}
+	shouldCheck := c.cfg.LastUpdateCheckAt == nil || c.cfg.LastUpdateCheckAt.Add(c.CheckInterval).Before(c.clock.Now())
+
 	if !shouldCheck && !forceCheck {
 		return "", "", nil
 	}
 
 	currVersion, err := version.NewVersion(currentVersion)
 	if err != nil {
-		return "", "", errors.Wrapf(err, errors.ParseVersionErrorMsg, cliName, currentVersion)
+		message := fmt.Sprintf(errors.ParseVersionErrorMsg, cliName, currentVersion)
+		return "", "", fmt.Errorf("%s: %w", message, err)
 	}
 
 	latestMajorVersion, latestMinorVersion, err := c.Repository.GetLatestMajorAndMinorVersion(cliName, currVersion)
@@ -100,10 +100,10 @@ func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool
 		}
 	}
 
-	// After fetching the latest version, we touch the file so that we don't make the request again for 24hrs.
-	if err := c.touchCheckFile(); err != nil {
-		return "", "", errors.Wrap(err, errors.TouchLastCheckFileErrorMsg)
-	}
+	// After fetching the latest version, we record the current time so that we don't make the request again for 24hrs.
+	currentTime := c.clock.Now()
+	c.cfg.LastUpdateCheckAt = &currentTime
+	_ = c.cfg.Save()
 
 	var major, minor string
 	if latestMajorVersion != nil && isLessThanVersion(currVersion, latestMajorVersion) {
@@ -166,7 +166,11 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 		confirm = false
 	}
 
-	fmt.Fprintf(c.Out, errors.PromptToDownloadDescriptionMsg, cliName, currVersion, latestVersion, releaseNotes)
+	fmt.Fprintf(c.Out, "New version of %s is available\n", cliName)
+	fmt.Fprintf(c.Out, "Current Version: %s\n", currVersion)
+	fmt.Fprintf(c.Out, "Latest Version:  %s\n", latestVersion)
+	fmt.Fprintln(c.Out)
+	fmt.Fprint(c.Out, releaseNotes)
 
 	if !confirm {
 		return true
@@ -193,10 +197,10 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 }
 
 // UpdateBinary replaces the named binary at path with the desired version
-func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) error {
+func (c *client) UpdateBinary(cliName, version string, noVerify bool) error {
 	downloadDir, err := c.fs.MkdirTemp("", cliName)
 	if err != nil {
-		return errors.Wrapf(err, errors.GetTempDirErrorMsg, cliName)
+		return fmt.Errorf("unable to get temporary directory for %s: %w", cliName, err)
 	}
 	defer func() {
 		if err := c.fs.RemoveAll(downloadDir); err != nil {
@@ -207,9 +211,9 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	fmt.Fprintf(c.Out, "Downloading %s version %s...\n", cliName, version)
 	startTime := c.clock.Now()
 
-	payload, err := c.Repository.DownloadVersion(cliName, version, downloadDir)
+	payload, err := c.Repository.DownloadVersion(cliName, version)
 	if err != nil {
-		return errors.Wrapf(err, errors.DownloadVersionErrorMsg, cliName, version, downloadDir)
+		return fmt.Errorf("unable to download %s version %s to %s: %w", cliName, version, downloadDir, err)
 	}
 
 	mb := float64(len(payload)) / 1024.0 / 1024.0
@@ -220,7 +224,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	if !noVerify {
 		content, err := c.Repository.DownloadChecksums(cliName, version)
 		if err != nil {
-			return errors.Wrapf(err, "failed to download checksums file")
+			return fmt.Errorf("failed to download checksums file: %w", err)
 		}
 
 		binary := getBinaryName(version, c.OS, runtime.GOARCH)
@@ -254,42 +258,4 @@ func findChecksum(content, binary string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("checksum not found for %s", binary)
-}
-
-func (c *client) readCheckFile() (bool, error) {
-	// If CheckFile is not provided, then we'll always perform the check
-	if c.CheckFile == "" {
-		return true, nil
-	}
-	info, err := c.fs.Stat(c.CheckFile)
-	if err != nil && !os.IsNotExist(err) {
-		return false, err
-	}
-	// if the file doesn't exist, check updates anyway -- indicates a new CLI install
-	if os.IsNotExist(err) {
-		return true, nil
-	}
-	// if the file was updated in the last (interval), don't check again
-	if info.ModTime().After(c.clock.Now().Add(-1 * c.CheckInterval)) {
-		return false, nil
-	}
-	return true, nil
-}
-
-func (c *client) touchCheckFile() error {
-	// If CheckFile is not provided, then we'll skip touching
-	if c.CheckFile == "" {
-		return nil
-	}
-
-	if _, err := c.fs.Stat(c.CheckFile); os.IsNotExist(err) {
-		if f, err := c.fs.Create(c.CheckFile); err != nil {
-			return err
-		} else {
-			f.Close()
-		}
-	} else if err := c.fs.Chtimes(c.CheckFile, c.clock.Now(), c.clock.Now()); err != nil {
-		return err
-	}
-	return nil
 }

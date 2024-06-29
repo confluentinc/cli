@@ -1,1 +1,2 @@
-Are you sure you want to delete Flink compute pools "lfcp-123456" and "lfcp-222222"? (y/n): Deleted Flink compute pools "lfcp-123456" and "lfcp-222222".
+Are you sure you want to delete Flink compute pools "lfcp-123456" and "lfcp-222222"? All statements leveraging the compute pool will be STOPPED immediately and be available for 30 days in the statement list history.
+After that, they will be permanently deleted. (y/n): Deleted Flink compute pools "lfcp-123456" and "lfcp-222222".

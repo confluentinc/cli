@@ -1,7 +1,10 @@
 package kafka
 
 import (
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -31,7 +34,8 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	data, httpResp, err := client.ClusterLinkingV3Api.GetKafkaLink(ctx, clusterId, linkName)
+	linkOpts := kafkarestv3.GetKafkaLinkOpts{IncludeTasks: optional.NewBool(false)}
+	data, httpResp, err := client.ClusterLinkingV3Api.GetKafkaLink(ctx, clusterId, linkName, &linkOpts)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, client)
 	}

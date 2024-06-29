@@ -1,0 +1,4 @@
+Error: network "n-invalid" not found
+
+Suggestions:
+    List available networks with `confluent network list`.

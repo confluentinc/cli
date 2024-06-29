@@ -42,7 +42,7 @@ func (f Field) validate(val string) (any, error) {
 		case "N", "NO":
 			return false, nil
 		}
-		return false, fmt.Errorf(errors.InvalidChoiceMsg, val)
+		return false, fmt.Errorf("%s is not a valid choice", val)
 	}
 
 	if val == "" && f.DefaultValue != nil {

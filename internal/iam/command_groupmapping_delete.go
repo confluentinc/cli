@@ -18,8 +18,8 @@ func (c *groupMappingCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete group mapping "pool-12345":`,
-				Code: "confluent iam group-mapping delete pool-12345",
+				Text: `Delete group mapping "group-123456":`,
+				Code: "confluent iam group-mapping delete group-123456",
 			},
 		),
 	}
@@ -31,17 +31,12 @@ func (c *groupMappingCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
-	groupMapping, err := c.V2Client.GetGroupMapping(args[0])
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.SsoGroupMapping, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := c.V2Client.GetGroupMapping(id)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.SsoGroupMapping, groupMapping.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.SsoGroupMapping); err != nil {
 		return err
 	}
 
@@ -49,6 +44,6 @@ func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteGroupMapping(id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.SsoGroupMapping)
+	_, err := deletion.Delete(args, deleteFunc, resource.SsoGroupMapping)
 	return err
 }

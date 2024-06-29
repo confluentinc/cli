@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -8,6 +10,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newComputePoolDeleteCommand() *cobra.Command {
@@ -26,15 +29,14 @@ func (c *command) newComputePoolDeleteCommand() *cobra.Command {
 	return cmd
 }
 
+func (c *command) validComputePoolArgsMultiple(cmd *cobra.Command, args []string) []string {
+	return c.autocompleteComputePools(cmd, args)
+}
+
 func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
-	}
-
-	computePool, err := c.V2Client.DescribeFlinkComputePool(args[0], environmentId)
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.FlinkComputePool, args[0])
 	}
 
 	existenceFunc := func(id string) bool {
@@ -42,7 +44,7 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.FlinkComputePool, computePool.Spec.GetDisplayName()); err != nil {
+	if err := validateAndConfirmComputePoolDeletion(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
 		return err
 	}
 
@@ -55,6 +57,29 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 	errs := multierror.Append(err, c.removePoolFromConfigIfCurrent(deletedIds))
 
 	return errs.ErrorOrNil()
+}
+
+func confirmComputePoolDeletionString(idList []string) string {
+	retentionTimeMsg := "All statements leveraging the compute pool will be STOPPED immediately and be available for 30 days in the statement list history.\n" +
+		"After that, they will be permanently deleted."
+
+	if len(idList) == 1 {
+		return fmt.Sprintf("Are you sure you want to delete %s \"%s\"? "+retentionTimeMsg, resource.FlinkComputePool, idList[0])
+	} else {
+		return fmt.Sprintf("Are you sure you want to delete %ss %s? "+retentionTimeMsg, resource.FlinkComputePool, utils.ArrayToCommaDelimitedString(idList, "and"))
+	}
+}
+
+func validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
+	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
+		return err
+	}
+
+	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
+		return err
+	}
+
+	return deletion.ConfirmPrompt(cmd, confirmComputePoolDeletionString(args))
 }
 
 func (c *command) removePoolFromConfigIfCurrent(deletedIds []string) error {

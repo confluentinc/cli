@@ -9,11 +9,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-yaml/yaml"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sevlyar/retag"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
+	"gopkg.in/yaml.v3"
 )
 
 type Table struct {
@@ -155,27 +155,41 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 
 	w := tablewriter.NewWriter(writer)
 	w.SetAutoWrapText(auto)
+	w.SetAlignment(tablewriter.ALIGN_LEFT)
 
 	if t.isList {
-		var header []string
-		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
-			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
-			if !slices.Contains(tag, "-") {
-				header = append(header, tag[0])
-			}
-		}
-
 		w.SetAutoFormatHeaders(false)
 		w.SetBorder(false)
+
+		n := reflect.TypeOf(t.objects[0]).Elem().NumField()
+
+		var header []string
+		var alignment []int
+		for i := 0; i < n; i++ {
+			field := reflect.TypeOf(t.objects[0]).Elem().Field(i)
+			tag := strings.Split(field.Tag.Get(t.format.String()), ",")
+
+			if !slices.Contains(tag, "-") {
+				header = append(header, tag[0])
+
+				switch field.Type.Kind() {
+				case reflect.Int, reflect.Int32, reflect.Int64:
+					alignment = append(alignment, tablewriter.ALIGN_RIGHT)
+				default:
+					alignment = append(alignment, tablewriter.ALIGN_LEFT)
+				}
+			}
+		}
 		w.SetHeader(header)
+		w.SetColumnAlignment(alignment)
 
 		for _, object := range t.objects {
 			var row []string
-			for i := 0; i < reflect.TypeOf(object).Elem().NumField(); i++ {
+			for i := 0; i < n; i++ {
 				tag := strings.Split(reflect.TypeOf(object).Elem().Field(i).Tag.Get(t.format.String()), ",")
 				if !slices.Contains(tag, "-") {
 					val := reflect.ValueOf(object).Elem().Field(i)
-					row = append(row, getValueAsString(val, tag))
+					row = append(row, getListValueString(val, tag))
 				}
 			}
 			w.Append(row)
@@ -189,7 +203,7 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
 			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
 			if !slices.Contains(tag, "-") && !(slices.Contains(tag, "omitempty") && val.IsZero()) {
-				w.Append([]string{tag[0], fmt.Sprint(val)})
+				w.Append([]string{tag[0], getTableValueString(val)})
 			}
 		}
 	}
@@ -199,15 +213,30 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 	return nil
 }
 
-func getValueAsString(val reflect.Value, tag []string) string {
+func getListValueString(value reflect.Value, tag []string) string {
 	if slices.Contains(tag, "Current") {
-		if val.Bool() {
+		if value.Bool() {
 			return "*"
 		} else {
 			return " "
 		}
 	}
-	return fmt.Sprint(val)
+
+	return getTableValueString(value)
+}
+
+func getTableValueString(value reflect.Value) string {
+	switch value.Kind() {
+	case reflect.Map:
+		s := make([]string, len(value.MapKeys()))
+		for i, k := range value.MapKeys() {
+			s[i] = fmt.Sprintf("%s=%s", k.String(), value.MapIndex(k).String())
+		}
+		sort.Strings(s)
+		return strings.Join(s, "\n")
+	default:
+		return fmt.Sprint(value)
+	}
 }
 
 func (t *Table) isMap() bool {

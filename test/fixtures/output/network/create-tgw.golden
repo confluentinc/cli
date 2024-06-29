@@ -1,0 +1,11 @@
++----------------------------+------------------------------+
+| ID                         | n-abcde1                     |
+| Environment                | env-00000                    |
+| Name                       | aws-tgw                      |
+| Cloud                      | AWS                          |
+| Region                     | us-west-2                    |
+| CIDR                       | 10.1.0.0/16                  |
+| Zones                      | usw2-az1, usw2-az2, usw2-az4 |
+| Phase                      | PROVISIONING                 |
+| Supported Connection Types | TRANSITGATEWAY               |
++----------------------------+------------------------------+

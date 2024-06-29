@@ -1,0 +1,8 @@
+{
+  "id": "platt-111111",
+  "name": "aws-platt",
+  "cloud": "AWS",
+  "region": "us-west-2",
+  "aws_vpc_endpoint_service": "com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef",
+  "phase": "WAITING_FOR_CONNECTIONS"
+}

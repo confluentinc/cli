@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/internal/update"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/types"
@@ -26,15 +25,13 @@ type command struct {
 }
 
 type fieldInfo struct {
-	kind     reflect.Kind
-	name     string
-	readOnly bool
+	kind reflect.Kind
+	name string
 }
 
 type fieldOut struct {
-	Name     string `human:"Name" serialized:"name"`
-	Value    string `human:"Value" serialized:"value"`
-	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
+	Name  string `human:"Name" serialized:"name"`
+	Value string `human:"Value" serialized:"value"`
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -57,37 +54,40 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
+	fields := []string{
+		"disable_feature_flags",
+		"disable_plugins",
+		"enable_color",
+	}
 	if runtime.GOOS == "windows" {
-		config.Whitelist = append(config.Whitelist, "disable_plugins_once")
+		fields = append(fields, "disable_plugins_once_windows")
+	}
+	if !cfg.DisableUpdates {
+		fields = append(fields, "disable_update_check")
 	}
 
-	whitelist := make(map[string]*fieldInfo, len(config.Whitelist))
+	whitelist := make(map[string]*fieldInfo, len(fields))
 	t := reflect.TypeOf(*cfg)
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		jsonTag := strings.Split(field.Tag.Get("json"), ",")[0]
-		if slices.Contains(config.Whitelist, jsonTag) {
+		if slices.Contains(fields, jsonTag) {
 			whitelist[jsonTag] = &fieldInfo{
-				kind:     field.Type.Kind(),
-				name:     field.Name,
-				readOnly: isReadOnly(jsonTag),
+				kind: field.Type.Kind(),
+				name: field.Name,
 			}
 		}
 	}
-	return whitelist
-}
 
-func isReadOnly(jsonField string) bool {
-	return jsonField == "disable_updates" && update.IsHomebrew()
+	return whitelist
 }
 
 func (c *command) newFieldOut(field string, whitelist map[string]*fieldInfo) *fieldOut {
 	value := reflect.ValueOf(c.cfg).Elem().FieldByName(whitelist[field].name)
 	return &fieldOut{
-		Name:     field,
-		Value:    fmt.Sprintf("%v", value),
-		ReadOnly: whitelist[field].readOnly,
+		Name:  field,
+		Value: fmt.Sprintf("%v", value),
 	}
 }
 

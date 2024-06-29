@@ -346,7 +346,7 @@ config.providers.securepass.class = io.confluent.kafka.security.config.provider.
 				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
-			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotInJSONErrorMsg, "credentials.ssl\\.trustore.\\location"),
+			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotInJsonErrorMsg, "credentials.ssl\\.trustore.\\location"),
 		},
 		{
 			name: "InvalidTestCase: encrypt configuration in invalid a JSON file",
@@ -368,7 +368,7 @@ config.providers.securepass.class = io.confluent.kafka.security.config.provider.
 				validateUsingDecrypt:   false,
 			},
 			wantErr:    true,
-			wantErrMsg: errors.InvalidJSONFileFormatErrorMsg,
+			wantErrMsg: errors.InvalidJsonFileFormatErrorMsg,
 		},
 	}
 	for _, test := range tests {

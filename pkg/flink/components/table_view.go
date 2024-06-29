@@ -32,13 +32,13 @@ type TableView struct {
 }
 
 const (
-	numPaddingRows              = 1
-	minColumnWidth          int = 4 // min characters displayed in a column
-	ExitTableViewShortcut       = "Q"
-	ToggleRefreshShortcut       = "P"
-	ToggleTableModeShortcut     = "M"
-	JumpUpShortcut              = "U"
-	JumpDownShortcut            = "D"
+	numPaddingRows          = 1
+	minColumnWidth          = 4 // min characters displayed in a column
+	ExitTableViewShortcut   = "Q"
+	ToggleRefreshShortcut   = "P"
+	ToggleTableModeShortcut = "M"
+	JumpUpShortcut          = "U"
+	JumpDownShortcut        = "D"
 )
 
 func NewTableView() TableViewInterface {
@@ -49,7 +49,6 @@ func (t *TableView) Init() {
 	t.infoBar = NewTableInfoBar()
 
 	t.table = tview.NewTable().SetFixed(1, 1)
-	t.table.SetBorder(true)
 	t.table.SetSelectionChangedFunc(func(row, column int) {
 		if t.isValidRowIdx(row) {
 			t.updateInfoBar()

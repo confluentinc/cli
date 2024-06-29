@@ -1,12 +1,11 @@
 package byok
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	errorMsgs "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -19,7 +18,7 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	pcmd.AddByokProviderFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	pcmd.AddByokStateFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -27,15 +26,17 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	provider, err := cmd.Flags().GetString("provider")
+	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
 	}
-	switch provider {
+	switch cloud {
 	case "aws":
-		provider = "AWS"
+		cloud = "AWS"
 	case "azure":
-		provider = "Azure"
+		cloud = "Azure"
+	case "gcp":
+		cloud = "GCP"
 	}
 
 	state, err := cmd.Flags().GetString("state")
@@ -49,14 +50,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		state = "AVAILABLE"
 	}
 
-	keys, err := c.V2Client.ListByokKeys(provider, state)
+	keys, err := c.V2Client.ListByokKeys(cloud, state)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	// API returns a list sorted by creation date already
-	list.Sort(false)
 	for _, key := range keys {
 		var keyString string
 		switch {
@@ -64,31 +63,34 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			keyString = key.Key.ByokV1AwsKey.KeyArn
 		case key.Key.ByokV1AzureKey != nil:
 			keyString = key.Key.ByokV1AzureKey.KeyId
+		case key.Key.ByokV1GcpKey != nil:
+			keyString = key.Key.ByokV1GcpKey.KeyId
 		default:
-			return errors.New(errorMsgs.ByokUnknownKeyTypeErrorMsg)
+			return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 		}
 
-		updatedAt := ""
-		if !key.Metadata.GetUpdatedAt().IsZero() {
-			updatedAt = key.Metadata.GetUpdatedAt().String()
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&humanOut{
+				Id:        key.GetId(),
+				Key:       keyString,
+				Cloud:     key.GetProvider(),
+				State:     key.GetState(),
+				CreatedAt: key.Metadata.CreatedAt.String(),
+			})
+		} else {
+			list.Add(&serializedOut{
+				Id:        key.GetId(),
+				Key:       keyString,
+				Cloud:     key.GetProvider(),
+				State:     key.GetState(),
+				CreatedAt: key.Metadata.CreatedAt.String(),
+			})
 		}
-
-		deletedAt := ""
-		if !key.Metadata.GetDeletedAt().IsZero() {
-			deletedAt = key.Metadata.GetDeletedAt().String()
-		}
-
-		list.Add(&describeStruct{
-			Id:        key.GetId(),
-			Key:       keyString,
-			Provider:  key.GetProvider(),
-			State:     key.GetState(),
-			CreatedAt: key.Metadata.CreatedAt.String(),
-			UpdatedAt: updatedAt,
-			DeletedAt: deletedAt,
-		})
 	}
 
-	list.Filter([]string{"Id", "Key", "Provider", "State", "CreatedAt"})
+	// The API returns a list sorted by creation date already
+	list.Sort(false)
+	list.Filter([]string{"Id", "Key", "Cloud", "State", "CreatedAt"})
+
 	return list.Print()
 }

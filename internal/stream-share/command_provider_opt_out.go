@@ -3,7 +3,6 @@ package streamshare
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -21,7 +20,7 @@ func (c *command) optOut(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if !isDeleteConfirmed {
-		output.Println("Operation terminated.")
+		output.Println(c.Config.EnableColor, "Operation terminated.")
 		return nil
 	}
 
@@ -29,6 +28,6 @@ func (c *command) optOut(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(errors.OptOutMsg)
+	output.Println(c.Config.EnableColor, "Successfully opted out of Stream Sharing.")
 	return nil
 }

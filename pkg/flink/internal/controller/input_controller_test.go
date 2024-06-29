@@ -1,12 +1,16 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
-	"github.com/golang/mock/gomock"
+	"github.com/sourcegraph/go-lsp"
+	"github.com/sourcegraph/jsonrpc2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"github.com/confluentinc/go-prompt"
 
@@ -21,6 +25,7 @@ type InputControllerTestSuite struct {
 	history         *history.History
 	prompt          *mock.MockIPrompt
 	reverseISearch  *mock.MockReverseISearch
+	handlerCh       chan *jsonrpc2.Request
 }
 
 func TestInputControllerTestSuite(t *testing.T) {
@@ -33,7 +38,8 @@ func (s *InputControllerTestSuite) SetupTest() {
 	s.history = &history.History{Data: []string{}}
 	s.prompt = mock.NewMockIPrompt(ctrl)
 	s.reverseISearch = mock.NewMockReverseISearch(ctrl)
-	s.inputController = NewInputController(s.history).(*InputController)
+	s.handlerCh = make(chan *jsonrpc2.Request)
+	s.inputController = NewInputController(s.history, nil, s.handlerCh).(*InputController)
 	s.inputController.reverseISearch = s.reverseISearch
 	s.inputController.prompt = s.prompt
 }
@@ -51,7 +57,7 @@ func (s *InputControllerTestSuite) TestGetUserInputSetsInitialBuffer() {
 	s.inputController.InitialBuffer = "not-empty"
 	input := fmt.Sprintf("%s %s", s.inputController.InitialBuffer, "input")
 	buffer := prompt.NewBuffer()
-	s.prompt.EXPECT().Buffer().Return(buffer)
+	s.prompt.EXPECT().Buffer().Return(buffer).Times(5)
 	s.prompt.EXPECT().Input().Return(input)
 
 	actual := s.inputController.GetUserInput()
@@ -78,7 +84,8 @@ func (s *InputControllerTestSuite) TestHasUserEnabledReverseSearchShouldBeFalse(
 
 func (s *InputControllerTestSuite) TestStartReverseSearch() {
 	searchResult := "search result"
-	s.reverseISearch.EXPECT().ReverseISearch(s.history.Data).Return(searchResult)
+	s.reverseISearch.EXPECT().ReverseISearch(s.history.Data, "").Return(searchResult)
+	s.prompt.EXPECT().Buffer().Return(prompt.NewBuffer())
 
 	s.inputController.StartReverseSearch()
 
@@ -86,10 +93,46 @@ func (s *InputControllerTestSuite) TestStartReverseSearch() {
 	require.Equal(s.T(), searchResult, s.inputController.InitialBuffer)
 }
 
+func (s *InputControllerTestSuite) TestSetDiagnostics() {
+	diagnostics := []lsp.Diagnostic{{
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 10},
+			End:   lsp.Position{Line: 0, Character: 13},
+		},
+		Severity: 1,
+		Code:     "1234",
+		Source:   "mock source",
+		Message:  "Error: this is a lsp diagnostic",
+	}}
+	publishDiagnosticsParams := lsp.PublishDiagnosticsParams{
+		URI:         "file:///tmp/test.sql",
+		Diagnostics: diagnostics,
+	}
+
+	diagnosticsParams, _ := json.Marshal(publishDiagnosticsParams)
+	rawParams := json.RawMessage(diagnosticsParams)
+	req := &jsonrpc2.Request{
+		Method: "textDocument/publishDiagnostics",
+		Params: &rawParams,
+	}
+
+	s.prompt.EXPECT().SetDiagnostics(diagnostics)
+	s.handlerCh <- req
+	time.Sleep(100 * time.Millisecond)
+}
+
 func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeTrueWhenShouldExitIsTrue() {
 	s.inputController.shouldExit = true
 
 	hasUserInitiatedExit := s.inputController.HasUserInitiatedExit("exit;")
+
+	require.True(s.T(), hasUserInitiatedExit)
+}
+
+func (s *InputControllerTestSuite) TestHasUserInitiatedQuitShouldBeTrueWhenShouldExitIsTrue() {
+	s.inputController.shouldExit = true
+
+	hasUserInitiatedExit := s.inputController.HasUserInitiatedExit("quit;")
 
 	require.True(s.T(), hasUserInitiatedExit)
 }

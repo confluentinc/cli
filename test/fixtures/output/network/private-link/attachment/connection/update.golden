@@ -1,0 +1,9 @@
++-------------------------------+---------------------------------------------------------+
+| ID                            | plattc-111111                                           |
+| Name                          | new-name                                                |
+| Cloud                         | AWS                                                     |
+| Private Link Attachment ID    | platt-111111                                            |
+| Phase                         | READY                                                   |
+| AWS VPC Endpoint ID           | vpce-01234567890abcdef                                  |
+| AWS VPC Endpoint Service Name | com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef |
++-------------------------------+---------------------------------------------------------+

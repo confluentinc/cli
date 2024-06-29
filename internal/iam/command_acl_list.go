@@ -37,10 +37,10 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 	if err != nil {
-		return c.handleACLError(cmd, err, response)
+		return c.handleAclError(cmd, err, response)
 	}
 
-	return printACLs(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
+	return printAcls(cmd, acl.Scope.Clusters.KafkaCluster, bindings)
 }

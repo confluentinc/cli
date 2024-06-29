@@ -1,19 +1,25 @@
 package flink
 
 import (
+	"net/url"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/auth"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	client "github.com/confluentinc/cli/v3/pkg/flink/app"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v3/pkg/jwt"
+	"github.com/confluentinc/cli/v3/pkg/log"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 )
 
-func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
@@ -23,19 +29,20 @@ func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) 
 	}
 
 	c.addComputePoolFlag(cmd)
-	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
+	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
+	c.addDatabaseFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
-	if cfg.IsTest {
-		cmd.Flags().Bool("fake-gateway", false, "Test the SQL client with fake gateway data.")
+
+	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+		cmd.Flags().StringSlice("config-key", []string{}, "App option keys for local mode.")
+		cmd.Flags().StringSlice("config-value", []string{}, "App option values for local mode.")
 	}
 
 	return cmd
 }
 
-func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator pcmd.JWTValidator) func() error {
+func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator jwt.Validator) func() error {
 	return func() error {
 		authToken := c.Context.GetAuthToken()
 		authRefreshToken := c.Context.GetAuthRefreshToken()
@@ -47,14 +54,14 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 			return err
 		}
 
-		flinkGatewayClient, err := c.GetFlinkGatewayClient()
+		flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
 		if err != nil {
 			return err
 		}
 
 		jwtCtx := &config.Context{State: &config.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
-			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+			dataplaneToken, err := auth.GetDataplaneToken(c.Context)
 			if err != nil {
 				return err
 			}
@@ -66,20 +73,22 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
-	// if the --fake-gateway flag is set, we start the client with a simulated gateway client that returns fake data
-	fakeMode, _ := cmd.Flags().GetBool("fake-gateway")
-	if fakeMode {
-		client.StartApp(
-			mock.NewFakeFlinkGatewayClient(),
-			func() error { return nil },
-			types.ApplicationOptions{
-				Context:   c.Context,
-				UserAgent: c.Version.UserAgent,
-			}, func() {})
-		return nil
-	}
+	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+		// get config keys and values from flags
+		configKeys, err := cmd.Flags().GetStringSlice("config-key")
+		if err != nil {
+			return err
+		}
+		configValues, err := cmd.Flags().GetStringSlice("config-value")
+		if err != nil {
+			return err
+		}
 
-	resourceId := c.Context.GetOrganization().GetResourceId()
+		// if configs were passed, we should enter local mode
+		if len(configKeys) > 0 && len(configValues) > 0 {
+			return c.startWithLocalMode(configKeys, configValues)
+		}
+	}
 
 	environmentId, err := cmd.Flags().GetString("environment")
 	if err != nil {
@@ -87,7 +96,10 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 	if environmentId == "" {
 		if c.Context.GetCurrentEnvironment() == "" {
-			return errors.NewErrorWithSuggestions("no environment provided", "Provide an environment with `confluent environment use env-123456` or `--environment`.")
+			return errors.NewErrorWithSuggestions(
+				"no environment provided",
+				"Provide an environment with `confluent environment use env-123456` or `--environment`.",
+			)
 		}
 		environmentId = c.Context.GetCurrentEnvironment()
 	}
@@ -101,26 +113,20 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		catalog = environment.GetDisplayName()
 	}
 
-	computePool, err := cmd.Flags().GetString("compute-pool")
-	if err != nil {
-		return err
-	}
+	computePool := c.Context.GetCurrentFlinkComputePool()
 	if computePool == "" {
-		if c.Context.GetCurrentFlinkComputePool() == "" {
-			return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
-		}
-		computePool = c.Context.GetCurrentFlinkComputePool()
+		return errors.NewErrorWithSuggestions(
+			"no compute pool selected",
+			"Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.",
+		)
 	}
 
-	identityPool, err := cmd.Flags().GetString("identity-pool")
+	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
-	if identityPool == "" {
-		if c.Context.GetCurrentIdentityPool() == "" {
-			return errors.NewErrorWithSuggestions("no identity pool set", "Set a persistent identity pool with `confluent iam pool use` or pass the `--identity-pool` flag.")
-		}
-		identityPool = c.Context.GetCurrentIdentityPool()
+	if serviceAccount == "" {
+		serviceAccount = c.Context.GetCurrentServiceAccount()
 	}
 
 	database, err := cmd.Flags().GetString("database")
@@ -140,33 +146,80 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	flinkGatewayClient, err := c.GetFlinkGatewayClient()
+	flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
 	if err != nil {
 		return err
 	}
 
-	jwtValidator := pcmd.NewJWTValidator()
+	lspBaseUrl, err := c.getFlinkLanguageServiceUrl(flinkGatewayClient)
+	if err != nil {
+		log.CliLogger.Warnf("Flink shell failed to connect to language service: error getting language service URL: %v\n", err)
+		return err
+	}
+
+	jwtValidator := jwt.NewValidator()
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
-	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), types.ApplicationOptions{
-		Context:         c.Context,
-		UnsafeTrace:     unsafeTrace,
-		UserAgent:       c.Version.UserAgent,
-		EnvironmentName: catalog,
-		EnvironmentId:   environmentId,
-		OrgResourceId:   resourceId,
-		Database:        database,
-		ComputePoolId:   computePool,
-		IdentityPoolId:  identityPool,
-		Verbose:         verbose > 0,
-	}, reportUsage(cmd, c.Config.Config, unsafeTrace))
-	return nil
+	opts := types.ApplicationOptions{
+		Context:          c.Context,
+		UnsafeTrace:      unsafeTrace,
+		UserAgent:        c.Version.UserAgent,
+		EnvironmentName:  catalog,
+		EnvironmentId:    environmentId,
+		OrganizationId:   c.Context.GetOrganization().GetResourceId(),
+		Database:         database,
+		ComputePoolId:    computePool,
+		ServiceAccountId: serviceAccount,
+		Verbose:          verbose > 0,
+		LSPBaseUrl:       lspBaseUrl,
+	}
+
+	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
+}
+
+func (c *command) startWithLocalMode(configKeys, configValues []string) error {
+	// parse app options from given flags
+	appOptions, err := types.ParseApplicationOptionsFromSlices(configKeys, configValues)
+	if err != nil {
+		return err
+	}
+
+	// validate app options
+	if err := appOptions.Validate(); err != nil {
+		return err
+	}
+
+	gatewayClient := ccloudv2.NewFlinkGatewayClient(appOptions.GetGatewayUrl(), c.Version.UserAgent, appOptions.GetUnsafeTrace(), "authToken")
+
+	appOptions.Context = c.Context
+	return client.StartApp(gatewayClient, func() error { return nil }, *appOptions, func() {})
+}
+
+func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewayClient) (string, error) {
+	if cfg := gatewayClient.GetConfig(); cfg != nil && len(cfg.Servers) > 0 {
+		gatewayUrl := cfg.Servers[0].URL
+		parsedUrl, err := url.Parse(gatewayUrl)
+		if err != nil {
+			return "", err
+		}
+
+		parsedUrl.Host = strings.Replace(parsedUrl.Host, "flink.", "flinkpls.", 1)
+		parsedUrl.Scheme = "wss"
+		parsedUrl.Path = "/lsp"
+
+		return parsedUrl.String(), nil
+	}
+	return "", nil
 }
 
 func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func() {
+	if cfg.HasGovHostname() {
+		return func() {}
+	}
+
 	return func() {
 		u := ppanic.CollectPanic(cmd, nil, cfg)
-		u.Report(cfg.GetCloudClientV2(unsafeTrace))
+		u.Report(ccloudv2.NewClient(cfg, unsafeTrace))
 	}
 }

@@ -9,9 +9,9 @@ import (
 )
 
 type exceptionOut struct {
-	Timestamp  time.Time `human:"Timestamp" serialized:"timestamp"`
-	Name       string    `human:"Name" serialized:"name"`
-	StackTrace string    `human:"Stack Trace" serialized:"stack_trace"`
+	Timestamp time.Time `human:"Timestamp" serialized:"timestamp"`
+	Name      string    `human:"Name" serialized:"name"`
+	Message   string    `human:"Message" serialized:"message"`
 }
 
 func (c *command) newStatementExceptionCommand() *cobra.Command {
@@ -21,7 +21,7 @@ func (c *command) newStatementExceptionCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	c.addRegionFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.AddCommand(c.newStatementExceptionListCommand())
 
 	return cmd

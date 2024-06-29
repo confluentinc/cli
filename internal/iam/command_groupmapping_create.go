@@ -18,14 +18,14 @@ func (c *groupMappingCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a group mapping named "demo-group-mapping".`,
-				Code: `confluent iam group-mapping create demo-group-mapping --description "new description" --filter "\"demo\" in claims.group"`,
+				Code: `confluent iam group-mapping create demo-group-mapping --description "new description" --filter "\"demo\" in groups"`,
 			},
 		),
 	}
 
 	cmd.Flags().String("description", "", "Description of the group mapping.")
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

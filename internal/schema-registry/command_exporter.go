@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
+const exporterActionMsg = "%s schema exporter \"%s\".\n"
+
 func (c *command) newExporterCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "exporter",
@@ -19,13 +21,13 @@ func (c *command) newExporterCommand(cfg *config.Config) *cobra.Command {
 
 	cmd.AddCommand(c.newExporterCreateCommand(cfg))
 	cmd.AddCommand(c.newExporterDeleteCommand(cfg))
+	cmd.AddCommand(c.newExporterConfigurationCommand(cfg))
 	cmd.AddCommand(c.newExporterDescribeCommand(cfg))
-	cmd.AddCommand(c.newExporterGetConfigCommand(cfg))
-	cmd.AddCommand(c.newExporterGetStatusCommand(cfg))
 	cmd.AddCommand(c.newExporterListCommand(cfg))
 	cmd.AddCommand(c.newExporterPauseCommand(cfg))
 	cmd.AddCommand(c.newExporterResetCommand(cfg))
 	cmd.AddCommand(c.newExporterResumeCommand(cfg))
+	cmd.AddCommand(c.newExporterStatusCommand(cfg))
 	cmd.AddCommand(c.newExporterUpdateCommand(cfg))
 
 	return cmd

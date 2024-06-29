@@ -7,11 +7,11 @@ import (
 
 type IntegerSerializationProvider struct{}
 
-func (s *IntegerSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (IntegerSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
-func (s *IntegerSerializationProvider) Serialize(str string) ([]byte, error) {
+func (IntegerSerializationProvider) Serialize(str string) ([]byte, error) {
 	i, err := strconv.ParseUint(str, 10, 32)
 	if err != nil {
 		return nil, err
@@ -23,6 +23,6 @@ func (s *IntegerSerializationProvider) Serialize(str string) ([]byte, error) {
 	return buf, nil
 }
 
-func (s *IntegerSerializationProvider) GetSchemaName() string {
+func (IntegerSerializationProvider) GetSchemaName() string {
 	return ""
 }

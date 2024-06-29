@@ -85,10 +85,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 	i := 0
 	for key, val := range configMap {
-		v := val
+		val := val
 		topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
 			Name:  key,
-			Value: *kafkarestv3.NewNullableString(&v),
+			Value: *kafkarestv3.NewNullableString(&val),
 		}
 		i++
 	}
@@ -103,8 +103,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		data.PartitionsCount = utils.Int32Ptr(int32(partitions))
 	}
 
-	_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(data)
-	if err != nil {
+	if _, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(data); err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
 			// Ignore or pretty print topic exists error
@@ -114,8 +113,9 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 				}
 				clusterId := kafkaREST.GetClusterId()
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, clusterId),
-					fmt.Sprintf(errors.TopicExistsSuggestions, clusterId, clusterId))
+					fmt.Sprintf(`topic "%s" already exists for Kafka cluster "%s"`, topicName, clusterId),
+					fmt.Sprintf("To list topics for the cluster \"%[1]s\", use `confluent kafka topic list --cluster %[1]s`.", clusterId),
+				)
 			}
 
 			// Print partition limit error w/ suggestion
@@ -127,6 +127,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(c.Config.EnableColor, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

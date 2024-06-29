@@ -23,7 +23,7 @@ func TestTable(t *testing.T) {
 		Human.String(): {
 			"+-------------+-----------------+",
 			"| Current     | true            |",
-			"| ID          |               1 |",
+			"| ID          | 1               |",
 			"| Name        | lkc-123456      |",
 			"| Description | Example Cluster |",
 			"+-------------+-----------------+",
@@ -70,7 +70,7 @@ func TestTable_NoAutoWrap(t *testing.T) {
 		Human.String(): {
 			"+-------------+------------+",
 			"| Current     | true       |",
-			"| ID          |          1 |",
+			"| ID          | 1          |",
 			"| Name        | lkc-123456 |",
 			"| Description | {          |",
 			`|             |   "A": 1,  |`,
@@ -91,10 +91,10 @@ func TestTable_NoAutoWrap(t *testing.T) {
 			"id: 1",
 			"name: lkc-123456",
 			"description: |-",
-			"  {",
-			`    "A": 1,`,
-			`    "B": 2`,
-			"  }",
+			"    {",
+			`      "A": 1,`,
+			`      "B": 2`,
+			"    }",
 		},
 	}
 
@@ -174,7 +174,7 @@ func TestTable_Omitempty(t *testing.T) {
 		Human.String(): {
 			"+---------+------------+",
 			"| Current | true       |",
-			"| ID      |          1 |",
+			"| ID      | 1          |",
 			"| Name    | lkc-123456 |",
 			"+---------+------------+",
 		},

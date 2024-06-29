@@ -35,9 +35,9 @@ Flags:
                                  If <secret-value> is empty, the named secret will be removed from Stream Designer.
       --activation-privilege     Grant or revoke the privilege to activate this pipeline. (default true)
       --update-schema-registry   Update the pipeline with the latest Schema Registry cluster.
-  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string           Kafka cluster ID.
       --environment string       Environment ID.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

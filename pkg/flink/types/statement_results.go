@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 )
 
 type StatementResults struct {
@@ -30,15 +30,33 @@ type StatementResultRow struct {
 	Fields    []StatementResultField
 }
 
-func (r *StatementResultRow) GetRowKey() string {
-	rowKey := strings.Builder{}
-	for idx, field := range r.GetFields() {
-		rowKey.WriteString(field.ToString())
-		if idx != len(r.GetFields())-1 {
-			rowKey.WriteString("-")
-		}
+func (r *StatementResultRow) GetRowKey(upsertColumns *[]int32) (string, bool) {
+	rowValues := r.tryGetRowKeyWithUpsertColumns(upsertColumns)
+	if len(rowValues) > 0 {
+		return strings.Join(rowValues, "-"), true
 	}
-	return rowKey.String()
+
+	// fallback to using the whole row as a key, in case we couldn't construct a row key with upsert columns
+	for _, field := range r.GetFields() {
+		rowValues = append(rowValues, field.ToString())
+	}
+	return strings.Join(rowValues, "-"), false
+}
+
+func (r *StatementResultRow) tryGetRowKeyWithUpsertColumns(upsertColumns *[]int32) []string {
+	if upsertColumns == nil || len(*upsertColumns) == 0 {
+		return nil
+	}
+
+	rowValues := []string{}
+	for _, upsertColumnIdxInt32 := range *upsertColumns {
+		upsertColumnIdx := int(upsertColumnIdxInt32)
+		if upsertColumnIdx < 0 || upsertColumnIdx > len(r.GetFields()) {
+			return nil
+		}
+		rowValues = append(rowValues, r.GetFields()[upsertColumnIdx].ToString())
+	}
+	return rowValues
 }
 
 func (r *StatementResultRow) GetFields() []StatementResultField {
@@ -50,33 +68,33 @@ func (r *StatementResultRow) GetFields() []StatementResultField {
 }
 
 const (
-	INSERT        StatementResultOperation = 0
-	UPDATE_BEFORE StatementResultOperation = 1
-	UPDATE_AFTER  StatementResultOperation = 2
-	DELETE        StatementResultOperation = 3
+	Insert       StatementResultOperation = 0
+	UpdateBefore StatementResultOperation = 1
+	UpdateAfter  StatementResultOperation = 2
+	Delete       StatementResultOperation = 3
 )
 
 type StatementResultOperation float64
 
 func (s StatementResultOperation) IsInsertOperation() bool {
-	return s == INSERT || s == UPDATE_AFTER
+	return s == Insert || s == UpdateAfter
 }
 
 func (s StatementResultOperation) String() string {
 	switch s {
-	case INSERT:
+	case Insert:
 		return "+I"
-	case UPDATE_BEFORE:
+	case UpdateBefore:
 		return "-U"
-	case UPDATE_AFTER:
+	case UpdateAfter:
 		return "+U"
-	case DELETE:
+	case Delete:
 		return "-D"
 	}
 	return ""
 }
 
 type MockStatementResult struct {
-	ResultSchema     flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
-	StatementResults flinkgatewayv1alpha1.SqlV1alpha1StatementResult
+	ResultSchema     flinkgatewayv1.SqlV1ResultSchema
+	StatementResults flinkgatewayv1.SqlV1StatementResult
 }

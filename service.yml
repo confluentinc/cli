@@ -1,8 +1,14 @@
 name: cli
 lang: go
-lang_version: "1.21.0"
+lang_version: "1.22.2"
 git:
   enable: true
+  hooks:
+    enable: true
 github:
   enable: true
-  repo_name: confluentinc/cli
+gitignore:
+  enable: true
+semaphore:
+  enable: true
+  pipeline_enable: false

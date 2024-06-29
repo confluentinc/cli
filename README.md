@@ -1,7 +1,7 @@
 # Confluent CLI
 
 [![Release](https://img.shields.io/github/v/release/confluentinc/cli)](https://github.com/confluentinc/cli/releases/latest)
-[![Build Status](https://confluent-cli.semaphoreci.com/badges/cli/branches/main.svg?style=shields&key=d7163855-c2f5-40b9-a5d7-ff9e3e2214fe)](https://confluent-cli.semaphoreci.com/projects/cli)
+[![Build Status](https://semaphore.ci.confluent.io/badges/cli/branches/main.svg?style=shields&key=36d1298e-932a-4d04-8cd0-2483a2a6ab85)](https://semaphore.ci.confluent.io/projects/cli)
 
 The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
@@ -27,19 +27,23 @@ Install the latest version of `confluent` to `/usr/local/bin`:
 
     brew install confluentinc/tap/cli
 
-#### Scripted installation
+#### APT (Ubuntu and Debian)
 
-Install the latest version of `confluent` to `/usr/local/bin`:
+Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin
+    wget -qO - https://packages.confluent.io/confluent-cli/deb/archive.key | sudo apt-key add -
+    sudo apt install software-properties-common
+    sudo add-apt-repository "deb https://packages.confluent.io/confluent-cli/deb stable main"
+    sudo apt update && sudo apt install confluent-cli
 
-Print a complete list of versions available for download:
+#### YUM (RHEL and CentOS)
 
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -l
+Install the latest version of `confluent` to `/usr/bin` (requires `glibc 2.17` or above for `amd64` and `glibc 2.27` or above for `arm64`):
 
-Install `confluent` v3.6.0 to `/usr/local/bin`:
-
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin 3.6.0
+    sudo rpm --import https://packages.confluent.io/confluent-cli/rpm/archive.key
+    sudo yum install yum-utils
+    sudo yum-config-manager --add-repo https://packages.confluent.io/confluent-cli/rpm/confluent-cli.repo
+    sudo yum clean all && sudo yum install confluent-cli
 
 #### Windows
 
@@ -59,28 +63,109 @@ Pull `confluent` v3.6.0:
 
 ### Building from Source
 
-    make
+    make build
     dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 
 #### Cross Compile for Other Platforms
 
-Cross compilation from a Darwin/amd64 machine to Darwin/arm64, Linux/amd64 and Windows/amd64 platforms is supported.
-To build for Darwin/arm64, run the following:
+From darwin/amd64 or darwin/arm64, you can build the CLI for any other supported platform.
 
-    GOARCH=arm64 make cross-build
+To build for darwin/amd64 from darwin/arm64, run the following:
 
-To build for Linux (glibc or musl), install cross compiler `musl-cross` with Homebrew:
+    GOARCH=amd64 make build
+
+To build for darwin/arm64 from darwin/amd64, run the following:
+
+    GOARCH=arm64 make build
+
+To build for linux/amd64 (glibc or musl), run the following:
 
     brew install FiloSottile/musl-cross/musl-cross
-    GOOS=linux make cross-build
+    GOOS=linux GOARCH=amd64 make cross-build
 
-To build for Windows/amd64, install `mingw-w64` compilers with Homebrew:
+To build for linux/arm64 (glibc or musl), run the following:
+
+    brew install FiloSottile/musl-cross/musl-cross
+    GOOS=linux GOARCH=arm64 make cross-build
+
+To build for windows/amd64, run the following:
 
     brew install mingw-w64
-    GOOS=windows make cross-build
+    GOOS=windows GOARCH=amd64 make cross-build
 
-Cross compilation from an M1 Macbook (Darwin/arm64) to other platforms is also supported.
+#### Building in FIPS-140 mode
 
-#### Troubleshooting
+Linux is built in FIPS-140 mode by default. To build the CLI for macOS in FIPS-140 mode, set the `GOLANG_FIPS` environment variable to "1":
 
-Please update your system to MacOS 11.0 or later if you are building on Darwin/arm64.
+```bash
+GOLANG_FIPS=1 make build
+```
+
+Then, build an OpenSSL FIPS provider:
+
+```bash
+wget "https://www.openssl.org/source/openssl-3.0.9.tar.gz"
+tar -xvf openssl-3.0.9.tar.gz
+cd openssl-3.0.9/
+./Configure enable-fips
+make install_fips DESTDIR=install
+```
+
+Copy the generated files into the Homebrew OpenSSL directory:
+
+```bash
+cp install/usr/local/lib/ossl-modules/fips.dylib /opt/homebrew/Cellar/openssl@3/<version>/lib/ossl-modules
+cp install/usr/local/ssl/fipsmodule.cnf /opt/homebrew/etc/openssl@3/
+```
+
+Create a new OpenSSL configuration file for FIPS mode:
+
+```bash
+cp /opt/homebrew/etc/openssl@3/openssl.cnf /opt/homebrew/etc/openssl@3/openssl-fips.cnf
+```
+
+Append the following to `openssl-fips.cnf`:
+
+```
+config_diagnostics = 1
+openssl_conf = openssl_init
+
+.include /opt/homebrew/etc/openssl@3/fipsmodule.cnf
+
+[openssl_init]
+providers = provider_sect
+ssl_conf = ssl_module
+alg_section = algorithm_sect
+
+[provider_sect]
+fips = fips_sect
+default = default_sect
+
+[default_sect]
+activate = 1
+
+[algorithm_sect]
+default_properties = fips=yes
+
+[ssl_module]
+system_default = crypto_policy
+
+[crypto_policy]
+CipherString = @SECLEVEL=2:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384
+Ciphersuites = TLS_AES_256_GCM_SHA384
+TLS.MinProtocol = TLSv1.2
+TLS.MaxProtocol = TLSv1.3
+DTLS.MinProtocol = DTLSv1.2
+DTLS.MaxProtocol = DTLSv1.2
+SignatureAlgorithms = ECDSA+SHA256:ECDSA+SHA384:ECDSA+SHA512:rsa_pss_pss_sha256:rsa_pss_pss_sha384:rsa_pss_pss_sha512:rsa_pss_rsae_sha256:rsa_pss_rsae_sha384:rsa_pss_rsae_sha512:RSA+SHA256:RSA+SHA384:RSA+SHA512:ECDSA+SHA224:RSA+SHA224
+```
+
+Run the Confluent CLI in FIPS-140 mode:
+
+```bash
+env \
+ DYLD_LIBRARY_PATH=/opt/homebrew/Cellar/openssl@3/<version>/lib \
+ OPENSSL_CONF=/opt/homebrew/etc/openssl@3/openssl-fips.cnf \
+ GOLANG_FIPS=1 \
+ confluent version
+```

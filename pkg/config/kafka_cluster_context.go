@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -185,12 +184,12 @@ func (k *KafkaClusterContext) Validate() {
 }
 
 func (k *KafkaClusterContext) validateActiveKafka() {
-	errMsg := "Active Kafka cluster '%s' has no info stored in config for context '%s'.\n" +
+	errMsg := "Active Kafka cluster \"%s\" has no info stored for context \"%s\".\n" +
 		"Removing active Kafka setting for the context.\n" +
 		"You can set the active Kafka cluster with `confluent kafka cluster use`.\n"
 	if !k.EnvContext {
 		if _, ok := k.KafkaClusterConfigs[k.ActiveKafkaCluster]; k.ActiveKafkaCluster != "" && !ok {
-			output.ErrPrintf(errMsg, k.ActiveKafkaCluster, k.Context.Name)
+			output.ErrPrintf(false, errMsg, k.ActiveKafkaCluster, k.Context.Name)
 			k.ActiveKafkaCluster = ""
 			if err := k.Context.Save(); err != nil {
 				panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s'.", k.Context.Name))
@@ -199,7 +198,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 	} else {
 		for env, kafkaEnvContext := range k.KafkaEnvContexts {
 			if _, ok := kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]; kafkaEnvContext.ActiveKafkaCluster != "" && !ok {
-				output.ErrPrintf(errMsg, kafkaEnvContext.ActiveKafkaCluster, k.Context.Name)
+				output.ErrPrintf(false, errMsg, kafkaEnvContext.ActiveKafkaCluster, k.Context.Name)
 				kafkaEnvContext.ActiveKafkaCluster = ""
 				if err := k.Context.Save(); err != nil {
 					panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s', environment '%s'.", k.Context.Name, env))
@@ -220,7 +219,9 @@ func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *KafkaClusterCo
 		}
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		output.ErrPrintf(errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, k.Context.Name, cluster.ID)
+		output.ErrPrintf(false, "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n", cluster.APIKey, cluster.ID, k.Context.Name)
+		output.ErrPrintln(false, "Removing current API key setting for the resource.")
+		output.ErrPrintf(false, "You can re-add the API key with `confluent api-key store --resource %s` and then set current API key with `confluent api-key use`.\n", cluster.ID)
 		cluster.APIKey = ""
 		if err := k.Context.Save(); err != nil {
 			panic(fmt.Sprintf("Unable to reset current APIKey for cluster '%s' in context '%s'.", cluster.ID, k.Context.Name))

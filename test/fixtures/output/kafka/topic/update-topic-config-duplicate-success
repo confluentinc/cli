@@ -1,4 +1,4 @@
 Updated the following configuration values for topic "topic-exist":
       Name     | Value  
 ---------------+--------
-  retention.ms |     1  
+  retention.ms | 1      

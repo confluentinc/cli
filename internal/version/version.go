@@ -32,6 +32,6 @@ func New(prerunner pcmd.PreRunner, ver *pversion.Version) *cobra.Command {
 }
 
 func (c *command) version(_ *cobra.Command, _ []string) error {
-	output.Println(c.ver)
+	output.Println(c.Config.EnableColor, c.ver.String())
 	return nil
 }

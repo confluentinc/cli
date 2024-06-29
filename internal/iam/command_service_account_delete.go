@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -32,27 +34,22 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	serviceAccount, _, err := c.V2Client.GetIamServiceAccount(args[0])
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.ServiceAccount, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, _, err := c.V2Client.GetIamServiceAccount(id)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.ServiceAccount, serviceAccount.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.ServiceAccount); err != nil {
 		return err
 	}
 
 	deleteFunc := func(id string) error {
 		if err := c.V2Client.DeleteIamServiceAccount(id); err != nil {
-			return errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, id, err)
+			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, id, err)
 		}
 		return nil
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.ServiceAccount)
+	_, err := deletion.Delete(args, deleteFunc, resource.ServiceAccount)
 	return err
 }

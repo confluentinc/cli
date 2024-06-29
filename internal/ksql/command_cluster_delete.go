@@ -2,6 +2,7 @@ package ksql
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -14,7 +15,6 @@ import (
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -47,7 +47,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.KsqlCluster, idToCluster[args[0]].Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.KsqlCluster); err != nil {
 		return err
 	}
 
@@ -70,13 +70,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
-	ctx := c.Config.Context()
-	state, err := ctx.AuthenticatedState()
-	if err != nil {
-		return err
-	}
-
-	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+	dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 	if err != nil {
 		return err
 	}
@@ -95,14 +89,14 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 		if err != nil {
 			return err
 		}
-		return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, clusterId, string(body))
+		return fmt.Errorf(`failed to terminate ksqlDB cluster "%s" due to "%s"`, clusterId, string(body))
 	}
 	return nil
 }
 
 func (c *ksqlCommand) mapIdToCluster(args []string, environmentId string) map[string]ksqlv2.KsqldbcmV2Cluster {
 	// NOTE: This function does not return an error for invalid IDs; validation will instead
-	// be done by deletion.ValidateAndConfirmDeletion using this map. This allows for consistent existence
+	// be done by deletion.ValidateAndConfirm using this map. This allows for consistent existence
 	// error messaging across all delete commands which support multiple deletion.
 
 	idToCluster := make(map[string]ksqlv2.KsqldbcmV2Cluster)

@@ -8,10 +8,11 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"slices"
 	"strings"
+	"time"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/secret"
@@ -19,91 +20,84 @@ import (
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
-const (
-	defaultConfigFileFmt = "%s/.confluent/config.json"
-	emptyFieldIndicator  = "EMPTY"
-)
+const emptyFieldIndicator = "EMPTY"
 
 const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
 var (
-	RequireCloudLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud to use this command",
-		"Log in with `confluent login`.\n"+signupSuggestion,
-	)
-	RequireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
-		"you must unsuspend your organization to use this command",
-		errors.SuspendedOrganizationSuggestions,
-	)
-	RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
-		"you must unsuspend your organization to use this command",
-		errors.EndOfFreeTrialSuggestions,
-	)
-	RequireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
-		"you must log in to use this command",
-		"Log in with `confluent login`.\n"+signupSuggestion,
-	)
-	RequireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud with a username and password to use this command",
-		"Log in with `confluent login`.\n"+signupSuggestion,
-	)
-	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
-		"Log in with `confluent login` or `confluent login --url <mds-url>`.\n"+signupSuggestion,
-	)
-	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
-		"you must log out of Confluent Cloud to use this command",
-		"Log out with `confluent logout`.\n",
-	)
-	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Platform to use this command",
-		"Log in to Confluent Platform with `confluent login --url <mds-url>`.",
-	)
-	RunningOnPremCommandInCloudErr = errors.NewErrorWithSuggestions(
-		"this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
-		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Use the "--help" flag to see available commands.`,
-	)
+	RequireCloudLoginErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to Confluent Cloud to use this command",
+		SuggestionsMsg: "Log in with `confluent login`.\n" + signupSuggestion,
+	}
+	RequireCloudLoginOrgUnsuspendedErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must unsuspend your organization to use this command",
+		SuggestionsMsg: errors.SuspendedOrganizationSuggestions,
+	}
+	RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must unsuspend your organization to use this command",
+		SuggestionsMsg: errors.EndOfFreeTrialSuggestions,
+	}
+	RequireCloudLoginOrOnPremErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to use this command",
+		SuggestionsMsg: "Log in with `confluent login`.\n" + signupSuggestion,
+	}
+	RequireNonAPIKeyCloudLoginErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to Confluent Cloud with a username and password to use this command",
+		SuggestionsMsg: "Log in with `confluent login`.\n" + signupSuggestion,
+	}
+	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
+		SuggestionsMsg: "Log in with `confluent login` or `confluent login --url <mds-url>`.\n" + signupSuggestion,
+	}
+	RequireCloudLogout = &errors.RunRequirementError{
+		ErrorMsg:       "you must log out of Confluent Cloud to use this command",
+		SuggestionsMsg: "Log out with `confluent logout`.\n",
+	}
+	RequireOnPremLoginErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must log in to Confluent Platform to use this command",
+		SuggestionsMsg: "Log in to Confluent Platform with `confluent login --url <mds-url>`.",
+	}
+	RunningOnPremCommandInCloudErr = &errors.RunRequirementError{
+		ErrorMsg:       "this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
+		SuggestionsMsg: "Log in to Confluent Platform with `confluent login --url <mds-url>`.\nSee available commands with `--help`.",
+	}
+	RunningSimilarOnPremCommandInCloudErr = func(cmdPath, suggestedCmdPath string) errors.CLITypedError {
+		return &errors.RunRequirementError{
+			ErrorMsg:       fmt.Sprintf("`%s` is not a Confluent Cloud command. Did you mean `%s`?", cmdPath, suggestedCmdPath),
+			SuggestionsMsg: fmt.Sprintf("If you are a Confluent Cloud user, run `%s` instead.\nIf you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`.", suggestedCmdPath, cmdPath),
+		}
+	}
 )
-
-// Whitelist is the configuration fields that are visible by the `config` subcommands.
-var Whitelist = []string{
-	"disable_update_check",
-	"disable_updates",
-	"disable_plugins",
-	"disable_feature_flags",
-	"no_browser",
-}
 
 // Config represents the CLI configuration.
 type Config struct {
-	DisableUpdateCheck  bool                        `json:"disable_update_check"`
-	DisableUpdates      bool                        `json:"disable_updates,omitempty"`
-	DisablePlugins      bool                        `json:"disable_plugins"`
-	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
-	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
-	NoBrowser           bool                        `json:"no_browser"`
-	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
-	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
-	CurrentContext      string                      `json:"current_context"`
-	Contexts            map[string]*Context         `json:"contexts,omitempty"`
-	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
-	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
-	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
+	DisableFeatureFlags       bool       `json:"disable_feature_flags"`
+	DisablePlugins            bool       `json:"disable_plugins"`
+	DisablePluginsOnceWindows bool       `json:"disable_plugins_once_windows,omitempty"`
+	DisableUpdateCheck        bool       `json:"disable_update_check"`
+	EnableColor               bool       `json:"enable_color"`
+	LastUpdateCheckAt         *time.Time `json:"last_update_check_at,omitempty"`
+
+	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
+	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
+	CurrentContext   string                      `json:"current_context"`
+	Contexts         map[string]*Context         `json:"contexts,omitempty"`
+	ContextStates    map[string]*ContextState    `json:"context_states,omitempty"`
+	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+	LocalPorts       *LocalPorts                 `json:"local_ports,omitempty"`
+
+	// The following configurations are not persisted between runs or are read-only
+	DisableUpdates bool              `json:"-"`
+	Filename       string            `json:"-"`
+	IsTest         bool              `json:"-"`
+	Version        *pversion.Version `json:"-"`
+
+	overwrittenCurrentContext      string
+	overwrittenCurrentEnvironment  string
+	overwrittenCurrentKafkaCluster string
 
 	// Deprecated
-	AnonymousId string `json:"anonymous_id,omitempty"`
-	Ver         string `json:"version,omitempty"`
-
-	// The following configurations are not persisted between runs
-
-	IsTest   bool              `json:"-"`
-	Version  *pversion.Version `json:"-"`
-	Filename string            `json:"-"`
-
-	overwrittenCurrentContext          string
-	overwrittenCurrentEnvironment      string
-	overwrittenCurrentFlinkComputePool string
-	overwrittenCurrentKafkaCluster     string
+	DisablePluginsOnce bool `json:"disable_plugins_once,omitempty"`
 }
 
 func (c *Config) SetOverwrittenCurrentContext(context string) {
@@ -118,12 +112,6 @@ func (c *Config) SetOverwrittenCurrentContext(context string) {
 func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
 	if c.overwrittenCurrentEnvironment == "" {
 		c.overwrittenCurrentEnvironment = environmentId
-	}
-}
-
-func (c *Config) SetOverwrittenFlinkComputePool(computePoolId string) {
-	if c.overwrittenCurrentFlinkComputePool == "" {
-		c.overwrittenCurrentFlinkComputePool = computePoolId
 	}
 }
 
@@ -144,6 +132,7 @@ func New() *Config {
 		ContextStates:    make(map[string]*ContextState),
 		SavedCredentials: make(map[string]*LoginCredential),
 		Version:          new(pversion.Version),
+		EnableColor:      true,
 	}
 }
 
@@ -151,10 +140,10 @@ func (c *Config) DecryptContextStates() error {
 	if context := c.Context(); context != nil {
 		state := c.ContextStates[context.Name]
 		if state != nil {
-			if err := state.DecryptContextStateAuthToken(context.Name); err != nil {
+			if err := state.DecryptAuthToken(context.Name); err != nil {
 				return err
 			}
-			if err := state.DecryptContextStateAuthRefreshToken(context.Name); err != nil {
+			if err := state.DecryptAuthRefreshToken(context.Name); err != nil {
 				return err
 			}
 		}
@@ -186,17 +175,18 @@ func (c *Config) Load() error {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
 			if err := c.Save(); err != nil {
-				return errors.Wrapf(err, "unable to save configuration file")
+				return fmt.Errorf("unable to save configuration file: %w", err)
 			}
 			return nil
 		}
-		return errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
+		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
 	if err := json.Unmarshal(input, c); err != nil {
-		return errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
+		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
+	var save bool
 	for _, context := range c.Contexts {
 		// Some "pre-validation"
 		if context.Name == "" {
@@ -212,15 +202,33 @@ func (c *Config) Load() error {
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Config = c
 		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
 		context.State = c.ContextStates[context.Name]
+
+		// Migrate deprecated NetrcMachineName to MachineName
+		if context.NetrcMachineName != "" && context.MachineName == "" {
+			context.MachineName = context.NetrcMachineName
+			context.NetrcMachineName = ""
+			save = true
+		}
 	}
 
-	if runtime.GOOS == "windows" && !c.DisablePluginsOnce {
+	// Migrate deprecated DisablePluginsOnce to DisablePluginsOnceWindows
+	if c.DisablePluginsOnce && !c.DisablePluginsOnceWindows {
+		c.DisablePluginsOnceWindows = true
+		c.DisablePluginsOnce = false
+		save = true
+	}
+
+	if runtime.GOOS == "windows" && !c.DisablePluginsOnceWindows {
 		c.DisablePlugins = true
-		c.DisablePluginsOnce = true
+		c.DisablePluginsOnceWindows = true
+		save = true
+	}
+
+	if save {
 		_ = c.Save()
 	}
 
@@ -229,12 +237,12 @@ func (c *Config) Load() error {
 
 // Save writes the CLI config to disk.
 func (c *Config) Save() error {
-	tempKafka := c.resolveOverwrittenKafka()
+	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
 	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
 	tempContext := c.resolveOverwrittenContext()
 	var tempAuthToken string
 	var tempAuthRefreshToken string
-	tempApiSecrets := map[string]string{}
+	tempCredentials := map[string]string{}
 
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
@@ -247,7 +255,7 @@ func (c *Config) Save() error {
 	if c.Credentials != nil {
 		for name, credential := range c.Credentials {
 			if credential.APIKeyPair != nil {
-				tempApiSecrets[name] = credential.APIKeyPair.Secret
+				tempCredentials[name] = credential.APIKeyPair.Secret
 			}
 		}
 		if err := c.encryptCredentialsAPISecret(); err != nil {
@@ -261,25 +269,25 @@ func (c *Config) Save() error {
 
 	cfg, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
-		return errors.Wrapf(err, errors.MarshalConfigErrorMsg)
+		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
 	filename := c.GetFilename()
 
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
+		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
 	}
 
 	if err := os.WriteFile(filename, cfg, 0600); err != nil {
-		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
+		return fmt.Errorf("unable to write config to file %s: %w", filename, err)
 	}
 
 	c.restoreOverwrittenContext(tempContext)
 	c.restoreOverwrittenEnvironment(tempEnvironment)
-	c.restoreOverwrittenKafka(tempKafka)
+	c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
 	c.restoreOverwrittenAuthToken(tempAuthToken)
 	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
-	c.restoreOverwrittenCredentials(tempApiSecrets)
+	c.restoreOverwrittenCredentials(tempCredentials)
 
 	return nil
 }
@@ -314,16 +322,13 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
 
-	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
+	// The Confluent Gov environment and the Confluent Platform MDS return a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
 	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
-	environments := []string{
-		"confluentgov.com",
-		"devel.confluentgov-internal.com",
-		"infra.confluentgov-internal.com",
-	}
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && slices.Contains(environments, c.Context().PlatformName)
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
 
-	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
+	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && !c.Context().IsCloud(c.IsTest)
+
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
@@ -337,7 +342,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 // If active Kafka cluster has been overwritten by flag value; if so, replace with previous active kafka
 // Return the flag value so that it can be restored after writing to file so that continued execution uses flag value
 // This prevents flags from updating state
-func (c *Config) resolveOverwrittenKafka() string {
+func (c *Config) resolveOverwrittenKafkaCluster() string {
 	ctx := c.Context()
 	var tempKafka string
 	if c.overwrittenCurrentKafkaCluster != "" && ctx != nil && ctx.KafkaClusterContext != nil {
@@ -351,9 +356,9 @@ func (c *Config) resolveOverwrittenKafka() string {
 }
 
 // Restore the flag cluster back into the struct so that it is used for any execution after Save()
-func (c *Config) restoreOverwrittenKafka(tempKafka string) {
-	if tempKafka != "" {
-		c.Context().KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
+func (c *Config) restoreOverwrittenKafkaCluster(tempKafkaCluster string) {
+	if tempKafkaCluster != "" {
+		c.Context().KafkaClusterContext.SetActiveKafkaCluster(tempKafkaCluster)
 	}
 }
 
@@ -421,7 +426,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			log.CliLogger.Trace("current context does not exist")
-			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename)
+			return errors.NewCorruptedConfigError(`the current context "%s" does not exist`, c.CurrentContext, c.Filename)
 		}
 	}
 
@@ -446,7 +451,7 @@ func (c *Config) Validate() error {
 		}
 		if !c.IsTest && !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
-			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(`context state mismatch for context "%s"`, context.Name, c.Filename)
 		}
 	}
 
@@ -454,7 +459,7 @@ func (c *Config) Validate() error {
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
 			log.CliLogger.Trace("context state mapped to nonexistent context")
-			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.Filename)
+			return errors.NewCorruptedConfigError(`context state mapping error for context "%s"`, contextName, c.Filename)
 		}
 	}
 
@@ -485,22 +490,22 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, orgResourceId, envId string) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, organizationId, environmentId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
 
 	credential, ok := c.Credentials[credentialName]
 	if !ok {
-		return fmt.Errorf(errors.CredentialNotFoundErrorMsg, credentialName)
+		return fmt.Errorf(`credential "%s" not found`, credentialName)
 	}
 
 	platform, ok := c.Platforms[platformName]
 	if !ok {
-		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
+		return fmt.Errorf(`platform "%s" not found`, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, orgResourceId, envId)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, organizationId, environmentId)
 	if err != nil {
 		return err
 	}
@@ -566,7 +571,7 @@ func (c *Config) UseContext(name string) error {
 
 func (c *Config) SaveCredential(credential *Credential) error {
 	if credential.Name == "" {
-		return errors.New(errors.NoNameCredentialErrorMsg)
+		return fmt.Errorf("credential must have a name")
 	}
 	c.Credentials[credential.Name] = credential
 	return c.Save()
@@ -574,7 +579,7 @@ func (c *Config) SaveCredential(credential *Credential) error {
 
 func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCredential) error {
 	if ctxName == "" {
-		return errors.New(errors.SavedCredentialNoContextErrorMsg)
+		return fmt.Errorf("saved credential must match a context")
 	}
 	c.SavedCredentials[ctxName] = loginCredential
 	return c.Save()
@@ -582,7 +587,7 @@ func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCrede
 
 func (c *Config) SavePlatform(platform *Platform) error {
 	if platform.Name == "" {
-		return errors.New(errors.NoNamePlatformErrorMsg)
+		return fmt.Errorf("platform must have a name")
 	}
 	c.Platforms[platform.Name] = platform
 	return c.Save()
@@ -622,18 +627,22 @@ func (c *Config) HasBasicLogin() bool {
 	}
 
 	if c.IsCloudLogin() {
-		return ctx.hasBasicCloudLogin()
+		return ctx.HasLogin() && ctx.GetCurrentEnvironment() != ""
 	} else {
-		return ctx.HasBasicMDSLogin()
+		return ctx.HasLogin()
 	}
 }
 
 func (c *Config) GetFilename() string {
 	if c.Filename == "" {
-		homedir, _ := os.UserHomeDir()
-		c.Filename = filepath.FromSlash(fmt.Sprintf(defaultConfigFileFmt, homedir))
+		c.Filename = GetDefaultFilename()
 	}
 	return c.Filename
+}
+
+func GetDefaultFilename() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".confluent", "config.json")
 }
 
 func (c *Config) CheckIsOnPremLogin() error {
@@ -720,15 +729,30 @@ func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
 	return nil
 }
 
-func (c *Config) CheckIsNonCloudLogin() error {
+func (c *Config) CheckIsCloudLogout() error {
 	if c.isCloud() {
-		return RequireNonCloudLogin
+		return RequireCloudLogout
 	}
 	return nil
 }
 
 func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
+}
+
+func (c *Config) HasGovHostname() bool {
+	ctx := c.Context()
+	if ctx == nil {
+		return false
+	}
+
+	for _, hostname := range []string{"confluentgov-internal.com", "confluentgov.com"} {
+		if strings.Contains(ctx.PlatformName, hostname) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Config) IsOnPremLogin() bool {
@@ -766,7 +790,16 @@ func (c *Config) isLoginBlockedByOrgSuspension() bool {
 	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
 }
 
-func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {
-	ctx := c.Context()
-	return ccloudv2.NewClient(ctx.GetPlatformServer(), c.IsTest, ctx.GetAuthToken(), c.Version.UserAgent, unsafeTrace)
+// Parse `--context` flag value into config struct
+// Call ParseFlagsIntoContext which handles environment and cluster flags
+func (c *Config) ParseFlagsIntoConfig(cmd *cobra.Command) error {
+	if context, _ := cmd.Flags().GetString("context"); context != "" {
+		if _, err := c.FindContext(context); err != nil {
+			return err
+		}
+		c.SetOverwrittenCurrentContext(c.CurrentContext)
+		c.CurrentContext = context
+	}
+
+	return nil
 }

@@ -40,6 +40,8 @@ You can use the Confluent command line interface (CLI) to manage Confluent Platf
 
 %files
 %defattr(-,root,root)
+%exclude %dir /usr/libexec/cli/linux_##EXCLUDEARCH##
+%exclude /usr/libexec/cli/linux_##EXCLUDEARCH##/confluent
 /usr/bin/*
 /usr/libexec/cli/
 %doc

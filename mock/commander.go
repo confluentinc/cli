@@ -47,24 +47,11 @@ func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsCli
 	}
 }
 
-func NewPreRunnerMdsV2Mock(v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *config.Config) *Commander {
-	flagResolverMock := &pcmd.FlagResolverImpl{
-		Prompt: &pmock.Prompt{},
-		Out:    os.Stdout,
-	}
-	return &Commander{
-		FlagResolver: flagResolverMock,
-		V2Client:     v2Client,
-		MDSv2Client:  mdsClient,
-		Config:       cfg,
-	}
-}
-
 func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {
 			command.Version = c.Version
-			command.Config.Config = c.Config
+			command.Config = c.Config
 		}
 		return nil
 	}
@@ -78,7 +65,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(*c
 		c.setClient(command)
 
 		ctx := command.Config.Context()
-		if ctx == nil || !ctx.HasLogin() {
+		if !ctx.HasLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
@@ -95,7 +82,7 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 		c.setClient(command)
 
 		ctx := command.Config.Context()
-		if ctx == nil || !ctx.HasBasicMDSLogin() {
+		if !ctx.HasLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx

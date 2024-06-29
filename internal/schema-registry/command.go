@@ -30,10 +30,10 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newClusterCommand(cfg))
-	cmd.AddCommand(c.newCompatibilityCommand(cfg))
-	cmd.AddCommand(c.newConfigCommand(cfg))
+	cmd.AddCommand(c.newConfigurationCommand(cfg))
+	cmd.AddCommand(c.newDekCommand(cfg))
 	cmd.AddCommand(c.newExporterCommand(cfg))
-	cmd.AddCommand(c.newRegionCommand())
+	cmd.AddCommand(c.newKekCommand(cfg))
 	cmd.AddCommand(c.newSchemaCommand(cfg))
 	cmd.AddCommand(c.newSubjectCommand(cfg))
 
@@ -79,7 +79,7 @@ func addModeFlag(cmd *cobra.Command) {
 }
 
 func addCaLocationFlag(cmd *cobra.Command) {
-	cmd.Flags().String("ca-location", "", "File or directory path to CA certificates to authenticate the Schema Registry client.")
+	cmd.Flags().String("certificate-authority-path", "", "File or directory path to Certificate Authority certificates to authenticate the Schema Registry client.")
 }
 
 func addSchemaRegistryEndpointFlag(cmd *cobra.Command) {

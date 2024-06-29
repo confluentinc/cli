@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -66,7 +65,7 @@ func (s *ScopedIdService) DescribeCluster(url, caCertPath string) (*ScopedId, er
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf(errors.FetchClusterMetadataErrorMsg, resp.Status, body)
+		return nil, fmt.Errorf("unable to fetch cluster metadata: %s - %s", resp.Status, body)
 	}
 
 	meta := &ScopedId{}

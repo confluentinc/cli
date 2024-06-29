@@ -1,4 +1,4 @@
-//go:generate mocker --dst ../../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 login_organization_manager.go LoginOrganizationManager --prefix ""
+//go:generate mocker --dst ../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 login_organization_manager.go LoginOrganizationManager --prefix ""
 package auth
 
 import (
@@ -35,7 +35,7 @@ func NewLoginOrganizationManagerImpl() *LoginOrganizationManagerImpl {
 
 func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromFlag(cmd *cobra.Command) func() string {
 	return func() string {
-		organizationId, _ := cmd.Flags().GetString("organization-id")
+		organizationId, _ := cmd.Flags().GetString("organization")
 		return organizationId
 	}
 }

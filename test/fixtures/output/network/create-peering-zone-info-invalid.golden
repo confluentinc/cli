@@ -1,0 +1,1 @@
+Error: zone info "usw2-az3=10.10.0.32/27=usw2-az4=10.10.0.64/27" is not correctly formatted as <zone-ID>=<CIDR> or <CIDR>

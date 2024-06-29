@@ -12,7 +12,7 @@ import (
 )
 
 type PythonPluginInstaller struct {
-	Name          string
+	Id            string
 	RepositoryDir string
 	InstallDir    string
 }
@@ -29,7 +29,7 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 
 	versionSegments := ver.Segments()
 	if len(versionSegments) == 0 {
-		return errors.New(errors.NoVersionFoundErrorMsg)
+		return fmt.Errorf(errors.NoVersionFoundErrorMsg)
 	}
 	majorVer := versionSegments[0]
 
@@ -42,17 +42,20 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 		out, err = versionCmd.Output()
 	}
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "python"), programNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(programNotFoundErrorMsg, "python"),
+			programNotFoundSuggestions,
+		)
 	}
 
 	for _, word := range strings.Split(string(out), " ") {
 		if p.IsVersion(word) {
 			installedVer, err := version.NewVersion(strings.TrimSpace(word))
 			if err != nil {
-				return errors.Errorf(unableToParseVersionErrorMsg, "python")
+				return fmt.Errorf(unableToParseVersionErrorMsg, "python")
 			}
 			if installedVer.LessThan(ver) {
-				return errors.Errorf(insufficientVersionErrorMsg, "python", installedVer, ver)
+				return fmt.Errorf(insufficientVersionErrorMsg, "python", installedVer, ver)
 			}
 		}
 	}
@@ -61,5 +64,5 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 }
 
 func (p *PythonPluginInstaller) Install() error {
-	return installSimplePlugin(p.Name, p.RepositoryDir, p.InstallDir, "python")
+	return installSimplePlugin(p.Id, p.RepositoryDir, p.InstallDir, "python")
 }

@@ -23,7 +23,7 @@ import (
 
 var (
 	environments = []*ccloudv1.Account{
-		{Id: "a-595", Name: "default", OrgResourceId: "abc-123"},
+		{Id: "env-596", Name: "default", OrgResourceId: "abc-123"},
 		{Id: "env-595", Name: "other"},
 		{Id: "env-123", Name: "env123"},
 		{Id: SRApiEnvId, Name: "srUpdate"},
@@ -51,27 +51,28 @@ var (
 const (
 	serviceAccountId                 = int32(12345)
 	serviceAccountResourceId         = "sa-12345"
-	groupMappingResourceId           = "pool-abc"
-	identityProviderResourceId       = "op-12345"
-	identityPoolResourceId           = "pool-12345"
+	groupMappingId                   = "group-abc"
+	identityProviderId               = "op-12345"
+	identityPoolId                   = "pool-12345"
+	ipGroupId                        = "ipg-wjnde"
+	ipFilterId                       = "ipf-34dq3"
 	deactivatedUserId                = int32(6666)
-	deactivatedResourceId            = "sa-6666"
+	deactivatedUserResourceId        = "sa-6666"
 	auditLogServiceAccountId         = int32(1337)
 	auditLogServiceAccountResourceId = "sa-1337"
-	PromoTestCode                    = "PromoTestCode"
 )
 
 // Handler for: "/api/me"
 func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		orgResourceId := os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
-		if orgResourceId == "" {
-			orgResourceId = "abc-123"
+		organizationId := os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
+		if organizationId == "" {
+			organizationId = "abc-123"
 		}
 
 		org := &ccloudv1.Organization{
 			Id:         42,
-			ResourceId: orgResourceId,
+			ResourceId: organizationId,
 			Name:       "Confluent",
 		}
 		if isAuditLogEnabled {
@@ -250,14 +251,34 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Google Cloud Platform",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "asia-southeast1",
-						Name:          "asia-southeast1 (Singapore)",
-						IsSchedulable: true,
+						Id:   "asia-southeast1",
+						Name: "asia-southeast1 (Singapore)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{
+										ccloudv1.NetworkType_VPC_PEERING,
+										ccloudv1.NetworkType_TRANSIT_GATEWAY,
+										ccloudv1.NetworkType_PRIVATE_LINK,
+									},
+								},
+							},
+						},
 					},
 					{
-						Id:            "asia-east2",
-						Name:          "asia-east2 (Hong Kong)",
-						IsSchedulable: true,
+						Id:   "asia-east2",
+						Name: "asia-east2 (Hong Kong)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{
+										ccloudv1.NetworkType_VPC_PEERING,
+										ccloudv1.NetworkType_TRANSIT_GATEWAY,
+										ccloudv1.NetworkType_PRIVATE_LINK,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -266,14 +287,30 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Amazon Web Services",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "ap-northeast-1",
-						Name:          "ap-northeast-1 (Tokyo)",
-						IsSchedulable: false,
+						Id:   "ap-northeast-1",
+						Name: "ap-northeast-1 (Tokyo)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{},
+								},
+							},
+						},
 					},
 					{
-						Id:            "us-east-1",
-						Name:          "us-east-1 (N. Virginia)",
-						IsSchedulable: true,
+						Id:   "us-east-1",
+						Name: "us-east-1 (N. Virginia)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{
+										ccloudv1.NetworkType_VPC_PEERING,
+										ccloudv1.NetworkType_TRANSIT_GATEWAY,
+										ccloudv1.NetworkType_PRIVATE_LINK,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -282,9 +319,15 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 				Name: "Azure",
 				Regions: []*ccloudv1.Region{
 					{
-						Id:            "southeastasia",
-						Name:          "southeastasia (Singapore)",
-						IsSchedulable: false,
+						Id:   "southeastasia",
+						Name: "southeastasia (Singapore)",
+						Schedulability: &ccloudv1.Schedulability{
+							DedicatedNetwork: &ccloudv1.Schedulability_Tenancy{
+								DedicatedCluster: &ccloudv1.Schedulability_Tenancy_Durability{
+									High: []ccloudv1.NetworkType{},
+								},
+							},
+						},
 					},
 				},
 			},

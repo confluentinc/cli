@@ -62,12 +62,11 @@ func (c *command) autocompleteProviderShares() []string {
 }
 
 func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShareOut {
-	status := share.GetStatus()
 	out := &providerShareOut{
 		Id:                       share.GetId(),
 		ConsumerName:             share.GetConsumerUserName(),
 		ConsumerOrganizationName: share.GetConsumerOrganizationName(),
-		Status:                   status.GetPhase(),
+		Status:                   share.Status.GetPhase(),
 		DeliveryMethod:           share.GetDeliveryMethod(),
 		InvitedAt:                share.GetInvitedAt(),
 		InviteExpiresAt:          share.GetInviteExpiresAt(),

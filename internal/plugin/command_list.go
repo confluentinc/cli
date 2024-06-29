@@ -15,7 +15,8 @@ import (
 )
 
 type out struct {
-	PluginName string `human:"Plugin Name" serialized:"plugin_name"`
+	PluginName string `human:"Name" serialized:"plugin_name"`
+	PluginId   string `human:"ID" serialized:"plugin_id"`
 	FilePath   string `human:"File Path" serialized:"file_path"`
 }
 
@@ -35,13 +36,13 @@ func (c *command) newListCommand() *cobra.Command {
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if c.cfg.DisablePlugins {
-		return errors.NewErrorWithSuggestions("plugins are disabled", `Set "disable_plugins": false in ~/.confluent/config.json.`)
+		return errors.NewErrorWithSuggestions("plugins are disabled", "To enable plugins, use `confluent configuration update disable_plugins false`.")
 	}
 
 	pluginMap := plugin.SearchPath(c.cfg)
 
 	if len(pluginMap) == 0 && output.GetFormat(cmd) == output.Human {
-		output.ErrPrintln("Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
+		output.ErrPrintln(c.Config.EnableColor, "Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
 	}
 
 	home, err := os.UserHomeDir()
@@ -51,14 +52,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	var overshadowedPlugins, nameConflictPlugins []*out
-	for name, paths := range pluginMap {
+	for id, paths := range pluginMap {
 		path := paths[0]
 		if home != "" && strings.HasPrefix(path, home) {
 			path = filepath.Join("~", strings.TrimPrefix(path, home))
 		}
 
 		pluginInfo := &out{
-			PluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
+			PluginName: plugin.ToCommandName(id),
+			PluginId:   id,
 			FilePath:   path,
 		}
 
@@ -84,10 +86,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, pluginInfo := range nameConflictPlugins {
-		output.ErrPrintf("[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
 	}
 	for _, pluginInfo := range overshadowedPlugins {
-		output.ErrPrintf("[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
 	}
 
 	return nil

@@ -3,8 +3,12 @@ package store
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/samber/lo"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
 const emptyStringTag = "<unset>"
@@ -14,13 +18,41 @@ type UserProperties struct {
 	properties        map[string]string
 }
 
-func NewUserProperties(defaultProperties map[string]string) UserProperties {
+func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
+	properties := map[string]string{
+		config.KeyServiceAccount: appOptions.GetServiceAccountId(),
+		config.KeyLocalTimeZone:  getLocalTimezone(),
+		config.KeyOutputFormat:   string(config.OutputFormatStandard),
+	}
+
+	return properties
+}
+
+func getInitialProperties(appOptions *types.ApplicationOptions) map[string]string {
+	properties := map[string]string{}
+
+	if appOptions.GetEnvironmentName() != "" {
+		properties[config.KeyCatalog] = appOptions.GetEnvironmentName()
+	}
+	if appOptions.GetDatabase() != "" {
+		properties[config.KeyDatabase] = appOptions.GetDatabase()
+	}
+
+	return properties
+}
+
+func NewUserProperties(appOptions *types.ApplicationOptions) types.UserPropertiesInterface {
+	return NewUserPropertiesWithDefaults(getDefaultProperties(appOptions), getInitialProperties(appOptions))
+}
+
+// add initial props
+func NewUserPropertiesWithDefaults(defaultProperties map[string]string, initialProperties map[string]string) types.UserPropertiesInterface {
 	userProperties := UserProperties{
 		defaultProperties: defaultProperties,
-		properties:        map[string]string{},
+		properties:        initialProperties,
 	}
 	userProperties.addDefaultProperties()
-	return userProperties
+	return &userProperties
 }
 
 func (p *UserProperties) addDefaultProperties() {
@@ -50,8 +82,20 @@ func (p *UserProperties) HasKey(key string) bool {
 	return keyExists
 }
 
+// GetProperties returns all properties
 func (p *UserProperties) GetProperties() map[string]string {
 	return p.properties
+}
+
+// GetNonLocalProperties returns only the properties that should be sent when creating a statement (identified by not having the 'client.' prefix)
+func (p *UserProperties) GetNonLocalProperties() map[string]string {
+	nonLocalProperties := map[string]string{}
+	for key, value := range p.properties {
+		if !strings.HasPrefix(key, config.NamespaceClient) {
+			nonLocalProperties[key] = value
+		}
+	}
+	return nonLocalProperties
 }
 
 func (p *UserProperties) Delete(key string) {
@@ -77,6 +121,10 @@ func (p *UserProperties) ToSortedSlice(annotateDefaultValues bool) [][]string {
 		return props[i][0] < props[j][0]
 	})
 	return props
+}
+
+func (p *UserProperties) GetOutputFormat() config.OutputFormat {
+	return config.OutputFormat(p.Get(config.KeyOutputFormat))
 }
 
 func (p *UserProperties) createKeyValuePair(key, val string, annotateDefaultValues bool) []string {

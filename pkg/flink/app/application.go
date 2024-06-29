@@ -2,26 +2,34 @@ package app
 
 import (
 	"sync"
+	"time"
+
+	"github.com/sourcegraph/jsonrpc2"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 type Application struct {
 	history                     *history.History
+	userProperties              types.UserPropertiesInterface
 	store                       types.StoreInterface
 	resultFetcher               types.ResultFetcherInterface
 	appController               types.ApplicationControllerInterface
 	inputController             types.InputControllerInterface
 	statementController         types.StatementControllerInterface
 	interactiveOutputController types.OutputControllerInterface
-	basicOutputController       types.OutputControllerInterface
+	baseOutputController        types.OutputControllerInterface
 	refreshToken                func() error
 	reportUsage                 func()
 	appOptions                  types.ApplicationOptions
@@ -38,7 +46,15 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 	}
 }
 
-func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
+func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) error {
+	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
+	getAuthToken := func() string {
+		if authErr := synchronizedTokenRefreshFunc(); authErr != nil {
+			log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
+		}
+		return gatewayClient.GetAuthToken()
+	}
+
 	// Load history of previous commands from cache file
 	historyStore := history.LoadHistory()
 
@@ -47,52 +63,73 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	appController := controller.NewApplicationController(historyStore)
 
 	// Store used to process statements and store local properties
-	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
+	userProperties := store.NewUserProperties(&appOptions)
+	dataStore := store.NewStore(gatewayClient, appController.ExitApplication, userProperties, &appOptions, synchronizedTokenRefreshFunc)
 	resultFetcher := results.NewResultFetcher(dataStore)
 
+	// Instantiate LSP
+	handlerCh := make(chan *jsonrpc2.Request) // This is the channel used for the messages received by the language to be passed through to the input controller
+	lspClient := lsp.NewWebsocketClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
+
 	stdinBefore := utils.GetStdin()
-	consoleParser := utils.GetConsoleParser()
-	if consoleParser == nil {
+	consoleParser, err := utils.GetConsoleParser()
+	if err != nil {
 		utils.OutputErr("Error: failed to initialize console parser")
-		return
+		return errors.NewErrorWithSuggestions("failed to initialize console parser", "Restart your shell session or try another terminal.")
 	}
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
 		utils.RestoreStdin(stdinBefore)
+		if lspClient != nil {
+			lspClient.ShutdownAndExit()
+		}
 	})
 
 	// Instantiate Component Controllers
-	inputController := controller.NewInputController(historyStore)
+	lspCompleter := lsp.LspCompleter(lspClient, func() lsp.CliContext {
+		return lsp.CliContext{
+			AuthToken:     getAuthToken(),
+			Catalog:       userProperties.Get(config.KeyCatalog),
+			Database:      userProperties.Get(config.KeyDatabase),
+			ComputePoolId: appOptions.GetComputePoolId(),
+		}
+	})
+
+	inputController := controller.NewInputController(historyStore, lspCompleter, handlerCh)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
-	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
-	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
+	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
+	baseOutputController := controller.NewBaseOutputController(resultFetcher, inputController.GetWindowWidth, userProperties)
 
 	app := Application{
 		history:                     historyStore,
+		userProperties:              userProperties,
 		store:                       dataStore,
 		resultFetcher:               resultFetcher,
 		appController:               appController,
 		inputController:             inputController,
 		statementController:         statementController,
 		interactiveOutputController: interactiveOutputController,
-		basicOutputController:       basicOutputController,
-		refreshToken:                synchronizedTokenRefresh(tokenRefreshFunc),
+		baseOutputController:        baseOutputController,
+		refreshToken:                synchronizedTokenRefreshFunc,
 		reportUsage:                 reportUsageFunc,
 		appOptions:                  appOptions,
 	}
 	components.PrintWelcomeHeader()
-	app.readEvalPrintLoop()
+	return app.readEvalPrintLoop()
 }
 
-func (a *Application) readEvalPrintLoop() {
+func (a *Application) readEvalPrintLoop() error {
+	run := utils.NewPanicRecoveryWithLimit(3, 3*time.Second)
 	for a.isAuthenticated() {
-		a.readEvalPrint()
+		err := run.WithCustomPanicRecovery(a.readEvalPrint, a.panicRecovery)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (a *Application) readEvalPrint() {
-	defer a.panicRecovery()
-
 	userInput := a.inputController.GetUserInput()
 	if a.inputController.HasUserEnabledReverseSearch() {
 		a.inputController.StartReverseSearch()
@@ -102,11 +139,13 @@ func (a *Application) readEvalPrint() {
 		a.appController.ExitApplication()
 		return
 	}
-	a.history.Append(userInput)
 
 	executedStatement, err := a.statementController.ExecuteStatement(userInput)
 	if err != nil {
 		return
+	}
+	if !executedStatement.IsSensitiveStatement {
+		a.history.Append(userInput)
 	}
 
 	a.resultFetcher.Init(*executedStatement)
@@ -114,17 +153,15 @@ func (a *Application) readEvalPrint() {
 }
 
 func (a *Application) panicRecovery() {
-	if r := recover(); r != nil {
-		a.statementController.CleanupStatement()
-		a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
-		a.reportUsage()
-		utils.OutputErr("Error: internal error occurred")
-	}
+	log.CliLogger.Warn("Internal error occurred. Executing panic recovery.")
+	a.statementController.CleanupStatement()
+	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.userProperties, a.appOptions.GetVerbose())
+	a.reportUsage()
 }
 
 func (a *Application) isAuthenticated() bool {
-	if authErr := a.refreshToken(); authErr != nil {
-		utils.OutputErrf("Error: %v\n", authErr)
+	if err := a.refreshToken(); err != nil {
+		utils.OutputErrf("Error: %v", err)
 		a.appController.ExitApplication()
 		return false
 	}
@@ -133,11 +170,11 @@ func (a *Application) isAuthenticated() bool {
 
 func (a *Application) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {
 	if processedStatementWithResults.IsLocalStatement {
-		return a.basicOutputController
+		return a.baseOutputController
 	}
-	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement {
+	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement() {
 		return a.interactiveOutputController
 	}
 
-	return a.basicOutputController
+	return a.baseOutputController
 }

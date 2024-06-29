@@ -23,7 +23,7 @@ This command comes with a number of formatting tokens. What follows is a list of
 
 * %a - The current Kafka API key in use. E.g., "ABCDEF1234567890"
 * %C - The name of the current context in use. E.g., "dev-app1", "stag-dc1", "prod"
-* %e - The ID of the current environment in use. E.g., "a-4567"
+* %e - The ID of the current environment in use. E.g., "env-123456"
 * %k - The ID of the current Kafka cluster in use. E.g., "lkc-abc123"
 * %K - The name of the current Kafka cluster in use. E.g., "prod-us-west-2-iot"
 * %u - The current user or credentials in use. E.g., "joe@montana.com"

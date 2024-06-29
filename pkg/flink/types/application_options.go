@@ -1,20 +1,116 @@
 package types
 
 import (
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 type ApplicationOptions struct {
-	UnsafeTrace     bool
-	UserAgent       string
-	EnvironmentId   string
-	EnvironmentName string
-	OrgResourceId   string
-	Database        string
-	ComputePoolId   string
-	IdentityPoolId  string
-	Verbose         bool
-	Context         *dynamicconfig.DynamicContext
+	UnsafeTrace      bool
+	UserAgent        string
+	EnvironmentId    string
+	EnvironmentName  string
+	OrganizationId   string
+	Database         string
+	ComputePoolId    string
+	ServiceAccountId string
+	Verbose          bool
+	LSPBaseUrl       string
+	GatewayUrl       string
+	Context          *config.Context
+}
+
+func ParseApplicationOptionsFromSlices(
+	configKeys, configValues []string,
+) (*ApplicationOptions, error) {
+	if len(configKeys) != len(configValues) {
+		return nil, errors.NewErrorWithSuggestions(
+			fmt.Sprintf(
+				"number of config keys %d and config values %d don't match",
+				len(configKeys),
+				len(configValues),
+			),
+			"please provide the same number of config keys and values",
+		)
+	}
+	availabaleFields := getAvailableConfigFields()
+
+	// use reflections to find the fields in ApplicationOptions and assign the right value type to them
+	appOptions := &ApplicationOptions{}
+	appOptionsReflection := reflect.ValueOf(appOptions).Elem()
+	for i, configKey := range configKeys {
+		configValue := configValues[i]
+
+		// find the field by name
+		field := appOptionsReflection.FieldByName(configKey)
+		if !field.IsValid() {
+			return nil, errors.NewErrorWithSuggestions(
+				fmt.Sprintf("config-key %s not found in ApplicationOptions", configKey),
+				fmt.Sprintf(
+					"double check the provided config-keys match the available fields %s",
+					strings.Join(availabaleFields, ", "),
+				),
+			)
+		}
+
+		// convert the field value to the appropriate type
+		switch field.Kind() {
+		case reflect.Bool:
+			value, err := strconv.ParseBool(configValue)
+			if err != nil {
+				return nil, fmt.Errorf("config-value %s cannot be parsed to bool", configValue)
+			}
+			field.SetBool(value)
+		case reflect.String:
+			field.SetString(configValue)
+		default:
+			return nil, fmt.Errorf(
+				"field type %v of config-key %s is unsupported",
+				field.Kind(),
+				configKey,
+			)
+		}
+	}
+
+	return appOptions, nil
+}
+
+func getAvailableConfigFields() []string {
+	appOptionsType := reflect.TypeOf(ApplicationOptions{})
+	var availabaleFields []string
+	for i := 0; i < appOptionsType.NumField(); i++ {
+		field := appOptionsType.Field(i)
+		// only allow string or bool fields
+		if field.Type.Kind() == reflect.String || field.Type.Kind() == reflect.Bool {
+			availabaleFields = append(availabaleFields, field.Name)
+		}
+	}
+	return availabaleFields
+}
+
+func (a *ApplicationOptions) Validate() error {
+	var missingOptions []string
+	if a.GetEnvironmentId() == "" {
+		missingOptions = append(missingOptions, "EnvironmentId")
+	}
+	if a.GetOrganizationId() == "" {
+		missingOptions = append(missingOptions, "OrganizationId")
+	}
+	if a.GetComputePoolId() == "" {
+		missingOptions = append(missingOptions, "ComputePoolId")
+	}
+	if a.GetGatewayUrl() == "" {
+		missingOptions = append(missingOptions, "GatewayURL")
+	}
+	if len(missingOptions) > 0 {
+		return fmt.Errorf("missing required config options: %s", strings.Join(missingOptions, ", "))
+	}
+	return nil
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
@@ -45,9 +141,9 @@ func (a *ApplicationOptions) GetEnvironmentName() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetOrgResourceId() string {
+func (a *ApplicationOptions) GetOrganizationId() string {
 	if a != nil {
-		return a.OrgResourceId
+		return a.OrganizationId
 	}
 	return ""
 }
@@ -66,12 +162,13 @@ func (a *ApplicationOptions) GetComputePoolId() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetIdentityPoolId() string {
+func (a *ApplicationOptions) GetServiceAccountId() string {
 	if a != nil {
-		return a.IdentityPoolId
+		return a.ServiceAccountId
 	}
 	return ""
 }
+
 func (a *ApplicationOptions) GetVerbose() bool {
 	if a != nil {
 		return a.Verbose
@@ -79,9 +176,23 @@ func (a *ApplicationOptions) GetVerbose() bool {
 	return false
 }
 
-func (a *ApplicationOptions) GetContext() *dynamicconfig.DynamicContext {
+func (a *ApplicationOptions) GetContext() *config.Context {
 	if a != nil {
 		return a.Context
 	}
 	return nil
+}
+
+func (a *ApplicationOptions) GetLSPBaseUrl() string {
+	if a != nil {
+		return a.LSPBaseUrl
+	}
+	return ""
+}
+
+func (a *ApplicationOptions) GetGatewayUrl() string {
+	if a != nil {
+		return a.GatewayUrl
+	}
+	return ""
 }

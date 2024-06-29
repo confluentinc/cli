@@ -1,4 +1,4 @@
-Bring your own key to Confluent Cloud for data at rest encryption (AWS and Azure only).
+Bring your own key to Confluent Cloud for data at rest encryption.
 
 Usage:
   confluent byok create <key> [flags]
@@ -11,6 +11,10 @@ Register a new self-managed encryption key for AWS:
 Register a new self-managed encryption key for Azure:
 
   $ confluent byok create "https://vault-name.vault.azure.net/keys/key-name" --tenant "00000000-0000-0000-0000-000000000000" --key-vault "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup-name/providers/Microsoft.KeyVault/vaults/vault-name"
+
+Register a new self-managed encryption key for GCP:
+
+  $ confluent byok create "projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3"
 
 Flags:
       --key-vault string   The ID of the Azure Key Vault where the key is stored.

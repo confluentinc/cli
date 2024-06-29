@@ -51,7 +51,7 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
-	acls, err := parse(cmd)
+	acls, err := parse(c.Context, cmd)
 	if err != nil {
 		return err
 	}

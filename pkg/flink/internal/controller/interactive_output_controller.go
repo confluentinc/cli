@@ -9,6 +9,7 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/components"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 	"github.com/confluentinc/cli/v3/pkg/log"
@@ -18,19 +19,21 @@ import (
 const errorDuringTableView = "Error: internal error occurred while in table view"
 
 type InteractiveOutputController struct {
-	app           *tview.Application
-	tableView     components.TableViewInterface
-	resultFetcher types.ResultFetcherInterface
-	isRowViewOpen bool
-	debug         bool
+	app            *tview.Application
+	tableView      components.TableViewInterface
+	resultFetcher  types.ResultFetcherInterface
+	isRowViewOpen  bool
+	userProperties types.UserPropertiesInterface
+	debug          bool
 }
 
-func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
+func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, userProperties types.UserPropertiesInterface, debug bool) types.OutputControllerInterface {
 	return &InteractiveOutputController{
-		app:           tview.NewApplication(),
-		tableView:     tableView,
-		resultFetcher: resultFetcher,
-		debug:         debug,
+		app:            tview.NewApplication(),
+		tableView:      tableView,
+		resultFetcher:  resultFetcher,
+		userProperties: userProperties,
+		debug:          debug,
 	}
 }
 
@@ -50,7 +53,7 @@ func (t *InteractiveOutputController) startTView() {
 
 func (t *InteractiveOutputController) close() {
 	t.resultFetcher.Close()
-	output.Println("Result retrieval aborted.")
+	output.Println(false, "Result retrieval aborted.")
 }
 
 func (t *InteractiveOutputController) init() {
@@ -63,6 +66,7 @@ func (t *InteractiveOutputController) init() {
 }
 
 func (t *InteractiveOutputController) updateTable() {
+	t.tableView.GetFocusableElement().SetBorder(t.withBorder())
 	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.GetLastRefreshTimestamp(), t.resultFetcher.GetRefreshState())
 	t.renderTableView()
 }
@@ -177,8 +181,10 @@ func (t *InteractiveOutputController) renderRowView() {
 			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
 		}
 		textView := tview.NewTextView().SetText(sb.String())
+
 		// mouse needs to be disabled, otherwise selecting text with the cursor won't work
-		t.app.SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
+		rowView := components.CreateRowView(textView, t.withBorder())
+		t.app.SetRoot(rowView, true).EnableMouse(false)
 		t.app.SetFocus(textView)
 	}
 }
@@ -192,6 +198,10 @@ func (t *InteractiveOutputController) handleKeyUpOrDownPress(event *tcell.EventK
 	return event
 }
 
+func (t *InteractiveOutputController) withBorder() bool {
+	return t.userProperties.GetOutputFormat() != config.OutputFormatPlainText
+}
+
 func (t *InteractiveOutputController) getTableTitle() string {
 	mode := "Changelog mode"
 	if t.resultFetcher.IsTableMode() {
@@ -200,8 +210,9 @@ func (t *InteractiveOutputController) getTableTitle() string {
 
 	if t.debug {
 		return fmt.Sprintf(
-			" %s | last page size: %d | current cache size: %d/%d | table size: %d ",
+			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
 			mode,
+			t.resultFetcher.GetStatement().StatementName,
 			t.resultFetcher.GetStatement().GetPageSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetChangelogSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetMaxResults(),
@@ -209,5 +220,5 @@ func (t *InteractiveOutputController) getTableTitle() string {
 		)
 	}
 
-	return fmt.Sprintf(" %s ", mode)
+	return fmt.Sprintf(" %s (%s) ", mode, t.resultFetcher.GetStatement().StatementName)
 }

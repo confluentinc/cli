@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *identityPoolCommand) newListCommand() *cobra.Command {
+func (c *poolCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List identity pools.",
@@ -24,7 +24,7 @@ func (c *identityPoolCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *poolCommand) list(cmd *cobra.Command, _ []string) error {
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, pool := range identityPools {
-		list.Add(&identityPoolOut{
+		list.Add(&poolOut{
 			Id:            pool.GetId(),
 			DisplayName:   pool.GetDisplayName(),
 			Description:   pool.GetDescription(),

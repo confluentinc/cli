@@ -2,6 +2,9 @@ package types
 
 import (
 	"sync"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v3/pkg/log"
 )
 
 type MaterializedStatementResultsIterator struct {
@@ -70,23 +73,25 @@ func (i *MaterializedStatementResultsIterator) Move(stepsToMove int) *StatementR
 }
 
 type MaterializedStatementResults struct {
-	isTableMode bool
-	maxCapacity int
-	headers     []string
-	changelog   LinkedList[StatementResultRow]
-	table       LinkedList[StatementResultRow]
-	cache       map[string]*ListElement[StatementResultRow]
-	lock        sync.RWMutex
+	isTableMode   bool
+	maxCapacity   int
+	headers       []string
+	changelog     LinkedList[StatementResultRow]
+	table         LinkedList[StatementResultRow]
+	cache         map[string]*ListElement[StatementResultRow]
+	lock          sync.RWMutex
+	upsertColumns *[]int32
 }
 
-func NewMaterializedStatementResults(headers []string, maxCapacity int) MaterializedStatementResults {
+func NewMaterializedStatementResults(headers []string, maxCapacity int, upsertColumns *[]int32) MaterializedStatementResults {
 	return MaterializedStatementResults{
-		isTableMode: true,
-		maxCapacity: maxCapacity,
-		headers:     headers,
-		changelog:   NewLinkedList[StatementResultRow](),
-		table:       NewLinkedList[StatementResultRow](),
-		cache:       map[string]*ListElement[StatementResultRow]{},
+		isTableMode:   true,
+		maxCapacity:   maxCapacity,
+		headers:       headers,
+		changelog:     NewLinkedList[StatementResultRow](),
+		table:         NewLinkedList[StatementResultRow](),
+		cache:         map[string]*ListElement[StatementResultRow]{},
+		upsertColumns: upsertColumns,
 	}
 }
 
@@ -121,7 +126,7 @@ func (s *MaterializedStatementResults) cleanup() {
 
 	if s.table.Len() > s.maxCapacity {
 		removedRow := s.table.RemoveFront()
-		removedRowKey := removedRow.GetRowKey()
+		removedRowKey, _ := removedRow.GetRowKey(s.upsertColumns)
 		delete(s.cache, removedRowKey)
 	}
 }
@@ -138,22 +143,57 @@ func (s *MaterializedStatementResults) Append(rows ...StatementResultRow) bool {
 		}
 		s.changelog.PushBack(row)
 
-		rowKey := row.GetRowKey()
-		if row.Operation.IsInsertOperation() {
-			listPtr := s.table.PushBack(row)
-			s.cache[rowKey] = listPtr
+		if rowKey, hasUpsertColumns := row.GetRowKey(s.upsertColumns); hasUpsertColumns {
+			s.processRowWithUpsertColumns(row, rowKey)
 		} else {
-			listPtr, ok := s.cache[rowKey]
-			if ok {
-				s.table.Remove(listPtr)
-				delete(s.cache, rowKey)
-			}
+			s.processRowWithoutUpsertColumns(row, rowKey)
 		}
 
 		// if we are now over the capacity we need to remove some records
 		s.cleanup()
 	}
 	return allValuesInserted
+}
+
+func (s *MaterializedStatementResults) processRowWithUpsertColumns(row StatementResultRow, rowKey string) {
+	switch row.Operation {
+	case Insert, UpdateAfter:
+		// treat Insert and UpdateAfter both as upsert events
+		listPtr, ok := s.cache[rowKey]
+		if ok {
+			listPtr.element.Value = row
+		} else {
+			listPtr = s.table.PushBack(row)
+			s.cache[rowKey] = listPtr
+		}
+	case UpdateBefore:
+		// ignore update before, when using upsert columns
+		return
+	case Delete:
+		listPtr, ok := s.cache[rowKey]
+		if ok {
+			s.table.Remove(listPtr)
+			delete(s.cache, rowKey)
+		}
+	default:
+		log.CliLogger.Warnf("unknown operation received: %f\n", row.Operation)
+	}
+}
+
+func (s *MaterializedStatementResults) processRowWithoutUpsertColumns(row StatementResultRow, rowKey string) {
+	// insert row at the end
+	if row.Operation.IsInsertOperation() {
+		listPtr := s.table.PushBack(row)
+		s.cache[rowKey] = listPtr
+		return
+	}
+
+	// delete row
+	listPtr, ok := s.cache[rowKey]
+	if ok {
+		s.table.Remove(listPtr)
+		delete(s.cache, rowKey)
+	}
 }
 
 func (s *MaterializedStatementResults) Size() int {
@@ -207,12 +247,12 @@ func (s *MaterializedStatementResults) GetMaxWidthPerColumn() []int {
 
 	columnWidths := make([]int, len(s.GetHeaders()))
 	for colIdx, column := range s.GetHeaders() {
-		columnWidths[colIdx] = max(len(column), columnWidths[colIdx])
+		columnWidths[colIdx] = max(utils.GetMaxStrWidth(column), columnWidths[colIdx])
 	}
 
 	s.ForEach(func(rowIdx int, row *StatementResultRow) {
 		for colIdx, field := range row.Fields {
-			columnWidths[colIdx] = max(len(field.ToString()), columnWidths[colIdx])
+			columnWidths[colIdx] = max(utils.GetMaxStrWidth(field.ToString()), columnWidths[colIdx])
 		}
 	})
 	return columnWidths

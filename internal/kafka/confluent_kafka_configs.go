@@ -107,7 +107,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 	if protocol == "SSL" || protocol == "SASL_SSL" {
-		caLocation, err := cmd.Flags().GetString("ca-location")
+		certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +115,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		if err := configMap.SetKey("enable.ssl.certificate.verification", true); err != nil {
 			return nil, err
 		}
-		if err := configMap.SetKey("ssl.ca.location", caLocation); err != nil {
+		if err := configMap.SetKey("ssl.ca.location", certificateAuthorityPath); err != nil {
 			return nil, err
 		}
 	}
@@ -147,7 +147,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 	if protocol == "SSL" || protocol == "SASL_SSL" {
-		caLocation, err := cmd.Flags().GetString("ca-location")
+		certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +155,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		if err := configMap.SetKey("enable.ssl.certificate.verification", true); err != nil {
 			return nil, err
 		}
-		if err := configMap.SetKey("ssl.ca.location", caLocation); err != nil {
+		if err := configMap.SetKey("ssl.ca.location", certificateAuthorityPath); err != nil {
 			return nil, err
 		}
 	}
@@ -206,7 +206,10 @@ func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka
 			return nil, err
 		}
 	default:
-		return nil, errors.NewErrorWithSuggestions(fmt.Errorf(errors.InvalidSecurityProtocolErrorMsg, protocol).Error(), errors.OnPremConfigGuideSuggestions)
+		return nil, errors.NewErrorWithSuggestions(
+			fmt.Errorf("security protocol not supported: %s", protocol).Error(),
+			errors.OnPremConfigGuideSuggestions,
+		)
 	}
 	return configMap, nil
 }
@@ -301,7 +304,7 @@ func GetOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 			return ckafka.OffsetInvalid, err
 		}
 		if offset < 0 {
-			return ckafka.OffsetInvalid, errors.New(errors.InvalidOffsetErrorMsg)
+			return ckafka.OffsetInvalid, fmt.Errorf("offset value must be a non-negative integer")
 		}
 		return ckafka.NewOffset(offset)
 	} else {
@@ -354,7 +357,7 @@ func newProducerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 	if err := OverwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
-
+	log.CliLogger.Debug("Creating Confluent Kafka producer with the configuration map.")
 	return ckafka.NewProducer(configMap)
 }
 
@@ -362,7 +365,7 @@ func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 	if err := OverwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
-
+	log.CliLogger.Debug("Creating Confluent Kafka consumer with the configuration map.")
 	return ckafka.NewConsumer(configMap)
 }
 

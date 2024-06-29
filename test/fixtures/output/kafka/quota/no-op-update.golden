@@ -1,1 +1,24 @@
-Error: at least one of the following flags must be set: `--add-principals`, `--description`, `--egress`, `--ingress`, `--name`, `--remove-principals`
+Error: at least one of the flags in the group [name description ingress egress add-principals remove-principals] is required
+Usage:
+  confluent kafka quota update <id> [flags]
+
+Examples:
+Add "sa-12345" to an existing quota and remove "sa-67890".
+
+  $ confluent kafka quota update cq-123ab --add-principals sa-12345 --remove-principals sa-67890
+
+Flags:
+      --name string                 Update name.
+      --description string          Update description.
+      --ingress string              Update ingress limit for quota.
+      --egress string               Update egress limit for quota.
+      --add-principals strings      A comma-separated list of service accounts to add to the quota.
+      --remove-principals strings   A comma-separated list of service accounts to remove from the quota.
+      --context string              CLI context name.
+  -o, --output string               Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

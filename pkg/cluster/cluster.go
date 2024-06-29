@@ -94,7 +94,7 @@ func createPrettyHost(hostInfo mdsv1.HostInfo) string {
 
 func HandleClusterError(err error, response *http.Response) error {
 	if response != nil && response.StatusCode == http.StatusNotFound {
-		return errors.NewWrapErrorWithSuggestions(err, errors.AccessClusterRegistryErrorMsg, errors.AccessClusterRegistrySuggestions)
+		return errors.NewWrapErrorWithSuggestions(err, "unable to access Cluster Registry", errors.EnsureCpSixPlusSuggestions)
 	}
 	return err
 }

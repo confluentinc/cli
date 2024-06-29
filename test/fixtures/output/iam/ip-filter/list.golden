@@ -1,0 +1,3 @@
+     ID     |      Name      | Resource group |      IP groups        
+------------+----------------+----------------+-----------------------
+  ipf-34dq3 | demo-ip-filter | management     | ipg-12345, ipg-abcde  

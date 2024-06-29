@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 )
 
 type pluginCommand struct {
@@ -24,14 +25,11 @@ func newPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comma
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
+		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
 	} else {
-		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
-
-		cmd.AddCommand(c.newInstallCommand())
+		cmd.AddCommand(newInstallCommand(prerunner))
 	}
-
-	cmd.AddCommand(c.newDescribeCommand())
 
 	return cmd
 }
@@ -62,7 +60,7 @@ func (c *pluginCommand) autocompleteConnectorPlugins() []string {
 }
 
 func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, error) {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return nil, err
 	}

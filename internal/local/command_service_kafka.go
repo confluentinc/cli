@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/local"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -133,7 +134,7 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runKafkaConsumeCommand(cmd *cobra.Command, args []string) error {
+func (c *command) runKafkaConsumeCommand(cmd *cobra.Command, args []string) error {
 	return c.runKafkaCommand(cmd, args, "consume", kafkaConsumeDefaultValues)
 }
 
@@ -162,15 +163,14 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runKafkaProduceCommand(cmd *cobra.Command, args []string) error {
+func (c *command) runKafkaProduceCommand(cmd *cobra.Command, args []string) error {
 	return c.runKafkaCommand(cmd, args, "produce", kafkaProduceDefaultValues)
 }
 
-func (c *Command) initFlags(mode string) {
+func (c *command) initFlags(mode string) {
 	// CLI Flags
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
-	defaultConfig := fmt.Sprintf("%s/.confluent/config", os.Getenv("HOME"))
-	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
+	c.Flags().String("config", config.GetDefaultFilename(), commonFlagUsage["config"])
 	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"]+"\n") // "\n" separates the CLI flags from the Kafka flags
 
 	// Kafka Flags
@@ -197,7 +197,7 @@ func (c *Command) initFlags(mode string) {
 	}
 }
 
-func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
+func (c *command) runKafkaCommand(cmd *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
 	cloud, err := cmd.Flags().GetBool("cloud")
 	if err != nil {
 		return err
@@ -271,7 +271,7 @@ func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		output.Println("Exit with Ctrl-D")
+		output.Println(c.Config.EnableColor, "Exit with Ctrl-D")
 	}
 
 	kafkaCommand.Env = []string{

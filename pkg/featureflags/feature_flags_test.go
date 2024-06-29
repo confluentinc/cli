@@ -9,18 +9,17 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/version"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 type LaunchDarklyTestSuite struct {
 	suite.Suite
-	ctx *dynamicconfig.DynamicContext
+	ctx *config.Context
 }
 
 func (suite *LaunchDarklyTestSuite) SetupTest() {
-	suite.ctx = dynamicconfig.NewDynamicContext(config.AuthenticatedCloudConfigMock().Context(), nil)
+	suite.ctx = config.AuthenticatedCloudConfigMock().Context()
 
 	type kv struct {
 		key string
@@ -42,7 +41,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 		cliClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version:   version.NewVersion("1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(config.AuthenticatedCloudConfigMock().Context(), nil)
+	ctx := config.AuthenticatedCloudConfigMock().Context()
 	req := require.New(suite.T())
 
 	boolFlag := ld.BoolVariation("testBool", ctx, config.CliLaunchDarklyClient, true, false)
@@ -65,7 +64,7 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlags() {
 		ccloudClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version:      version.NewVersion("v1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(config.AuthenticatedCloudConfigMock().Context(), nil)
+	ctx := config.AuthenticatedCloudConfigMock().Context()
 	req := require.New(suite.T())
 
 	boolFlag := ld.BoolVariation("testBool", ctx, config.CcloudStagLaunchDarklyClient, true, false)
@@ -79,7 +78,7 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlagsCached() {
 		ccloudClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version:      version.NewVersion("v1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(config.AuthenticatedCloudConfigMock().Context(), nil)
+	ctx := config.AuthenticatedCloudConfigMock().Context()
 	req := require.New(suite.T())
 
 	intFlag := ld.IntVariation("testInt", ctx, config.CcloudStagLaunchDarklyClient, true, 0)
@@ -97,7 +96,7 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlagsCachedExpired() {
 		ccloudClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version:      version.NewVersion("v1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(config.AuthenticatedCloudConfigMock().Context(), nil)
+	ctx := config.AuthenticatedCloudConfigMock().Context()
 	req := require.New(suite.T())
 
 	intFlag := ld.IntVariation("testInt", ctx, config.CcloudStagLaunchDarklyClient, true, 0)
@@ -120,7 +119,7 @@ func (suite *LaunchDarklyTestSuite) TestCliFlagsCachedExpired() {
 		cliClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version:   version.NewVersion("v1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(config.AuthenticatedCloudConfigMock().Context(), nil)
+	ctx := config.AuthenticatedCloudConfigMock().Context()
 	req := require.New(suite.T())
 
 	boolFlag := ld.BoolVariation("testBool", ctx, config.CliLaunchDarklyClient, true, false)
@@ -144,7 +143,7 @@ func (suite *LaunchDarklyTestSuite) TestMultipleCcloudFlags() {
 		ccloudClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version:      version.NewVersion("v1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(config.AuthenticatedCloudConfigMock().Context(), nil)
+	ctx := config.AuthenticatedCloudConfigMock().Context()
 	req := require.New(suite.T())
 
 	boolFlag := ld.BoolVariation("testBool", ctx, config.CcloudStagLaunchDarklyClient, true, false)

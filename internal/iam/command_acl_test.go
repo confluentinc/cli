@@ -290,7 +290,7 @@ func (suite *ACLTestSuite) TestMdsDeleteACL() {
 			cmd.SetArgs(append(args, mdsAclEntry.args...))
 
 			go func() {
-				expect <- convertToACLFilterRequest(
+				expect <- convertToAclFilterRequest(
 					&mdsv1.CreateAclRequest{
 						Scope: mdsv1.KafkaScope{
 							Clusters: mdsv1.KafkaScopeClusters{
@@ -303,7 +303,7 @@ func (suite *ACLTestSuite) TestMdsDeleteACL() {
 						},
 					},
 				)
-				expect <- convertToACLFilterRequest(
+				expect <- convertToAclFilterRequest(
 					&mdsv1.CreateAclRequest{
 						Scope: mdsv1.KafkaScope{
 							Clusters: mdsv1.KafkaScopeClusters{
@@ -331,7 +331,7 @@ func (suite *ACLTestSuite) TestMdsListACL() {
 		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster", "testcluster"}, mdsResourcePattern.args...))
 
 		go func() {
-			expect <- convertToACLFilterRequest(
+			expect <- convertToAclFilterRequest(
 				&mdsv1.CreateAclRequest{
 					Scope: mdsv1.KafkaScope{
 						Clusters: mdsv1.KafkaScopeClusters{
@@ -358,7 +358,7 @@ func (suite *ACLTestSuite) TestMdsListPrincipalACL() {
 		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster", "testcluster", "--principal"}, mdsAclEntry.entry.Principal))
 
 		go func() {
-			expect <- convertToACLFilterRequest(
+			expect <- convertToAclFilterRequest(
 				&mdsv1.CreateAclRequest{
 					Scope: mdsv1.KafkaScope{
 						Clusters: mdsv1.KafkaScopeClusters{
@@ -388,7 +388,7 @@ func (suite *ACLTestSuite) TestMdsListPrincipalFilterACL() {
 			cmd.SetArgs(append(args, "--principal", mdsAclEntry.entry.Principal))
 
 			go func() {
-				expect <- convertToACLFilterRequest(
+				expect <- convertToAclFilterRequest(
 					&mdsv1.CreateAclRequest{
 						Scope: mdsv1.KafkaScope{
 							Clusters: mdsv1.KafkaScopeClusters{

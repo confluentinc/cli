@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -46,7 +48,7 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	}
 
 	if resource.LookupType(args[0]) != resource.ServiceAccount {
-		return errors.New(errors.BadServiceAccountIDErrorMsg)
+		return fmt.Errorf(errors.BadServiceAccountIdErrorMsg)
 	}
 	serviceAccountId := args[0]
 
@@ -55,6 +57,6 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
 
-	output.ErrPrintf(errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
+	output.ErrPrintf(c.Config.EnableColor, errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
 	return nil
 }

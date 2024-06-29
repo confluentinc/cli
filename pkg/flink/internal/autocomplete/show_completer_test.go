@@ -3,7 +3,7 @@ package autocomplete
 import (
 	"testing"
 
-	"github.com/bradleyjkemp/cupaloy"
+	"github.com/bradleyjkemp/cupaloy/v2"
 
 	"github.com/confluentinc/go-prompt"
 )

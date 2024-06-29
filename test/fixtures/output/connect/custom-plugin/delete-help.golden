@@ -1,0 +1,13 @@
+Delete one or more custom connector plugins.
+
+Usage:
+  confluent connect custom-plugin delete <id-1> [id-2] ... [id-n] [flags]
+
+Flags:
+      --force            Skip the deletion confirmation prompt.
+      --context string   CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -30,8 +30,3 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (*cobra.Command, strin
 	c, err := root.ExecuteC()
 	return c, buf.String(), err
 }
-
-// BuildRootCommand creates a new root command for testing
-func BuildRootCommand() *cobra.Command {
-	return &cobra.Command{}
-}

@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -42,7 +43,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,7 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 
 	reply, err := c.V2Client.ValidateConnectorPlugin(args[0], environmentId, kafkaCluster.ID, config)
 	if err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
+		return errors.NewWrapErrorWithSuggestions(err, "error defining plugin on given Kafka cluster", "To list available connector plugin types, use `confluent connect plugin list`.")
 	}
 
 	list := output.NewList(cmd)

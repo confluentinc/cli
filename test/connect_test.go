@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +17,7 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml -o yaml", fixture: "connect/cluster/create-yaml.golden"},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/create.golden"},
 		{args: "connect cluster delete lcc-123 --cluster lkc-123 --force", fixture: "connect/cluster/delete.golden"},
-		{args: "connect cluster delete lcc-123 --cluster lkc-123", input: "az-connector\n", fixture: "connect/cluster/delete-prompt.golden"},
+		{args: "connect cluster delete lcc-123 --cluster lkc-123", input: "y\n", fixture: "connect/cluster/delete-prompt.golden"},
 		{args: "connect cluster delete lcc-123 lcc-456 lcc-789 lcc-101112 --cluster lkc-123", input: "y\n", fixture: "connect/cluster/delete-multiple-fail.golden", exitCode: 1},
 		{args: "connect cluster delete lcc-123 lcc-111 --cluster lkc-123", input: "n\n", fixture: "connect/cluster/delete-multiple-refuse.golden"},
 		{args: "connect cluster delete lcc-123 lcc-111 --cluster lkc-123", input: "y\n", fixture: "connect/cluster/delete-multiple-success.golden"},
@@ -26,7 +27,7 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster list --cluster lkc-123 -o json", fixture: "connect/cluster/list-json.golden"},
 		{args: "connect cluster list --cluster lkc-123 -o yaml", fixture: "connect/cluster/list-yaml.golden"},
 		{args: "connect cluster list --cluster lkc-123", fixture: "connect/cluster/list.golden"},
-		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/update.golden"},
+		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/update-config.yaml", fixture: "connect/cluster/update.golden"},
 		{args: "connect event describe", fixture: "connect/event-describe.golden"},
 
 		// Tests based on new config
@@ -34,7 +35,8 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json -o yaml", fixture: "connect/cluster/create-yaml.golden"},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-malformed-new.json", fixture: "connect/cluster/create-malformed-new.golden", exitCode: 1},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-malformed-old.json", fixture: "connect/cluster/create-malformed-old.golden", exitCode: 1},
-		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json", fixture: "connect/cluster/update.golden"},
+		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/update-config-new-format.json", fixture: "connect/cluster/update.golden"},
+		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/update-config-malformed.json", fixture: "connect/cluster/update-error.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -85,6 +87,10 @@ func (s *CLITestSuite) TestConnectPlugin() {
 }
 
 func (s *CLITestSuite) TestConnectPluginInstall() {
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	s.zipManifest()
 	defer s.deleteZip()
 
@@ -170,4 +176,55 @@ func (s *CLITestSuite) deleteZip() {
 
 	err := os.Remove("test/fixtures/input/connect/test-plugin.zip")
 	req.NoError(err)
+}
+
+func (s *CLITestSuite) TestConnectCustomPlugin() {
+	tests := []CLITest{
+		{args: `connect custom-plugin create my-custom-plugin --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector --cloud aws`, fixture: "connect/custom-plugin/create.golden"},
+		{args: `connect custom-plugin create my-custom-plugin --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector`, fixture: "connect/custom-plugin/create.golden"},
+		{args: `connect custom-plugin create my-custom-plugin --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf" --connector-type source --connector-class io.confluent.kafka.connect.datagen.DatagenConnector --cloud aws`, fixture: "connect/custom-plugin/create-invalid-extension.golden", exitCode: 1},
+		{args: "connect custom-plugin list", fixture: "connect/custom-plugin/list.golden"},
+		{args: "connect custom-plugin list --cloud aws", fixture: "connect/custom-plugin/list.golden"},
+		{args: "connect custom-plugin list -o json", fixture: "connect/custom-plugin/list-json.golden"},
+		{args: "connect custom-plugin list -o yaml", fixture: "connect/custom-plugin/list-yaml.golden"},
+		{args: "connect custom-plugin describe ccp-123456", fixture: "connect/custom-plugin/describe.golden"},
+		{args: "connect custom-plugin describe ccp-789012", fixture: "connect/custom-plugin/describe-with-sensitive-properties.golden"},
+		{args: "connect custom-plugin describe ccp-123456 -o json", fixture: "connect/custom-plugin/describe-json.golden"},
+		{args: "connect custom-plugin describe ccp-123456 -o yaml", fixture: "connect/custom-plugin/describe-yaml.golden"},
+		{args: "connect custom-plugin delete ccp-123456 --force", fixture: "connect/custom-plugin/delete.golden"},
+		{args: "connect custom-plugin delete ccp-123456", input: "y\n", fixture: "connect/custom-plugin/delete-prompt.golden"},
+		{args: "connect custom-plugin update ccp-123456 --name CliPluginTestUpdate", fixture: "connect/custom-plugin/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestConnectOffset() {
+	tests := []CLITest{
+		{args: "connect offset describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-json.golden"},
+		{args: "connect offset describe lcc-101112 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-fail.golden", exitCode: 1},
+		{args: "connect offset describe lcc-123 --cluster lkc-123", fixture: "connect/offset/describe-offset.golden"},
+		{args: "connect offset describe lcc-123 --staleness-threshold 10 --timeout 10 --cluster lkc-123", fixture: "connect/offset/describe-offset.golden"},
+
+		{args: "connect offset describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/offset/describe-offset-yaml.golden"},
+		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123", fixture: "connect/offset/update-offset.golden"},
+		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o json", fixture: "connect/offset/update-offset-json.golden"},
+		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o yaml", fixture: "connect/offset/update-offset-yaml.golden"},
+
+		{args: "connect offset status describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/update-offset-status-describe-json.golden"},
+		{args: "connect offset status describe lcc-123 --cluster lkc-123", fixture: "connect/offset/update-offset-status-describe.golden"},
+		{args: "connect offset status describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/offset/update-offset-status-describe-yaml.golden"},
+
+		{args: "connect offset delete lcc-111 --cluster lkc-123", fixture: "connect/offset/delete-offset.golden"},
+		{args: "connect offset delete lcc-111 --cluster lkc-123 -o json", fixture: "connect/offset/delete-offset-json.golden"},
+		{args: "connect offset delete lcc-111 --cluster lkc-123 -o yaml", fixture: "connect/offset/delete-offset-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }

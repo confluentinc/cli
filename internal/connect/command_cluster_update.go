@@ -1,10 +1,13 @@
 package connect
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
@@ -31,7 +34,7 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
@@ -41,7 +44,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var userConfigs *map[string]string
+	var userConfigs map[string]string
 	if cmd.Flags().Changed("config") {
 		configs, err := cmd.Flags().GetStringSlice("config")
 		if err != nil {
@@ -61,14 +64,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		for name, value := range configMap {
 			currentConfigs[name] = value
 		}
-		userConfigs = &currentConfigs
+		userConfigs = currentConfigs
 	} else if cmd.Flags().Changed("config-file") {
-		userConfigs, err = getConfig(cmd)
+		userConfigs, err = getConfig(cmd, true)
 		if err != nil {
 			return err
 		}
 	} else {
-		return errors.New("one of `--config` or `--config-file` must be specified")
+		return fmt.Errorf("one of `--config` or `--config-file` must be specified")
 	}
 
 	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
@@ -76,10 +79,10 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connector.Info.GetName(), environmentId, kafkaCluster.ID, *userConfigs); err != nil {
+	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connector.Info.GetName(), environmentId, kafkaCluster.ID, userConfigs); err != nil {
 		return err
 	}
 
-	output.Printf(errors.UpdatedResourceMsg, resource.Connector, args[0])
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.Connector, args[0])
 	return nil
 }

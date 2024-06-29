@@ -5,24 +5,23 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	errMsgs "github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
-func TestParseAclRequest(t *testing.T) {
+func TestParseRequest(t *testing.T) {
 	suite := []struct {
 		args        []string
-		expectedAcl AclRequestDataWithError
+		expectedAcl RequestDataWithError
 	}{
 		{
 			args: []string{"--operation", "read", "--principal", "User:Alice", "--cluster-scope", "--host", "127.0.0.1", "--allow"},
-			expectedAcl: AclRequestDataWithError{
+			expectedAcl: RequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
 				ResourceName: "kafka-cluster",
 				PatternType:  "LITERAL",
@@ -35,7 +34,7 @@ func TestParseAclRequest(t *testing.T) {
 		},
 		{
 			args: []string{"--operation", "delete", "--principal", "Group:Admin", "--topic", "Test", "--prefix", "--deny"},
-			expectedAcl: AclRequestDataWithError{
+			expectedAcl: RequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_TOPIC,
 				ResourceName: "Test",
 				PatternType:  "PREFIXED",
@@ -48,25 +47,25 @@ func TestParseAclRequest(t *testing.T) {
 		},
 		{
 			args: []string{"--operation", "fake", "--principal", "User:Alice", "--cluster-scope", "--transactional-id", "123"},
-			expectedAcl: AclRequestDataWithError{
-				Errors: multierror.Append(errors.New("invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
+			expectedAcl: RequestDataWithError{
+				Errors: multierror.Append(fmt.Errorf("invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
 					convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
 						kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID))),
 			},
 		},
 		{
 			args: []string{"--operation", "read", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
-			expectedAcl: AclRequestDataWithError{
-				Errors: multierror.Append(errors.Errorf(errMsgs.OnlySetAllowOrDenyErrorMsg)),
+			expectedAcl: RequestDataWithError{
+				Errors: multierror.Append(fmt.Errorf("only `--allow` or `--deny` may be set when adding or deleting an ACL")),
 			},
 		},
 	}
 	req := require.New(t)
 	for _, s := range suite {
 		cmd := &cobra.Command{}
-		cmd.Flags().AddFlagSet(AclFlags())
+		cmd.Flags().AddFlagSet(Flags())
 		_ = cmd.ParseFlags(s.args)
-		acl := ParseAclRequest(cmd)
+		acl := ParseRequest(cmd)
 		if s.expectedAcl.Errors != nil {
 			req.NotNil(acl.Errors)
 			req.Equal(s.expectedAcl.Errors.Error(), acl.Errors.Error())
@@ -79,25 +78,26 @@ func TestParseAclRequest(t *testing.T) {
 
 func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 	suite := []struct {
-		initialAcl  AclRequestDataWithError
-		expectedAcl AclRequestDataWithError
+		initialAcl  RequestDataWithError
+		expectedAcl RequestDataWithError
 	}{
 		{
-			initialAcl: AclRequestDataWithError{
+			initialAcl: RequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
 				Permission:   "ALLOW",
 			},
-			expectedAcl: AclRequestDataWithError{
+			expectedAcl: RequestDataWithError{
 				PatternType:  "LITERAL",
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
 				Permission:   "ALLOW",
 			},
 		},
 		{
-			initialAcl: AclRequestDataWithError{Host: "*"},
-			expectedAcl: AclRequestDataWithError{Errors: multierror.Append(errors.Errorf(errMsgs.MustSetAllowOrDenyErrorMsg), errors.Errorf(errMsgs.MustSetResourceTypeErrorMsg,
-				convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-					kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))},
+			initialAcl: RequestDataWithError{Host: "*"},
+			expectedAcl: RequestDataWithError{Errors: multierror.Append(
+				fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg),
+				fmt.Errorf(errors.MustSetResourceTypeErrorMsg, convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP, kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)),
+			)},
 		},
 	}
 	req := require.New(t)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/rivo/tview"
 
+	"github.com/confluentinc/cli/v3/pkg/color"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
 )
 
@@ -55,21 +56,22 @@ func (t *TableInfoBar) constructRefreshInfo() tview.Primitive {
 	return tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignLeft).
-		SetText(fmt.Sprintf("Refresh: [darkcyan]%s[white]", t.refreshState.ToString()))
+		SetText(fmt.Sprintf("Refresh: [%s]%s[white]", color.CyanHexCode, t.refreshState.ToString()))
 }
 
 func (t *TableInfoBar) constructRowInfo() tview.Primitive {
 	rowInfo := tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignCenter).SetText("")
 	if t.selectedRowIdx > 0 && t.totalNumRows > 0 {
-		rowInfo.SetText(fmt.Sprintf("Row: [darkcyan]%v[white] of [darkcyan]%v[white]", t.selectedRowIdx, t.totalNumRows))
+		rowInfo.SetText(fmt.Sprintf("Row: [%s]%v[white] of [%s]%v[white]", color.CyanHexCode, t.selectedRowIdx, color.CyanHexCode, t.totalNumRows))
 	}
 	return rowInfo
 }
 
 func (t *TableInfoBar) constructLastRefreshInfo() tview.Primitive {
-	lastRefreshInfo := tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignRight).SetText("Last refresh: [darkcyan]-[white]")
+	lastRefreshInfo := tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignRight).
+		SetText(fmt.Sprintf("Last refresh: [%s]-[white]", color.CyanHexCode))
 	if t.lastRefreshTimestamp != nil {
-		lastRefreshInfo.SetText(fmt.Sprintf("Last refresh: [darkcyan]%s[white]", t.lastRefreshTimestamp.Format("15:04:05.000")))
+		lastRefreshInfo.SetText(fmt.Sprintf("Last refresh: [%s]%s[white]", color.CyanHexCode, t.lastRefreshTimestamp.Format("15:04:05.000")))
 	}
 	return lastRefreshInfo
 }

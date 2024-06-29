@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"sort"
 	"time"
 
@@ -40,7 +41,11 @@ func fillKeyStoreV2() {
 	keyStoreV2["MYKEY1"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("MYKEY1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-bob",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u11"},
 			Description: apikeysv2.PtrString("Example description"),
 		},
@@ -49,7 +54,11 @@ func fillKeyStoreV2() {
 	keyStoreV2["MYKEY2"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("MYKEY2"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource:    &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-abc",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-17"},
 			Description: apikeysv2.PtrString(""),
 		},
@@ -58,10 +67,21 @@ func fillKeyStoreV2() {
 	keyStoreV2["MULTICLUSTERKEY1"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("MULTICLUSTERKEY1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-abc",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Resources: &[]apikeysv2.ObjectReference{
-				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
-				{Id: "lsrc-1234", Kind: apikeysv2.PtrString("SchemaRegistry")},
+				{
+					Id:         "lkc-abc",
+					ApiVersion: apikeysv2.PtrString("cmk/v2"),
+					Kind:       apikeysv2.PtrString("Cluster"),
+				},
+				{
+					Id:   "lsrc-1234",
+					Kind: apikeysv2.PtrString("SchemaRegistry"),
+				},
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-44ddd"},
 			Description: apikeysv2.PtrString("works for two clusters"),
@@ -71,10 +91,21 @@ func fillKeyStoreV2() {
 	keyStoreV2["MULTICLUSTERKEY2"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("MULTICLUSTERKEY2"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-abc",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Resources: &[]apikeysv2.ObjectReference{
-				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
-				{Id: "lsrc-abc123", Kind: apikeysv2.PtrString("SchemaRegistry")},
+				{
+					Id:         "lkc-abc",
+					ApiVersion: apikeysv2.PtrString("cmk/v2"),
+					Kind:       apikeysv2.PtrString("Cluster"),
+				},
+				{
+					Id:   "lsrc-abc123",
+					Kind: apikeysv2.PtrString("SchemaRegistry"),
+				},
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-44ddd"},
 			Description: apikeysv2.PtrString("works for two clusters but on a different sr cluster"),
@@ -84,10 +115,21 @@ func fillKeyStoreV2() {
 	keyStoreV2["MULTICLUSTERKEY3"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("MULTICLUSTERKEY3"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-abc",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Resources: &[]apikeysv2.ObjectReference{
-				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
-				{Id: "lsrc-1234", Kind: apikeysv2.PtrString("SchemaRegistry")},
+				{
+					Id:         "lkc-abc",
+					ApiVersion: apikeysv2.PtrString("cmk/v2"),
+					Kind:       apikeysv2.PtrString("Cluster"),
+				},
+				{
+					Id:   "lsrc-1234",
+					Kind: apikeysv2.PtrString("SchemaRegistry"),
+				},
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "sa-12345"},
 			Description: apikeysv2.PtrString("works for two clusters and owned by service account"),
@@ -97,7 +139,11 @@ func fillKeyStoreV2() {
 	keyStoreV2["UIAPIKEY100"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY100"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource:    &apikeysv2.ObjectReference{Id: "lkc-cool1", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-cool1",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
 			Description: apikeysv2.PtrString(""),
 		},
@@ -105,7 +151,11 @@ func fillKeyStoreV2() {
 	keyStoreV2["UIAPIKEY101"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY101"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource:    &apikeysv2.ObjectReference{Id: "lkc-other1", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-other1",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
 			Description: apikeysv2.PtrString(""),
 		},
@@ -121,7 +171,11 @@ func fillKeyStoreV2() {
 	keyStoreV2["UIAPIKEY103"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY103"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource:    &apikeysv2.ObjectReference{Id: "lkc-cool1", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-cool1",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
 			Description: apikeysv2.PtrString(""),
 		},
@@ -129,7 +183,11 @@ func fillKeyStoreV2() {
 	keyStoreV2["SERVICEACCOUNTKEY1"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("SERVICEACCOUNTKEY1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-bob",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
 			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
@@ -137,8 +195,12 @@ func fillKeyStoreV2() {
 	keyStoreV2["DEACTIVATEDUSERKEY"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("DEACTIVATEDUSERKEY"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceId},
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "lkc-bob",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			},
+			Owner:       &apikeysv2.ObjectReference{Id: deactivatedUserResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -154,8 +216,8 @@ func apiKeysFilterV2(url *url.URL) *apikeysv2.IamV2ApiKeyList {
 	resourceId := q.Get("spec.resource")
 
 	for _, key := range keyStoreV2 {
-		uidFilter := (uid == "") || (uid == key.Spec.Owner.Id)
-		clusterFilter := (resourceId == "") || containsResourceId(key, resourceId)
+		uidFilter := uid == "" || uid == key.Spec.Owner.GetId()
+		clusterFilter := resourceId == "" || containsResourceId(key, resourceId)
 		if uidFilter && clusterFilter {
 			apiKeys = append(apiKeys, *key)
 		}
@@ -169,12 +231,9 @@ func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
 		return key.Spec.Resource.Id == resourceId
 	}
 
-	for _, resource := range key.Spec.GetResources() {
-		if resource.Id == resourceId {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(key.Spec.GetResources(), func(o apikeysv2.ObjectReference) bool {
+		return o.GetId() == resourceId
+	})
 }
 
 func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
@@ -227,6 +286,19 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 			},
 		},
 		Provider: byokv1.PtrString("Azure"),
+		State:    byokv1.PtrString("AVAILABLE"),
+	}
+
+	byokStoreV1["cck-004"] = &byokv1.ByokV1Key{
+		Id:       byokv1.PtrString("cck-004"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 13, 0, 30, 0, time.UTC))},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1GcpKey: &byokv1.ByokV1GcpKey{
+				KeyId: "projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3",
+				Kind:  "GcpKey",
+			},
+		},
+		Provider: byokv1.PtrString("GCP"),
 		State:    byokv1.PtrString("AVAILABLE"),
 	}
 

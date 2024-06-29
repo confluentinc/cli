@@ -3,42 +3,9 @@ package test
 import (
 	"os"
 	"path/filepath"
-	"runtime"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
-
-func (s *CLITestSuite) TestLocalKafka() {
-	if runtime.GOOS == "darwin" {
-		s.T().Skip()
-	}
-
-	tests := []CLITest{
-		{args: "local kafka stop", fixture: "local/kafka/stop-empty.golden"},
-		{args: "local kafka start", fixture: "local/kafka/start.golden", regex: true},
-	}
-
-	for _, test := range tests {
-		test.workflow = true
-		s.runIntegrationTest(test)
-	}
-
-	time.Sleep(40 * time.Second)
-
-	tests2 := []CLITest{
-		{args: "local kafka topic create test", fixture: "local/kafka/topic/create.golden"},
-		{args: "local kafka topic list", fixture: "local/kafka/topic/list.golden"},
-		{args: "local kafka topic describe test", fixture: "local/kafka/topic/describe.golden"},
-		{args: "local kafka topic delete test --force", fixture: "local/kafka/topic/delete.golden"},
-		{args: "local kafka stop", fixture: "local/kafka/stop.golden", regex: true},
-	}
-
-	for _, test := range tests2 {
-		test.workflow = true
-		s.runIntegrationTest(test)
-	}
-}
 
 func (s *CLITestSuite) TestLocalLifecycle() {
 	s.createCH([]string{

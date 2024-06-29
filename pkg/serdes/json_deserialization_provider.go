@@ -3,6 +3,7 @@ package serdes
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	"github.com/xeipuuv/gojsonschema"
 
@@ -34,7 +35,7 @@ func (j *JsonSchemaDeserializationProvider) Deserialize(data []byte) (string, er
 	}
 
 	if !result.Valid() {
-		return "", errors.New(errors.JsonDocumentInvalidErrorMsg)
+		return "", fmt.Errorf(errors.JsonDocumentInvalidErrorMsg)
 	}
 
 	data = []byte(str)

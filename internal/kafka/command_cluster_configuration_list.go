@@ -23,7 +23,7 @@ func (c *clusterCommand) newConfigurationListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) configurationList(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) configurationList(cmd *cobra.Command, _ []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (c *clusterCommand) configurationList(cmd *cobra.Command, args []string) er
 	}
 
 	list := output.NewList(cmd)
-	for _, config := range configs.GetData() {
+	for _, config := range configs {
 		list.Add(&configurationOut{
 			Name:     config.GetName(),
 			Value:    config.GetValue(),

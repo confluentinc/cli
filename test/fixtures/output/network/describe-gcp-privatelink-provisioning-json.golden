@@ -1,0 +1,11 @@
+{
+  "id": "n-abcde11",
+  "environment_id": "env-00000",
+  "name": "stag-gcp-us-central1",
+  "cloud": "GCP",
+  "region": "us-central1",
+  "zones": ["us-central1-a", "us-central1-b", "us-central1-c"],
+  "phase": "PROVISIONING",
+  "supported_connection_types": ["PRIVATELINK"],
+  "dns_resolution": "PRIVATE"
+}

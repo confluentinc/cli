@@ -3,6 +3,7 @@ name: clientQuota
 description: ""
 ingress: "500"
 egress: "100"
-principals: <default>
+principals:
+    - <default>
 cluster: lkc-1234
-environment: a-595
+environment: env-596

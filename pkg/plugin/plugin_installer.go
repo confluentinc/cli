@@ -3,10 +3,9 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-version"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 const (
@@ -23,7 +22,8 @@ type PluginInstaller interface {
 }
 
 func installSimplePlugin(name, repositoryDir, installDir, language string) error {
-	pluginDir := fmt.Sprintf("%s/%s", repositoryDir, name)
+	pluginDir := filepath.Join(repositoryDir, name)
+
 	entries, err := os.ReadDir(pluginDir)
 	if err != nil {
 		return err
@@ -31,22 +31,22 @@ func installSimplePlugin(name, repositoryDir, installDir, language string) error
 
 	found := false
 	for _, entry := range entries {
-		if PluginFromEntry(entry) != "" {
+		if nameFromEntry(entry) != "" {
 			found = true
 
-			fileData, err := os.ReadFile(fmt.Sprintf("%s/%s", pluginDir, entry.Name()))
+			fileData, err := os.ReadFile(filepath.Join(pluginDir, entry.Name()))
 			if err != nil {
 				return err
 			}
 
-			if err := os.WriteFile(fmt.Sprintf("%s/%s", installDir, entry.Name()), fileData, 0755); err != nil {
+			if err := os.WriteFile(filepath.Join(installDir, entry.Name()), fileData, 0755); err != nil {
 				return err
 			}
 		}
 	}
 
 	if !found {
-		return errors.Errorf("unable to find %s file for plugin %s", language, name)
+		return fmt.Errorf("unable to find %s file for plugin %s", language, name)
 	}
 	return nil
 }

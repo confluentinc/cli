@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 const (
 	subjectUsage              = "Subject of the schema."
-	onPremAuthenticationMsg   = "--ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>"
+	onPremAuthenticationMsg   = "--certificate-authority-path <certification-authority-location> --schema-registry-endpoint <schema-registry-endpoint>"
 	essentialsPackage         = "essentials"
 	advancedPackage           = "advanced"
 	essentialsPackageInternal = "free"
@@ -34,14 +32,12 @@ func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 		}
 	}
 
-	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SRInvalidPackageTypeErrorMsg, inputPackageDisplayName),
-		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
+	return "", errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`"%s" is an invalid package type`, inputPackageDisplayName),
+		fmt.Sprintf("Allowed values for `--package` flag are: %s.", getCommaDelimitedPackagesString()),
+	)
 }
 
 func getCommaDelimitedPackagesString() string {
 	return utils.ArrayToCommaDelimitedString(packageDisplayNames, "or")
-}
-
-func addPackageFlag(cmd *cobra.Command, defaultPackage string) {
-	cmd.Flags().String("package", defaultPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }

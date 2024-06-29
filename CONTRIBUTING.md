@@ -191,9 +191,9 @@ func (c *command) newDescribeCommand() *cobra.Command {
 func (c *command) describe(_ *cobra.Command, args []string) error {
     filename := c.CLICommand.Config.Config.Filename
     if filename == "" {
-        return errors.New("config file not found")
+        return fmt.Errorf("config file not found")
     }
-	
+
     n, err := strconv.Atoi(args[0])
     if err != nil {
         return err
@@ -284,7 +284,7 @@ Note: If there is a JIRA ticket associated with your PR, please format the PR de
 
 Please familiarize yourself with the following resources before writing your first CLI command:
 
-* [Cloud and On-Prem Annotations](pkg/cmd/ANNOTATIONS.md)
-* [CLI Error Handling](pkg/errors/README.md)
 * [Autocompletion](pkg/cmd/AUTOCOMPLETION.md)
-* TODO: REST Proxy Commands
+* [Cloud and On-Prem Annotations](pkg/cmd/ANNOTATIONS.md)
+* [Errors](pkg/errors/README.md)
+* [Output](pkg/output/README.md)

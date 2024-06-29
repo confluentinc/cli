@@ -10,6 +10,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -21,6 +22,11 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 	if err != nil { // require the flag
 		return nil, nil, "", err
 	}
+
+	if ccloudv2.IsCCloudURL(url, c.Config.IsTest) {
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] This is a Confluent Platform command. Confluent Cloud URLs are not supported.\n")
+	}
+
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, nil, "", err
@@ -43,24 +49,24 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 // Embedded KafkaRest uses /kafka/v3 and standalone uses /v3
 // Relying on users to include the /kafka in the url for embedded instances
 func SetServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string) {
-	url = strings.Trim(url, "/")   // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
-	url = strings.Trim(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
+	url = strings.TrimSuffix(url, "/")   // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
+	url = strings.TrimSuffix(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
 	protocolRgx := regexp.MustCompile(`(\w+)://`)
 	protocolMatch := protocolRgx.MatchString(url)
 	if !protocolMatch {
 		var protocolMsg string
-		if cmd.Flags().Changed("client-cert-path") || cmd.Flags().Changed("ca-cert-path") { // assume https if client-cert is set since this means we want to use mTLS auth
+		if cmd.Flags().Changed("client-cert-path") || cmd.Flags().Changed("certificate-authority-path") { // assume https if client-cert is set since this means we want to use mTLS auth
 			url = "https://" + url
-			protocolMsg = errors.AssumingHttpsProtocol
+			protocolMsg = "Assuming https protocol.\n"
 		} else {
 			url = "http://" + url
-			protocolMsg = errors.AssumingHttpProtocol
+			protocolMsg = "Assuming http protocol.\n"
 		}
 		if i, _ := cmd.Flags().GetCount("verbose"); i > 0 {
-			output.ErrPrintf(protocolMsg)
+			output.ErrPrintf(false, protocolMsg)
 		}
 	}
-	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
+	client.ChangeBasePath(strings.TrimSuffix(url, "/") + "/v3")
 }
 
 // getKafkaRestUrl tries to fetch the Kafka REST URL from the --url flag or from the CONFLUENT_REST_URL environment variable.

@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/confluent_current.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 confluent_current.go ConfluentCurrent
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/confluent_current.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 confluent_current.go ConfluentCurrent
 
 package local
 

@@ -16,16 +16,6 @@ func GetKeys[K comparable, V any](m map[K]V) []K {
 	return keys
 }
 
-func GetValues[K comparable, V any](m map[K]V) []V {
-	values := make([]V, len(m))
-	i := 0
-	for _, value := range m {
-		values[i] = value
-		i++
-	}
-	return values
-}
-
 func GetSortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
 	keys := NewSortableSlice[K](len(m))
 	i := 0

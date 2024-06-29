@@ -1,0 +1,21 @@
+Manage transit gateway attachments.
+
+Usage:
+  confluent network transit-gateway-attachment [command]
+
+Aliases:
+  transit-gateway-attachment, tgwa
+
+Available Commands:
+  create      Create a transit gateway attachment.
+  delete      Delete one or more transit gateway attachments.
+  describe    Describe a transit gateway attachment.
+  list        List transit gateway attachments.
+  update      Update an existing transit gateway attachment.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network transit-gateway-attachment [command] --help" for more information about a command.

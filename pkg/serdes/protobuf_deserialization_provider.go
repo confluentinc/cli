@@ -1,6 +1,8 @@
 package serdes
 
 import (
+	"fmt"
+
 	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 	"github.com/golang/protobuf/proto"  //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 
@@ -27,7 +29,7 @@ func (p *ProtobufDeserializationProvider) Deserialize(data []byte) (string, erro
 
 	// Convert from binary format to proto message type.
 	if err := proto.Unmarshal(data, p.message); err != nil {
-		return "", errors.New(errors.ProtoDocumentInvalidErrorMsg)
+		return "", fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
 	}
 
 	// Convert from proto message type to JSON string.

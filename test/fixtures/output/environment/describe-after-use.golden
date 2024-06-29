@@ -1,5 +1,6 @@
-+---------+---------+
-| Current | true    |
-| ID      | a-595   |
-| Name    | default |
-+---------+---------+
++---------------------------+------------+
+| Current                   | true       |
+| ID                        | env-596    |
+| Name                      | default    |
+| Stream Governance Package | ESSENTIALS |
++---------------------------+------------+

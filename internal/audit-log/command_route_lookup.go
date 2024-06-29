@@ -25,12 +25,12 @@ func (c *routeCommand) newLookupCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *routeCommand) lookup(cmd *cobra.Command, args []string) error {
+func (c *routeCommand) lookup(_ *cobra.Command, args []string) error {
 	resource := args[0]
 	opts := &mdsv1.ResolveResourceRouteOpts{Crn: optional.NewString(resource)}
 	result, response, err := c.MDSClient.AuditLogConfigurationApi.ResolveResourceRoute(c.createContext(), opts)
 	if err != nil {
-		return HandleMdsAuditLogApiError(cmd, err, response)
+		return HandleMdsAuditLogApiError(err, response)
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")

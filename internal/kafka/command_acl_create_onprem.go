@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	aclutil "github.com/confluentinc/cli/v3/pkg/acl"
+	"github.com/confluentinc/cli/v3/pkg/acl"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafkarest"
@@ -42,7 +42,7 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().AddFlagSet(aclutil.AclFlags())
+	cmd.Flags().AddFlagSet(acl.Flags())
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -54,10 +54,9 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 }
 
 func (c *aclCommand) createOnPrem(cmd *cobra.Command, _ []string) error {
-	acl := aclutil.ParseAclRequest(cmd)
-	acl = aclutil.ValidateCreateDeleteAclRequestData(acl)
-	if acl.Errors != nil {
-		return acl.Errors
+	data := acl.ValidateCreateDeleteAclRequestData(acl.ParseRequest(cmd))
+	if data.Errors != nil {
+		return data.Errors
 	}
 
 	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
@@ -65,12 +64,12 @@ func (c *aclCommand) createOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	opts := aclutil.AclRequestToCreateAclRequest(acl)
+	opts := acl.RequestToCreateRequest(data)
 	httpResp, err := restClient.ACLV3Api.CreateKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
-	aclData := aclutil.CreateAclRequestDataToAclData(acl)
-	return aclutil.PrintACLsFromKafkaRestResponseOnPrem(cmd, []kafkarestv3.AclData{aclData})
+	aclData := acl.CreateAclRequestDataToAclData(data)
+	return acl.PrintACLsFromKafkaRestResponseOnPrem(cmd, []kafkarestv3.AclData{aclData})
 }

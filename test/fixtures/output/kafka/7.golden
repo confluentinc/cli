@@ -4,7 +4,7 @@
     "id": "lkc-123",
     "name": "abc",
     "type": "BASIC",
-    "provider": "gcp",
+    "cloud": "gcp",
     "region": "us-central1",
     "availability": "single-zone",
     "status": "PROVISIONING"
@@ -14,9 +14,20 @@
     "id": "lkc-456",
     "name": "def",
     "type": "BASIC",
-    "provider": "gcp",
+    "cloud": "gcp",
     "region": "us-central1",
     "availability": "multi-zone",
     "status": "PROVISIONING"
+  },
+  {
+    "is_current": false,
+    "id": "lkc-789",
+    "name": "ghi",
+    "type": "DEDICATED",
+    "cloud": "aws",
+    "region": "us-west-2",
+    "availability": "single-zone",
+    "network": "n-abcde1",
+    "status": "UP"
   }
 ]

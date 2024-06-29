@@ -11,9 +11,10 @@ import (
 )
 
 type regionOut struct {
-	Id    string `human:"ID" serialized:"id"`
-	Name  string `human:"Name" serialized:"name"`
-	Cloud string `human:"Cloud" serialized:"cloud"`
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
+	Name      string `human:"Name" serialized:"name"`
+	Cloud     string `human:"Cloud" serialized:"cloud"`
+	Region    string `human:"Region" serialized:"region"`
 }
 
 func (c *command) newRegionListCommand() *cobra.Command {
@@ -31,12 +32,13 @@ func (c *command) newRegionListCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) regionList(cmd *cobra.Command, args []string) error {
+func (c *command) regionList(cmd *cobra.Command, _ []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -49,11 +51,17 @@ func (c *command) regionList(cmd *cobra.Command, args []string) error {
 
 	list := output.NewList(cmd)
 	for _, region := range regions {
-		list.Add(&regionOut{
-			Id:    region.GetRegionName(),
-			Name:  region.GetDisplayName(),
-			Cloud: region.GetCloud(),
-		})
+		out := &regionOut{
+			Cloud:  region.GetCloud(),
+			Region: region.GetRegionName(),
+			Name:   region.GetDisplayName(),
+		}
+
+		if x := strings.SplitN(region.GetId(), ".", 2); len(x) == 2 {
+			out.IsCurrent = x[0] == c.Context.GetCurrentFlinkCloudProvider() && x[1] == c.Context.GetCurrentFlinkRegion()
+		}
+
+		list.Add(out)
 	}
 	return list.Print()
 }

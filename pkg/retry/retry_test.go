@@ -1,7 +1,7 @@
 package retry
 
 import (
-	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -10,7 +10,7 @@ import (
 
 func TestRetry(t *testing.T) {
 	require.Error(t, Retry(time.Nanosecond, 2*time.Nanosecond, func() error {
-		return errors.New("error")
+		return fmt.Errorf("error")
 	}))
 	require.NoError(t, Retry(time.Nanosecond, 2*time.Nanosecond, func() error {
 		return nil

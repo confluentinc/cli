@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bradleyjkemp/cupaloy"
+	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -42,13 +42,13 @@ func (s *TableViewTestSuite) TestJumpUp() {
 }
 
 func getResultsExample(numRows int) *types.MaterializedStatementResults {
-	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10, nil)
 	for i := 0; i < numRows; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
-			Operation: types.INSERT,
+			Operation: types.Insert,
 			Fields: []types.StatementResultField{
 				types.AtomicStatementResultField{
-					Type:  types.INTEGER,
+					Type:  types.Integer,
 					Value: strconv.Itoa(i),
 				},
 			},

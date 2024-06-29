@@ -196,11 +196,13 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	msg := fmt.Sprintf(errors.CreatedLinkResourceMsg, resource.ClusterLink, linkName, linkConfigsCommandOutput(configMap))
+	msg := fmt.Sprintf(createdLinkResourceMsg, resource.ClusterLink, linkName)
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}
-	output.Print(msg)
+
+	output.Println(c.Config.EnableColor, msg)
+	output.Println(c.Config.EnableColor, linkConfigsCommandOutput(configMap))
 
 	return nil
 }
@@ -273,8 +275,11 @@ func (c *linkCommand) getConfigMapAndLinkMode(configMap map[string]string) (map[
 	}
 }
 
-func unrecognizedLinkModeErr(linkModeStr string) error {
-	return errors.Errorf(`unrecognized link.mode "%s". Use %s, %s, or %s.`, linkModeStr, DESTINATION, SOURCE, BIDIRECTIONAL)
+func unrecognizedLinkModeErr(linkMode string) error {
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`unrecognized link mode "%s"`, linkMode),
+		fmt.Sprintf("Use %s.", utils.ArrayToCommaDelimitedString([]string{DESTINATION, SOURCE, BIDIRECTIONAL}, "or")),
+	)
 }
 
 func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkModeMetadata *linkModeMetadata, configMap map[string]string) error {
@@ -335,7 +340,7 @@ func (c *linkCommand) addDestInitiatedLinkSecurityConfigToMap(cmd *cobra.Command
 		configMap[saslMechanismPropertyName] = plain
 		configMap[saslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
 	} else if sourceApiKey != "" || sourceApiSecret != "" {
-		return errors.New("--source-api-key and --source-api-secret must be supplied together")
+		return fmt.Errorf("--source-api-key and --source-api-secret must be supplied together")
 	}
 	return nil
 }
@@ -355,7 +360,7 @@ func (c *linkCommand) addSourceInitiatedLinkSecurityConfigToMap(cmd *cobra.Comma
 		configMap[localSaslMechanismPropertyName] = plain
 		configMap[localSaslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
 	} else if sourceApiKey != "" || sourceApiSecret != "" {
-		return errors.New("--source-api-key and --source-api-secret must be supplied together")
+		return fmt.Errorf("--source-api-key and --source-api-secret must be supplied together")
 	}
 	destinationApiKey, err := cmd.Flags().GetString(destinationApiKeyFlagName)
 	if err != nil {
@@ -371,7 +376,7 @@ func (c *linkCommand) addSourceInitiatedLinkSecurityConfigToMap(cmd *cobra.Comma
 		configMap[saslMechanismPropertyName] = plain
 		configMap[saslJaasConfigPropertyName] = getJaasValue(destinationApiKey, destinationApiSecret)
 	} else if destinationApiKey != "" || destinationApiSecret != "" {
-		return errors.New("--destination-api-key and --destination-api-secret must be supplied together")
+		return fmt.Errorf("--destination-api-key and --destination-api-secret must be supplied together")
 	}
 	return nil
 }

@@ -14,13 +14,14 @@ func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "replica",
 		Short:       "Manage Kafka replicas.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
 	c := &replicaCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newStatusCommand())
 
 	return cmd
 }

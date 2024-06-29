@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -56,19 +55,19 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if apiKey {
-		output.Println(ctx.Credential.APIKeyPair.Key)
+		output.Println(c.Config.EnableColor, ctx.Credential.APIKeyPair.Key)
 		return nil
 	}
 
 	if username {
-		output.Println(ctx.Credential.Username)
+		output.Println(c.Config.EnableColor, ctx.Credential.Username)
 		return nil
 	}
 
 	return describeContext(cmd, ctx)
 }
 
-func describeContext(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) error {
+func describeContext(cmd *cobra.Command, ctx *config.Context) error {
 	table := output.NewTable(cmd)
 	table.Add(&out{
 		Name:       ctx.Name,

@@ -12,3 +12,24 @@
   status_time_ms: 222222222
   num_partition: 2
   max_per_partition_mirror_lag: 0
+- link_name: link-3
+  mirror_topic_name: dest-topic-3
+  source_topic_name: src-topic-3
+  mirror_status: LINK_FAILED
+  status_time_ms: 222222222
+  num_partition: 2
+  max_per_partition_mirror_lag: 0
+- link_name: link-4
+  mirror_topic_name: dest-topic-4
+  source_topic_name: src-topic-4
+  mirror_status: LINK_PAUSED
+  status_time_ms: 222222222
+  num_partition: 2
+  max_per_partition_mirror_lag: 0
+- link_name: link-5
+  mirror_topic_name: dest-topic-5
+  source_topic_name: src-topic-5
+  mirror_status: SOURCE_UNAVAILABLE
+  status_time_ms: 222222222
+  num_partition: 2
+  max_per_partition_mirror_lag: 0
