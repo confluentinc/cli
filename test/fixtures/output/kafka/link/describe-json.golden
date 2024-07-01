@@ -1,7 +1,5 @@
 {
   "link_name": "link-1",
   "source_cluster": "lkc-describe-topic",
-  "destination_cluster": "",
-  "remote_cluster": "",
   "state": "AVAILABLE"
 }

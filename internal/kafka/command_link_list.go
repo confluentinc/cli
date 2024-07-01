@@ -11,23 +11,12 @@ import (
 
 const includeTopicsFlagName = "include-topics"
 
-type listOut struct {
-	Name               string `human:"Name" serialized:"link_name"`
-	TopicName          string `human:"Topic Name" serialized:"topic_name"`
-	SourceCluster      string `human:"Source Cluster" serialized:"source_cluster"`
-	DestinationCluster string `human:"Destination Cluster" serialized:"destination_cluster"`
-	RemoteCluster      string `human:"Remote Cluster" serialized:"remote_cluster"`
-	State              string `human:"State" serialized:"state"`
-	Error              string `human:"Error" serialized:"error"`
-	ErrorMessage       string `human:"Error Message" serialized:"error_message"`
-}
-
-func newLink(link kafkarestv3.ListLinksResponseData, topic string) *listOut {
+func newLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
 	var linkError string
 	if link.GetLinkError() != "NO_ERROR" {
 		linkError = link.GetLinkError()
 	}
-	return &listOut{
+	return &describeOut{
 		Name:               link.GetLinkName(),
 		TopicName:          topic,
 		SourceCluster:      link.GetSourceClusterId(),

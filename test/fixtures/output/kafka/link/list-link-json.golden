@@ -3,45 +3,30 @@
     "link_name": "link-1",
     "source_cluster": "cluster-1",
     "destination_cluster": "cluster-2",
-    "remote_cluster": "",
-    "state": "",
-    "error": "",
-    "error_message": ""
+    "state": ""
   },
   {
     "link_name": "link-2",
     "source_cluster": "cluster-1",
     "destination_cluster": "cluster-2",
-    "remote_cluster": "",
-    "state": "AVAILABLE",
-    "error": "",
-    "error_message": ""
+    "state": "AVAILABLE"
   },
   {
     "link_name": "link-3",
     "source_cluster": "cluster-1",
     "destination_cluster": "cluster-2",
-    "remote_cluster": "",
     "state": "UNAVAILABLE",
     "error": "AUTHENTICATION_ERROR",
     "error_message": "Please check your API key and secret."
   },
   {
     "link_name": "link-4",
-    "source_cluster": "",
-    "destination_cluster": "",
     "remote_cluster": "cluster-2",
-    "state": "",
-    "error": "",
-    "error_message": ""
+    "state": ""
   },
   {
     "link_name": "link-5",
-    "source_cluster": "",
-    "destination_cluster": "",
     "remote_cluster": "cluster-2",
-    "state": "",
-    "error": "",
-    "error_message": ""
+    "state": ""
   }
 ]
