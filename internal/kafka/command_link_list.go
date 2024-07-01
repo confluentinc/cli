@@ -11,12 +11,12 @@ import (
 
 const includeTopicsFlagName = "include-topics"
 
-func newLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
+func newLink(link kafkarestv3.ListLinksResponseData, topic string) *linkOut {
 	var linkError string
 	if link.GetLinkError() != "NO_ERROR" {
 		linkError = link.GetLinkError()
 	}
-	return &describeOut{
+	return &linkOut{
 		Name:               link.GetLinkName(),
 		TopicName:          topic,
 		SourceCluster:      link.GetSourceClusterId(),

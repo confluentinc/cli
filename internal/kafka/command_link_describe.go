@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type describeOut struct {
+type linkOut struct {
 	Name               string `human:"Name" serialized:"link_name"`
 	TopicName          string `human:"Topic Name" serialized:"topic_name"`
 	SourceCluster      string `human:"Source Cluster" serialized:"source_cluster,omitempty"`
@@ -56,12 +56,12 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	return table.Print()
 }
 
-func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
+func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *linkOut {
 	var linkError string
 	if link.GetLinkError() != "NO_ERROR" {
 		linkError = link.GetLinkError()
 	}
-	return &describeOut{
+	return &linkOut{
 		Name:               link.GetLinkName(),
 		TopicName:          topic,
 		SourceCluster:      link.GetSourceClusterId(),
