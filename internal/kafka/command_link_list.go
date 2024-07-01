@@ -12,14 +12,14 @@ import (
 const includeTopicsFlagName = "include-topics"
 
 type listOut struct {
-	Name                 string `human:"Name" serialized:"link_name"`
-	TopicName            string `human:"Topic Name" serialized:"topic_name"`
-	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster"`
-	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster"`
-	RemoteClusterId      string `human:"Remote Cluster" serialized:"remote_cluster"`
-	State                string `human:"State" serialized:"state"`
-	Error                string `human:"Error" serialized:"error"`
-	ErrorMessage         string `human:"Error Message" serialized:"error_message"`
+	Name               string `human:"Name" serialized:"link_name"`
+	TopicName          string `human:"Topic Name" serialized:"topic_name"`
+	SourceCluster      string `human:"Source Cluster" serialized:"source_cluster"`
+	DestinationCluster string `human:"Destination Cluster" serialized:"destination_cluster"`
+	RemoteCluster      string `human:"Remote Cluster" serialized:"remote_cluster"`
+	State              string `human:"State" serialized:"state"`
+	Error              string `human:"Error" serialized:"error"`
+	ErrorMessage       string `human:"Error Message" serialized:"error_message"`
 }
 
 func newLink(link kafkarestv3.ListLinksResponseData, topic string) *listOut {
@@ -28,14 +28,14 @@ func newLink(link kafkarestv3.ListLinksResponseData, topic string) *listOut {
 		linkError = link.GetLinkError()
 	}
 	return &listOut{
-		Name:                 link.GetLinkName(),
-		TopicName:            topic,
-		SourceClusterId:      link.GetSourceClusterId(),
-		DestinationClusterId: link.GetDestinationClusterId(),
-		RemoteClusterId:      link.GetRemoteClusterId(),
-		State:                link.GetLinkState(),
-		Error:                linkError,
-		ErrorMessage:         link.GetLinkErrorMessage(),
+		Name:               link.GetLinkName(),
+		TopicName:          topic,
+		SourceCluster:      link.GetSourceClusterId(),
+		DestinationCluster: link.GetDestinationClusterId(),
+		RemoteCluster:      link.GetRemoteClusterId(),
+		State:              link.GetLinkState(),
+		Error:              linkError,
+		ErrorMessage:       link.GetLinkErrorMessage(),
 	}
 }
 
@@ -94,5 +94,5 @@ func getListFields(includeTopics bool) []string {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage")
+	return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage")
 }

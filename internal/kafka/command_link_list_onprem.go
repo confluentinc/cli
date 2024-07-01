@@ -16,11 +16,11 @@ func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *listOu
 	}
 
 	if data.SourceClusterId != nil {
-		listEntry.SourceClusterId = *data.SourceClusterId
+		listEntry.SourceCluster = *data.SourceClusterId
 	}
 
 	if data.DestinationClusterId != nil {
-		listEntry.DestinationClusterId = *data.DestinationClusterId
+		listEntry.DestinationCluster = *data.DestinationClusterId
 	}
 
 	return listEntry
