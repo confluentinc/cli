@@ -16,6 +16,7 @@ var ccloudHandlers = []route{
 	{"/api/login/realm", handleLoginRealm},
 	{"/api/metadata/security/v2alpha1/authenticate", handleV2Authenticate},
 	{"/api/organizations/{id}/payment_info", handlePaymentInfo},
+	{"/api/organizations/{id}/update_default_payment_method", handleUpdateDefaultPaymentMethod},
 	{"/api/organizations/{id}/price_table", handlePriceTable},
 	{"/api/organizations/{id}/promo_code_claims", handlePromoCodeClaims},
 	{"/api/schema_registries", handleSchemaRegistries},
