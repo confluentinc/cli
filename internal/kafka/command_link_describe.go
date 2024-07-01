@@ -12,9 +12,9 @@ import (
 type describeOut struct {
 	Name                 string `human:"Name" serialized:"link_name"`
 	TopicName            string `human:"Topic Name" serialized:"topic_name"`
-	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster_id"`
-	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster_id"`
-	RemoteClusterId      string `human:"Remote Cluster" serialized:"remote_cluster_id"`
+	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster"`
+	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster"`
+	RemoteClusterId      string `human:"Remote Cluster" serialized:"remote_cluster"`
 	State                string `human:"State" serialized:"state"`
 	Error                string `human:"Error,omitempty" serialized:"error,omitempty"`
 	ErrorMessage         string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
