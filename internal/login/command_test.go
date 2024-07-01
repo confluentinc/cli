@@ -876,12 +876,12 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, cfg *config.Config) *cobra.Command {
 	var prerunner pcmd.PreRunner
 
-	if !isCloud {
-		mdsClient := climock.NewMdsClientMock(testToken1)
-		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
-	} else {
+	if isCloud {
 		ccloudClientFactory := climock.NewCCloudClientFactoryMock(auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
+	} else {
+		mdsClient := climock.NewMdsClientMock(testToken1)
+		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	}
 	return logout.New(cfg, prerunner, authTokenHandler)
 }
