@@ -1,18 +1,13 @@
 package config
 
 import (
-	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/go-jose/go-jose/v3/jwt"
 
 	"github.com/confluentinc/cli/v3/pkg/secret"
-)
-
-const (
-	authTokenRegex        = `^[\w-]*\.[\w-]*\.[\w-]*$`
-	authRefreshTokenRegex = `^(v1\..*)$`
 )
 
 type ContextState struct {
@@ -26,8 +21,7 @@ type ContextState struct {
 }
 
 func (c *ContextState) DecryptAuthToken(ctxName string) error {
-	reg := regexp.MustCompile(authTokenRegex)
-	if !reg.MatchString(c.AuthToken) && c.AuthToken != "" && (c.Salt != nil || runtime.GOOS == "windows") {
+	if (strings.HasPrefix(c.AuthToken, secret.AesGcm) && c.Salt != nil) || (c.AuthToken != "" && runtime.GOOS == "windows") {
 		decryptedAuthToken, err := secret.Decrypt(ctxName, c.AuthToken, c.Salt, c.Nonce)
 		if err != nil {
 			return err
@@ -39,8 +33,7 @@ func (c *ContextState) DecryptAuthToken(ctxName string) error {
 }
 
 func (c *ContextState) DecryptAuthRefreshToken(ctxName string) error {
-	reg := regexp.MustCompile(authRefreshTokenRegex)
-	if !reg.MatchString(c.AuthRefreshToken) && c.AuthRefreshToken != "" && (c.Salt != nil || runtime.GOOS == "windows") {
+	if (strings.HasPrefix(c.AuthRefreshToken, secret.AesGcm) && c.Salt != nil) || (c.AuthRefreshToken != "" && runtime.GOOS == "windows") {
 		decryptedAuthRefreshToken, err := secret.Decrypt(ctxName, c.AuthRefreshToken, c.Salt, c.Nonce)
 		if err != nil {
 			return err
