@@ -202,7 +202,7 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
 			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
-			if !slices.Contains(tag, "-") && !(slices.Contains(tag, "omitempty") && val.IsZero()) {
+			if !slices.Contains(tag, "-") && !(slices.Contains(tag, "omitempty") && isZero(val)) {
 				w.Append([]string{tag[0], getTableValueString(val)})
 			}
 		}
@@ -246,4 +246,13 @@ func (t *Table) isMap() bool {
 
 	_, ok := t.objects[0].(map[string]string)
 	return ok
+}
+
+func isZero(value reflect.Value) bool {
+	// special cases: value.IsZero() doesn't evaluate to true for maps or slices that are empty but not nil
+	if value.Kind() == reflect.Map || value.Kind() == reflect.Slice {
+		return value.Len() == 0
+	}
+
+	return value.IsZero()
 }
