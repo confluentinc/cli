@@ -1,6 +1,5 @@
 +----------------------------+--------------------------------------+
 | ID                         | n-abcde3                             |
-| Environment                | env-00000                            |
 | Name                       | prod-azure-eastus2                   |
 | Cloud                      | AZURE                                |
 | Region                     | eastus2                              |

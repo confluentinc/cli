@@ -16,7 +16,7 @@ import (
 
 type out struct {
 	PluginName string `human:"Name" serialized:"plugin_name"`
-	PluginId   string `human:"ID" serialized:"plugin_id"`
+	PluginId   string `human:"ID" serialized:"id"`
 	FilePath   string `human:"File Path" serialized:"file_path"`
 }
 

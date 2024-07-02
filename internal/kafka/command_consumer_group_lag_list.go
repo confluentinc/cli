@@ -50,16 +50,16 @@ func (c *consumerCommand) groupLagList(cmd *cobra.Command, args []string) error 
 	list := output.NewList(cmd)
 	for _, consumerLag := range consumerLags {
 		list.Add(&lagOut{
-			ClusterId:       consumerLag.GetClusterId(),
-			ConsumerGroupId: consumerLag.GetConsumerGroupId(),
-			Lag:             consumerLag.GetLag(),
-			LogEndOffset:    consumerLag.GetLogEndOffset(),
-			CurrentOffset:   consumerLag.GetCurrentOffset(),
-			ConsumerId:      consumerLag.GetConsumerId(),
-			InstanceId:      consumerLag.GetInstanceId(),
-			ClientId:        consumerLag.GetClientId(),
-			Topic:           consumerLag.GetTopicName(),
-			PartitionId:     consumerLag.GetPartitionId(),
+			Cluster:       consumerLag.GetClusterId(),
+			ConsumerGroup: consumerLag.GetConsumerGroupId(),
+			Lag:           consumerLag.GetLag(),
+			LogEndOffset:  consumerLag.GetLogEndOffset(),
+			CurrentOffset: consumerLag.GetCurrentOffset(),
+			Consumer:      consumerLag.GetConsumerId(),
+			Instance:      consumerLag.GetInstanceId(),
+			Client:        consumerLag.GetClientId(),
+			Topic:         consumerLag.GetTopicName(),
+			Partition:     consumerLag.GetPartitionId(),
 		})
 	}
 	return list.Print()
