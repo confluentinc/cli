@@ -323,10 +323,14 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 	}
 
 	// The Confluent Gov environment and the Confluent Platform MDS return a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
-	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
+	// We prefix encrypted tokens with "AES/GCM/NoPadding" on Unix systems and "DPAPI" on Windows to ensure that they are only encrypted once.
+	prefix := secret.AesGcm
+	if runtime.GOOS == "windows" {
+		prefix = secret.Dpapi
+	}
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, prefix) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
 
-	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && !c.Context().IsCloud(c.IsTest)
+	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, prefix) && !c.Context().IsCloud(c.IsTest)
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
