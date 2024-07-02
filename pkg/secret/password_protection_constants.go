@@ -57,4 +57,5 @@ const (
 const (
 	AesCbc = "AES/CBC/PKCS5Padding"
 	AesGcm = "AES/GCM/NoPadding"
+	Dpapi  = "DPAPI"
 )
