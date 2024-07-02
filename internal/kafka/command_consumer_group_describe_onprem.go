@@ -36,8 +36,8 @@ func (c *consumerCommand) groupDescribeOnPrem(cmd *cobra.Command, args []string)
 
 	table := output.NewTable(cmd)
 	table.Add(&consumerGroupOut{
-		ClusterId:         group.ClusterId,
-		ConsumerGroupId:   group.ConsumerGroupId,
+		Cluster:           group.ClusterId,
+		ConsumerGroup:     group.ConsumerGroupId,
 		Coordinator:       getStringBroker(group.Coordinator.Related),
 		IsSimple:          group.IsSimple,
 		PartitionAssignor: group.PartitionAssignor,

@@ -19,7 +19,7 @@ import (
 
 type clusterOut struct {
 	Name                string `human:"Name" serialized:"name"`
-	ClusterId           string `human:"Cluster" serialized:"cluster_id"`
+	Cluster             string `human:"Cluster" serialized:"cluster"`
 	EndpointUrl         string `human:"Endpoint URL" serialized:"endpoint_url"`
 	UsedSchemas         string `human:"Used Schemas" serialized:"used_schemas"`
 	AvailableSchemas    string `human:"Available Schemas" serialized:"available_schemas"`
@@ -137,7 +137,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	table := output.NewTable(cmd)
 	table.Add(&clusterOut{
 		Name:                cluster.Spec.GetDisplayName(),
-		ClusterId:           cluster.GetId(),
+		Cluster:             cluster.GetId(),
 		EndpointUrl:         cluster.Spec.GetHttpEndpoint(),
 		Cloud:               cluster.Spec.GetCloud(),
 		Region:              cluster.Spec.GetRegion(),

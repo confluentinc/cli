@@ -5,7 +5,7 @@
     "owner_id": "u11",
     "owner_email": "bstrauch@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-bob",
+    "resource": "lkc-bob",
     "created": "1999-02-24T00:00:00Z"
   }
 ]

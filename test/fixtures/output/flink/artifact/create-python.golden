@@ -1,6 +1,6 @@
 +----------------+-------------------------+
 | Name           | my-custom-python-plugin |
-| Plugin ID      | ccp-789012              |
-| Version ID     | ver-789012              |
+| Plugin         | ccp-789012              |
+| Version        | ver-789012              |
 | Content Format | ZIP                     |
 +----------------+-------------------------+

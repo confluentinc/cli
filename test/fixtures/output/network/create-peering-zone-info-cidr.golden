@@ -1,6 +1,5 @@
 +----------------------------+--------------+
 | ID                         | n-abcde1     |
-| Environment                | env-00000    |
 | Name                       | aws-peering  |
 | Cloud                      | AWS          |
 | Region                     | us-west-2    |
