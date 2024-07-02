@@ -35,8 +35,8 @@ type describeStruct struct {
 	Network            string `human:"Network,omitempty" serialized:"network,omitempty"`
 	Status             string `human:"Status" serialized:"status"`
 	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
-	ByokKey            string `human:"BYOK Key" serialized:"byok_key"`
-	EncryptionKey      string `human:"Encryption Key" serialized:"encryption_key"`
+	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
+	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
 	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
 }
@@ -136,8 +136,8 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		Network:            cluster.Spec.Network.GetId(),
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
-		ByokKey:            getCmkByokId(cluster),
-		EncryptionKey:      getCmkEncryptionKey(cluster),
+		ByokKeyId:          getCmkByokId(cluster),
+		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
 	}
 }
@@ -158,7 +158,7 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 			describeFields = append(describeFields, "PendingClusterSize")
 		}
 		if cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != nil && *cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != "" {
-			describeFields = append(describeFields, "EncryptionKey")
+			describeFields = append(describeFields, "EncryptionKeyId")
 		}
 		if cluster.Spec.Byok != nil {
 			describeFields = append(describeFields, "ByokId")
