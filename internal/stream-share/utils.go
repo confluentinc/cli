@@ -34,16 +34,6 @@ func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetwor
 	return &details
 }
 
-func mapSubdomainsToList(m map[string]string) []string {
-	subdomains := make([]string, len(m))
-	i := 0
-	for k, v := range m {
-		subdomains[i] = fmt.Sprintf(`%s="%s"`, k, v)
-		i++
-	}
-	return subdomains
-}
-
 func confirmOptOut() (bool, error) {
 	f := form.New(
 		form.Field{

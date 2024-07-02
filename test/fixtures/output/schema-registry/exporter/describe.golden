@@ -4,6 +4,6 @@
 | Subject Format | my-${subject} |
 | Context Type   | CUSTOM        |
 | Context        | mycontext     |
-| Config         | key1="value1" |
-|                | key2="value2" |
+| Config         | key1=value1   |
+|                | key2=value2   |
 +----------------+---------------+

@@ -24,7 +24,7 @@ type brokerTaskData struct {
 	CreatedAt         time.Time                  `human:"Created At" serialized:"created_at"`
 	UpdatedAt         time.Time                  `human:"Updated At" serialized:"updated_at"`
 	ShutdownScheduled bool                       `human:"Shutdown Scheduled,omitempty" serialized:"shutdown_scheduled,omitempty"`
-	SubtaskStatuses   string                     `human:"Subtask Statuses" serialized:"subtask_statuses"`
+	SubtaskStatuses   map[string]string          `human:"Subtask Statuses" serialized:"subtask_statuses"`
 	ErrorCode         int32                      `human:"Error Code,omitempty" serialized:"error_code,omitempty"`
 	ErrorMessage      string                     `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
@@ -103,7 +103,7 @@ func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) *brokerTaskData {
 		TaskStatus:      entry.TaskStatus,
 		CreatedAt:       entry.CreatedAt,
 		UpdatedAt:       entry.UpdatedAt,
-		SubtaskStatuses: mapToKeyValueString(entry.SubTaskStatuses),
+		SubtaskStatuses: entry.SubTaskStatuses,
 	}
 	if entry.ShutdownScheduled != nil {
 		s.ShutdownScheduled = *entry.ShutdownScheduled
@@ -115,18 +115,6 @@ func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) *brokerTaskData {
 		s.ErrorMessage = *entry.ErrorMessage
 	}
 	return s
-}
-
-func mapToKeyValueString(values map[string]string) string {
-	kvString := ""
-	for k, v := range values {
-		if kvString == "" {
-			kvString = k + "=" + v
-		} else {
-			kvString = kvString + "\n" + k + "=" + v
-		}
-	}
-	return kvString
 }
 
 func getBrokerTasksForCluster(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, taskType kafkarestv3.BrokerTaskType) ([]kafkarestv3.BrokerTaskData, error) {
