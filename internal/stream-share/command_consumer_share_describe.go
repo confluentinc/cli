@@ -81,7 +81,6 @@ func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error
 				Status:                   share.Status.GetPhase(),
 				InviteExpiresAt:          share.GetInviteExpiresAt(),
 				NetworkDnsDomain:         network.GetDnsDomain(),
-				// TODO: Serialize array instead of string in next major version
 				NetworkZones:               network.GetZones(),
 				NetworkZonalSubdomains:     network.GetZonalSubdomains(),
 				NetworkKind:                networkDetails.networkKind,
