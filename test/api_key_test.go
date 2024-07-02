@@ -61,16 +61,16 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/25.golden"},
 
 		// store an API key for kafka cluster
-		{args: "api-key store UIAPIKEY100 --resource lkc-cool1", input: "UIAPISECRET100\n", fixture: "api-key/26.golden"},
+		{args: "api-key store UIAPIKEY100 UIAPISECRET100 --resource lkc-cool1", fixture: "api-key/26.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 
 		// store an API key for other kafka cluster
-		{args: "api-key store UIAPIKEY101 --resource lkc-other1", input: "UIAPISECRET101\n", fixture: "api-key/27.golden"},
+		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --resource lkc-other1", fixture: "api-key/27.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/28.golden"},
 
 		// store exists already error
-		{args: "api-key store UIAPIKEY101 --resource lkc-other1", input: "UIAPISECRET101\n", fixture: "api-key/override-error.golden", exitCode: 1},
+		{args: "api-key store UIAPIKEY101 UIAPISECRET101 --resource lkc-other1", fixture: "api-key/override-error.golden", exitCode: 1},
 
 		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/61.golden", exitCode: 1},
 		{args: "api-key use UIAPIKEY103", fixture: "api-key/29.golden", exitCode: 1},
@@ -107,7 +107,7 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key create --description my-cool-app --resource lkc-cool1 --use", fixture: "api-key/60.golden"}, // MYKEY16
 
 		// store: error handling
-		{name: "error if storing unknown API key", args: "api-key store UNKNOWN --resource lkc-cool1", input: "UIAPISECRET100\n", fixture: "api-key/47.golden", exitCode: 1},
+		{name: "error if storing unknown API key", args: "api-key store UNKNOWN UIAPISECRET100 --resource lkc-cool1", fixture: "api-key/47.golden", exitCode: 1},
 		{name: "error if storing API key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden", exitCode: 1},
 		{
 			name: "succeed if forced to overwrite existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1 --force", fixture: "api-key/49.golden",

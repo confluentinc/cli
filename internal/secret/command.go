@@ -9,11 +9,10 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	flagResolver pcmd.FlagResolver
-	plugin       secret.PasswordProtection
+	plugin secret.PasswordProtection
 }
 
-func New(prerunner pcmd.PreRunner, flagResolver pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
+func New(prerunner pcmd.PreRunner, plugin secret.PasswordProtection) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "secret",
 		Short:       "Manage secrets for Confluent Platform.",
@@ -21,9 +20,8 @@ func New(prerunner pcmd.PreRunner, flagResolver pcmd.FlagResolver, plugin secret
 	}
 
 	c := &command{
-		CLICommand:   pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		flagResolver: flagResolver,
-		plugin:       plugin,
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		plugin:     plugin,
 	}
 
 	cmd.AddCommand(c.newMasterKeyCommand())
