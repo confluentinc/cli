@@ -22,8 +22,8 @@ func (c *command) newRotateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
-	cmd.Flags().String("passphrase", "", `Master key passphrase.`)
-	cmd.Flags().String("passphrase-new", "", `New master key passphrase.`)
+	cmd.Flags().String("passphrase", "", "Master key passphrase.")
+	cmd.Flags().String("passphrase-new", "", "New master key passphrase.")
 	cmd.Flags().Bool("master-key", false, "Rotate the master key. Generates a new master key and re-encrypts with the new key.")
 	cmd.Flags().Bool("data-key", false, "Rotate data key. Generates a new data key and re-encrypts the file with the new key.")
 	pcmd.AddOutputFlag(cmd)

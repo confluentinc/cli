@@ -27,7 +27,7 @@ func (c *command) newAddCommand() *cobra.Command {
 }
 
 func (c *command) add(cmd *cobra.Command, _ []string) error {
-	configs, err := cmd.Flags().GetString("config")
+	config, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}

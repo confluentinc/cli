@@ -18,7 +18,7 @@ func (c *command) newGenerateFunction() *cobra.Command {
 		RunE:  c.generate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Generate a master key`,
+				Text: "Generate a master key.",
 				Code: "confluent secret master-key generate --local-secrets-file /path/to/secrets.txt --passphrase my-passphrase",
 			},
 		),

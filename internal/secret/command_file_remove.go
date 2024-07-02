@@ -26,7 +26,7 @@ func (c *command) newRemoveCommand() *cobra.Command {
 }
 
 func (c *command) remove(cmd *cobra.Command, _ []string) error {
-	configs, err := cmd.Flags().GetString("config")
+	config, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
