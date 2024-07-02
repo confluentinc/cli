@@ -19,8 +19,7 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	keystore     *keystore.ConfigKeyStore
-	flagResolver pcmd.FlagResolver
+	keystore *keystore.ConfigKeyStore
 }
 
 const (
@@ -38,17 +37,14 @@ const (
 	unableToStoreApiKeyErrorMsg         = "unable to store API key locally: %w"
 )
 
-func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
 		Short:       "Manage API keys.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-		flagResolver:            resolver,
-	}
+	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
@@ -125,14 +121,6 @@ func (c *command) setKeyStoreIfNil() {
 	if c.keystore == nil {
 		c.keystore = &keystore.ConfigKeyStore{Config: c.Config}
 	}
-}
-
-func (c *command) parseFlagResolverPromptValue(source, prompt string, secure bool) (string, error) {
-	val, err := c.flagResolver.ValueFrom(source, prompt, secure)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(val), nil
 }
 
 func (c *command) validArgs(cmd *cobra.Command, args []string) []string {

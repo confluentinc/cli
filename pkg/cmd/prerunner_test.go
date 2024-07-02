@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -21,7 +20,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
-	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	pmock "github.com/confluentinc/cli/v3/pkg/mock"
@@ -93,10 +91,6 @@ func getPreRunBase() *pcmd.PreRun {
 			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
 				return "", "", nil
 			},
-		},
-		FlagResolver: &pcmd.FlagResolverImpl{
-			Prompt: &form.RealPrompt{},
-			Out:    os.Stdout,
 		},
 		CCloudClientFactory: &climock.CCloudClientFactory{
 			JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {

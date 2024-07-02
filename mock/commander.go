@@ -1,8 +1,6 @@
 package mock
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -14,12 +12,10 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	pmock "github.com/confluentinc/cli/v3/pkg/mock"
 	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
 type Commander struct {
-	FlagResolver      pcmd.FlagResolver
 	Client            *ccloudv1.Client
 	V2Client          *ccloudv2.Client
 	MDSClient         *mdsv1.APIClient
@@ -33,12 +29,7 @@ type Commander struct {
 var _ pcmd.PreRunner = (*Commander)(nil)
 
 func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsClient *mdsv1.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *config.Config) pcmd.PreRunner {
-	flagResolverMock := &pcmd.FlagResolverImpl{
-		Prompt: &pmock.Prompt{},
-		Out:    os.Stdout,
-	}
 	return &Commander{
-		FlagResolver:      flagResolverMock,
 		Client:            client,
 		V2Client:          v2Client,
 		MDSClient:         mdsClient,

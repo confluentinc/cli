@@ -29,12 +29,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	config, err := cmd.Flags().GetString("config")
-	if err != nil {
-		return err
-	}
-
-	newConfigs, err := c.getConfigs(config, "config properties", "", false)
+	configs, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
@@ -44,7 +39,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.plugin.UpdateEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs); err != nil {
+	if err := c.plugin.UpdateEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, configs); err != nil {
 		return err
 	}
 

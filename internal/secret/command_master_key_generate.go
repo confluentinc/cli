@@ -1,8 +1,6 @@
 package secret
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -20,12 +18,8 @@ func (c *command) newGenerateFunction() *cobra.Command {
 		RunE:  c.generate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Pipe the passphrase from stdin:`,
-				Code: "confluent secret master-key generate --local-secrets-file /path/to/secrets.txt --passphrase -",
-			},
-			examples.Example{
-				Text: `Read the passphrase from the file "/User/bob/secret.properties":`,
-				Code: "confluent secret master-key generate --local-secrets-file /path/to/secrets.txt --passphrase @/User/bob/secret.properties",
+				Text: `Generate a master key`,
+				Code: "confluent secret master-key generate --local-secrets-file /path/to/secrets.txt --passphrase my-passphrase",
 			},
 		),
 	}
@@ -35,25 +29,14 @@ func (c *command) newGenerateFunction() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("passphrase"))
 
 	return cmd
 }
 
 func (c *command) generate(cmd *cobra.Command, _ []string) error {
-	passphraseSource, err := cmd.Flags().GetString("passphrase")
+	passphrase, err := cmd.Flags().GetString("passphrase")
 	if err != nil {
-		return err
-	}
-
-	passphrase, err := c.flagResolver.ValueFrom(passphraseSource, "Master Key Passphrase: ", true)
-	if err != nil {
-		switch err {
-		case pcmd.ErrUnexpectedStdinPipe:
-			// TODO: should we require this or just assume that pipe to stdin implies '--passphrase -' ?
-			return fmt.Errorf("specify `--passphrase -` if you intend to pipe your passphrase over stdin")
-		case pcmd.ErrNoPipe:
-			return fmt.Errorf("pipe your passphrase over stdin")
-		}
 		return err
 	}
 

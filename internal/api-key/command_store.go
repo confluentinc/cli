@@ -26,23 +26,15 @@ work. For example, the Kafka topic consume and produce commands require an API s
 
 func (c *command) newStoreCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "store [api-key] [secret]",
+		Use:   "store <api-key> <secret>",
 		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
-		Args:  cobra.MaximumNArgs(2),
+		Args:  cobra.ExactArgs(2),
 		RunE:  c.store,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pass the API key and secret as arguments",
 				Code: "confluent api-key store my-key my-secret",
-			},
-			examples.Example{
-				Text: "Get prompted for only the API secret",
-				Code: "confluent api-key store my-key",
-			},
-			examples.Example{
-				Text: "Get prompted for both the API key and secret",
-				Code: "confluent api-key store",
 			},
 		),
 	}
@@ -82,28 +74,9 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	var key string
-	if len(args) == 0 {
-		key, err = c.parseFlagResolverPromptValue("", "Key: ", false)
-		if err != nil {
-			return err
-		}
-	} else {
-		key = args[0]
-	}
+	key := args[0]
+	secret := args[1]
 
-	var secret string
-	if len(args) < 2 {
-		secret, err = c.parseFlagResolverPromptValue("", "Secret: ", true)
-		if err != nil {
-			return err
-		}
-	} else if len(args) == 2 {
-		secret, err = c.parseFlagResolverPromptValue(args[1], "", true)
-		if err != nil {
-			return err
-		}
-	}
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return err
