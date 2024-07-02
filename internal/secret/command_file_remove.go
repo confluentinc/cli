@@ -41,7 +41,7 @@ func (c *command) remove(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.plugin.RemoveEncryptedPasswords(configFile, localSecretsFile, configs); err != nil {
+	if err := c.plugin.RemoveEncryptedPasswords(configFile, localSecretsFile, config); err != nil {
 		return err
 	}
 
