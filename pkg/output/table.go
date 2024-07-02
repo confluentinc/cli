@@ -249,9 +249,9 @@ func (t *Table) isMap() bool {
 }
 
 func isZero(value reflect.Value) bool {
-	// special case: value.IsZero() doesn't evaluate to true for maps that are empty but not nil
-	if value.Kind() == reflect.Map {
-		return len(value.MapKeys()) == 0
+	// special cases: value.IsZero() doesn't evaluate to true for maps or slices that are empty but not nil
+	if value.Kind() == reflect.Map || value.Kind() == reflect.Slice {
+		return value.Len() == 0
 	}
 
 	return value.IsZero()
