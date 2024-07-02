@@ -78,7 +78,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	updateClient := update.NewClient(cfg)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
-	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(), Out: os.Stdout}
 	jwtValidator := jwt.NewValidator()
 	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(form.NewPrompt(), ccloudClient)
@@ -95,7 +94,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 		Config:                  cfg,
 		AuthTokenHandler:        authTokenHandler,
 		CCloudClientFactory:     ccloudClientFactory,
-		FlagResolver:            flagResolver,
 		JWTValidator:            jwtValidator,
 		LoginCredentialsManager: loginCredentialsManager,
 		MDSClientManager:        mdsClientManager,
@@ -105,7 +103,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 
 	cmd.AddCommand(admin.New(prerunner, cfg.IsTest))
 	cmd.AddCommand(ai.New(prerunner))
-	cmd.AddCommand(apikey.New(prerunner, flagResolver))
+	cmd.AddCommand(apikey.New(prerunner))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(billing.New(prerunner))
@@ -114,7 +112,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(cloudsignup.New(prerunner))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(configuration.New(cfg, prerunner))
-	cmd.AddCommand(context.New(prerunner, flagResolver))
+	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
@@ -132,7 +130,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner))
-	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
+	cmd.AddCommand(secret.New(prerunner, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner, updateClient))
