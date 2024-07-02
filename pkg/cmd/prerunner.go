@@ -46,7 +46,6 @@ type PreRunner interface {
 type PreRun struct {
 	Config                  *config.Config
 	UpdateClient            update.Client
-	FlagResolver            FlagResolver
 	Version                 *version.Version
 	CCloudClientFactory     pauth.CCloudClientFactory
 	MDSClientManager        pauth.MDSClientManager
