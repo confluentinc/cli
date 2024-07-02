@@ -15,7 +15,7 @@ func (s *CLITestSuite) TestAsyncapiExport() {
 		{args: "environment use " + testserver.SRApiEnvId},
 		// Spec Generated
 		{args: "asyncapi export", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi", authKafka: true},
-		{args: "asyncapi export --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: true},
+		{args: "asyncapi export --schema-registry-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: true},
 		{args: "asyncapi export --topics topic1 --file asyncapi-topic-specified.yaml", fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: true},
 		{args: "asyncapi export --topics topic2 --file asyncapi-no-topics.yaml", fixture: "asyncapi/export-no-topics.golden", useKafka: "lkc-asyncapi", authKafka: true},
 		{args: `asyncapi export --topics "topic*" --file asyncapi-topic-specified.yaml`, fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: true},
