@@ -14,37 +14,37 @@ import (
 )
 
 type redeemHumanOut struct {
-	Id                         string `human:"ID"`
-	ApiKey                     string `human:"API Key"`
-	ApiSecret                  string `human:"API Secret"`
-	KafkaBootstrapUrl          string `human:"Kafka Bootstrap URL"`
-	SchemaRegistryApiKey       string `human:"Schema Registry API Key"`
-	SchemaRegistryAPISecret    string `human:"Schema Registry API Secret"`
-	SchemaRegistryUrl          string `human:"Schema Registry URL"`
-	Resources                  string `human:"Resources"`
-	NetworkDnsDomain           string `human:"Network DNS Domain"`
-	NetworkZones               string `human:"Network Zones"`
-	NetworkZonalSubdomains     string `human:"Network Zonal Subdomains"`
-	NetworkKind                string `human:"Network Kind"`
-	NetworkPrivateLinkDataType string `human:"Network Private Link Data Type"`
-	NetworkPrivateLinkData     string `human:"Network Private Link Data"`
+	Id                         string            `human:"ID"`
+	ApiKey                     string            `human:"API Key"`
+	ApiSecret                  string            `human:"API Secret"`
+	KafkaBootstrapUrl          string            `human:"Kafka Bootstrap URL"`
+	SchemaRegistryApiKey       string            `human:"Schema Registry API Key"`
+	SchemaRegistryAPISecret    string            `human:"Schema Registry API Secret"`
+	SchemaRegistryUrl          string            `human:"Schema Registry URL"`
+	Resources                  string            `human:"Resources"`
+	NetworkDnsDomain           string            `human:"Network DNS Domain"`
+	NetworkZones               string            `human:"Network Zones"`
+	NetworkZonalSubdomains     map[string]string `human:"Network Zonal Subdomains"`
+	NetworkKind                string            `human:"Network Kind"`
+	NetworkPrivateLinkDataType string            `human:"Network Private Link Data Type"`
+	NetworkPrivateLinkData     string            `human:"Network Private Link Data"`
 }
 
 type redeemSerializedOut struct {
-	Id                         string   `serialized:"id"`
-	ApiKey                     string   `serialized:"api_key"`
-	ApiSecret                  string   `serialized:"api_secret"`
-	KafkaBootstrapUrl          string   `serialized:"kafka_bootstrap_url"`
-	SchemaRegistryApiKey       string   `serialized:"schema_registry_api_key"`
-	SchemaRegistryAPISecret    string   `serialized:"schema_registry_api_secret"`
-	SchemaRegistryUrl          string   `serialized:"schema_registry_url"`
-	Resources                  []string `serialized:"resources"`
-	NetworkDnsDomain           string   `serialized:"network_dns_domain"`
-	NetworkZones               string   `serialized:"network_zones"`
-	NetworkZonalSubdomains     []string `serialized:"network_zonal_subdomains"`
-	NetworkKind                string   `serialized:"network_kind"`
-	NetworkPrivateLinkDataType string   `serialized:"network_private_link_data_type"`
-	NetworkPrivateLinkData     string   `serialized:"network_private_link_data"`
+	Id                         string            `serialized:"id"`
+	ApiKey                     string            `serialized:"api_key"`
+	ApiSecret                  string            `serialized:"api_secret"`
+	KafkaBootstrapUrl          string            `serialized:"kafka_bootstrap_url"`
+	SchemaRegistryApiKey       string            `serialized:"schema_registry_api_key"`
+	SchemaRegistryAPISecret    string            `serialized:"schema_registry_api_secret"`
+	SchemaRegistryUrl          string            `serialized:"schema_registry_url"`
+	Resources                  []string          `serialized:"resources"`
+	NetworkDnsDomain           string            `serialized:"network_dns_domain"`
+	NetworkZones               []string          `serialized:"network_zones"`
+	NetworkZonalSubdomains     map[string]string `serialized:"network_zonal_subdomains"`
+	NetworkKind                string            `serialized:"network_kind"`
+	NetworkPrivateLinkDataType string            `serialized:"network_private_link_data_type"`
+	NetworkPrivateLinkData     string            `serialized:"network_private_link_data"`
 }
 
 func (c *command) newRedeemCommand() *cobra.Command {
@@ -131,25 +131,24 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 				Resources:                  strings.Join(resources, ", "),
 				NetworkDnsDomain:           network.GetDnsDomain(),
 				NetworkZones:               strings.Join(network.GetZones(), ", "),
-				NetworkZonalSubdomains:     strings.Join(mapSubdomainsToList(network.GetZonalSubdomains()), ", "),
+				NetworkZonalSubdomains:     network.GetZonalSubdomains(),
 				NetworkKind:                networkDetails.networkKind,
 				NetworkPrivateLinkDataType: networkDetails.privateLinkDataType,
 				NetworkPrivateLinkData:     networkDetails.privateLinkData,
 			})
 		} else {
 			table.Add(&redeemSerializedOut{
-				Id:                      redeemResponse.GetId(),
-				ApiKey:                  redeemResponse.GetApiKey(),
-				ApiSecret:               redeemResponse.GetSecret(),
-				KafkaBootstrapUrl:       redeemResponse.GetKafkaBootstrapUrl(),
-				SchemaRegistryApiKey:    redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistryAPISecret: redeemResponse.GetSchemaRegistrySecret(),
-				SchemaRegistryUrl:       redeemResponse.GetSchemaRegistryUrl(),
-				Resources:               resources,
-				NetworkDnsDomain:        network.GetDnsDomain(),
-				// TODO: Serialize array instead of string in next major version
-				NetworkZones:               strings.Join(network.GetZones(), ","),
-				NetworkZonalSubdomains:     mapSubdomainsToList(network.GetZonalSubdomains()),
+				Id:                         redeemResponse.GetId(),
+				ApiKey:                     redeemResponse.GetApiKey(),
+				ApiSecret:                  redeemResponse.GetSecret(),
+				KafkaBootstrapUrl:          redeemResponse.GetKafkaBootstrapUrl(),
+				SchemaRegistryApiKey:       redeemResponse.GetSchemaRegistryApiKey(),
+				SchemaRegistryAPISecret:    redeemResponse.GetSchemaRegistrySecret(),
+				SchemaRegistryUrl:          redeemResponse.GetSchemaRegistryUrl(),
+				Resources:                  resources,
+				NetworkDnsDomain:           network.GetDnsDomain(),
+				NetworkZones:               network.GetZones(),
+				NetworkZonalSubdomains:     network.GetZonalSubdomains(),
 				NetworkKind:                networkDetails.networkKind,
 				NetworkPrivateLinkDataType: networkDetails.privateLinkDataType,
 				NetworkPrivateLinkData:     networkDetails.privateLinkData,
