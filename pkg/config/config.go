@@ -326,7 +326,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 	// We prefix encrypted tokens with "AES/GCM/NoPadding" on Unix systems and "DPAPI" on Windows to ensure that they are only encrypted once.
 	prefix := secret.AesGcm
 	if runtime.GOOS == "windows" {
-		prefix = secret.DPAPI
+		prefix = secret.Dpapi
 	}
 	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, prefix) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
 
