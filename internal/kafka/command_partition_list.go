@@ -53,10 +53,10 @@ func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, partition := range partitions {
 		list.Add(&partitionOut{
-			ClusterId:   partition.GetClusterId(),
-			TopicName:   partition.GetTopicName(),
-			PartitionId: partition.GetPartitionId(),
-			LeaderId:    parseLeaderId(partition.Leader.GetRelated()),
+			Cluster:   partition.GetClusterId(),
+			TopicName: partition.GetTopicName(),
+			Partition: partition.GetPartitionId(),
+			Leader:    parseLeaderId(partition.Leader.GetRelated()),
 		})
 	}
 	return list.Print()

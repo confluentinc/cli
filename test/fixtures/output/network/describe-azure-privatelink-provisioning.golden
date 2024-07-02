@@ -1,6 +1,5 @@
 +----------------------------+-------------------+
 | ID                         | n-abcde12         |
-| Environment                | env-00000         |
 | Name                       | dev-azure-eastus2 |
 | Cloud                      | AZURE             |
 | Region                     | eastus2           |

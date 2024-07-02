@@ -8,15 +8,15 @@ import (
 )
 
 type summarizeOut struct {
-	ClusterId         string `human:"Cluster" serialized:"cluster_id"`
-	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group_id"`
-	TotalLag          int64  `human:"Total Lag" serialized:"total_lag"`
-	MaxLag            int64  `human:"Max Lag" serialized:"max_lag"`
-	MaxLagConsumerId  string `human:"Max Lag Consumer" serialized:"max_lag_consumer_id"`
-	MaxLagInstanceId  string `human:"Max Lag Instance" serialized:"max_lag_instance_id"`
-	MaxLagClientId    string `human:"Max Lag Client" serialized:"max_lag_client_id"`
-	MaxLagTopic       string `human:"Max Lag Topic" serialized:"max_lag_topic"`
-	MaxLagPartitionId int32  `human:"Max Lag Partition" serialized:"max_lag_partition_id"`
+	Cluster         string `human:"Cluster" serialized:"cluster"`
+	ConsumerGroup   string `human:"Consumer Group" serialized:"consumer_group"`
+	TotalLag        int64  `human:"Total Lag" serialized:"total_lag"`
+	MaxLag          int64  `human:"Max Lag" serialized:"max_lag"`
+	MaxLagConsumer  string `human:"Max Lag Consumer" serialized:"max_lag_consumer"`
+	MaxLagInstance  string `human:"Max Lag Instance" serialized:"max_lag_instance"`
+	MaxLagClient    string `human:"Max Lag Client" serialized:"max_lag_client"`
+	MaxLagTopic     string `human:"Max Lag Topic" serialized:"max_lag_topic"`
+	MaxLagPartition int32  `human:"Max Lag Partition" serialized:"max_lag_partition"`
 }
 
 func (c *consumerCommand) newLagSummarizeCommand() *cobra.Command {
@@ -54,15 +54,15 @@ func (c *consumerCommand) groupLagSummarize(cmd *cobra.Command, args []string) e
 
 	table := output.NewTable(cmd)
 	table.Add(&summarizeOut{
-		ClusterId:         summary.GetClusterId(),
-		ConsumerGroupId:   summary.GetConsumerGroupId(),
-		TotalLag:          summary.GetTotalLag(),
-		MaxLag:            summary.GetMaxLag(),
-		MaxLagConsumerId:  summary.GetMaxLagConsumerId(),
-		MaxLagInstanceId:  summary.GetMaxLagInstanceId(),
-		MaxLagClientId:    summary.GetMaxLagClientId(),
-		MaxLagTopic:       summary.GetMaxLagTopicName(),
-		MaxLagPartitionId: summary.GetMaxLagPartitionId(),
+		Cluster:         summary.GetClusterId(),
+		ConsumerGroup:   summary.GetConsumerGroupId(),
+		TotalLag:        summary.GetTotalLag(),
+		MaxLag:          summary.GetMaxLag(),
+		MaxLagConsumer:  summary.GetMaxLagConsumerId(),
+		MaxLagInstance:  summary.GetMaxLagInstanceId(),
+		MaxLagClient:    summary.GetMaxLagClientId(),
+		MaxLagTopic:     summary.GetMaxLagTopicName(),
+		MaxLagPartition: summary.GetMaxLagPartitionId(),
 	})
 	return table.Print()
 }

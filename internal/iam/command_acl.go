@@ -14,14 +14,14 @@ import (
 )
 
 type out struct {
-	KafkaClusterId string                  `human:"Kafka Cluster" serialized:"kafka_cluster_id"`
-	Principal      string                  `human:"Principal" serialized:"principal"`
-	Permission     mdsv1.AclPermissionType `human:"Permission" serialized:"permission"`
-	Operation      mdsv1.AclOperation      `human:"Operation" serialized:"operation"`
-	Host           string                  `human:"Host" serialized:"host"`
-	ResourceType   mdsv1.AclResourceType   `human:"Resource Type" serialized:"resource_type"`
-	ResourceName   string                  `human:"Resource Name" serialized:"resource_name"`
-	PatternType    mdsv1.PatternType       `human:"Pattern Type" serialized:"pattern_type"`
+	KafkaCluster string                  `human:"Kafka Cluster" serialized:"kafka_cluster"`
+	Principal    string                  `human:"Principal" serialized:"principal"`
+	Permission   mdsv1.AclPermissionType `human:"Permission" serialized:"permission"`
+	Operation    mdsv1.AclOperation      `human:"Operation" serialized:"operation"`
+	Host         string                  `human:"Host" serialized:"host"`
+	ResourceType mdsv1.AclResourceType   `human:"Resource Type" serialized:"resource_type"`
+	ResourceName string                  `human:"Resource Name" serialized:"resource_name"`
+	PatternType  mdsv1.PatternType       `human:"Pattern Type" serialized:"pattern_type"`
 }
 
 type aclCommand struct {
@@ -102,14 +102,14 @@ func printAcls(cmd *cobra.Command, kafkaClusterId string, aclBindings []mdsv1.Ac
 	list := output.NewList(cmd)
 	for _, binding := range aclBindings {
 		list.Add(&out{
-			KafkaClusterId: kafkaClusterId,
-			Principal:      binding.Entry.Principal,
-			Permission:     binding.Entry.PermissionType,
-			Operation:      binding.Entry.Operation,
-			Host:           binding.Entry.Host,
-			ResourceType:   binding.Pattern.ResourceType,
-			ResourceName:   binding.Pattern.Name,
-			PatternType:    binding.Pattern.PatternType,
+			KafkaCluster: kafkaClusterId,
+			Principal:    binding.Entry.Principal,
+			Permission:   binding.Entry.PermissionType,
+			Operation:    binding.Entry.Operation,
+			Host:         binding.Entry.Host,
+			ResourceType: binding.Pattern.ResourceType,
+			ResourceName: binding.Pattern.Name,
+			PatternType:  binding.Pattern.PatternType,
 		})
 	}
 	return list.Print()

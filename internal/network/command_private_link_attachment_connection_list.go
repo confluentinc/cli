@@ -61,20 +61,20 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 		}
 
 		out := &privateLinkAttachmentConnectionOut{
-			Id:                      connection.GetId(),
-			Name:                    connection.Spec.GetDisplayName(),
-			PrivateLinkAttachmentId: connection.Spec.PrivateLinkAttachment.GetId(),
-			Phase:                   connection.Status.GetPhase(),
+			Id:                    connection.GetId(),
+			Name:                  connection.Spec.GetDisplayName(),
+			PrivateLinkAttachment: connection.Spec.PrivateLinkAttachment.GetId(),
+			Phase:                 connection.Status.GetPhase(),
 		}
 
 		if connection.Spec.HasCloud() {
 			switch {
 			case connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection != nil:
 				out.Cloud = CloudAws
-				out.AwsVpcEndpointId = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
+				out.AwsVpcEndpoint = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
 			case connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection != nil:
 				out.Cloud = CloudAzure
-				out.AzurePrivateEndpointResourceId = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
+				out.AzurePrivateEndpointResource = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
 			}
 		}
 
@@ -84,7 +84,7 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 				out.AwsVpcEndpointServiceName = connection.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus.GetVpcEndpointServiceName()
 			case connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus != nil:
 				out.AzurePrivateLinkServiceAlias = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceAlias()
-				out.AzurePrivateLinkServiceId = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceResourceId()
+				out.AzurePrivateLinkService = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceResourceId()
 			}
 		}
 
