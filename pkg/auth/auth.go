@@ -76,8 +76,8 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 		AuthToken:        token,
 		AuthRefreshToken: refreshToken,
 	}
-	var ctxName string
-	ctxName = GenerateContextName(username, url, caCertPath)
+
+	ctxName := GenerateContextName(username, url, caCertPath)
 	return addOrUpdateContext(cfg, false, credentials, ctxName, url, state, caCertPath, "", save)
 }
 
