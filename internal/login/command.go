@@ -291,7 +291,14 @@ func (c *command) getCaCertPath(cmd *cobra.Command) (string, error) {
 	}
 
 	if certificateAuthorityPath == "" {
-		return os.Getenv(pauth.ConfluentPlatformCertificateAuthorityPath), nil
+		certificateAuthorityPath = os.Getenv(pauth.ConfluentPlatformCertificateAuthorityPath)
+	}
+
+	if certificateAuthorityPath != "" {
+		certificateAuthorityPath, err = filepath.Abs(certificateAuthorityPath)
+		if err != nil {
+			return "", false, err
+		}
 	}
 
 	return certificateAuthorityPath, nil
