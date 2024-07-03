@@ -1,7 +1,7 @@
 Manage payment method.
 
 Usage:
-  confluent admin payment [command]
+  confluent billing payment [command]
 
 Available Commands:
   describe    Describe the active payment method.
@@ -12,4 +12,4 @@ Global Flags:
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent admin payment [command] --help" for more information about a command.
+Use "confluent billing payment [command] --help" for more information about a command.

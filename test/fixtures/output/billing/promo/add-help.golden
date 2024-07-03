@@ -1,7 +1,7 @@
-Describe the active payment method.
+Add a new promo code.
 
 Usage:
-  confluent admin payment describe [flags]
+  confluent billing promo add <code> [flags]
 
 Global Flags:
   -h, --help            Show help for this command.
