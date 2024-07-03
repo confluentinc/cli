@@ -1,73 +1,73 @@
 [
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 0,
-    "broker_id": 1001,
+    "partition": 0,
+    "broker": 1001,
     "is_leader": true,
     "is_in_isr": true
   },
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 0,
-    "broker_id": 1002,
+    "partition": 0,
+    "broker": 1002,
     "is_leader": false,
     "is_in_isr": true
   },
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 0,
-    "broker_id": 1003,
+    "partition": 0,
+    "broker": 1003,
     "is_leader": false,
     "is_in_isr": true
   },
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 1,
-    "broker_id": 1001,
+    "partition": 1,
+    "broker": 1001,
     "is_leader": false,
     "is_in_isr": false
   },
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 1,
-    "broker_id": 1002,
+    "partition": 1,
+    "broker": 1002,
     "is_leader": true,
     "is_in_isr": true
   },
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 1,
-    "broker_id": 1003,
+    "partition": 1,
+    "broker": 1003,
     "is_leader": false,
     "is_in_isr": true
   },
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 2,
-    "broker_id": 1001,
+    "partition": 2,
+    "broker": 1001,
     "is_leader": false,
     "is_in_isr": false
   },
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 2,
-    "broker_id": 1002,
+    "partition": 2,
+    "broker": 1002,
     "is_leader": false,
     "is_in_isr": false
   },
   {
-    "cluster_id": "cluster-1",
+    "cluster": "cluster-1",
     "topic_name": "topic-exist",
-    "partition_id": 2,
-    "broker_id": 1003,
+    "partition": 2,
+    "broker": 1003,
     "is_leader": true,
     "is_in_isr": true
   }

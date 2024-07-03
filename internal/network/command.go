@@ -150,7 +150,7 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 		ActiveConnectionTypes:    strings.Join(network.Status.GetActiveConnectionTypes().Items, ", "),
 	}
 
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		human.DnsResolution = network.Spec.DnsConfig.GetResolution()
@@ -229,7 +229,7 @@ func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1N
 		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
 	}
 
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		serialized.DnsResolution = network.Spec.DnsConfig.GetResolution()

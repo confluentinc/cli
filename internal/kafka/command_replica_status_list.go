@@ -15,10 +15,10 @@ import (
 )
 
 type replicaHumanOut struct {
-	ClusterId          string `human:"Cluster"`
+	Cluster            string `human:"Cluster"`
 	TopicName          string `human:"Topic Name"`
-	BrokerId           int32  `human:"Broker ID"`
-	PartitionId        int32  `human:"Partition ID"`
+	Broker             int32  `human:"Broker"`
+	Partition          int32  `human:"Partition"`
 	IsLeader           bool   `human:"Leader"`
 	IsObserver         bool   `human:"Observer"`
 	IsIsrEligible      bool   `human:"ISR Eligible"`
@@ -32,10 +32,10 @@ type replicaHumanOut struct {
 }
 
 type replicaSerializedOut struct {
-	ClusterId          string `serialized:"cluster_id"`
+	Cluster            string `serialized:"cluster"`
 	TopicName          string `serialized:"topic_name"`
-	BrokerId           int32  `serialized:"broker_id"`
-	PartitionId        int32  `serialized:"partition_id"`
+	Broker             int32  `serialized:"broker"`
+	Partition          int32  `serialized:"partition"`
 	IsLeader           bool   `serialized:"is_leader"`
 	IsObserver         bool   `serialized:"is_observer"`
 	IsIsrEligible      bool   `serialized:"is_isr_eligible"`
@@ -111,10 +111,10 @@ func (c *replicaCommand) statusList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		for _, replica := range replicas.Data {
 			list.Add(&replicaHumanOut{
-				ClusterId:          replica.ClusterId,
+				Cluster:            replica.ClusterId,
 				TopicName:          replica.TopicName,
-				BrokerId:           replica.BrokerId,
-				PartitionId:        replica.PartitionId,
+				Broker:             replica.BrokerId,
+				Partition:          replica.PartitionId,
 				IsLeader:           replica.IsLeader,
 				IsObserver:         replica.IsObserver,
 				IsIsrEligible:      replica.IsIsrEligible,
@@ -130,10 +130,10 @@ func (c *replicaCommand) statusList(cmd *cobra.Command, _ []string) error {
 	} else {
 		for _, replica := range replicas.Data {
 			list.Add(&replicaSerializedOut{
-				ClusterId:          replica.ClusterId,
+				Cluster:            replica.ClusterId,
 				TopicName:          replica.TopicName,
-				BrokerId:           replica.BrokerId,
-				PartitionId:        replica.PartitionId,
+				Broker:             replica.BrokerId,
+				Partition:          replica.PartitionId,
 				IsLeader:           replica.IsLeader,
 				IsObserver:         replica.IsObserver,
 				IsIsrEligible:      replica.IsIsrEligible,

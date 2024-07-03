@@ -36,7 +36,7 @@ func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
 type kekOut struct {
 	Name          string            `human:"Name,omitempty" serialized:"name,omitempty" `
 	KmsType       string            `human:"KMS Type,omitempty" serialized:"kms_type,omitempty"`
-	KmsKeyId      string            `human:"KMS Key ID,omitempty" serialized:"kms_key_id,omitempty"`
+	KmsKey        string            `human:"KMS Key,omitempty" serialized:"kms_key,omitempty"`
 	KmsProperties map[string]string `human:"KMS Properties,omitempty" serialized:"kms_properties,omitempty"`
 	Doc           string            `human:"Doc,omitempty" serialized:"doc,omitempty"`
 	IsShared      bool              `human:"Shared,omitempty" serialized:"is_shared,omitempty"`
@@ -49,7 +49,7 @@ func printKek(cmd *cobra.Command, kek srsdk.Kek) error {
 	table.Add(&kekOut{
 		Name:          kek.GetName(),
 		KmsType:       kek.GetKmsType(),
-		KmsKeyId:      kek.GetKmsKeyId(),
+		KmsKey:        kek.GetKmsKeyId(),
 		KmsProperties: kek.GetKmsProps(),
 		Doc:           kek.GetDoc(),
 		IsShared:      kek.GetShared(),
