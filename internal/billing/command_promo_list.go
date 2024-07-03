@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v3/pkg/billing"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -57,7 +58,7 @@ func (c *command) promoList(cmd *cobra.Command, _ []string) error {
 		} else {
 			list.Add(&promoSerializedOut{
 				Code:       code.GetCode(),
-				Balance:    ConvertToUSD(code.GetBalance()),
+				Balance:    billing.ConvertToUSD(code.GetBalance()),
 				Expiration: code.GetCreditExpirationDate().GetSeconds(),
 			})
 		}
@@ -66,12 +67,7 @@ func (c *command) promoList(cmd *cobra.Command, _ []string) error {
 }
 
 func formatBalance(balance, amount int64) string {
-	return fmt.Sprintf("$%.2f/%.2f USD", ConvertToUSD(balance), ConvertToUSD(amount))
-}
-
-func ConvertToUSD(balance int64) float64 {
-	// The backend represents money in hundredths of cents
-	return float64(balance) / 10000
+	return fmt.Sprintf("$%.2f/%.2f USD", billing.ConvertToUSD(balance), billing.ConvertToUSD(amount))
 }
 
 func formatExpiration(seconds int64) string {
