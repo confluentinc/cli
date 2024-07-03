@@ -99,7 +99,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 		Version:                 cfg.Version,
 	}
 
-	cmd.AddCommand(ai.New(prerunner))
 	cmd.AddCommand(apikey.New(prerunner))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))

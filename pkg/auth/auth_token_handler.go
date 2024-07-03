@@ -150,7 +150,7 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 	if credentials.IsSSO {
 		if credentials.AuthRefreshToken != "" {
 			if authToken, err := refreshConfluentToken(mdsClient, credentials); err == nil {
-				return authToken, "", nil
+				return authToken, credentials.AuthRefreshToken, nil
 			}
 		}
 

@@ -75,12 +75,12 @@ func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error
 			})
 		} else {
 			table.Add(&consumerShareSerializedOut{
-				Id:                       share.GetId(),
-				ProviderName:             share.GetProviderUserName(),
-				ProviderOrganizationName: share.GetProviderOrganizationName(),
-				Status:                   share.Status.GetPhase(),
-				InviteExpiresAt:          share.GetInviteExpiresAt(),
-				NetworkDnsDomain:         network.GetDnsDomain(),
+				Id:                         share.GetId(),
+				ProviderName:               share.GetProviderUserName(),
+				ProviderOrganizationName:   share.GetProviderOrganizationName(),
+				Status:                     share.Status.GetPhase(),
+				InviteExpiresAt:            share.GetInviteExpiresAt(),
+				NetworkDnsDomain:           network.GetDnsDomain(),
 				NetworkZones:               network.GetZones(),
 				NetworkZonalSubdomains:     network.GetZonalSubdomains(),
 				NetworkKind:                networkDetails.networkKind,
