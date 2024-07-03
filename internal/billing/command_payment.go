@@ -8,7 +8,6 @@ func (c *command) newPaymentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "payment",
 		Short: "Manage payment method.",
-		Args:  cobra.NoArgs,
 	}
 
 	cmd.AddCommand(c.newDescribeCommand())
