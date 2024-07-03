@@ -1,4 +1,4 @@
-package admin
+package billing
 
 import (
 	"testing"
@@ -9,10 +9,6 @@ import (
 
 func TestFormatBalance(t *testing.T) {
 	require.Equal(t, "$0.00/1.00 USD", formatBalance(0, 10000))
-}
-
-func TestConvertToUSD(t *testing.T) {
-	require.Equal(t, 1.23, ConvertToUSD(12300))
 }
 
 func TestFormatExpiration(t *testing.T) {

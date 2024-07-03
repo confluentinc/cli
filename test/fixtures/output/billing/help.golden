@@ -5,6 +5,9 @@ Usage:
 
 Available Commands:
   cost        List Confluent Cloud billing costs.
+  payment     Manage payment method.
+  price       See Confluent Cloud pricing information.
+  promo       Manage promo codes.
 
 Global Flags:
   -h, --help            Show help for this command.

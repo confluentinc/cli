@@ -1,7 +1,7 @@
 Print an organization's price list.
 
 Usage:
-  confluent price list [flags]
+  confluent billing price list [flags]
 
 Flags:
       --cloud string          REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".

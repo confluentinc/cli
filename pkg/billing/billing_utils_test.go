@@ -6,6 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestConvertToUSD(t *testing.T) {
+	assert.Equal(t, 1.23, ConvertToUSD(12300))
+}
+
 func TestFormatPrice(t *testing.T) {
 	assert.Equal(t, "$1.00 USD/GB", FormatPrice(1, "GB"))
 }
