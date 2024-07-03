@@ -10,16 +10,16 @@ import (
 )
 
 type lagOut struct {
-	ClusterId       string `human:"Cluster" serialized:"cluster_id"`
-	ConsumerGroupId string `human:"Consumer Group" serialized:"consumer_group_id"`
-	Lag             int64  `human:"Lag" serialized:"lag"`
-	LogEndOffset    int64  `human:"Log End Offset" serialized:"log_end_offset"`
-	CurrentOffset   int64  `human:"Current Offset" serialized:"current_offset"`
-	ConsumerId      string `human:"Consumer" serialized:"consumer_id"`
-	InstanceId      string `human:"Instance" serialized:"instance_id"`
-	ClientId        string `human:"Client" serialized:"client_id"`
-	Topic           string `human:"Topic" serialized:"topic"`
-	PartitionId     int32  `human:"Partition" serialized:"partition_id"`
+	Cluster       string `human:"Cluster" serialized:"cluster"`
+	ConsumerGroup string `human:"Consumer Group" serialized:"consumer_group"`
+	Lag           int64  `human:"Lag" serialized:"lag"`
+	LogEndOffset  int64  `human:"Log End Offset" serialized:"log_end_offset"`
+	CurrentOffset int64  `human:"Current Offset" serialized:"current_offset"`
+	Consumer      string `human:"Consumer" serialized:"consumer"`
+	Instance      string `human:"Instance" serialized:"instance"`
+	Client        string `human:"Client" serialized:"client"`
+	Topic         string `human:"Topic" serialized:"topic"`
+	Partition     int32  `human:"Partition" serialized:"partition"`
 }
 
 func (c *consumerCommand) newLagCommand(cfg *config.Config) *cobra.Command {

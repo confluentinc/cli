@@ -1,9 +1,9 @@
 [
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1001,
-    "partition_id": 0,
+    "broker": 1001,
+    "partition": 0,
     "is_leader": true,
     "is_observer": false,
     "is_isr_eligible": false,
@@ -16,10 +16,10 @@
     "link_name": ""
   },
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1001,
-    "partition_id": 1,
+    "broker": 1001,
+    "partition": 1,
     "is_leader": false,
     "is_observer": false,
     "is_isr_eligible": false,
@@ -32,10 +32,10 @@
     "link_name": ""
   },
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1001,
-    "partition_id": 2,
+    "broker": 1001,
+    "partition": 2,
     "is_leader": false,
     "is_observer": false,
     "is_isr_eligible": false,
@@ -48,10 +48,10 @@
     "link_name": ""
   },
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1002,
-    "partition_id": 0,
+    "broker": 1002,
+    "partition": 0,
     "is_leader": false,
     "is_observer": false,
     "is_isr_eligible": false,
@@ -64,10 +64,10 @@
     "link_name": ""
   },
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1002,
-    "partition_id": 1,
+    "broker": 1002,
+    "partition": 1,
     "is_leader": true,
     "is_observer": false,
     "is_isr_eligible": false,
@@ -80,10 +80,10 @@
     "link_name": ""
   },
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1002,
-    "partition_id": 2,
+    "broker": 1002,
+    "partition": 2,
     "is_leader": false,
     "is_observer": false,
     "is_isr_eligible": false,
@@ -96,10 +96,10 @@
     "link_name": ""
   },
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1003,
-    "partition_id": 0,
+    "broker": 1003,
+    "partition": 0,
     "is_leader": false,
     "is_observer": false,
     "is_isr_eligible": false,
@@ -112,10 +112,10 @@
     "link_name": ""
   },
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1003,
-    "partition_id": 1,
+    "broker": 1003,
+    "partition": 1,
     "is_leader": false,
     "is_observer": false,
     "is_isr_eligible": false,
@@ -128,10 +128,10 @@
     "link_name": ""
   },
   {
-    "cluster_id": "",
+    "cluster": "",
     "topic_name": "topic-exist",
-    "broker_id": 1003,
-    "partition_id": 2,
+    "broker": 1003,
+    "partition": 2,
     "is_leader": true,
     "is_observer": false,
     "is_isr_eligible": false,

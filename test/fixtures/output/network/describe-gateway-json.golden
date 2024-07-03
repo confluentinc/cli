@@ -1,6 +1,5 @@
 {
   "id": "n-abcde13",
-  "environment_id": "env-00000",
   "name": "dev-aws-us-eastus1",
   "gateway": "gw-abcde1",
   "cloud": "AWS",

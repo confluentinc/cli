@@ -1,5 +1,5 @@
-   Cluster  | Topic Name  | Partition ID | Broker ID | Leader | In ISR  
-------------+-------------+--------------+-----------+--------+---------
-  cluster-1 | topic-exist |            0 |      1001 | true   | true    
-  cluster-1 | topic-exist |            0 |      1002 | false  | true    
-  cluster-1 | topic-exist |            0 |      1003 | false  | true    
+   Cluster  | Topic Name  | Partition | Broker | Leader | In ISR  
+------------+-------------+-----------+--------+--------+---------
+  cluster-1 | topic-exist |         0 |   1001 | true   | true    
+  cluster-1 | topic-exist |         0 |   1002 | false  | true    
+  cluster-1 | topic-exist |         0 |   1003 | false  | true    

@@ -15,9 +15,9 @@ import (
 )
 
 type out struct {
-	PluginName string `human:"Name" serialized:"plugin_name"`
-	PluginId   string `human:"ID" serialized:"plugin_id"`
-	FilePath   string `human:"File Path" serialized:"file_path"`
+	Name     string `human:"Name" serialized:"name"`
+	Id       string `human:"ID" serialized:"id"`
+	FilePath string `human:"File Path" serialized:"file_path"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -59,13 +59,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		pluginInfo := &out{
-			PluginName: plugin.ToCommandName(id),
-			PluginId:   id,
-			FilePath:   path,
+			Name:     plugin.ToCommandName(id),
+			Id:       id,
+			FilePath: path,
 		}
 
-		args := strings.Split(pluginInfo.PluginName, " ")
-		if cmd, _, _ := cmd.Root().Find(args[1:]); cmd.CommandPath() == pluginInfo.PluginName {
+		args := strings.Split(pluginInfo.Name, " ")
+		if cmd, _, _ := cmd.Root().Find(args[1:]); cmd.CommandPath() == pluginInfo.Name {
 			nameConflictPlugins = append(nameConflictPlugins, pluginInfo)
 		} else {
 			list.Add(pluginInfo)
@@ -76,7 +76,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			if visitedPaths.Contains(path) {
 				continue
 			}
-			overshadowedPlugins = append(overshadowedPlugins, &out{PluginName: pluginInfo.PluginName, FilePath: path})
+			overshadowedPlugins = append(overshadowedPlugins, &out{Name: pluginInfo.Name, FilePath: path})
 			visitedPaths.Add(path)
 		}
 	}
@@ -86,10 +86,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, pluginInfo := range nameConflictPlugins {
-		output.ErrPrintf(c.Config.EnableColor, "[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.Name, pluginInfo.FilePath)
 	}
 	for _, pluginInfo := range overshadowedPlugins {
-		output.ErrPrintf(c.Config.EnableColor, "[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.Name, pluginInfo.FilePath)
 	}
 
 	return nil

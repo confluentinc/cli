@@ -13,12 +13,12 @@ import (
 )
 
 type ReplicaOut struct {
-	ClusterId   string `human:"Cluster" serialized:"cluster_id"`
-	TopicName   string `human:"Topic Name" serialized:"topic_name"`
-	PartitionId int32  `human:"Partition ID" serialized:"partition_id"`
-	BrokerId    int32  `human:"Broker ID" serialized:"broker_id"`
-	IsLeader    bool   `human:"Leader" serialized:"is_leader"`
-	IsInIsr     bool   `human:"In ISR" serialized:"is_in_isr"`
+	Cluster   string `human:"Cluster" serialized:"cluster"`
+	TopicName string `human:"Topic Name" serialized:"topic_name"`
+	Partition int32  `human:"Partition" serialized:"partition"`
+	Broker    int32  `human:"Broker" serialized:"broker"`
+	IsLeader  bool   `human:"Leader" serialized:"is_leader"`
+	IsInIsr   bool   `human:"In ISR" serialized:"is_in_isr"`
 }
 
 func (c *replicaCommand) newListCommand() *cobra.Command {
@@ -96,12 +96,12 @@ func (c *replicaCommand) list(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for _, replica := range replicas {
 		list.Add(&ReplicaOut{
-			ClusterId:   replica.ClusterId,
-			TopicName:   replica.TopicName,
-			PartitionId: replica.PartitionId,
-			BrokerId:    replica.BrokerId,
-			IsLeader:    replica.IsLeader,
-			IsInIsr:     replica.IsInSync,
+			Cluster:   replica.ClusterId,
+			TopicName: replica.TopicName,
+			Partition: replica.PartitionId,
+			Broker:    replica.BrokerId,
+			IsLeader:  replica.IsLeader,
+			IsInIsr:   replica.IsInSync,
 		})
 	}
 	return list.Print()
