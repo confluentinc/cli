@@ -41,7 +41,7 @@ func (c *command) dekDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("kek-name")
+	kekName, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (c *command) dekDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dek, err := client.GetDekByVersion(name, subject, version, algorithm, all)
+	dek, err := client.GetDekByVersion(kekName, subject, version, algorithm, all)
 	if err != nil {
 		return err
 	}
