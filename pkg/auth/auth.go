@@ -54,7 +54,7 @@ func PersistLogout(config *config.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, isLegacyContext, save bool) error {
+func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, save bool) error {
 	if credentials.IsSSO {
 		// on-prem SSO login does not use a username or email
 		// the sub claim is used in place of a username since it is a unique identifier
@@ -77,11 +77,7 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 		AuthRefreshToken: refreshToken,
 	}
 	var ctxName string
-	if isLegacyContext {
-		ctxName = GenerateContextName(username, url, "")
-	} else {
-		ctxName = GenerateContextName(username, url, caCertPath)
-	}
+	ctxName = GenerateContextName(username, url, caCertPath)
 	return addOrUpdateContext(cfg, false, credentials, ctxName, url, state, caCertPath, "", save)
 }
 
