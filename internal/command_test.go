@@ -77,7 +77,7 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 	out, err := runWithConfig(cfg)
 	require.NoError(t, err)
 
-	// note users can still run "confluent billing payment update" or "confluent billing promo add" if the org is suspended
+	// Note that users can still run `confluent billing payment update` or `confluent billing promo add` if their organization is suspended
 	// but only due to end of free trial
 	commands := []string{
 		"billing", "cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "prompt", "shell", "update", "version",

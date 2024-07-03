@@ -18,6 +18,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	
 	cmd.AddCommand(c.newCostCommand())
 	cmd.AddCommand(c.newPaymentCommand())
 	cmd.AddCommand(c.newPriceCommand())
