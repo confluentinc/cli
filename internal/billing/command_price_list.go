@@ -1,4 +1,4 @@
-package price
+package billing
 
 import (
 	"fmt"
@@ -99,12 +99,12 @@ type row struct {
 	unit         string
 }
 
-func (c *command) newListCommand() *cobra.Command {
+func (c *command) newPriceListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Print an organization's price list.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.priceList,
 	}
 
 	pcmd.AddCloudFlag(cmd)
@@ -127,7 +127,7 @@ func (c *command) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) list(cmd *cobra.Command, _ []string) error {
+func (c *command) priceList(cmd *cobra.Command, _ []string) error {
 	filterFlags := []string{"cloud", "region", "availability", "cluster-type", "network-type"}
 
 	filters := make([]string, len(filterFlags))
