@@ -54,7 +54,7 @@ func PersistLogout(config *config.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, isLegacyContext, save bool) error {
+func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, save bool) error {
 	if credentials.IsSSO {
 		// on-prem SSO login does not use a username or email
 		// the sub claim is used in place of a username since it is a unique identifier
@@ -77,11 +77,7 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 		AuthRefreshToken: refreshToken,
 	}
 	var ctxName string
-	if isLegacyContext {
-		ctxName = GenerateContextName(username, url, "")
-	} else {
-		ctxName = GenerateContextName(username, url, caCertPath)
-	}
+	ctxName = GenerateContextName(username, url, caCertPath)
 	return addOrUpdateContext(cfg, false, credentials, ctxName, url, state, caCertPath, "", save)
 }
 
@@ -193,8 +189,7 @@ func GenerateCloudContextName(username, url string) string {
 	return GenerateContextName(username, url, "")
 }
 
-// if CP users use cacertpath then include that in the context name
-// (legacy CP users may still have context without cacertpath in the name but have cacertpath stored)
+// CP users use cacertpath, so include that in the context name
 func GenerateContextName(username, url, caCertPath string) string {
 	if caCertPath == "" {
 		return fmt.Sprintf("login-%s-%s", username, url)
