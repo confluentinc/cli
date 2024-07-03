@@ -1,6 +1,6 @@
---- cli/Makefile	2024-06-11 04:16:54.000000000 +0000
-+++ debian/Makefile	2024-06-11 03:50:15.000000000 +0000
-@@ -1,149 +1,144 @@
+--- cli/Makefile	2024-07-02 20:56:36.753423056 -0700
++++ debian/Makefile	2024-07-02 18:21:01.618798613 -0700
+@@ -1,146 +1,144 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -55,10 +55,10 @@
 -	cd src/ && \
 -	./make.bash && \
 -	cd ../../
--	PATH=$$(pwd)/go/bin:$$PATH GOROOT=$$(pwd)/go TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+-	PATH=$$(pwd)/go/bin:$$PATH GOROOT=$$(pwd)/go TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
 -	rm -rf go go-openssl go$$(cat .go-version).src.tar.gz
 -else
--	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+-	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
  endif
@@ -68,13 +68,13 @@
 -include ./mk-files/dry-run.mk
 -include ./mk-files/release.mk
 -include ./mk-files/release-test.mk
--include ./mk-files/release-notes.mk
--include ./mk-files/unrelease.mk
--include ./mk-files/utils.mk
 -
 -REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
--
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
+ 
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
@@ -83,10 +83,7 @@
 -S3_DEB_RPM_PROD_PREFIX=confluent-cli
 -S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
 -S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
- 
+-
 -.PHONY: clean
 -clean:
 -	for dir in bin dist docs legal prebuilt release-notes; do \

@@ -51,10 +51,10 @@ ifeq ($(GOLANG_FIPS),1)
 	cd src/ && \
 	./make.bash && \
 	cd ../../
-	PATH=$$(pwd)/go/bin:$$PATH GOROOT=$$(pwd)/go TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+	PATH=$$(pwd)/go/bin:$$PATH GOROOT=$$(pwd)/go TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
 	rm -rf go go-openssl go$$(cat .go-version).src.tar.gz
 else
-	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
+	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
 endif
 
 include ./mk-files/semver.mk
@@ -62,9 +62,6 @@ include ./mk-files/docs.mk
 include ./mk-files/dry-run.mk
 include ./mk-files/release.mk
 include ./mk-files/release-test.mk
-include ./mk-files/release-notes.mk
-include ./mk-files/unrelease.mk
-include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")

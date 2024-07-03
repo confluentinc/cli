@@ -43,12 +43,12 @@ func (c *command) dekSubjectList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("kek-name")
+	kekName, err := cmd.Flags().GetString("kek-name")
 	if err != nil {
 		return err
 	}
 
-	subjects, err := client.GetDekSubjects(name)
+	subjects, err := client.GetDekSubjects(kekName)
 	if err != nil {
 		return err
 	}
