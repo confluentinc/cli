@@ -1,6 +1,5 @@
 +----------------------------+--------------------------------+
 | ID                         | n-abcde2                       |
-| Environment                | env-00000                      |
 | Name                       | prod-gcp-us-central1           |
 | Cloud                      | GCP                            |
 | Region                     | us-central1                    |

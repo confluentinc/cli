@@ -81,7 +81,7 @@ func (c *command) privateLinkAttachmentList(cmd *cobra.Command, _ []string) erro
 				out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
 			case attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus != nil:
 				out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceAlias()
-				out.AzurePrivateLinkServiceId = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
+				out.AzurePrivateLinkServiceID = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
 			}
 		}
 

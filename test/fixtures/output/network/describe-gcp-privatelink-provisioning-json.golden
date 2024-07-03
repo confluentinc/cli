@@ -1,6 +1,5 @@
 {
   "id": "n-abcde11",
-  "environment_id": "env-00000",
   "name": "stag-gcp-us-central1",
   "cloud": "GCP",
   "region": "us-central1",

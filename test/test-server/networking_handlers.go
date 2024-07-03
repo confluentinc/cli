@@ -989,7 +989,7 @@ func getTransitGatewayAttachment(id, name string) networkingv1.NetworkingV1Trans
 			Network:     &networkingv1.ObjectReference{Id: "n-abcde1"},
 			Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecCloudOneOf{
 				NetworkingV1AwsTransitGatewayAttachment: &networkingv1.NetworkingV1AwsTransitGatewayAttachment{
-					Kind:             "AwsTransitGatewayAttachment",
+					Kind:             "AwsTransitGatewayAttachmentId",
 					RamShareArn:      "arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
 					Routes:           []string{"10.0.0.0/16"},
 					TransitGatewayId: "tgw-00000000000000000",
@@ -1066,7 +1066,7 @@ func handleNetworkingTransitGatewayAttachmentCreate(t *testing.T) http.HandlerFu
 					Network:     &networkingv1.ObjectReference{Id: body.Spec.Network.GetId()},
 					Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecCloudOneOf{
 						NetworkingV1AwsTransitGatewayAttachment: &networkingv1.NetworkingV1AwsTransitGatewayAttachment{
-							Kind:             "AwsTransitGatewayAttachment",
+							Kind:             "AwsTransitGatewayAttachmentId",
 							RamShareArn:      body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRamShareArn(),
 							Routes:           body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetRoutes(),
 							TransitGatewayId: body.Spec.Cloud.NetworkingV1AwsTransitGatewayAttachment.GetTransitGatewayId(),
