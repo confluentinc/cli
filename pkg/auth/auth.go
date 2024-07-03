@@ -189,8 +189,7 @@ func GenerateCloudContextName(username, url string) string {
 	return GenerateContextName(username, url, "")
 }
 
-// if CP users use cacertpath then include that in the context name
-// (legacy CP users may still have context without cacertpath in the name but have cacertpath stored)
+// CP users use cacertpath, so include that in the context name
 func GenerateContextName(username, url, caCertPath string) string {
 	if caCertPath == "" {
 		return fmt.Sprintf("login-%s-%s", username, url)
