@@ -13,8 +13,8 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/internal/admin"
 	pauth "github.com/confluentinc/cli/v3/pkg/auth"
+	"github.com/confluentinc/cli/v3/pkg/billing"
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
@@ -198,7 +198,7 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
 	if remainingFreeCredit > 0 {
-		output.ErrPrintf(c.Config.EnableColor, "Free credits: $%.2f USD remaining\n", admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintf(c.Config.EnableColor, "Free credits: $%.2f USD remaining\n", billing.ConvertToUSD(remainingFreeCredit))
 		output.ErrPrintln(c.Config.EnableColor, "You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.")
 	}
 }
