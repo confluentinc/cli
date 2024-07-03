@@ -5,14 +5,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newCostCommand() *cobra.Command {
+func (c *command) newPriceCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "cost",
-		Short:       "List Confluent Cloud billing costs.",
+		Use:         "price",
+		Short:       "See Confluent Cloud pricing information.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.AddCommand(c.newCostListCommand())
+	cmd.AddCommand(c.newPriceListCommand())
 
 	return cmd
 }
