@@ -1,4 +1,4 @@
-package admin
+package billing
 
 import (
 	"github.com/spf13/cobra"

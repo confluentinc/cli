@@ -1,4 +1,4 @@
-package admin
+package billing
 
 import (
 	"fmt"
@@ -6,17 +6,18 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v3/pkg/billing"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type humanOut struct {
+type promoHumanOut struct {
 	Code       string `human:"Code"`
 	Balance    string `human:"Balance"`
 	Expiration string `human:"Expiration"`
 }
 
-type serializedOut struct {
+type promoSerializedOut struct {
 	Code       string  `serialized:"code"`
 	Balance    float64 `serialized:"balance"`
 	Expiration int64   `serialized:"expiration"`
@@ -27,7 +28,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List claimed promo codes.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.promoList,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -35,7 +36,7 @@ func (c *command) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) list(cmd *cobra.Command, _ []string) error {
+func (c *command) promoList(cmd *cobra.Command, _ []string) error {
 	user, err := c.Client.Auth.User()
 	if err != nil {
 		return err
@@ -49,15 +50,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, code := range codes {
 		if output.GetFormat(cmd) == output.Human {
-			list.Add(&humanOut{
+			list.Add(&promoHumanOut{
 				Code:       code.GetCode(),
 				Balance:    formatBalance(code.GetBalance(), code.GetAmount()),
 				Expiration: formatExpiration(code.GetCreditExpirationDate().GetSeconds()),
 			})
 		} else {
-			list.Add(&serializedOut{
+			list.Add(&promoSerializedOut{
 				Code:       code.GetCode(),
-				Balance:    ConvertToUSD(code.GetBalance()),
+				Balance:    billing.ConvertToUSD(code.GetBalance()),
 				Expiration: code.GetCreditExpirationDate().GetSeconds(),
 			})
 		}
@@ -66,12 +67,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 }
 
 func formatBalance(balance, amount int64) string {
-	return fmt.Sprintf("$%.2f/%.2f USD", ConvertToUSD(balance), ConvertToUSD(amount))
-}
-
-func ConvertToUSD(balance int64) float64 {
-	// The backend represents money in hundredths of cents
-	return float64(balance) / 10000
+	return fmt.Sprintf("$%.2f/%.2f USD", billing.ConvertToUSD(balance), billing.ConvertToUSD(amount))
 }
 
 func formatExpiration(seconds int64) string {

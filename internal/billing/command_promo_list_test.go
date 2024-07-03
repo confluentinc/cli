@@ -1,10 +1,12 @@
-package admin
+package billing
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v3/pkg/billing"
 )
 
 func TestFormatBalance(t *testing.T) {
@@ -12,7 +14,7 @@ func TestFormatBalance(t *testing.T) {
 }
 
 func TestConvertToUSD(t *testing.T) {
-	require.Equal(t, 1.23, ConvertToUSD(12300))
+	require.Equal(t, 1.23, billing.ConvertToUSD(12300))
 }
 
 func TestFormatExpiration(t *testing.T) {
