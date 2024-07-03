@@ -9,18 +9,18 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *listOut {
-	listEntry := &listOut{
+func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *linkOut {
+	listEntry := &linkOut{
 		Name:      data.LinkName,
 		TopicName: topic,
 	}
 
 	if data.SourceClusterId != nil {
-		listEntry.SourceClusterId = *data.SourceClusterId
+		listEntry.SourceCluster = *data.SourceClusterId
 	}
 
 	if data.DestinationClusterId != nil {
-		listEntry.DestinationClusterId = *data.DestinationClusterId
+		listEntry.DestinationCluster = *data.DestinationClusterId
 	}
 
 	return listEntry

@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -70,12 +71,12 @@ var (
 
 // Config represents the CLI configuration.
 type Config struct {
-	DisableFeatureFlags bool `json:"disable_feature_flags"`
-	DisablePlugins      bool `json:"disable_plugins"`
-	DisablePluginsOnce  bool `json:"disable_plugins_once,omitempty"`
-	DisableUpdateCheck  bool `json:"disable_update_check"`
-	DisableUpdates      bool `json:"disable_updates,omitempty"`
-	EnableColor         bool `json:"enable_color"`
+	DisableFeatureFlags       bool       `json:"disable_feature_flags"`
+	DisablePlugins            bool       `json:"disable_plugins"`
+	DisablePluginsOnceWindows bool       `json:"disable_plugins_once_windows,omitempty"`
+	DisableUpdateCheck        bool       `json:"disable_update_check"`
+	EnableColor               bool       `json:"enable_color"`
+	LastUpdateCheckAt         *time.Time `json:"last_update_check_at,omitempty"`
 
 	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
@@ -85,20 +86,18 @@ type Config struct {
 	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 	LocalPorts       *LocalPorts                 `json:"local_ports,omitempty"`
 
-	// Deprecated
-	AnonymousId string `json:"anonymous_id,omitempty"`
-	NoBrowser   bool   `json:"no_browser,omitempty"`
-	Ver         string `json:"version,omitempty"`
-
-	// The following configurations are not persisted between runs
-
-	IsTest   bool              `json:"-"`
-	Version  *pversion.Version `json:"-"`
-	Filename string            `json:"-"`
+	// The following configurations are not persisted between runs or are read-only
+	DisableUpdates bool              `json:"-"`
+	Filename       string            `json:"-"`
+	IsTest         bool              `json:"-"`
+	Version        *pversion.Version `json:"-"`
 
 	overwrittenCurrentContext      string
 	overwrittenCurrentEnvironment  string
 	overwrittenCurrentKafkaCluster string
+
+	// Deprecated
+	DisablePluginsOnce bool `json:"disable_plugins_once,omitempty"`
 }
 
 func (c *Config) SetOverwrittenCurrentContext(context string) {
@@ -133,6 +132,7 @@ func New() *Config {
 		ContextStates:    make(map[string]*ContextState),
 		SavedCredentials: make(map[string]*LoginCredential),
 		Version:          new(pversion.Version),
+		EnableColor:      true,
 	}
 }
 
@@ -186,6 +186,7 @@ func (c *Config) Load() error {
 		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
+	var save bool
 	for _, context := range c.Contexts {
 		// Some "pre-validation"
 		if context.Name == "" {
@@ -205,11 +206,29 @@ func (c *Config) Load() error {
 		}
 		context.KafkaClusterContext.Context = context
 		context.State = c.ContextStates[context.Name]
+
+		// Migrate deprecated NetrcMachineName to MachineName
+		if context.NetrcMachineName != "" && context.MachineName == "" {
+			context.MachineName = context.NetrcMachineName
+			context.NetrcMachineName = ""
+			save = true
+		}
 	}
 
-	if runtime.GOOS == "windows" && !c.DisablePluginsOnce {
+	// Migrate deprecated DisablePluginsOnce to DisablePluginsOnceWindows
+	if c.DisablePluginsOnce && !c.DisablePluginsOnceWindows {
+		c.DisablePluginsOnceWindows = true
+		c.DisablePluginsOnce = false
+		save = true
+	}
+
+	if runtime.GOOS == "windows" && !c.DisablePluginsOnceWindows {
 		c.DisablePlugins = true
-		c.DisablePluginsOnce = true
+		c.DisablePluginsOnceWindows = true
+		save = true
+	}
+
+	if save {
 		_ = c.Save()
 	}
 
@@ -304,10 +323,14 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 	}
 
 	// The Confluent Gov environment and the Confluent Platform MDS return a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
-	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
+	// We prefix encrypted tokens with "AES/GCM/NoPadding" on Unix systems and "DPAPI" on Windows to ensure that they are only encrypted once.
+	prefix := secret.AesGcm
+	if runtime.GOOS == "windows" {
+		prefix = secret.Dpapi
+	}
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, prefix) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
 
-	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && !c.Context().IsCloud(c.IsTest)
+	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, prefix) && !c.Context().IsCloud(c.IsTest)
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)

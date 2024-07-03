@@ -8,6 +8,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
+type regionOut struct {
+	Name   string `human:"Name" serialized:"name"`
+	Cloud  string `human:"Cloud" serialized:"cloud"`
+	Region string `human:"Region" serialized:"region"`
+}
+
 func (c *regionCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -35,7 +41,12 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, region := range regions {
-		list.Add(region)
+		out := &regionOut{
+			Cloud:  region.CloudId,
+			Region: region.RegionId,
+			Name:   region.RegionName,
+		}
+		list.Add(out)
 	}
 	return list.Print()
 }

@@ -4,6 +4,7 @@ Usage:
   confluent kafka cluster [command]
 
 Available Commands:
+  configuration Manage Kafka cluster configurations.
   list          List registered Kafka clusters.
 
 Global Flags:

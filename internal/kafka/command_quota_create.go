@@ -8,28 +8,26 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create",
+		Use:   "create <name>",
 		Short: "Create a Kafka client quota.",
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create client quotas for service accounts "sa-1234" and "sa-5678" on cluster "lkc-1234".`,
-				Code: `confluent kafka quota create --name clientQuota --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234`,
+				Code: `confluent kafka quota create my-client-quota --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234`,
 			},
 			examples.Example{
 				Text: `Create a default client quota for all principals without an explicit quota assignment.`,
-				Code: `confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234`,
+				Code: `confluent kafka quota create my-default-quota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234`,
 			},
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of quota.")
 	cmd.Flags().String("description", "", "Description of quota.")
 	cmd.Flags().String("ingress", "", "Ingress throughput limit for client (bytes/second).")
 	cmd.Flags().String("egress", "", "Egress throughput limit for client (bytes/second).")
@@ -38,23 +36,17 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 	cmd.MarkFlagsRequiredTogether("ingress", "egress")
 
 	return cmd
 }
 
-func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
+func (c *quotaCommand) create(cmd *cobra.Command, args []string) error {
 	serviceAccounts, err := cmd.Flags().GetStringSlice("principals")
 	if err != nil {
 		return err
 	}
 	principals := sliceToObjRefArray(serviceAccounts)
-
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
-	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
@@ -78,7 +70,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 
 	quotaToCreate := kafkaquotasv1.KafkaQuotasV1ClientQuota{
 		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
-			DisplayName: kafkaquotasv1.PtrString(name),
+			DisplayName: kafkaquotasv1.PtrString(args[0]),
 			Description: kafkaquotasv1.PtrString(description),
 			Throughput:  throughput,
 			Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: cluster.ID},
@@ -92,10 +84,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	format := output.GetFormat(cmd)
-	table.Add(quotaToPrintable(quota, format))
-	return table.Print()
+	return printTable(cmd, quota)
 }
 
 func sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.GlobalObjectReference {
