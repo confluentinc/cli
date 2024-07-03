@@ -77,10 +77,10 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 	out, err := runWithConfig(cfg)
 	require.NoError(t, err)
 
-	// note users can still run "confluent admin payment update" or "confluent admin promo add" if the org is suspended
+	// note users can still run "confluent billing payment update" or "confluent billing promo add" if the org is suspended
 	// but only due to end of free trial
 	commands := []string{
-		"admin", "cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "prompt", "shell", "update", "version",
+		"billing", "cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "prompt", "shell", "update", "version",
 	}
 	if runtime.GOOS == "windows" {
 		commands = slices.DeleteFunc(commands, func(s string) bool { return s == "local" })
@@ -99,15 +99,20 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 
 	cmd := NewConfluentCommand(cfg)
 
-	out, err = pcmd.ExecuteCommand(cmd, "admin", "payment", "--help")
+	out, err = pcmd.ExecuteCommand(cmd, "billing", "payment", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "update")
 	require.Contains(t, out, "describe")
 
-	out, err = pcmd.ExecuteCommand(cmd, "admin", "promo", "--help")
+	out, err = pcmd.ExecuteCommand(cmd, "billing", "promo", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "add")
 	require.Contains(t, out, "list")
+
+	out, err = pcmd.ExecuteCommand(cmd, "billing", "--help")
+	require.NoError(t, err)
+	require.NotContains(t, out, "cost")
+	require.NotContains(t, out, "price")
 }
 
 func TestHelp_Cloud(t *testing.T) {
@@ -123,13 +128,22 @@ func TestHelp_Cloud(t *testing.T) {
 	require.NoError(t, err)
 
 	commands := []string{
-		"admin", "ai", "api-key", "audit-log", "cloud-signup", "completion", "context", "connect", "environment", "help",
-		"iam", "kafka", "ksql", "login", "logout", "price", "prompt", "schema-registry", "shell", "update", "version",
+		"ai", "api-key", "audit-log", "billing", "cloud-signup", "completion", "context", "connect", "environment", "help",
+		"iam", "kafka", "ksql", "login", "logout", "prompt", "schema-registry", "shell", "update", "version",
 	}
 
 	for _, command := range commands {
 		require.Contains(t, out, command)
 	}
+
+	cmd := NewConfluentCommand(cfg)
+
+	out, err = pcmd.ExecuteCommand(cmd, "billing", "--help")
+	require.NoError(t, err)
+	require.Contains(t, out, "cost")
+	require.Contains(t, out, "payment")
+	require.Contains(t, out, "price")
+	require.Contains(t, out, "promo")
 }
 
 func TestHelp_CloudWithAPIKey(t *testing.T) {
@@ -148,13 +162,22 @@ func TestHelp_CloudWithAPIKey(t *testing.T) {
 	require.NoError(t, err)
 
 	commands := []string{
-		"admin", "audit-log", "cloud-signup", "completion", "context", "help", "kafka", "login", "logout", "update",
+		"audit-log", "billing", "cloud-signup", "completion", "context", "help", "kafka", "login", "logout", "update",
 		"version",
 	}
 
 	for _, command := range commands {
 		require.Contains(t, out, command)
 	}
+
+	cmd := NewConfluentCommand(cfg)
+
+	out, err = pcmd.ExecuteCommand(cmd, "billing", "--help")
+	require.NoError(t, err)
+	require.Contains(t, out, "payment")
+	require.Contains(t, out, "promo")
+	require.NotContains(t, out, "cost")
+	require.NotContains(t, out, "price")
 }
 
 func TestHelp_OnPrem(t *testing.T) {

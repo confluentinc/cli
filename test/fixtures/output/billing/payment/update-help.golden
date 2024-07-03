@@ -1,7 +1,7 @@
-Add a new promo code.
+Update the active payment method.
 
 Usage:
-  confluent admin promo add <code> [flags]
+  confluent billing payment update [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

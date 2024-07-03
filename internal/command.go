@@ -11,7 +11,6 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
-	"github.com/confluentinc/cli/v3/internal/admin"
 	"github.com/confluentinc/cli/v3/internal/ai"
 	apikey "github.com/confluentinc/cli/v3/internal/api-key"
 	"github.com/confluentinc/cli/v3/internal/asyncapi"
@@ -37,7 +36,6 @@ import (
 	"github.com/confluentinc/cli/v3/internal/organization"
 	"github.com/confluentinc/cli/v3/internal/pipeline"
 	"github.com/confluentinc/cli/v3/internal/plugin"
-	"github.com/confluentinc/cli/v3/internal/price"
 	"github.com/confluentinc/cli/v3/internal/prompt"
 	schemaregistry "github.com/confluentinc/cli/v3/internal/schema-registry"
 	"github.com/confluentinc/cli/v3/internal/secret"
@@ -101,7 +99,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 		Version:                 cfg.Version,
 	}
 
-	cmd.AddCommand(admin.New(prerunner, cfg.IsTest))
 	cmd.AddCommand(apikey.New(prerunner))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
@@ -125,7 +122,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(organization.New(prerunner))
 	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
-	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner))

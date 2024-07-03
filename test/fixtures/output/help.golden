@@ -4,7 +4,6 @@ Usage:
   confluent [command]
 
 Available Commands:
-  admin           Perform administrative tasks for the current organization.
   ai              Start an interactive AI shell.
   api-key         Manage API keys.
   asyncapi        Manage AsyncAPI document tooling.
@@ -30,7 +29,6 @@ Available Commands:
   organization    Manage your Confluent Cloud organizations.
   pipeline        Manage Stream Designer pipelines.
   plugin          Manage Confluent plugins.
-  price           See Confluent Cloud pricing information.
   prompt          Add Confluent CLI context to your terminal prompt.
   schema-registry Manage Schema Registry.
   service-quota   Look up Confluent Cloud service quota limits.
