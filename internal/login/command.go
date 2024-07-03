@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -297,7 +298,7 @@ func (c *command) getCaCertPath(cmd *cobra.Command) (string, error) {
 	if certificateAuthorityPath != "" {
 		certificateAuthorityPath, err = filepath.Abs(certificateAuthorityPath)
 		if err != nil {
-			return "", false, err
+			return "", err
 		}
 	}
 
