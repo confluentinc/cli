@@ -54,7 +54,7 @@ func (c *command) kekList(cmd *cobra.Command, _ []string) error {
 		list.Add(&kekOut{
 			Name:          kekName,
 			KmsType:       kek.GetKmsType(),
-			KmsKeyId:      kek.GetKmsKeyId(),
+			KmsKey:        kek.GetKmsKeyId(),
 			KmsProperties: kek.GetKmsProps(),
 			Doc:           kek.GetDoc(),
 			IsShared:      kek.GetShared(),

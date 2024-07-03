@@ -52,10 +52,10 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, consumer := range consumers {
 		list.Add(&consumerOut{
-			ConsumerGroupId: consumer.GetConsumerGroupId(),
-			ConsumerId:      consumer.GetConsumerId(),
-			InstanceId:      consumer.GetInstanceId(),
-			ClientId:        consumer.GetClientId(),
+			ConsumerGroup: consumer.GetConsumerGroupId(),
+			Consumer:      consumer.GetConsumerId(),
+			Instance:      consumer.GetInstanceId(),
+			Client:        consumer.GetClientId(),
 		})
 	}
 	return list.Print()

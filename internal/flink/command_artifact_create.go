@@ -23,8 +23,8 @@ var (
 
 type pluginCreateOut struct {
 	Name          string `human:"Name" serialized:"name"`
-	PluginId      string `human:"Plugin ID" serialized:"plugin_id"`
-	VersionId     string `human:"Version ID" serialized:"version_id"`
+	Plugin        string `human:"Plugin" serialized:"plugin"`
+	Version       string `human:"Version" serialized:"version"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
 	ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
@@ -109,8 +109,8 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	table := output.NewTable(cmd)
 	table.Add(&pluginCreateOut{
 		Name:          plugin.GetDisplayName(),
-		PluginId:      plugin.GetId(),
-		VersionId:     plugin.GetConnectorClass(),
+		Plugin:        plugin.GetId(),
+		Version:       plugin.GetConnectorClass(),
 		ContentFormat: plugin.GetContentFormat(),
 	})
 	return table.Print()

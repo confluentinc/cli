@@ -10,10 +10,10 @@ import (
 )
 
 type eventDescribeOut struct {
-	ClusterId        string `human:"Cluster" serialized:"cluster_id"`
-	EnvironmentId    string `human:"Environment" serialized:"environment_id"`
-	ServiceAccountId string `human:"Service Account" serialized:"service_account_id"`
-	TopicName        string `human:"Topic Name" serialized:"topic_name"`
+	Cluster        string `human:"Cluster" serialized:"cluster"`
+	Environment    string `human:"Environment" serialized:"environment"`
+	ServiceAccount string `human:"Service Account" serialized:"service_account"`
+	TopicName      string `human:"Topic Name" serialized:"topic_name"`
 }
 
 func (c *eventCommand) newDescribeCommand() *cobra.Command {
@@ -38,10 +38,10 @@ func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&eventDescribeOut{
-		ClusterId:        auditLog.GetClusterId(),
-		EnvironmentId:    auditLog.GetAccountId(),
-		ServiceAccountId: auditLog.GetServiceAccountResourceId(),
-		TopicName:        "confluent-connect-log-events",
+		Cluster:        auditLog.GetClusterId(),
+		Environment:    auditLog.GetAccountId(),
+		ServiceAccount: auditLog.GetServiceAccountResourceId(),
+		TopicName:      "confluent-connect-log-events",
 	})
 	return table.Print()
 }
