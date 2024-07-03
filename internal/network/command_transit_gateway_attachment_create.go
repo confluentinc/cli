@@ -80,7 +80,7 @@ func (c *command) transitGatewayAttachmentCreate(cmd *cobra.Command, args []stri
 			Network:     &networkingv1.ObjectReference{Id: network},
 			Cloud: &networkingv1.NetworkingV1TransitGatewayAttachmentSpecCloudOneOf{
 				NetworkingV1AwsTransitGatewayAttachment: &networkingv1.NetworkingV1AwsTransitGatewayAttachment{
-					Kind:             "AwsTransitGatewayAttachment",
+					Kind:             "AwsTransitGatewayAttachmentId",
 					RamShareArn:      awsRamShareArn,
 					Routes:           routes,
 					TransitGatewayId: awsTransitGateway,

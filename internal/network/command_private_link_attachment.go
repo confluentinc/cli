@@ -18,7 +18,7 @@ type privateLinkAttachmentOut struct {
 	Region                       string `human:"Region" serialized:"region"`
 	AwsVpcEndpointService        string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
 	AzurePrivateLinkServiceAlias string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
-	AzurePrivateLinkService      string `human:"Azure Private Link Service,omitempty" serialized:"azure_private_link_service,omitempty"`
+	AzurePrivateLinkServiceID    string `human:"Azure Private Link Service ID,omitempty" serialized:"azure_private_link_service_id,omitempty"`
 	Phase                        string `human:"Phase" serialized:"phase"`
 }
 
@@ -97,7 +97,7 @@ func printPrivateLinkAttachmentTable(cmd *cobra.Command, attachment networkingpr
 			out.AwsVpcEndpointService = attachment.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentStatus.VpcEndpointService.GetVpcEndpointServiceName()
 		case attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus != nil:
 			out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceAlias()
-			out.AzurePrivateLinkService = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
+			out.AzurePrivateLinkServiceID = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
 		}
 	}
 

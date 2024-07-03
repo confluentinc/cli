@@ -12,16 +12,16 @@ import (
 )
 
 type privateLinkAttachmentConnectionOut struct {
-	Id                           string `human:"ID" serialized:"id"`
-	Name                         string `human:"Name,omitempty" serialized:"name,omitempty"`
-	Cloud                        string `human:"Cloud" serialized:"cloud"`
-	PrivateLinkAttachment        string `human:"Private Link Attachment" serialized:"private_link_attachment"`
-	Phase                        string `human:"Phase" serialized:"phase"`
-	AwsVpcEndpoint               string `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
-	AwsVpcEndpointServiceName    string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
-	AzurePrivateEndpointResource string `human:"Azure Private Endpoint Resource,omitempty" serialized:"azure_private_endpoint_resource,omitempty"`
-	AzurePrivateLinkServiceAlias string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
-	AzurePrivateLinkService      string `human:"Azure Private Link Service,omitempty" serialized:"azure_private_link_service,omitempty"`
+	Id                             string `human:"ID" serialized:"id"`
+	Name                           string `human:"Name,omitempty" serialized:"name,omitempty"`
+	Cloud                          string `human:"Cloud" serialized:"cloud"`
+	PrivateLinkAttachment          string `human:"Private Link Attachment" serialized:"private_link_attachment"`
+	Phase                          string `human:"Phase" serialized:"phase"`
+	AwsVpcEndpointID               string `human:"AWS VPC Endpoint ID,omitempty" serialized:"aws_vpc_endpoint_id,omitempty"`
+	AwsVpcEndpointServiceName      string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
+	AzurePrivateEndpointResourceID string `human:"Azure Private Endpoint Resource ID,omitempty" serialized:"azure_private_endpoint_resource_id,omitempty"`
+	AzurePrivateLinkServiceAlias   string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
+	AzurePrivateLinkServiceID      string `human:"Azure Private Link Service ID,omitempty" serialized:"azure_private_link_service_id,omitempty"`
 }
 
 func (c *command) newPrivateLinkAttachmentConnectionCommand() *cobra.Command {
@@ -58,10 +58,10 @@ func printPrivateLinkAttachmentConnectionTable(cmd *cobra.Command, connection ne
 		switch {
 		case connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection != nil:
 			out.Cloud = CloudAws
-			out.AwsVpcEndpoint = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
+			out.AwsVpcEndpointID = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
 		case connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection != nil:
 			out.Cloud = CloudAzure
-			out.AzurePrivateEndpointResource = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
+			out.AzurePrivateEndpointResourceID = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
 		}
 	}
 
@@ -71,7 +71,7 @@ func printPrivateLinkAttachmentConnectionTable(cmd *cobra.Command, connection ne
 			out.AwsVpcEndpointServiceName = connection.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus.GetVpcEndpointServiceName()
 		case connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus != nil:
 			out.AzurePrivateLinkServiceAlias = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceAlias()
-			out.AzurePrivateLinkService = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceResourceId()
+			out.AzurePrivateLinkServiceID = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceResourceId()
 		}
 	}
 

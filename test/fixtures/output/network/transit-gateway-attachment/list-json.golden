@@ -3,9 +3,9 @@
     "id": "tgwa-111111",
     "name": "aws-tgwa1",
     "network": "n-abcde1",
-    "aws_ram_share_arn": "arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
-    "aws_transit_gateway": "tgw-00000000000000000",
-    "routes": ["10.0.0.0/16"],
+    "aws_ram_share_arn": "",
+    "aws_transit_gateway": "",
+    "routes": null,
     "aws_transit_gateway_attachment": "tgw-attach-00000000000000000",
     "phase": "READY"
   },
@@ -13,9 +13,9 @@
     "id": "tgwa-222222",
     "name": "aws-tgwa2",
     "network": "n-abcde1",
-    "aws_ram_share_arn": "arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
-    "aws_transit_gateway": "tgw-00000000000000000",
-    "routes": ["10.0.0.0/16"],
+    "aws_ram_share_arn": "",
+    "aws_transit_gateway": "",
+    "routes": null,
     "aws_transit_gateway_attachment": "tgw-attach-00000000000000000",
     "phase": "READY"
   },
@@ -23,9 +23,9 @@
     "id": "tgwa-333333",
     "name": "aws-tgwa3",
     "network": "n-abcde1",
-    "aws_ram_share_arn": "arn:aws:ram:us-east-1:000000000000:resource-share/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx",
-    "aws_transit_gateway": "tgw-00000000000000000",
-    "routes": ["10.0.0.0/16"],
+    "aws_ram_share_arn": "",
+    "aws_transit_gateway": "",
+    "routes": null,
     "aws_transit_gateway_attachment": "tgw-attach-00000000000000000",
     "phase": "READY"
   }

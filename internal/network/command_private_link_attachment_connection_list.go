@@ -71,10 +71,10 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 			switch {
 			case connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection != nil:
 				out.Cloud = CloudAws
-				out.AwsVpcEndpoint = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
+				out.AwsVpcEndpointID = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
 			case connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection != nil:
 				out.Cloud = CloudAzure
-				out.AzurePrivateEndpointResource = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
+				out.AzurePrivateEndpointResourceID = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
 			}
 		}
 
@@ -84,7 +84,7 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 				out.AwsVpcEndpointServiceName = connection.Status.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnectionStatus.GetVpcEndpointServiceName()
 			case connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus != nil:
 				out.AzurePrivateLinkServiceAlias = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceAlias()
-				out.AzurePrivateLinkService = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceResourceId()
+				out.AzurePrivateLinkServiceID = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceResourceId()
 			}
 		}
 
