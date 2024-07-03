@@ -13,7 +13,6 @@ import (
 	"math/big"
 	"net/http"
 	"os"
-	"path/filepath"
 	"reflect"
 	"slices"
 	"testing"
@@ -602,48 +601,6 @@ func Test_SelfSignedCerts(t *testing.T) {
 			if test.setEnv {
 				os.Unsetenv(pauth.ConfluentPlatformCertificateAuthorityPath)
 			}
-		})
-	}
-}
-
-func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
-	originalCaCertPath, _ := filepath.Abs("ogcert.pem")
-
-	req := require.New(t)
-	tests := []struct {
-		name               string
-		useCaCertPathFlag  bool
-		expectedCaCertPath string
-	}{
-		{
-			name:               "use existing caCertPath in config",
-			expectedCaCertPath: originalCaCertPath,
-		},
-		{
-			name:              "reset certificate-authority-path",
-			useCaCertPathFlag: true,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
-			cfg := config.AuthenticatedConfigMockWithContextName(legacyContextName)
-			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
-
-			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, test.expectedCaCertPath)
-			args := []string{"--url", "http://localhost:8090"}
-			if test.useCaCertPathFlag {
-				args = append(args, "--certificate-authority-path", "")
-			}
-			fmt.Println(args)
-			_, err := pcmd.ExecuteCommand(loginCmd, args...)
-			req.NoError(err)
-
-			ctx := cfg.Context()
-			// ensure the right CaCertPath is stored in Config and context name is the right name
-			req.Equal(test.expectedCaCertPath, ctx.Platform.CaCertPath)
-			req.Equal(legacyContextName, ctx.Name)
 		})
 	}
 }

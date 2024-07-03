@@ -445,7 +445,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, refreshToken, credentials.PrerunLoginCaCertPath, false, false); err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, refreshToken, credentials.PrerunLoginCaCertPath, false); err != nil {
 		return err
 	}
 	log.CliLogger.Debug(autoLoginMsg)
