@@ -7,7 +7,6 @@ Aliases:
   context, ctx
 
 Available Commands:
-  create      Create a new context.
   delete      Delete one or more contexts.
   describe    Describe a context.
   list        List all contexts.

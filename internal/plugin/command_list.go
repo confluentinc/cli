@@ -15,7 +15,8 @@ import (
 )
 
 type out struct {
-	PluginName string `human:"Plugin Name" serialized:"plugin_name"`
+	PluginName string `human:"Name" serialized:"plugin_name"`
+	PluginId   string `human:"ID" serialized:"plugin_id"`
 	FilePath   string `human:"File Path" serialized:"file_path"`
 }
 
@@ -51,14 +52,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	var overshadowedPlugins, nameConflictPlugins []*out
-	for name, paths := range pluginMap {
+	for id, paths := range pluginMap {
 		path := paths[0]
 		if home != "" && strings.HasPrefix(path, home) {
 			path = filepath.Join("~", strings.TrimPrefix(path, home))
 		}
 
 		pluginInfo := &out{
-			PluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
+			PluginName: plugin.ToCommandName(id),
+			PluginId:   id,
 			FilePath:   path,
 		}
 

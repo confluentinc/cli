@@ -27,16 +27,6 @@ func (c *command) newExporterDeleteCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	return cmd
 }
 
@@ -46,17 +36,12 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	info, err := client.GetExporterInfo(args[0])
-	if err != nil {
-		return resource.ResourcesNotFoundError(cmd, resource.SchemaExporter, args[0])
-	}
-
 	existenceFunc := func(id string) bool {
 		_, err := client.GetExporterInfo(id)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.SchemaExporter, info.GetName()); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.SchemaExporter); err != nil {
 		return err
 	}
 

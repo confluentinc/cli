@@ -107,7 +107,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 	if protocol == "SSL" || protocol == "SASL_SSL" {
-		caLocation, err := cmd.Flags().GetString("ca-location")
+		certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +115,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		if err := configMap.SetKey("enable.ssl.certificate.verification", true); err != nil {
 			return nil, err
 		}
-		if err := configMap.SetKey("ssl.ca.location", caLocation); err != nil {
+		if err := configMap.SetKey("ssl.ca.location", certificateAuthorityPath); err != nil {
 			return nil, err
 		}
 	}
@@ -147,7 +147,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 	if protocol == "SSL" || protocol == "SASL_SSL" {
-		caLocation, err := cmd.Flags().GetString("ca-location")
+		certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +155,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		if err := configMap.SetKey("enable.ssl.certificate.verification", true); err != nil {
 			return nil, err
 		}
-		if err := configMap.SetKey("ssl.ca.location", caLocation); err != nil {
+		if err := configMap.SetKey("ssl.ca.location", certificateAuthorityPath); err != nil {
 			return nil, err
 		}
 	}
