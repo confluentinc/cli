@@ -17,8 +17,8 @@ import (
 )
 
 type brokerTaskData struct {
-	ClusterId         string                     `human:"Cluster" serialized:"cluster_id"`
-	BrokerId          int32                      `human:"Broker ID" serialized:"broker_id"`
+	Cluster           string                     `human:"Cluster" serialized:"cluster"`
+	Broker            int32                      `human:"Broker" serialized:"broker"`
 	TaskType          kafkarestv3.BrokerTaskType `human:"Task Type" serialized:"task_type"`
 	TaskStatus        string                     `human:"Task Status" serialized:"task_status"`
 	CreatedAt         time.Time                  `human:"Created At" serialized:"created_at"`
@@ -97,8 +97,8 @@ func (c *brokerCommand) taskList(cmd *cobra.Command, args []string) error {
 
 func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) *brokerTaskData {
 	s := &brokerTaskData{
-		ClusterId:       entry.ClusterId,
-		BrokerId:        entry.BrokerId,
+		Cluster:         entry.ClusterId,
+		Broker:          entry.BrokerId,
 		TaskType:        entry.TaskType,
 		TaskStatus:      entry.TaskStatus,
 		CreatedAt:       entry.CreatedAt,

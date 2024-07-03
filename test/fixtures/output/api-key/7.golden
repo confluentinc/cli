@@ -5,7 +5,7 @@
     "owner_id": "sa-6666",
     "owner_email": "\u003cdeactivated user\u003e",
     "resource_type": "kafka",
-    "resource_id": "lkc-bob",
+    "resource": "lkc-bob",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -14,7 +14,7 @@
     "owner_id": "u-44ddd",
     "owner_email": "mhe@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-abc",
+    "resource": "lkc-abc",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -23,7 +23,7 @@
     "owner_id": "u-44ddd",
     "owner_email": "mhe@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-abc",
+    "resource": "lkc-abc",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -32,7 +32,7 @@
     "owner_id": "sa-12345",
     "owner_email": "\u003cservice account\u003e",
     "resource_type": "kafka",
-    "resource_id": "lkc-abc",
+    "resource": "lkc-abc",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -41,7 +41,7 @@
     "owner_id": "u11",
     "owner_email": "bstrauch@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-bob",
+    "resource": "lkc-bob",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -50,7 +50,7 @@
     "owner_id": "u-17",
     "owner_email": "mtodzo@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-abc",
+    "resource": "lkc-abc",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -59,7 +59,7 @@
     "owner_id": "u-44ddd",
     "owner_email": "mhe@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-bob",
+    "resource": "lkc-bob",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -68,7 +68,7 @@
     "owner_id": "sa-12345",
     "owner_email": "\u003cservice account\u003e",
     "resource_type": "kafka",
-    "resource_id": "lkc-bob",
+    "resource": "lkc-bob",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -77,7 +77,7 @@
     "owner_id": "u-22bbb",
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-cool1",
+    "resource": "lkc-cool1",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -86,7 +86,7 @@
     "owner_id": "u-22bbb",
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-other1",
+    "resource": "lkc-other1",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -95,7 +95,7 @@
     "owner_id": "u-22bbb",
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "ksql",
-    "resource_id": "lksqlc-ksql1",
+    "resource": "lksqlc-ksql1",
     "created": "1999-02-24T00:00:00Z"
   },
   {
@@ -104,7 +104,7 @@
     "owner_id": "u-22bbb",
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
-    "resource_id": "lkc-cool1",
+    "resource": "lkc-cool1",
     "created": "1999-02-24T00:00:00Z"
   }
 ]

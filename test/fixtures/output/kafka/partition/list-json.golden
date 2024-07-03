@@ -1,14 +1,14 @@
 [
   {
-    "cluster_id": "lkc-12345",
+    "cluster": "lkc-12345",
     "topic_name": "topic1",
-    "partition_id": 0,
-    "leader_id": 2
+    "partition": 0,
+    "leader": 2
   },
   {
-    "cluster_id": "lkc-12345",
+    "cluster": "lkc-12345",
     "topic_name": "topic1",
-    "partition_id": 1,
-    "leader_id": 1
+    "partition": 1,
+    "leader": 1
   }
 ]

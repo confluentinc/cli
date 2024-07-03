@@ -11,8 +11,8 @@ import (
 
 type flinkArtifactOut struct {
 	Name          string `human:"Name" serialized:"name" `
-	PluginId      string `human:"Plugin ID" serialized:"plugin_id" `
-	VersionId     string `human:"Version ID" serialized:"version_id" `
+	Plugin        string `human:"Plugin" serialized:"plugin" `
+	Version       string `human:"Version" serialized:"version" `
 	ContentFormat string `human:"Content Format" serialized:"content_format" `
 }
 
@@ -35,8 +35,8 @@ func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1Custom
 	table := output.NewTable(cmd)
 	table.Add(&flinkArtifactOut{
 		Name:          plugin.GetDisplayName(),
-		PluginId:      plugin.GetId(),
-		VersionId:     plugin.GetConnectorClass(),
+		Plugin:        plugin.GetId(),
+		Version:       plugin.GetConnectorClass(),
 		ContentFormat: plugin.GetContentFormat(),
 	})
 

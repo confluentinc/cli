@@ -21,7 +21,7 @@ type out struct {
 	OwnerId      string `human:"Owner" serialized:"owner_id"`
 	OwnerEmail   string `human:"Owner Email" serialized:"owner_email"`
 	ResourceType string `human:"Resource Type" serialized:"resource_type"`
-	ResourceId   string `human:"Resource" serialized:"resource_id"`
+	ResourceId   string `human:"Resource" serialized:"resource"`
 	Created      string `human:"Created" serialized:"created"`
 }
 

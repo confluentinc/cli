@@ -96,7 +96,7 @@ func getAvailableConfigFields() []string {
 func (a *ApplicationOptions) Validate() error {
 	var missingOptions []string
 	if a.GetEnvironmentId() == "" {
-		missingOptions = append(missingOptions, "EnvironmentId")
+		missingOptions = append(missingOptions, "Environment")
 	}
 	if a.GetOrganizationId() == "" {
 		missingOptions = append(missingOptions, "OrganizationId")

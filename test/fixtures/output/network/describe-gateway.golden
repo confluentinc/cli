@@ -1,6 +1,5 @@
 +----------------------------+-------------------------------+
 | ID                         | n-abcde13                     |
-| Environment                | env-00000                     |
 | Name                       | dev-aws-us-eastus1            |
 | Gateway                    | gw-abcde1                     |
 | Cloud                      | AWS                           |
