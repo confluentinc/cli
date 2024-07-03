@@ -40,7 +40,7 @@ func TestParseApplicationOptionsFromSlices(t *testing.T) {
 		},
 		{
 			name:         "TestParseAppOptionsSuccessfully",
-			configKeys:   []string{"UnsafeTrace", "UserAgent", "EnvironmentId", "EnvironmentName", "OrganizationId", "Database", "ComputePoolId", "ServiceAccount", "Verbose", "LSPBaseUrl", "GatewayUrl"},
+			configKeys:   []string{"UnsafeTrace", "UserAgent", "EnvironmentId", "EnvironmentName", "OrganizationId", "Database", "ComputePoolId", "ServiceAccountId", "Verbose", "LSPBaseUrl", "GatewayUrl"},
 			configValues: []string{"true", "test", "env-123", "test-env", "org-123", "test-database", "lfcp-123", "sa-123", "true", "localhost:8080", "localhost:8000"},
 			expectedAppOptions: &ApplicationOptions{
 				UnsafeTrace:      true,
