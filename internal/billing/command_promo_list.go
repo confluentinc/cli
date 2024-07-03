@@ -1,4 +1,4 @@
-package admin
+package billing
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type humanOut struct {
+type promoHumanOut struct {
 	Code       string `human:"Code"`
 	Balance    string `human:"Balance"`
 	Expiration string `human:"Expiration"`
 }
 
-type serializedOut struct {
+type promoSerializedOut struct {
 	Code       string  `serialized:"code"`
 	Balance    float64 `serialized:"balance"`
 	Expiration int64   `serialized:"expiration"`
@@ -27,7 +27,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List claimed promo codes.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.promoList,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -35,7 +35,7 @@ func (c *command) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) list(cmd *cobra.Command, _ []string) error {
+func (c *command) promoList(cmd *cobra.Command, _ []string) error {
 	user, err := c.Client.Auth.User()
 	if err != nil {
 		return err
@@ -49,13 +49,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, code := range codes {
 		if output.GetFormat(cmd) == output.Human {
-			list.Add(&humanOut{
+			list.Add(&promoHumanOut{
 				Code:       code.GetCode(),
 				Balance:    formatBalance(code.GetBalance(), code.GetAmount()),
 				Expiration: formatExpiration(code.GetCreditExpirationDate().GetSeconds()),
 			})
 		} else {
-			list.Add(&serializedOut{
+			list.Add(&promoSerializedOut{
 				Code:       code.GetCode(),
 				Balance:    ConvertToUSD(code.GetBalance()),
 				Expiration: code.GetCreditExpirationDate().GetSeconds(),
