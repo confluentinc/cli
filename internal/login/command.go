@@ -217,20 +217,8 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization str
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization))
 	}
 
-	filterParams := config.MachineParams{
-		IsCloud: true,
-		URL:     url,
-	}
-	ctx := c.Config.Context()
-	if strings.Contains(ctx.GetMachineName(), url) {
-		filterParams.Name = ctx.GetMachineName()
-	}
-
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(organization),
-		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, url),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(true, filterParams.Name, url),
-		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(organization),
 	)
 }
@@ -349,19 +337,8 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		)
 	}
 
-	filterParams := config.MachineParams{
-		IgnoreCert: true,
-		URL:        url,
-	}
-	ctx := c.Config.Context()
-	if strings.Contains(ctx.GetMachineName(), url) {
-		filterParams.Name = ctx.GetMachineName()
-	}
-
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(false, filterParams.Name, url),
-		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
