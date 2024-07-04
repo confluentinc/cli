@@ -60,7 +60,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 				Code: "confluent login --url https://localhost:8090 --certificate-authority-path certs/my-cert.crt",
 			},
 			examples.Example{
-				Text: "Log in to Confluent Platform with SSO and ignore any saved credentials.",
+				Text: "Log in to Confluent Platform with SSO and ignore login environment variables.",
 				Code: "CONFLUENT_PLATFORM_SSO=true confluent login --url https://localhost:8090 --certificate-authority-path certs/my-cert.crt",
 			},
 		),
