@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -73,7 +75,12 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 		log.CliLogger.Warnf(`Invalid status "%s". Valid statuses are %s.`, status, utils.ArrayToCommaDelimitedString(allowedStatuses, "and"))
 	}
 
-	statements, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), c.Context.GetCurrentFlinkComputePool())
+	computePoolId := c.Context.GetCurrentFlinkComputePool()
+	if err := c.validateProvidedComputePool(environmentId, computePoolId); err != nil {
+		return err
+	}
+
+	statements, err := client.ListStatements(environmentId, c.Context.GetCurrentOrganization(), computePoolId)
 	if err != nil {
 		return err
 	}
@@ -96,4 +103,31 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 		})
 	}
 	return list.Print()
+}
+
+func (c *command) validateProvidedComputePool(environmentId, computePoolId string) error {
+	if computePoolId == "" {
+		return nil
+	}
+
+	computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, environmentId)
+	if err != nil {
+		return err
+	}
+
+	computePoolCloudProvider := strings.ToLower(computePool.Spec.GetCloud())
+	computePoolFlinkRegion := strings.ToLower(computePool.Spec.GetRegion())
+
+	providedCloudProvider := strings.ToLower(c.Context.GetCurrentFlinkCloudProvider())
+	providedFlinkRegion := strings.ToLower(c.Context.GetCurrentFlinkRegion())
+
+	if computePoolCloudProvider != providedCloudProvider ||
+		computePoolFlinkRegion != providedFlinkRegion {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf("Flink compute pool %q not found in %s %s", computePoolId, providedCloudProvider, providedFlinkRegion),
+			fmt.Sprintf("Select a different compute pool, or provide the correct cloud/region pair with `confluent flink statement list --cloud %s --region %s --compute-pool %s --environment %s`",
+				computePoolCloudProvider, computePoolFlinkRegion, computePoolId, environmentId))
+	}
+
+	return nil
 }
