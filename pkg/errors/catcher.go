@@ -221,7 +221,7 @@ func CatchComputePoolNotFoundError(err error, computePoolId string, r *http.Resp
 		return nil
 	}
 
-	if r != nil && r.StatusCode == http.StatusForbidden {
+	if r != nil && (r.StatusCode == http.StatusForbidden || r.StatusCode == http.StatusNotFound) {
 		return NewWrapErrorWithSuggestions(
 			CatchCCloudV2Error(err, r),
 			fmt.Sprintf(`Flink compute pool "%s" not found or access forbidden`, computePoolId),
