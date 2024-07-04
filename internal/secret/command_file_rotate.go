@@ -22,13 +22,15 @@ func (c *command) newRotateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
+	cmd.Flags().String("passphrase", "", "Master key passphrase.")
+	cmd.Flags().String("passphrase-new", "", "New master key passphrase.")
 	cmd.Flags().Bool("master-key", false, "Rotate the master key. Generates a new master key and re-encrypts with the new key.")
 	cmd.Flags().Bool("data-key", false, "Rotate data key. Generates a new data key and re-encrypts the file with the new key.")
-	cmd.Flags().String("passphrase", "", `Master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
-	cmd.Flags().String("passphrase-new", "", `New master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("passphrase"))
+	cobra.CheckErr(cmd.MarkFlagRequired("passphrase-new"))
 
 	return cmd
 }
@@ -50,22 +52,12 @@ func (c *command) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		oldPassphrase, err := c.getConfigs(passphrase, "passphrase", "Old Master Key Passphrase: ", true)
-		if err != nil {
-			return err
-		}
-
 		passphraseNew, err := cmd.Flags().GetString("passphrase-new")
 		if err != nil {
 			return err
 		}
 
-		newPassphrase, err := c.getConfigs(passphraseNew, "passphrase-new", "New Master Key Passphrase: ", true)
-		if err != nil {
-			return err
-		}
-
-		masterKey, err := c.plugin.RotateMasterKey(oldPassphrase, newPassphrase, localSecretsFile)
+		masterKey, err := c.plugin.RotateMasterKey(passphrase, passphraseNew, localSecretsFile)
 		if err != nil {
 			return err
 		}
@@ -80,11 +72,6 @@ func (c *command) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		configs, err := c.getConfigs(passphrase, "passphrase", "Master Key Passphrase: ", true)
-		if err != nil {
-			return err
-		}
-
-		return c.plugin.RotateDataKey(configs, localSecretsFile)
+		return c.plugin.RotateDataKey(passphrase, localSecretsFile)
 	}
 }

@@ -1,2 +1,1 @@
-Are you sure you want to delete identity pool "pool-55555"?
-To confirm, type "identity-pool". To cancel, press Ctrl-C: Deleted identity pool "pool-55555".
+Are you sure you want to delete identity pool "pool-55555"? (y/n): Deleted identity pool "pool-55555".

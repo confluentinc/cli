@@ -4,7 +4,7 @@
   line_type: LINE_TYPE_1
   product: KAFKA
   resource_id: lkc-00000
-  resource_display_name: kafka_1
+  resource_name: kafka_1
   environment_id: env-123
   network_access_type: INTERNET
   price: $0.123 USD/GB
@@ -17,7 +17,7 @@
   line_type: LINE_TYPE_1
   product: KAFKA
   resource_id: lkc-00001
-  resource_display_name: kafka_1
+  resource_name: kafka_1
   environment_id: env-123
   network_access_type: INTERNET
   price: $0.123 USD/GB

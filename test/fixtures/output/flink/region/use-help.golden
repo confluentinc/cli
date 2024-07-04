@@ -9,10 +9,8 @@ Select region "N. Virginia (us-east-1)" for use in subsequent Flink commands.
   $ confluent flink region use --cloud aws --region us-east-1
 
 Flags:
-      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string        REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
-      --environment string   Environment ID.
-      --context string       CLI context name.
+      --cloud string    REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string   REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
 
 Global Flags:
   -h, --help            Show help for this command.

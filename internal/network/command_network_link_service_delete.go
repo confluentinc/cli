@@ -40,7 +40,7 @@ func (c *command) networkLinkServiceDelete(cmd *cobra.Command, args []string) er
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionYesNo(cmd, args, existenceFunc, resource.NetworkLinkService); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.NetworkLinkService); err != nil {
 		return err
 	}
 

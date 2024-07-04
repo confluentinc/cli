@@ -32,7 +32,7 @@
   "contexts": {
     "my-context": {
       "name": "my-context",
-      "netrc_machine_name": "",
+      "machine_name": "",
       "platform": "http://127.0.0.1:1024",
       "credential": "api-key-abc-key-123",
       "kafka_cluster_context": {

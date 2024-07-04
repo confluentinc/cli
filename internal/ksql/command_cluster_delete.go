@@ -47,7 +47,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
-	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.KsqlCluster, idToCluster[args[0]].Spec.GetDisplayName()); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.KsqlCluster); err != nil {
 		return err
 	}
 
@@ -96,7 +96,7 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 
 func (c *ksqlCommand) mapIdToCluster(args []string, environmentId string) map[string]ksqlv2.KsqldbcmV2Cluster {
 	// NOTE: This function does not return an error for invalid IDs; validation will instead
-	// be done by deletion.ValidateAndConfirmDeletion using this map. This allows for consistent existence
+	// be done by deletion.ValidateAndConfirm using this map. This allows for consistent existence
 	// error messaging across all delete commands which support multiple deletion.
 
 	idToCluster := make(map[string]ksqlv2.KsqldbcmV2Cluster)
