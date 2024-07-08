@@ -10,9 +10,9 @@ import (
 )
 
 type row struct {
-	SchemaId int32  `human:"Schema ID" serialized:"schema_id"`
-	Subject  string `human:"Subject" serialized:"subject"`
-	Version  int32  `human:"Version" serialized:"version"`
+	Id      int32  `human:"ID" serialized:"id"`
+	Subject string `human:"Subject" serialized:"subject"`
+	Version int32  `human:"Version" serialized:"version"`
 }
 
 func (c *command) newSchemaListCommand(cfg *config.Config) *cobra.Command {
@@ -53,16 +53,6 @@ func (c *command) newSchemaListCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	return cmd
 }
 
@@ -90,9 +80,9 @@ func (c *command) schemaList(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, schema := range schemas {
 		list.Add(&row{
-			SchemaId: schema.GetId(),
-			Subject:  schema.GetSubject(),
-			Version:  schema.GetVersion(),
+			Id:      schema.GetId(),
+			Subject: schema.GetSubject(),
+			Version: schema.GetVersion(),
 		})
 	}
 	return list.Print()

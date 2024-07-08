@@ -16,7 +16,7 @@ type humanOut struct {
 	Id        string `human:"ID"`
 	Key       string `human:"Key"`
 	Roles     string `human:"Roles"`
-	Provider  string `human:"Provider"`
+	Cloud     string `human:"Cloud"`
 	State     string `human:"State"`
 	CreatedAt string `human:"Created At"`
 }
@@ -25,7 +25,7 @@ type serializedOut struct {
 	Id        string   `serialized:"id"`
 	Key       string   `serialized:"key"`
 	Roles     []string `serialized:"roles"`
-	Provider  string   `serialized:"provider"`
+	Cloud     string   `serialized:"cloud"`
 	State     string   `serialized:"state"`
 	CreatedAt string   `serialized:"created_at"`
 }

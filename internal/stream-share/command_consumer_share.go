@@ -7,31 +7,31 @@ import (
 )
 
 type consumerShareHumanOut struct {
-	Id                         string    `human:"ID"`
-	ProviderName               string    `human:"Provider Name"`
-	ProviderOrganizationName   string    `human:"Provider Organization Name"`
-	Status                     string    `human:"Status"`
-	InviteExpiresAt            time.Time `human:"Invite Expires At"`
-	NetworkDnsDomain           string    `human:"Network DNS Domain"`
-	NetworkZones               string    `human:"Network Zones"`
-	NetworkZonalSubdomains     string    `human:"Network Zonal Subdomains"`
-	NetworkKind                string    `human:"Network Kind"`
-	NetworkPrivateLinkDataType string    `human:"Network Private Link Data Type"`
-	NetworkPrivateLinkData     string    `human:"Network Private Link Data"`
+	Id                         string            `human:"ID"`
+	ProviderName               string            `human:"Provider Name"`
+	ProviderOrganizationName   string            `human:"Provider Organization Name"`
+	Status                     string            `human:"Status"`
+	InviteExpiresAt            time.Time         `human:"Invite Expires At"`
+	NetworkDnsDomain           string            `human:"Network DNS Domain"`
+	NetworkZones               string            `human:"Network Zones"`
+	NetworkZonalSubdomains     map[string]string `human:"Network Zonal Subdomains"`
+	NetworkKind                string            `human:"Network Kind"`
+	NetworkPrivateLinkDataType string            `human:"Network Private Link Data Type"`
+	NetworkPrivateLinkData     string            `human:"Network Private Link Data"`
 }
 
 type consumerShareSerializedOut struct {
-	Id                         string    `serialized:"id"`
-	ProviderName               string    `serialized:"provider_name"`
-	ProviderOrganizationName   string    `serialized:"provider_organization_name"`
-	Status                     string    `serialized:"status"`
-	InviteExpiresAt            time.Time `serialized:"invite_expires_at"`
-	NetworkDnsDomain           string    `serialized:"network_dns_domain"`
-	NetworkZones               string    `serialized:"network_zones"`
-	NetworkZonalSubdomains     []string  `serialized:"network_zonal_subdomains"`
-	NetworkKind                string    `serialized:"network_kind"`
-	NetworkPrivateLinkDataType string    `serialized:"network_private_link_data_type"`
-	NetworkPrivateLinkData     string    `serialized:"network_private_link_data"`
+	Id                         string            `serialized:"id"`
+	ProviderName               string            `serialized:"provider_name"`
+	ProviderOrganizationName   string            `serialized:"provider_organization_name"`
+	Status                     string            `serialized:"status"`
+	InviteExpiresAt            time.Time         `serialized:"invite_expires_at"`
+	NetworkDnsDomain           string            `serialized:"network_dns_domain"`
+	NetworkZones               []string          `serialized:"network_zones"`
+	NetworkZonalSubdomains     map[string]string `serialized:"network_zonal_subdomains"`
+	NetworkKind                string            `serialized:"network_kind"`
+	NetworkPrivateLinkDataType string            `serialized:"network_private_link_data_type"`
+	NetworkPrivateLinkData     string            `serialized:"network_private_link_data"`
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {

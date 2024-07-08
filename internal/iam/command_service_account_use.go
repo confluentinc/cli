@@ -19,8 +19,6 @@ func (c *serviceAccountCommand) newUseCommand() *cobra.Command {
 		RunE:              c.use,
 	}
 
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-
 	return cmd
 }
 

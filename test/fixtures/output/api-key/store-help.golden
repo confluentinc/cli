@@ -9,20 +9,12 @@ You must have an API secret stored locally for certain CLI commands to
 work. For example, the Kafka topic consume and produce commands require an API secret.
 
 Usage:
-  confluent api-key store [api-key] [secret] [flags]
+  confluent api-key store <api-key> <secret> [flags]
 
 Examples:
 Pass the API key and secret as arguments
 
   $ confluent api-key store my-key my-secret
-
-Get prompted for only the API secret
-
-  $ confluent api-key store my-key
-
-Get prompted for both the API key and secret
-
-  $ confluent api-key store
 
 Flags:
       --resource string      The ID of the resource the API key is for.
