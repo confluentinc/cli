@@ -35,6 +35,8 @@ type Context struct {
 	Config     *Config       `json:"-"`
 }
 
+var noEnvError = "no environment found"
+
 func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, organizationId, environmentId string) (*Context, error) {
 	ctx := &Context{
 		Name:               name,
@@ -191,7 +193,7 @@ func (c *Context) EnvironmentId() (string, error) {
 		return id, nil
 	}
 
-	return "", errors.NewErrorWithSuggestions("no environment found", "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
+	return "", errors.NewErrorWithSuggestions(noEnvError, "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
 }
 
 func (c *Context) GetCurrentEnvironment() string {
@@ -246,10 +248,20 @@ func (c *Context) GetCurrentFlinkComputePool() string {
 func (c *Context) SetCurrentFlinkComputePool(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf("no environment found")
+		return fmt.Errorf(noEnvError)
 	}
 
 	ctx.CurrentFlinkComputePool = id
+	return nil
+}
+
+func (c *Context) SetCurrentFlinkAccessType(name string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf(noEnvError)
+	}
+
+	ctx.CurrentFlinkAccessType = name
 	return nil
 }
 
@@ -263,7 +275,7 @@ func (c *Context) GetCurrentFlinkCloudProvider() string {
 func (c *Context) SetCurrentFlinkCloudProvider(cloud string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf("no environment found")
+		return fmt.Errorf(noEnvError)
 	}
 
 	ctx.CurrentFlinkCloudProvider = cloud
@@ -279,7 +291,7 @@ func (c *Context) GetCurrentFlinkRegion() string {
 func (c *Context) SetCurrentFlinkRegion(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf("no environment found")
+		return fmt.Errorf(noEnvError)
 	}
 
 	ctx.CurrentFlinkRegion = id
@@ -296,7 +308,7 @@ func (c *Context) GetCurrentFlinkCatalog() string {
 func (c *Context) SetCurrentFlinkCatalog(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf("no environment found")
+		return fmt.Errorf(noEnvError)
 	}
 
 	ctx.CurrentFlinkCatalog = id
@@ -313,11 +325,18 @@ func (c *Context) GetCurrentFlinkDatabase() string {
 func (c *Context) SetCurrentFlinkDatabase(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf("no environment found")
+		return fmt.Errorf(noEnvError)
 	}
 
 	ctx.CurrentFlinkDatabase = id
 	return nil
+}
+
+func (c *Context) GetCurrentFlinkAccessType() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkAccessType
+	}
+	return ""
 }
 
 func (c *Context) GetCurrentServiceAccount() string {
@@ -330,7 +349,7 @@ func (c *Context) GetCurrentServiceAccount() string {
 func (c *Context) SetCurrentServiceAccount(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf("no environment found")
+		return fmt.Errorf(noEnvError)
 	}
 
 	ctx.CurrentServiceAccount = id

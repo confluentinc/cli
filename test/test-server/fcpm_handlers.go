@@ -119,11 +119,12 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		aws := flinkv2.FcpmV2Region{
-			Id:           flinkv2.PtrString("aws.eu-west-1"),
-			DisplayName:  flinkv2.PtrString("Europe (eu-west-1)"),
-			Cloud:        flinkv2.PtrString("AWS"),
-			RegionName:   flinkv2.PtrString("eu-west-1"),
-			HttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrl.String()),
+			Id:                  flinkv2.PtrString("aws.eu-west-1"),
+			DisplayName:         flinkv2.PtrString("Europe (eu-west-1)"),
+			Cloud:               flinkv2.PtrString("AWS"),
+			RegionName:          flinkv2.PtrString("eu-west-1"),
+			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
+			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
 		}
 		gcp := flinkv2.FcpmV2Region{
 			Id:           flinkv2.PtrString("gcp.europe-west3-a"),
