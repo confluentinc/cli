@@ -1,0 +1,9 @@
+Select a Flink connectivity type for the current environment as "public" or "private". If unspecified, the CLI will default to the connectivity type that was set at the organization level.
+
+Usage:
+  confluent flink connectivity-type use <region-access> [flags]
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
