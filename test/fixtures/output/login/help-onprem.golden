@@ -40,7 +40,7 @@ Log in to Confluent Platform with a MDS URL and Certification Authority certific
 
   $ confluent login --url https://localhost:8090 --certificate-authority-path certs/my-cert.crt
 
-Log in to Confluent Platform with SSO and ignore any saved credentials.
+Log in to Confluent Platform with SSO and ignore login environment variables.
 
   CONFLUENT_PLATFORM_SSO=true confluent login --url https://localhost:8090 --certificate-authority-path certs/my-cert.crt
 

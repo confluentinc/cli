@@ -20,9 +20,6 @@ type LoginCredentialsManager struct {
 	lockGetOnPremCredentialsFromEnvVar sync.Mutex
 	GetOnPremCredentialsFromEnvVarFunc func() func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
-	lockGetSsoCredentialsFromConfig sync.Mutex
-	GetSsoCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
-
 	lockGetCredentialsFromConfig sync.Mutex
 	GetCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 github_com_confluentinc_cli_v3_pkg_config.MachineParams) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error)
 
@@ -55,10 +52,6 @@ type LoginCredentialsManager struct {
 			Arg0 string
 		}
 		GetOnPremCredentialsFromEnvVar []struct {
-		}
-		GetSsoCredentialsFromConfig []struct {
-			Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
-			Arg1 string
 		}
 		GetCredentialsFromConfig []struct {
 			Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
@@ -164,47 +157,6 @@ func (m *LoginCredentialsManager) GetOnPremCredentialsFromEnvVarCalls() []struct
 	defer m.lockGetOnPremCredentialsFromEnvVar.Unlock()
 
 	return m.calls.GetOnPremCredentialsFromEnvVar
-}
-
-// GetSsoCredentialsFromConfig mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetSsoCredentialsFromConfig(arg0 *github_com_confluentinc_cli_v3_pkg_config.Config, arg1 string) func() (*github_com_confluentinc_cli_v3_pkg_auth.Credentials, error) {
-	m.lockGetSsoCredentialsFromConfig.Lock()
-	defer m.lockGetSsoCredentialsFromConfig.Unlock()
-
-	if m.GetSsoCredentialsFromConfigFunc == nil {
-		panic("mocker: LoginCredentialsManager.GetSsoCredentialsFromConfigFunc is nil but LoginCredentialsManager.GetSsoCredentialsFromConfig was called.")
-	}
-
-	call := struct {
-		Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
-		Arg1 string
-	}{
-		Arg0: arg0,
-		Arg1: arg1,
-	}
-
-	m.calls.GetSsoCredentialsFromConfig = append(m.calls.GetSsoCredentialsFromConfig, call)
-
-	return m.GetSsoCredentialsFromConfigFunc(arg0, arg1)
-}
-
-// GetSsoCredentialsFromConfigCalled returns true if GetSsoCredentialsFromConfig was called at least once.
-func (m *LoginCredentialsManager) GetSsoCredentialsFromConfigCalled() bool {
-	m.lockGetSsoCredentialsFromConfig.Lock()
-	defer m.lockGetSsoCredentialsFromConfig.Unlock()
-
-	return len(m.calls.GetSsoCredentialsFromConfig) > 0
-}
-
-// GetSsoCredentialsFromConfigCalls returns the calls made to GetSsoCredentialsFromConfig.
-func (m *LoginCredentialsManager) GetSsoCredentialsFromConfigCalls() []struct {
-	Arg0 *github_com_confluentinc_cli_v3_pkg_config.Config
-	Arg1 string
-} {
-	m.lockGetSsoCredentialsFromConfig.Lock()
-	defer m.lockGetSsoCredentialsFromConfig.Unlock()
-
-	return m.calls.GetSsoCredentialsFromConfig
 }
 
 // GetCredentialsFromConfig mocks base method by wrapping the associated func.
@@ -567,9 +519,6 @@ func (m *LoginCredentialsManager) Reset() {
 	m.lockGetOnPremCredentialsFromEnvVar.Lock()
 	m.calls.GetOnPremCredentialsFromEnvVar = nil
 	m.lockGetOnPremCredentialsFromEnvVar.Unlock()
-	m.lockGetSsoCredentialsFromConfig.Lock()
-	m.calls.GetSsoCredentialsFromConfig = nil
-	m.lockGetSsoCredentialsFromConfig.Unlock()
 	m.lockGetCredentialsFromConfig.Lock()
 	m.calls.GetCredentialsFromConfig = nil
 	m.lockGetCredentialsFromConfig.Unlock()
