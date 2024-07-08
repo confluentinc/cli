@@ -7,4 +7,5 @@ type EnvironmentContext struct {
 	CurrentFlinkDatabase      string `json:"current_flink_database,omitempty"`
 	CurrentFlinkRegion        string `json:"current_flink_region,omitempty"`
 	CurrentServiceAccount     string `json:"current_service_account,omitempty"`
+	CurrentFlinkAccessType    string `json:"current_flink_access_type,omitempty"`
 }

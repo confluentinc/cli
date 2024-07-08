@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -60,6 +61,27 @@ func (s *CLITestSuite) TestFlinkComputePool() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkConnectivityType() {
+	listPrivateFixture := "flink/connectivity-type/list-private.golden"
+	if runtime.GOOS == "windows" { // Error message is different on Windows
+		listPrivateFixture = "flink/connectivity-type/list-private-windows.golden"
+	}
+
+	tests := []CLITest{
+		{args: "flink connectivity-type use public", fixture: "flink/connectivity-type/use-public.golden"},
+		{args: "flink statement list --cloud aws --region eu-west-1", fixture: "flink/connectivity-type/list-public.golden"},
+		{args: "flink connectivity-type use private", fixture: "flink/connectivity-type/use-private.golden"},
+		// Checking that the private endpoint is getting hit. The error here tells us that we are not using the public URL anymore.
+		{args: "flink statement list --cloud aws --region eu-west-1", fixture: listPrivateFixture, exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }
