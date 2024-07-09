@@ -1,0 +1,31 @@
+Update a Flink SQL statement.
+
+Usage:
+  confluent flink statement update <name> [flags]
+
+Examples:
+Request to update the principal of statement "my-statement" to service account "sa-123456".
+
+  $ confluent flink statement update my-statement --principal sa-123456
+
+Request to update statement "my-statement" to be run on compute pool "lfcp-123456".
+
+  $ confluent flink statement update my-statement --compute-pool lfcp-123456
+
+Request to resume statement "my-statement".
+
+  $ confluent flink statement update my-statement --stopped=false
+
+Flags:
+      --principal string      A user or service account the statement runs as.
+      --compute-pool string   Flink compute pool ID.
+      --stopped               Request to stop the statement.
+      --cloud string          Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string         Cloud region for Flink (use "confluent flink region list" to see all).
+      --environment string    Environment ID.
+      --context string        CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

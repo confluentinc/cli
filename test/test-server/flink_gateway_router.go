@@ -103,7 +103,7 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 					"sql.current-catalog":  "default",
 					"sql.current-database": "my-cluster",
 				},
-				ComputePoolId: flinkgatewayv1.PtrString("pool-123456"),
+				ComputePoolId: flinkgatewayv1.PtrString("lfcp-123456"),
 				Principal:     flinkgatewayv1.PtrString("u-123456"),
 			},
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
