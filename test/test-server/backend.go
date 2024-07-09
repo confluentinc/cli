@@ -10,12 +10,13 @@ import (
 
 var (
 	// TestCloudUrl is used to hardcode a specific port (1024) so tests can identify CCloud URLs
-	TestCloudUrl          = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
-	TestV2CloudUrl        = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
-	TestHubUrl            = url.URL{Scheme: "http", Host: "127.0.0.1:4096"}
-	TestKafkaRestProxyUrl = url.URL{Scheme: "http", Host: "127.0.0.1:1025"}
-	TestFlinkGatewayUrl   = url.URL{Scheme: "http", Host: "127.0.0.1:1026"}
-	TestSchemaRegistryUrl = url.URL{Scheme: "http", Host: "127.0.0.1:1027"}
+	TestCloudUrl               = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
+	TestV2CloudUrl             = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
+	TestHubUrl                 = url.URL{Scheme: "http", Host: "127.0.0.1:4096"}
+	TestKafkaRestProxyUrl      = url.URL{Scheme: "http", Host: "127.0.0.1:1025"}
+	TestFlinkGatewayUrl        = url.URL{Scheme: "http", Host: "127.0.0.1:1026"}
+	TestFlinkGatewayUrlPrivate = url.URL{Scheme: "http", Host: "127.0.0.1:1028"}
+	TestSchemaRegistryUrl      = url.URL{Scheme: "http", Host: "127.0.0.1:1027"}
 )
 
 // TestBackend consists of the servers for necessary mocked backend services

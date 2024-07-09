@@ -57,7 +57,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 
 		if computePoolOnly {
 			if computePoolId := c.Context.GetCurrentFlinkComputePool(); computePoolId != "" {
-				url, err = c.getGatewayUrlForComputePool(computePoolId)
+				url, err = c.getGatewayUrlForComputePool(c.Context.GetCurrentFlinkAccessType(), computePoolId)
 				if err != nil {
 					return nil, err
 				}
@@ -65,7 +65,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 				return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 			}
 		} else if c.Context.GetCurrentFlinkRegion() != "" && c.Context.GetCurrentFlinkCloudProvider() != "" {
-			url, err = c.getGatewayUrlForRegion(c.Context.GetCurrentFlinkCloudProvider(), c.Context.GetCurrentFlinkRegion())
+			url, err = c.getGatewayUrlForRegion(c.Context.GetCurrentFlinkAccessType(), c.Context.GetCurrentFlinkCloudProvider(), c.Context.GetCurrentFlinkRegion())
 			if err != nil {
 				return nil, err
 			}
@@ -89,7 +89,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 	return c.flinkGatewayClient, nil
 }
 
-func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(id string) (string, error) {
+func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string) (string, error) {
 	if c.Config.IsTest {
 		return testserver.TestFlinkGatewayUrl.String(), nil
 	}
@@ -104,11 +104,38 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(id string) (string
 		return "", err
 	}
 
-	return fmt.Sprintf("https://flink.%s.%s.%s", computePool.Spec.GetRegion(), strings.ToLower(computePool.Spec.GetCloud()), u.Host), nil
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return "", err
+	}
+
+	privateURL := fmt.Sprintf("https://flink.%s.%s.private.%s", computePool.Spec.GetRegion(), strings.ToLower(computePool.Spec.GetCloud()), u.Host)
+	publicURL := fmt.Sprintf("https://flink.%s.%s.%s", computePool.Spec.GetRegion(), strings.ToLower(computePool.Spec.GetCloud()), u.Host)
+
+	if access == "private" {
+		return privateURL, nil
+	} else if access == "public" {
+		return publicURL, nil
+	} else {
+		list, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, []string{"AWS"}, nil, []string{"READY"})
+		if err != nil {
+			return "", err
+		}
+		if len(list) > 0 {
+			return privateURL, nil
+		} else {
+			return publicURL, nil
+		}
+	}
 }
 
-func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string) (string, error) {
+func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, region string) (string, error) {
 	regions, err := c.V2Client.ListFlinkRegions(provider)
+	if err != nil {
+		return "", err
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +143,21 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string
 	var hostUrl string
 	for _, flinkRegion := range regions {
 		if flinkRegion.GetRegionName() == region {
-			hostUrl = flinkRegion.GetHttpEndpoint()
+			if accessType == "public" {
+				hostUrl = flinkRegion.GetHttpEndpoint()
+			} else if accessType == "private" {
+				hostUrl = flinkRegion.GetPrivateHttpEndpoint()
+			} else {
+				list, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, []string{"AWS"}, nil, []string{"READY"})
+				if err != nil {
+					return "", err
+				}
+				if len(list) > 0 {
+					hostUrl = flinkRegion.GetPrivateHttpEndpoint()
+				} else {
+					hostUrl = flinkRegion.GetHttpEndpoint()
+				}
+			}
 			break
 		}
 	}
