@@ -155,8 +155,8 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 
 		// "USE `catalog_name`.`database_name`" statement
 	} else if catalog != "" && database != "" {
-		s.Properties.Set(catalog, database)
-		s.Properties.Set(catalog, database)
+		s.Properties.Set(config.KeyCatalog, catalog)
+		s.Properties.Set(config.KeyDatabase, database)
 		addedConfig = append(addedConfig, []string{config.KeyCatalog, catalog})
 		addedConfig = append(addedConfig, []string{config.KeyDatabase, database})
 	} else {
