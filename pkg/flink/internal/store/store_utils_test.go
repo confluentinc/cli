@@ -221,6 +221,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.Equal(t, "configuration updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.KeyDatabase, "db1"}})
 		assert.Equal(t, expectedResult, result.StatementResults)
+		assert.Equal(t, "db1", s.Properties.Get(config.KeyDatabase))
 	})
 
 	t.Run("should return an error message if catalog name is missing", func(t *testing.T) {
@@ -236,6 +237,22 @@ func TestProcessUseStatement(t *testing.T) {
 		require.Equal(t, "configuration updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.KeyCatalog, "metadata"}})
 		assert.Equal(t, expectedResult, result.StatementResults)
+		assert.Equal(t, "metadata", s.Properties.Get(config.KeyCatalog))
+	})
+
+	t.Run("should update the catalog and database name in config", func(t *testing.T) {
+		result, err := s.processUseStatement("USE `my catalog`.`my database`")
+		require.Nil(t, err)
+		require.Equal(t, config.OpUse, result.Kind)
+		require.EqualValues(t, types.COMPLETED, result.Status)
+		require.Equal(t, "configuration updated successfully", result.StatusDetail)
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{
+			{config.KeyCatalog, "my catalog"},
+			{config.KeyDatabase, "my database"},
+		})
+		assert.Equal(t, expectedResult, result.StatementResults)
+		assert.Equal(t, "my catalog", s.Properties.Get(config.KeyCatalog))
+		assert.Equal(t, "my database", s.Properties.Get(config.KeyDatabase))
 	})
 
 	t.Run("should return an error message for invalid syntax", func(t *testing.T) {
