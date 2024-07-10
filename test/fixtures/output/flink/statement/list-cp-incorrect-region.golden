@@ -1,4 +1,4 @@
-Error: Flink compute pool "lfcp-123456" not found in aws eu-west-1
+Error: Flink compute pool "lfcp-123456" not found in aws eu-west-2
 
 Suggestions:
-    Select a different compute pool, or provide the correct cloud/region pair with `confluent flink statement list --cloud aws --region us-west-2 --compute-pool lfcp-123456 --environment env-596`
+    Select a different compute pool, or provide the correct cloud/region pair with `confluent flink statement list --cloud aws --region eu-west-1 --compute-pool lfcp-123456 --environment env-596`
