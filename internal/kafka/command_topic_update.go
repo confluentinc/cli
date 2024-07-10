@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v3/pkg/retry"
 	"strconv"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/properties"
 	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v3/pkg/retry"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
