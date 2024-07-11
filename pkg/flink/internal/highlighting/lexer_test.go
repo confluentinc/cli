@@ -127,7 +127,7 @@ func TestSplitWithSeparatorsSnapshot(t *testing.T) {
 	// when
 	tokens := splitWithSeparators(sentence)
 	// then
-	cupaloy.Snapshot(t, tokens)
+	cupaloy.SnapshotT(t, tokens)
 }
 
 func TestWordLexerForRandomStatements(t *testing.T) {
