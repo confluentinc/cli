@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
@@ -118,6 +119,15 @@ func TestSplitWithSeparatorsDoesNotIncludeEmptyString(t *testing.T) {
 		// then
 		require.NotContains(t, tokens, "")
 	})
+}
+
+func TestSplitWithSeparatorsSnapshot(t *testing.T) {
+	// given
+	sentence := `SELECT count(col1) FROM users \n /*\t\v\f\r[testing]*/WHERE (name = 'John Doe'); -- \n>.,<:= testing)`
+	// when
+	tokens := splitWithSeparators(sentence)
+	// then
+	cupaloy.Snapshot(t, tokens)
 }
 
 func TestWordLexerForRandomStatements(t *testing.T) {

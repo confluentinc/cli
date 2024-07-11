@@ -1,0 +1,259 @@
+(*testing.T)({
+  common: (testing.common) {
+    mu: (sync.RWMutex) {
+      w: (sync.Mutex) {
+        state: (int32) 0,
+        sema: (uint32) 0
+      },
+      writerSem: (uint32) 0,
+      readerSem: (uint32) 0,
+      readerCount: (atomic.Int32) {
+        _: (atomic.noCopy) {
+        },
+        v: (int32) 0
+      },
+      readerWait: (atomic.Int32) {
+        _: (atomic.noCopy) {
+        },
+        v: (int32) 0
+      }
+    },
+    output: ([]uint8) <nil>,
+    w: (testing.indenter) {
+      c: (*testing.common)(<already shown>)
+    },
+    ran: (bool) false,
+    failed: (bool) false,
+    skipped: (bool) false,
+    done: (bool) false,
+    helperPCs: (map[uintptr]struct {}) <nil>,
+    helperNames: (map[string]struct {}) <nil>,
+    cleanups: ([]func()) <nil>,
+    cleanupName: (string) "",
+    cleanupPc: ([]uintptr) <nil>,
+    finished: (bool) false,
+    inFuzzFn: (bool) false,
+    chatty: (*testing.chattyPrinter)(<nil>),
+    bench: (bool) false,
+    hasSub: (atomic.Bool) {
+      _: (atomic.noCopy) {
+      },
+      v: (uint32) 0
+    },
+    cleanupStarted: (atomic.Bool) {
+      _: (atomic.noCopy) {
+      },
+      v: (uint32) 0
+    },
+    runner: (string) (len=15) "testing.tRunner",
+    isParallel: (bool) false,
+    parent: (*testing.common)({
+      mu: (sync.RWMutex) {
+        w: (sync.Mutex) {
+          state: (int32) 0,
+          sema: (uint32) 0
+        },
+        writerSem: (uint32) 0,
+        readerSem: (uint32) 0,
+        readerCount: (atomic.Int32) {
+          _: (atomic.noCopy) {
+          },
+          v: (int32) 0
+        },
+        readerWait: (atomic.Int32) {
+          _: (atomic.noCopy) {
+          },
+          v: (int32) 0
+        }
+      },
+      output: ([]uint8) <nil>,
+      w: (*os.File)({
+        file: (*os.file)({
+          pfd: (poll.FD) {
+            fdmu: (poll.fdMutex) {
+              state: (uint64) 0,
+              rsema: (uint32) 0,
+              wsema: (uint32) 0
+            },
+            Sysfd: (int) 1,
+            SysFile: (poll.SysFile) {
+              iovecs: (*[]syscall.Iovec)(<nil>)
+            },
+            pd: (poll.pollDesc) {
+              runtimeCtx: (uintptr) <nil>
+            },
+            csema: (uint32) 0,
+            isBlocking: (uint32) 1,
+            IsStream: (bool) true,
+            ZeroReadIsEOF: (bool) true,
+            isFile: (bool) true
+          },
+          name: (string) (len=11) "/dev/stdout",
+          dirinfo: (*os.dirInfo)(<nil>),
+          nonblock: (bool) false,
+          stdoutOrErr: (bool) true,
+          appendMode: (bool) false
+        })
+      }),
+      ran: (bool) false,
+      failed: (bool) false,
+      skipped: (bool) false,
+      done: (bool) false,
+      helperPCs: (map[uintptr]struct {}) <nil>,
+      helperNames: (map[string]struct {}) <nil>,
+      cleanups: ([]func()) <nil>,
+      cleanupName: (string) "",
+      cleanupPc: ([]uintptr) <nil>,
+      finished: (bool) false,
+      inFuzzFn: (bool) false,
+      chatty: (*testing.chattyPrinter)(<nil>),
+      bench: (bool) false,
+      hasSub: (atomic.Bool) {
+        _: (atomic.noCopy) {
+        },
+        v: (uint32) 1
+      },
+      cleanupStarted: (atomic.Bool) {
+        _: (atomic.noCopy) {
+        },
+        v: (uint32) 0
+      },
+      runner: (string) (len=15) "testing.tRunner",
+      isParallel: (bool) false,
+      parent: (*testing.common)(<nil>),
+      level: (int) 0,
+      creator: ([]uintptr) <nil>,
+      name: (string) "",
+      start: (time.Time) 2024-07-11 15:56:03.482572 +0200 CEST m=+0.007354792,
+      duration: (time.Duration) 0s,
+      barrier: (chan bool) 0x1400011a900,
+      signal: (chan bool) 0x14000110620,
+      sub: ([]*testing.T) <nil>,
+      lastRaceErrors: (atomic.Int64) {
+        _: (atomic.noCopy) {
+        },
+        _: (atomic.align64) {
+        },
+        v: (int64) 0
+      },
+      raceErrorLogged: (atomic.Bool) {
+        _: (atomic.noCopy) {
+        },
+        v: (uint32) 0
+      },
+      tempDirMu: (sync.Mutex) {
+        state: (int32) 0,
+        sema: (uint32) 0
+      },
+      tempDir: (string) "",
+      tempDirErr: (error) <nil>,
+      tempDirSeq: (int32) 0
+    }),
+    level: (int) 1,
+    creator: ([]uintptr) (len=7) {
+      (uintptr) 0x100e54510,
+      (uintptr) 0x100e519cc,
+      (uintptr) 0x100e54410,
+      (uintptr) 0x100e53144,
+      (uintptr) 0x10165cb3c,
+      (uintptr) 0x100d6302c,
+      (uintptr) 0x100d9d814
+    },
+    name: (string) (len=31) "TestSplitWithSeparatorsSnapshot",
+    start: (time.Time) 2024-07-11 15:56:03.482613 +0200 CEST m=+0.007395501,
+    duration: (time.Duration) 0s,
+    barrier: (chan bool) 0x1400011a960,
+    signal: (chan bool) 0x14000110690,
+    sub: ([]*testing.T) <nil>,
+    lastRaceErrors: (atomic.Int64) {
+      _: (atomic.noCopy) {
+      },
+      _: (atomic.align64) {
+      },
+      v: (int64) 0
+    },
+    raceErrorLogged: (atomic.Bool) {
+      _: (atomic.noCopy) {
+      },
+      v: (uint32) 0
+    },
+    tempDirMu: (sync.Mutex) {
+      state: (int32) 0,
+      sema: (uint32) 0
+    },
+    tempDir: (string) "",
+    tempDirErr: (error) <nil>,
+    tempDirSeq: (int32) 0
+  },
+  isEnvSet: (bool) false,
+  context: (*testing.testContext)({
+    match: (*testing.matcher)({
+      filter: (testing.simpleMatch) (len=1) {
+        (string) (len=33) "^TestSplitWithSeparatorsSnapshot$"
+      },
+      skip: (testing.alternationMatch) {
+      },
+      matchFunc: (func(string, string) (bool, error)) 0x100e56970,
+      mu: (sync.Mutex) {
+        state: (int32) 0,
+        sema: (uint32) 0
+      },
+      subNames: (map[string]int32) {
+      }
+    }),
+    deadline: (time.Time) 2024-07-11 15:58:03.482486 +0200 CEST m=+120.007268751,
+    isFuzzing: (bool) false,
+    mu: (sync.Mutex) {
+      state: (int32) 0,
+      sema: (uint32) 0
+    },
+    startParallel: (chan bool) 0x1400011a8a0,
+    running: (int) 1,
+    numWaiting: (int) 0,
+    maxParallel: (int) 10
+  })
+})
+([]string) (len=42) {
+  (string) (len=6) "SELECT",
+  (string) (len=1) " ",
+  (string) (len=5) "count",
+  (string) (len=1) "(",
+  (string) (len=4) "col1",
+  (string) (len=1) ")",
+  (string) (len=1) " ",
+  (string) (len=4) "FROM",
+  (string) (len=1) " ",
+  (string) (len=5) "users",
+  (string) (len=1) " ",
+  (string) (len=2) "\\n",
+  (string) (len=1) " ",
+  (string) (len=10) "/*\\t\\v\\f\\r",
+  (string) (len=1) "[",
+  (string) (len=7) "testing",
+  (string) (len=1) "]",
+  (string) (len=7) "*/WHERE",
+  (string) (len=1) " ",
+  (string) (len=1) "(",
+  (string) (len=4) "name",
+  (string) (len=1) " ",
+  (string) (len=1) "=",
+  (string) (len=1) " ",
+  (string) (len=5) "'John",
+  (string) (len=1) " ",
+  (string) (len=4) "Doe'",
+  (string) (len=1) ")",
+  (string) (len=1) ";",
+  (string) (len=1) " ",
+  (string) (len=2) "--",
+  (string) (len=1) " ",
+  (string) (len=2) "\\n",
+  (string) (len=1) ">",
+  (string) (len=1) ".",
+  (string) (len=1) ",",
+  (string) (len=1) "<",
+  (string) (len=1) ":",
+  (string) (len=1) "=",
+  (string) (len=1) " ",
+  (string) (len=7) "testing",
+  (string) (len=1) ")"
+}
