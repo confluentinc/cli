@@ -121,31 +121,30 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		errPartition := retry.Retry(time.Second/10, time.Second, func() error {
-			topic, httpRespPartition, err := kafkaREST.CloudClient.GetKafkaTopic(topicName)
+		err = retry.Retry(100*time.Millisecond, time.Second, func() error {
+			topic, httpResp, err := kafkaREST.CloudClient.GetKafkaTopic(topicName)
 			if err != nil {
 				if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
-				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpRespPartition)
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
-			if int64(topic.PartitionsCount) != (updateNumPartitionsInt) {
-				return fmt.Errorf(`the partition count not yet updated`)
+			if int64(topic.PartitionsCount) != updateNumPartitionsInt {
+				return fmt.Errorf("the partition count is not yet updated")
 			}
 			return nil
 		})
-
-		if errPartition != nil {
-			return errPartition
+		if err != nil {
+			return err
 		}
 
-		topic, httpRespPartition, errUpdated := kafkaREST.CloudClient.GetKafkaTopic(topicName)
-		if errUpdated != nil {
-			if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(errUpdated); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
+		topic, httpResp, err := kafkaREST.CloudClient.GetKafkaTopic(topicName)
+		if err != nil {
+			if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
 				return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 			}
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), errUpdated, httpRespPartition)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		configsValues[numPartitionsKey] = fmt.Sprint(topic.PartitionsCount)
