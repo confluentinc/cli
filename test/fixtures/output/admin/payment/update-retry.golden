@@ -1,4 +1,3 @@
-Edit credit card
 Card number: Error: "bad card number" is not of valid format for field "card number"
 Card number: MM/YY: Error: "bad expiration" is not of valid format for field "expiration"
 MM/YY: CVC: Error: "bad cvc" is not of valid format for field "cvc"
