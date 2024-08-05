@@ -541,6 +541,12 @@ func handleKafkaRestTopic(t *testing.T) http.HandlerFunc {
 				TopicName:       topic,
 				PartitionsCount: 3,
 			}
+			if topic == "topic-exist-rest" {
+				data = cckafkarestv3.TopicData{
+					TopicName:       topic,
+					PartitionsCount: 6,
+				}
+			}
 			err := json.NewEncoder(w).Encode(data)
 			require.NoError(t, err)
 		case http.MethodPatch:
