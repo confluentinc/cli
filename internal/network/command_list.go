@@ -3,7 +3,6 @@ package network
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -98,38 +97,19 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
-		zones := network.Spec.GetZones()
-		activeConnectionTypes := network.Status.GetActiveConnectionTypes().Items
-
-		if output.GetFormat(cmd) == output.Human {
-			list.Add(&humanOut{
-				Id:                    network.GetId(),
-				Name:                  network.Spec.GetDisplayName(),
-				EnvironmentId:         network.Spec.Environment.GetId(),
-				Gateway:               network.Spec.GetGateway().Id,
-				Cloud:                 network.Spec.GetCloud(),
-				Region:                network.Spec.GetRegion(),
-				Cidr:                  network.Spec.GetCidr(),
-				Zones:                 strings.Join(zones, ", "),
-				DnsResolution:         network.Spec.DnsConfig.GetResolution(),
-				Phase:                 network.Status.GetPhase(),
-				ActiveConnectionTypes: strings.Join(activeConnectionTypes, ", "),
-			})
-		} else {
-			list.Add(&serializedOut{
-				Id:                    network.GetId(),
-				Name:                  network.Spec.GetDisplayName(),
-				EnvironmentId:         network.Spec.Environment.GetId(),
-				Gateway:               network.Spec.GetGateway().Id,
-				Cloud:                 network.Spec.GetCloud(),
-				Region:                network.Spec.GetRegion(),
-				Cidr:                  network.Spec.GetCidr(),
-				Zones:                 zones,
-				DnsResolution:         network.Spec.DnsConfig.GetResolution(),
-				Phase:                 network.Status.GetPhase(),
-				ActiveConnectionTypes: activeConnectionTypes,
-			})
-		}
+		list.Add(&out{
+			Id:                    network.GetId(),
+			Name:                  network.Spec.GetDisplayName(),
+			EnvironmentId:         network.Spec.Environment.GetId(),
+			Gateway:               network.Spec.GetGateway().Id,
+			Cloud:                 network.Spec.GetCloud(),
+			Region:                network.Spec.GetRegion(),
+			Cidr:                  network.Spec.GetCidr(),
+			Zones:                 network.Spec.GetZones(),
+			DnsResolution:         network.Spec.DnsConfig.GetResolution(),
+			Phase:                 network.Status.GetPhase(),
+			ActiveConnectionTypes: network.Status.GetActiveConnectionTypes().Items,
+		})
 	}
 	list.Sort(false)
 	list.Filter([]string{"Id", "Name", "Gateway", "Cloud", "Region", "Cidr", "Zones", "DnsResolution", "Phase", "ActiveConnectionTypes"})

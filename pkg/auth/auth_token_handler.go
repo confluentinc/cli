@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/auth/sso"
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/retry"
@@ -163,6 +164,10 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, cre
 			output.Println(false, "Navigate to the following link in your browser to authenticate:")
 			output.Println(false, resp.VerificationUri)
 		} else {
+			output.Printf(false, "You will now be redirected to the SSO authentication page in your browser. Your activation code is \"%s\". If you are not redirected, please use the following link: %s\n", resp.UserCode, resp.VerificationUri)
+			if err := form.ConfirmEnter(); err != nil {
+				return "", "", err
+			}
 			if err := browser.OpenURL(resp.VerificationUri); err != nil {
 				return "", "", fmt.Errorf("unable to open web browser for SSO authentication: %w", err)
 			}

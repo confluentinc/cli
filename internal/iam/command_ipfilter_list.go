@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -32,25 +30,13 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	if output.GetFormat(cmd) == output.Human {
-		for _, filter := range ipFilters {
-			list.Add(&ipFilterHumanOut{
-				ID:            filter.GetId(),
-				Name:          filter.GetFilterName(),
-				ResourceGroup: filter.GetResourceGroup(),
-				IpGroups:      strings.Join(convertIpGroupObjectsToIpGroupIds(filter), ", "),
-			})
-		}
-		return list.Print()
-	} else {
-		for _, filter := range ipFilters {
-			list.Add(&ipFilterSerializedOut{
-				ID:            filter.GetId(),
-				Name:          filter.GetFilterName(),
-				ResourceGroup: filter.GetResourceGroup(),
-				IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
-			})
-		}
+	for _, filter := range ipFilters {
+		list.Add(&ipFilterOut{
+			ID:            filter.GetId(),
+			Name:          filter.GetFilterName(),
+			ResourceGroup: filter.GetResourceGroup(),
+			IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
+		})
 	}
 	return list.Print()
 }

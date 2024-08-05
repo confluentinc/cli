@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
@@ -77,10 +76,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	format := output.GetFormat(cmd)
-	table.Add(quotaToPrintable(updatedQuota, format))
-	return table.Print()
+	return printTable(cmd, updatedQuota)
 }
 
 func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotasv1.GlobalObjectReference) (*[]kafkaquotasv1.GlobalObjectReference, error) {

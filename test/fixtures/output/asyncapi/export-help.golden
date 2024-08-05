@@ -10,7 +10,7 @@ Export an AsyncAPI specification with topic "my-topic" and all topics starting w
 
 Flags:
       --file string             Output file name. (default "asyncapi-spec.yaml")
-      --group-id string         Consumer Group ID for getting messages. (default "consumerApplication")
+      --group string            Consumer Group ID for getting messages. (default "consumerApplication")
       --consume-examples        Consume messages from topics for populating examples.
       --spec-version string     Version number of the output file. (default "1.0.0")
       --kafka-api-key string    Kafka cluster API key.

@@ -1,8 +1,6 @@
 package streamshare
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
@@ -59,54 +57,27 @@ func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error
 	if isPrivateLink {
 		networkDetails := getPrivateLinkNetworkDetails(network)
 
-		if output.GetFormat(cmd) == output.Human {
-			table.Add(&consumerShareHumanOut{
-				Id:                         share.GetId(),
-				ProviderName:               share.GetProviderUserName(),
-				ProviderOrganizationName:   share.GetProviderOrganizationName(),
-				Status:                     share.Status.GetPhase(),
-				InviteExpiresAt:            share.GetInviteExpiresAt(),
-				NetworkDnsDomain:           network.GetDnsDomain(),
-				NetworkZones:               strings.Join(network.GetZones(), ", "),
-				NetworkZonalSubdomains:     strings.Join(mapSubdomainsToList(network.GetZonalSubdomains()), ", "),
-				NetworkKind:                networkDetails.networkKind,
-				NetworkPrivateLinkDataType: networkDetails.privateLinkDataType,
-				NetworkPrivateLinkData:     networkDetails.privateLinkData,
-			})
-		} else {
-			table.Add(&consumerShareSerializedOut{
-				Id:                       share.GetId(),
-				ProviderName:             share.GetProviderUserName(),
-				ProviderOrganizationName: share.GetProviderOrganizationName(),
-				Status:                   share.Status.GetPhase(),
-				InviteExpiresAt:          share.GetInviteExpiresAt(),
-				NetworkDnsDomain:         network.GetDnsDomain(),
-				// TODO: Serialize array instead of string in next major version
-				NetworkZones:               strings.Join(network.GetZones(), ","),
-				NetworkZonalSubdomains:     mapSubdomainsToList(network.GetZonalSubdomains()),
-				NetworkKind:                networkDetails.networkKind,
-				NetworkPrivateLinkDataType: networkDetails.privateLinkDataType,
-				NetworkPrivateLinkData:     networkDetails.privateLinkData,
-			})
-		}
+		table.Add(&consumerShareOut{
+			Id:                         share.GetId(),
+			ProviderName:               share.GetProviderUserName(),
+			ProviderOrganizationName:   share.GetProviderOrganizationName(),
+			Status:                     share.Status.GetPhase(),
+			InviteExpiresAt:            share.GetInviteExpiresAt(),
+			NetworkDnsDomain:           network.GetDnsDomain(),
+			NetworkZones:               network.GetZones(),
+			NetworkZonalSubdomains:     network.GetZonalSubdomains(),
+			NetworkKind:                networkDetails.networkKind,
+			NetworkPrivateLinkDataType: networkDetails.privateLinkDataType,
+			NetworkPrivateLinkData:     networkDetails.privateLinkData,
+		})
 	} else {
-		if output.GetFormat(cmd) == output.Human {
-			table.Add(&consumerShareHumanOut{
-				Id:                       share.GetId(),
-				ProviderName:             share.GetProviderUserName(),
-				ProviderOrganizationName: share.GetProviderOrganizationName(),
-				Status:                   share.Status.GetPhase(),
-				InviteExpiresAt:          share.GetInviteExpiresAt(),
-			})
-		} else {
-			table.Add(&consumerShareSerializedOut{
-				Id:                       share.GetId(),
-				ProviderName:             share.GetProviderUserName(),
-				ProviderOrganizationName: share.GetProviderOrganizationName(),
-				Status:                   share.Status.GetPhase(),
-				InviteExpiresAt:          share.GetInviteExpiresAt(),
-			})
-		}
+		table.Add(&consumerShareOut{
+			Id:                       share.GetId(),
+			ProviderName:             share.GetProviderUserName(),
+			ProviderOrganizationName: share.GetProviderOrganizationName(),
+			Status:                   share.Status.GetPhase(),
+			InviteExpiresAt:          share.GetInviteExpiresAt(),
+		})
 
 		table.Filter([]string{"Id", "ProviderName", "ProviderOrganizationName", "Status", "InviteExpiresAt"})
 	}

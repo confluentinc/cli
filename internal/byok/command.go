@@ -12,22 +12,13 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type humanOut struct {
-	Id        string `human:"ID"`
-	Key       string `human:"Key"`
-	Roles     string `human:"Roles"`
-	Provider  string `human:"Provider"`
-	State     string `human:"State"`
-	CreatedAt string `human:"Created At"`
-}
-
-type serializedOut struct {
-	Id        string   `serialized:"id"`
-	Key       string   `serialized:"key"`
-	Roles     []string `serialized:"roles"`
-	Provider  string   `serialized:"provider"`
-	State     string   `serialized:"state"`
-	CreatedAt string   `serialized:"created_at"`
+type out struct {
+	Id        string   `human:"ID" serialized:"id"`
+	Key       string   `human:"Key" serialized:"key"`
+	Roles     []string `human:"Roles" serialized:"roles"`
+	Cloud     string   `human:"Cloud" serialized:"cloud"`
+	State     string   `human:"State" serialized:"state"`
+	CreatedAt string   `human:"Created At" serialized:"created_at"`
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {

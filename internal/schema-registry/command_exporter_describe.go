@@ -1,8 +1,6 @@
 package schemaregistry
 
 import (
-	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,12 +11,12 @@ import (
 )
 
 type exporterOut struct {
-	Name          string `human:"Name" serialized:"name"`
-	Subjects      string `human:"Subjects" serialized:"subjects"`
-	SubjectFormat string `human:"Subject Format" serialized:"subject_format"`
-	ContextType   string `human:"Context Type" serialized:"context_type"`
-	Context       string `human:"Context" serialized:"context"`
-	Config        string `human:"Config" serialized:"config"`
+	Name          string            `human:"Name" serialized:"name"`
+	Subjects      string            `human:"Subjects" serialized:"subjects"`
+	SubjectFormat string            `human:"Subject Format" serialized:"subject_format"`
+	ContextType   string            `human:"Context Type" serialized:"context_type"`
+	Context       string            `human:"Context" serialized:"context"`
+	Config        map[string]string `human:"Config" serialized:"config"`
 }
 
 func (c *command) newExporterDescribeCommand(cfg *config.Config) *cobra.Command {
@@ -37,16 +35,6 @@ func (c *command) newExporterDescribeCommand(cfg *config.Config) *cobra.Command 
 		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
-
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
 
 	return cmd
 }
@@ -69,16 +57,7 @@ func (c *command) exporterDescribe(cmd *cobra.Command, args []string) error {
 		SubjectFormat: info.GetSubjectRenameFormat(),
 		ContextType:   info.GetContextType(),
 		Context:       info.GetContext(),
-		Config:        convertMapToString(info.GetConfig()),
+		Config:        info.GetConfig(),
 	})
 	return table.Print()
-}
-
-func convertMapToString(m map[string]string) string {
-	pairs := make([]string, 0, len(m))
-	for key, value := range m {
-		pairs = append(pairs, fmt.Sprintf(`%s="%s"`, key, value))
-	}
-	sort.Strings(pairs)
-	return strings.Join(pairs, "\n")
 }

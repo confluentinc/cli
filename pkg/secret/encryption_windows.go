@@ -3,6 +3,8 @@
 package secret
 
 import (
+	"strings"
+
 	"github.com/billgraziano/dpapi"
 	"github.com/confluentinc/cli/v3/pkg/log"
 )
@@ -24,11 +26,12 @@ func Encrypt(_, password string, _, _ []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return encryptedPassword, nil
+	return Dpapi + ":" + encryptedPassword, nil
 }
 
 func Decrypt(_, encrypted string, _, _ []byte) (string, error) {
 	log.CliLogger.Tracef("Decrypting secret: %s", encrypted)
+	encrypted = strings.TrimPrefix(encrypted, Dpapi+":")
 	decryptedPassword, err := dpapi.Decrypt(encrypted)
 	if err != nil {
 		return "", err

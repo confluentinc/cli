@@ -3,7 +3,6 @@ package network
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -13,24 +12,14 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type dnsForwarderHumanOut struct {
-	Id           string `human:"ID"`
-	Name         string `human:"Name,omitempty"`
-	Domains      string `human:"Domains,omitempty"`
-	DnsServerIps string `human:"DNS Server IPs"`
-	Environment  string `human:"Environment"`
-	Gateway      string `human:"Gateway"`
-	Phase        string `human:"Phase"`
-}
-
-type dnsForwarderSerializedOut struct {
-	Id           string   `serialized:"id"`
-	Name         string   `serialized:"name,omitempty"`
-	Domains      []string `serialized:"domains,omitempty"`
-	DnsServerIps []string `serialized:"dns_server_ips"`
-	Environment  string   `serialized:"environment"`
-	Gateway      string   `serialized:"gateway"`
-	Phase        string   `serialized:"phase"`
+type dnsForwarderOut struct {
+	Id           string   `human:"ID" serialized:"id"`
+	Name         string   `human:"Name,omitempty" serialized:"name,omitempty"`
+	Domains      []string `human:"Domains,omitempty" serialized:"domains,omitempty"`
+	DnsServerIps []string `human:"DNS Server IPs" serialized:"dns_server_ips"`
+	Environment  string   `human:"Environment" serialized:"environment"`
+	Gateway      string   `human:"Gateway" serialized:"gateway"`
+	Phase        string   `human:"Phase" serialized:"phase"`
 }
 
 func (c *command) newDnsForwarderCommand() *cobra.Command {
@@ -96,27 +85,14 @@ func printDnsForwarderTable(cmd *cobra.Command, forwarder networkingdnsforwarder
 	sort.Strings(forwarder.Spec.GetDomains())
 	table := output.NewTable(cmd)
 
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&dnsForwarderHumanOut{
-			Id:           forwarder.GetId(),
-			Name:         forwarder.Spec.GetDisplayName(),
-			Domains:      strings.Join(forwarder.Spec.GetDomains(), ", "),
-			DnsServerIps: strings.Join(forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(), ", "),
-			Gateway:      forwarder.Spec.Gateway.GetId(),
-			Environment:  forwarder.Spec.Environment.GetId(),
-			Phase:        forwarder.Status.GetPhase(),
-		})
-	} else {
-		table.Add(&dnsForwarderSerializedOut{
-			Id:           forwarder.GetId(),
-			Name:         forwarder.Spec.GetDisplayName(),
-			Domains:      forwarder.Spec.GetDomains(),
-			DnsServerIps: forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
-			Gateway:      forwarder.Spec.Gateway.GetId(),
-			Environment:  forwarder.Spec.Environment.GetId(),
-			Phase:        forwarder.Status.GetPhase(),
-		})
-	}
-
+	table.Add(&dnsForwarderOut{
+		Id:           forwarder.GetId(),
+		Name:         forwarder.Spec.GetDisplayName(),
+		Domains:      forwarder.Spec.GetDomains(),
+		DnsServerIps: forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
+		Gateway:      forwarder.Spec.Gateway.GetId(),
+		Environment:  forwarder.Spec.Environment.GetId(),
+		Phase:        forwarder.Status.GetPhase(),
+	})
 	return table.Print()
 }

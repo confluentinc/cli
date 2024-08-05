@@ -62,18 +62,17 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, client update.Client) *co
 }
 
 // NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, disableUpdateCheck bool) update.Client {
+func NewClient(cfg *config.Config) update.Client {
 	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
 		S3BinRegion:             S3BinRegion,
 		S3BinBucket:             S3BinBucket,
 		S3BinPrefixFmt:          S3BinPrefixFmt,
 		S3ReleaseNotesPrefixFmt: S3ReleaseNotesPrefixFmt,
 	})
-	homedir, _ := os.UserHomeDir()
-	return update.NewClient(&update.ClientParams{
+
+	return update.NewClient(cfg, &update.ClientParams{
 		Repository:    repo,
-		DisableCheck:  disableUpdateCheck,
-		CheckFile:     fmt.Sprintf(CheckFileFmt, homedir, cliName),
+		DisableCheck:  cfg.DisableUpdates || cfg.DisableUpdateCheck,
 		CheckInterval: CheckInterval,
 		Out:           os.Stdout,
 	})

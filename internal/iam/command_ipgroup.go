@@ -2,7 +2,6 @@ package iam
 
 import (
 	"slices"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -16,16 +15,10 @@ type ipGroupCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type ipGroupHumanOut struct {
-	ID         string `human:"ID"`
-	Name       string `human:"Name"`
-	CidrBlocks string `human:"CIDR blocks"`
-}
-
-type ipGroupSerializedOut struct {
-	ID         string   `serialized:"id"`
-	Name       string   `serialized:"name"`
-	CidrBlocks []string `serialized:"cidr_blocks"`
+type ipGroupOut struct {
+	ID         string   `human:"ID" serialized:"id"`
+	Name       string   `human:"Name" serialized:"name"`
+	CidrBlocks []string `human:"CIDR blocks" serialized:"cidr_blocks"`
 }
 
 func newIpGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -52,19 +45,11 @@ func printIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
 	slices.Sort(cidrBlocks)
 
 	table := output.NewTable(cmd)
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&ipGroupHumanOut{
-			ID:         ipGroup.GetId(),
-			Name:       ipGroup.GetGroupName(),
-			CidrBlocks: strings.Join(cidrBlocks, ", "),
-		})
-	} else {
-		table.Add(&ipGroupSerializedOut{
-			ID:         ipGroup.GetId(),
-			Name:       ipGroup.GetGroupName(),
-			CidrBlocks: cidrBlocks,
-		})
-	}
+	table.Add(&ipGroupOut{
+		ID:         ipGroup.GetId(),
+		Name:       ipGroup.GetGroupName(),
+		CidrBlocks: cidrBlocks,
+	})
 	return table.Print()
 }
 

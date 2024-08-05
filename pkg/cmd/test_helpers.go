@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"bytes"
+	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -9,24 +10,33 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/featureflags"
 )
 
-// ExecuteCommand runs the root command with the given args, and returns the output string or an error.
+// ExecuteCommand runs the root command with the given args, and returns the Cobra command output and the standard output as strings, or returns an error.
 func ExecuteCommand(root *cobra.Command, args ...string) (string, error) {
 	if args == nil {
 		args = []string{}
 	}
-	_, output, err := ExecuteCommandC(root, args...)
-	return output, err
-}
 
-// ExecuteCommandC runs the root command with the given args, and returns the executed command and the output string or an error.
-func ExecuteCommandC(root *cobra.Command, args ...string) (*cobra.Command, string, error) {
-	buf := new(bytes.Buffer)
-	root.SetOut(buf)
+	oldStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		return "", err
+	}
+	os.Stdout = w
+	root.SetOut(w)
+	defer func() {
+		os.Stdout = oldStdout
+		root.SetOut(oldStdout)
+	}()
+
 	root.SetArgs(args)
-
 	cfg := &config.Config{IsTest: true, Contexts: map[string]*config.Context{}}
 	featureflags.Init(cfg)
+	if _, err := root.ExecuteC(); err != nil {
+		return "", err
+	}
 
-	c, err := root.ExecuteC()
-	return c, buf.String(), err
+	w.Close()
+	output, err := io.ReadAll(r)
+
+	return string(output), err
 }

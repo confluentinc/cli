@@ -11,7 +11,6 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
-	"github.com/confluentinc/cli/v3/internal/admin"
 	"github.com/confluentinc/cli/v3/internal/ai"
 	apikey "github.com/confluentinc/cli/v3/internal/api-key"
 	"github.com/confluentinc/cli/v3/internal/asyncapi"
@@ -37,7 +36,6 @@ import (
 	"github.com/confluentinc/cli/v3/internal/organization"
 	"github.com/confluentinc/cli/v3/internal/pipeline"
 	"github.com/confluentinc/cli/v3/internal/plugin"
-	"github.com/confluentinc/cli/v3/internal/price"
 	"github.com/confluentinc/cli/v3/internal/prompt"
 	schemaregistry "github.com/confluentinc/cli/v3/internal/schema-registry"
 	"github.com/confluentinc/cli/v3/internal/secret"
@@ -54,7 +52,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/help"
 	"github.com/confluentinc/cli/v3/pkg/jwt"
-	"github.com/confluentinc/cli/v3/pkg/netrc"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
 	pplugin "github.com/confluentinc/cli/v3/pkg/plugin"
@@ -76,15 +73,12 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.")
 
-	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
-	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
+	updateClient := update.NewClient(cfg)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
-	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(), Out: os.Stdout}
 	jwtValidator := jwt.NewValidator()
-	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(cfg.IsTest))
 	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
-	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(), ccloudClient)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(form.NewPrompt(), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 	featureflags.Init(cfg)
@@ -98,7 +92,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 		Config:                  cfg,
 		AuthTokenHandler:        authTokenHandler,
 		CCloudClientFactory:     ccloudClientFactory,
-		FlagResolver:            flagResolver,
 		JWTValidator:            jwtValidator,
 		LoginCredentialsManager: loginCredentialsManager,
 		MDSClientManager:        mdsClientManager,
@@ -106,8 +99,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 		Version:                 cfg.Version,
 	}
 
-	cmd.AddCommand(admin.New(prerunner, cfg.IsTest))
-	cmd.AddCommand(apikey.New(prerunner, flagResolver))
+	cmd.AddCommand(apikey.New(prerunner))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(billing.New(prerunner))
@@ -116,7 +108,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(cloudsignup.New(prerunner))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(configuration.New(cfg, prerunner))
-	cmd.AddCommand(context.New(prerunner, flagResolver))
+	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
@@ -124,17 +116,16 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(kafka.New(cfg, prerunner))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
 	cmd.AddCommand(local.New(prerunner))
-	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
-	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
+	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
 	cmd.AddCommand(network.New(prerunner))
 	cmd.AddCommand(organization.New(prerunner))
 	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
-	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner))
-	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
+	cmd.AddCommand(secret.New(prerunner, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner, updateClient))

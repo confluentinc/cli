@@ -10,9 +10,9 @@ func (c *command) newKafkaBrokerCommand() *cobra.Command {
 		Short: "Manage local Kafka brokers.",
 	}
 
+	cmd.AddCommand(c.newKafkaBrokerConfigurationCommand())
 	cmd.AddCommand(c.newKafkaBrokerDescribeCommand())
 	cmd.AddCommand(c.newKafkaBrokerListCommand())
-	cmd.AddCommand(c.newKafkaBrokerUpdateCommand())
 
 	return cmd
 }
