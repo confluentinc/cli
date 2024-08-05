@@ -9,17 +9,16 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *brokerCommand) newUpdateCommand() *cobra.Command {
+func (c *brokerCommand) newConfigurationUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update Kafka broker configurations.",
-		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		RunE:  c.configurationUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
-				Code: "confluent kafka broker update 1 --config min.insync.replicas=2,num.partitions=2",
+				Code: "confluent kafka broker configuration update 1 --config min.insync.replicas=2,num.partitions=2",
 			},
 		),
 	}
@@ -33,7 +32,7 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
+func (c *brokerCommand) configurationUpdate(cmd *cobra.Command, args []string) error {
 	restClient, restContext, clusterId, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err

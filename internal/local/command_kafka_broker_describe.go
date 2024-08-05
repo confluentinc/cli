@@ -8,25 +8,16 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/broker"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
 )
 
 func (c *command) newKafkaBrokerDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a local Kafka broker.",
-		Long:  "Describe per-broker configuration values.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.brokerDescribe,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Describe the "min.insync.replicas" configuration for broker 1.`,
-				Code: "confluent local broker describe 1 --config min.insync.replicas",
-			},
-		),
 	}
 
-	cmd.Flags().String("config", "", "Get a specific configuration value.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

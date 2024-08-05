@@ -68,7 +68,6 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
-	GetSsoCredentialsFromConfig(*config.Config, string) func() (*Credentials, error)
 	GetCredentialsFromConfig(*config.Config, config.MachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
 	GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error)
@@ -171,29 +170,6 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *config.Confi
 			Nonce:    loginCredential.Nonce,
 		}
 		return credentials, nil
-	}
-}
-
-func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *config.Config, url string) func() (*Credentials, error) {
-	return func() (*Credentials, error) {
-		ctx := cfg.Context()
-
-		if ctx.GetPlatformServer() != url {
-			return nil, nil
-		}
-
-		credentials := &Credentials{
-			IsSSO:            ctx.IsSso(),
-			Username:         ctx.GetUser().GetEmail(),
-			AuthToken:        ctx.GetAuthToken(),
-			AuthRefreshToken: ctx.GetAuthRefreshToken(),
-		}
-
-		if credentials.IsSSO {
-			return credentials, nil
-		}
-
-		return nil, nil
 	}
 }
 

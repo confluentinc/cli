@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -35,54 +34,29 @@ func newQuotaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-type quotaHumanOut struct {
-	Id          string `human:"ID"`
-	DisplayName string `human:"Name"`
-	Description string `human:"Description"`
-	Ingress     string `human:"Ingress (B/s)"`
-	Egress      string `human:"Egress (B/s)"`
-	Principals  string `human:"Principals"`
-	Cluster     string `human:"Cluster"`
-	Environment string `human:"Environment"`
-}
-
-type quotaSerializedOut struct {
-	Id          string   `serialized:"id"`
-	DisplayName string   `serialized:"name"`
-	Description string   `serialized:"description"`
-	Ingress     string   `serialized:"ingress"`
-	Egress      string   `serialized:"egress"`
-	Principals  []string `serialized:"principals"`
-	Cluster     string   `serialized:"cluster"`
-	Environment string   `serialized:"environment"`
+type quotaOut struct {
+	Id          string   `human:"ID" serialized:"id"`
+	DisplayName string   `human:"Name" serialized:"name"`
+	Description string   `human:"Description" serialized:"description"`
+	Ingress     string   `human:"Ingress (B/s)" serialized:"ingress"`
+	Egress      string   `human:"Egress (B/s)" serialized:"egress"`
+	Principals  []string `human:"Principals" serialized:"principals"`
+	Cluster     string   `human:"Cluster" serialized:"cluster"`
+	Environment string   `human:"Environment" serialized:"environment"`
 }
 
 func printTable(cmd *cobra.Command, quota kafkaquotasv1.KafkaQuotasV1ClientQuota) error {
 	table := output.NewTable(cmd)
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&quotaHumanOut{
-			Id:          quota.GetId(),
-			DisplayName: quota.Spec.GetDisplayName(),
-			Description: quota.Spec.GetDescription(),
-			Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
-			Egress:      quota.Spec.Throughput.GetEgressByteRate(),
-			Principals:  strings.Join(principalsToStringSlice(quota.Spec.GetPrincipals()), ", "),
-			Cluster:     quota.Spec.Cluster.GetId(),
-			Environment: quota.Spec.Environment.GetId(),
-		})
-	} else {
-		table.Add(&quotaSerializedOut{
-			Id:          quota.GetId(),
-			DisplayName: quota.Spec.GetDisplayName(),
-			Description: quota.Spec.GetDescription(),
-			Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
-			Egress:      quota.Spec.Throughput.GetEgressByteRate(),
-			Principals:  principalsToStringSlice(quota.Spec.GetPrincipals()),
-			Cluster:     quota.Spec.Cluster.GetId(),
-			Environment: quota.Spec.Environment.GetId(),
-		})
-	}
-
+	table.Add(&quotaOut{
+		Id:          quota.GetId(),
+		DisplayName: quota.Spec.GetDisplayName(),
+		Description: quota.Spec.GetDescription(),
+		Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
+		Egress:      quota.Spec.Throughput.GetEgressByteRate(),
+		Principals:  principalsToStringSlice(quota.Spec.GetPrincipals()),
+		Cluster:     quota.Spec.Cluster.GetId(),
+		Environment: quota.Spec.Environment.GetId(),
+	})
 	return table.Print()
 }
 

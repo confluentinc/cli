@@ -69,23 +69,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
 		}
 
-		if output.GetFormat(cmd) == output.Human {
-			list.Add(&humanOut{
-				Id:        key.GetId(),
-				Key:       keyString,
-				Cloud:     key.GetProvider(),
-				State:     key.GetState(),
-				CreatedAt: key.Metadata.CreatedAt.String(),
-			})
-		} else {
-			list.Add(&serializedOut{
-				Id:        key.GetId(),
-				Key:       keyString,
-				Cloud:     key.GetProvider(),
-				State:     key.GetState(),
-				CreatedAt: key.Metadata.CreatedAt.String(),
-			})
-		}
+		list.Add(&out{
+			Id:        key.GetId(),
+			Key:       keyString,
+			Cloud:     key.GetProvider(),
+			State:     key.GetState(),
+			CreatedAt: key.Metadata.CreatedAt.String(),
+		})
 	}
 
 	// The API returns a list sorted by creation date already

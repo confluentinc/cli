@@ -52,6 +52,15 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 		rows = append(rows, printSphinxBlock("include", include, args)...)
 	}
 
+	if strings.HasPrefix(cmd.CommandPath(), "confluent connect plugin install") {
+		include := strings.Repeat("../", depth) + "includes/cli.rst"
+		args := map[string]string{
+			"start-after": "cli_cloud_logout_note_start",
+			"end-before":  "cli_cloud_logout_note_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
 	return rows
 }
 

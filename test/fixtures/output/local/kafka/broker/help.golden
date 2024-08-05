@@ -4,9 +4,9 @@ Usage:
   confluent local kafka broker [command]
 
 Available Commands:
-  describe    Describe a local Kafka broker.
-  list        List local Kafka brokers.
-  update      Update local Kafka broker configurations.
+  configuration Manage Kafka broker configurations in Confluent Local.
+  describe      Describe a local Kafka broker.
+  list          List local Kafka brokers.
 
 Global Flags:
   -h, --help            Show help for this command.

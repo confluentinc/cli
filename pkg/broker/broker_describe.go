@@ -7,8 +7,8 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
@@ -17,26 +17,23 @@ func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClie
 		return err
 	}
 
-	configName, err := cmd.Flags().GetString("config")
+	broker, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdGet(restContext, clusterId, brokerId)
 	if err != nil {
-		return err
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	// Get Broker Configs
-	var data []*ConfigOut
-	brokerConfig, err := getIndividualBrokerConfigs(restClient, restContext, clusterId, brokerId, configName)
-	if err != nil {
-		return err
+	table := output.NewTable(cmd)
+	out := &out{
+		ClusterId: broker.ClusterId,
+		BrokerId:  broker.BrokerId,
 	}
-	data = parseBrokerConfigData(brokerConfig)
+	if broker.Host != nil {
+		out.Host = *broker.Host
+	}
+	if broker.Port != nil {
+		out.Port = *broker.Port
+	}
+	table.Add(out)
 
-	list := output.NewList(cmd)
-	for _, entry := range data {
-		if output.GetFormat(cmd) == output.Human {
-			entry.Name = utils.Abbreviate(entry.Name, AbbreviationLength)
-			entry.Value = utils.Abbreviate(entry.Value, AbbreviationLength)
-		}
-		list.Add(entry)
-	}
-	return list.Print()
+	return table.Print()
 }

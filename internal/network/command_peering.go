@@ -2,7 +2,6 @@ package network
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -12,36 +11,20 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type peeringHumanOut struct {
-	Id            string `human:"ID"`
-	Name          string `human:"Name,omitempty"`
-	Network       string `human:"Network"`
-	Cloud         string `human:"Cloud"`
-	Phase         string `human:"Phase"`
-	CustomRegion  string `human:"Custom Region,omitempty"`
-	AwsVpc        string `human:"AWS VPC,omitempty"`
-	AwsAccount    string `human:"AWS Account,omitempty"`
-	AwsRoutes     string `human:"AWS Routes,omitempty"`
-	GcpProject    string `human:"GCP Project,omitempty"`
-	GcpVpcNetwork string `human:"GCP VPC Network,omitempty"`
-	AzureVNet     string `human:"Azure VNet,omitempty"`
-	AzureTenant   string `human:"Azure Tenant,omitempty"`
-}
-
-type peeringSerializedOut struct {
-	Id            string   `serialized:"id"`
-	Name          string   `serialized:"name,omitempty"`
-	Network       string   `serialized:"network"`
-	Cloud         string   `serialized:"cloud"`
-	Phase         string   `serialized:"phase"`
-	CustomRegion  string   `serialized:"custom_region,omitempty"`
-	AwsVpc        string   `serialized:"aws_vpc,omitempty"`
-	AwsAccount    string   `serialized:"aws_account,omitempty"`
-	AwsRoutes     []string `serialized:"aws_routes,omitempty"`
-	GcpProject    string   `serialized:"gcp_project,omitempty"`
-	GcpVpcNetwork string   `serialized:"gcp_vpc_network,omitempty"`
-	AzureVNet     string   `serialized:"azure_vnet,omitempty"`
-	AzureTenant   string   `serialized:"azure_tenant,omitempty"`
+type peeringOut struct {
+	Id            string   `human:"ID" serialized:"id"`
+	Name          string   `human:"Name,omitempty" serialized:"name,omitempty"`
+	Network       string   `human:"Network" serialized:"network"`
+	Cloud         string   `human:"Cloud" serialized:"cloud"`
+	Phase         string   `human:"Phase" serialized:"phase"`
+	CustomRegion  string   `human:"Custom Region,omitempty" serialized:"custom_region,omitempty"`
+	AwsVpc        string   `human:"AWS VPC,omitempty" serialized:"aws_vpc,omitempty"`
+	AwsAccount    string   `human:"AWS Account,omitempty" serialized:"aws_account,omitempty"`
+	AwsRoutes     []string `human:"AWS Routes,omitempty" serialized:"aws_routes,omitempty"`
+	GcpProject    string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
+	GcpVpcNetwork string   `human:"GCP VPC Network,omitempty" serialized:"gcp_vpc_network,omitempty"`
+	AzureVNet     string   `human:"Azure VNet,omitempty" serialized:"azure_vnet,omitempty"`
+	AzureTenant   string   `human:"Azure Tenant,omitempty" serialized:"azure_tenant,omitempty"`
 }
 
 func (c *command) newPeeringCommand() *cobra.Command {
@@ -124,15 +107,7 @@ func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peer
 		return err
 	}
 
-	human := &peeringHumanOut{
-		Id:      peering.GetId(),
-		Name:    peering.Spec.GetDisplayName(),
-		Network: peering.Spec.Network.GetId(),
-		Cloud:   cloud,
-		Phase:   peering.Status.GetPhase(),
-	}
-
-	serialized := &peeringSerializedOut{
+	out := &peeringOut{
 		Id:      peering.GetId(),
 		Name:    peering.Spec.GetDisplayName(),
 		Network: peering.Spec.Network.GetId(),
@@ -144,39 +119,24 @@ func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peer
 
 	switch cloud {
 	case CloudAws:
-		human.AwsVpc = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
-		human.AwsAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
-		human.AwsRoutes = strings.Join(peering.Spec.Cloud.NetworkingV1AwsPeering.GetRoutes(), ", ")
-		human.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
-		serialized.AwsVpc = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
-		serialized.AwsAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
-		serialized.AwsRoutes = peering.Spec.Cloud.NetworkingV1AwsPeering.GetRoutes()
-		serialized.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
+		out.AwsVpc = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
+		out.AwsAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
+		out.AwsRoutes = peering.Spec.Cloud.NetworkingV1AwsPeering.GetRoutes()
+		out.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
 		describeFields = append(describeFields, "AwsVpc", "AwsAccount", "AwsRoutes", "CustomRegion")
 	case CloudGcp:
-		human.GcpVpcNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
-		human.GcpProject = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
-		serialized.GcpVpcNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
-		serialized.GcpProject = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
+		out.GcpVpcNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
+		out.GcpProject = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
 		describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
 	case CloudAzure:
-		human.AzureVNet = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
-		human.AzureTenant = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
-		human.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
-		serialized.AzureVNet = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
-		serialized.AzureTenant = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
-		serialized.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
+		out.AzureVNet = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
+		out.AzureTenant = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
+		out.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
 		describeFields = append(describeFields, "AzureVNet", "AzureTenant", "CustomRegion")
 	}
 
 	table := output.NewTable(cmd)
-
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(human)
-	} else {
-		table.Add(serialized)
-	}
-
+	table.Add(out)
 	table.Filter(describeFields)
 	return table.Print()
 }

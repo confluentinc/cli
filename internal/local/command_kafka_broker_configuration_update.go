@@ -12,17 +12,17 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *command) newKafkaBrokerUpdateCommand() *cobra.Command {
+func (c *command) newKafkaBrokerConfigurationUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update local Kafka broker configurations.",
 		Long:  "Update per-broker configurations for local Kafka brokers.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.brokerUpdate,
+		RunE:  c.brokerConfigurationUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
-				Code: "confluent kafka broker update 1 --config min.insync.replicas=2,num.partitions=2",
+				Code: "confluent kafka broker configuration update 1 --config min.insync.replicas=2,num.partitions=2",
 			},
 		),
 	}
@@ -35,7 +35,7 @@ func (c *command) newKafkaBrokerUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) brokerUpdate(cmd *cobra.Command, args []string) error {
+func (c *command) brokerConfigurationUpdate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)

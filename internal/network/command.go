@@ -3,7 +3,6 @@ package network
 import (
 	"fmt"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -19,60 +18,32 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-type humanOut struct {
-	Id                                         string            `human:"ID"`
-	EnvironmentId                              string            `human:"Environment"`
-	Name                                       string            `human:"Name,omitempty"`
-	Gateway                                    string            `human:"Gateway,omitempty"`
-	Cloud                                      string            `human:"Cloud"`
-	Region                                     string            `human:"Region"`
-	Cidr                                       string            `human:"CIDR,omitempty"`
-	Zones                                      string            `human:"Zones,omitempty"`
-	Phase                                      string            `human:"Phase"`
-	SupportedConnectionTypes                   string            `human:"Supported Connection Types"`
-	ActiveConnectionTypes                      string            `human:"Active Connection Types,omitempty"`
-	AwsVpc                                     string            `human:"AWS VPC,omitempty"`
-	AwsAccount                                 string            `human:"AWS Account,omitempty"`
-	AwsPrivateLinkEndpointService              string            `human:"AWS Private Link Endpoint Service,omitempty"`
-	GcpProject                                 string            `human:"GCP Project,omitempty"`
-	GcpVpcNetwork                              string            `human:"GCP VPC Network,omitempty"`
-	GcpPrivateServiceConnectServiceAttachments map[string]string `human:"GCP Private Service Connect Service Attachments,omitempty"`
-	AzureVNet                                  string            `human:"Azure VNet,omitempty"`
-	AzureSubscription                          string            `human:"Azure Subscription,omitempty"`
-	AzurePrivateLinkServiceAliases             map[string]string `human:"Azure Private Link Service Aliases,omitempty"`
-	AzurePrivateLinkServiceResourceIds         map[string]string `human:"Azure Private Link Service Resources,omitempty"`
-	DnsResolution                              string            `human:"DNS Resolution,omitempty"`
-	DnsDomain                                  string            `human:"DNS Domain,omitempty"`
-	ZonalSubdomains                            map[string]string `human:"Zonal Subdomains,omitempty"`
-	IdleSince                                  time.Time         `human:"Idle Since,omitempty"`
-}
-
-type serializedOut struct {
-	Id                                         string            `serialized:"id"`
-	EnvironmentId                              string            `serialized:"environment_id"`
-	Name                                       string            `serialized:"name,omitempty"`
-	Gateway                                    string            `serialized:"gateway,omitempty"`
-	Cloud                                      string            `serialized:"cloud"`
-	Region                                     string            `serialized:"region"`
-	Cidr                                       string            `serialized:"cidr,omitempty"`
-	Zones                                      []string          `serialized:"zones,omitempty"`
-	Phase                                      string            `serialized:"phase"`
-	SupportedConnectionTypes                   []string          `serialized:"supported_connection_types"`
-	ActiveConnectionTypes                      []string          `serialized:"active_connection_types,omitempty"`
-	AwsVpc                                     string            `serialized:"aws_vpc,omitempty"`
-	AwsAccount                                 string            `serialized:"aws_account,omitempty"`
-	AwsPrivateLinkEndpointService              string            `serialized:"aws_private_link_endpoint_service,omitempty"`
-	GcpProject                                 string            `serialized:"gcp_project,omitempty"`
-	GcpVpcNetwork                              string            `serialized:"gcp_vpc_network,omitempty"`
-	GcpPrivateServiceConnectServiceAttachments map[string]string `serialized:"gcp_private_service_connect_service_attachments,omitempty"`
-	AzureVNet                                  string            `serialized:"azure_vnet,omitempty"`
-	AzureSubscription                          string            `serialized:"azure_subscription,omitempty"`
-	AzurePrivateLinkServiceAliases             map[string]string `serialized:"azure_private_link_service_aliases,omitempty"`
-	AzurePrivateLinkServiceResourceIds         map[string]string `serialized:"azure_private_link_service_resource_ids,omitempty"`
-	DnsResolution                              string            `serialized:"dns_resolution,omitempty"`
-	DnsDomain                                  string            `serialized:"dns_domain,omitempty"`
-	ZonalSubdomains                            map[string]string `serialized:"zonal_subdomains,omitempty"`
-	IdleSince                                  time.Time         `serialized:"idle_since,omitempty"`
+type out struct {
+	Id                                         string            `human:"ID" serialized:"id"`
+	EnvironmentId                              string            `human:"Environment" serialized:"environment_id"`
+	Name                                       string            `human:"Name,omitempty" serialized:"name,omitempty"`
+	Gateway                                    string            `human:"Gateway,omitempty" serialized:"gateway,omitempty"`
+	Cloud                                      string            `human:"Cloud" serialized:"cloud"`
+	Region                                     string            `human:"Region" serialized:"region"`
+	Cidr                                       string            `human:"CIDR,omitempty" serialized:"cidr,omitempty"`
+	Zones                                      []string          `human:"Zones,omitempty" serialized:"zones,omitempty"`
+	Phase                                      string            `human:"Phase" serialized:"phase"`
+	SupportedConnectionTypes                   []string          `human:"Supported Connection Types" serialized:"supported_connection_types"`
+	ActiveConnectionTypes                      []string          `human:"Active Connection Types,omitempty" serialized:"active_connection_types,omitempty"`
+	AwsVpc                                     string            `human:"AWS VPC,omitempty" serialized:"aws_vpc,omitempty"`
+	AwsAccount                                 string            `human:"AWS Account,omitempty" serialized:"aws_account,omitempty"`
+	AwsPrivateLinkEndpointService              string            `human:"AWS Private Link Endpoint Service,omitempty" serialized:"aws_private_link_endpoint_service,omitempty"`
+	GcpProject                                 string            `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
+	GcpVpcNetwork                              string            `human:"GCP VPC Network,omitempty" serialized:"gcp_vpc_network,omitempty"`
+	GcpPrivateServiceConnectServiceAttachments map[string]string `human:"GCP Private Service Connect Service Attachments,omitempty" serialized:"gcp_private_service_connect_service_attachments,omitempty"`
+	AzureVNet                                  string            `human:"Azure VNet,omitempty" serialized:"azure_vnet,omitempty"`
+	AzureSubscription                          string            `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
+	AzurePrivateLinkServiceAliases             map[string]string `human:"Azure Private Link Service Aliases,omitempty" serialized:"azure_private_link_service_aliases,omitempty"`
+	AzurePrivateLinkServiceResourceIds         map[string]string `human:"Azure Private Link Service Resources,omitempty" serialized:"azure_private_link_service_resource_ids,omitempty"`
+	DnsResolution                              string            `human:"DNS Resolution,omitempty" serialized:"dns_resolution,omitempty"`
+	DnsDomain                                  string            `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
+	ZonalSubdomains                            map[string]string `human:"Zonal Subdomains,omitempty" serialized:"zonal_subdomains,omitempty"`
+	IdleSince                                  time.Time         `human:"Idle Since,omitempty" serialized:"idle_since,omitempty"`
 }
 
 type command struct {
@@ -125,29 +96,21 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 	}
 
-	if output.GetFormat(cmd) == output.Human {
-		return printHumanTable(cmd, network)
-	}
-
-	return printSerializedTable(cmd, network)
-}
-
-func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
 	cloud := network.Spec.GetCloud()
 	phase := network.Status.GetPhase()
 	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes().Items
 
-	human := &humanOut{
+	human := &out{
 		Id:                       network.GetId(),
 		EnvironmentId:            network.Spec.Environment.GetId(),
 		Name:                     network.Spec.GetDisplayName(),
 		Gateway:                  network.Spec.GetGateway().Id,
 		Cloud:                    cloud,
 		Region:                   network.Spec.GetRegion(),
-		Zones:                    strings.Join(network.Spec.GetZones(), ", "),
+		Zones:                    network.Spec.GetZones(),
 		Phase:                    phase,
-		SupportedConnectionTypes: strings.Join(supportedConnectionTypes, ", "),
-		ActiveConnectionTypes:    strings.Join(network.Status.GetActiveConnectionTypes().Items, ", "),
+		SupportedConnectionTypes: supportedConnectionTypes,
+		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
 	}
 
 	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
@@ -207,86 +170,6 @@ func printHumanTable(cmd *cobra.Command, network networkingv1.NetworkingV1Networ
 
 	table := output.NewTable(cmd)
 	table.Add(human)
-	table.Filter(describeFields)
-	return table.Print()
-}
-
-func printSerializedTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) error {
-	cloud := network.Spec.GetCloud()
-	phase := network.Status.GetPhase()
-	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes().Items
-
-	serialized := &serializedOut{
-		Id:                       network.GetId(),
-		EnvironmentId:            network.Spec.Environment.GetId(),
-		Name:                     network.Spec.GetDisplayName(),
-		Gateway:                  network.Spec.GetGateway().Id,
-		Cloud:                    network.Spec.GetCloud(),
-		Region:                   network.Spec.GetRegion(),
-		Zones:                    network.Spec.GetZones(),
-		Phase:                    network.Status.GetPhase(),
-		SupportedConnectionTypes: supportedConnectionTypes,
-		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
-	}
-
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
-
-	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
-		serialized.DnsResolution = network.Spec.DnsConfig.GetResolution()
-		serialized.DnsDomain = network.Status.GetDnsDomain()
-		serialized.ZonalSubdomains = network.Status.GetZonalSubdomains()
-		describeFields = append(describeFields, "DnsResolution", "DnsDomain", "ZonalSubdomains")
-
-		if network.Status.Cloud == nil {
-			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
-		}
-
-		switch cloud {
-		case CloudAws:
-			serialized.AwsPrivateLinkEndpointService = network.Status.Cloud.NetworkingV1AwsNetwork.GetPrivateLinkEndpointService()
-			describeFields = append(describeFields, "AwsPrivateLinkEndpointService")
-		case CloudGcp:
-			serialized.GcpPrivateServiceConnectServiceAttachments = network.Status.Cloud.NetworkingV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
-			describeFields = append(describeFields, "GcpPrivateServiceConnectServiceAttachments")
-		case CloudAzure:
-			serialized.AzurePrivateLinkServiceAliases = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceAliases()
-			serialized.AzurePrivateLinkServiceResourceIds = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceResourceIds()
-			describeFields = append(describeFields, "AzurePrivateLinkServiceAliases", "AzurePrivateLinkServiceResourceIds")
-		}
-	} else {
-		serialized.Cidr = network.Spec.GetCidr()
-		describeFields = append(describeFields, "Cidr")
-	}
-
-	if phase == "READY" {
-		if network.Status.Cloud == nil {
-			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
-		}
-
-		switch cloud {
-		case CloudAws:
-			serialized.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
-			serialized.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
-			describeFields = append(describeFields, "AwsVpc", "AwsAccount")
-		case CloudGcp:
-			serialized.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
-			serialized.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
-			describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
-		case CloudAzure:
-			serialized.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
-			serialized.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
-			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")
-		}
-	}
-
-	if !network.Status.GetIdleSince().IsZero() {
-		serialized.IdleSince = network.Status.GetIdleSince()
-		describeFields = append(describeFields, "IdleSince")
-	}
-
-	table := output.NewTable(cmd)
-	table.Add(serialized)
-
 	table.Filter(describeFields)
 	return table.Print()
 }

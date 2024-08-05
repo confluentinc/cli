@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
@@ -48,29 +46,16 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, quota := range quotas {
-		if output.GetFormat(cmd) == output.Human {
-			list.Add(&quotaHumanOut{
-				Id:          quota.GetId(),
-				DisplayName: quota.Spec.GetDisplayName(),
-				Description: quota.Spec.GetDescription(),
-				Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
-				Egress:      quota.Spec.Throughput.GetEgressByteRate(),
-				Principals:  strings.Join(principalsToStringSlice(quota.Spec.GetPrincipals()), ", "),
-				Cluster:     quota.Spec.Cluster.GetId(),
-				Environment: quota.Spec.Environment.GetId(),
-			})
-		} else {
-			list.Add(&quotaSerializedOut{
-				Id:          quota.GetId(),
-				DisplayName: quota.Spec.GetDisplayName(),
-				Description: quota.Spec.GetDescription(),
-				Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
-				Egress:      quota.Spec.Throughput.GetEgressByteRate(),
-				Principals:  principalsToStringSlice(quota.Spec.GetPrincipals()),
-				Cluster:     quota.Spec.Cluster.GetId(),
-				Environment: quota.Spec.Environment.GetId(),
-			})
-		}
+		list.Add(&quotaOut{
+			Id:          quota.GetId(),
+			DisplayName: quota.Spec.GetDisplayName(),
+			Description: quota.Spec.GetDescription(),
+			Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
+			Egress:      quota.Spec.Throughput.GetEgressByteRate(),
+			Principals:  principalsToStringSlice(quota.Spec.GetPrincipals()),
+			Cluster:     quota.Spec.Cluster.GetId(),
+			Environment: quota.Spec.Environment.GetId(),
+		})
 	}
 	return list.Print()
 }

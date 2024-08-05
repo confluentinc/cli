@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	envUser         = "env-user"
+	envUser         = "envvar-user"
 	envPassword     = "env-password"
 	testToken1      = "org-1-y0ur.jwt.T0kEn"
 	testToken2      = "org-2-y0ur.jwt.T0kEn"
@@ -87,11 +87,6 @@ var (
 					Username: promptUser,
 					Password: promptPassword,
 				}, nil
-			}
-		},
-		GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
 			}
 		},
 		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
@@ -170,11 +165,6 @@ func TestCredentialsOverride(t *testing.T) {
 				return envCreds, nil
 			}
 		},
-		GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
 		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -196,7 +186,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
-	req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
+	req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, envUser, organizationId1, ""))
 
 	ctx := cfg.Context()
 	req.NotNil(ctx)
@@ -233,7 +223,7 @@ func TestOrgIdOverride(t *testing.T) {
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
-	req.Empty("", output)
+	req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, promptUser, organizationId2, ""))
 
 	ctx := cfg.Context()
 	req.NotNil(ctx)
@@ -246,14 +236,14 @@ func TestOrgIdOverride(t *testing.T) {
 
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
-	org2 := false
+	useOrgTwo := false
 	auth := &ccloudv1mock.Auth{
 		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
 			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
 		},
 		UserFunc: func() (*ccloudv1.GetMeReply, error) {
 			org := organizationId1
-			if org2 {
+			if useOrgTwo {
 				org = organizationId2
 			}
 			return &ccloudv1.GetMeReply{
@@ -300,17 +290,22 @@ func TestLoginSuccess(t *testing.T) {
 		if s.setEnv {
 			_ = os.Setenv(pauth.ConfluentPlatformMDSURL, "http://localhost:8090")
 		}
-		if s.orgId != "" {
-			org2 = s.orgId == organizationId2
+		if s.isCloud && s.orgId == "" {
+			s.orgId = organizationId1 // org1Id treated as default org
+		} else if s.orgId != "" {
+			useOrgTwo = s.orgId == organizationId2
 			s.args = append(s.args, "--organization", s.orgId)
 		}
+
 		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
-		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
-		if s.isCloud && s.orgId == "" {
-			s.orgId = organizationId1 // org1Id treated as default org
+		if s.isCloud {
+			req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, promptUser, s.orgId, ""))
+		} else {
+			req.Empty(output) // on-prem has no login message
 		}
+
 		verifyLoggedInState(t, cfg, s.isCloud, s.orgId)
 		if s.setEnv {
 			_ = os.Unsetenv(pauth.ConfluentPlatformMDSURL)
@@ -380,11 +375,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}, nil
 					}
 				},
-				GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
 				GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -432,7 +422,15 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
 			req.NoError(err)
-			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, test.wantUser))
+			if test.isCloud {
+				user := promptUser
+				if test.setEnvVar {
+					user = envUser
+				}
+				req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, user, organizationId1, ""))
+			} else {
+				req.Empty(output) // on-prem has no login message
+			}
 		})
 	}
 }
@@ -499,7 +497,11 @@ func TestPromptLoginFlag(t *testing.T) {
 			req.False(mockLoginCredentialsManager.GetCloudCredentialsFromEnvVarCalled())
 			req.False(mockLoginCredentialsManager.GetOnPremCredentialsFromEnvVarCalled())
 
-			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
+			if test.isCloud {
+				req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, promptUser, organizationId1, ""))
+			} else {
+				req.Empty(output) // on-prem has no login message
+			}
 		})
 	}
 }
@@ -508,11 +510,6 @@ func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
-			}
-		},
-		GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
 			}

@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -14,30 +13,17 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type humanOut struct {
-	Id                    string    `human:"ID"`
-	Name                  string    `human:"Name"`
-	Description           string    `human:"Description"`
-	KsqlCluster           string    `human:"KSQL Cluster,omitempty"`
-	SchemaRegistryCluster string    `human:"Schema Registry Cluster,omitempty"`
-	SecretNames           string    `human:"Secret Names,omitempty"`
-	ActivationPrivilege   bool      `human:"Activation Privilege"`
-	State                 string    `human:"State"`
-	CreatedAt             time.Time `human:"Created At"`
-	UpdatedAt             time.Time `human:"Updated At"`
-}
-
-type serializedOut struct {
-	Id                    string    `serialized:"id"`
-	Name                  string    `serialized:"name"`
-	Description           string    `serialized:"description"`
-	KsqlCluster           string    `serialized:"ksql_cluster"`
-	SchemaRegistryCluster string    `serialized:"schema_registry_cluster"`
-	SecretNames           []string  `serialized:"secret_names,omitempty"`
-	ActivationPrivilege   bool      `serialized:"activation_privilege"`
-	State                 string    `serialized:"state"`
-	CreatedAt             time.Time `serialized:"created_at"`
-	UpdatedAt             time.Time `serialized:"updated_at"`
+type out struct {
+	Id                    string    `human:"ID" serialized:"id"`
+	Name                  string    `human:"Name" serialized:"name"`
+	Description           string    `human:"Description" serialized:"description"`
+	KsqlCluster           string    `human:"KSQL Cluster,omitempty" serialized:"ksql_cluster"`
+	SchemaRegistryCluster string    `human:"Schema Registry Cluster,omitempty" serialized:"schema_registry_cluster"`
+	SecretNames           []string  `human:"Secret Names,omitempty" serialized:"secret_names,omitempty"`
+	ActivationPrivilege   bool      `human:"Activation Privilege" serialized:"activation_privilege"`
+	State                 string    `human:"State" serialized:"state"`
+	CreatedAt             time.Time `human:"Created At" serialized:"created_at"`
+	UpdatedAt             time.Time `human:"Updated At" serialized:"updated_at"`
 }
 
 var (
@@ -72,36 +58,19 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 func printTable(cmd *cobra.Command, pipeline streamdesignerv1.SdV1Pipeline) error {
 	table := output.NewTable(cmd)
-	secrets := getOrderedSecretNames(pipeline.Spec.Secrets)
 
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&humanOut{
-			Id:                    pipeline.GetId(),
-			Name:                  pipeline.Spec.GetDisplayName(),
-			Description:           pipeline.Spec.GetDescription(),
-			KsqlCluster:           pipeline.Spec.KsqlCluster.GetId(),
-			SchemaRegistryCluster: pipeline.Spec.StreamGovernanceCluster.GetId(),
-			SecretNames:           strings.Join(secrets, ", "),
-			ActivationPrivilege:   pipeline.Spec.GetActivationPrivilege(),
-			State:                 pipeline.Status.GetState(),
-			CreatedAt:             pipeline.Metadata.GetCreatedAt(),
-			UpdatedAt:             pipeline.Metadata.GetUpdatedAt(),
-		})
-	} else {
-		table.Add(&serializedOut{
-			Id:                    pipeline.GetId(),
-			Name:                  pipeline.Spec.GetDisplayName(),
-			Description:           pipeline.Spec.GetDescription(),
-			KsqlCluster:           pipeline.Spec.KsqlCluster.GetId(),
-			SchemaRegistryCluster: pipeline.Spec.StreamGovernanceCluster.GetId(),
-			SecretNames:           secrets,
-			ActivationPrivilege:   pipeline.Spec.GetActivationPrivilege(),
-			State:                 pipeline.Status.GetState(),
-			CreatedAt:             pipeline.Metadata.GetCreatedAt(),
-			UpdatedAt:             pipeline.Metadata.GetUpdatedAt(),
-		})
-	}
-
+	table.Add(&out{
+		Id:                    pipeline.GetId(),
+		Name:                  pipeline.Spec.GetDisplayName(),
+		Description:           pipeline.Spec.GetDescription(),
+		KsqlCluster:           pipeline.Spec.KsqlCluster.GetId(),
+		SchemaRegistryCluster: pipeline.Spec.StreamGovernanceCluster.GetId(),
+		SecretNames:           getOrderedSecretNames(pipeline.Spec.Secrets),
+		ActivationPrivilege:   pipeline.Spec.GetActivationPrivilege(),
+		State:                 pipeline.Status.GetState(),
+		CreatedAt:             pipeline.Metadata.GetCreatedAt(),
+		UpdatedAt:             pipeline.Metadata.GetUpdatedAt(),
+	})
 	return table.Print()
 }
 

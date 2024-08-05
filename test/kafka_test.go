@@ -245,18 +245,21 @@ func getCreateBidirectionalLinkConfigFile() string {
 func (s *CLITestSuite) TestKafkaBroker() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka broker describe 1", fixture: "kafka/broker/describe-1.golden"},
-		{args: "kafka broker describe 1 -o json", fixture: "kafka/broker/describe-1-json.golden"},
-		{args: "kafka broker describe 1 -o yaml", fixture: "kafka/broker/describe-1-yaml.golden"},
-		{args: "kafka broker describe 1 --config compression.type", fixture: "kafka/broker/describe-1-config.golden"},
+		{args: "kafka broker configuration list 1", fixture: "kafka/broker/configuration-list-1.golden"},
+		{args: "kafka broker configuration list 1 -o json", fixture: "kafka/broker/configuration-list-1-json.golden"},
+		{args: "kafka broker configuration list 1 -o yaml", fixture: "kafka/broker/configuration-list-1-yaml.golden"},
+		{args: "kafka broker configuration list 1 --config compression.type", fixture: "kafka/broker/configuration-list-1-config.golden"},
 
-		{args: "kafka broker update 1 --config test/fixtures/input/kafka/broker/update.properties", fixture: "kafka/broker/update-1.golden"},
+		{args: "kafka broker configuration update 1 --config test/fixtures/input/kafka/broker/update.properties", fixture: "kafka/broker/configuration-update-1.golden"},
 
 		{args: "kafka broker delete 1 --force", fixture: "kafka/broker/delete.golden"},
 		{args: "kafka broker delete 1", input: "y\n", fixture: "kafka/broker/delete-prompt.golden"},
 		{args: "kafka broker delete 1 2", input: "n\n", fixture: "kafka/broker/delete-multiple-refuse.golden"},
 		{args: "kafka broker delete 1 2", input: "y\n", fixture: "kafka/broker/delete-multiple-prompt.golden"},
 		{args: "kafka broker delete 1 3", fixture: "kafka/broker/delete-multiple-fail.golden", exitCode: 1},
+
+		{args: "kafka broker describe 1", fixture: "kafka/broker/describe.golden"},
+		{args: "kafka broker describe 1 -o json", fixture: "kafka/broker/describe-json.golden"},
 
 		{args: "kafka broker task list 1", fixture: "kafka/broker/task/list-1.golden"},
 		{args: "kafka broker task list 1 --task-type remove-broker", fixture: "kafka/broker/task/list-1-remove-broker.golden"},

@@ -4,11 +4,11 @@ Usage:
   confluent kafka broker [command]
 
 Available Commands:
-  delete      Delete one or more Kafka brokers.
-  describe    Describe a Kafka broker.
-  list        List Kafka brokers.
-  task        Manage broker tasks.
-  update      Update Kafka broker configurations.
+  configuration Manage Kafka broker configurations.
+  delete        Delete one or more Kafka brokers.
+  describe      Describe a Kafka broker.
+  list          List Kafka brokers.
+  task          Manage broker tasks.
 
 Global Flags:
   -h, --help            Show help for this command.
