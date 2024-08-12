@@ -79,11 +79,6 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 	return suggestions
 }
 
-func AddByokProviderFlag(cmd *cobra.Command) {
-	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure", "gcp"}, "or")))
-	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string { return []string{"aws", "azure", "gcp"} })
-}
-
 func AddByokStateFlag(cmd *cobra.Command) {
 	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"}, "or")))
 	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string { return []string{"in-use", "available"} })

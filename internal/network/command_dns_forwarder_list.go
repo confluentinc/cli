@@ -3,7 +3,6 @@ package network
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -43,27 +42,15 @@ func (c *command) dnsForwarderList(cmd *cobra.Command, _ []string) error {
 		}
 		sort.Strings(forwarder.Spec.GetDomains())
 
-		if output.GetFormat(cmd) == output.Human {
-			list.Add(&dnsForwarderHumanOut{
-				Id:           forwarder.GetId(),
-				Name:         forwarder.Spec.GetDisplayName(),
-				Domains:      strings.Join(forwarder.Spec.GetDomains(), ", "),
-				DnsServerIps: strings.Join(forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(), ", "),
-				Gateway:      forwarder.Spec.Gateway.GetId(),
-				Environment:  forwarder.Spec.Environment.GetId(),
-				Phase:        forwarder.Status.GetPhase(),
-			})
-		} else {
-			list.Add(&dnsForwarderSerializedOut{
-				Id:           forwarder.GetId(),
-				Name:         forwarder.Spec.GetDisplayName(),
-				Domains:      forwarder.Spec.GetDomains(),
-				DnsServerIps: forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
-				Gateway:      forwarder.Spec.Gateway.GetId(),
-				Environment:  forwarder.Spec.Environment.GetId(),
-				Phase:        forwarder.Status.GetPhase(),
-			})
-		}
+		list.Add(&dnsForwarderOut{
+			Id:           forwarder.GetId(),
+			Name:         forwarder.Spec.GetDisplayName(),
+			Domains:      forwarder.Spec.GetDomains(),
+			DnsServerIps: forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
+			Gateway:      forwarder.Spec.Gateway.GetId(),
+			Environment:  forwarder.Spec.Environment.GetId(),
+			Phase:        forwarder.Status.GetPhase(),
+		})
 	}
 
 	return list.Print()

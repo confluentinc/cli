@@ -37,8 +37,8 @@ func (c *consumerCommand) groupList(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, group := range groups {
 		list.Add(&consumerGroupOut{
-			ClusterId:         group.GetClusterId(),
-			ConsumerGroupId:   group.GetConsumerGroupId(),
+			Cluster:           group.GetClusterId(),
+			ConsumerGroup:     group.GetConsumerGroupId(),
 			Coordinator:       getStringBroker(group.GetCoordinator().Related),
 			IsSimple:          group.GetIsSimple(),
 			PartitionAssignor: group.GetPartitionAssignor(),

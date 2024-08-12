@@ -8,7 +8,7 @@
 | Ingress Limit (MB/s) | 100                         |
 | Egress Limit (MB/s)  | 300                         |
 | Storage              | Infinite                    |
-| Provider             | aws                         |
+| Cloud                | aws                         |
 | Region               | us-west-2                   |
 | Availability         | single-zone                 |
 | Status               | SHRINKING                   |

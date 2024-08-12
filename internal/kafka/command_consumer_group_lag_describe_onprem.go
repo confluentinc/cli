@@ -63,16 +63,16 @@ func (c *consumerCommand) groupLagDescribeOnPrem(cmd *cobra.Command, args []stri
 		instanceId = *consumerLag.InstanceId
 	}
 	table.Add(&lagOut{
-		ClusterId:       consumerLag.ClusterId,
-		ConsumerGroupId: consumerLag.ConsumerGroupId,
-		Lag:             consumerLag.Lag,
-		LogEndOffset:    consumerLag.LogEndOffset,
-		CurrentOffset:   consumerLag.CurrentOffset,
-		ConsumerId:      consumerLag.ConsumerId,
-		InstanceId:      instanceId,
-		ClientId:        consumerLag.ClientId,
-		Topic:           consumerLag.TopicName,
-		PartitionId:     consumerLag.PartitionId,
+		Cluster:       consumerLag.ClusterId,
+		ConsumerGroup: consumerLag.ConsumerGroupId,
+		Lag:           consumerLag.Lag,
+		LogEndOffset:  consumerLag.LogEndOffset,
+		CurrentOffset: consumerLag.CurrentOffset,
+		Consumer:      consumerLag.ConsumerId,
+		Instance:      instanceId,
+		Client:        consumerLag.ClientId,
+		Topic:         consumerLag.TopicName,
+		Partition:     consumerLag.PartitionId,
 	})
 	return table.Print()
 }

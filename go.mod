@@ -13,7 +13,7 @@ require (
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
-	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
+	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230822191820-abc0b42e8715
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
@@ -37,14 +37,13 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/org v0.8.1
+	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
-	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
 	github.com/confluentinc/go-prompt v0.2.31
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18
@@ -54,7 +53,7 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.1.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.2
-	github.com/docker/docker v27.0.3+incompatible
+	github.com/docker/docker v27.1.1+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/fatih/color v1.17.0
 	github.com/gdamore/tcell/v2 v2.7.4

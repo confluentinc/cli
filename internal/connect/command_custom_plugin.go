@@ -1,8 +1,6 @@
 package connect
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
@@ -15,24 +13,14 @@ type customPluginCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type customPluginSerializedOut struct {
-	Id                  string   `serialized:"id"`
-	Name                string   `serialized:"name"`
-	Description         string   `serialized:"description"`
-	Cloud               string   `serialized:"cloud"`
-	ConnectorClass      string   `serialized:"connector_class"`
-	ConnectorType       string   `serialized:"connector_type"`
-	SensitiveProperties []string `serialized:"sensitive_properties"`
-}
-
-type customPluginHumanOut struct {
-	Id                  string `human:"ID"`
-	Name                string `human:"Name"`
-	Description         string `human:"Description"`
-	Cloud               string `human:"Cloud"`
-	ConnectorClass      string `human:"Connector Class"`
-	ConnectorType       string `human:"Connector Type"`
-	SensitiveProperties string `human:"Sensitive Properties"`
+type customPluginOut struct {
+	Id                  string   `human:"ID" serialized:"id"`
+	Name                string   `human:"Name" serialized:"name"`
+	Description         string   `human:"Description" serialized:"description"`
+	Cloud               string   `human:"Cloud" serialized:"cloud"`
+	ConnectorClass      string   `human:"Connector Class" serialized:"connector_class"`
+	ConnectorType       string   `human:"Connector Type" serialized:"connector_type"`
+	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
 }
 
 func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -55,28 +43,14 @@ func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin) error {
 	table := output.NewTable(cmd)
-	sensitiveProperties := plugin.GetSensitiveConfigProperties()
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&customPluginHumanOut{
-			Id:                  plugin.GetId(),
-			Name:                plugin.GetDisplayName(),
-			Description:         plugin.GetDescription(),
-			Cloud:               plugin.GetCloud(),
-			ConnectorClass:      plugin.GetConnectorClass(),
-			ConnectorType:       plugin.GetConnectorType(),
-			SensitiveProperties: strings.Join(sensitiveProperties, ", "),
-		})
-	} else {
-		table.Add(&customPluginSerializedOut{
-			Id:                  plugin.GetId(),
-			Name:                plugin.GetDisplayName(),
-			Description:         plugin.GetDescription(),
-			Cloud:               plugin.GetCloud(),
-			ConnectorClass:      plugin.GetConnectorClass(),
-			ConnectorType:       plugin.GetConnectorType(),
-			SensitiveProperties: sensitiveProperties,
-		})
-	}
-
+	table.Add(&customPluginOut{
+		Id:                  plugin.GetId(),
+		Name:                plugin.GetDisplayName(),
+		Description:         plugin.GetDescription(),
+		Cloud:               plugin.GetCloud(),
+		ConnectorClass:      plugin.GetConnectorClass(),
+		ConnectorType:       plugin.GetConnectorType(),
+		SensitiveProperties: plugin.GetSensitiveConfigProperties(),
+	})
 	return table.Print()
 }

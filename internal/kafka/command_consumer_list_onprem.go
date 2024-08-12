@@ -52,12 +52,12 @@ func (c *consumerCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, consumer := range consumers.Data {
 		out := &consumerOut{
-			ConsumerGroupId: consumer.ConsumerGroupId,
-			ConsumerId:      consumer.ConsumerId,
-			ClientId:        consumer.ClientId,
+			ConsumerGroup: consumer.ConsumerGroupId,
+			Consumer:      consumer.ConsumerId,
+			Client:        consumer.ClientId,
 		}
 		if consumer.InstanceId != nil {
-			out.InstanceId = *consumer.InstanceId
+			out.Instance = *consumer.InstanceId
 		}
 		list.Add(out)
 	}

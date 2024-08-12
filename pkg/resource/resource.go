@@ -48,6 +48,7 @@ const (
 	NetworkLinkServiceAssociation   = "network link service association"
 	Organization                    = "organization"
 	Peering                         = "peering"
+	Plugin                          = "plugin"
 	PrivateLinkAccess               = "private link access"
 	PrivateLinkAttachment           = "private link attachment"
 	PrivateLinkAttachmentConnection = "private link attachment connection"

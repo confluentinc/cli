@@ -14,43 +14,21 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/keychain"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/secret"
 )
 
 const (
 	CCloudURL = "https://confluent.cloud"
 
-	ConfluentCloudEmail          = "CONFLUENT_CLOUD_EMAIL"
-	ConfluentCloudPassword       = "CONFLUENT_CLOUD_PASSWORD"
-	ConfluentCloudOrganizationId = "CONFLUENT_CLOUD_ORGANIZATION_ID"
-	ConfluentPlatformUsername    = "CONFLUENT_PLATFORM_USERNAME"
-	ConfluentPlatformPassword    = "CONFLUENT_PLATFORM_PASSWORD"
-	ConfluentPlatformMDSURL      = "CONFLUENT_PLATFORM_MDS_URL"
-	ConfluentPlatformCACertPath  = "CONFLUENT_PLATFORM_CA_CERT_PATH"
-	ConfluentPlatformSSO         = "CONFLUENT_PLATFORM_SSO"
-
-	DeprecatedConfluentCloudEmail         = "CCLOUD_EMAIL"
-	DeprecatedConfluentCloudPassword      = "CCLOUD_PASSWORD"
-	DeprecatedConfluentPlatformUsername   = "CONFLUENT_USERNAME"
-	DeprecatedConfluentPlatformPassword   = "CONFLUENT_PASSWORD"
-	DeprecatedConfluentPlatformMDSURL     = "CONFLUENT_MDS_URL"
-	DeprecatedConfluentPlatformCACertPath = "CONFLUENT_CA_CERT_PATH"
+	ConfluentCloudEmail                       = "CONFLUENT_CLOUD_EMAIL"
+	ConfluentCloudPassword                    = "CONFLUENT_CLOUD_PASSWORD"
+	ConfluentCloudOrganizationId              = "CONFLUENT_CLOUD_ORGANIZATION_ID"
+	ConfluentPlatformUsername                 = "CONFLUENT_PLATFORM_USERNAME"
+	ConfluentPlatformPassword                 = "CONFLUENT_PLATFORM_PASSWORD"
+	ConfluentPlatformMDSURL                   = "CONFLUENT_PLATFORM_MDS_URL"
+	ConfluentPlatformCertificateAuthorityPath = "CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH"
+	ConfluentPlatformSSO                      = "CONFLUENT_PLATFORM_SSO"
 )
-
-// GetEnvWithFallback calls os.GetEnv() twice, once for the current var and once for the deprecated var.
-func GetEnvWithFallback(current, deprecated string) string {
-	if val := os.Getenv(current); val != "" {
-		return val
-	}
-
-	if val := os.Getenv(deprecated); val != "" {
-		output.ErrPrintf(false, errors.DeprecatedEnvVarWarningMsg, deprecated, current)
-		return val
-	}
-
-	return ""
-}
 
 func IsOnPremSSOEnv() bool {
 	return strings.ToLower(os.Getenv(ConfluentPlatformSSO)) == "true"
@@ -63,7 +41,7 @@ func PersistLogout(config *config.Config) error {
 	}
 
 	if runtime.GOOS == "darwin" && !config.IsTest {
-		if err := keychain.Delete(config.IsCloudLogin(), ctx.GetNetrcMachineName()); err != nil {
+		if err := keychain.Delete(config.IsCloudLogin(), ctx.GetMachineName()); err != nil {
 			return err
 		}
 	}
@@ -76,7 +54,7 @@ func PersistLogout(config *config.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, isLegacyContext, save bool) error {
+func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, save bool) error {
 	if credentials.IsSSO {
 		// on-prem SSO login does not use a username or email
 		// the sub claim is used in place of a username since it is a unique identifier
@@ -98,12 +76,8 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 		AuthToken:        token,
 		AuthRefreshToken: refreshToken,
 	}
-	var ctxName string
-	if isLegacyContext {
-		ctxName = GenerateContextName(username, url, "")
-	} else {
-		ctxName = GenerateContextName(username, url, caCertPath)
-	}
+
+	ctxName := GenerateContextName(username, url, caCertPath)
 	return addOrUpdateContext(cfg, false, credentials, ctxName, url, state, caCertPath, "", save)
 }
 
@@ -215,8 +189,7 @@ func GenerateCloudContextName(username, url string) string {
 	return GenerateContextName(username, url, "")
 }
 
-// if CP users use cacertpath then include that in the context name
-// (legacy CP users may still have context without cacertpath in the name but have cacertpath stored)
+// CP users use cacertpath, so include that in the context name
 func GenerateContextName(username, url, caCertPath string) string {
 	if caCertPath == "" {
 		return fmt.Sprintf("login-%s-%s", username, url)

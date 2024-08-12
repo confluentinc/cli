@@ -17,7 +17,7 @@ import (
 // Context represents a specific CLI context.
 type Context struct {
 	Name                string                         `json:"name"`
-	NetrcMachineName    string                         `json:"netrc_machine_name"`
+	MachineName         string                         `json:"machine_name"`
 	PlatformName        string                         `json:"platform"`
 	CredentialName      string                         `json:"credential"`
 	CurrentEnvironment  string                         `json:"current_environment,omitempty"`
@@ -27,6 +27,7 @@ type Context struct {
 	FeatureFlags        *FeatureFlags                  `json:"feature_flags,omitempty"`
 
 	// Deprecated
+	NetrcMachineName       string                            `json:"netrc_machine_name,omitempty"`
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters,omitempty"`
 
 	Platform   *Platform     `json:"-"`
@@ -40,7 +41,7 @@ var noEnvError = "no environment found"
 func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, organizationId, environmentId string) (*Context, error) {
 	ctx := &Context{
 		Name:               name,
-		NetrcMachineName:   name,
+		MachineName:        name,
 		Platform:           platform,
 		PlatformName:       platform.Name,
 		Credential:         credential,
@@ -383,9 +384,9 @@ func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]any {
 	}
 }
 
-func (c *Context) GetNetrcMachineName() string {
+func (c *Context) GetMachineName() string {
 	if c != nil {
-		return c.NetrcMachineName
+		return c.MachineName
 	}
 	return ""
 }

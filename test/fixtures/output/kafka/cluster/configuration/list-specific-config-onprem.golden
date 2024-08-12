@@ -1,0 +1,3 @@
+        Name       | Value | Default | Read-Only | Sensitive  
+-------------------+-------+---------+-----------+------------
+  compression.type | gzip  | false   | false     | false      

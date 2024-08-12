@@ -537,7 +537,10 @@ func handleKafkaRestTopic(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
-			data := cckafkarestv3.TopicData{PartitionsCount: 3}
+			data := cckafkarestv3.TopicData{
+				TopicName:       topic,
+				PartitionsCount: 3,
+			}
 			err := json.NewEncoder(w).Encode(data)
 			require.NoError(t, err)
 		case http.MethodPatch:
@@ -1820,7 +1823,17 @@ func handleKafkaBrokerIdConfigsAlter(_ *testing.T) http.HandlerFunc {
 func handleKafkaBrokersBrokerId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		id, err := strconv.ParseInt(vars["broker_id"], 10, 32)
+		require.NoError(t, err)
 		switch r.Method {
+		case http.MethodGet:
+			err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerData{
+				ClusterId: vars["cluster_id"],
+				BrokerId:  int32(id),
+				Port:      cckafkarestv3.PtrInt32(1),
+				Host:      cckafkarestv3.PtrString("kafka1"),
+			})
+			require.NoError(t, err)
 		case http.MethodDelete:
 			var req cpkafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts
 			_ = json.NewDecoder(r.Body).Decode(&req)

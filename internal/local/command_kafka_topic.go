@@ -22,6 +22,7 @@ func (c *command) newKafkaTopicCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
+	cmd.AddCommand(c.newKafkaTopicConfigurationCommand())
 	cmd.AddCommand(c.newKafkaTopicConsumeCommand())
 	cmd.AddCommand(c.newKafkaTopicCreateCommand())
 	cmd.AddCommand(c.newKafkaTopicDeleteCommand())

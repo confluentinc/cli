@@ -26,13 +26,13 @@ type serializedConnectorOut struct {
 }
 
 type taskDescribeOut struct {
-	TaskId int32  `human:"Task ID"`
-	State  string `human:"State"`
+	Task  int32  `human:"Task"`
+	State string `human:"State"`
 }
 
 type serializedTasksOut struct {
-	TaskId int32  `json:"task_id" yaml:"task_id"`
-	State  string `json:"state" yaml:"state"`
+	Task  int32  `json:"task" yaml:"task"`
+	State string `json:"state" yaml:"state"`
 }
 
 type configDescribeOut struct {
@@ -115,8 +115,8 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	list := output.NewList(cmd)
 	for _, task := range connector.Status.GetTasks() {
 		list.Add(&taskDescribeOut{
-			TaskId: task.GetId(),
-			State:  task.GetState(),
+			Task:  task.GetId(),
+			State: task.GetState(),
 		})
 	}
 	if err := list.Print(); err != nil {
@@ -139,7 +139,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 func printSerializedDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
 	tasks := make([]serializedTasksOut, 0)
 	for _, task := range connector.Status.GetTasks() {
-		tasks = append(tasks, serializedTasksOut{TaskId: task.Id, State: task.State})
+		tasks = append(tasks, serializedTasksOut{Task: task.Id, State: task.State})
 	}
 
 	configs := make([]serializedConfigsOut, 0)

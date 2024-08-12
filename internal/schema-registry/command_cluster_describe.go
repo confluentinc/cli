@@ -18,17 +18,17 @@ import (
 )
 
 type clusterOut struct {
-	Name                  string `human:"Name" serialized:"name"`
-	ClusterId             string `human:"Cluster" serialized:"cluster_id"`
-	EndpointUrl           string `human:"Endpoint URL" serialized:"endpoint_url"`
-	UsedSchemas           string `human:"Used Schemas" serialized:"used_schemas"`
-	AvailableSchemas      string `human:"Available Schemas" serialized:"available_schemas"`
-	FreeSchemasLimit      int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
-	GlobalCompatibility   string `human:"Global Compatibility" serialized:"global_compatibility"`
-	Mode                  string `human:"Mode" serialized:"mode"`
-	ServiceProvider       string `human:"Service Provider" serialized:"service_provider"`
-	ServiceProviderRegion string `human:"Service Provider Region" serialized:"service_provider_region"`
-	Package               string `human:"Package" serialized:"package"`
+	Name                string `human:"Name" serialized:"name"`
+	Cluster             string `human:"Cluster" serialized:"cluster"`
+	EndpointUrl         string `human:"Endpoint URL" serialized:"endpoint_url"`
+	UsedSchemas         string `human:"Used Schemas" serialized:"used_schemas"`
+	AvailableSchemas    string `human:"Available Schemas" serialized:"available_schemas"`
+	FreeSchemasLimit    int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
+	GlobalCompatibility string `human:"Global Compatibility" serialized:"global_compatibility"`
+	Mode                string `human:"Mode" serialized:"mode"`
+	Cloud               string `human:"Cloud" serialized:"cloud"`
+	Region              string `human:"Region" serialized:"region"`
+	Package             string `human:"Package" serialized:"package"`
 }
 
 const (
@@ -51,14 +51,6 @@ func (c *command) newClusterDescribeCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	// Deprecated
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-	// Deprecated
-	pcmd.AddApiSecretFlag(cmd)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-
 	return cmd
 }
 
@@ -79,11 +71,6 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		return errors.NewSRNotEnabledError()
 	}
 	cluster := clusters[0]
-
-	region, err := c.V2Client.GetStreamGovernanceRegionById(cluster.Spec.Region.GetId())
-	if err != nil {
-		return err
-	}
 
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
@@ -122,7 +109,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 			if err != nil {
 				return err
 			}
-			priceKey := getMaxSchemaLimitPriceKey(region.Spec.GetCloud(), region.Spec.GetRegionName(), internalPackageName)
+			priceKey := getMaxSchemaLimitPriceKey(cluster.Spec.GetCloud(), cluster.Spec.GetRegion(), internalPackageName)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
 		}
 	} else {
@@ -149,17 +136,17 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&clusterOut{
-		Name:                  cluster.Spec.GetDisplayName(),
-		ClusterId:             cluster.GetId(),
-		EndpointUrl:           cluster.Spec.GetHttpEndpoint(),
-		ServiceProvider:       region.Spec.GetCloud(),
-		ServiceProviderRegion: region.Spec.GetRegionName(),
-		Package:               cluster.Spec.GetPackage(),
-		UsedSchemas:           numSchemas,
-		AvailableSchemas:      availableSchemas,
-		FreeSchemasLimit:      freeSchemasLimit,
-		GlobalCompatibility:   config.GetCompatibilityLevel(),
-		Mode:                  mode.GetMode(),
+		Name:                cluster.Spec.GetDisplayName(),
+		Cluster:             cluster.GetId(),
+		EndpointUrl:         cluster.Spec.GetHttpEndpoint(),
+		Cloud:               cluster.Spec.GetCloud(),
+		Region:              cluster.Spec.GetRegion(),
+		Package:             cluster.Spec.GetPackage(),
+		UsedSchemas:         numSchemas,
+		AvailableSchemas:    availableSchemas,
+		FreeSchemasLimit:    freeSchemasLimit,
+		GlobalCompatibility: config.GetCompatibilityLevel(),
+		Mode:                mode.GetMode(),
 	})
 	return table.Print()
 }

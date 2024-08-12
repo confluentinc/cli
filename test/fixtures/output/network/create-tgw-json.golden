@@ -1,6 +1,6 @@
 {
   "id": "n-abcde1",
-  "environment_id": "env-00000",
+  "environment": "env-00000",
   "name": "aws-tgw",
   "cloud": "AWS",
   "region": "us-west-2",

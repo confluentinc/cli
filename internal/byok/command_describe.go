@@ -2,7 +2,6 @@ package byok
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -55,25 +54,14 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key byokv1.ByokV1
 	}
 
 	table := output.NewTable(cmd)
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&humanOut{
-			Id:        key.GetId(),
-			Key:       keyString,
-			Roles:     strings.Join(roles, ", "),
-			Provider:  key.GetProvider(),
-			State:     key.GetState(),
-			CreatedAt: key.Metadata.CreatedAt.String(),
-		})
-	} else {
-		table.Add(&serializedOut{
-			Id:        key.GetId(),
-			Key:       keyString,
-			Roles:     roles,
-			Provider:  key.GetProvider(),
-			State:     key.GetState(),
-			CreatedAt: key.Metadata.CreatedAt.String(),
-		})
-	}
+	table.Add(&out{
+		Id:        key.GetId(),
+		Key:       keyString,
+		Roles:     roles,
+		Cloud:     key.GetProvider(),
+		State:     key.GetState(),
+		CreatedAt: key.Metadata.CreatedAt.String(),
+	})
 	table.Print()
 
 	if output.GetFormat(cmd) == output.Human {

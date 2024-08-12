@@ -2,7 +2,6 @@ package iam
 
 import (
 	"slices"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -16,18 +15,11 @@ type ipFilterCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type ipFilterHumanOut struct {
-	ID            string `human:"ID"`
-	Name          string `human:"Name"`
-	ResourceGroup string `human:"Resource group"`
-	IpGroups      string `human:"IP groups"`
-}
-
-type ipFilterSerializedOut struct {
-	ID            string   `serialized:"id"`
-	Name          string   `serialized:"name"`
-	ResourceGroup string   `serialized:"resource_group"`
-	IpGroups      []string `serialized:"ip_groups"`
+type ipFilterOut struct {
+	ID            string   `human:"ID" serialized:"id"`
+	Name          string   `human:"Name" serialized:"name"`
+	ResourceGroup string   `human:"Resource group" serialized:"resource_group"`
+	IpGroups      []string `human:"IP groups" serialized:"ip_groups"`
 }
 
 func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -54,21 +46,12 @@ func printIpFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error {
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
 
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&ipFilterHumanOut{
-			ID:            ipFilter.GetId(),
-			Name:          ipFilter.GetFilterName(),
-			ResourceGroup: ipFilter.GetResourceGroup(),
-			IpGroups:      strings.Join(ipGroupIds, ", "),
-		})
-	} else {
-		table.Add(&ipFilterSerializedOut{
-			ID:            ipFilter.GetId(),
-			Name:          ipFilter.GetFilterName(),
-			ResourceGroup: ipFilter.GetResourceGroup(),
-			IpGroups:      ipGroupIds,
-		})
-	}
+	table.Add(&ipFilterOut{
+		ID:            ipFilter.GetId(),
+		Name:          ipFilter.GetFilterName(),
+		ResourceGroup: ipFilter.GetResourceGroup(),
+		IpGroups:      ipGroupIds,
+	})
 	return table.Print()
 }
 

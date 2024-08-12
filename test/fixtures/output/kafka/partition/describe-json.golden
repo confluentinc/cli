@@ -1,6 +1,6 @@
 {
-  "cluster_id": "lkc-12345",
+  "cluster": "lkc-12345",
   "topic_name": "topic1",
-  "partition_id": 0,
-  "leader_id": 1
+  "id": 0,
+  "leader": 1
 }

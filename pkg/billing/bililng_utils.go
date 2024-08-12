@@ -27,3 +27,8 @@ func FormatDollars(amount float64) string {
 
 	return fmt.Sprintf("$%s", amountStr)
 }
+
+func ConvertToUSD(balance int64) float64 {
+	// The backend represents money in hundredths of cents
+	return float64(balance) / 10000
+}

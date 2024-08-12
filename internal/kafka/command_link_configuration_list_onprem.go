@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -50,25 +48,14 @@ func (c *linkCommand) configurationListOnPrem(cmd *cobra.Command, args []string)
 
 	list := output.NewList(cmd)
 	for _, config := range configList {
-		if output.GetFormat(cmd) == output.Human {
-			list.Add(&linkConfigurationHumanOut{
-				ConfigName:  config.Name,
-				ConfigValue: config.Value,
-				ReadOnly:    config.ReadOnly,
-				Sensitive:   config.Sensitive,
-				Source:      config.Source,
-				Synonyms:    strings.Join(config.Synonyms, ", "),
-			})
-		} else {
-			list.Add(&linkConfigurationSerializedOut{
-				ConfigName:  config.Name,
-				ConfigValue: config.Value,
-				ReadOnly:    config.ReadOnly,
-				Sensitive:   config.Sensitive,
-				Source:      config.Source,
-				Synonyms:    config.Synonyms,
-			})
-		}
+		list.Add(&linkConfigurationOut{
+			ConfigName:  config.Name,
+			ConfigValue: config.Value,
+			ReadOnly:    config.ReadOnly,
+			Sensitive:   config.Sensitive,
+			Source:      config.Source,
+			Synonyms:    config.Synonyms,
+		})
 	}
 	return list.Print()
 }

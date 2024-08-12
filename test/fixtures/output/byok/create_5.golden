@@ -2,7 +2,7 @@
 | ID         | cck-004                                                                                                       |
 | Key        | projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3 |
 | Roles      |                                                                                                               |
-| Provider   | GCP                                                                                                           |
+| Cloud      | GCP                                                                                                           |
 | State      | AVAILABLE                                                                                                     |
 | Created At | 2022-12-24 00:00:00 +0000 UTC                                                                                 |
 +------------+---------------------------------------------------------------------------------------------------------------+

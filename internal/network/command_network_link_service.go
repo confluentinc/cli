@@ -2,7 +2,6 @@ package network
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -12,26 +11,15 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type networkLinkServiceHumanOut struct {
-	Id                   string `human:"ID"`
-	Name                 string `human:"Name,omitempty"`
-	Network              string `human:"Network"`
-	Environment          string `human:"Environment"`
-	Description          string `human:"Description,omitempty"`
-	AcceptedEnvironments string `human:"Accepted Environments,omitempty"`
-	AcceptedNetworks     string `human:"Accepted Networks,omitempty"`
-	Phase                string `human:"Phase"`
-}
-
-type networkLinkServiceSerializedOut struct {
-	Id                   string   `serialized:"id"`
-	Name                 string   `serialized:"name,omitempty"`
-	Network              string   `serialized:"network"`
-	Environment          string   `serialized:"environment"`
-	Description          string   `serialized:"description,omitempty"`
-	AcceptedEnvironments []string `serialized:"accepted_environments,omitempty"`
-	AcceptedNetworks     []string `serialized:"accepted_networks,omitempty"`
-	Phase                string   `serialized:"phase"`
+type networkLinkServiceOut struct {
+	Id                   string   `human:"ID" serialized:"id"`
+	Name                 string   `human:"Name,omitempty" serialized:"name,omitempty"`
+	Network              string   `human:"Network" serialized:"network"`
+	Environment          string   `human:"Environment" serialized:"environment"`
+	Description          string   `human:"Description,omitempty" serialized:"description,omitempty"`
+	AcceptedEnvironments []string `human:"Accepted Environments,omitempty" serialized:"accepted_environments,omitempty"`
+	AcceptedNetworks     []string `human:"Accepted Networks,omitempty" serialized:"accepted_networks,omitempty"`
+	Phase                string   `human:"Phase" serialized:"phase"`
 }
 
 func (c *command) newNetworkLinkServiceCommand() *cobra.Command {
@@ -98,29 +86,15 @@ func printNetworkLinkServiceTable(cmd *cobra.Command, service networkingv1.Netwo
 
 	table := output.NewTable(cmd)
 
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&networkLinkServiceHumanOut{
-			Id:                   service.GetId(),
-			Name:                 service.Spec.GetDisplayName(),
-			Network:              service.Spec.Network.GetId(),
-			Environment:          service.Spec.Environment.GetId(),
-			Description:          service.Spec.GetDescription(),
-			AcceptedEnvironments: strings.Join(service.Spec.Accept.GetEnvironments(), ", "),
-			AcceptedNetworks:     strings.Join(service.Spec.Accept.GetNetworks(), ", "),
-			Phase:                service.Status.GetPhase(),
-		})
-	} else {
-		table.Add(&networkLinkServiceSerializedOut{
-			Id:                   service.GetId(),
-			Name:                 service.Spec.GetDisplayName(),
-			Network:              service.Spec.Network.GetId(),
-			Environment:          service.Spec.Environment.GetId(),
-			Description:          service.Spec.GetDescription(),
-			AcceptedEnvironments: service.Spec.Accept.GetEnvironments(),
-			AcceptedNetworks:     service.Spec.Accept.GetNetworks(),
-			Phase:                service.Status.GetPhase(),
-		})
-	}
-
+	table.Add(&networkLinkServiceOut{
+		Id:                   service.GetId(),
+		Name:                 service.Spec.GetDisplayName(),
+		Network:              service.Spec.Network.GetId(),
+		Environment:          service.Spec.Environment.GetId(),
+		Description:          service.Spec.GetDescription(),
+		AcceptedEnvironments: service.Spec.Accept.GetEnvironments(),
+		AcceptedNetworks:     service.Spec.Accept.GetNetworks(),
+		Phase:                service.Status.GetPhase(),
+	})
 	return table.PrintWithAutoWrap(false)
 }

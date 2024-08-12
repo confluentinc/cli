@@ -45,9 +45,17 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	format := output.GetFormat(cmd)
 	for _, quota := range quotas {
-		list.Add(quotaToPrintable(quota, format))
+		list.Add(&quotaOut{
+			Id:          quota.GetId(),
+			DisplayName: quota.Spec.GetDisplayName(),
+			Description: quota.Spec.GetDescription(),
+			Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
+			Egress:      quota.Spec.Throughput.GetEgressByteRate(),
+			Principals:  principalsToStringSlice(quota.Spec.GetPrincipals()),
+			Cluster:     quota.Spec.Cluster.GetId(),
+			Environment: quota.Spec.Environment.GetId(),
+		})
 	}
 	return list.Print()
 }

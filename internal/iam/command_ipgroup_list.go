@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -30,22 +28,12 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	if output.GetFormat(cmd) == output.Human {
-		for _, group := range ipGroups {
-			list.Add(&ipGroupHumanOut{
-				ID:         group.GetId(),
-				Name:       group.GetGroupName(),
-				CidrBlocks: strings.Join(group.GetCidrBlocks(), ", "),
-			})
-		}
-	} else {
-		for _, group := range ipGroups {
-			list.Add(&ipGroupSerializedOut{
-				ID:         group.GetId(),
-				Name:       group.GetGroupName(),
-				CidrBlocks: group.GetCidrBlocks(),
-			})
-		}
+	for _, group := range ipGroups {
+		list.Add(&ipGroupOut{
+			ID:         group.GetId(),
+			Name:       group.GetGroupName(),
+			CidrBlocks: group.GetCidrBlocks(),
+		})
 	}
 	return list.Print()
 }

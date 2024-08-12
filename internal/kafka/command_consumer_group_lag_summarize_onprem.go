@@ -40,15 +40,15 @@ func (c *consumerCommand) groupLagSummarizeOnPrem(cmd *cobra.Command, args []str
 		maxLagInstanceId = *summary.MaxLagInstanceId
 	}
 	table.Add(&summarizeOut{
-		ClusterId:         summary.ClusterId,
-		ConsumerGroupId:   summary.ConsumerGroupId,
-		TotalLag:          summary.TotalLag,
-		MaxLag:            summary.MaxLag,
-		MaxLagConsumerId:  summary.MaxLagConsumerId,
-		MaxLagInstanceId:  maxLagInstanceId,
-		MaxLagClientId:    summary.MaxLagClientId,
-		MaxLagTopic:       summary.MaxLagTopicName,
-		MaxLagPartitionId: summary.MaxLagPartitionId,
+		Cluster:         summary.ClusterId,
+		ConsumerGroup:   summary.ConsumerGroupId,
+		TotalLag:        summary.TotalLag,
+		MaxLag:          summary.MaxLag,
+		MaxLagConsumer:  summary.MaxLagConsumerId,
+		MaxLagInstance:  maxLagInstanceId,
+		MaxLagClient:    summary.MaxLagClientId,
+		MaxLagTopic:     summary.MaxLagTopicName,
+		MaxLagPartition: summary.MaxLagPartitionId,
 	})
 	return table.Print()
 }

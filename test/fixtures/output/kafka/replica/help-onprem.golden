@@ -4,7 +4,8 @@ Usage:
   confluent kafka replica [command]
 
 Available Commands:
-  list        List Kafka replica statuses.
+  list        List Kafka replicas.
+  status      Manage Kafka replica statuses.
 
 Global Flags:
   -h, --help            Show help for this command.

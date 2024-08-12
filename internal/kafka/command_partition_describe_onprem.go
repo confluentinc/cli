@@ -55,10 +55,10 @@ func (c *partitionCommand) describeOnPrem(cmd *cobra.Command, args []string) err
 
 	table := output.NewTable(cmd)
 	table.Add(&partitionOut{
-		ClusterId:   partition.ClusterId,
-		TopicName:   partition.TopicName,
-		PartitionId: partition.PartitionId,
-		LeaderId:    parseLeaderId(partition.Leader.Related),
+		Cluster:   partition.ClusterId,
+		TopicName: partition.TopicName,
+		Id:        partition.PartitionId,
+		Leader:    parseLeaderId(partition.Leader.Related),
 	})
 	return table.Print()
 }
