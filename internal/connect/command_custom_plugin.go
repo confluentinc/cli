@@ -35,6 +35,34 @@ type customPluginHumanOut struct {
 	SensitiveProperties string `human:"Sensitive Properties"`
 }
 
+type customPluginVersionSerializedOut struct {
+	PluginId            string   `serialized:"plugin-id"`
+	Id                  string   `serialized:"id"`
+	Name                string   `serialized:"name"`
+	Description         string   `serialized:"description"`
+	Cloud               string   `serialized:"cloud"`
+	ConnectorClass      string   `serialized:"connector_class"`
+	ConnectorType       string   `serialized:"connector_type"`
+	SensitiveProperties []string `serialized:"sensitive_properties"`
+	Version             string   `serialized:"version"`
+	IsBeta              string   `serialized:"is_beta"`
+	ReleaseNotes        string   `serialized:"release_notes"`
+}
+
+type customPluginVersionHumanOut struct {
+	PluginId            string `human:"Plugin ID"`
+	Id                  string `human:"ID"`
+	Name                string `human:"Name"`
+	Description         string `human:"Description"`
+	Cloud               string `human:"Cloud"`
+	ConnectorClass      string `human:"Connector Class"`
+	ConnectorType       string `human:"Connector Type"`
+	SensitiveProperties string `human:"Sensitive Properties"`
+	Version             string `human:"Version"`
+	IsBeta              string `human:"Is Beta"`
+	ReleaseNotes        string `human:"Release Notes"`
+}
+
 func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "custom-plugin",
@@ -49,6 +77,11 @@ func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newCreateVersionCommand())
+	cmd.AddCommand(c.newDescribeVersionCommand())
+	cmd.AddCommand(c.newListVersionCommand())
+	cmd.AddCommand(c.newDeleteVersionCommand())
+	cmd.AddCommand(c.newUpdateVersionCommand())
 
 	return cmd
 }
@@ -75,6 +108,42 @@ func printTable(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1Custom
 			ConnectorClass:      plugin.GetConnectorClass(),
 			ConnectorType:       plugin.GetConnectorType(),
 			SensitiveProperties: sensitiveProperties,
+		})
+	}
+
+	return table.Print()
+}
+
+func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin, version connectcustompluginv1.ConnectV1CustomConnectorPluginVersion) error {
+	table := output.NewTable(cmd)
+	sensitiveProperties := plugin.GetSensitiveConfigProperties()
+	if output.GetFormat(cmd) == output.Human {
+		table.Add(&customPluginVersionHumanOut{
+			PluginId:            plugin.GetId(),
+			Name:                plugin.GetDisplayName(),
+			Description:         plugin.GetDescription(),
+			Cloud:               plugin.GetCloud(),
+			ConnectorClass:      plugin.GetConnectorClass(),
+			ConnectorType:       plugin.GetConnectorType(),
+			SensitiveProperties: strings.Join(sensitiveProperties, ", "),
+			Id:                  version.GetId(),
+			Version:             version.GetVersion(),
+			IsBeta:              version.GetIsBeta(),
+			ReleaseNotes:        version.GetReleaseNotes(),
+		})
+	} else {
+		table.Add(&customPluginVersionSerializedOut{
+			PluginId:            plugin.GetId(),
+			Name:                plugin.GetDisplayName(),
+			Description:         plugin.GetDescription(),
+			Cloud:               plugin.GetCloud(),
+			ConnectorClass:      plugin.GetConnectorClass(),
+			ConnectorType:       plugin.GetConnectorType(),
+			SensitiveProperties: sensitiveProperties,
+			Id:                  version.GetId(),
+			Version:             version.GetVersion(),
+			IsBeta:              version.GetIsBeta(),
+			ReleaseNotes:        version.GetReleaseNotes(),
 		})
 	}
 
