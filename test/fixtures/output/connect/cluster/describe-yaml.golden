@@ -4,6 +4,6 @@ connector:
     status: RUNNING
     type: Sink
 tasks:
-    - task_id: 1
+    - task: 1
       state: RUNNING
 configs: []

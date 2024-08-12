@@ -2,7 +2,6 @@ package network
 
 import (
 	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -10,20 +9,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type listIpAddressHumanOut struct {
-	Cloud       string `human:"Cloud"`
-	Region      string `human:"Region"`
-	IpPrefix    string `human:"IP Prefix"`
-	AddressType string `human:"Address Type"`
-	Services    string `human:"Services"`
-}
-
-type listIpAddressSerializedOut struct {
-	Cloud       string   `serialized:"cloud"`
-	Region      string   `serialized:"region"`
-	IpPrefix    string   `serialized:"ip_prefix"`
-	AddressType string   `serialized:"address_type"`
-	Services    []string `serialized:"services"`
+type listIpAddressOut struct {
+	Cloud       string   `human:"Cloud" serialized:"cloud"`
+	Region      string   `human:"Region" serialized:"region"`
+	IpPrefix    string   `human:"IP Prefix" serialized:"ip_prefix"`
+	AddressType string   `human:"Address Type" serialized:"address_type"`
+	Services    []string `human:"Services" serialized:"services"`
 }
 
 func (c *command) newIpAddressListCommand() *cobra.Command {
@@ -91,23 +82,13 @@ func (c *command) ipAddressList(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, ipAddress := range ipAddresses {
-		if output.GetFormat(cmd) == output.Human {
-			list.Add(&listIpAddressHumanOut{
-				IpPrefix:    ipAddress.GetIpPrefix(),
-				Cloud:       ipAddress.GetCloud(),
-				Region:      ipAddress.GetRegion(),
-				AddressType: ipAddress.GetAddressType(),
-				Services:    strings.Join(ipAddress.GetServices().Items, ", "),
-			})
-		} else {
-			list.Add(&listIpAddressSerializedOut{
-				IpPrefix:    ipAddress.GetIpPrefix(),
-				Cloud:       ipAddress.GetCloud(),
-				Region:      ipAddress.GetRegion(),
-				AddressType: ipAddress.GetAddressType(),
-				Services:    ipAddress.GetServices().Items,
-			})
-		}
+		list.Add(&listIpAddressOut{
+			IpPrefix:    ipAddress.GetIpPrefix(),
+			Cloud:       ipAddress.GetCloud(),
+			Region:      ipAddress.GetRegion(),
+			AddressType: ipAddress.GetAddressType(),
+			Services:    ipAddress.GetServices().Items,
+		})
 	}
 
 	// Disable default sort to use the custom sort above.

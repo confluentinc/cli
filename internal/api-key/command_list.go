@@ -129,10 +129,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
 				Key:          apiKey.GetId(),
 				Description:  apiKey.Spec.GetDescription(),
-				OwnerId:      ownerId,
+				Owner:        ownerId,
 				OwnerEmail:   email,
 				ResourceType: getResourceType(resource),
-				ResourceId:   getResourceId(resource.GetId()),
+				Resource:     getResourceId(resource.GetId()),
 				Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}

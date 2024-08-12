@@ -126,7 +126,7 @@ const (
 	InternalServerErrorSuggestions    = "Please check the status of your Kafka cluster or submit a support ticket."
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
-	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--ca-cert-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."
+	KafkaRestCertErrorSuggestions     = "To specify a Certificate Authority certificate, please use the `--certificate-authority-path` flag or set `CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH`."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set `CONFLUENT_REST_URL`."
 	KafkaRestProvisioningErrorMsg     = `Kafka REST unavailable: Kafka cluster "%s" is still provisioning`
@@ -151,7 +151,7 @@ const (
 		AvoidTimeoutSuggestions
 	InvalidLoginURLErrorMsg      = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
 	InvalidLoginErrorMsg         = "incorrect email, password, or organization ID"
-	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
+	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization` flag.\n" +
 		"To skip auto-login and force a username and password prompt, use the `--prompt` flag.\n" + // TODO: Remove in V4
 		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."

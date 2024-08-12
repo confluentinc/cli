@@ -2,7 +2,6 @@ package streamshare
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -13,38 +12,21 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-type redeemHumanOut struct {
-	Id                         string `human:"ID"`
-	ApiKey                     string `human:"API Key"`
-	ApiSecret                  string `human:"API Secret"`
-	KafkaBootstrapUrl          string `human:"Kafka Bootstrap URL"`
-	SchemaRegistryApiKey       string `human:"Schema Registry API Key"`
-	SchemaRegistrySecret       string `human:"Schema Registry Secret"`
-	SchemaRegistryUrl          string `human:"Schema Registry URL"`
-	Resources                  string `human:"Resources"`
-	NetworkDnsDomain           string `human:"Network DNS Domain"`
-	NetworkZones               string `human:"Network Zones"`
-	NetworkZonalSubdomains     string `human:"Network Zonal Subdomains"`
-	NetworkKind                string `human:"Network Kind"`
-	NetworkPrivateLinkDataType string `human:"Network Private Link Data Type"`
-	NetworkPrivateLinkData     string `human:"Network Private Link Data"`
-}
-
-type redeemSerializedOut struct {
-	Id                         string   `serialized:"id"`
-	ApiKey                     string   `serialized:"api_key"`
-	ApiSecret                  string   `serialized:"api_secret"`
-	KafkaBootstrapUrl          string   `serialized:"kafka_bootstrap_url"`
-	SchemaRegistryApiKey       string   `serialized:"schema_registry_api_key"`
-	SchemaRegistrySecret       string   `serialized:"schema_registry_secret"`
-	SchemaRegistryUrl          string   `serialized:"schema_registry_url"`
-	Resources                  []string `serialized:"resources"`
-	NetworkDnsDomain           string   `serialized:"network_dns_domain"`
-	NetworkZones               string   `serialized:"network_zones"`
-	NetworkZonalSubdomains     []string `serialized:"network_zonal_subdomains"`
-	NetworkKind                string   `serialized:"network_kind"`
-	NetworkPrivateLinkDataType string   `serialized:"network_private_link_data_type"`
-	NetworkPrivateLinkData     string   `serialized:"network_private_link_data"`
+type redeemOut struct {
+	Id                         string            `human:"ID" serialized:"id"`
+	ApiKey                     string            `human:"API Key" serialized:"api_key"`
+	ApiSecret                  string            `human:"API Secret" serialized:"api_secret"`
+	KafkaBootstrapUrl          string            `human:"Kafka Bootstrap URL" serialized:"kafka_bootstrap_url"`
+	SchemaRegistryApiKey       string            `human:"Schema Registry API Key" serialized:"schema_registry_api_key"`
+	SchemaRegistryAPISecret    string            `human:"Schema Registry API Secret" serialized:"schema_registry_api_secret"`
+	SchemaRegistryUrl          string            `human:"Schema Registry URL" serialized:"schema_registry_url"`
+	Resources                  []string          `human:"Resources" serialized:"resources"`
+	NetworkDnsDomain           string            `human:"Network DNS Domain" serialized:"network_dns_domain"`
+	NetworkZones               []string          `human:"Network Zones" serialized:"network_zones"`
+	NetworkZonalSubdomains     map[string]string `human:"Network Zonal Subdomains" serialized:"network_zonal_subdomains"`
+	NetworkKind                string            `human:"Network Kind" serialized:"network_kind"`
+	NetworkPrivateLinkDataType string            `human:"Network Private Link Data Type" serialized:"network_private_link_data_type"`
+	NetworkPrivateLinkData     string            `human:"Network Private Link Data" serialized:"network_private_link_data"`
 }
 
 func (c *command) newRedeemCommand() *cobra.Command {
@@ -61,31 +43,31 @@ func (c *command) newRedeemCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("aws-account-id", "", "Consumer's AWS account ID for PrivateLink access.")
-	cmd.Flags().String("azure-subscription-id", "", "Consumer's Azure subscription ID for PrivateLink access.")
-	cmd.Flags().String("gcp-project-id", "", "Consumer's GCP project ID for Private Service Connect access.")
+	cmd.Flags().String("aws-account", "", "Consumer's AWS account ID for PrivateLink access.")
+	cmd.Flags().String("azure-subscription", "", "Consumer's Azure subscription ID for PrivateLink access.")
+	cmd.Flags().String("gcp-project", "", "Consumer's GCP project ID for Private Service Connect access.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
-	awsAccountId, err := cmd.Flags().GetString("aws-account-id")
+	awsAccount, err := cmd.Flags().GetString("aws-account")
 	if err != nil {
 		return err
 	}
 
-	azureSubscriptionId, err := cmd.Flags().GetString("azure-subscription-id")
+	azureSubscription, err := cmd.Flags().GetString("azure-subscription")
 	if err != nil {
 		return err
 	}
 
-	gcpProjectId, err := cmd.Flags().GetString("gcp-project-id")
+	gcpProject, err := cmd.Flags().GetString("gcp-project")
 	if err != nil {
 		return err
 	}
 
-	redeemResponse, err := c.V2Client.RedeemSharedToken(args[0], awsAccountId, azureSubscriptionId, gcpProjectId)
+	redeemResponse, err := c.V2Client.RedeemSharedToken(args[0], awsAccount, azureSubscription, gcpProject)
 	if err != nil {
 		return err
 	}
@@ -100,7 +82,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	isPrivateLink := awsAccountId != "" || azureSubscriptionId != "" || gcpProjectId != ""
+	isPrivateLink := awsAccount != "" || azureSubscription != "" || gcpProject != ""
 
 	table := output.NewTable(cmd)
 	if isPrivateLink {
@@ -119,68 +101,35 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		}
 		networkDetails := getPrivateLinkNetworkDetails(network)
 
-		if output.GetFormat(cmd) == output.Human {
-			table.Add(&redeemHumanOut{
-				Id:                         redeemResponse.GetId(),
-				ApiKey:                     redeemResponse.GetApiKey(),
-				ApiSecret:                  redeemResponse.GetSecret(),
-				KafkaBootstrapUrl:          redeemResponse.GetKafkaBootstrapUrl(),
-				SchemaRegistryApiKey:       redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistrySecret:       redeemResponse.GetSchemaRegistrySecret(),
-				SchemaRegistryUrl:          redeemResponse.GetSchemaRegistryUrl(),
-				Resources:                  strings.Join(resources, ", "),
-				NetworkDnsDomain:           network.GetDnsDomain(),
-				NetworkZones:               strings.Join(network.GetZones(), ", "),
-				NetworkZonalSubdomains:     strings.Join(mapSubdomainsToList(network.GetZonalSubdomains()), ", "),
-				NetworkKind:                networkDetails.networkKind,
-				NetworkPrivateLinkDataType: networkDetails.privateLinkDataType,
-				NetworkPrivateLinkData:     networkDetails.privateLinkData,
-			})
-		} else {
-			table.Add(&redeemSerializedOut{
-				Id:                   redeemResponse.GetId(),
-				ApiKey:               redeemResponse.GetApiKey(),
-				ApiSecret:            redeemResponse.GetSecret(),
-				KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
-				SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
-				SchemaRegistryUrl:    redeemResponse.GetSchemaRegistryUrl(),
-				Resources:            resources,
-				NetworkDnsDomain:     network.GetDnsDomain(),
-				// TODO: Serialize array instead of string in next major version
-				NetworkZones:               strings.Join(network.GetZones(), ","),
-				NetworkZonalSubdomains:     mapSubdomainsToList(network.GetZonalSubdomains()),
-				NetworkKind:                networkDetails.networkKind,
-				NetworkPrivateLinkDataType: networkDetails.privateLinkDataType,
-				NetworkPrivateLinkData:     networkDetails.privateLinkData,
-			})
-		}
+		table.Add(&redeemOut{
+			Id:                         redeemResponse.GetId(),
+			ApiKey:                     redeemResponse.GetApiKey(),
+			ApiSecret:                  redeemResponse.GetSecret(),
+			KafkaBootstrapUrl:          redeemResponse.GetKafkaBootstrapUrl(),
+			SchemaRegistryApiKey:       redeemResponse.GetSchemaRegistryApiKey(),
+			SchemaRegistryAPISecret:    redeemResponse.GetSchemaRegistrySecret(),
+			SchemaRegistryUrl:          redeemResponse.GetSchemaRegistryUrl(),
+			Resources:                  resources,
+			NetworkDnsDomain:           network.GetDnsDomain(),
+			NetworkZones:               network.GetZones(),
+			NetworkZonalSubdomains:     network.GetZonalSubdomains(),
+			NetworkKind:                networkDetails.networkKind,
+			NetworkPrivateLinkDataType: networkDetails.privateLinkDataType,
+			NetworkPrivateLinkData:     networkDetails.privateLinkData,
+		})
 	} else {
-		if output.GetFormat(cmd) == output.Human {
-			table.Add(&redeemHumanOut{
-				Id:                   redeemResponse.GetId(),
-				ApiKey:               redeemResponse.GetApiKey(),
-				ApiSecret:            redeemResponse.GetSecret(),
-				KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
-				SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
-				SchemaRegistryUrl:    redeemResponse.GetSchemaRegistryUrl(),
-				Resources:            strings.Join(resources, ", "),
-			})
-		} else {
-			table.Add(&redeemSerializedOut{
-				Id:                   redeemResponse.GetId(),
-				ApiKey:               redeemResponse.GetApiKey(),
-				ApiSecret:            redeemResponse.GetSecret(),
-				KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
-				SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
-				SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
-				SchemaRegistryUrl:    redeemResponse.GetSchemaRegistryUrl(),
-				Resources:            resources,
-			})
-		}
+		table.Add(&redeemOut{
+			Id:                      redeemResponse.GetId(),
+			ApiKey:                  redeemResponse.GetApiKey(),
+			ApiSecret:               redeemResponse.GetSecret(),
+			KafkaBootstrapUrl:       redeemResponse.GetKafkaBootstrapUrl(),
+			SchemaRegistryApiKey:    redeemResponse.GetSchemaRegistryApiKey(),
+			SchemaRegistryAPISecret: redeemResponse.GetSchemaRegistrySecret(),
+			SchemaRegistryUrl:       redeemResponse.GetSchemaRegistryUrl(),
+			Resources:               resources,
+		})
 
-		table.Filter([]string{"Id", "ApiKey", "ApiSecret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"})
+		table.Filter([]string{"Id", "ApiKey", "ApiSecret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistryAPISecret", "SchemaRegistryUrl", "Resources"})
 	}
 
 	return table.Print()

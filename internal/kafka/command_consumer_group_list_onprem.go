@@ -37,8 +37,8 @@ func (c *consumerCommand) groupListOnPrem(cmd *cobra.Command, _ []string) error 
 	list := output.NewList(cmd)
 	for _, group := range groups.Data {
 		list.Add(&consumerGroupOut{
-			ClusterId:         group.ClusterId,
-			ConsumerGroupId:   group.ConsumerGroupId,
+			Cluster:           group.ClusterId,
+			ConsumerGroup:     group.ConsumerGroupId,
 			Coordinator:       getStringBroker(group.Coordinator.Related),
 			IsSimple:          group.IsSimple,
 			PartitionAssignor: group.PartitionAssignor,

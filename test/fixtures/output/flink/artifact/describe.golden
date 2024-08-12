@@ -1,6 +1,6 @@
 +----------------+---------------+
+| ID             | ccp-789013    |
 | Name           | CliPluginTest |
-| Plugin ID      | ccp-789013    |
-| Version ID     | ver-123456    |
+| Version        | ver-123456    |
 | Content Format | JAR           |
 +----------------+---------------+

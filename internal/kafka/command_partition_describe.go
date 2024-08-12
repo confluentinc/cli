@@ -9,10 +9,10 @@ import (
 )
 
 type partitionOut struct {
-	ClusterId   string `human:"Cluster" serialized:"cluster_id"`
-	TopicName   string `human:"Topic Name" serialized:"topic_name"`
-	PartitionId int32  `human:"Partition ID" serialized:"partition_id"`
-	LeaderId    int32  `human:"Leader ID" serialized:"leader_id"`
+	Cluster   string `human:"Cluster" serialized:"cluster"`
+	TopicName string `human:"Topic Name" serialized:"topic_name"`
+	Id        int32  `human:"ID" serialized:"id"`
+	Leader    int32  `human:"Leader" serialized:"leader"`
 }
 
 func (c *partitionCommand) newDescribeCommand() *cobra.Command {
@@ -63,10 +63,10 @@ func (c *partitionCommand) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&partitionOut{
-		ClusterId:   partition.GetClusterId(),
-		TopicName:   partition.GetTopicName(),
-		PartitionId: partition.GetPartitionId(),
-		LeaderId:    parseLeaderId(partition.GetLeader().Related),
+		Cluster:   partition.GetClusterId(),
+		TopicName: partition.GetTopicName(),
+		Id:        partition.GetPartitionId(),
+		Leader:    parseLeaderId(partition.GetLeader().Related),
 	})
 	return table.Print()
 }

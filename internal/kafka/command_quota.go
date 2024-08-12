@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -36,56 +35,38 @@ func newQuotaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 type quotaOut struct {
-	Id          string `human:"ID" serialized:"id"`
-	DisplayName string `human:"Name" serialized:"name"`
-	Description string `human:"Description" serialized:"description"`
-	Ingress     string `human:"Ingress" serialized:"ingress"`
-	Egress      string `human:"Egress" serialized:"egress"`
-	Principals  string `human:"Principals" serialized:"principals"`
-	Cluster     string `human:"Cluster" serialized:"cluster"`
-	Environment string `human:"Environment" serialized:"environment"`
+	Id          string   `human:"ID" serialized:"id"`
+	DisplayName string   `human:"Name" serialized:"name"`
+	Description string   `human:"Description" serialized:"description"`
+	Ingress     string   `human:"Ingress (B/s)" serialized:"ingress"`
+	Egress      string   `human:"Egress (B/s)" serialized:"egress"`
+	Principals  []string `human:"Principals" serialized:"principals"`
+	Cluster     string   `human:"Cluster" serialized:"cluster"`
+	Environment string   `human:"Environment" serialized:"environment"`
 }
 
-func quotaToPrintable(quota kafkaquotasv1.KafkaQuotasV1ClientQuota, format output.Format) *quotaOut {
-	out := &quotaOut{
+func printTable(cmd *cobra.Command, quota kafkaquotasv1.KafkaQuotasV1ClientQuota) error {
+	table := output.NewTable(cmd)
+	table.Add(&quotaOut{
 		Id:          quota.GetId(),
 		DisplayName: quota.Spec.GetDisplayName(),
 		Description: quota.Spec.GetDescription(),
 		Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
 		Egress:      quota.Spec.Throughput.GetEgressByteRate(),
-		Principals:  principalsToString(quota.Spec.GetPrincipals()),
+		Principals:  principalsToStringSlice(quota.Spec.GetPrincipals()),
 		Cluster:     quota.Spec.Cluster.GetId(),
 		Environment: quota.Spec.Environment.GetId(),
-	}
-
-	if format == output.Human {
-		out.Ingress += " B/s"
-		out.Egress += " B/s"
-	} else {
-		// TODO: Serialize array instead of string in next major version
-		out.Principals = principalsToStringSerialized(quota.Spec.GetPrincipals())
-	}
-
-	return out
+	})
+	return table.Print()
 }
 
-func principalsToString(principals []kafkaquotasv1.GlobalObjectReference) string {
+func principalsToStringSlice(principals []kafkaquotasv1.GlobalObjectReference) []string {
 	ids := make([]string, len(principals))
 	for i, principal := range principals {
 		ids[i] = principal.GetId()
 	}
-	return strings.Join(ids, ", ")
-}
 
-func principalsToStringSerialized(principals []kafkaquotasv1.GlobalObjectReference) string {
-	principalStr := ""
-	for i, principal := range principals {
-		principalStr += principal.Id
-		if i < len(principals)-1 {
-			principalStr += ","
-		}
-	}
-	return principalStr
+	return ids
 }
 
 func (c *quotaCommand) validArgs(cmd *cobra.Command, args []string) []string {

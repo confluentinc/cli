@@ -7,44 +7,33 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/v3/pkg/kafkarest"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
-func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, checkAll bool) error {
-	brokerId, all, err := CheckAllOrIdSpecified(cmd, args, checkAll)
+func Describe(cmd *cobra.Command, args []string, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
+	brokerId, err := GetId(cmd, args)
 	if err != nil {
 		return err
 	}
 
-	configName, err := cmd.Flags().GetString("config-name")
+	broker, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdGet(restContext, clusterId, brokerId)
 	if err != nil {
-		return err
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	// Get Broker Configs
-	var data []*ConfigOut
-	if all { // fetch cluster-wide configs
-		clusterConfig, err := GetClusterWideConfigs(restClient, restContext, clusterId, configName)
-		if err != nil {
-			return err
-		}
-		data = ParseClusterConfigData(clusterConfig)
-	} else { // fetch individual broker configs
-		brokerConfig, err := getIndividualBrokerConfigs(restClient, restContext, clusterId, brokerId, configName)
-		if err != nil {
-			return err
-		}
-		data = parseBrokerConfigData(brokerConfig)
+	table := output.NewTable(cmd)
+	out := &out{
+		ClusterId: broker.ClusterId,
+		BrokerId:  broker.BrokerId,
 	}
+	if broker.Host != nil {
+		out.Host = *broker.Host
+	}
+	if broker.Port != nil {
+		out.Port = *broker.Port
+	}
+	table.Add(out)
 
-	list := output.NewList(cmd)
-	for _, entry := range data {
-		if output.GetFormat(cmd) == output.Human {
-			entry.Name = utils.Abbreviate(entry.Name, AbbreviationLength)
-			entry.Value = utils.Abbreviate(entry.Value, AbbreviationLength)
-		}
-		list.Add(entry)
-	}
-	return list.Print()
+	return table.Print()
 }

@@ -5,7 +5,7 @@
     "arn:aws:iam::123456789012:role/role1",
     "arn:aws:iam::123456789012:role/role2"
   ],
-  "provider": "AWS",
+  "cloud": "AWS",
   "state": "IN_USE",
   "created_at": "2022-11-12 08:24:00 +0000 UTC"
 }

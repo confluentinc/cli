@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -48,25 +46,14 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 
 	list := output.NewList(cmd)
 	for _, config := range configList {
-		if output.GetFormat(cmd) == output.Human {
-			list.Add(&linkConfigurationHumanOut{
-				ConfigName:  config.GetName(),
-				ConfigValue: config.GetValue(),
-				ReadOnly:    config.GetReadOnly(),
-				Sensitive:   config.GetSensitive(),
-				Source:      config.GetSource(),
-				Synonyms:    strings.Join(config.GetSynonyms(), ", "),
-			})
-		} else {
-			list.Add(&linkConfigurationSerializedOut{
-				ConfigName:  config.GetName(),
-				ConfigValue: config.GetValue(),
-				ReadOnly:    config.GetReadOnly(),
-				Sensitive:   config.GetSensitive(),
-				Source:      config.GetSource(),
-				Synonyms:    config.GetSynonyms(),
-			})
-		}
+		list.Add(&linkConfigurationOut{
+			ConfigName:  config.GetName(),
+			ConfigValue: config.GetValue(),
+			ReadOnly:    config.GetReadOnly(),
+			Sensitive:   config.GetSensitive(),
+			Source:      config.GetSource(),
+			Synonyms:    config.GetSynonyms(),
+		})
 	}
 	return list.Print()
 }

@@ -1,6 +1,6 @@
 {
   "id": "n-abcde9",
-  "environment_id": "env-00000",
+  "environment": "env-00000",
   "name": "prod-azure-eastus2",
   "cloud": "AZURE",
   "region": "eastus2",

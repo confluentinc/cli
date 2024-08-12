@@ -1,5 +1,5 @@
---- cli/Makefile	2024-06-10 15:26:50.775683060 -0700
-+++ debian/Makefile	2024-06-10 12:33:07.670484306 -0700
+--- cli/Makefile	2024-07-02 20:56:36.753423056 -0700
++++ debian/Makefile	2024-07-02 18:21:01.618798613 -0700
 @@ -1,146 +1,144 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
@@ -191,7 +191,7 @@
 +		mkdir -p $${dir}; \
 +		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
 +		filepath=$${dir}/confluent$${ext}; \
-+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath}; \
++		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent-disableupdates_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath}; \
 +		chmod 755 $${filepath}; \
 +	done
 +

@@ -57,9 +57,6 @@ check_executable() {
 
 init_config() {
   mkdir -p ${HOME}/.confluent
-  if [[ ! -f "${HOME}/.confluent/config.json" ]] ; then
-    echo '{"disable_updates": true}' > "${HOME}/.confluent/config.json"
-  fi
 }
 
 cat /dev/null <<EOF

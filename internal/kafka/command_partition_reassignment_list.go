@@ -17,17 +17,17 @@ import (
 )
 
 type getReassignmentOutHuman struct {
-	ClusterId        string `human:"Cluster"`
+	Cluster          string `human:"Cluster"`
 	TopicName        string `human:"Topic Name"`
-	PartitionId      int32  `human:"Partition ID"`
+	Partition        int32  `human:"Partition"`
 	AddingReplicas   string `human:"Adding Replicas"`
 	RemovingReplicas string `human:"Removing Replicas"`
 }
 
 type getReassignmentOutSerialized struct {
-	ClusterId        string  `serialized:"cluster_id"`
+	Cluster          string  `serialized:"cluster"`
 	TopicName        string  `serialized:"topic_name"`
-	PartitionId      int32   `serialized:"partition_id"`
+	Partition        int32   `serialized:"partition"`
 	AddingReplicas   []int32 `serialized:"adding_replicas"`
 	RemovingReplicas []int32 `serialized:"removing_replicas"`
 }
@@ -103,17 +103,17 @@ func (c *partitionCommand) reassignmentList(cmd *cobra.Command, args []string) e
 	for _, reassignment := range reassignments.Data {
 		if output.GetFormat(cmd) == output.Human {
 			list.Add(&getReassignmentOutHuman{
-				ClusterId:        reassignment.ClusterId,
+				Cluster:          reassignment.ClusterId,
 				TopicName:        reassignment.TopicName,
-				PartitionId:      reassignment.PartitionId,
+				Partition:        reassignment.PartitionId,
 				AddingReplicas:   join(reassignment.AddingReplicas),
 				RemovingReplicas: join(reassignment.RemovingReplicas),
 			})
 		} else {
 			list.Add(&getReassignmentOutSerialized{
-				ClusterId:        reassignment.ClusterId,
+				Cluster:          reassignment.ClusterId,
 				TopicName:        reassignment.TopicName,
-				PartitionId:      reassignment.PartitionId,
+				Partition:        reassignment.PartitionId,
 				AddingReplicas:   reassignment.AddingReplicas,
 				RemovingReplicas: reassignment.RemovingReplicas,
 			})

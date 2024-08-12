@@ -10,10 +10,9 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	resolver pcmd.FlagResolver
 }
 
-func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "context",
 		Aliases: []string{"ctx"},
@@ -21,12 +20,8 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 		Long:    "Manage CLI configuration contexts. Contexts define the state of a Confluent Cloud or Confluent Platform login.",
 	}
 
-	c := &command{
-		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		resolver:   resolver,
-	}
+	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
