@@ -1,6 +1,6 @@
 {
   "id": "n-abcde8",
-  "environment_id": "env-00000",
+  "environment": "env-00000",
   "name": "prod-gcp-us-central1",
   "cloud": "GCP",
   "region": "us-central1",

@@ -20,7 +20,7 @@ import (
 
 type out struct {
 	Id                                         string            `human:"ID" serialized:"id"`
-	EnvironmentId                              string            `human:"Environment" serialized:"environment_id"`
+	Environment                                string            `human:"Environment" serialized:"environment"`
 	Name                                       string            `human:"Name,omitempty" serialized:"name,omitempty"`
 	Gateway                                    string            `human:"Gateway,omitempty" serialized:"gateway,omitempty"`
 	Cloud                                      string            `human:"Cloud" serialized:"cloud"`
@@ -102,7 +102,7 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 
 	human := &out{
 		Id:                       network.GetId(),
-		EnvironmentId:            network.Spec.Environment.GetId(),
+		Environment:              network.Spec.Environment.GetId(),
 		Name:                     network.Spec.GetDisplayName(),
 		Gateway:                  network.Spec.GetGateway().Id,
 		Cloud:                    cloud,
@@ -113,7 +113,7 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
 	}
 
-	describeFields := []string{"Id", "EnvironmentId", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		human.DnsResolution = network.Spec.DnsConfig.GetResolution()

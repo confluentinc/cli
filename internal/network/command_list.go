@@ -100,7 +100,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		list.Add(&out{
 			Id:                    network.GetId(),
 			Name:                  network.Spec.GetDisplayName(),
-			EnvironmentId:         network.Spec.Environment.GetId(),
+			Environment:           network.Spec.Environment.GetId(),
 			Gateway:               network.Spec.GetGateway().Id,
 			Cloud:                 network.Spec.GetCloud(),
 			Region:                network.Spec.GetRegion(),

@@ -18,10 +18,10 @@ type out struct {
 	IsCurrent    bool   `human:"Current,omitempty" serialized:"is_current,omitempty"`
 	Key          string `human:"Key" serialized:"key"`
 	Description  string `human:"Description" serialized:"description"`
-	OwnerId      string `human:"Owner" serialized:"owner_id"`
+	Owner        string `human:"Owner" serialized:"owner"`
 	OwnerEmail   string `human:"Owner Email" serialized:"owner_email"`
 	ResourceType string `human:"Resource Type" serialized:"resource_type"`
-	ResourceId   string `human:"Resource" serialized:"resource_id"`
+	Resource     string `human:"Resource" serialized:"resource"`
 	Created      string `human:"Created" serialized:"created"`
 }
 
@@ -83,10 +83,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		list.Add(&out{
 			Key:          apiKey.GetId(),
 			Description:  apiKey.Spec.GetDescription(),
-			OwnerId:      ownerId,
+			Owner:        ownerId,
 			OwnerEmail:   email,
 			ResourceType: getResourceType(resource),
-			ResourceId:   getResourceId(resource.GetId()),
+			Resource:     getResourceId(resource.GetId()),
 			Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 		})
 	}

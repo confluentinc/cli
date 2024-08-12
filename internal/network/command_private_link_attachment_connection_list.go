@@ -61,10 +61,10 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 		}
 
 		out := &privateLinkAttachmentConnectionOut{
-			Id:                      connection.GetId(),
-			Name:                    connection.Spec.GetDisplayName(),
-			PrivateLinkAttachmentId: connection.Spec.PrivateLinkAttachment.GetId(),
-			Phase:                   connection.Status.GetPhase(),
+			Id:                    connection.GetId(),
+			Name:                  connection.Spec.GetDisplayName(),
+			PrivateLinkAttachment: connection.Spec.PrivateLinkAttachment.GetId(),
+			Phase:                 connection.Status.GetPhase(),
 		}
 
 		if connection.Spec.HasCloud() {

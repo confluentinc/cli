@@ -15,7 +15,7 @@ type privateLinkAttachmentConnectionOut struct {
 	Id                             string `human:"ID" serialized:"id"`
 	Name                           string `human:"Name,omitempty" serialized:"name,omitempty"`
 	Cloud                          string `human:"Cloud" serialized:"cloud"`
-	PrivateLinkAttachmentId        string `human:"Private Link Attachment ID" serialized:"private_link_attachment_id"`
+	PrivateLinkAttachment          string `human:"Private Link Attachment" serialized:"private_link_attachment"`
 	Phase                          string `human:"Phase" serialized:"phase"`
 	AwsVpcEndpointId               string `human:"AWS VPC Endpoint ID,omitempty" serialized:"aws_vpc_endpoint_id,omitempty"`
 	AwsVpcEndpointServiceName      string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
@@ -48,10 +48,10 @@ func printPrivateLinkAttachmentConnectionTable(cmd *cobra.Command, connection ne
 	}
 
 	out := &privateLinkAttachmentConnectionOut{
-		Id:                      connection.GetId(),
-		Name:                    connection.Spec.GetDisplayName(),
-		PrivateLinkAttachmentId: connection.Spec.PrivateLinkAttachment.GetId(),
-		Phase:                   connection.Status.GetPhase(),
+		Id:                    connection.GetId(),
+		Name:                  connection.Spec.GetDisplayName(),
+		PrivateLinkAttachment: connection.Spec.PrivateLinkAttachment.GetId(),
+		Phase:                 connection.Status.GetPhase(),
 	}
 
 	if connection.Spec.HasCloud() {
