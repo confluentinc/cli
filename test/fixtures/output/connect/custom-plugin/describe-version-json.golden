@@ -1,0 +1,7 @@
+{
+  "id": "ver-123456",
+  "version": "0.0.1",
+  "is_beta": "false",
+  "release_notes": "test notes",
+  "sensitive_properties": null
+}

@@ -1,0 +1,15 @@
+
+Usage:
+  confluent connect custom-plugin update-version <plugin-id> <version-id> [flags]
+
+Flags:
+      --version string                 REQUIRED: Must be in the format of major.minor.patch
+      --is-beta string                 A flag denoting whether version is in beta. Can be either true or false
+      --release-notes string           String containing release notes
+      --sensitive-properties strings   A comma-separated list of sensitive property names.
+      --context string                 CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
