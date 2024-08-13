@@ -216,7 +216,7 @@ func (s *CLITestSuite) TestConnectCustomPluginVersioning() {
 		{args: "connect custom-plugin describe-version ccp-123456 ver-123456 -o json", fixture: "connect/custom-plugin/describe-version-json.golden"},
 		{args: "connect custom-plugin describe-version ccp-123456 ver-123456 -o yaml", fixture: "connect/custom-plugin/describe-version-yaml.golden"},
 		{args: "connect custom-plugin delete-version ccp-123456 version-123456 --force", fixture: "connect/custom-plugin/delete-version.golden"},
-		{args: "connect custom-plugin delete-version ccp-123456 version-123456", input: "CliPluginTest1\n", fixture: "connect/custom-plugin/delete-version-prompt.golden"},
+		{args: "connect custom-plugin delete-version ccp-123456 version-123456", input: "y\n", fixture: "connect/custom-plugin/delete-version-prompt.golden"},
 		{args: "connect custom-plugin update-version ccp-123456 ver-123456  --version 0.0.1 --is-beta false", fixture: "connect/custom-plugin/update-version.golden"},
 	}
 

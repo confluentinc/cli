@@ -30,13 +30,13 @@ func (c *customPluginCommand) newDeleteVersionCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
-	version, err := c.V2Client.DescribeCustomPluginVersion(args[0], args[1])
+	_, err := c.V2Client.DescribeCustomPluginVersion(args[0], args[1])
 	if err != nil {
 		return err
 	}
 
 	existenceFunc := func(id string) bool {
-		return version.GetId() == args[1]
+		return id == args[1] || id == args[0]
 	}
 
 	if err := deletion.ValidateAndConfirmDeletion(cmd, args, existenceFunc, resource.CustomConnectorPlugin, args[1]); err != nil {
