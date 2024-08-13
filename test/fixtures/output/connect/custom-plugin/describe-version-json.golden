@@ -1,7 +1,13 @@
 {
+  "plugin-id": "ccp-123456",
   "id": "ver-123456",
-  "version": "0.0.1",
+  "name": "CliPluginTest",
+  "description": "",
+  "cloud": "AWS",
+  "connector_class": "io.confluent.kafka.connect.test",
+  "connector_type": "source",
+  "sensitive_properties": null,
+  "version": "0.0.0",
   "is_beta": "false",
-  "release_notes": "test notes",
-  "sensitive_properties": null
+  "release_notes": ""
 }

@@ -1,5 +1,11 @@
+plugin-id: ccp-123456
 id: ver-123456
-version: 0.0.1
-is_beta: false
-release_notes: "notes"
+name: CliPluginTest
+description: ""
+cloud: AWS
+connector_class: io.confluent.kafka.connect.test
+connector_type: source
 sensitive_properties: []
+version: 0.0.0
+is_beta: "false"
+release_notes: ""

@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/spf13/cobra"
 
@@ -75,6 +76,7 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.CustomConnectorPlugin, args[0], args[1])
+	outputMessage := fmt.Sprintf("%s %s", args[0], args[1])
+	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.CustomConnectorPlugin, outputMessage)
 	return nil
 }
