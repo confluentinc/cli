@@ -57,7 +57,7 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 		return err
 	}
 
-	pluginVersionFileName, err := cmd.Flags().GetString("plugin-version-file")
+	pluginVersionFileName, err := cmd.Flags().GetString("plugin-file")
 	if err != nil {
 		return err
 	}

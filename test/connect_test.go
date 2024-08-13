@@ -202,6 +202,30 @@ func (s *CLITestSuite) TestConnectCustomPlugin() {
 	}
 }
 
+func (s *CLITestSuite) TestConnectCustomPluginVersioning() {
+	tests := []CLITest{
+		{args: `connect custom-plugin create-version plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version 0.0.1 --is-beta false`, fixture: "connect/custom-plugin/create-version.golden"},
+		{args: `connect custom-plugin create-version plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version 0.0.1 --is-beta false`, fixture: "connect/custom-plugin/create-version.golden"},
+		{args: `connect custom-plugin create-version plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf"--version 0.0.1 --is-beta false`, fixture: "connect/custom-plugin/create-version-invalid-extension.golden", exitCode: 1},
+		{args: "connect custom-plugin list", fixture: "connect/custom-plugin/list.golden"},
+		{args: "connect custom-plugin list --cloud aws", fixture: "connect/custom-plugin/list.golden"},
+		{args: "connect custom-plugin list -o json", fixture: "connect/custom-plugin/list-json.golden"},
+		{args: "connect custom-plugin list -o yaml", fixture: "connect/custom-plugin/list-yaml.golden"},
+		{args: "connect custom-plugin describe ccp-123456", fixture: "connect/custom-plugin/describe.golden"},
+		{args: "connect custom-plugin describe ccp-789012", fixture: "connect/custom-plugin/describe-with-sensitive-properties.golden"},
+		{args: "connect custom-plugin describe ccp-123456 -o json", fixture: "connect/custom-plugin/describe-json.golden"},
+		{args: "connect custom-plugin describe ccp-123456 -o yaml", fixture: "connect/custom-plugin/describe-yaml.golden"},
+		{args: "connect custom-plugin delete ccp-123456 --force", fixture: "connect/custom-plugin/delete.golden"},
+		{args: "connect custom-plugin delete ccp-123456", input: "CliPluginTest1\n", fixture: "connect/custom-plugin/delete-prompt.golden"},
+		{args: "connect custom-plugin update ccp-123456 --name CliPluginTestUpdate", fixture: "connect/custom-plugin/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestConnectOffset() {
 	tests := []CLITest{
 		{args: "connect offset describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-json.golden"},
