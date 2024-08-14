@@ -27,6 +27,10 @@ PREFIX=/usr
 SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 endif
 
+_empty :=
+_space := $(_empty) $(empty)
+split_version := $(subst .,$(_space),$(CLI_VERSION))
+
 all: install
 
 archive: install
@@ -43,6 +47,9 @@ BINPATH=$(PREFIX)/bin
 LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
+# Notes on the archive download links:
+# For CLI v2, the version number has the 'v' prefix
+# For CLI v3.43.0 and above, we download the '_disableupdates' variant
 install: apply-patches
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
@@ -56,13 +63,21 @@ install: apply-patches
 	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
 	cd $(DESTDIR)$(LIBPATH); \
-	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64; do \
-		mkdir -p $${dir}; \
-		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
-		filepath=$${dir}/confluent$${ext}; \
-		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent-disableupdates_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath}; \
-		chmod 755 $${filepath}; \
-	done
+	v=""; if [[ $(word 1,$(split_version)) -eq 2 ]]; then v="v"; fi; \
+	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
+	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do \
+		archive=confluent_$${v}$(CLI_VERSION)_$${dir}$${disableupdates}.tar.gz; \
+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
+		mkdir -p $${dir} $${dir}-temp; \
+		tar -xzf $${archive} -C $${dir}-temp confluent/confluent; \
+		mv $${dir}-temp/confluent/confluent $${dir}/confluent; \
+		rm -rf $${archive} $${dir}-temp; \
+		chmod 755 $${dir}/confluent; \
+	done; \
+	mkdir -p windows_amd64; \
+	filepath=windows_amd64/confluent.exe; \
+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_windows_amd64.exe -o $${filepath}; \
+	chmod 755 $${filepath}
 
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
 	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
