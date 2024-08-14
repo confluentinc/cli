@@ -9,8 +9,8 @@ import (
 )
 
 type customPluginVersionOutList struct {
-	Id                  string   `human:"ID" serialized:"id"`
 	Version             string   `human:"Version" serialized:"version"`
+	VersionNumber       string   `human:"Version Number" serialized:"version_number"`
 	IsBeta              string   `human:"Is Beta" serialized:"is_beta"`
 	ReleaseNotes        string   `human:"Release Notes" serialized:"release_notes"`
 	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
@@ -45,8 +45,8 @@ func (c *customPluginCommand) listVersions(cmd *cobra.Command, args []string) er
 	list := output.NewList(cmd)
 	for _, pluginVersion := range versions.Data {
 		list.Add(&customPluginVersionOutList{
-			Id:                  pluginVersion.GetId(),
-			Version:             pluginVersion.GetVersion(),
+			Version:             pluginVersion.GetId(),
+			VersionNumber:       pluginVersion.GetVersion(),
 			IsBeta:              pluginVersion.GetIsBeta(),
 			ReleaseNotes:        pluginVersion.GetReleaseNotes(),
 			SensitiveProperties: pluginVersion.GetSensitiveConfigProperties(),

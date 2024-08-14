@@ -13,11 +13,11 @@ import (
 )
 
 type pluginVersionCreateOut struct {
-	Id           string `human:"ID" serialized:"id"`
-	Version      string `human:"Version" serialized:"version"`
-	IsBeta       string `human:"Is Beta" serialized:"is_beta"`
-	ReleaseNotes string `human:"Release Notes" serialized:"release_notes"`
-	ErrorTrace   string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
+	Version       string `human:"Version" serialized:"version"`
+	VersionNumber string `human:"Version Number" serialized:"version_number"`
+	IsBeta        string `human:"Is Beta" serialized:"is_beta"`
+	ReleaseNotes  string `human:"Release Notes" serialized:"release_notes"`
+	ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
 func (c *customPluginCommand) newCreateVersionCommand() *cobra.Command {
@@ -124,10 +124,10 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 
 	table := output.NewTable(cmd)
 	table.Add(&pluginVersionCreateOut{
-		Id:           pluginResp.GetId(),
-		Version:      pluginResp.GetVersion(),
-		IsBeta:       pluginResp.GetIsBeta(),
-		ReleaseNotes: pluginResp.GetReleaseNotes(),
+		Version:       pluginResp.GetId(),
+		VersionNumber: pluginResp.GetVersion(),
+		IsBeta:        pluginResp.GetIsBeta(),
+		ReleaseNotes:  pluginResp.GetReleaseNotes(),
 	})
 	return table.Print()
 }
