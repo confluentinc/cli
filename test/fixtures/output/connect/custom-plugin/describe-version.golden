@@ -1,13 +1,13 @@
 +----------------------+---------------------------------+
-| Plugin ID            | ccp-123456                      |
-| ID                   | ver-123456                      |
+| Plugin               | ccp-123456                      |
+| Version              | ver-123456                      |
 | Name                 | CliPluginTest                   |
 | Description          |                                 |
 | Cloud                | AWS                             |
 | Connector Class      | io.confluent.kafka.connect.test |
 | Connector Type       | source                          |
 | Sensitive Properties |                                 |
-| Version              | 0.0.0                           |
+| Version Number       | 0.0.0                           |
 | Is Beta              | false                           |
 | Release Notes        |                                 |
 +----------------------+---------------------------------+

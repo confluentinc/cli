@@ -36,29 +36,29 @@ type customPluginHumanOut struct {
 }
 
 type customPluginVersionSerializedOut struct {
-	PluginId            string   `serialized:"plugin-id"`
-	Id                  string   `serialized:"id"`
+	Plugin              string   `serialized:"plugin"`
+	Version             string   `serialized:"version"`
 	Name                string   `serialized:"name"`
 	Description         string   `serialized:"description"`
 	Cloud               string   `serialized:"cloud"`
 	ConnectorClass      string   `serialized:"connector_class"`
 	ConnectorType       string   `serialized:"connector_type"`
 	SensitiveProperties []string `serialized:"sensitive_properties"`
-	Version             string   `serialized:"version"`
+	VersionNumber       string   `serialized:"version_number"`
 	IsBeta              string   `serialized:"is_beta"`
 	ReleaseNotes        string   `serialized:"release_notes"`
 }
 
 type customPluginVersionHumanOut struct {
-	PluginId            string `human:"Plugin ID"`
-	Id                  string `human:"ID"`
+	PluginId            string `human:"Plugin"`
+	Version             string `human:"Version"`
 	Name                string `human:"Name"`
 	Description         string `human:"Description"`
 	Cloud               string `human:"Cloud"`
 	ConnectorClass      string `human:"Connector Class"`
 	ConnectorType       string `human:"Connector Type"`
 	SensitiveProperties string `human:"Sensitive Properties"`
-	Version             string `human:"Version"`
+	VersionNumber       string `human:"Version Number"`
 	IsBeta              string `human:"Is Beta"`
 	ReleaseNotes        string `human:"Release Notes"`
 }
@@ -126,22 +126,22 @@ func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV
 			ConnectorClass:      plugin.GetConnectorClass(),
 			ConnectorType:       plugin.GetConnectorType(),
 			SensitiveProperties: strings.Join(sensitiveProperties, ", "),
-			Id:                  version.GetId(),
-			Version:             version.GetVersion(),
+			Version:             version.GetId(),
+			VersionNumber:       version.GetVersion(),
 			IsBeta:              version.GetIsBeta(),
 			ReleaseNotes:        version.GetReleaseNotes(),
 		})
 	} else {
 		table.Add(&customPluginVersionSerializedOut{
-			PluginId:            plugin.GetId(),
+			Plugin:              plugin.GetId(),
 			Name:                plugin.GetDisplayName(),
 			Description:         plugin.GetDescription(),
 			Cloud:               plugin.GetCloud(),
 			ConnectorClass:      plugin.GetConnectorClass(),
 			ConnectorType:       plugin.GetConnectorType(),
 			SensitiveProperties: sensitiveProperties,
-			Id:                  version.GetId(),
-			Version:             version.GetVersion(),
+			Version:             version.GetId(),
+			VersionNumber:       version.GetVersion(),
 			IsBeta:              version.GetIsBeta(),
 			ReleaseNotes:        version.GetReleaseNotes(),
 		})
