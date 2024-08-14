@@ -14,7 +14,7 @@ func (c *customPluginCommand) newDescribeVersionCommand() *cobra.Command {
 		RunE:  c.describeVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe custom connector plugin version",
+				Text: "Describe custom connector plugin version.",
 				Code: "confluent connect custom-plugin describe-version ccp-123456 ver-12345",
 			},
 		),

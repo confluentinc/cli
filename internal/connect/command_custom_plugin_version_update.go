@@ -22,7 +22,7 @@ func (c *customPluginCommand) newUpdateVersionCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update custom connector plugin version for plugin "my-plugin-id" version "my-plugin-version."`,
-				Code: "confluent connect custom-plugin update-version my-plugin-id my-version-id --version 0.0.1 --is-beta false release-notes none",
+				Code: "confluent connect custom-plugin update-version my-plugin-id my-version-id --version 0.0.1 --is-beta false",
 			},
 		),
 	}
@@ -76,7 +76,7 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	outputMessage := fmt.Sprintf("%s %s", args[0], args[1])
+	outputMessage := fmt.Sprintf("%s\" version \"%s", args[0], args[1])
 	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.CustomConnectorPlugin, outputMessage)
 	return nil
 }

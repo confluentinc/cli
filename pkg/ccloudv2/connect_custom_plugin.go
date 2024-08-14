@@ -84,7 +84,7 @@ func (c *Client) CreateCustomPluginVersion(createCustomPluginVersionRequest conn
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DescribeCustomPluginVersion(pluginId string, versionId string) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
+func (c *Client) DescribeCustomPluginVersion(pluginId, versionId string) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
 	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.GetConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), pluginId, versionId).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
@@ -94,12 +94,12 @@ func (c *Client) ListCustomPluginVersions(pluginId string) (connectcustompluginv
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteCustomPluginVersion(pluginId string, versionId string) error {
+func (c *Client) DeleteCustomPluginVersion(pluginId, versionId string) error {
 	httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.DeleteConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), pluginId, versionId).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateCustomPluginVersion(pluginId string, versionId string, versionUpdate connectcustompluginv1.ConnectV1CustomConnectorPluginVersion) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
+func (c *Client) UpdateCustomPluginVersion(pluginId, versionId string, versionUpdate connectcustompluginv1.ConnectV1CustomConnectorPluginVersion) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
 	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.UpdateConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), pluginId, versionId).ConnectV1CustomConnectorPluginVersion(versionUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
