@@ -8,7 +8,7 @@ import (
 
 func (c *customPluginCommand) newDescribeVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe-version <plugin-id> <version-id",
+		Use:   "describe-version <plugin-id> <version-id>",
 		Short: "Describe a custom connector plugin version.",
 		Args:  cobra.ExactArgs(2),
 		RunE:  c.describeVersion,

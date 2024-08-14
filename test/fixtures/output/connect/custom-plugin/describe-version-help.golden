@@ -1,7 +1,7 @@
 Describe a custom connector plugin version.
 
 Usage:
-  confluent connect custom-plugin describe-version <pluing-id> <version-id> [flags]
+  confluent connect custom-plugin describe-version <plugin-id> <version-id> [flags]
 
 Examples:
 Describe custom connector plugin version

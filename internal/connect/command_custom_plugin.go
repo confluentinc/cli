@@ -50,7 +50,7 @@ type customPluginVersionSerializedOut struct {
 }
 
 type customPluginVersionHumanOut struct {
-	PluginId            string `human:"Plugin"`
+	Plugin              string `human:"Plugin"`
 	Version             string `human:"Version"`
 	Name                string `human:"Name"`
 	Description         string `human:"Description"`
@@ -119,7 +119,7 @@ func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV
 	sensitiveProperties := plugin.GetSensitiveConfigProperties()
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(&customPluginVersionHumanOut{
-			PluginId:            plugin.GetId(),
+			Plugin:              plugin.GetId(),
 			Name:                plugin.GetDisplayName(),
 			Description:         plugin.GetDescription(),
 			Cloud:               plugin.GetCloud(),
