@@ -12,7 +12,7 @@ import (
 
 func (c *customPluginCommand) newDeleteVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete-version <plugin-id> <version-id>",
+		Use:   "delete <plugin-id> <version-id>",
 		Short: "Delete a custom connector plugin version.",
 		Args:  cobra.ExactArgs(2),
 		RunE:  c.deleteVersion,

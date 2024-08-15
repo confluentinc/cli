@@ -18,7 +18,7 @@ type customPluginVersionOutList struct {
 
 func (c *customPluginCommand) newListVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-versions <plugin-id>",
+		Use:   "list <plugin-id>",
 		Short: "List custom connector plugin versions for plugin.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.listVersions,

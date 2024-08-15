@@ -1,6 +1,6 @@
 
 Usage:
-  confluent connect custom-plugin update-version <plugin-id> <version-id> [flags]
+  confluent connect custom-plugin version update <plugin-id> <version-id> [flags]
 
 Flags:
       --version string                 REQUIRED: Must be in the format of major.minor.patch

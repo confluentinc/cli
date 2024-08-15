@@ -22,7 +22,7 @@ type pluginVersionCreateOut struct {
 
 func (c *customPluginCommand) newCreateVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-version <my-plugin-id>",
+		Use:   "create <my-plugin-id>",
 		Short: "Create a custom connector plugin version.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.createCustomPluginVersion,

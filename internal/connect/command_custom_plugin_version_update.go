@@ -15,7 +15,7 @@ import (
 
 func (c *customPluginCommand) newUpdateVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-version <plugin-id> <version-id>",
+		Use:   "update <plugin-id> <version-id>",
 		Short: "Update a custom connector plugin version metadata.",
 		Args:  cobra.ExactArgs(2),
 		RunE:  c.updateVersion,
