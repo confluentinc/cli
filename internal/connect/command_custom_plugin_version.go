@@ -44,7 +44,6 @@ func (c *customPluginCommand) newCustomPluginVersionCommand() *cobra.Command {
 
 func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin, version connectcustompluginv1.ConnectV1CustomConnectorPluginVersion) error {
 	table := output.NewTable(cmd)
-	sensitiveProperties := plugin.GetSensitiveConfigProperties()
 	table.Add(&customPluginVersionOut{
 		Plugin:              plugin.GetId(),
 		Name:                plugin.GetDisplayName(),
@@ -52,7 +51,7 @@ func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV
 		Cloud:               plugin.GetCloud(),
 		ConnectorClass:      plugin.GetConnectorClass(),
 		ConnectorType:       plugin.GetConnectorType(),
-		SensitiveProperties: sensitiveProperties,
+		SensitiveProperties: version.GetSensitiveConfigProperties(),
 		Version:             version.GetId(),
 		VersionNumber:       version.GetVersion(),
 		IsBeta:              version.GetIsBeta(),
