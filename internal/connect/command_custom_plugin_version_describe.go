@@ -22,6 +22,7 @@ func (c *customPluginCommand) newDescribeVersionCommand() *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
 	return cmd
 }
 

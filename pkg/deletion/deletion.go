@@ -47,6 +47,26 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 	return nil
 }
 
+func ValidateAndConfirmDeletionCustomPluginVersion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
+	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
+		return err
+	}
+
+	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
+		return err
+	}
+
+	if len(args) > 1 {
+		return ConfirmPromptYesOrNo(cmd, VersionDeleteYesNoDeletePromptString(resourceType, args[0], args[1]))
+	}
+	promptString := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, args[0], name)
+	if err := ConfirmDeletionWithString(cmd, promptString, name); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ConfirmPromptYesOrNo(cmd *cobra.Command, promptMsg string) error {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return err
@@ -124,6 +144,13 @@ func DefaultYesNoDeletePromptString(resourceType string, idList []string) string
 	} else {
 		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
 	}
+
+	return promptMsg
+}
+
+func VersionDeleteYesNoDeletePromptString(resourceType, pluginId, versionID string) string {
+	var promptMsg string
+	promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s" version "%s"?`, resourceType, pluginId, versionID)
 
 	return promptMsg
 }
