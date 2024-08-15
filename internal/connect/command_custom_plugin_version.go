@@ -12,48 +12,33 @@ type customPluginVersionCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type customPluginVersionSerializedOut struct {
-	Plugin              string   `serialized:"plugin"`
-	Version             string   `serialized:"version"`
-	Name                string   `serialized:"name"`
-	Description         string   `serialized:"description"`
-	Cloud               string   `serialized:"cloud"`
-	ConnectorClass      string   `serialized:"connector_class"`
-	ConnectorType       string   `serialized:"connector_type"`
-	SensitiveProperties []string `serialized:"sensitive_properties"`
-	VersionNumber       string   `serialized:"version_number"`
-	IsBeta              string   `serialized:"is_beta"`
-	ReleaseNotes        string   `serialized:"release_notes"`
+type customPluginVersionOut struct {
+	Plugin              string `human:"Plugin" serialized:"plugin"`
+	Version             string `human:"Version" serialized:"version"`
+	Name                string `human:"Name" serialized:"name"`
+	Description         string `human:"Description" serialized:"description"`
+	Cloud               string `human:"Cloud" serialized:"cloud"`
+	ConnectorClass      string `human:"Connector Class" serialized:"connector_class"`
+	ConnectorType       string `human:"Connector Type" serialized:"connector_type"`
+	SensitiveProperties string `human:"Sensitive Properties" serialized:"sensitive_properties"`
+	VersionNumber       string `human:"Version Number" serialized:"version_number"`
+	IsBeta              string `human:"Beta" serialized:"is_beta"`
+	ReleaseNotes        string `human:"Release Notes" serialized:"release_notes"`
+	ErrorTrace          string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
-type customPluginVersionHumanOut struct {
-	Plugin              string `human:"Plugin"`
-	Version             string `human:"Version"`
-	Name                string `human:"Name"`
-	Description         string `human:"Description"`
-	Cloud               string `human:"Cloud"`
-	ConnectorClass      string `human:"Connector Class"`
-	ConnectorType       string `human:"Connector Type"`
-	SensitiveProperties string `human:"Sensitive Properties"`
-	VersionNumber       string `human:"Version Number"`
-	IsBeta              string `human:"Is Beta"`
-	ReleaseNotes        string `human:"Release Notes"`
-}
-
-func newCustomPluginVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *customPluginCommand) newCustomPluginVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "version",
 		Short:       "Manage custom connector plugins versions.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &customPluginCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-
-	cmd.AddCommand(c.newCreateVersionCommand())
-	cmd.AddCommand(c.newDescribeVersionCommand())
-	cmd.AddCommand(c.newListVersionCommand())
-	cmd.AddCommand(c.newDeleteVersionCommand())
-	cmd.AddCommand(c.newUpdateVersionCommand())
+	cmd.AddCommand(c.newVersionCreateCommand())
+	cmd.AddCommand(c.newVersionDescribeCommand())
+	cmd.AddCommand(c.newVersionListCommand())
+	cmd.AddCommand(c.newVersionDeleteCommand())
+	cmd.AddCommand(c.newVersionUpdateCommand())
 
 	return cmd
 }
@@ -61,35 +46,19 @@ func newCustomPluginVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin, version connectcustompluginv1.ConnectV1CustomConnectorPluginVersion) error {
 	table := output.NewTable(cmd)
 	sensitiveProperties := plugin.GetSensitiveConfigProperties()
-	if output.GetFormat(cmd) == output.Human {
-		table.Add(&customPluginVersionHumanOut{
-			Plugin:              plugin.GetId(),
-			Name:                plugin.GetDisplayName(),
-			Description:         plugin.GetDescription(),
-			Cloud:               plugin.GetCloud(),
-			ConnectorClass:      plugin.GetConnectorClass(),
-			ConnectorType:       plugin.GetConnectorType(),
-			SensitiveProperties: strings.Join(sensitiveProperties, ", "),
-			Version:             version.GetId(),
-			VersionNumber:       version.GetVersion(),
-			IsBeta:              version.GetIsBeta(),
-			ReleaseNotes:        version.GetReleaseNotes(),
-		})
-	} else {
-		table.Add(&customPluginVersionSerializedOut{
-			Plugin:              plugin.GetId(),
-			Name:                plugin.GetDisplayName(),
-			Description:         plugin.GetDescription(),
-			Cloud:               plugin.GetCloud(),
-			ConnectorClass:      plugin.GetConnectorClass(),
-			ConnectorType:       plugin.GetConnectorType(),
-			SensitiveProperties: sensitiveProperties,
-			Version:             version.GetId(),
-			VersionNumber:       version.GetVersion(),
-			IsBeta:              version.GetIsBeta(),
-			ReleaseNotes:        version.GetReleaseNotes(),
-		})
-	}
+	table.Add(&customPluginVersionOut{
+		Plugin:              plugin.GetId(),
+		Name:                plugin.GetDisplayName(),
+		Description:         plugin.GetDescription(),
+		Cloud:               plugin.GetCloud(),
+		ConnectorClass:      plugin.GetConnectorClass(),
+		ConnectorType:       plugin.GetConnectorType(),
+		SensitiveProperties: strings.Join(sensitiveProperties, ", "),
+		Version:             version.GetId(),
+		VersionNumber:       version.GetVersion(),
+		IsBeta:              version.GetIsBeta(),
+		ReleaseNotes:        version.GetReleaseNotes(),
+	})
 
 	return table.Print()
 }

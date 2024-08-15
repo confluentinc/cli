@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
@@ -10,46 +11,60 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c *customPluginCommand) newDeleteVersionCommand() *cobra.Command {
+func (c *customPluginCommand) newVersionDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <plugin-id> <version-id>",
+		Use:   "delete",
 		Short: "Delete a custom connector plugin version.",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.NoArgs,
 		RunE:  c.deleteVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete custom connector plugin version for plugin "my-plugin-id" version "my-plugin-version".`,
-				Code: "confluent connect custom-plugin delete-version ccp-123456 ver-12345",
+				Text: `Delete custom connector plugin version for plugin "ccp-123456" version "ver-123456".`,
+				Code: "confluent connect custom-plugin version delete --plugin-id ccp-123456 --version-id ver-12345",
 			},
 		),
 	}
 
+	cmd.Flags().String("plugin-id", "", "ID of custom connector plugin.")
+	cmd.Flags().String("version-id", "", "ID of custom connector plugin version.")
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin-id"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version-id"))
 
 	return cmd
 }
 
 func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
-	_, err := c.V2Client.DescribeCustomPluginVersion(args[0], args[1])
+	pluginId, err := cmd.Flags().GetString("plugin-id")
+	if err != nil {
+		return err
+	}
+	versionId, err := cmd.Flags().GetString("version-id")
+	if err != nil {
+		return err
+	}
+
+	_, err = c.V2Client.DescribeCustomPluginVersion(pluginId, versionId)
 	if err != nil {
 		return err
 	}
 
 	existenceFunc := func(id string) bool {
-		return id == args[1] || id == args[0]
+		return id == versionId || id == pluginId
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionCustomPluginVersion(cmd, args, existenceFunc, resource.CustomConnectorPlugin, args[1]); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionCustomPluginVersion(cmd, args, existenceFunc, resource.CustomConnectorPlugin, pluginId, versionId); err != nil {
 		return err
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCustomPluginVersion(args[0], args[1])
+		return c.V2Client.DeleteCustomPluginVersion(pluginId, versionId)
 	}
 
 	_, err = deletion.DeleteWithoutMessage(args, deleteFunc)
-	deletedResourceMsg := `Deleted %s version for plugin "` + args[0] + `" version "` + args[1] + `"`
-	output.Printf(false, deletedResourceMsg, resource.CustomConnectorPlugin)
+	deletedResourceMsg := fmt.Sprintf("Deleted %s version for plugin \"%s\" version \"%s\"", resource.CustomConnectorPlugin, pluginId, versionId)
+	output.Printf(false, deletedResourceMsg)
 	return err
 }

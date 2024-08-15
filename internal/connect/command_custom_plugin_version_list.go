@@ -11,33 +11,40 @@ import (
 type customPluginVersionOutList struct {
 	Version             string   `human:"Version" serialized:"version"`
 	VersionNumber       string   `human:"Version Number" serialized:"version_number"`
-	IsBeta              string   `human:"Is Beta" serialized:"is_beta"`
+	IsBeta              string   `human:"Beta" serialized:"is_beta"`
 	ReleaseNotes        string   `human:"Release Notes" serialized:"release_notes"`
 	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
 }
 
-func (c *customPluginCommand) newListVersionCommand() *cobra.Command {
+func (c *customPluginCommand) newVersionListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list <plugin-id>",
+		Use:   "list",
 		Short: "List custom connector plugin versions for plugin.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 		RunE:  c.listVersions,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List custom connector plugin versions for plugin",
-				Code: "confluent connect custom-plugin list-versions <plugin-id>",
+				Code: "confluent connect custom-plugin version list --plugin-id plugin123",
 			},
 		),
 	}
-
+	cmd.Flags().String("plugin-id", "", "ID of custom connector plugin.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin-id"))
 
 	return cmd
 }
 
 func (c *customPluginCommand) listVersions(cmd *cobra.Command, args []string) error {
-	versions, err := c.V2Client.ListCustomPluginVersions(args[0])
+	pluginId, err := cmd.Flags().GetString("plugin-id")
+	if err != nil {
+		return err
+	}
+
+	versions, err := c.V2Client.ListCustomPluginVersions(pluginId)
 	if err != nil {
 		return err
 	}

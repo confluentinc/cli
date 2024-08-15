@@ -49,7 +49,7 @@ func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
-	cmd.AddCommand(newCustomPluginVersionCommand(prerunner))
+	cmd.AddCommand(c.newCustomPluginVersionCommand())
 
 	return cmd
 }

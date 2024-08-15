@@ -9,39 +9,42 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	"github.com/spf13/cobra"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 type pluginVersionCreateOut struct {
 	Version       string `human:"Version" serialized:"version"`
 	VersionNumber string `human:"Version Number" serialized:"version_number"`
-	IsBeta        string `human:"Is Beta" serialized:"is_beta"`
+	IsBeta        string `human:"Beta" serialized:"is_beta"`
 	ReleaseNotes  string `human:"Release Notes" serialized:"release_notes"`
 	ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
-func (c *customPluginCommand) newCreateVersionCommand() *cobra.Command {
+func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <my-plugin-id>",
+		Use:   "create",
 		Short: "Create a custom connector plugin version.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 		RunE:  c.createCustomPluginVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create custom connector plugin version for plugin "my-plugin-id".`,
-				Code: "confluent connect custom-plugin create-version my-plugin-id --plugin-file datagen.zip --version 0.0.1 --is-beta false",
+				Text: `Create custom connector plugin version for plugin "plugin123".`,
+				Code: "confluent connect custom-plugin create-version --plugin-id plugin123 --plugin-file datagen.zip --version 0.0.1 --is-beta false",
 			},
 		),
 	}
 
+	cmd.Flags().String("plugin-id", "", "ID of custom connector plugin.")
 	cmd.Flags().String("plugin-file", "", "ZIP/JAR custom plugin file.")
-	cmd.Flags().String("version", "", "Version number for custom plugin version")
-	cmd.Flags().String("is-beta", "", "Is Beta flag [true/false] for custom plugin version")
-	cmd.Flags().String("release-notes", "", "Release Notes for custom plugin version")
+	cmd.Flags().String("version", "", "Version number for custom plugin version.")
+	cmd.Flags().Bool("is-beta", false, "Is Beta flag for custom plugin version.")
+	cmd.Flags().String("release-notes", "", "Release Notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin-id"))
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 	cobra.CheckErr(cmd.MarkFlagFilename("plugin-file", "zip", "jar"))
@@ -50,7 +53,10 @@ func (c *customPluginCommand) newCreateVersionCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args []string) error {
-	pluginId := args[0]
+	pluginId, err := cmd.Flags().GetString("plugin-id")
+	if err != nil {
+		return err
+	}
 
 	plugin, err := c.V2Client.DescribeCustomPlugin(pluginId)
 	if err != nil {
@@ -68,10 +74,12 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 	if err != nil {
 		return err
 	}
-	isBeta, err := cmd.Flags().GetString("is-beta")
+	isBetaBool, err := cmd.Flags().GetBool("is-beta")
 	if err != nil {
 		return err
 	}
+	isBeta := strconv.FormatBool(isBetaBool)
+
 	releaseNotes, err := cmd.Flags().GetString("release-notes")
 	if err != nil {
 		return err

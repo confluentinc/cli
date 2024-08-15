@@ -6,7 +6,7 @@
   "cloud": "AWS",
   "connector_class": "io.confluent.kafka.connect.test",
   "connector_type": "source",
-  "sensitive_properties": null,
+  "sensitive_properties": "",
   "version_number": "0.0.0",
   "is_beta": "false",
   "release_notes": ""

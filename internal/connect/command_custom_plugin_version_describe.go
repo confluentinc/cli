@@ -6,33 +6,46 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *customPluginCommand) newDescribeVersionCommand() *cobra.Command {
+func (c *customPluginCommand) newVersionDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <plugin-id> <version-id>",
+		Use:   "describe",
 		Short: "Describe a custom connector plugin version.",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.NoArgs,
 		RunE:  c.describeVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe custom connector plugin version.",
-				Code: "confluent connect custom-plugin describe-version ccp-123456 ver-12345",
+				Code: "confluent connect custom-plugin version describe --plugin-id ccp-123456 --version-id ver-12345",
 			},
 		),
 	}
-
+	cmd.Flags().String("plugin-id", "", "ID of custom connector plugin.")
+	cmd.Flags().String("version-id", "", "ID of custom connector plugin version.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin-id"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version-id"))
 
 	return cmd
 }
 
 func (c *customPluginCommand) describeVersion(cmd *cobra.Command, args []string) error {
-	plugin, err := c.V2Client.DescribeCustomPlugin(args[0])
+	pluginId, err := cmd.Flags().GetString("plugin-id")
+	if err != nil {
+		return err
+	}
+	versionId, err := cmd.Flags().GetString("version-id")
 	if err != nil {
 		return err
 	}
 
-	pluginVersion, err := c.V2Client.DescribeCustomPluginVersion(args[0], args[1])
+	plugin, err := c.V2Client.DescribeCustomPlugin(pluginId)
+	if err != nil {
+		return err
+	}
+
+	pluginVersion, err := c.V2Client.DescribeCustomPluginVersion(pluginId, versionId)
 	if err != nil {
 		return err
 	}

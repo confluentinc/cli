@@ -47,7 +47,7 @@ func ValidateAndConfirmDeletion(cmd *cobra.Command, args []string, checkExistenc
 	return nil
 }
 
-func ValidateAndConfirmDeletionCustomPluginVersion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
+func ValidateAndConfirmDeletionCustomPluginVersion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, pluginId, versionId string) error {
 	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
 		return err
 	}
@@ -57,10 +57,10 @@ func ValidateAndConfirmDeletionCustomPluginVersion(cmd *cobra.Command, args []st
 	}
 
 	if len(args) > 1 {
-		return ConfirmPromptYesOrNo(cmd, VersionDeleteYesNoDeletePromptString(resourceType, args[0], args[1]))
+		return ConfirmPromptYesOrNo(cmd, VersionDeleteYesNoDeletePromptString(resourceType, pluginId, versionId))
 	}
-	promptString := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, args[0], name)
-	if err := ConfirmDeletionWithString(cmd, promptString, name); err != nil {
+	promptString := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, pluginId, versionId)
+	if err := ConfirmDeletionWithString(cmd, promptString, versionId); err != nil {
 		return err
 	}
 

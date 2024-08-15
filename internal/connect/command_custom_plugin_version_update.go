@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/spf13/cobra"
+	"strconv"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
@@ -13,34 +14,45 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-func (c *customPluginCommand) newUpdateVersionCommand() *cobra.Command {
+func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <plugin-id> <version-id>",
+		Use:   "update",
 		Short: "Update a custom connector plugin version metadata.",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.NoArgs,
 		RunE:  c.updateVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update custom connector plugin version for plugin "my-plugin-id" version "my-plugin-version."`,
-				Code: "confluent connect custom-plugin update-version my-plugin-id my-version-id --version 0.0.1 --is-beta false",
+				Text: `Update custom connector plugin version for plugin "plugin123" version "ver123."`,
+				Code: "confluent connect custom-plugin version update --plugin-id plugin123 --version-id ver123 --version 0.0.1 --is-beta false",
 			},
 		),
 	}
 
-	cmd.Flags().String("version", "", "Version number for custom plugin version")
-	cmd.Flags().String("is-beta", "", "Is Beta flag [true/false] for custom plugin version")
-	cmd.Flags().String("release-notes", "", "Release Notes for custom plugin version")
+	cmd.Flags().String("plugin-id", "", "ID of custom connector plugin.")
+	cmd.Flags().String("version-id", "", "ID of custom connector plugin version.")
+	cmd.Flags().String("version", "", "Version number for custom plugin version.")
+	cmd.Flags().Bool("is-beta", false, "Is Beta flag [true/false] for custom plugin version.")
+	cmd.Flags().String("release-notes", "", "Release Notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin-id"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version-id"))
 	cmd.MarkFlagsOneRequired("version", "is-beta", "release-notes", "sensitive-properties")
 
 	return cmd
 }
 
 func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) error {
-	pluginId := args[0]
-	versionId := args[1]
+	pluginId, err := cmd.Flags().GetString("plugin-id")
+	if err != nil {
+		return err
+	}
+	versionId, err := cmd.Flags().GetString("version-id")
+	if err != nil {
+		return err
+	}
+
 	updateCustomPluginVersionRequest := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{}
 
 	if cmd.Flags().Changed("version") {
@@ -51,11 +63,12 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		}
 	}
 	if cmd.Flags().Changed("is-beta") {
-		if isBeta, err := cmd.Flags().GetString("is-beta"); err != nil {
+		isBetaBool, err := cmd.Flags().GetBool("is-beta")
+		if err != nil {
 			return err
-		} else {
-			updateCustomPluginVersionRequest.SetIsBeta(isBeta)
 		}
+		isBeta := strconv.FormatBool(isBetaBool)
+		updateCustomPluginVersionRequest.SetIsBeta(isBeta)
 	}
 	if cmd.Flags().Changed("release-notes") {
 		if releaseNotes, err := cmd.Flags().GetString("release-notes"); err != nil {
@@ -76,7 +89,7 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	outputMessage := fmt.Sprintf("%s\" version \"%s", args[0], args[1])
+	outputMessage := fmt.Sprintf("%s\" version \"%s", pluginId, versionId)
 	output.Printf(c.Config.EnableColor, errors.UpdatedResourceMsg, resource.CustomConnectorPlugin, outputMessage)
 	return nil
 }
