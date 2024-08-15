@@ -5,7 +5,6 @@ import (
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 type customPluginVersionCommand struct {
@@ -13,18 +12,18 @@ type customPluginVersionCommand struct {
 }
 
 type customPluginVersionOut struct {
-	Plugin              string `human:"Plugin" serialized:"plugin"`
-	Version             string `human:"Version" serialized:"version"`
-	Name                string `human:"Name" serialized:"name"`
-	Description         string `human:"Description" serialized:"description"`
-	Cloud               string `human:"Cloud" serialized:"cloud"`
-	ConnectorClass      string `human:"Connector Class" serialized:"connector_class"`
-	ConnectorType       string `human:"Connector Type" serialized:"connector_type"`
-	SensitiveProperties string `human:"Sensitive Properties" serialized:"sensitive_properties"`
-	VersionNumber       string `human:"Version Number" serialized:"version_number"`
-	IsBeta              string `human:"Beta" serialized:"is_beta"`
-	ReleaseNotes        string `human:"Release Notes" serialized:"release_notes"`
-	ErrorTrace          string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
+	Plugin              string   `human:"Plugin" serialized:"plugin"`
+	Version             string   `human:"Version" serialized:"version"`
+	Name                string   `human:"Name" serialized:"name"`
+	Description         string   `human:"Description" serialized:"description"`
+	Cloud               string   `human:"Cloud" serialized:"cloud"`
+	ConnectorClass      string   `human:"Connector Class" serialized:"connector_class"`
+	ConnectorType       string   `human:"Connector Type" serialized:"connector_type"`
+	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
+	VersionNumber       string   `human:"Version Number" serialized:"version_number"`
+	IsBeta              string   `human:"Beta" serialized:"is_beta"`
+	ReleaseNotes        string   `human:"Release Notes" serialized:"release_notes"`
+	ErrorTrace          string   `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
 func (c *customPluginCommand) newCustomPluginVersionCommand() *cobra.Command {
@@ -53,7 +52,7 @@ func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV
 		Cloud:               plugin.GetCloud(),
 		ConnectorClass:      plugin.GetConnectorClass(),
 		ConnectorType:       plugin.GetConnectorType(),
-		SensitiveProperties: strings.Join(sensitiveProperties, ", "),
+		SensitiveProperties: sensitiveProperties,
 		Version:             version.GetId(),
 		VersionNumber:       version.GetVersion(),
 		IsBeta:              version.GetIsBeta(),
