@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
+	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2-internal/srcmv3/v3"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
