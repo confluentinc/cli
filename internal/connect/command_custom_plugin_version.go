@@ -30,15 +30,14 @@ type customPluginVersionOut struct {
 
 func (c *customPluginCommand) newCustomPluginVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "version",
-		Short:       "Manage custom connector plugins versions.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "version",
+		Short: "Manage custom connector plugins versions.",
 	}
 
 	cmd.AddCommand(c.newVersionCreateCommand())
+	cmd.AddCommand(c.newVersionDeleteCommand())
 	cmd.AddCommand(c.newVersionDescribeCommand())
 	cmd.AddCommand(c.newVersionListCommand())
-	cmd.AddCommand(c.newVersionDeleteCommand())
 	cmd.AddCommand(c.newVersionUpdateCommand())
 
 	return cmd

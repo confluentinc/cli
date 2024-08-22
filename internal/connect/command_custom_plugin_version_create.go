@@ -13,12 +13,12 @@ import (
 	"strings"
 )
 
-type pluginVersionCreateOut struct {
-	Version       string `human:"Version" serialized:"version"`
-	VersionNumber string `human:"Version Number" serialized:"version_number"`
-	IsBeta        string `human:"Beta" serialized:"is_beta"`
-	ReleaseNotes  string `human:"Release Notes" serialized:"release_notes"`
-	ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
+type pluginVersionOut struct {
+	Version             string   `human:"Version" serialized:"version"`
+	VersionNumber       string   `human:"Version Number" serialized:"version_number"`
+	IsBeta              string   `human:"Beta" serialized:"is_beta"`
+	ReleaseNotes        string   `human:"Release Notes" serialized:"release_notes"`
+	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
 }
 
 func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
@@ -30,30 +30,30 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create custom connector plugin version for plugin "plugin123".`,
-				Code: "confluent connect custom-plugin create-version --plugin-id plugin123 --plugin-file datagen.zip --version 0.0.1 --is-beta false",
+				Code: "confluent connect custom-plugin create-version --plugin plugin123 --plugin-file datagen.zip --version-number 0.0.1",
 			},
 		),
 	}
 
-	cmd.Flags().String("plugin-id", "", "ID of custom connector plugin.")
+	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
 	cmd.Flags().String("plugin-file", "", "ZIP/JAR custom plugin file.")
-	cmd.Flags().String("version", "", "Version number for custom plugin version.")
+	cmd.Flags().String("version-number", "", "Version number for custom plugin version.")
 	cmd.Flags().Bool("is-beta", false, "Is Beta flag for custom plugin version.")
 	cmd.Flags().String("release-notes", "", "Release Notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("plugin-id"))
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin-file"))
-	cobra.CheckErr(cmd.MarkFlagRequired("version"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version-number"))
 	cobra.CheckErr(cmd.MarkFlagFilename("plugin-file", "zip", "jar"))
 
 	return cmd
 }
 
 func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args []string) error {
-	pluginId, err := cmd.Flags().GetString("plugin-id")
+	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
 	}
@@ -63,14 +63,14 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 		return err
 	}
 
-	pluginVersionFileName, err := cmd.Flags().GetString("plugin-file")
+	pluginFile, err := cmd.Flags().GetString("plugin-file")
 	if err != nil {
 		return err
 	}
 
 	cloud := plugin.GetCloud()
 
-	version, err := cmd.Flags().GetString("version")
+	version, err := cmd.Flags().GetString("version-number")
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 		return err
 	}
 
-	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(pluginVersionFileName), "."))
+	extension := strings.ToLower(strings.TrimPrefix(filepath.Ext(pluginFile), "."))
 	if extension != "zip" && extension != "jar" {
 		return fmt.Errorf(`only file extensions ".jar" and ".zip" are allowed`)
 	}
@@ -106,11 +106,11 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 	}
 
 	if cloud == "AZURE" {
-		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), pluginVersionFileName, strings.ToLower(resp.GetContentFormat())); err != nil {
+		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), pluginFile, strings.ToLower(resp.GetContentFormat())); err != nil {
 			return err
 		}
 	} else {
-		if err := utils.UploadFile(resp.GetUploadUrl(), pluginVersionFileName, resp.GetUploadFormData()); err != nil {
+		if err := utils.UploadFile(resp.GetUploadUrl(), pluginFile, resp.GetUploadFormData()); err != nil {
 			return err
 		}
 	}
@@ -131,11 +131,12 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&pluginVersionCreateOut{
-		Version:       pluginResp.GetId(),
-		VersionNumber: pluginResp.GetVersion(),
-		IsBeta:        pluginResp.GetIsBeta(),
-		ReleaseNotes:  pluginResp.GetReleaseNotes(),
+	table.Add(&pluginVersionOut{
+		Version:             pluginResp.GetId(),
+		VersionNumber:       pluginResp.GetVersion(),
+		IsBeta:              pluginResp.GetIsBeta(),
+		ReleaseNotes:        pluginResp.GetReleaseNotes(),
+		SensitiveProperties: pluginResp.GetSensitiveConfigProperties(),
 	})
 	return table.Print()
 }

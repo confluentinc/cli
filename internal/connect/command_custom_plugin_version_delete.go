@@ -19,29 +19,29 @@ func (c *customPluginCommand) newVersionDeleteCommand() *cobra.Command {
 		RunE:  c.deleteVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete custom connector plugin version for plugin "ccp-123456" version "ver-123456".`,
-				Code: "confluent connect custom-plugin version delete --plugin-id ccp-123456 --version-id ver-12345",
+				Text: `Delete custom connector plugin "ccp-123456" version "ver-123456".`,
+				Code: "confluent connect custom-plugin version delete --plugin ccp-123456 --version ver-12345",
 			},
 		),
 	}
 
-	cmd.Flags().String("plugin-id", "", "ID of custom connector plugin.")
-	cmd.Flags().String("version-id", "", "ID of custom connector plugin version.")
+	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
+	cmd.Flags().String("version", "", "ID of custom connector plugin version.")
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("plugin-id"))
-	cobra.CheckErr(cmd.MarkFlagRequired("version-id"))
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 
 	return cmd
 }
 
 func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
-	pluginId, err := cmd.Flags().GetString("plugin-id")
+	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
 	}
-	versionId, err := cmd.Flags().GetString("version-id")
+	versionId, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) e
 	}
 
 	_, err = deletion.DeleteWithoutMessage(args, deleteFunc)
-	deletedResourceMsg := fmt.Sprintf("Deleted %s version for plugin \"%s\" version \"%s\"", resource.CustomConnectorPlugin, pluginId, versionId)
+	deletedResourceMsg := fmt.Sprintf(`Deleted %s "%s" version "%s".`, resource.CustomConnectorPlugin, pluginId, versionId)
 	output.Printf(false, deletedResourceMsg)
 	return err
 }

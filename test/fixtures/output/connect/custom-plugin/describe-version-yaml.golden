@@ -8,4 +8,4 @@ connector_type: source
 sensitive_properties: []
 version_number: 0.0.0
 is_beta: "false"
-release_notes: ""
+release_notes: test release notes

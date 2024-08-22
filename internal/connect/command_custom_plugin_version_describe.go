@@ -14,28 +14,29 @@ func (c *customPluginCommand) newVersionDescribeCommand() *cobra.Command {
 		RunE:  c.describeVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe custom connector plugin version.",
-				Code: "confluent connect custom-plugin version describe --plugin-id ccp-123456 --version-id ver-12345",
+				Text: `Describe custom connector plugin "ccp-123456" version "ver-12345".`,
+				Code: "confluent connect custom-plugin version describe --plugin ccp-123456 --version ver-12345",
 			},
 		),
 	}
-	cmd.Flags().String("plugin-id", "", "ID of custom connector plugin.")
-	cmd.Flags().String("version-id", "", "ID of custom connector plugin version.")
+	
+	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
+	cmd.Flags().String("version", "", "ID of custom connector plugin version.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("plugin-id"))
-	cobra.CheckErr(cmd.MarkFlagRequired("version-id"))
+	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 
 	return cmd
 }
 
 func (c *customPluginCommand) describeVersion(cmd *cobra.Command, args []string) error {
-	pluginId, err := cmd.Flags().GetString("plugin-id")
+	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
 	}
-	versionId, err := cmd.Flags().GetString("version-id")
+	versionId, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err
 	}

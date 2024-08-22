@@ -1,1 +1,7 @@
-Updated custom connector plugin "ccp-123456" version "ver-123456".
++----------------------+--------------------+
+| Version              | ver-123456         |
+| Version Number       | 0.0.0              |
+| Beta                 | false              |
+| Release Notes        | test release notes |
+| Sensitive Properties | []                 |
++----------------------+--------------------+

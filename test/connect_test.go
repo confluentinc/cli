@@ -204,20 +204,20 @@ func (s *CLITestSuite) TestConnectCustomPlugin() {
 
 func (s *CLITestSuite) TestConnectCustomPluginVersioning() {
 	tests := []CLITest{
-		{args: `connect custom-plugin version create --plugin-id plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version 0.0.1 --is-beta=false`, fixture: "connect/custom-plugin/create-version.golden"},
-		{args: `connect custom-plugin version create --plugin-id plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version 0.0.1 --is-beta=false`, fixture: "connect/custom-plugin/create-version.golden"},
-		{args: `connect custom-plugin version create --plugin-id plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf" --version 0.0.1 --is-beta=false`, fixture: "connect/custom-plugin/create-version-invalid-extension.golden", exitCode: 1},
-		{args: "connect custom-plugin version list --plugin-id plugin23", fixture: "connect/custom-plugin/list-version.golden"},
-		{args: "connect custom-plugin version list --plugin-id plugin23", fixture: "connect/custom-plugin/list-version.golden"},
-		{args: "connect custom-plugin version list --plugin-id plugin23 -o json", fixture: "connect/custom-plugin/list-version-json.golden"},
-		{args: "connect custom-plugin version list --plugin-id plugin23 -o yaml", fixture: "connect/custom-plugin/list-version-yaml.golden"},
-		{args: "connect custom-plugin version describe --plugin-id ccp-123456 --version-id ver-123456", fixture: "connect/custom-plugin/describe-version.golden"},
-		{args: "connect custom-plugin version describe --plugin-id ccp-789012 --version-id ver-789012", fixture: "connect/custom-plugin/describe-version-with-sensitive-properties.golden"},
-		{args: "connect custom-plugin version describe --plugin-id ccp-123456 --version-id ver-123456 -o json", fixture: "connect/custom-plugin/describe-version-json.golden"},
-		{args: "connect custom-plugin version describe --plugin-id ccp-123456 --version-id ver-123456 -o yaml", fixture: "connect/custom-plugin/describe-version-yaml.golden"},
-		{args: "connect custom-plugin version delete --plugin-id ccp-123456 --version-id version-123456 --force", fixture: "connect/custom-plugin/delete-version.golden"},
-		{args: "connect custom-plugin version delete --plugin-id ccp-123456 --version-id version-123456", input: "version-123456\n", fixture: "connect/custom-plugin/delete-version-prompt.golden"},
-		{args: "connect custom-plugin version update --plugin-id ccp-123456 --version-id ver-123456  --version 0.0.1 --is-beta=false", fixture: "connect/custom-plugin/update-version.golden"},
+		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version-number 0.0.1 `, fixture: "connect/custom-plugin/create-version.golden"},
+		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version-number 0.0.1 `, fixture: "connect/custom-plugin/create-version.golden"},
+		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf" --version-number 0.0.1 `, fixture: "connect/custom-plugin/create-version-invalid-extension.golden", exitCode: 1},
+		{args: "connect custom-plugin version list --plugin plugin23", fixture: "connect/custom-plugin/list-version.golden"},
+		{args: "connect custom-plugin version list --plugin plugin23", fixture: "connect/custom-plugin/list-version.golden"},
+		{args: "connect custom-plugin version list --plugin plugin23 -o json", fixture: "connect/custom-plugin/list-version-json.golden"},
+		{args: "connect custom-plugin version list --plugin plugin23 -o yaml", fixture: "connect/custom-plugin/list-version-yaml.golden"},
+		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456", fixture: "connect/custom-plugin/describe-version.golden"},
+		{args: "connect custom-plugin version describe --plugin ccp-789012 --version ver-789012", fixture: "connect/custom-plugin/describe-version-with-sensitive-properties.golden"},
+		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456 -o json", fixture: "connect/custom-plugin/describe-version-json.golden"},
+		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456 -o yaml", fixture: "connect/custom-plugin/describe-version-yaml.golden"},
+		{args: "connect custom-plugin version delete --plugin ccp-123456 --version version-123456 --force", fixture: "connect/custom-plugin/delete-version.golden"},
+		{args: "connect custom-plugin version delete --plugin ccp-123456 --version version-123456", input: "version-123456\n", fixture: "connect/custom-plugin/delete-version-prompt.golden"},
+		{args: "connect custom-plugin version update --plugin ccp-123456 --version ver-123456 --version-number 0.0.1 ", fixture: "connect/custom-plugin/update-version.golden"},
 	}
 
 	for _, test := range tests {
