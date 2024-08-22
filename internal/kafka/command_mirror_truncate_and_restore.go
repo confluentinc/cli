@@ -1,22 +1,24 @@
 package kafka
 
 import (
+	"github.com/spf13/cobra"
+
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/spf13/cobra"
 )
 
 func (c *mirrorCommand) newTruncateAndRestoreCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "truncate-and-restore <local-topic-1> [local-topic-2] ... [local-topic-N]",
-		Short:             "Truncate the local topic to the remote stopped mirror log end offsets and restore mirroring to the local topic to mirror from the remote topic.",
+		Short:             "Truncate and restore local topics.",
 		RunE:              c.truncateAndRestore,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Truncates local topics and restore local topics "my-topic-1" and "my-topic-2":`,
+				Text: `Truncates local topics and restores local topics "my-topic-1" and "my-topic-2":`,
 				Code: "confluent kafka mirror truncate-and-restore my-topic-1 my-topic-2 --link my-link",
 			},
 		),
