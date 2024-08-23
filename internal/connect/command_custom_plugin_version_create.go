@@ -70,15 +70,15 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 
 	cloud := pluginResp.GetCloud()
 
-	version, err := cmd.Flags().GetString("version-number")
+	versionNumber, err := cmd.Flags().GetString("version-number")
 	if err != nil {
 		return err
 	}
-	isBetaBool, err := cmd.Flags().GetBool("is-beta")
+	isBeta, err := cmd.Flags().GetBool("is-beta")
 	if err != nil {
 		return err
 	}
-	isBeta := strconv.FormatBool(isBetaBool)
+	isBetaString := strconv.FormatBool(isBeta)
 
 	releaseNotes, err := cmd.Flags().GetString("release-notes")
 	if err != nil {
@@ -116,8 +116,8 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 	}
 
 	createCustomPluginVersionRequest := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-		Version:                   connectcustompluginv1.PtrString(version),
-		IsBeta:                    connectcustompluginv1.PtrString(isBeta),
+		Version:                   connectcustompluginv1.PtrString(versionNumber),
+		IsBeta:                    connectcustompluginv1.PtrString(isBetaString),
 		ReleaseNotes:              connectcustompluginv1.PtrString(releaseNotes),
 		SensitiveConfigProperties: &sensitiveProperties,
 		UploadSource: &connectcustompluginv1.ConnectV1CustomConnectorPluginVersionUploadSourceOneOf{

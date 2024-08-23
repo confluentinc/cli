@@ -31,12 +31,12 @@ func (c *customPluginCommand) newVersionListCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) listVersions(cmd *cobra.Command, args []string) error {
-	pluginId, err := cmd.Flags().GetString("plugin")
+	plugin, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
 	}
 
-	versionsResp, err := c.V2Client.ListCustomPluginVersions(pluginId)
+	versionsResp, err := c.V2Client.ListCustomPluginVersions(plugin)
 	if err != nil {
 		return err
 	}
