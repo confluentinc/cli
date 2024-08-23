@@ -20,9 +20,9 @@ import (
 type clusterOut struct {
 	Name                string `human:"Name" serialized:"name"`
 	Cluster             string `human:"Cluster" serialized:"cluster"`
-	EndpointUrl         string `human:"Endpoint URL" serialized:"endpoint_url"`
-	PrivateEndpointUrl  string `human:"Private Endpoint URL" serialized:"private_endpoint_url"`
-	CatalogEndpointUrl  string `human:"Catalog Endpoint URL" serialized:"catalog_endpoint_url"`
+	EndpointUrl         string `human:"Endpoint URL,omitempty" serialized:"endpoint_url,omitempty"`
+	PrivateEndpointUrl  string `human:"Private Endpoint URL,omitempty" serialized:"private_endpoint_url,omitempty"`
+	CatalogEndpointUrl  string `human:"Catalog Endpoint URL,omitempty" serialized:"catalog_endpoint_url,omitempty"`
 	UsedSchemas         string `human:"Used Schemas" serialized:"used_schemas"`
 	AvailableSchemas    string `human:"Available Schemas" serialized:"available_schemas"`
 	FreeSchemasLimit    int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
