@@ -1,7 +1,7 @@
 package ccloudv2
 
 import (
-	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2-internal/srcmv3/v3"
+	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2-internal/srcm/v3"
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
