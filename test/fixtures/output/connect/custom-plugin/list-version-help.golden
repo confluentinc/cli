@@ -1,14 +1,15 @@
 List custom connector plugin versions.
 
 Usage:
-  confluent connect custom-plugin version list <plugin-id> [flags]
+  confluent connect custom-plugin version list [flags]
 
 Examples:
-List custom connector plugins versions for plugin "plugin123"
+List custom connector plugins versions for plugin "ccp-12345"
 
-  $ confluent connect custom-plugin version list plugin-123
+  $ confluent connect custom-plugin version list --plugin "ccp-12345"
 
 Flags:
+      --plugin string    REQUIRED: Id of the base plugin
       --context string   CLI context name.
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
 

@@ -19,8 +19,8 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 		RunE:  c.updateVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update custom connector plugin version for plugin "plugin123" version "ver123."`,
-				Code: "confluent connect custom-plugin version update --plugin plugin123 --version ver123 --version-number 0.0.1",
+				Text: `Update custom connector plugin version for plugin "ccp-123456" version "ver-12345."`,
+				Code: "confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345. --version-number 0.0.1",
 			},
 		),
 	}
@@ -41,11 +41,11 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) error {
-	pluginId, err := cmd.Flags().GetString("plugin")
+	plugin, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
 	}
-	versionId, err := cmd.Flags().GetString("version")
+	version, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err
 	}
@@ -53,10 +53,10 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 	updateCustomPluginVersionRequest := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{}
 
 	if cmd.Flags().Changed("version-number") {
-		if version, err := cmd.Flags().GetString("version"); err != nil {
+		if versionNumber, err := cmd.Flags().GetString("version-number"); err != nil {
 			return err
 		} else {
-			updateCustomPluginVersionRequest.SetVersion(version)
+			updateCustomPluginVersionRequest.SetVersion(versionNumber)
 		}
 	}
 	if cmd.Flags().Changed("is-beta") {
@@ -82,7 +82,7 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		}
 	}
 
-	if pluginResp, err := c.V2Client.UpdateCustomPluginVersion(pluginId, versionId, updateCustomPluginVersionRequest); err != nil {
+	if pluginResp, err := c.V2Client.UpdateCustomPluginVersion(plugin, version, updateCustomPluginVersionRequest); err != nil {
 		return err
 	} else {
 		table := output.NewTable(cmd)

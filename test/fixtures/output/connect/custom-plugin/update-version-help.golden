@@ -1,9 +1,11 @@
 
 Usage:
-  confluent connect custom-plugin version update <plugin-id> <version-id> [flags]
+  confluent connect custom-plugin version update [flags]
 
 Flags:
-      --version string                 REQUIRED: Must be in the format of major.minor.patch
+      --plugin string                  REQUIRED: Id of the base plugin
+      --version string                 REQUIRED: Id of the version to be deleted
+      --version-number string          Must be in the format of major.minor.patch
       --is-beta string                 A flag denoting whether version is in beta. Can be either true or false
       --release-notes string           String containing release notes
       --sensitive-properties strings   A comma-separated list of sensitive property names.

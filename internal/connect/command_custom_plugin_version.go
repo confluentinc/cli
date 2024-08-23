@@ -31,7 +31,7 @@ type customPluginVersionOut struct {
 func (c *customPluginCommand) newCustomPluginVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Manage custom connector plugins versions.",
+		Short: "Manage custom connector plugin versions.",
 	}
 
 	cmd.AddCommand(c.newVersionCreateCommand())

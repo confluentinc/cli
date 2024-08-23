@@ -29,8 +29,8 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 		RunE:  c.createCustomPluginVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create custom connector plugin version for plugin "plugin123".`,
-				Code: "confluent connect custom-plugin create-version --plugin plugin123 --plugin-file datagen.zip --version-number 0.0.1",
+				Text: `Create custom connector plugin version for plugin "ccp-123456".`,
+				Code: "confluent connect custom-plugin create-version --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1",
 			},
 		),
 	}
@@ -53,12 +53,12 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args []string) error {
-	pluginId, err := cmd.Flags().GetString("plugin")
+	plugin, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
 	}
 
-	plugin, err := c.V2Client.DescribeCustomPlugin(pluginId)
+	pluginResp, err := c.V2Client.DescribeCustomPlugin(plugin)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 		return err
 	}
 
-	cloud := plugin.GetCloud()
+	cloud := pluginResp.GetCloud()
 
 	version, err := cmd.Flags().GetString("version-number")
 	if err != nil {
@@ -125,18 +125,18 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 		},
 	}
 
-	pluginResp, err := c.V2Client.CreateCustomPluginVersion(createCustomPluginVersionRequest, pluginId)
+	pluginVersionResp, err := c.V2Client.CreateCustomPluginVersion(createCustomPluginVersionRequest, plugin)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&pluginVersionOut{
-		Version:             pluginResp.GetId(),
-		VersionNumber:       pluginResp.GetVersion(),
-		IsBeta:              pluginResp.GetIsBeta(),
-		ReleaseNotes:        pluginResp.GetReleaseNotes(),
-		SensitiveProperties: pluginResp.GetSensitiveConfigProperties(),
+		Version:             pluginVersionResp.GetId(),
+		VersionNumber:       pluginVersionResp.GetVersion(),
+		IsBeta:              pluginVersionResp.GetIsBeta(),
+		ReleaseNotes:        pluginVersionResp.GetReleaseNotes(),
+		SensitiveProperties: pluginVersionResp.GetSensitiveConfigProperties(),
 	})
 	return table.Print()
 }

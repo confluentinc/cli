@@ -17,7 +17,7 @@ func (c *customPluginCommand) newVersionListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List custom connector plugin versions for plugin",
-				Code: "confluent connect custom-plugin version list --plugin plugin123",
+				Code: "confluent connect custom-plugin version list --plugin ccp-123456",
 			},
 		),
 	}
@@ -36,13 +36,13 @@ func (c *customPluginCommand) listVersions(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	versions, err := c.V2Client.ListCustomPluginVersions(pluginId)
+	versionsResp, err := c.V2Client.ListCustomPluginVersions(pluginId)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, pluginVersion := range versions.Data {
+	for _, pluginVersion := range versionsResp.Data {
 		list.Add(&pluginVersionOut{
 			Version:             pluginVersion.GetId(),
 			VersionNumber:       pluginVersion.GetVersion(),

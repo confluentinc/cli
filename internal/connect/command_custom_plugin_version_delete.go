@@ -37,34 +37,34 @@ func (c *customPluginCommand) newVersionDeleteCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
-	pluginId, err := cmd.Flags().GetString("plugin")
+	plugin, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
 	}
-	versionId, err := cmd.Flags().GetString("version")
+	version, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err
 	}
 
-	_, err = c.V2Client.DescribeCustomPluginVersion(pluginId, versionId)
+	_, err = c.V2Client.DescribeCustomPluginVersion(plugin, version)
 	if err != nil {
 		return err
 	}
 
 	existenceFunc := func(id string) bool {
-		return id == versionId || id == pluginId
+		return id == version || id == plugin
 	}
 
-	if err := deletion.ValidateAndConfirmDeletionCustomPluginVersion(cmd, args, existenceFunc, resource.CustomConnectorPlugin, pluginId, versionId); err != nil {
+	if err := deletion.ValidateAndConfirmDeletionCustomPluginVersion(cmd, args, existenceFunc, resource.CustomConnectorPlugin, plugin, version); err != nil {
 		return err
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCustomPluginVersion(pluginId, versionId)
+		return c.V2Client.DeleteCustomPluginVersion(plugin, version)
 	}
 
 	_, err = deletion.DeleteWithoutMessage(args, deleteFunc)
-	deletedResourceMsg := fmt.Sprintf(`Deleted %s "%s" version "%s".`, resource.CustomConnectorPlugin, pluginId, versionId)
+	deletedResourceMsg := fmt.Sprintf(`Deleted %s "%s" version "%s".`, resource.CustomConnectorPlugin, plugin, version)
 	output.Printf(false, deletedResourceMsg)
 	return err
 }

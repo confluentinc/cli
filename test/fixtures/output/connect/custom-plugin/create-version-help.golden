@@ -1,17 +1,18 @@
 Create a custom connector plugin version.
 
 Usage:
-  confluent connect custom-plugin version create <my-plugin-id> [flags]
+  confluent connect custom-plugin version create [flags]
 
 Examples:
-Create custom connector plugin version "plugin-123".
+Create custom connector plugin version --plugin "ccp-12345".
 
-  $ confluent connect custom-plugin version create plugin-123 --plugin-file datagen.zip --version 0.0.1 --is-beta false release-notes none
+  $ confluent connect custom-plugin version create --plugin ccp-12345. --plugin-file datagen.zip --version-number 0.0.1 --is-beta=true
 
 Flags:
+      --plugin string                  REQUIRED: Id of the base plugin
       --plugin-file string             REQUIRED: ZIP/JAR custom plugin file.
-      --version string                 REQUIRED: Must be in the format of major.minor.patch
-      --is-beta string                 A flag denoting whether version is in beta. Can be either true or false
+      --version-number string          REQUIRED: Must be in the format of major.minor.patch
+      --is-beta bool                   A flag denoting whether version is in beta.
       --release-notes string           String containing release notes
       --sensitive-properties strings   A comma-separated list of sensitive property names.
   -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")

@@ -19,7 +19,7 @@ func (c *customPluginCommand) newVersionDescribeCommand() *cobra.Command {
 			},
 		),
 	}
-	
+
 	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
 	cmd.Flags().String("version", "", "ID of custom connector plugin version.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -32,24 +32,24 @@ func (c *customPluginCommand) newVersionDescribeCommand() *cobra.Command {
 }
 
 func (c *customPluginCommand) describeVersion(cmd *cobra.Command, args []string) error {
-	pluginId, err := cmd.Flags().GetString("plugin")
+	plugin, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
 	}
-	versionId, err := cmd.Flags().GetString("version")
-	if err != nil {
-		return err
-	}
-
-	plugin, err := c.V2Client.DescribeCustomPlugin(pluginId)
+	version, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err
 	}
 
-	pluginVersion, err := c.V2Client.DescribeCustomPluginVersion(pluginId, versionId)
+	pluginResp, err := c.V2Client.DescribeCustomPlugin(plugin)
 	if err != nil {
 		return err
 	}
 
-	return printTableVersion(cmd, plugin, pluginVersion)
+	pluginVersionResp, err := c.V2Client.DescribeCustomPluginVersion(plugin, version)
+	if err != nil {
+		return err
+	}
+
+	return printTableVersion(cmd, pluginResp, pluginVersionResp)
 }
