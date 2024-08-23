@@ -36,10 +36,10 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
-	cmd.Flags().String("plugin-file", "", "ZIP/JAR custom plugin file.")
-	cmd.Flags().String("version-number", "", "Version number for custom plugin version.")
-	cmd.Flags().Bool("is-beta", false, "Is Beta flag for custom plugin version.")
-	cmd.Flags().String("release-notes", "", "Release Notes for custom plugin version.")
+	cmd.Flags().String("plugin-file", "", "Custom plugin ZIP or JAR file.")
+	cmd.Flags().String("version-number", "", "Version number of custom plugin version.")
+	cmd.Flags().Bool("beta", false, "Mark the custom plugin version as beta.")
+	cmd.Flags().String("release-notes", "", "Release notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -74,11 +74,11 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 	if err != nil {
 		return err
 	}
-	isBeta, err := cmd.Flags().GetBool("is-beta")
+	beta, err := cmd.Flags().GetBool("beta")
 	if err != nil {
 		return err
 	}
-	isBetaString := strconv.FormatBool(isBeta)
+	isBetaString := strconv.FormatBool(beta)
 
 	releaseNotes, err := cmd.Flags().GetString("release-notes")
 	if err != nil {

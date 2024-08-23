@@ -9,11 +9,11 @@ Create custom connector plugin version --plugin "ccp-12345".
   $ confluent connect custom-plugin version create --plugin ccp-12345. --plugin-file datagen.zip --version-number 0.0.1 --is-beta=true
 
 Flags:
-      --plugin string                  REQUIRED: Id of the base plugin
-      --plugin-file string             REQUIRED: ZIP/JAR custom plugin file.
-      --version-number string          REQUIRED: Must be in the format of major.minor.patch
-      --is-beta bool                   A flag denoting whether version is in beta.
-      --release-notes string           String containing release notes
+      --plugin string                  REQUIRED: ID of custom connector plugin.
+      --plugin-file string             REQUIRED: Custom plugin ZIP or JAR file.
+      --version-number string          REQUIRED: Version number of custom plugin version.
+      --is-beta bool                   Mark the custom plugin version as beta.
+      --release-notes string           Release notes for custom plugin version.
       --sensitive-properties strings   A comma-separated list of sensitive property names.
   -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
 
