@@ -2,15 +2,18 @@ package connect
 
 import (
 	"fmt"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	"github.com/spf13/cobra"
+
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/utils"
-	"github.com/spf13/cobra"
-	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 type pluginVersionOut struct {
@@ -30,7 +33,7 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create custom connector plugin version for plugin "ccp-123456".`,
-				Code: "confluent connect custom-plugin create-version --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1",
+				Code: "confluent connect custom-plugin version create --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1",
 			},
 		),
 	}

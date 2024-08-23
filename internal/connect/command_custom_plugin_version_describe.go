@@ -1,9 +1,10 @@
 package connect
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/spf13/cobra"
 )
 
 func (c *customPluginCommand) newVersionDescribeCommand() *cobra.Command {

@@ -566,7 +566,6 @@ func handleCustomConnectorPluginsVersionsId(t *testing.T) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(version1)
 			require.NoError(t, err)
-		case http.MethodDelete:
 		}
 	}
 }

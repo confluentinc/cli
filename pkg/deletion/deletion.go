@@ -149,8 +149,7 @@ func DefaultYesNoDeletePromptString(resourceType string, idList []string) string
 }
 
 func VersionDeleteYesNoDeletePromptString(resourceType, pluginId, versionID string) string {
-	var promptMsg string
-	promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s" version "%s"?`, resourceType, pluginId, versionID)
+	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" version "%s"?`, resourceType, pluginId, versionID)
 
 	return promptMsg
 }
