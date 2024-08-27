@@ -18,6 +18,8 @@ const (
 	ApiKey                          = "API key"
 	Broker                          = "broker"
 	ByokKey                         = "self-managed key"
+	CertificateAuthority            = "certificate authority"
+	CertificatePool                 = "certificate pool"
 	ClientQuota                     = "client quota"
 	Cloud                           = "cloud"
 	ClusterLink                     = "cluster link"
@@ -185,7 +187,7 @@ func ResourcesNotFoundError(cmd *cobra.Command, resourceType string, invalidArgs
 		fullParentCommand = fmt.Sprintf("%s %s", cmd.Parent().Name(), fullParentCommand)
 		cmd = cmd.Parent()
 	}
-	invalidResourceSuggestion := fmt.Sprintf(errors.ListResourceSuggestions, resourceType, fullParentCommand)
+	invalidResourceSuggestion := fmt.Sprintf("List available %s with `%s list`.", Plural(resourceType), fullParentCommand)
 
 	return errors.NewErrorWithSuggestions(invalidArgsErrMsg, invalidResourceSuggestion)
 }
@@ -193,6 +195,11 @@ func ResourcesNotFoundError(cmd *cobra.Command, resourceType string, invalidArgs
 func Plural(resource string) string {
 	if resource == "" {
 		return ""
+	}
+
+	// Words ending in `-ty` generally replace it with `-ties` in their plural forms
+	if strings.HasSuffix(resource, "ty") {
+		return strings.TrimSuffix(resource, "y") + "ies"
 	}
 
 	// Singular words ending w/ these suffixes generally add an extra -es syllable in their plural forms
