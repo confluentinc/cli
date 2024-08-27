@@ -54,12 +54,19 @@ func main() {
 		panic(err)
 	}
 
+	removeUnreleasedDocs()
+
 	if err := os.Setenv("HOME", home); err != nil {
 		panic(err)
 	}
 }
 
-func removeUnreleasedCommands(command string) { //nolint:unused
+func removeUnreleasedDocs() {
+	removeUnreleasedCommands("iam certificate-authority")
+	removeUnreleasedCommands("iam certificate-pool")
+}
+
+func removeUnreleasedCommands(command string) {
 	subcommands := strings.Split(command, " ")
 
 	line := fmt.Sprintf(`\s{3}%s/index\n`, subcommands[len(subcommands)-1])
@@ -86,7 +93,7 @@ func removeUnreleasedCommands(command string) { //nolint:unused
 	}
 }
 
-func removeLineFromFile(line, file string) error { //nolint:unused
+func removeLineFromFile(line, file string) error {
 	out, err := os.ReadFile(file)
 	if err != nil {
 		return err

@@ -1,0 +1,7 @@
++---------------------+-----------------+
+| ID                  | pool-55555      |
+| Name                | pool-xyz        |
+| Description         | new description |
+| External Identifier | identity        |
+| Filter              | true            |
++---------------------+-----------------+
