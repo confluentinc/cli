@@ -303,6 +303,43 @@ func (s *CLITestSuite) TestIamPool() {
 	}
 }
 
+func (s *CLITestSuite) TestIamCertificateAuthority() {
+	tests := []CLITest{
+		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem`, fixture: "iam/certificate-authority/create.golden"},
+		{args: "iam certificate-authority delete op-12345 --force", fixture: "iam/certificate-authority/delete.golden"},
+		{args: "iam certificate-authority delete op-12345 op-67890", fixture: "iam/certificate-authority/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam certificate-authority delete op-12345 op-54321", input: "y\n", fixture: "iam/certificate-authority/delete-multiple-success.golden"},
+		{args: "iam certificate-authority describe op-12345", fixture: "iam/certificate-authority/describe.golden"},
+		{args: "iam certificate-authority describe op-12345 -o json", fixture: "iam/certificate-authority/describe-json.golden"},
+		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update.golden"},
+		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-fail.golden", exitCode: 1},
+		{args: "iam certificate-authority list", fixture: "iam/certificate-authority/list.golden"},
+		{args: "iam certificate-authority list -o json", fixture: "iam/certificate-authority/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIamCertificatePool() {
+	tests := []CLITest{
+		{args: `iam certificate-pool create pool-xyz --provider pool-1 --description "new description" --external-identifier "identity"`, fixture: "iam/certificate-pool/create.golden"},
+		{args: "iam certificate-pool delete pool-55555 --provider pool-1 --force", fixture: "iam/certificate-pool/delete.golden"},
+		{args: "iam certificate-pool delete pool-55555 pool-44444 --provider pool-1", fixture: "iam/certificate-pool/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam certificate-pool delete pool-55555 pool-12345 --provider pool-1", input: "y\n", fixture: "iam/certificate-pool/delete-multiple-success.golden"},
+		{args: "iam certificate-pool describe pool-12345 --provider pool-1", fixture: "iam/certificate-pool/describe.golden"},
+		{args: `iam certificate-pool update pool-12345 --provider pool-1 --name "updated name" --description "updated description" --external-identifier "identity2" --filter false`, fixture: "iam/certificate-pool/update.golden"},
+		{args: "iam certificate-pool list --provider pool-1", fixture: "iam/certificate-pool/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestIamGroupMapping() {
 	tests := []CLITest{
 		{args: `iam group-mapping create group_mapping --description new-group-description --filter '"engineering" in claims.group || "marketing" in claims.group'`, fixture: "iam/group-mapping/create.golden"},

@@ -78,7 +78,8 @@ func DefaultYesNoDeletePromptString(resourceType string, idList []string) string
 	if len(idList) == 1 {
 		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
 	} else {
-		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
+		plural := resource.Plural(resourceType)
+		promptMsg = fmt.Sprintf("Are you sure you want to delete %s %s?", plural, utils.ArrayToCommaDelimitedString(idList, "and"))
 	}
 
 	return promptMsg

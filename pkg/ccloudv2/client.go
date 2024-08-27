@@ -6,6 +6,7 @@ import (
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
+	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
@@ -40,6 +41,7 @@ type Client struct {
 	BillingClient                *billingv1.APIClient
 	ByokClient                   *byokv1.APIClient
 	CdxClient                    *cdxv1.APIClient
+	CertificateAuthorityClient   *certificateauthorityv2.APIClient
 	CliClient                    *cliv1.APIClient
 	CmkClient                    *cmkv2.APIClient
 	ConnectClient                *connectv1.APIClient
@@ -80,6 +82,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		BillingClient:                newBillingClient(httpClient, url, userAgent, unsafeTrace),
 		ByokClient:                   newByokV1Client(httpClient, url, userAgent, unsafeTrace),
 		CdxClient:                    newCdxClient(httpClient, url, userAgent, unsafeTrace),
+		CertificateAuthorityClient:   newCertificateAuthorityClient(httpClient, url, userAgent, unsafeTrace),
 		CliClient:                    newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:                    newCmkClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectClient:                newConnectClient(httpClient, url, userAgent, unsafeTrace),
