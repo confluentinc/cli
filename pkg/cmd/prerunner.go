@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
@@ -713,7 +714,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, _ string) {
-	if !r.shouldCheckForUpdates(cmd) || r.Config.IsTest {
+	if !r.shouldCheckForUpdates(cmd) {
 		return
 	}
 
@@ -745,11 +746,22 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, _ string) {
 }
 
 func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
+	if r.Config.IsTest || r.Config.DisableUpdates || r.Config.DisableUpdateCheck {
+		return false
+	}
+
 	for _, subcommand := range []string{"prompt", "update"} {
 		if strings.HasPrefix(cmd.CommandPath(), fmt.Sprintf("confluent %s", subcommand)) {
 			return false
 		}
 	}
+
+	if time.Now().Sub(*r.Config.LastUpdateCheckAt) < 24*time.Hour {
+		return false
+	}
+
+	*r.Config.LastUpdateCheckAt = time.Now()
+	_ = r.Config.Save()
 
 	return true
 }
