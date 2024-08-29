@@ -1,8 +1,9 @@
 package flink
 
 import (
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 const (
