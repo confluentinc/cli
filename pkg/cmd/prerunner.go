@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -28,7 +29,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/update"
 	"github.com/confluentinc/cli/v3/pkg/utils"
-	"github.com/confluentinc/cli/v3/pkg/version"
+	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
 const autoLoginMsg = "Successful auto-login with non-interactive credentials."
@@ -45,8 +46,7 @@ type PreRunner interface {
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
 	Config                  *config.Config
-	UpdateClient            update.Client
-	Version                 *version.Version
+	Version                 *pversion.Version
 	CCloudClientFactory     pauth.CCloudClientFactory
 	MDSClientManager        pauth.MDSClientManager
 	LoginCredentialsManager pauth.LoginCredentialsManager
@@ -362,7 +362,7 @@ func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *config.Context) (string,
 	return config.RestEndpoint, config.ID, err
 }
 
-func (r *PreRun) createCCloudClient(ctx *config.Context, ver *version.Version) *ccloudv1.Client {
+func (r *PreRun) createCCloudClient(ctx *config.Context, ver *pversion.Version) *ccloudv1.Client {
 	params := &ccloudv1.Params{
 		BaseURL:   ctx.GetPlatformServer(),
 		Logger:    log.CliLogger,
@@ -488,7 +488,7 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand, unsafeTrace
 	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version, unsafeTrace)
 }
 
-func (r *PreRun) createMDSClient(ctx *config.Context, ver *version.Version, unsafeTrace bool) *mdsv1.APIClient {
+func (r *PreRun) createMDSClient(ctx *config.Context, ver *pversion.Version, unsafeTrace bool) *mdsv1.APIClient {
 	mdsConfig := mdsv1.NewConfiguration()
 	mdsConfig.HTTPClient = utils.DefaultClient()
 	mdsConfig.Debug = unsafeTrace
@@ -712,36 +712,35 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 }
 
 // notifyIfUpdateAvailable prints a message if an update is available
-func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) {
+func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, _ string) {
 	if !r.shouldCheckForUpdates(cmd) || r.Config.IsTest {
 		return
 	}
 
-	latestMajorVersion, latestMinorVersion, err := r.UpdateClient.CheckForUpdates(version.CLIName, currentVersion, false)
+	current, err := version.NewVersion(r.Config.Version.Version)
 	if err != nil {
-		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
-		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
-		log.CliLogger.Warn(err)
 		return
 	}
 
-	if latestMajorVersion != "" {
-		if !strings.HasPrefix(latestMajorVersion, "v") {
-			latestMajorVersion = "v" + latestMajorVersion
-		}
-		output.ErrPrintf(r.Config.EnableColor, "A major version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMajorVersion)
-		output.ErrPrintln(r.Config.EnableColor, "To view release notes and install the update, please run `confluent update --major`.")
-		output.ErrPrintln(r.Config.EnableColor, "")
+	client := update.NewClient(r.Config.IsTest)
+
+	binaries, err := client.GetBinaries()
+	if err != nil {
+		return
 	}
 
-	if latestMinorVersion != "" {
-		if !strings.HasPrefix(latestMinorVersion, "v") {
-			latestMinorVersion = "v" + latestMinorVersion
-		}
+	minorVersions, majorVersions := update.FilterUpdates(binaries, current, false)
 
-		output.ErrPrintf(r.Config.EnableColor, "A minor version update is available for %s from (current: %s, latest: %s).\n", version.CLIName, currentVersion, latestMinorVersion)
-		output.ErrPrintln(r.Config.EnableColor, "To view release notes and install the update, please run `confluent update`.")
-		output.ErrPrintln(r.Config.EnableColor, "")
+	if len(majorVersions) > 0 {
+		output.ErrPrintf(r.Config.EnableColor, "A major version update is available for %s from (current: %s, latest: %s).\n", pversion.CLIName, current, majorVersions[len(majorVersions)-1])
+		output.ErrPrintf(r.Config.EnableColor, "To view release notes and install the update, please run `confluent update --major`.\n")
+		output.ErrPrintf(r.Config.EnableColor, "\n")
+	}
+
+	if len(minorVersions) > 0 {
+		output.ErrPrintf(r.Config.EnableColor, "A minor version update is available for %s from (current: %s, latest: %s).\n", pversion.CLIName, current, minorVersions[len(minorVersions)-1])
+		output.ErrPrintf(r.Config.EnableColor, "To view release notes and install the update, please run `confluent update`.\n")
+		output.ErrPrintf(r.Config.EnableColor, "\n")
 	}
 }
 
@@ -768,7 +767,7 @@ func warnIfConfluentLocal(cmd *cobra.Command) {
 	}
 }
 
-func (r *PreRun) createMDSv2Client(ctx *config.Context, ver *version.Version, unsafeTrace bool) *mdsv2alpha1.APIClient {
+func (r *PreRun) createMDSv2Client(ctx *config.Context, ver *pversion.Version, unsafeTrace bool) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
 	mdsv2Config.HTTPClient = utils.DefaultClient()
 	mdsv2Config.Debug = unsafeTrace
