@@ -26,6 +26,11 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink_artifact.early_access", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(c.newArtifactCommand())
 	}
+
+	fmt.Sprintf("Is test flag is %t", cfg.IsTest)
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(c.newConnectionCommand())
+	}
 	cmd.AddCommand(c.newComputePoolCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newRegionCommand())

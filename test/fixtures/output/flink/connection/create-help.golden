@@ -1,0 +1,29 @@
+Create a Flink connection.
+
+Usage:
+  confluent flink connection create <name> [flags]
+
+Examples:
+Create Flink connection "my-connection" in AWS us-west-2 for openai with endpoint and api key
+
+  $ confluent flink connection create my-connection --cloud aws --region us-west-2 --connectionType openai --endpoint https://api.openai.com/v1/chat/completions --api_key mykey
+
+Flags:
+      --cloud string          REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string         REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
+      --type string           REQUIRED: Specify the connection type. Supported types are: openai, azureml, azureopenai, bedrock, sagemaker, googleai, vertexai, elastic, mongodb, pinecone
+      --endpoint string       REQUIRED: Specify endpoint for the connection
+      --api-key string        Specify api key for the type: openai, azureml, azureopenai, googleai, elastic, pinecone
+      --access-key string     Specify access key for the type: bedrock, sagemaker
+      --secret-key string     Specify secret key for the type: bedrock, sagemaker
+      --access-token string   Specify session token for the type: bedrock, sagemaker
+      --service-key string    Specify service key for the type: vertexai
+      --username string       Specify username for the type: mongodb
+      --password string       Specify password for the type: mongodb
+      --environment string    Environment ID.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
