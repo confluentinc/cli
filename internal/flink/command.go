@@ -27,7 +27,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(c.newArtifactCommand())
 	}
 
-	fmt.Sprintf("Is test flag is %t", cfg.IsTest)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(c.newConnectionCommand())
 	}
