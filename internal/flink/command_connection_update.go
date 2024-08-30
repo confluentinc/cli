@@ -3,9 +3,10 @@ package flink
 import (
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/spf13/cobra"
 )
 
 func (c *command) newConnectionUpdateCommand() *cobra.Command {
@@ -13,7 +14,7 @@ func (c *command) newConnectionUpdateCommand() *cobra.Command {
 		Use:               "update [name]",
 		Short:             "Update a Flink connection. Only secret can be updated",
 		Args:              cobra.MaximumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs), // TODO
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConnectionArgs), // TODO
 		RunE:              c.connectionUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{

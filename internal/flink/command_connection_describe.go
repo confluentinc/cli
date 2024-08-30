@@ -1,8 +1,9 @@
 package flink
 
 import (
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 func (c *command) newConnectionDescribeCommand() *cobra.Command {
@@ -10,7 +11,7 @@ func (c *command) newConnectionDescribeCommand() *cobra.Command {
 		Use:               "describe [name]",
 		Short:             "Describe a Flink connection.",
 		Args:              cobra.MaximumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs), // TODO: update this to connection
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConnectionArgs), // TODO: update this to connection
 		RunE:              c.connectionDescribe,
 	}
 

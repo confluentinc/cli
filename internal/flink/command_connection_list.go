@@ -1,8 +1,9 @@
 package flink
 
 import (
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 func (c *command) newConnectionListCommand() *cobra.Command {

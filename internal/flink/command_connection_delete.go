@@ -1,8 +1,9 @@
 package flink
 
 import (
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 func (c *command) newConnectionDeleteCommand() *cobra.Command {
@@ -10,7 +11,7 @@ func (c *command) newConnectionDeleteCommand() *cobra.Command {
 		Use:               "delete <name-1> [name-2] ... [name-n]",
 		Short:             "Delete one or more Flink connections.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgsMultiple), // TODO: update this
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConnectionArgs), // TODO: update this
 		RunE:              c.connectionDelete,
 	}
 
