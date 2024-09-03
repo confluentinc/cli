@@ -4,7 +4,7 @@ Usage:
   confluent kafka mirror truncate-and-restore <local-topic-1> [local-topic-2] ... [local-topic-N] [flags]
 
 Examples:
-Truncates the local topics and restores mirroring to fetch from the remote topics for "my-topic-1" and "my-topic-2":
+Truncates and restores local topics for "my-topic-1" and "my-topic-2":
 
   $ confluent kafka mirror truncate-and-restore my-topic-1 my-topic-2 --link my-link
 
