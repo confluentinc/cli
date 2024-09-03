@@ -14,7 +14,7 @@ Available Commands:
   reverse-and-pause      Reverse local mirror topics and pause remote mirror topics.
   reverse-and-start      Reverse local mirror topics and start remote mirror topics.
   state-transition-error Manages state transition errors.
-  truncate-and-restore   Truncate the local topic to the remote stopped mirror log end offsets and restore mirroring to the local topic to mirror from the remote topic.
+  truncate-and-restore   Truncate the local topic and restore mirroring to fetch from the remote topic.
 
 Global Flags:
   -h, --help            Show help for this command.
