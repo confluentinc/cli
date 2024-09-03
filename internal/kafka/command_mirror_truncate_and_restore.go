@@ -18,7 +18,7 @@ func (c *mirrorCommand) newTruncateAndRestoreCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Truncates local topics and restores local topics "my-topic-1" and "my-topic-2":`,
+				Text: `Truncate the local topics and restore mirroring to fetch from the remote topics for "my-topic-1" and "my-topic-2:`,
 				Code: "confluent kafka mirror truncate-and-restore my-topic-1 my-topic-2 --link my-link",
 			},
 		),
