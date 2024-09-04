@@ -3,7 +3,14 @@ Delete one or more Flink UDF artifacts.
 Usage:
   confluent flink artifact delete <id-1> [id-2] ... [id-n] [flags]
 
+Examples:
+Delete Flink UDF artifact.
+
+  $ confluent flink artifact delete --cloud aws --region us-west-2 cfa-123456
+
 Flags:
+      --cloud string     REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string    REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
       --force            Skip the deletion confirmation prompt.
       --context string   CLI context name.
 
