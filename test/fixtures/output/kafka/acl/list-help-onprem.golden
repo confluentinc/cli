@@ -23,7 +23,7 @@ Flags:
       --client-key-path string              Path to client private key, include for mTLS authentication.
       --no-authentication                   Include if requests should be made without authentication headers and user will not be prompted for credentials.
       --prompt                              Bypass use of available login credentials and prompt for Kafka Rest credentials.
-      --principal string                    Principal for this operation with User: or Group: prefix.
+      --principal string                    Principal for this operation, prefixed with "User:" or "Group:".
       --operation string                    Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --host string                         Set host for access. Only IP addresses are supported. (default "*")
       --allow                               ACL permission to allow access.
