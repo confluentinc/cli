@@ -16,45 +16,58 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 
+	pcmd.AddCloudFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	pluginIdToName, err := c.mapPluginIdToName()
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
+	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
 	}
 
 	existenceFunc := func(id string) bool {
-		_, ok := pluginIdToName[id]
+		artifactIdToName, err := c.mapArtifactIdToName(cloud, region)
+		if err != nil {
+			return false
+		}
+		_, ok := artifactIdToName[id]
 		return ok
 	}
 
-	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.CustomConnectorPlugin); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkArtifact); err != nil {
 		return err
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCustomPlugin(id)
+		return c.V2Client.DeleteFlinkArtifact(cloud, region, id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.CustomConnectorPlugin)
+	_, err = deletion.Delete(args, deleteFunc, resource.FlinkArtifact)
 	return err
 }
 
-func (c *command) mapPluginIdToName() (map[string]string, error) {
-	plugins, err := c.V2Client.ListCustomPlugins("")
+func (c *command) mapArtifactIdToName(cloud string, region string) (map[string]string, error) {
+	plugins, err := c.V2Client.ListFlinkArtifacts(cloud, region, "")
 	if err != nil {
 		return nil, err
 	}
 
-	pluginIdToName := make(map[string]string)
+	artifactIdToName := make(map[string]string)
 	for _, plugin := range plugins {
-		pluginIdToName[plugin.GetId()] = plugin.GetDisplayName()
+		artifactIdToName[plugin.GetId()] = plugin.GetDisplayName()
 	}
 
-	return pluginIdToName, nil
+	return artifactIdToName, nil
 }

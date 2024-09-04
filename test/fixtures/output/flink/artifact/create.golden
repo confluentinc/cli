@@ -1,6 +1,10 @@
-+----------------+------------------+
-| ID             | ccp-123456       |
-| Name           | my-custom-plugin |
-| Version        | ver-123456       |
-| Content Format | JAR              |
-+----------------+------------------+
++----------------+----------------------------------+
+| ID             | cfa-123456                       |
+| Name           | my-flink-artifact                |
+| Version        | 1.0.0                            |
+| Class          | io.confluent.flink.example1.test |
+| Content Format | JAR                              |
+| Cloud          | aws                              |
+| Region         | us-west-2                        |
+| Environment    | env-123456                       |
++----------------+----------------------------------+
