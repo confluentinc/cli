@@ -37,7 +37,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
