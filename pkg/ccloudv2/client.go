@@ -11,6 +11,7 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+	flinkartifactv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact/v1"
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
@@ -46,6 +47,7 @@ type Client struct {
 	CmkClient                    *cmkv2.APIClient
 	ConnectClient                *connectv1.APIClient
 	ConnectCustomPluginClient    *connectcustompluginv1.APIClient
+	FlinkArtifactClient          *flinkartifactv1.APIClient
 	FlinkClient                  *flinkv2.APIClient
 	IamClient                    *iamv2.APIClient
 	IdentityProviderClient       *identityproviderv2.APIClient
@@ -87,6 +89,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		CmkClient:                    newCmkClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectClient:                newConnectClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectCustomPluginClient:    newConnectCustomPluginClient(httpClient, url, userAgent, unsafeTrace),
+		FlinkArtifactClient:          newFlinkArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkClient:                  newFlinkClient(httpClient, url, userAgent, unsafeTrace),
 		IamClient:                    newIamClient(httpClient, url, userAgent, unsafeTrace),
 		IdentityProviderClient:       newIdentityProviderClient(httpClient, url, userAgent, unsafeTrace),
