@@ -32,6 +32,7 @@ const (
 	DnsRecord                       = "DNS record"
 	Environment                     = "environment"
 	Flink                           = "flink"
+	FlinkArtifact                   = "Flink artifact"
 	FlinkConnectivityType           = "Flink connectivity type"
 	FlinkComputePool                = "Flink compute pool"
 	FlinkRegion                     = "Flink region"

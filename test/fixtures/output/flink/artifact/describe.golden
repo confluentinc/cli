@@ -1,6 +1,10 @@
-+----------------+---------------+
-| ID             | ccp-789013    |
-| Name           | CliPluginTest |
-| Version        | ver-123456    |
-| Content Format | JAR           |
-+----------------+---------------+
++----------------+----------------------------------+
+| ID             | cfa-789013                       |
+| Name           | CliArtifactTest                  |
+| Version        | 1.0.0                            |
+| Class          | io.confluent.flink.example3.test |
+| Cloud          | AWS                              |
+| Region         | us-west-2                        |
+| Environment    | env-789013                       |
+| Content Format | JAR                              |
++----------------+----------------------------------+
