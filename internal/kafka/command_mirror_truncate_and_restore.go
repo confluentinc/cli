@@ -12,7 +12,7 @@ import (
 func (c *mirrorCommand) newTruncateAndRestoreCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "truncate-and-restore <local-topic-1> [local-topic-2] ... [local-topic-N]",
-		Short:             "Truncate the local topic and restore mirroring to fetch from the remote topic.",
+		Short:             "Truncate topics and restore mirroring.",
 		RunE:              c.truncateAndRestore,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),

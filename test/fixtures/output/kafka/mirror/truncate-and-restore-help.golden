@@ -1,4 +1,4 @@
-Truncate the local topic and restore mirroring to fetch from the remote topic.
+Truncate topics and restore mirroring.
 
 Usage:
   confluent kafka mirror truncate-and-restore <local-topic-1> [local-topic-2] ... [local-topic-N] [flags]
