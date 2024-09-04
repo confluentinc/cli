@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
+	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -14,6 +15,12 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		Short: "Delete one or more Flink UDF artifacts.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete Flink UDF artifact.",
+				Code: "confluent flink artifact delete --cloud aws --region us-west-2 cfa-123456",
+			},
+		),
 	}
 
 	pcmd.AddCloudFlag(cmd)

@@ -6,7 +6,7 @@ Usage:
 Examples:
 Describe Flink UDF artifact.
 
-  $ confluent flink artifact describe cfa-123456
+  $ confluent flink artifact describe --cloud aws --region us-west-2 cfa-123456
 
 Flags:
       --cloud string     REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
