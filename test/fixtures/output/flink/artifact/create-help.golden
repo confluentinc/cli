@@ -6,10 +6,13 @@ Usage:
 Examples:
 Create Flink artifact "my-flink-artifact".
 
-  $ confluent flink artifact create my-flink-artifact --artifact-file plugin.jar
+  $ confluent flink artifact create my-flink-artifact --artifact-file plugin.jar --cloud aws --region us-west-2 --environment env-123456
 
 Flags:
       --artifact-file string      REQUIRED: Flink artifact JAR file or ZIP file.
+      --cloud string              REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string             REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
+      --environment string        Environment ID.
       --runtime-language string   Specify the Flink artifact runtime language as "python" or "java". (default "java")
       --description string        Description of Flink artifact.
       --context string            CLI context name.

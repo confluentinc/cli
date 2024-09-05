@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
 )
 
 type command struct {
@@ -23,9 +22,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink_artifact.early_access", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(c.newArtifactCommand())
-	}
+	cmd.AddCommand(c.newArtifactCommand())
 	cmd.AddCommand(c.newComputePoolCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newRegionCommand())
