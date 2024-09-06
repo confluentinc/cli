@@ -42,7 +42,11 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink artifact "my-flink-artifact".`,
-				Code: "confluent flink artifact create my-flink-artifact --artifact-file plugin.jar --cloud aws --region us-west-2 --environment env-123456",
+				Code: "confluent flink artifact create my-flink-artifact --artifact-file artifact.jar --cloud aws --region us-west-2 --environment env-123456",
+			},
+			examples.Example{
+				Text: `Create Flink artifact "flink-java-artifact".`,
+				Code: "confluent flink artifact create my-flink-artifact --artifact-file artifact.jar --cloud aws --region us-west-2 --environment env-123456 --description flinkJavaScalar --class io.confluent.example.SumScalarFunction",
 			},
 		),
 	}
@@ -53,6 +57,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("runtime-language", "java", fmt.Sprintf("Specify the Flink artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(allowedRuntimeLanguages, "or")))
 	cmd.Flags().String("description", "", "Description of Flink artifact.")
+	cmd.Flags().String("class", "default", "Name of Flink artifact class or alias.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -90,6 +95,10 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	class, err := cmd.Flags().GetString("class")
+	if err != nil {
+		return err
+	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
 	if !slices.Contains(allowedFileExtensions, strings.ToLower(extension)) {
@@ -115,6 +124,8 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		DisplayName: displayName,
 		Cloud:       cloud,
 		Region:      region,
+		Environment: environment,
+		Class:       class,
 		Description: flinkartifactv1.PtrString(description),
 		UploadSource: flinkartifactv1.InlineObjectUploadSourceOneOf{
 			ArtifactV1UploadSourcePresignedUrl: &flinkartifactv1.ArtifactV1UploadSourcePresignedUrl{
@@ -125,26 +136,26 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		RuntimeLanguage: flinkartifactv1.PtrString(runtimeLanguage),
 	}
 
-	plugin, err := c.V2Client.CreateFlinkArtifact(createArtifactRequest)
+	artifact, err := c.V2Client.CreateFlinkArtifact(createArtifactRequest)
 	if err != nil {
 		return err
 	}
 
-	var pluginVersion = ""
-	if len(plugin.GetVersions()) > 0 {
-		pluginVersion = (*plugin.Versions)[0].GetVersion()
+	var artifactVersion = ""
+	if versions := artifact.GetVersions(); len(versions) > 0 {
+		artifactVersion = versions[0].GetVersion()
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&artifactCreateOut{
-		Name:          plugin.GetDisplayName(),
-		Id:            plugin.GetId(),
-		Version:       pluginVersion,
-		Class:         plugin.GetClass(),
+		Name:          artifact.GetDisplayName(),
+		Id:            artifact.GetId(),
+		Version:       artifactVersion,
+		Class:         artifact.GetClass(),
 		Cloud:         cloud,
 		Region:        region,
 		Environment:   environment,
-		ContentFormat: plugin.GetContentFormat(),
+		ContentFormat: artifact.GetContentFormat(),
 	})
 	return table.Print()
 }

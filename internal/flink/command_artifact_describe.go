@@ -43,10 +43,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	plugin, err := c.V2Client.DescribeFlinkArtifact(cloud, region, args[0])
+	artifact, err := c.V2Client.DescribeFlinkArtifact(cloud, region, args[0])
 	if err != nil {
 		return err
 	}
 
-	return printTable(cmd, plugin)
+	return printTable(cmd, artifact)
 }

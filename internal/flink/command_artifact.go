@@ -35,23 +35,23 @@ func (c *command) newArtifactCommand() *cobra.Command {
 	return cmd
 }
 
-func printTable(cmd *cobra.Command, plugin flinkartifactv1.ArtifactV1FlinkArtifact) error {
+func printTable(cmd *cobra.Command, artifact flinkartifactv1.ArtifactV1FlinkArtifact) error {
 	table := output.NewTable(cmd)
 
-	var pluginVersion = ""
-	if len(plugin.GetVersions()) > 0 {
-		pluginVersion = (*plugin.Versions)[0].GetVersion()
+	var artifactVersion = ""
+	if versions := artifact.GetVersions(); len(versions) > 0 {
+		artifactVersion = versions[0].GetVersion()
 	}
 
 	table.Add(&flinkArtifactOut{
-		Name:          plugin.GetDisplayName(),
-		Id:            plugin.GetId(),
-		Version:       pluginVersion,
-		Class:         plugin.GetClass(),
-		Cloud:         plugin.GetCloud(),
-		Region:        plugin.GetRegion(),
-		Environment:   plugin.GetEnvironment(),
-		ContentFormat: plugin.GetContentFormat(),
+		Name:          artifact.GetDisplayName(),
+		Id:            artifact.GetId(),
+		Version:       artifactVersion,
+		Class:         artifact.GetClass(),
+		Cloud:         artifact.GetCloud(),
+		Region:        artifact.GetRegion(),
+		Environment:   artifact.GetEnvironment(),
+		ContentFormat: artifact.GetContentFormat(),
 	})
 
 	return table.Print()

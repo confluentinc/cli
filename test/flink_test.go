@@ -37,6 +37,7 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 	tests := []CLITest{
 		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud aws --region us-west-2 --environment env-123456", fixture: "flink/artifact/create.golden"},
 		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud aws --region us-west-2 --environment env-123456 --description CliArtifactTest", fixture: "flink/artifact/create.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud aws --region us-west-2 --environment env-123456 --description CliArtifactTest --class io.confluent.example.SumScalarFunction", fixture: "flink/artifact/create.golden"},
 		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/python-udf-examples.zip --cloud aws --region us-west-2 --environment env-789012 --description CliArtifactTest --runtime-language python", fixture: "flink/artifact/create-python.golden"},
 		{args: "flink artifact describe --cloud aws --region us-west-2 cfa-789013", fixture: "flink/artifact/describe.golden"},
 		{args: "flink artifact list --cloud aws --region us-west-2", fixture: "flink/artifact/list.golden"},
