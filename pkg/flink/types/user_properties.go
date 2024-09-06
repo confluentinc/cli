@@ -6,6 +6,7 @@ type UserPropertiesInterface interface {
 	Clear()
 	Delete(key string)
 	Get(key string) string
+	GetMaskedNonLocalProperties() map[string]string
 	GetNonLocalProperties() map[string]string
 	GetOrDefault(key string, defaultValue string) string
 	GetOutputFormat() config.OutputFormat
