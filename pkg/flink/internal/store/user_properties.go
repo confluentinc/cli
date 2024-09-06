@@ -98,6 +98,19 @@ func (p *UserProperties) GetNonLocalProperties() map[string]string {
 	return nonLocalProperties
 }
 
+// GetMaskedNonLocalProperties returns the same as GetNonLocalProperties but with sensitive values masked
+func (p *UserProperties) GetMaskedNonLocalProperties() map[string]string {
+	maskedProperties := p.GetNonLocalProperties()
+	for key := range maskedProperties {
+		if !strings.HasPrefix(key, config.NamespaceClient) {
+			if hasSensitiveKey(key) {
+				maskedProperties[key] = "hidden"
+			}
+		}
+	}
+	return maskedProperties
+}
+
 func (p *UserProperties) Delete(key string) {
 	defaultValue, isDefaultKey := p.defaultProperties[key]
 	if isDefaultKey {
