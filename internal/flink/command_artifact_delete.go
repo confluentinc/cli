@@ -66,14 +66,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) mapArtifactIdToName(cloud string, region string) (map[string]string, error) {
-	plugins, err := c.V2Client.ListFlinkArtifacts(cloud, region, "")
+	artifacts, err := c.V2Client.ListFlinkArtifacts(cloud, region, "")
 	if err != nil {
 		return nil, err
 	}
 
 	artifactIdToName := make(map[string]string)
-	for _, plugin := range plugins {
-		artifactIdToName[plugin.GetId()] = plugin.GetDisplayName()
+	for _, artifact := range artifacts {
+		artifactIdToName[artifact.GetId()] = artifact.GetDisplayName()
 	}
 
 	return artifactIdToName, nil
