@@ -11,8 +11,8 @@ type CloudV2Router struct {
 }
 
 var ccloudV2Routes = []route{
-	{"/artifact/v1/flink-artifacts", handleFlinkArtifactPlugins},
-	{"/artifact/v1/flink-artifacts/{id}", handleFlinkArtifactPluginsId},
+	{"/artifact/v1/flink-artifacts", handleFlinkArtifacts},
+	{"/artifact/v1/flink-artifacts/{id}", handleFlinkArtifactId},
 	{"/artifact/v1/presigned-upload-url", handleFlinkArtifactUploadUrl},
 	{"/byok/v1/keys", handleByokKeys},
 	{"/byok/v1/keys/{id}", handleByokKey},

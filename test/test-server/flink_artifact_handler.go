@@ -28,16 +28,16 @@ var artifactVersions = &[]flinkartifactv1.ArtifactV1FlinkArtifactVersion{
 }
 
 // Handler for: "/artifact/v1/flink-artifacts"
-func handleFlinkArtifactPlugins(t *testing.T) http.HandlerFunc {
+func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			var decodeRespone flinkartifactv1.ArtifactV1FlinkArtifact
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&decodeRespone))
-			var plugin flinkartifactv1.ArtifactV1FlinkArtifact
+			var artifact flinkartifactv1.ArtifactV1FlinkArtifact
 			switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
 			case "java", "":
-				plugin = flinkartifactv1.ArtifactV1FlinkArtifact{
+				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
 					Id:            flinkartifactv1.PtrString("cfa-123456"),
 					Cloud:         flinkartifactv1.PtrString("AWS"),
 					Region:        flinkartifactv1.PtrString("us-west-2"),
@@ -48,7 +48,7 @@ func handleFlinkArtifactPlugins(t *testing.T) http.HandlerFunc {
 					Versions:      artifactVersions,
 				}
 			case "python":
-				plugin = flinkartifactv1.ArtifactV1FlinkArtifact{
+				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
 					Id:            flinkartifactv1.PtrString("cfa-789012"),
 					Cloud:         flinkartifactv1.PtrString("AWS"),
 					Region:        flinkartifactv1.PtrString("us-east-1"),
@@ -59,10 +59,10 @@ func handleFlinkArtifactPlugins(t *testing.T) http.HandlerFunc {
 					Versions:      artifactVersions,
 				}
 			}
-			err := json.NewEncoder(w).Encode(plugin)
+			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodGet:
-			plugin1 := flinkartifactv1.ArtifactV1FlinkArtifact{
+			artifact1 := flinkartifactv1.ArtifactV1FlinkArtifact{
 				Id:            flinkartifactv1.PtrString("cfa-123456"),
 				Cloud:         flinkartifactv1.PtrString("AWS"),
 				Region:        flinkartifactv1.PtrString("us-west-2"),
@@ -72,7 +72,7 @@ func handleFlinkArtifactPlugins(t *testing.T) http.HandlerFunc {
 				ContentFormat: flinkartifactv1.PtrString("JAR"),
 				Versions:      artifactVersions,
 			}
-			plugin2 := flinkartifactv1.ArtifactV1FlinkArtifact{
+			artifact2 := flinkartifactv1.ArtifactV1FlinkArtifact{
 				Id:            flinkartifactv1.PtrString("cfa-789012"),
 				Cloud:         flinkartifactv1.PtrString("AWS"),
 				Region:        flinkartifactv1.PtrString("us-east-1"),
@@ -82,22 +82,22 @@ func handleFlinkArtifactPlugins(t *testing.T) http.HandlerFunc {
 				ContentFormat: flinkartifactv1.PtrString("ZIP"),
 				Versions:      artifactVersions,
 			}
-			err := json.NewEncoder(w).Encode(flinkartifactv1.ArtifactV1FlinkArtifactList{Data: []flinkartifactv1.ArtifactV1FlinkArtifact{plugin1, plugin2}})
+			err := json.NewEncoder(w).Encode(flinkartifactv1.ArtifactV1FlinkArtifactList{Data: []flinkartifactv1.ArtifactV1FlinkArtifact{artifact1, artifact2}})
 			require.NoError(t, err)
 		}
 	}
 }
 
 // Handler for: "/artifact/v1/flink-artifacts/{id}"
-func handleFlinkArtifactPluginsId(t *testing.T) http.HandlerFunc {
+func handleFlinkArtifactId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			vars := mux.Vars(r)
 			id := vars["id"]
-			var plugin flinkartifactv1.ArtifactV1FlinkArtifact
+			var artifact flinkartifactv1.ArtifactV1FlinkArtifact
 			if id == "cfa-123456" {
-				plugin = flinkartifactv1.ArtifactV1FlinkArtifact{
+				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
 					Id:            flinkartifactv1.PtrString("cfa-123456"),
 					Cloud:         flinkartifactv1.PtrString("AWS"),
 					Region:        flinkartifactv1.PtrString("us-west-2"),
@@ -108,7 +108,7 @@ func handleFlinkArtifactPluginsId(t *testing.T) http.HandlerFunc {
 					Versions:      artifactVersions,
 				}
 			} else if id == "cfa-789012" {
-				plugin = flinkartifactv1.ArtifactV1FlinkArtifact{
+				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
 					Id:            flinkartifactv1.PtrString("cfa-789012"),
 					Cloud:         flinkartifactv1.PtrString("AWS"),
 					Region:        flinkartifactv1.PtrString("us-east-1"),
@@ -120,7 +120,7 @@ func handleFlinkArtifactPluginsId(t *testing.T) http.HandlerFunc {
 					Versions:      artifactVersions,
 				}
 			} else {
-				plugin = flinkartifactv1.ArtifactV1FlinkArtifact{
+				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
 					Id:            flinkartifactv1.PtrString("cfa-789013"),
 					Cloud:         flinkartifactv1.PtrString("AWS"),
 					Region:        flinkartifactv1.PtrString("us-west-2"),
@@ -131,14 +131,14 @@ func handleFlinkArtifactPluginsId(t *testing.T) http.HandlerFunc {
 					Versions:      artifactVersions,
 				}
 			}
-			err := json.NewEncoder(w).Encode(plugin)
+			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodPatch:
-			plugin := flinkartifactv1.ArtifactV1FlinkArtifact{
+			artifact := flinkartifactv1.ArtifactV1FlinkArtifact{
 				Id:          flinkartifactv1.PtrString("cfa-123456"),
 				DisplayName: flinkartifactv1.PtrString("CliArtifactTestUpdate"),
 			}
-			err := json.NewEncoder(w).Encode(plugin)
+			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(flinkartifactv1.ArtifactV1FlinkArtifact{})
