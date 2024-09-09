@@ -412,17 +412,20 @@ main() {
 
   log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
-  # If < v3, archive version is prefixed with "v"
+  # As of v3.0.0, the archive version is no longer prefixed with "v"
   VERSION=${VERSION#v}
-  VERSION=$([ "${VERSION#3.}" = "${VERSION}" ] && echo "v${VERSION}" || echo "${VERSION}")
+  VERSION=$([ "${VERSION#2.}" = "${VERSION}" ] && echo "${VERSION}" || echo "v${VERSION}")
   VERSION=$([ "${VERSION}" = "vlatest" ] && echo "latest" || echo "${VERSION}")
-  
-  S3_ARCHIVES_URL=${S3_URL}/${PROJECT_NAME}/archives/${VERSION#v}
-  NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
-  TARBALL=${NAME}.${FORMAT}
-  TARBALL_URL=${S3_ARCHIVES_URL}/${TARBALL}
-  CHECKSUM=${BINARY}_${VERSION}_checksums.txt
-  CHECKSUM_URL=${S3_ARCHIVES_URL}/${CHECKSUM}
+
+  # As of v4.1.0, the base URL is packages.confluent.io and the archive/checksum names do not contain the version
+  ABOVE_4_0=$( { [ "${VERSION}" = "latest" ] || { [ "${VERSION#v2.}" = "${VERSION}" ] && [ "${VERSION#3.}" = "${VERSION}" ] && [ "${VERSION#4.0.}" = "${VERSION}" ]; }; } && echo "true" || echo "false")
+  BASEURL=$([ ${ABOVE_4_0} = "true" ] && echo "https://packages.confluent.io" || echo "https://s3-us-west-2.amazonaws.com/confluent.cloud")
+  NAME=$([ ${ABOVE_4_0} = "true" ] && echo "${BINARY}_${OS}_${ARCH}" || echo "${BINARY}_${VERSION}_${OS}_${ARCH}")
+  CHECKSUM=$([ ${ABOVE_4_0} = "true" ] && echo "${BINARY}_checksums.txt" || echo "${BINARY}_${VERSION}_checksums.txt")
+
+  ARCHIVES_URL=${BASEURL}/${PROJECT_NAME}/archives/${VERSION#v}
+  TARBALL_URL=${ARCHIVES_URL}/${NAME}.${FORMAT}
+  CHECKSUM_URL=${ARCHIVES_URL}/${CHECKSUM}
 
   execute
 }
