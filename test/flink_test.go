@@ -254,7 +254,7 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 		{args: `__complete flink compute-pool delete ""`, fixture: "flink/compute-pool/delete-autocomplete.golden"},
 		{args: `__complete flink compute-pool list --region ""`, fixture: "flink/compute-pool/list-region-autocomplete.golden"},
 		{args: `__complete flink statement create my-statement --database ""`, fixture: "flink/statement/create-database-autocomplete.golden"},
-		{args: `__complete flink connection create my-connection --cloud ""`, fixture: "flink/connection/create-cloud-autocomplete.golden"},
+		{args: `__complete flink connection create my-connection --cloud ""`, fixture: "flink/connection/create/create-cloud-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

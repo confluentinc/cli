@@ -93,13 +93,13 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 	var connectionSecrets []string
 	connectionSecrets = append(connectionSecrets, flink.ConnectionTypeSecretMapping[connectionType]...)
 
-	for k := range flink.ConnectionSecretTypeMapping {
-		secret, err := cmd.Flags().GetString(k)
+	for key := range flink.ConnectionSecretTypeMapping {
+		secret, err := cmd.Flags().GetString(key)
 		if err != nil {
 			return nil, err
 		}
-		if secret != "" && !slices.Contains(connectionSecrets, k) {
-			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("%s is invalid for connection %s.", k, connectionType), fmt.Sprintf("Valid secret types are %s.", utils.ArrayToCommaDelimitedString(connectionSecrets, "or")))
+		if secret != "" && !slices.Contains(connectionSecrets, key) {
+			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("%s is invalid for connection %s.", key, connectionType), fmt.Sprintf("Valid secret types are %s.", utils.ArrayToCommaDelimitedString(connectionSecrets, "or")))
 		}
 	}
 
@@ -122,7 +122,7 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 		}
 		backendKey, ok := flink.ConnectionSecretBackendKeyMapping[requiredKey]
 		if !ok {
-			return nil, fmt.Errorf("backend key not found for %s", requiredKey)
+			return nil, fmt.Errorf(`backend key not found for "%s"`, requiredKey)
 		}
 		secretMap[backendKey] = secret
 	}

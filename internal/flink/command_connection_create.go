@@ -80,12 +80,11 @@ func (c *command) connectionCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = c.V2Client.GetOrgEnvironment(environmentId)
-	if err != nil {
+	if _, err := c.V2Client.GetOrgEnvironment(environmentId); err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
 
-	gatewayClient, err := c.GetFlinkGatewayClient(false)
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
@@ -104,7 +103,7 @@ func (c *command) connectionCreate(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	connection, err = gatewayClient.CreateConnection(connection, environmentId, c.Context.LastOrgId)
+	connection, err = client.CreateConnection(connection, environmentId, c.Context.LastOrgId)
 	if err != nil {
 		return err
 	}
