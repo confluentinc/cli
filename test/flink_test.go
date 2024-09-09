@@ -65,6 +65,74 @@ func (s *CLITestSuite) TestFlinkComputePool() {
 	}
 }
 
+func (s *CLITestSuite) TestFlinkConnection() {
+	tests := []CLITest{
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type openai --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create.golden"},
+		{args: "flink connection describe my-connection --cloud aws --region eu-west-1", fixture: "flink/connection/describe/describe.golden"},
+		{args: "flink connection describe nonexist-connection --cloud aws --region eu-west-1", fixture: "flink/connection/describe/describe-nonexist.golden", exitCode: 1},
+		{args: "flink connection list --cloud aws --region eu-west-1", fixture: "flink/connection/list/list.golden"},
+		{args: "flink connection list --type openai --cloud aws --region eu-west-1", fixture: "flink/connection/list/list.golden"},
+		{args: "flink connection list --type invalid --cloud aws --region eu-west-1", fixture: "flink/connection/list/list-failure.golden", exitCode: 1},
+		{args: "flink connection update my-connection --cloud aws --region eu-west-1 --api-key 0000000000000000", fixture: "flink/connection/update/update.golden"},
+		{args: "flink connection update nonexist-connection --cloud aws --region eu-west-1 --api-key 0000000000000000", fixture: "flink/connection/update/update-nonexist.golden", exitCode: 1},
+		{args: "flink connection update my-connection --cloud aws --region eu-west-1 --service-key 0000000000000000", fixture: "flink/connection/update/update-wrong-secret.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkConnectionDelete() {
+	tests := []CLITest{
+		{args: "flink connection delete my-connection --force --cloud aws --region eu-west-1", fixture: "flink/connection/delete/delete.golden"},
+		{args: "flink connection delete my-connection my-connection-1 --cloud aws --region eu-west-1", input: "n\n", fixture: "flink/connection/delete/delete-multiple-refuse.golden"},
+		{args: "flink connection delete my-connection my-connection-1 --cloud aws --region eu-west-1", input: "y\n", fixture: "flink/connection/delete/delete-multiple-success.golden"},
+		{args: "flink connection delete my-connection nonexist-connection --cloud aws --region eu-west-1", fixture: "flink/connection/delete/delete-multiple-failure.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkConnectionCreateFailure() {
+	tests := []CLITest{
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type OPENAI --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-wrong-type.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type openai --endpoint https://api.openai.com/v1/chat/completions --username username", fixture: "flink/connection/create/create-wrong-secret-type.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000 --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-extra-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-missing-required-secret.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
+	tests := []CLITest{
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type azureml --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-azure.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type azureopenai --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-azureopenai.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-bedrock.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000", fixture: "flink/connection/create/create-bedrock.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type sagemaker --endpoint https://api.openai.com/v1/chat/completions --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-sagemaker.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type sagemaker --endpoint https://api.openai.com/v1/chat/completions --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000", fixture: "flink/connection/create/create-sagemaker.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type googleai --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-googleai.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type vertexai --endpoint https://api.openai.com/v1/chat/completions --service-key 0000000000000000", fixture: "flink/connection/create/create-vertexai.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mongodb --endpoint https://api.openai.com/v1/chat/completions --username name --password pass", fixture: "flink/connection/create/create-mongodb.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type elastic --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-elastic.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type pinecone --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-pinecone.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestFlinkConnectivityType() {
 	listPrivateFixture := "flink/connectivity-type/list-private.golden"
 	if runtime.GOOS == "windows" { // Error message is different on Windows
@@ -186,6 +254,7 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 		{args: `__complete flink compute-pool delete ""`, fixture: "flink/compute-pool/delete-autocomplete.golden"},
 		{args: `__complete flink compute-pool list --region ""`, fixture: "flink/compute-pool/list-region-autocomplete.golden"},
 		{args: `__complete flink statement create my-statement --database ""`, fixture: "flink/statement/create-database-autocomplete.golden"},
+		{args: `__complete flink connection create my-connection --cloud ""`, fixture: "flink/connection/create/create-cloud-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
