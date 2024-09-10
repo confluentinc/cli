@@ -100,6 +100,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return nil
 	} else if !major && len(minorVersions) == 0 && len(majorVersions) > 0 {
 		output.Println(c.Config.EnableColor, "The only available update is a major version update. Use `confluent update --major` to accept the update.")
+		return nil
 	}
 
 	versions := minorVersions
