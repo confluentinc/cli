@@ -49,7 +49,7 @@ func (c *command) connectionDescribe(cmd *cobra.Command, args []string) error {
 		Name:         connection.GetName(),
 		Type:         connection.Spec.GetConnectionType(),
 		Endpoint:     connection.Spec.GetEndpoint(),
-		Data:         "<REDACTED>",
+		Data:         connection.Spec.AuthData.SqlV1PlaintextProvider.GetData(),
 		Status:       connection.Status.GetPhase(),
 		StatusDetail: connection.Status.GetDetail(),
 	})

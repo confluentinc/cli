@@ -66,7 +66,7 @@ func (c *command) connectionList(cmd *cobra.Command, _ []string) error {
 			Name:         connection.GetName(),
 			Type:         connection.Spec.GetConnectionType(),
 			Endpoint:     connection.Spec.GetEndpoint(),
-			Data:         "<REDACTED>",
+			Data:         connection.Spec.AuthData.SqlV1PlaintextProvider.GetData(),
 			Status:       connection.Status.GetPhase(),
 			StatusDetail: connection.Status.GetDetail(),
 		})

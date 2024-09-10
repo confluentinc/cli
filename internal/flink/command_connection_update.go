@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"strings"
 
@@ -82,7 +81,7 @@ func (c *command) connectionUpdate(cmd *cobra.Command, args []string) error {
 			AuthData: &flinkgatewayv1.SqlV1ConnectionSpecAuthDataOneOf{
 				SqlV1PlaintextProvider: &flinkgatewayv1.SqlV1PlaintextProvider{
 					Kind: lo.ToPtr("PlaintextProvider"),
-					Data: lo.ToPtr(base64.StdEncoding.EncodeToString(secretData)),
+					Data: lo.ToPtr(string(secretData[:])),
 				},
 			},
 		},
@@ -98,7 +97,7 @@ func (c *command) connectionUpdate(cmd *cobra.Command, args []string) error {
 		Name:         connection.GetName(),
 		Type:         connection.Spec.GetConnectionType(),
 		Endpoint:     connection.Spec.GetEndpoint(),
-		Data:         "<REDACTED>",
+		Data:         connection.Spec.AuthData.SqlV1PlaintextProvider.GetData(),
 		Status:       connection.Status.GetPhase(),
 		StatusDetail: connection.Status.GetDetail(),
 	})
