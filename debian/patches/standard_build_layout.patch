@@ -1,6 +1,6 @@
---- cli/Makefile	2024-08-07 12:56:17.727187329 -0700
-+++ debian/Makefile	2024-08-13 15:17:56.588603066 -0700
-@@ -1,146 +1,159 @@
+--- cli/Makefile	2024-09-10 12:37:37
++++ debian/Makefile	2024-09-09 10:54:04
+@@ -1,139 +1,159 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -18,8 +18,10 @@
 -	endif
 -else # darwin
 -	$(MAKE) cli-builder
--endif
--
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
+ endif
+ 
 -# Cross-compile from darwin to any of the OS/Arch pairs below
 -.PHONY: cross-build
 -cross-build:
@@ -29,7 +31,25 @@
 -	else # darwin/arm64
 -		$(MAKE) cli-builder
 -	endif
--else
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
++
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
++
++APPLY_PATCHES?=yes
++
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
++endif
++
++ifeq ($(PACKAGE_TYPE),archive)
++PREFIX=$(PACKAGE_NAME)
++SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
+ else
 -	ifeq ($(GOOS),windows) # windows/amd64
 -		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
 -	else ifeq ($(GOOS),linux) # linux/amd64
@@ -37,12 +57,17 @@
 -	else # darwin/amd64
 -		$(MAKE) cli-builder
 -	endif
--endif
--
++PREFIX=/usr
++SYSCONFDIR=/etc/$(PACKAGE_TITLE)
+ endif
+ 
 -.PHONY: cli-builder
 -cli-builder:
 -	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
--
++_empty :=
++_space := $(_empty) $(empty)
++split_version := $(subst .,$(_space),$(CLI_VERSION))
+ 
 -ifeq ($(GOLANG_FIPS),1)
 -	wget "https://go.dev/dl/go$$(cat .go-version).src.tar.gz" && \
 -	tar -xf go$$(cat .go-version).src.tar.gz && \
@@ -59,107 +84,6 @@
 -	rm -rf go go-openssl go$$(cat .go-version).src.tar.gz
 -else
 -	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
- endif
- 
--include ./mk-files/semver.mk
--include ./mk-files/docs.mk
--include ./mk-files/dry-run.mk
--include ./mk-files/release.mk
--include ./mk-files/release-test.mk
--
--REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
--DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
- 
--S3_BUCKET_PATH=s3://confluent.cloud
--S3_STAG_FOLDER_NAME=cli-release-stag
--S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
- 
--S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
--S3_DEB_RPM_PROD_PREFIX=confluent-cli
--S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
--S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
-+APPLY_PATCHES?=yes
- 
--.PHONY: clean
--clean:
--	for dir in bin dist docs legal prebuilt release-notes; do \
--		[ -d $$dir ] && rm -r $$dir || true; \
--	done
--
--.PHONY: lint
--lint: lint-go lint-cli
--
--.PHONY: lint-go
--lint-go:
--	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0 && \
--	golangci-lint run --timeout 10m
--	@echo "✅  golangci-lint"
--
--.PHONY: lint-cli
--lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
--	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
--	@echo "✅  cmd/lint/main.go"
--
--cmd/lint/en_US.aff:
--	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
--
--cmd/lint/en_US.dic:
--	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
--
--.PHONY: unit-test
--unit-test:
--ifdef CI
--	go install gotest.tools/gotestsum@v1.8.2 && \
--	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
--else
--	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
- endif
- 
--.PHONY: build-for-integration-test
--build-for-integration-test:
--ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
-+ifeq ($(PACKAGE_TYPE),archive)
-+PREFIX=$(PACKAGE_NAME)
-+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
- else
--	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
- endif
- 
--.PHONY: build-for-integration-test-windows
--build-for-integration-test-windows:
--ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
--else
--	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
--endif
-+_empty :=
-+_space := $(_empty) $(empty)
-+split_version := $(subst .,$(_space),$(CLI_VERSION))
- 
--.PHONY: integration-test
--integration-test:
--ifdef CI
--	go install gotest.tools/gotestsum@v1.8.2 && \
--	export GOCOVERDIR=test/coverage && \
--	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
--	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
--else
--	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
 +all: install
 +
 +archive: install
@@ -172,27 +96,46 @@
 +	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
  endif
  
--.PHONY: test
--test: unit-test integration-test
+-include ./mk-files/semver.mk
+-include ./mk-files/docs.mk
+-include ./mk-files/dry-run.mk
+-include ./mk-files/release.mk
+-include ./mk-files/release-test.mk
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
-+
+ 
+-S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
+-S3_DEB_RPM_PROD_PREFIX=confluent-cli
+-S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
+-S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
 +# Notes on the archive download links:
 +# For CLI v2, the version number has the 'v' prefix
 +# For CLI v3.43.0 and above, we download the '_disableupdates' variant
 +install: apply-patches
 +	rm -rf $(DESTDIR)$(PREFIX)
 +	mkdir -p $(DESTDIR)$(PREFIX)
-+
+ 
+-.PHONY: clean
+-clean:
+-	for dir in bin dist docs legal prebuilt release-notes; do \
+-		[ -d $$dir ] && rm -r $$dir || true; \
+-	done
 +	mkdir -p $(DESTDIR)$(BINPATH)
 +	mkdir -p $(DESTDIR)$(LIBPATH)
 +	mkdir -p $(DESTDIR)$(DOCPATH)
 +	mkdir -p $(DESTDIR)$(SYSCONFDIR)
-+
+ 
+-.PHONY: lint
+-lint: lint-go lint-cli
 +	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
 +	chmod 755 $(DESTDIR)$(BINPATH)/confluent
-+
+ 
+-.PHONY: lint-go
+-lint-go:
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0 && \
+-	golangci-lint run --timeout 10m
+-	@echo "✅  golangci-lint"
 +	cd $(DESTDIR)$(LIBPATH); \
 +	v=""; if [[ $(word 1,$(split_version)) -eq 2 ]]; then v="v"; fi; \
 +	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
@@ -209,25 +152,51 @@
 +	filepath=windows_amd64/confluent.exe; \
 +	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_windows_amd64.exe -o $${filepath}; \
 +	chmod 755 $${filepath}
-+
+ 
+-.PHONY: lint-cli
+-lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+-	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+-	@echo "✅  cmd/lint/main.go"
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
 +	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
-+
+ 
+-cmd/lint/en_US.aff:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
 +	chown -R root:root $(DESTDIR)$(PREFIX)
-+
+ 
+-cmd/lint/en_US.dic:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
 +clean:
 +	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
 +	rm -rf RPM_BUILDING
-+
+ 
+-.PHONY: unit-test
+-unit-test:
+-ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
+-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
+-else
+-	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
 +distclean: clean
 +ifneq ($(PACKAGE_TYPE),deb)
 +	git reset --hard HEAD
 +	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
-+endif
-+
+ endif
+ 
+-.PHONY: build-for-integration-test
+-build-for-integration-test:
+-ifdef CI
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-else
+-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-endif
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
-+
+ 
+-.PHONY: build-for-integration-test-windows
+-build-for-integration-test-windows:
+-ifdef CI
+-	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 +# the version since RPM versions don't support non-numeric
 +# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
@@ -239,16 +208,33 @@
 +ifneq ($(RPM_RELEASE_POSTFIX),)
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
-+else
+ else
+-	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 +	RPM_RELEASE_ID=$(REVISION)
-+endif
-+
+ endif
+ 
+-.PHONY: integration-test
+-integration-test:
+-ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
+-	export GOCOVERDIR=test/coverage && \
+-	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
+-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
+-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+-else
+-	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
+-endif
 +rpm: rpm-amd64-build rpm-arm64-build
-+
+ 
+-.PHONY: test
+-test: unit-test integration-test
 +rpm-amd64-build: rpm-amd64-spec
 +	echo "Building the amd64 RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
-+
+ 
+-.PHONY: generate-packaging-patch
+-generate-packaging-patch:
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 +rpm-arm64-build: rpm-arm64-spec
 +	echo "Building the arm64 RPM"
 +	rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
@@ -285,9 +271,6 @@
 +
 +RPM_BUILDING/%:
 +	mkdir -p $@
- 
--.PHONY: generate-packaging-patch
--generate-packaging-patch:
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
++
 +RELEASE_%:
 +	echo 0 > $@
