@@ -17,7 +17,7 @@ func (c *command) newConnectionUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update [name]",
 		Short:             "Update a Flink connection. Only secret can be updated.",
-		Args:              cobra.MaximumNArgs(1),
+		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConnectionArgs),
 		RunE:              c.connectionUpdate,
 		Example: examples.BuildExampleString(
