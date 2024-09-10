@@ -167,18 +167,9 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(`unable to fetch checksum for version "%s" of "%s": %w`, version, filename, err)
 		}
 
-		for _, line := range strings.Split(checksums, "\n") {
-			if strings.HasSuffix(line, filename) {
-				checksum := strings.Split(line, " ")[0]
-				log.CliLogger.Debugf(`Checksum for version "%s" of "%s": %s`, version, filename, checksum)
-
-				opts.Checksum = make([]byte, len(checksum)/2)
-				if _, err := hex.Decode(opts.Checksum, []byte(checksum)); err != nil {
-					return err
-				}
-
-				break
-			}
+		opts.Checksum, err = findChecksum(checksums, filename)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -231,4 +222,22 @@ func getOs() string {
 	}
 
 	return runtime.GOOS
+}
+
+func findChecksum(checksums, filename string) ([]byte, error) {
+	for _, line := range strings.Split(checksums, "\n") {
+		if strings.HasSuffix(line, filename) {
+			hexChecksum := strings.Split(line, " ")[0]
+			log.CliLogger.Debugf(`Found checksum for "%s": %s`, filename, hexChecksum)
+
+			checksum := make([]byte, len(hexChecksum)/2)
+			if _, err := hex.Decode(checksum, []byte(hexChecksum)); err != nil {
+				return nil, err
+			}
+
+			return checksum, nil
+		}
+	}
+
+	return nil, fmt.Errorf(`checksum not found for "%s"`, filename)
 }
