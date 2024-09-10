@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
@@ -95,8 +94,8 @@ func (c *command) connectionCreate(cmd *cobra.Command, args []string) error {
 			Endpoint:       flinkgatewayv1.PtrString(endpoint),
 			AuthData: &flinkgatewayv1.SqlV1ConnectionSpecAuthDataOneOf{
 				SqlV1PlaintextProvider: &flinkgatewayv1.SqlV1PlaintextProvider{
-					Kind: lo.ToPtr("PlaintextProvider"),
-					Data: lo.ToPtr(string(secretData[:])),
+					Kind: flinkgatewayv1.PtrString("PlaintextProvider"),
+					Data: flinkgatewayv1.PtrString(string(secretData[:])),
 				},
 			},
 		},
