@@ -23,7 +23,7 @@ func (c *command) newConnectionCreateCommand() *cobra.Command {
 		Use:               "create <name>",
 		Short:             "Create a Flink connection.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConnectionArgs), // TODO
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConnectionArgs),
 		RunE:              c.connectionCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
