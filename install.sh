@@ -421,10 +421,11 @@ main() {
   ABOVE_4_0=$( { [ "${VERSION}" = "latest" ] || { [ "${VERSION#v2.}" = "${VERSION}" ] && [ "${VERSION#3.}" = "${VERSION}" ] && [ "${VERSION#4.0.}" = "${VERSION}" ]; }; } && echo "true" || echo "false")
   BASEURL=$([ ${ABOVE_4_0} = "true" ] && echo "https://packages.confluent.io" || echo "https://s3-us-west-2.amazonaws.com/confluent.cloud")
   NAME=$([ ${ABOVE_4_0} = "true" ] && echo "${BINARY}_${OS}_${ARCH}" || echo "${BINARY}_${VERSION}_${OS}_${ARCH}")
+  TARBALL=${NAME}.${FORMAT}
   CHECKSUM=$([ ${ABOVE_4_0} = "true" ] && echo "${BINARY}_checksums.txt" || echo "${BINARY}_${VERSION}_checksums.txt")
 
   ARCHIVES_URL=${BASEURL}/${PROJECT_NAME}/archives/${VERSION#v}
-  TARBALL_URL=${ARCHIVES_URL}/${NAME}.${FORMAT}
+  TARBALL_URL=${ARCHIVES_URL}/${TARBALL}
   CHECKSUM_URL=${ARCHIVES_URL}/${CHECKSUM}
 
   execute
