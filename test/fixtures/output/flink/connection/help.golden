@@ -1,0 +1,18 @@
+Manage Flink connections.
+
+Usage:
+  confluent flink connection [command]
+
+Available Commands:
+  create      Create a Flink connection.
+  delete      Delete one or more Flink connections.
+  describe    Describe a Flink connection.
+  list        List Flink connections.
+  update      Update a Flink connection. Only secret can be updated.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink connection [command] --help" for more information about a command.
