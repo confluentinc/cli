@@ -1,7 +1,6 @@
 package testserver
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -46,7 +45,7 @@ func handleSqlEnvironmentsEnvironmentConnections(t *testing.T) http.HandlerFunc 
 					AuthData: &flinkgatewayv1.SqlV1ConnectionSpecAuthDataOneOf{
 						SqlV1PlaintextProvider: &flinkgatewayv1.SqlV1PlaintextProvider{
 							Kind: lo.ToPtr("PlaintextProvider"),
-							Data: lo.ToPtr(base64.StdEncoding.EncodeToString([]byte("passwd1"))),
+							Data: lo.ToPtr("<REDACTED>"),
 						}},
 				},
 				Status: &flinkgatewayv1.SqlV1ConnectionStatus{
@@ -62,7 +61,7 @@ func handleSqlEnvironmentsEnvironmentConnections(t *testing.T) http.HandlerFunc 
 					AuthData: &flinkgatewayv1.SqlV1ConnectionSpecAuthDataOneOf{
 						SqlV1PlaintextProvider: &flinkgatewayv1.SqlV1PlaintextProvider{
 							Kind: lo.ToPtr("PlaintextProvider"),
-							Data: lo.ToPtr(base64.StdEncoding.EncodeToString([]byte("passwd2"))),
+							Data: lo.ToPtr("<REDACTED>"),
 						}},
 				},
 				Status: &flinkgatewayv1.SqlV1ConnectionStatus{
@@ -81,6 +80,7 @@ func handleSqlEnvironmentsEnvironmentConnections(t *testing.T) http.HandlerFunc 
 
 			connection.Metadata = &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
 			connection.Status = &flinkgatewayv1.SqlV1ConnectionStatus{Phase: "PENDING"}
+			connection.Spec.AuthData.SqlV1PlaintextProvider.Data = lo.ToPtr("<REDACTED>")
 
 			err = json.NewEncoder(w).Encode(connection)
 			require.NoError(t, err)
@@ -106,7 +106,7 @@ func handleSqlEnvironmentsEnvironmentConnectionsConnection(t *testing.T) http.Ha
 					AuthData: &flinkgatewayv1.SqlV1ConnectionSpecAuthDataOneOf{
 						SqlV1PlaintextProvider: &flinkgatewayv1.SqlV1PlaintextProvider{
 							Kind: lo.ToPtr("PlaintextProvider"),
-							Data: lo.ToPtr(base64.StdEncoding.EncodeToString([]byte("passwd1"))),
+							Data: lo.ToPtr("<REDACTED>"),
 						}},
 				},
 				Status: &flinkgatewayv1.SqlV1ConnectionStatus{
