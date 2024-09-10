@@ -21,6 +21,11 @@ type GatewayClientInterface interface {
 	DeleteStatement(environmentId, statementName, orgId string) error
 	UpdateStatement(environmentId, statementName, orgId string, statement flinkgatewayv1.SqlV1Statement) error
 	GetAuthToken() string
+	CreateConnection(connection flinkgatewayv1.SqlV1Connection, environmentId, orgId string) (flinkgatewayv1.SqlV1Connection, error)
+	ListConnections(environmentId, orgId, connectionType string) ([]flinkgatewayv1.SqlV1Connection, error)
+	GetConnection(environmentId, connectionName, orgId string) (flinkgatewayv1.SqlV1Connection, error)
+	DeleteConnection(environmentId, connectionName, orgId string) error
+	UpdateConnection(environmentId, connectionName, organizationId string, connection flinkgatewayv1.SqlV1Connection) error
 }
 
 type FlinkGatewayClient struct {
@@ -142,4 +147,57 @@ func (c *FlinkGatewayClient) GetExceptions(environmentId, statementName, orgId s
 		return nil, flinkerror.CatchError(err, httpResp)
 	}
 	return resp.GetData(), nil
+}
+
+func (c *FlinkGatewayClient) CreateConnection(connection flinkgatewayv1.SqlV1Connection, environmentId, orgId string) (flinkgatewayv1.SqlV1Connection, error) {
+	resp, httpResp, err := c.ConnectionsSqlV1Api.CreateSqlv1Connection(c.flinkGatewayApiContext(), orgId, environmentId).SqlV1Connection(connection).Execute()
+	return resp, flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) executeListConnection(environmentId, orgId, pageToken, connectionType string) (flinkgatewayv1.SqlV1ConnectionList, error) {
+	req := c.ConnectionsSqlV1Api.ListSqlv1Connections(c.flinkGatewayApiContext(), orgId, environmentId).PageSize(ccloudV2ListPageSize)
+
+	if connectionType != "" {
+		req = req.SpecConnectionType(connectionType)
+	}
+
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	resp, httpResp, err := req.Execute()
+	return resp, flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) ListConnections(environmentId, orgId, connectionType string) ([]flinkgatewayv1.SqlV1Connection, error) {
+	var allConnections []flinkgatewayv1.SqlV1Connection
+	pageToken := ""
+	done := false
+	for !done {
+		connectionListResponse, err := c.executeListConnection(environmentId, orgId, pageToken, connectionType)
+		if err != nil {
+			return nil, err
+		}
+		allConnections = append(allConnections, connectionListResponse.GetData()...)
+		nextUrl := connectionListResponse.Metadata.GetNext()
+		pageToken, done, err = extractNextPageToken(flinkgatewayv1.NewNullableString(&nextUrl))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return allConnections, nil
+}
+
+func (c *FlinkGatewayClient) GetConnection(environmentId, connectionName, orgId string) (flinkgatewayv1.SqlV1Connection, error) {
+	resp, httpResp, err := c.ConnectionsSqlV1Api.GetSqlv1Connection(c.flinkGatewayApiContext(), orgId, environmentId, connectionName).Execute()
+	return resp, flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) DeleteConnection(environmentId, connectionName, orgId string) error {
+	httpResp, err := c.ConnectionsSqlV1Api.DeleteSqlv1Connection(c.flinkGatewayApiContext(), orgId, environmentId, connectionName).Execute()
+	return flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) UpdateConnection(environmentId, connectionName, organizationId string, connection flinkgatewayv1.SqlV1Connection) error {
+	httpResp, err := c.ConnectionsSqlV1Api.UpdateSqlv1Connection(c.flinkGatewayApiContext(), organizationId, environmentId, connectionName).SqlV1Connection(connection).Execute()
+	return flink.CatchError(err, httpResp)
 }
