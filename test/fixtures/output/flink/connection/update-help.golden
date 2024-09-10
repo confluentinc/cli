@@ -1,7 +1,7 @@
 Update a Flink connection. Only secret can be updated.
 
 Usage:
-  confluent flink connection update [name] [flags]
+  confluent flink connection update <name> [flags]
 
 Examples:
 Update API key of Flink connection "my-connection".

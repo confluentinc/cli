@@ -9,7 +9,7 @@ import (
 
 func (c *command) newConnectionDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe [name]",
+		Use:               "describe <name>",
 		Short:             "Describe a Flink connection.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConnectionArgs),
