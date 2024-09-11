@@ -173,10 +173,8 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	if !c.Config.IsTest {
-		if err := update.Apply(binary, opts); err != nil {
-			return err
-		}
+	if err := update.Apply(binary, opts); err != nil {
+		return err
 	}
 
 	output.Println(c.Config.EnableColor, "Done.")

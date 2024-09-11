@@ -757,7 +757,7 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 	}
 
 	// Only check for updates once a day
-	if r.Config.LastUpdateCheckAt != nil && time.Now().Sub(*r.Config.LastUpdateCheckAt) < 24*time.Hour {
+	if r.Config.LastUpdateCheckAt != nil && time.Since(*r.Config.LastUpdateCheckAt) < 24*time.Hour {
 		return false
 	}
 

@@ -93,6 +93,9 @@ func (b *TestBackend) Close() {
 	if b.hub != nil {
 		b.hub.Close()
 	}
+	if b.packages != nil {
+		b.packages.Close()
+	}
 }
 
 func (b *TestBackend) GetCloudUrl() string {
