@@ -149,8 +149,10 @@ func (a *Application) readEvalPrint() {
 		a.history.Append(userInput)
 	}
 
-	a.resultFetcher.Init(*executedStatement)
-	a.getOutputController(*executedStatement).VisualizeResults()
+	if !executedStatement.IsDryRunStatement() {
+		a.resultFetcher.Init(*executedStatement)
+		a.getOutputController(*executedStatement).VisualizeResults()
+	}
 }
 
 func (a *Application) panicRecovery() {
