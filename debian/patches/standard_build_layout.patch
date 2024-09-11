@@ -1,6 +1,6 @@
---- cli/Makefile	2024-08-21 09:32:56.009794825 -0700
-+++ debian/Makefile	2024-08-21 09:33:27.728731257 -0700
-@@ -1,146 +1,163 @@
+--- cli/Makefile	2024-09-11 12:14:11.637318219 -0700
++++ debian/Makefile	2024-09-11 13:09:21.649421504 -0700
+@@ -1,139 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -147,23 +147,15 @@
 +	curl -fs https://$${baseurl}/confluent-cli/binaries/$(CLI_VERSION)/confluent$${version}_windows_amd64.exe -o $${filepath}; \
 +	chmod 755 $${filepath}
  
--REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
--DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-+	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
- 
--S3_BUCKET_PATH=s3://confluent.cloud
--S3_STAG_FOLDER_NAME=cli-release-stag
--S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-+	chown -R root:root $(DESTDIR)$(PREFIX)
- 
 -S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
 -S3_DEB_RPM_PROD_PREFIX=confluent-cli
 -S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
 -S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
--
++	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
++	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+ 
 -.PHONY: clean
- clean:
+-clean:
 -	for dir in bin dist docs legal prebuilt release-notes; do \
 -		[ -d $$dir ] && rm -r $$dir || true; \
 -	done
@@ -196,6 +188,24 @@
 -else
 -	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
 -endif
++	chown -R root:root $(DESTDIR)$(PREFIX)
+ 
+-.PHONY: build-for-integration-test
+-build-for-integration-test:
+-ifdef CI
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-else
+-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-endif
+-
+-.PHONY: build-for-integration-test-windows
+-build-for-integration-test-windows:
+-ifdef CI
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-else
+-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-endif
++clean:
 +	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
 +	rm -rf RPM_BUILDING
@@ -261,22 +271,6 @@
 +	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
  
--.PHONY: build-for-integration-test
--build-for-integration-test:
--ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
--else
--	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
--endif
--
--.PHONY: build-for-integration-test-windows
--build-for-integration-test-windows:
--ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
--else
--	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
--endif
--
 -.PHONY: integration-test
 -integration-test:
 -ifdef CI
