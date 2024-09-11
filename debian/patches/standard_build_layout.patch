@@ -1,5 +1,5 @@
---- cli/Makefile	2024-09-10 12:37:37
-+++ debian/Makefile	2024-09-09 10:54:04
+--- cli/Makefile	2024-09-11 12:14:11
++++ debian/Makefile	2024-09-11 12:12:00
 @@ -1,139 +1,159 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
@@ -196,7 +196,7 @@
 -.PHONY: build-for-integration-test-windows
 -build-for-integration-test-windows:
 -ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 +# the version since RPM versions don't support non-numeric
 +# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
@@ -209,7 +209,7 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  
