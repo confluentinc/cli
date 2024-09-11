@@ -237,7 +237,7 @@ func getTableValueString(value reflect.Value) string {
 	case reflect.Slice:
 		s := make([]string, value.Len())
 		for i := range value.Len() {
-			s[i] = value.Index(i).String()
+			s[i] = fmt.Sprint(value.Index(i))
 		}
 		return strings.Join(s, ", ")
 	default:

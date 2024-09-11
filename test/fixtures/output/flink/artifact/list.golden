@@ -1,3 +1,4 @@
-      ID     |      Name       
--------------+-----------------
-  ccp-789013 | CliPluginTest3  
+      ID     |           Name           | Cloud |  Region   | Environment  
+-------------+--------------------------+-------+-----------+--------------
+  cfa-123456 | my-flink-artifact        | AWS   | us-west-2 | env-123456   
+  cfa-789012 | my-flink-python-artifact | AWS   | us-east-1 | env-789012   

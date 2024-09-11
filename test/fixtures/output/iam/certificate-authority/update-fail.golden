@@ -1,0 +1,22 @@
+Error: if any flags in the group [certificate-chain certificate-chain-filename] are set they must all be set; missing [certificate-chain]
+Usage:
+  confluent iam certificate-authority update <id> [flags]
+
+Examples:
+Update the certificate chain for certificate authority "op-123456" using the certificate chain stored in the "CERTIFICATE_CHAIN" environment variable:
+
+  $ confluent iam certificate-authority update op-123456 --certificate-chain $CERTIFICATE_CHAIN --certificate-chain-filename certificate.pem
+
+Flags:
+      --name string                         Name of the certificate authority.
+      --description string                  Description of the certificate authority.
+      --certificate-chain string            A base64 encoded string containing the signing certificate chain.
+      --certificate-chain-filename string   The name of the certificate file.
+      --context string                      CLI context name.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

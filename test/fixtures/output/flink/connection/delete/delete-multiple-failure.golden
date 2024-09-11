@@ -1,0 +1,4 @@
+Error: Flink connection "nonexist-connection" not found
+
+Suggestions:
+    List available Flink connections with `confluent flink connection list`.

@@ -19,12 +19,14 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
+	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.0-20240827200211-50926cdd47e0
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.5
+	github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.9.0
-	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.10.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.12.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
@@ -33,13 +35,13 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.12.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
