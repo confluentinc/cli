@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type privateLinkAccessOut struct {
@@ -79,11 +80,11 @@ func getPrivateLinkAccessCloud(access networkingv1.NetworkingV1PrivateLinkAccess
 	cloud := access.Spec.GetCloud()
 
 	if cloud.NetworkingV1AwsPrivateLinkAccess != nil {
-		return CloudAws, nil
+		return resource.CloudAws, nil
 	} else if cloud.NetworkingV1GcpPrivateServiceConnectAccess != nil {
-		return CloudGcp, nil
+		return resource.CloudGcp, nil
 	} else if cloud.NetworkingV1AzurePrivateLinkAccess != nil {
-		return CloudAzure, nil
+		return resource.CloudAzure, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
@@ -111,11 +112,11 @@ func printPrivateLinkAccessTable(cmd *cobra.Command, access networkingv1.Network
 	}
 
 	switch cloud {
-	case CloudAws:
+	case resource.CloudAws:
 		out.AwsAccount = access.Spec.Cloud.NetworkingV1AwsPrivateLinkAccess.GetAccount()
-	case CloudGcp:
+	case resource.CloudGcp:
 		out.GcpProject = access.Spec.Cloud.NetworkingV1GcpPrivateServiceConnectAccess.GetProject()
-	case CloudAzure:
+	case resource.CloudAzure:
 		out.AzureSubscription = access.Spec.Cloud.NetworkingV1AzurePrivateLinkAccess.GetSubscription()
 	}
 

@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Command {
@@ -78,21 +79,21 @@ func (c *command) privateLinkAttachmentConnectionCreate(cmd *cobra.Command, args
 	}
 
 	switch cloud {
-	case CloudAws:
+	case resource.CloudAws:
 		createPrivateLinkAttachmentConnection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
 			NetworkingV1AwsPrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentConnection{
 				Kind:          "AwsPrivateLinkAttachmentConnection",
 				VpcEndpointId: endpoint,
 			},
 		}
-	case CloudGcp:
+	case resource.CloudGcp:
 		createPrivateLinkAttachmentConnection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
 			NetworkingV1GcpPrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnection{
 				Kind:                              "GcpPrivateLinkAttachmentConnection",
 				PrivateServiceConnectConnectionId: endpoint,
 			},
 		}
-	case CloudAzure:
+	case resource.CloudAzure:
 		createPrivateLinkAttachmentConnection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
 			NetworkingV1AzurePrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnection{
 				Kind:                      "AzurePrivateLinkAttachmentConnection",
