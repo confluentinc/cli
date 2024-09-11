@@ -155,7 +155,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	binary, err := client.GetBinary(version.String(), filename)
 	if err != nil {
-		return fmt.Errorf("unable to download confluent version %s for %s/%s: %w", version, runtime.GOOS, runtime.GOARCH, err)
+		return fmt.Errorf("unable to download confluent version %s for %s/%s: %w", version, getOs(), runtime.GOARCH, err)
 	}
 	defer binary.Close()
 

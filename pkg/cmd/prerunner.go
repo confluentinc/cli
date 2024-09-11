@@ -756,11 +756,13 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 		}
 	}
 
-	if time.Now().Sub(*r.Config.LastUpdateCheckAt) < 24*time.Hour {
+	// Only check for updates once a day
+	if r.Config.LastUpdateCheckAt != nil && time.Now().Sub(*r.Config.LastUpdateCheckAt) < 24*time.Hour {
 		return false
 	}
 
-	*r.Config.LastUpdateCheckAt = time.Now()
+	now := time.Now()
+	r.Config.LastUpdateCheckAt = &now
 	_ = r.Config.Save()
 
 	return true
