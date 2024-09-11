@@ -1,7 +1,13 @@
 package testserver
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -10,7 +16,7 @@ import (
 
 var packagesRoutes = []route{
 	{"/confluent-cli/binaries/", handleConfluentCliBinaries},
-	{"/confluent-cli/binaries/{version}/confluent_checksum.txt", handleConfluentCliBinariesVersionConfluentChecksumTxt},
+	{"/confluent-cli/binaries/{version}/confluent_checksums.txt", handleConfluentCliBinariesVersionConfluentChecksumsTxt},
 	{"/confluent-cli/binaries/{version}/{binary}", handleConfluentCliBinariesVersionBinary},
 	{"/confluent-cli/release-notes/{version}/release-notes.rst", handleConfluentCliReleaseNotesVersionReleaseNotesRst},
 }
@@ -54,10 +60,26 @@ func handleConfluentCliBinaries(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/confluent-cli/binaries/{version}/confluent_checksum.txt"
-func handleConfluentCliBinariesVersionConfluentChecksumTxt(t *testing.T) http.HandlerFunc {
+// Handler for: "/confluent-cli/binaries/{version}/confluent_checksums.txt"
+func handleConfluentCliBinariesVersionConfluentChecksumsTxt(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte(`TODO`))
+		binary := "confluent"
+		if runtime.GOOS == "windows" {
+			binary += ".exe"
+		}
+
+		out, err := os.ReadFile(filepath.Join("test", "bin", binary))
+		require.NoError(t, err)
+
+		hash := sha256.Sum256(out)
+
+		content := fmt.Sprintf(`%[1]s confluent_darwin_amd64
+%[1]s confluent_darwin_arm64
+%[1]s confluent_linux_amd64
+%[1]s confluent_linux_arm64
+%[1]s confluent_windows_amd64.exe`, hex.EncodeToString(hash[:]))
+
+		_, err = w.Write([]byte(content))
 		require.NoError(t, err)
 	}
 }
@@ -65,7 +87,15 @@ func handleConfluentCliBinariesVersionConfluentChecksumTxt(t *testing.T) http.Ha
 // Handler for: "/confluent-cli/binaries/{version}/{binary}"
 func handleConfluentCliBinariesVersionBinary(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte(`TODO`))
+		binary := "confluent"
+		if runtime.GOOS == "windows" {
+			binary += ".exe"
+		}
+
+		out, err := os.ReadFile(filepath.Join("test", "bin", binary))
+		require.NoError(t, err)
+
+		_, err = w.Write(out)
 		require.NoError(t, err)
 	}
 }
