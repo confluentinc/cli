@@ -20,7 +20,9 @@ import (
 type clusterOut struct {
 	Name                string `human:"Name" serialized:"name"`
 	Cluster             string `human:"Cluster" serialized:"cluster"`
-	EndpointUrl         string `human:"Endpoint URL" serialized:"endpoint_url"`
+	EndpointUrl         string `human:"Endpoint URL,omitempty" serialized:"endpoint_url,omitempty"`
+	PrivateEndpointUrl  string `human:"Private Endpoint URL,omitempty" serialized:"private_endpoint_url,omitempty"`
+	CatalogEndpointUrl  string `human:"Catalog Endpoint URL,omitempty" serialized:"catalog_endpoint_url,omitempty"`
 	UsedSchemas         string `human:"Used Schemas" serialized:"used_schemas"`
 	AvailableSchemas    string `human:"Available Schemas" serialized:"available_schemas"`
 	FreeSchemasLimit    int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
@@ -139,6 +141,8 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		Name:                cluster.Spec.GetDisplayName(),
 		Cluster:             cluster.GetId(),
 		EndpointUrl:         cluster.Spec.GetHttpEndpoint(),
+		PrivateEndpointUrl:  cluster.Spec.GetPrivateHttpEndpoint(),
+		CatalogEndpointUrl:  cluster.Spec.GetCatalogHttpEndpoint(),
 		Cloud:               cluster.Spec.GetCloud(),
 		Region:              cluster.Spec.GetRegion(),
 		Package:             cluster.Spec.GetPackage(),

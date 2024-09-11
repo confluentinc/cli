@@ -88,10 +88,11 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	// Instantiate Component Controllers
 	lspCompleter := lsp.LspCompleter(lspClient, func() lsp.CliContext {
 		return lsp.CliContext{
-			AuthToken:     getAuthToken(),
-			Catalog:       userProperties.Get(config.KeyCatalog),
-			Database:      userProperties.Get(config.KeyDatabase),
-			ComputePoolId: appOptions.GetComputePoolId(),
+			AuthToken:           getAuthToken(),
+			Catalog:             userProperties.Get(config.KeyCatalog),
+			Database:            userProperties.Get(config.KeyDatabase),
+			ComputePoolId:       appOptions.GetComputePoolId(),
+			StatementProperties: userProperties.GetMaskedNonLocalProperties(),
 		}
 	})
 

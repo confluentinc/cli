@@ -4,14 +4,16 @@ Usage:
   confluent iam [command]
 
 Available Commands:
-  group-mapping   Manage SSO group mappings.
-  ip-filter       Manage IP filters.
-  ip-group        Manage IP groups.
-  pool            Manage identity pools.
-  provider        Manage identity providers.
-  rbac            Manage RBAC permissions.
-  service-account Manage service accounts.
-  user            Manage users.
+  certificate-authority Manage certificate authorities.
+  certificate-pool      Manage certificate pools.
+  group-mapping         Manage SSO group mappings.
+  ip-filter             Manage IP filters.
+  ip-group              Manage IP groups.
+  pool                  Manage identity pools.
+  provider              Manage identity providers.
+  rbac                  Manage RBAC permissions.
+  service-account       Manage service accounts.
+  user                  Manage users.
 
 Global Flags:
   -h, --help            Show help for this command.

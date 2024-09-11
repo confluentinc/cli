@@ -1,6 +1,10 @@
-+----------------+-------------------------+
-| ID             | ccp-789012              |
-| Name           | my-custom-python-plugin |
-| Version        | ver-789012              |
-| Content Format | ZIP                     |
-+----------------+-------------------------+
++----------------+----------------------------------+
+| ID             | cfa-789012                       |
+| Name           | my-flink-python-artifact         |
+| Version        | 1.0.0                            |
+| Class          | io.confluent.flink.example2.test |
+| Content Format | ZIP                              |
+| Cloud          | aws                              |
+| Region         | us-west-2                        |
+| Environment    | env-789012                       |
++----------------+----------------------------------+

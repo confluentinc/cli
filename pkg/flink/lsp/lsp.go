@@ -26,10 +26,11 @@ type LSPClient struct {
 }
 
 type CliContext struct {
-	AuthToken     string
-	Catalog       string
-	Database      string
-	ComputePoolId string
+	AuthToken           string
+	Catalog             string
+	Database            string
+	ComputePoolId       string
+	StatementProperties map[string]string
 }
 
 func NewLSPClient(conn types.JSONRpcConn) *LSPClient {
