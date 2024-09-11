@@ -23,7 +23,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/jwt"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	pmock "github.com/confluentinc/cli/v3/pkg/mock"
-	"github.com/confluentinc/cli/v3/pkg/update/mock"
 )
 
 const (
@@ -87,11 +86,6 @@ func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
 		Config:  config.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
-		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
-				return "", "", nil
-			},
-		},
 		CCloudClientFactory: &climock.CCloudClientFactory{
 			JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 				return &ccloudv1.Client{}
