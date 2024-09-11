@@ -73,7 +73,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.")
 
-	updateClient := update.NewClient(cfg)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
 	jwtValidator := jwt.NewValidator()
@@ -95,7 +94,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 		JWTValidator:            jwtValidator,
 		LoginCredentialsManager: loginCredentialsManager,
 		MDSClientManager:        mdsClientManager,
-		UpdateClient:            updateClient,
 		Version:                 cfg.Version,
 	}
 
@@ -128,7 +126,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(secret.New(prerunner, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
-	cmd.AddCommand(update.New(cfg, prerunner, updateClient))
+	cmd.AddCommand(update.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
