@@ -10,6 +10,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -96,7 +97,7 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	switch cloud {
-	case CloudAws:
+	case resource.CloudAws:
 		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AwsEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsEgressPrivateLinkEndpoint{
 				Kind:                   "AwsEgressPrivateLinkEndpoint",
@@ -104,7 +105,7 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 				EnableHighAvailability: networkingaccesspointv1.PtrBool(highAvailability),
 			},
 		}
-	case CloudAzure:
+	case resource.CloudAzure:
 		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AzureEgressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpoint{
 				Kind:                         "AzureEgressPrivateLinkEndpoint",

@@ -84,11 +84,11 @@ func (c *command) privateLinkAccessList(cmd *cobra.Command, _ []string) error {
 		}
 
 		switch cloud {
-		case CloudAws:
+		case resource.CloudAws:
 			out.CloudAccount = access.Spec.Cloud.NetworkingV1AwsPrivateLinkAccess.GetAccount()
-		case CloudGcp:
+		case resource.CloudGcp:
 			out.CloudAccount = access.Spec.Cloud.NetworkingV1GcpPrivateServiceConnectAccess.GetProject()
-		case CloudAzure:
+		case resource.CloudAzure:
 			out.CloudAccount = access.Spec.Cloud.NetworkingV1AzurePrivateLinkAccess.GetSubscription()
 		}
 

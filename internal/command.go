@@ -37,6 +37,7 @@ import (
 	"github.com/confluentinc/cli/v3/internal/pipeline"
 	"github.com/confluentinc/cli/v3/internal/plugin"
 	"github.com/confluentinc/cli/v3/internal/prompt"
+	providerintegration "github.com/confluentinc/cli/v3/internal/provider-integration"
 	schemaregistry "github.com/confluentinc/cli/v3/internal/schema-registry"
 	"github.com/confluentinc/cli/v3/internal/secret"
 	servicequota "github.com/confluentinc/cli/v3/internal/service-quota"
@@ -121,6 +122,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(prompt.New(cfg))
+	cmd.AddCommand(providerintegration.New(prerunner))
 	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner))
 	cmd.AddCommand(secret.New(prerunner, secrets.NewPasswordProtectionPlugin()))

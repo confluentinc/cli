@@ -56,6 +56,7 @@ const (
 	PrivateLinkAccess               = "private link access"
 	PrivateLinkAttachment           = "private link attachment"
 	PrivateLinkAttachmentConnection = "private link attachment connection"
+	ProviderIntegration             = "provider integration"
 	ProviderShare                   = "provider share"
 	Pipeline                        = "pipeline"
 	SchemaExporter                  = "schema exporter"
@@ -82,6 +83,12 @@ const (
 	ServiceAccountPrefix        = "sa"
 	SsoGroupMappingPrefix       = "group"
 	UserPrefix                  = "u"
+)
+
+const (
+	CloudAws   = "AWS"
+	CloudAzure = "AZURE"
+	CloudGcp   = "GCP"
 )
 
 var prefixToResource = map[string]string{
