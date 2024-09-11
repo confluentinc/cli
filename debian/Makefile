@@ -48,8 +48,9 @@ LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
 # Notes on the archive download links:
-# For CLI v2, the version number has the 'v' prefix
-# For CLI v3.43.0 and above, we download the '_disableupdates' variant
+# As of v3.0.0, the version number no longer has the 'v' prefix
+# As of v3.43.0, we download the '_disableupdates' variant
+# As of v4.1.0, the base URL is 'packages.confluent.io' and there is no version in the archive/binary name
 install: apply-patches
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
@@ -65,9 +66,11 @@ install: apply-patches
 	cd $(DESTDIR)$(LIBPATH); \
 	v=""; if [[ $(word 1,$(split_version)) -eq 2 ]]; then v="v"; fi; \
 	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
+	baseurl="s3-us-west-2.amazonaws.com/confluent.cloud"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then baseurl="packages.confluent.io"; fi; \
+	version="_$${v}$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
 	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do \
-		archive=confluent_$${v}$(CLI_VERSION)_$${dir}$${disableupdates}.tar.gz; \
-		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
+		archive=confluent$${version}_$${dir}$${disableupdates}.tar.gz; \
+		curl -fs https://$${baseurl}/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
 		mkdir -p $${dir} $${dir}-temp; \
 		tar -xzf $${archive} -C $${dir}-temp confluent/confluent; \
 		mv $${dir}-temp/confluent/confluent $${dir}/confluent; \
@@ -75,8 +78,9 @@ install: apply-patches
 		chmod 755 $${dir}/confluent; \
 	done; \
 	mkdir -p windows_amd64; \
+	version="_$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
 	filepath=windows_amd64/confluent.exe; \
-	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_windows_amd64.exe -o $${filepath}; \
+	curl -fs https://$${baseurl}/confluent-cli/binaries/$(CLI_VERSION)/confluent$${version}_windows_amd64.exe -o $${filepath}; \
 	chmod 755 $${filepath}
 
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
