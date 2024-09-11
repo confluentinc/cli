@@ -1,0 +1,4 @@
+Error: certificate authority "op-67890" not found
+
+Suggestions:
+    List available certificate authorities with `confluent iam certificate-authority list`.

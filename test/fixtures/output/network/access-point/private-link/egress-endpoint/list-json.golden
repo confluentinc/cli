@@ -18,6 +18,10 @@
     "azure_private_endpoint": "private-endpoint-id",
     "azure_private_endpoint_domain": "domain.com",
     "azure_private_endpoint_ip_address": "10.2.0.68",
+    "azure_private_endpoint_custom_dns_config_domains": [
+      "dbname.database.windows.net",
+      "dbname-region.database.windows.net"
+    ],
     "environment": "env-596",
     "gateway": "gw-12345",
     "phase": "READY"

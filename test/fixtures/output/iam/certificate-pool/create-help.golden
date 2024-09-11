@@ -1,0 +1,20 @@
+Create a certificate pool.
+
+Usage:
+  confluent iam certificate-pool create <name> [flags]
+
+Examples:
+Create a certificate pool named "pool-123".
+
+  $ confluent iam certificate-pool create pool-123 --provider provider-123 --description "new description"
+
+Flags:
+      --provider string              REQUIRED: ID of this pool's certificate authority.
+      --description string           Description of the certificate pool.
+      --filter string                A supported Common Expression Language (CEL) filter expression for group mappings. (default "true")
+      --external-identifier string   External Identifier for this pool.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

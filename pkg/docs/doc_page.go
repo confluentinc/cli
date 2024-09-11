@@ -43,8 +43,14 @@ func printDocPage(tabs []Tab, depth int) []string {
 func printWarnings(cmd *cobra.Command, depth int) []string {
 	var rows []string
 
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		include := strings.Repeat("../", depth) + "includes/cli.rst"
+	include := strings.Repeat("../", depth) + "includes/cli.rst"
+	if cmd.CommandPath() == "confluent local kafka start" {
+		args := map[string]string{
+			"start-after": "cli_limitations_confluent_kafka_local_start",
+			"end-before":  "cli_limitations_confluent_kafka_local_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	} else if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		args := map[string]string{
 			"start-after": "cli_limitations_start",
 			"end-before":  "cli_limitations_end",

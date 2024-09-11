@@ -27,6 +27,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(newGroupMappingCommand(prerunner))
 	}
 	cmd.AddCommand(newAclCommand(prerunner))
+	cmd.AddCommand(newCertificateAuthorityCommand(cfg, prerunner))
+	cmd.AddCommand(newCertificatePoolCommand(cfg, prerunner))
 	cmd.AddCommand(newIpFilterCommand(prerunner))
 	cmd.AddCommand(newIpGroupCommand(prerunner))
 	cmd.AddCommand(newPoolCommand(prerunner))

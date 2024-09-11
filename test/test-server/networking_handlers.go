@@ -2504,10 +2504,11 @@ func getAzureEgressAccessPoint(id, environment, name string) networkingaccesspoi
 			Phase: "READY",
 			Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
 				NetworkingV1AzureEgressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpointStatus{
-					Kind:                      "AzureEgressPrivateLinkEndpointStatus",
-					PrivateEndpointResourceId: "private-endpoint-id",
-					PrivateEndpointDomain:     networkingaccesspointv1.PtrString("domain.com"),
-					PrivateEndpointIpAddress:  "10.2.0.68",
+					Kind:                                  "AzureEgressPrivateLinkEndpointStatus",
+					PrivateEndpointResourceId:             "private-endpoint-id",
+					PrivateEndpointDomain:                 networkingaccesspointv1.PtrString("domain.com"),
+					PrivateEndpointIpAddress:              "10.2.0.68",
+					PrivateEndpointCustomDnsConfigDomains: &[]string{"dbname.database.windows.net", "dbname-region.database.windows.net"},
 				},
 			},
 		},
@@ -2592,10 +2593,11 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 				Phase: "READY",
 				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
 					NetworkingV1AzureEgressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AzureEgressPrivateLinkEndpointStatus{
-						Kind:                      "AzureEgressPrivateLinkEndpointStatus",
-						PrivateEndpointResourceId: "private-endpoint-id",
-						PrivateEndpointDomain:     networkingaccesspointv1.PtrString("domain.com"),
-						PrivateEndpointIpAddress:  "10.2.0.68",
+						Kind:                                  "AzureEgressPrivateLinkEndpointStatus",
+						PrivateEndpointResourceId:             "private-endpoint-id",
+						PrivateEndpointDomain:                 networkingaccesspointv1.PtrString("domain.com"),
+						PrivateEndpointIpAddress:              "10.2.0.68",
+						PrivateEndpointCustomDnsConfigDomains: &[]string{"dbname.database.windows.net", "dbname-region.database.windows.net"},
 					},
 				},
 			}

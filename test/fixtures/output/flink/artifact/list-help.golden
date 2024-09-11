@@ -3,7 +3,14 @@ List Flink UDF artifacts.
 Usage:
   confluent flink artifact list [flags]
 
+Examples:
+List Flink UDF artifacts.
+
+  $ confluent flink artifact list --cloud aws --region us-west-2
+
 Flags:
+      --cloud string     REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string    REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
       --context string   CLI context name.
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
 

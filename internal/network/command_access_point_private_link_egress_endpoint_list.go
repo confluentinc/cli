@@ -76,6 +76,7 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 			out.AzurePrivateEndpoint = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointResourceId()
 			out.AzurePrivateEndpointDomain = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointDomain()
 			out.AzurePrivateEndpointIpAddress = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointIpAddress()
+			out.AzurePrivateEndpointCustomDnsConfigDomains = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointCustomDnsConfigDomains()
 		}
 
 		list.Add(out)
