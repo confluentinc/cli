@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"strings"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
@@ -31,6 +32,7 @@ type ProcessedStatement struct {
 	IsLocalStatement     bool
 	IsSensitiveStatement bool
 	PageToken            string
+	Properties           map[string]string
 	StatementResults     *StatementResults
 	Traits               flinkgatewayv1.SqlV1StatementTraits
 }
@@ -43,6 +45,7 @@ func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *Processe
 		Principal:     statementObj.Spec.GetPrincipal(),
 		StatusDetail:  statementObj.Status.GetDetail(),
 		Status:        PHASE(statementObj.Status.GetPhase()),
+		Properties:    statementObj.Spec.GetProperties(),
 		Traits:        statementObj.Status.GetTraits(),
 	}
 }
@@ -113,4 +116,13 @@ func (s ProcessedStatement) IsTerminalState() bool {
 func (s ProcessedStatement) IsSelectStatement() bool {
 	return strings.EqualFold(s.Traits.GetSqlKind(), "SELECT") ||
 		strings.HasPrefix(strings.ToUpper(s.Statement), "SELECT")
+}
+
+func (s ProcessedStatement) IsDryRunStatement() bool {
+	keyVal, ok := s.Properties[config.KeyDryRun]
+
+	if ok && strings.ToLower(keyVal) == "true" {
+		return true
+	}
+	return false
 }
