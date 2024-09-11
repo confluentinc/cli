@@ -63,13 +63,6 @@ include ./mk-files/dry-run.mk
 include ./mk-files/release.mk
 include ./mk-files/release-test.mk
 
-REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
-DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-S3_BUCKET_PATH=s3://confluent.cloud
-S3_STAG_FOLDER_NAME=cli-release-stag
-S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-
 S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
 S3_DEB_RPM_PROD_PREFIX=confluent-cli
 S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
@@ -113,17 +106,17 @@ endif
 .PHONY: build-for-integration-test
 build-for-integration-test:
 ifdef CI
-	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 else
-	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
 
 .PHONY: build-for-integration-test-windows
 build-for-integration-test-windows:
 ifdef CI
-	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 else
-	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 endif
 
 .PHONY: integration-test

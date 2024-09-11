@@ -1,48 +1,39 @@
 package update
 
 import (
+	"bytes"
+	"encoding/hex"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/go-version"
+	"github.com/inconshreveable/go-update"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/exec"
+	"github.com/confluentinc/cli/v3/pkg/form"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/update"
-	"github.com/confluentinc/cli/v3/pkg/update/s3"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	pupdate "github.com/confluentinc/cli/v3/pkg/update"
 )
 
-const (
-	S3BinBucket             = "confluent.cloud"
-	S3BinRegion             = "us-west-2"
-	S3BinPrefixFmt          = "%s-cli/binaries"
-	S3ReleaseNotesPrefixFmt = "%s-cli/release-notes"
-	CheckFileFmt            = "%s/.%s/update_check"
-	CheckInterval           = 24 * time.Hour
-)
-
-const homebrewFormula = "confluentinc/tap/cli"
+const homebrewTap = "confluentinc/tap/cli"
 
 type command struct {
 	*pcmd.CLICommand
-	version *pversion.Version
-	client  update.Client
 }
 
-func New(cfg *config.Config, prerunner pcmd.PreRunner, client update.Client) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "update",
-		Short:  fmt.Sprintf("Update the %s.", pversion.FullCLIName),
+		Short:  "Update the Confluent CLI.",
 		Args:   cobra.NoArgs,
 		Hidden: cfg.DisableUpdates,
 	}
@@ -51,40 +42,19 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, client update.Client) *co
 	cmd.Flags().Bool("major", false, "Allow major version updates.")
 	cmd.Flags().Bool("no-verify", false, "Skip checksum verification of new binary.")
 
-	c := &command{
-		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		version:    cfg.Version,
-		client:     client,
-	}
+	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 	cmd.RunE = c.update
 
 	return cmd
 }
 
-// NewClient returns a new update.Client configured for the CLI
-func NewClient(cfg *config.Config) update.Client {
-	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
-		S3BinRegion:             S3BinRegion,
-		S3BinBucket:             S3BinBucket,
-		S3BinPrefixFmt:          S3BinPrefixFmt,
-		S3ReleaseNotesPrefixFmt: S3ReleaseNotesPrefixFmt,
-	})
-
-	return update.NewClient(cfg, &update.ClientParams{
-		Repository:    repo,
-		DisableCheck:  cfg.DisableUpdates || cfg.DisableUpdateCheck,
-		CheckInterval: CheckInterval,
-		Out:           os.Stdout,
-	})
-}
-
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if c.Config.DisableUpdates {
 		message := "updates are disabled for this binary"
-		if IsHomebrew() {
+		if isHomebrew() {
 			return errors.NewErrorWithSuggestions(
 				message,
-				fmt.Sprintf("If installed with Homebrew, run `brew upgrade %s`.", homebrewFormula),
+				fmt.Sprintf("If installed with Homebrew, run `brew upgrade %s`.", homebrewTap),
 			)
 		}
 
@@ -110,58 +80,112 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	output.ErrPrintln(c.Config.EnableColor, "Checking for updates...")
-	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
+
+	current, err := version.NewVersion(c.Config.Version.Version)
 	if err != nil {
-		return errors.NewUpdateClientWrapError(err, "error checking for updates")
+		return err
 	}
 
-	if latestMajorVersion == "" && latestMinorVersion == "" {
+	client := pupdate.NewClient(c.Config.IsTest)
+
+	binaries, err := client.GetBinaries()
+	if err != nil {
+		return err
+	}
+
+	minorVersions, majorVersions := pupdate.FilterUpdates(binaries, current, major)
+
+	if len(minorVersions) == 0 && len(majorVersions) == 0 {
 		output.Println(c.Config.EnableColor, "Already up to date.")
 		return nil
-	}
-
-	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
+	} else if !major && len(minorVersions) == 0 && len(majorVersions) > 0 {
 		output.Println(c.Config.EnableColor, "The only available update is a major version update. Use `confluent update --major` to accept the update.")
 		return nil
 	}
 
-	if latestMajorVersion == "" && major {
-		output.Println(c.Config.EnableColor, "No major version updates are available.")
-		return nil
+	versions := minorVersions
+	if major {
+		versions = majorVersions
 	}
 
-	isMajorVersionUpdate := major && latestMajorVersion != ""
+	output.Printf(c.Config.EnableColor, "New version of confluent is available\n")
+	output.Printf(c.Config.EnableColor, "Current Version: %s\n", c.Config.Version.Version)
+	output.Printf(c.Config.EnableColor, "Latest Version:  v%s\n", versions[len(versions)-1])
+	output.Printf(c.Config.EnableColor, "\n")
 
-	updateVersion := latestMinorVersion
-	if isMajorVersionUpdate {
-		updateVersion = latestMajorVersion
+	const maxReleaseNotes = 5
+
+	for _, version := range versions[max(len(versions)-maxReleaseNotes, 0):] {
+		releaseNotes, err := client.GetReleaseNotes(version.String())
+		if err != nil {
+			log.CliLogger.Warnf(`Failed to fetch release notes for version "%s": %v`, version, err)
+			continue
+		}
+
+		output.Print(false, releaseNotes)
 	}
 
-	releaseNotes := c.getReleaseNotes(pversion.CLIName, updateVersion)
-
-	// HACK: our packaging doesn't include the "v" in the version, so we add it back so that the prompt is consistent
-	//   example S3 path: ccloud-cli/binaries/0.50.0/ccloud_0.50.0_darwin_amd64
-	// Without this hack, the prompt looks like
-	//   Current Version: v0.0.0
-	//   Latest Version:  0.50.0
-	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	if !c.client.PromptToDownload(pversion.CLIName, c.version.Version, "v"+updateVersion, releaseNotes, !yes) {
-		return nil
+	if len(versions) > maxReleaseNotes {
+		output.Println(c.Config.EnableColor, "For all release notes, see: https://docs.confluent.io/confluent-cli/current/release-notes.html")
+		output.Println(c.Config.EnableColor, "")
 	}
 
-	if _, err := os.Executable(); err != nil {
-		return err
+	if !yes {
+		f := form.New(form.Field{
+			ID:        "download",
+			Prompt:    "Do you want to download and install this update?",
+			IsYesOrNo: true,
+		})
+		if err := f.Prompt(form.NewPrompt()); err != nil {
+			return err
+		}
+		if !f.Responses["download"].(bool) {
+			return nil
+		}
 	}
 
-	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, noVerify); err != nil {
-		return errors.NewUpdateClientWrapError(err, "error updating CLI binary")
+	version := versions[len(versions)-1]
+
+	output.Printf(c.Config.EnableColor, "Downloading confluent version %s...\n", version)
+
+	filename := fmt.Sprintf("confluent_%s_%s", getOs(), runtime.GOARCH)
+	if runtime.GOOS == "windows" {
+		filename += ".exe"
 	}
+
+	binary, err := client.GetBinary(version.String(), filename)
+	if err != nil {
+		return fmt.Errorf("unable to download confluent version %s for %s/%s: %w", version, getOs(), runtime.GOARCH, err)
+	}
+	defer binary.Close()
+
+	opts := update.Options{}
+
+	if !noVerify {
+		checksums, err := client.GetBinaryChecksums(version.String())
+		if err != nil {
+			return fmt.Errorf(`unable to fetch checksum for version "%s" of "%s": %w`, version, filename, err)
+		}
+
+		opts.Checksum, err = findChecksum(checksums, filename)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !c.Config.IsTest {
+		if err := update.Apply(binary, opts); err != nil {
+			return err
+		}
+	}
+
+	output.Println(c.Config.EnableColor, "Done.")
 
 	return nil
 }
 
-func IsHomebrew() bool {
-	out, err := exec.NewCommand("brew", "ls", homebrewFormula).Output()
+func isHomebrew() bool {
+	out, err := exec.Command("brew", "ls", homebrewTap).Output()
 	if err != nil {
 		return false
 	}
@@ -184,38 +208,36 @@ func IsHomebrew() bool {
 	return slices.Contains(homebrewPaths, path)
 }
 
-func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
-	latestReleaseNotesVersion, allReleaseNotes, err := c.client.GetLatestReleaseNotes(cliName, c.version.Version)
+func getOs() string {
+	if runtime.GOOS == "linux" {
+		stderr := new(bytes.Buffer)
 
-	var errMsg string
-	if err != nil {
-		errMsg = fmt.Sprintf("error obtaining release notes: %v", err)
-	} else {
-		isSameVersion, err := sameVersionCheck(latestBinaryVersion, latestReleaseNotesVersion)
-		if err != nil {
-			errMsg = fmt.Sprintf("unable to perform release notes and binary version check: %v", err)
-		}
-		if !isSameVersion {
-			errMsg = fmt.Sprintf("binary version (v%s) and latest release notes version (v%s) mismatch", latestBinaryVersion, latestReleaseNotesVersion)
+		cmd := exec.Command("ldd", "--version")
+		cmd.Stderr = stderr
+		_ = cmd.Run()
+
+		if strings.Contains(stderr.String(), "musl") {
+			return "alpine"
 		}
 	}
 
-	if errMsg != "" {
-		log.CliLogger.Debugf(errMsg)
-		return ""
-	}
-
-	return strings.Join(allReleaseNotes, "\n")
+	return runtime.GOOS
 }
 
-func sameVersionCheck(v1, v2 string) (bool, error) {
-	version1, err := version.NewVersion(v1)
-	if err != nil {
-		return false, err
+func findChecksum(checksums, filename string) ([]byte, error) {
+	for _, line := range strings.Split(checksums, "\n") {
+		if strings.HasSuffix(line, filename) {
+			hexChecksum := strings.Split(line, " ")[0]
+			log.CliLogger.Debugf(`Found checksum for "%s": %s`, filename, hexChecksum)
+
+			checksum := make([]byte, len(hexChecksum)/2)
+			if _, err := hex.Decode(checksum, []byte(hexChecksum)); err != nil {
+				return nil, err
+			}
+
+			return checksum, nil
+		}
 	}
-	version2, err := version.NewVersion(v2)
-	if err != nil {
-		return false, err
-	}
-	return version1.Compare(version2) == 0, nil
+
+	return nil, fmt.Errorf(`checksum not found for "%s"`, filename)
 }
