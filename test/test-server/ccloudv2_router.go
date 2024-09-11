@@ -11,6 +11,9 @@ type CloudV2Router struct {
 }
 
 var ccloudV2Routes = []route{
+	{"/artifact/v1/flink-artifacts", handleFlinkArtifacts},
+	{"/artifact/v1/flink-artifacts/{id}", handleFlinkArtifactId},
+	{"/artifact/v1/presigned-upload-url", handleFlinkArtifactUploadUrl},
 	{"/byok/v1/keys", handleByokKeys},
 	{"/byok/v1/keys/{id}", handleByokKey},
 	{"/billing/v1/costs", handleBillingCosts},
@@ -44,6 +47,8 @@ var ccloudV2Routes = []route{
 	{"/fcpm/v2/regions", handleFcpmRegions},
 	{"/iam/v2/api-keys", handleIamApiKeys},
 	{"/iam/v2/api-keys/{id}", handleIamApiKey},
+	{"/iam/v2/certificate-authorities/{id}", handleIamCertificateAuthority},
+	{"/iam/v2/certificate-authorities", handleIamCertificateAuthorities},
 	{"/iam/v2/identity-providers", handleIamIdentityProviders},
 	{"/iam/v2/identity-providers/{id}", handleIamIdentityProvider},
 	{"/iam/v2/identity-providers/{provider_id}/identity-pools", handleIamIdentityPools},
@@ -59,6 +64,8 @@ var ccloudV2Routes = []route{
 	{"/iam/v2/service-accounts/{id}", handleIamServiceAccount},
 	{"/iam/v2/sso/group-mappings", handleIamGroupMappings},
 	{"/iam/v2/sso/group-mappings/{id}", handleIamGroupMapping},
+	{"/iam/v2/certificate-authorities/{provider_id}/identity-pools", handleIamCertificatePools},
+	{"/iam/v2/certificate-authorities/{provider_id}/identity-pools/{id}", handleIamCertificatePool},
 	{"/iam/v2/users", handleIamUsers},
 	{"/iam/v2/users/{id}", handleIamUser},
 	{"/kafka-quotas/v1/client-quotas", handleKafkaClientQuotas},

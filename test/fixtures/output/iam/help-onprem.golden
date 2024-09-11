@@ -4,9 +4,9 @@ Usage:
   confluent iam [command]
 
 Available Commands:
-  acl             Manage centralized ACLs.
-  rbac            Manage RBAC permissions.
-  user            Manage users.
+  acl                   Manage centralized ACLs.
+  rbac                  Manage RBAC permissions.
+  user                  Manage users.
 
 Global Flags:
   -h, --help            Show help for this command.
