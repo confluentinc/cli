@@ -4,26 +4,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	updatemock "github.com/confluentinc/cli/v3/pkg/update/mock"
-	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
-func TestGetReleaseNotes_MultipleReleaseNotes(t *testing.T) {
-	client := &updatemock.Client{
-		GetLatestReleaseNotesFunc: func(_, _ string) (string, []string, error) {
-			notes := []string{
-				"v0.1.0 changes\n",
-				"v1.0.0 changes\n",
-			}
-			return "1.0.0", notes, nil
-		},
-	}
+const checksums = `a393  confluent_darwin_amd64
+fefb  confluent_linux_amd64
+921a  confluent_windows_amd64.exe`
 
-	c := &command{
-		client:  client,
-		version: &version.Version{Version: "0.0.0"},
-	}
+func TestFindChecksum(t *testing.T) {
+	checksum, err := findChecksum(checksums, "confluent_darwin_amd64")
+	require.NoError(t, err)
+	require.Equal(t, []byte{0xa3, 0x93}, checksum)
+}
 
-	require.Equal(t, "v0.1.0 changes\n\nv1.0.0 changes\n", c.getReleaseNotes("confluent", "1.0.0"))
+func TestFindChecksum_DoesNotExist(t *testing.T) {
+	_, err := findChecksum(checksums, "does_not_exist")
+	require.Error(t, err)
 }
