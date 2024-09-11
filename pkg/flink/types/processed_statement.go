@@ -75,6 +75,22 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	}
 }
 
+func (s ProcessedStatement) PrintOutputDryRunStatement() {
+	if s.StatementName != "" {
+		utils.OutputInfof("Statement name: %s\n", s.StatementName)
+	}
+	utils.OutputInfo(fmt.Sprintf("Statement successfully submitted. Statement phase is %s.", s.Status))
+	if s.Status == "FAILED" {
+		utils.OutputErr(fmt.Sprintf("Dry run statement was verified and there were issues found.\nError: %s", s.StatusDetail))
+	} else if s.Status == "COMPLETED" {
+		utils.OutputInfo("Dry run statement was verified and there were no issues found.")
+		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before submitting your statement with \"set 'sql.dry-run' = 'false';\"")
+	} else {
+		utils.OutputErr(fmt.Sprintf("Dry run statement execution resulted in unexpected status.\nStatus: %s", s.Status))
+		utils.OutputErr(fmt.Sprintf("Details: %s", s.StatusDetail))
+	}
+}
+
 func (s ProcessedStatement) GetPageSize() int {
 	return len(s.StatementResults.GetRows())
 }
