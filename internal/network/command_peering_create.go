@@ -7,9 +7,9 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newPeeringCreateCommand() *cobra.Command {
@@ -97,7 +97,7 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	switch cloud {
-	case resource.CloudAws:
+	case pcloud.Aws:
 		awsPeering, err := createAwsPeeringRequest(cmd, region)
 		if err != nil {
 			return err
@@ -105,7 +105,7 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 		createPeering.Spec.Cloud = &networkingv1.NetworkingV1PeeringSpecCloudOneOf{
 			NetworkingV1AwsPeering: awsPeering,
 		}
-	case resource.CloudGcp:
+	case pcloud.Gcp:
 		gcpPeering, err := createGcpPeeringRequest(cmd)
 		if err != nil {
 			return err
@@ -113,7 +113,7 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 		createPeering.Spec.Cloud = &networkingv1.NetworkingV1PeeringSpecCloudOneOf{
 			NetworkingV1GcpPeering: gcpPeering,
 		}
-	case resource.CloudAzure:
+	case pcloud.Azure:
 		azurePeering, err := createAzurePeeringRequest(cmd, region)
 		if err != nil {
 			return err

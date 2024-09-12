@@ -1,4 +1,4 @@
-package provider_integration
+package providerintegration
 
 import (
 	"github.com/spf13/cobra"
@@ -18,11 +18,11 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe a Provider Integration with id=cspi-12345 in current environment",
-				Code: `confluent provider-integration describe cspi-12345`,
+				Code: "confluent provider-integration describe cspi-12345",
 			},
 			examples.Example{
 				Text: "Describe a Provider Integration with id=cspi-12345 in environment env-abcdef",
-				Code: `confluent provider-integration describe cspi-12345 --environment env-abcdef`,
+				Code: "confluent provider-integration describe cspi-12345 --environment env-abcdef",
 			},
 		),
 	}
@@ -48,14 +48,14 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	resp := providerIntegrationOut{
-		Id:                 providerIntegration.GetId(),
-		Name:               providerIntegration.GetDisplayName(),
-		Provider:           providerIntegration.GetProvider(),
-		Environment:        providerIntegration.Environment.GetId(),
-		IamRoleArn:         providerIntegration.Config.PimV1AwsIntegrationConfig.GetIamRoleArn(),
-		ExternalId:         providerIntegration.Config.PimV1AwsIntegrationConfig.GetExternalId(),
-		CustomerIamRoleArn: providerIntegration.Config.PimV1AwsIntegrationConfig.GetCustomerIamRoleArn(),
-		Usages:             providerIntegration.GetUsages(),
+		Id:              providerIntegration.GetId(),
+		Name:            providerIntegration.GetDisplayName(),
+		Provider:        providerIntegration.GetProvider(),
+		Environment:     providerIntegration.Environment.GetId(),
+		IamRoleArn:      providerIntegration.Config.PimV1AwsIntegrationConfig.GetIamRoleArn(),
+		ExternalId:      providerIntegration.Config.PimV1AwsIntegrationConfig.GetExternalId(),
+		CustomerRoleArn: providerIntegration.Config.PimV1AwsIntegrationConfig.GetCustomerIamRoleArn(),
+		Usages:          providerIntegration.GetUsages(),
 	}
 
 	table.Add(&resp)

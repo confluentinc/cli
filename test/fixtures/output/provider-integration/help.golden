@@ -1,4 +1,4 @@
-Manage CLI provider integrations.
+Manage Confluent Cloud provider integrations.
 
 Usage:
   confluent provider-integration [command]

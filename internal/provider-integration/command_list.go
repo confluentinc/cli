@@ -1,4 +1,4 @@
-package provider_integration
+package providerintegration
 
 import (
 	"github.com/spf13/cobra"
@@ -18,15 +18,15 @@ func (c *command) newListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List Provider Integrations in current environment.",
-				Code: `confluent provider-integration list`,
+				Code: "confluent provider-integration list",
 			},
 			examples.Example{
 				Text: "List Provider Integrations in environment env-abcdef.",
-				Code: `confluent provider-integration list --environment env-abcdef`,
+				Code: "confluent provider-integration list --environment env-abcdef",
 			},
 			examples.Example{
 				Text: "List Provider Integrations in current environment with AWS as cloud provider.",
-				Code: `confluent provider-integration list --cloud aws`,
+				Code: "confluent provider-integration list --cloud aws",
 			},
 		),
 	}
@@ -57,14 +57,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	for _, providerIntegration := range providerIntegrations {
 		list.Add(&providerIntegrationOut{
-			Id:                 providerIntegration.GetId(),
-			Name:               providerIntegration.GetDisplayName(),
-			Provider:           providerIntegration.GetProvider(),
-			Environment:        providerIntegration.Environment.GetId(),
-			IamRoleArn:         providerIntegration.Config.PimV1AwsIntegrationConfig.GetIamRoleArn(),
-			ExternalId:         providerIntegration.Config.PimV1AwsIntegrationConfig.GetExternalId(),
-			CustomerIamRoleArn: providerIntegration.Config.PimV1AwsIntegrationConfig.GetCustomerIamRoleArn(),
-			Usages:             providerIntegration.GetUsages(),
+			Id:              providerIntegration.GetId(),
+			Name:            providerIntegration.GetDisplayName(),
+			Provider:        providerIntegration.GetProvider(),
+			Environment:     providerIntegration.Environment.GetId(),
+			IamRoleArn:      providerIntegration.Config.PimV1AwsIntegrationConfig.GetIamRoleArn(),
+			ExternalId:      providerIntegration.Config.PimV1AwsIntegrationConfig.GetExternalId(),
+			CustomerRoleArn: providerIntegration.Config.PimV1AwsIntegrationConfig.GetCustomerIamRoleArn(),
+			Usages:          providerIntegration.GetUsages(),
 		})
 	}
 

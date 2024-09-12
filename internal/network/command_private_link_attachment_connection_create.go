@@ -7,9 +7,9 @@ import (
 
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Command {
@@ -79,21 +79,21 @@ func (c *command) privateLinkAttachmentConnectionCreate(cmd *cobra.Command, args
 	}
 
 	switch cloud {
-	case resource.CloudAws:
+	case pcloud.Aws:
 		createPrivateLinkAttachmentConnection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
 			NetworkingV1AwsPrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1AwsPrivateLinkAttachmentConnection{
 				Kind:          "AwsPrivateLinkAttachmentConnection",
 				VpcEndpointId: endpoint,
 			},
 		}
-	case resource.CloudGcp:
+	case pcloud.Gcp:
 		createPrivateLinkAttachmentConnection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
 			NetworkingV1GcpPrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnection{
 				Kind:                              "GcpPrivateLinkAttachmentConnection",
 				PrivateServiceConnectConnectionId: endpoint,
 			},
 		}
-	case resource.CloudAzure:
+	case pcloud.Azure:
 		createPrivateLinkAttachmentConnection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
 			NetworkingV1AzurePrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnection{
 				Kind:                      "AzurePrivateLinkAttachmentConnection",

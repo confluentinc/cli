@@ -7,9 +7,9 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newPrivateLinkAccessCreateCommand() *cobra.Command {
@@ -91,21 +91,21 @@ func (c *command) privateLinkAccessCreate(cmd *cobra.Command, args []string) err
 	}
 
 	switch cloud {
-	case resource.CloudAws:
+	case pcloud.Aws:
 		createPrivateLinkAccess.Spec.Cloud = &networkingv1.NetworkingV1PrivateLinkAccessSpecCloudOneOf{
 			NetworkingV1AwsPrivateLinkAccess: &networkingv1.NetworkingV1AwsPrivateLinkAccess{
 				Kind:    "AwsPrivateLinkAccess",
 				Account: cloudAccount,
 			},
 		}
-	case resource.CloudAzure:
+	case pcloud.Azure:
 		createPrivateLinkAccess.Spec.Cloud = &networkingv1.NetworkingV1PrivateLinkAccessSpecCloudOneOf{
 			NetworkingV1AzurePrivateLinkAccess: &networkingv1.NetworkingV1AzurePrivateLinkAccess{
 				Kind:         "AzurePrivateLinkAccess",
 				Subscription: cloudAccount,
 			},
 		}
-	case resource.CloudGcp:
+	case pcloud.Gcp:
 		createPrivateLinkAccess.Spec.Cloud = &networkingv1.NetworkingV1PrivateLinkAccessSpecCloudOneOf{
 			NetworkingV1GcpPrivateServiceConnectAccess: &networkingv1.NetworkingV1GcpPrivateServiceConnectAccess{
 				Kind:    "GcpPrivateServiceConnectAccess",
