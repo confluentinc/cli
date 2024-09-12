@@ -10,7 +10,7 @@ import (
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/clouds"
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/network"
@@ -121,13 +121,13 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		}
 
 		switch cloud {
-		case clouds.CloudAws:
+		case pcloud.Aws:
 			human.AwsPrivateLinkEndpointService = network.Status.Cloud.NetworkingV1AwsNetwork.GetPrivateLinkEndpointService()
 			describeFields = append(describeFields, "AwsPrivateLinkEndpointService")
-		case clouds.CloudGcp:
+		case pcloud.Gcp:
 			human.GcpPrivateServiceConnectServiceAttachments = network.Status.Cloud.NetworkingV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
 			describeFields = append(describeFields, "GcpPrivateServiceConnectServiceAttachments")
-		case clouds.CloudAzure:
+		case pcloud.Azure:
 			human.AzurePrivateLinkServiceAliases = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceAliases()
 			human.AzurePrivateLinkServiceResourceIds = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceResourceIds()
 			describeFields = append(describeFields, "AzurePrivateLinkServiceAliases", "AzurePrivateLinkServiceResourceIds")
@@ -143,15 +143,15 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		}
 
 		switch cloud {
-		case clouds.CloudAws:
+		case pcloud.Aws:
 			human.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
 			human.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
 			describeFields = append(describeFields, "AwsVpc", "AwsAccount")
-		case clouds.CloudGcp:
+		case pcloud.Gcp:
 			human.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
 			human.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
 			describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
-		case clouds.CloudAzure:
+		case pcloud.Azure:
 			human.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
 			human.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
 			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/clouds"
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -75,9 +75,9 @@ func (c *command) gatewayDescribe(cmd *cobra.Command, args []string) error {
 	cloud := getGatewayCloud(gateway)
 
 	switch cloud {
-	case clouds.CloudAws:
+	case pcloud.Aws:
 		out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
-	case clouds.CloudAzure:
+	case pcloud.Azure:
 		out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
 	}
 

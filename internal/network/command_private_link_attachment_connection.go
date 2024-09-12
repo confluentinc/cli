@@ -7,7 +7,7 @@ import (
 
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/clouds"
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -58,10 +58,10 @@ func printPrivateLinkAttachmentConnectionTable(cmd *cobra.Command, connection ne
 	if connection.Spec.HasCloud() {
 		switch {
 		case connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection != nil:
-			out.Cloud = clouds.CloudAws
+			out.Cloud = pcloud.Aws
 			out.AwsVpcEndpointId = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
 		case connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection != nil:
-			out.Cloud = clouds.CloudAzure
+			out.Cloud = pcloud.Azure
 			out.AzurePrivateEndpointResourceId = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
 		}
 	}
