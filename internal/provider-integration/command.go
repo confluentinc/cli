@@ -11,14 +11,14 @@ type command struct {
 }
 
 type providerIntegrationOut struct {
-	Id                 string   `human:"ID" serialized:"id"`
-	Name               string   `human:"Name" serialized:"name"`
-	Provider           string   `human:"Provider" serialized:"provider"`
-	Environment        string   `human:"Environment" serialized:"environment"`
-	IamRoleArn         string   `human:"IAM Role ARN" serialized:"iam_role_arn"`
-	ExternalId         string   `human:"External ID" serialized:"external_id"`
-	CustomerIamRoleArn string   `human:"Customer IAM Role ARN" serialized:"customer_iam_role_arn"`
-	Usages             []string `human:"Usages" serialized:"usages"`
+	Id              string   `human:"ID" serialized:"id"`
+	Name            string   `human:"Name" serialized:"name"`
+	Provider        string   `human:"Provider" serialized:"provider"`
+	Environment     string   `human:"Environment" serialized:"environment"`
+	IamRoleArn      string   `human:"IAM Role ARN" serialized:"iam_role_arn"`
+	ExternalId      string   `human:"External ID" serialized:"external_id"`
+	CustomerRoleArn string   `human:"Customer Role ARN" serialized:"customer_role_arn"`
+	Usages          []string `human:"Usages" serialized:"usages"`
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {

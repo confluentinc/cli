@@ -57,7 +57,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	customerIamRoleArn, err := cmd.Flags().GetString("customer-role-arn")
+	customerRoleArn, err := cmd.Flags().GetString("customer-role-arn")
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Environment: &providerintegrationv1.GlobalObjectReference{Id: environmentId},
 		Config: &providerintegrationv1.PimV1IntegrationConfigOneOf{
 			PimV1AwsIntegrationConfig: &providerintegrationv1.PimV1AwsIntegrationConfig{
-				CustomerIamRoleArn: providerintegrationv1.PtrString(customerIamRoleArn),
+				CustomerIamRoleArn: providerintegrationv1.PtrString(customerRoleArn),
 				Kind:               kind,
 			},
 		},
@@ -93,18 +93,18 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	table := output.NewTable(cmd)
 
 	resp := providerIntegrationOut{
-		Id:                 providerIntegration.GetId(),
-		Name:               providerIntegration.GetDisplayName(),
-		Provider:           providerIntegration.GetProvider(),
-		Environment:        providerIntegration.Environment.GetId(),
-		IamRoleArn:         providerIntegration.GetConfig().PimV1AwsIntegrationConfig.GetIamRoleArn(),
-		ExternalId:         providerIntegration.GetConfig().PimV1AwsIntegrationConfig.GetExternalId(),
-		CustomerIamRoleArn: providerIntegration.GetConfig().PimV1AwsIntegrationConfig.GetCustomerIamRoleArn(),
+		Id:              providerIntegration.GetId(),
+		Name:            providerIntegration.GetDisplayName(),
+		Provider:        providerIntegration.GetProvider(),
+		Environment:     providerIntegration.Environment.GetId(),
+		IamRoleArn:      providerIntegration.GetConfig().PimV1AwsIntegrationConfig.GetIamRoleArn(),
+		ExternalId:      providerIntegration.GetConfig().PimV1AwsIntegrationConfig.GetExternalId(),
+		CustomerRoleArn: providerIntegration.GetConfig().PimV1AwsIntegrationConfig.GetCustomerIamRoleArn(),
 	}
 
 	// `PimV1Integration.Usages` field is empty after create() and this field should be hidden
 	table.Add(&resp)
-	table.Filter([]string{"Id", "Name", "Provider", "Environment", "IamRoleArn", "ExternalId", "CustomerIamRoleArn"})
+	table.Filter([]string{"Id", "Name", "Provider", "Environment", "IamRoleArn", "ExternalId", "CustomerRoleArn"})
 	return table.Print()
 }
 

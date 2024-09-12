@@ -48,14 +48,14 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	resp := providerIntegrationOut{
-		Id:                 providerIntegration.GetId(),
-		Name:               providerIntegration.GetDisplayName(),
-		Provider:           providerIntegration.GetProvider(),
-		Environment:        providerIntegration.Environment.GetId(),
-		IamRoleArn:         providerIntegration.Config.PimV1AwsIntegrationConfig.GetIamRoleArn(),
-		ExternalId:         providerIntegration.Config.PimV1AwsIntegrationConfig.GetExternalId(),
-		CustomerIamRoleArn: providerIntegration.Config.PimV1AwsIntegrationConfig.GetCustomerIamRoleArn(),
-		Usages:             providerIntegration.GetUsages(),
+		Id:              providerIntegration.GetId(),
+		Name:            providerIntegration.GetDisplayName(),
+		Provider:        providerIntegration.GetProvider(),
+		Environment:     providerIntegration.Environment.GetId(),
+		IamRoleArn:      providerIntegration.Config.PimV1AwsIntegrationConfig.GetIamRoleArn(),
+		ExternalId:      providerIntegration.Config.PimV1AwsIntegrationConfig.GetExternalId(),
+		CustomerRoleArn: providerIntegration.Config.PimV1AwsIntegrationConfig.GetCustomerIamRoleArn(),
+		Usages:          providerIntegration.GetUsages(),
 	}
 
 	table.Add(&resp)
