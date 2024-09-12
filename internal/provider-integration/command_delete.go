@@ -1,4 +1,4 @@
-package provider_integration
+package providerintegration
 
 import (
 	"github.com/spf13/cobra"

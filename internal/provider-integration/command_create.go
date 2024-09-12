@@ -1,4 +1,4 @@
-package provider_integration
+package providerintegration
 
 import (
 	"errors"
@@ -24,17 +24,17 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in current environment".`,
-				Code: `confluent provider-integration create s3-provider-integration --cloud aws --customer-iam-role-arn arn:aws:iam::000000000000:role/my-test-aws-role`,
+				Code: `confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role`,
 			},
 			examples.Example{
 				Text: `Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in environment env-abcdef".`,
-				Code: `confluent provider-integration create s3-provider-integration --cloud aws --customer-iam-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef`,
+				Code: "confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef",
 			},
 		),
 	}
 
 	// Handle the flags, for cloud flag only AWS is supported now
-	cmd.Flags().String("customer-iam-role-arn", "", "Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.")
+	cmd.Flags().String("customer-role-arn", "", "Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.")
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -42,7 +42,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	// Check the argument from flags
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
-	cobra.CheckErr(cmd.MarkFlagRequired("customer-iam-role-arn"))
+	cobra.CheckErr(cmd.MarkFlagRequired("customer-role-arn"))
 
 	return cmd
 }
@@ -55,7 +55,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	customerIamRoleArn, err := cmd.Flags().GetString("customer-iam-role-arn")
+	customerIamRoleArn, err := cmd.Flags().GetString("customer-role-arn")
 	if err != nil {
 		return err
 	}

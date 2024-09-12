@@ -6,14 +6,14 @@ Usage:
 Examples:
 Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in current environment".
 
-  $ confluent provider-integration create s3-provider-integration --cloud aws --customer-iam-role-arn arn:aws:iam::000000000000:role/my-test-aws-role
+  $ confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role
 
 Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in environment env-abcdef".
 
-  $ confluent provider-integration create s3-provider-integration --cloud aws --customer-iam-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef
+  $ confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef
 
 Flags:
-      --customer-iam-role-arn string   REQUIRED: Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.
+      --customer-role-arn string       REQUIRED: Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.
       --cloud string                   REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --environment string             Environment ID.
       --context string                 CLI context name.

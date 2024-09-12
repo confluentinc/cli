@@ -2,7 +2,7 @@ package test
 
 func (s *CLITestSuite) TestProviderIntegration() {
 	tests := []CLITest{
-		{args: "provider-integration create cdong-test2 --cloud aws --customer-iam-role-arn arn:aws:iam::037803949979:role/tarun-iam-test-role", fixture: "provider-integration/create.golden"},
+		{args: "provider-integration create cdong-test2 --cloud aws --customer-role-arn arn:aws:iam::037803949979:role/tarun-iam-test-role", fixture: "provider-integration/create.golden"},
 		{args: "provider-integration describe cspi-42o61", fixture: "provider-integration/describe.golden"},
 		{args: "provider-integration list", fixture: "provider-integration/list.golden"},
 		{args: "provider-integration list --cloud aws", fixture: "provider-integration/list.golden"},

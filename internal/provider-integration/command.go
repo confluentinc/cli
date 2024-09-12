@@ -1,4 +1,4 @@
-package provider_integration
+package providerintegration
 
 import (
 	"github.com/spf13/cobra"
@@ -15,9 +15,9 @@ type providerIntegrationOut struct {
 	Name               string   `human:"Name" serialized:"name"`
 	Provider           string   `human:"Provider" serialized:"provider"`
 	Environment        string   `human:"Environment" serialized:"environment"`
-	IamRoleArn         string   `human:"IAM Role Arn" serialized:"iam_role_arn"`
+	IamRoleArn         string   `human:"IAM Role ARN" serialized:"iam_role_arn"`
 	ExternalId         string   `human:"External ID" serialized:"external_id"`
-	CustomerIamRoleArn string   `human:"Customer IAM Role Arn" serialized:"customer_iam_role_arn"`
+	CustomerIamRoleArn string   `human:"Customer IAM Role ARN" serialized:"customer_iam_role_arn"`
 	Usages             []string `human:"Usages" serialized:"usages"`
 }
 
