@@ -22,6 +22,7 @@ const (
 	KeyServiceAccount = "client.service-account"
 	KeyStatementName  = "client.statement-name"
 	KeyOutputFormat   = "client.output-format"
+	KeyDryRun         = "sql.dry-run"
 )
 
 type OutputFormat string
