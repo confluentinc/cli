@@ -1,0 +1,25 @@
+Create a Provider Integration that allow users to manage access to public cloud service provider resources through Confluent resources.
+
+Usage:
+  confluent provider-integration create <name> [flags]
+
+Examples:
+Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in current environment".
+
+  $ confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role
+
+Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in environment env-abcdef".
+
+  $ confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef
+
+Flags:
+      --customer-role-arn string   REQUIRED: Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.
+      --cloud string               REQUIRED: Specify the cloud provider as "aws".
+      --environment string         Environment ID.
+      --context string             CLI context name.
+  -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

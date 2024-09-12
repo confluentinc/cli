@@ -7,6 +7,7 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -84,11 +85,11 @@ func getPeeringCloud(peering networkingv1.NetworkingV1Peering) (string, error) {
 	cloud := peering.Spec.GetCloud()
 
 	if cloud.NetworkingV1AwsPeering != nil {
-		return CloudAws, nil
+		return pcloud.Aws, nil
 	} else if cloud.NetworkingV1GcpPeering != nil {
-		return CloudGcp, nil
+		return pcloud.Gcp, nil
 	} else if cloud.NetworkingV1AzurePeering != nil {
-		return CloudAzure, nil
+		return pcloud.Azure, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
@@ -118,17 +119,17 @@ func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peer
 	describeFields := []string{"Id", "Name", "Network", "Cloud", "Phase"}
 
 	switch cloud {
-	case CloudAws:
+	case pcloud.Aws:
 		out.AwsVpc = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
 		out.AwsAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
 		out.AwsRoutes = peering.Spec.Cloud.NetworkingV1AwsPeering.GetRoutes()
 		out.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
 		describeFields = append(describeFields, "AwsVpc", "AwsAccount", "AwsRoutes", "CustomRegion")
-	case CloudGcp:
+	case pcloud.Gcp:
 		out.GcpVpcNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
 		out.GcpProject = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
 		describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
-	case CloudAzure:
+	case pcloud.Azure:
 		out.AzureVNet = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
 		out.AzureTenant = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
 		out.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()

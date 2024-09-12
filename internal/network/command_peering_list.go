@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -85,14 +86,14 @@ func (c *command) peeringList(cmd *cobra.Command, _ []string) error {
 			Phase:   peering.Status.GetPhase(),
 		}
 		switch cloud {
-		case CloudAws:
+		case pcloud.Aws:
 			out.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
 			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
 			out.CloudAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
-		case CloudGcp:
+		case pcloud.Gcp:
 			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
 			out.CloudAccount = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
-		case CloudAzure:
+		case pcloud.Azure:
 			out.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
 			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
 			out.CloudAccount = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
