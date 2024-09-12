@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v3/pkg/publiccloud"
 )
 
 func (c *command) newPrivateLinkAccessCreateCommand() *cobra.Command {

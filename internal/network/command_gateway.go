@@ -8,6 +8,7 @@ import (
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/publiccloud"
 )
 
 type gatewayOut struct {

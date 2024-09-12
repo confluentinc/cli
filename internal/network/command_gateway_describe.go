@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/publiccloud"
 )
 
 func (c *command) newGatewayDescribeCommand() *cobra.Command {

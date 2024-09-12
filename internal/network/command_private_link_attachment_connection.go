@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/publiccloud"
 )
 
 type privateLinkAttachmentConnectionOut struct {

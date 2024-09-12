@@ -1,17 +1,19 @@
 package providerintegration
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	providerintegrationv1 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v1"
 
-	"fmt"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/publiccloud"
+	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newCreateCommand() *cobra.Command {
@@ -35,7 +37,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	// Handle the flags, for cloud flag only AWS is supported now
 	cmd.Flags().String("customer-role-arn", "", "Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.")
-	pcmd.AddCloudFlag(cmd)
+	c.addCloudFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -113,4 +115,9 @@ func getProviderConfigKind(provider string) (string, error) {
 	default:
 		return "", fmt.Errorf(`cloud provider "%s" is not supported`, provider)
 	}
+}
+
+func (c *command) addCloudFlag(cmd *cobra.Command) {
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(ccloudv2.ProviderIntegrationSupportClouds, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return ccloudv2.ProviderIntegrationSupportClouds })
 }
