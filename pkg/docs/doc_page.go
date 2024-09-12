@@ -50,6 +50,12 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 			"end-before":  "cli_limitations_confluent_kafka_local_end",
 		}
 		rows = append(rows, printSphinxBlock("include", include, args)...)
+	} else if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka broker describe") {
+		args := map[string]string{
+			"start-after": "cli_new_local_kafka_broker_describe_start",
+			"end-before":  "cli_new_kafka_broker_describe_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)		
 	} else if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		args := map[string]string{
 			"start-after": "cli_limitations_start",
@@ -63,6 +69,44 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 		args := map[string]string{
 			"start-after": "cli_cloud_logout_note_start",
 			"end-before":  "cli_cloud_logout_note_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka broker describe") {
+		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
+		args := map[string]string{
+			"start-after": "cli_new_kafka_broker_describe_start",
+			"end-before":  "cli_new_kafka_broker_describe_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka broker task list") {
+		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
+		args := map[string]string{
+			"start-after": "cli_new_kafka_broker_task_list_start",
+			"end-before":  "cli_new_kafka_broker_task_list_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka replica list") {
+		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
+		args := map[string]string{
+			"start-after": "cli_new_kafka_replica_list_start",
+			"end-before":  "cli_new_kafka_replica_list_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka topic describe") {
+		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
+		args := map[string]string{
+			"start-after": "cli_new_kafka_topic_describe_start",
+			"end-before":  "cli_new_kafka_topic_describe_end",
 		}
 		rows = append(rows, printSphinxBlock("include", include, args)...)
 	}
