@@ -2,10 +2,11 @@ package controller
 
 import (
 	"context"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/require"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
+	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	testUtils "github.com/confluentinc/cli/v3/pkg/flink/test"
 	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
