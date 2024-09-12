@@ -19,11 +19,11 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the Provider Integration "cspi-12345".`,
-				Code: `confluent provider-integration delete cspi-12345`,
+				Code: "confluent provider-integration delete cspi-12345",
 			},
 			examples.Example{
 				Text: `Delete the Provider Integrations "cspi-12345" and "cspi-67890" in environment "env-abcdef".`,
-				Code: `confluent provider-integration delete cspi-12345 cspi-67890 --environment env-abcdef`,
+				Code: "confluent provider-integration delete cspi-12345 cspi-67890 --environment env-abcdef",
 			},
 		),
 	}

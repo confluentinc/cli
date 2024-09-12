@@ -18,11 +18,11 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe a Provider Integration with id=cspi-12345 in current environment",
-				Code: `confluent provider-integration describe cspi-12345`,
+				Code: "confluent provider-integration describe cspi-12345",
 			},
 			examples.Example{
 				Text: "Describe a Provider Integration with id=cspi-12345 in environment env-abcdef",
-				Code: `confluent provider-integration describe cspi-12345 --environment env-abcdef`,
+				Code: "confluent provider-integration describe cspi-12345 --environment env-abcdef",
 			},
 		),
 	}

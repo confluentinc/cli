@@ -1,13 +1,13 @@
 package providerintegration
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	providerintegrationv1 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v1"
 
+	"fmt"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -24,7 +24,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in current environment".`,
-				Code: `confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role`,
+				Code: "confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role",
 			},
 			examples.Example{
 				Text: `Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in environment env-abcdef".`,
@@ -48,7 +48,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	displayName := args[0]
+	name := args[0]
 
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	// Populate the PimV1Integration request object
 	request := &providerintegrationv1.PimV1Integration{
-		DisplayName: providerintegrationv1.PtrString(displayName),
+		DisplayName: providerintegrationv1.PtrString(name),
 		Provider:    providerintegrationv1.PtrString(cloud),
 		Environment: &providerintegrationv1.GlobalObjectReference{Id: environmentId},
 		Config: &providerintegrationv1.PimV1IntegrationConfigOneOf{
@@ -111,6 +111,6 @@ func getProviderConfigKind(provider string) (string, error) {
 	case resource.CloudAws:
 		return "AwsIntegrationConfig", nil
 	default:
-		return "", errors.New("can't find a supported cloud provider config kind")
+		return "", fmt.Errorf(`cloud provider "%s" is not supported`, provider)
 	}
 }

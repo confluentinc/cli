@@ -18,15 +18,15 @@ func (c *command) newListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List Provider Integrations in current environment.",
-				Code: `confluent provider-integration list`,
+				Code: "confluent provider-integration list",
 			},
 			examples.Example{
 				Text: "List Provider Integrations in environment env-abcdef.",
-				Code: `confluent provider-integration list --environment env-abcdef`,
+				Code: "confluent provider-integration list --environment env-abcdef",
 			},
 			examples.Example{
 				Text: "List Provider Integrations in current environment with AWS as cloud provider.",
-				Code: `confluent provider-integration list --cloud aws`,
+				Code: "confluent provider-integration list --cloud aws",
 			},
 		),
 	}
