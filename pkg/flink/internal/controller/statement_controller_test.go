@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-
 	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

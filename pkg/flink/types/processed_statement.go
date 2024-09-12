@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
