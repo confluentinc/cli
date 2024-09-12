@@ -9,7 +9,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type privateLinkAttachmentConnectionOut struct {
@@ -58,10 +57,10 @@ func printPrivateLinkAttachmentConnectionTable(cmd *cobra.Command, connection ne
 	if connection.Spec.HasCloud() {
 		switch {
 		case connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection != nil:
-			out.Cloud = resource.CloudAws
+			out.Cloud = publiccloud.CloudAws
 			out.AwsVpcEndpointId = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
 		case connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection != nil:
-			out.Cloud = resource.CloudAzure
+			out.Cloud = publiccloud.CloudAzure
 			out.AzurePrivateEndpointResourceId = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
 		}
 	}

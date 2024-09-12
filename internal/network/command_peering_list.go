@@ -85,14 +85,14 @@ func (c *command) peeringList(cmd *cobra.Command, _ []string) error {
 			Phase:   peering.Status.GetPhase(),
 		}
 		switch cloud {
-		case resource.CloudAws:
+		case publiccloud.CloudAws:
 			out.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
 			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
 			out.CloudAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
-		case resource.CloudGcp:
+		case publiccloud.CloudGcp:
 			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
 			out.CloudAccount = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
-		case resource.CloudAzure:
+		case publiccloud.CloudAzure:
 			out.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()
 			out.VirtualNetwork = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
 			out.CloudAccount = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()

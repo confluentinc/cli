@@ -9,7 +9,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newPrivateLinkAccessCreateCommand() *cobra.Command {
@@ -91,21 +90,21 @@ func (c *command) privateLinkAccessCreate(cmd *cobra.Command, args []string) err
 	}
 
 	switch cloud {
-	case resource.CloudAws:
+	case publiccloud.CloudAws:
 		createPrivateLinkAccess.Spec.Cloud = &networkingv1.NetworkingV1PrivateLinkAccessSpecCloudOneOf{
 			NetworkingV1AwsPrivateLinkAccess: &networkingv1.NetworkingV1AwsPrivateLinkAccess{
 				Kind:    "AwsPrivateLinkAccess",
 				Account: cloudAccount,
 			},
 		}
-	case resource.CloudAzure:
+	case publiccloud.CloudAzure:
 		createPrivateLinkAccess.Spec.Cloud = &networkingv1.NetworkingV1PrivateLinkAccessSpecCloudOneOf{
 			NetworkingV1AzurePrivateLinkAccess: &networkingv1.NetworkingV1AzurePrivateLinkAccess{
 				Kind:         "AzurePrivateLinkAccess",
 				Subscription: cloudAccount,
 			},
 		}
-	case resource.CloudGcp:
+	case publiccloud.CloudGcp:
 		createPrivateLinkAccess.Spec.Cloud = &networkingv1.NetworkingV1PrivateLinkAccessSpecCloudOneOf{
 			NetworkingV1GcpPrivateServiceConnectAccess: &networkingv1.NetworkingV1GcpPrivateServiceConnectAccess{
 				Kind:    "GcpPrivateServiceConnectAccess",

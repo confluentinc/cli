@@ -83,12 +83,6 @@ const (
 	UserPrefix                  = "u"
 )
 
-const (
-	CloudAws   = "AWS"
-	CloudAzure = "AZURE"
-	CloudGcp   = "GCP"
-)
-
 var prefixToResource = map[string]string{
 	AccessPointPrefix:           AccessPoint,
 	ConnectorPrefix:             Connector,

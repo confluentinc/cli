@@ -120,13 +120,13 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		}
 
 		switch cloud {
-		case resource.CloudAws:
+		case publiccloud.CloudAws:
 			human.AwsPrivateLinkEndpointService = network.Status.Cloud.NetworkingV1AwsNetwork.GetPrivateLinkEndpointService()
 			describeFields = append(describeFields, "AwsPrivateLinkEndpointService")
-		case resource.CloudGcp:
+		case publiccloud.CloudGcp:
 			human.GcpPrivateServiceConnectServiceAttachments = network.Status.Cloud.NetworkingV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
 			describeFields = append(describeFields, "GcpPrivateServiceConnectServiceAttachments")
-		case resource.CloudAzure:
+		case publiccloud.CloudAzure:
 			human.AzurePrivateLinkServiceAliases = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceAliases()
 			human.AzurePrivateLinkServiceResourceIds = network.Status.Cloud.NetworkingV1AzureNetwork.GetPrivateLinkServiceResourceIds()
 			describeFields = append(describeFields, "AzurePrivateLinkServiceAliases", "AzurePrivateLinkServiceResourceIds")
@@ -142,15 +142,15 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		}
 
 		switch cloud {
-		case resource.CloudAws:
+		case publiccloud.CloudAws:
 			human.AwsVpc = network.Status.Cloud.NetworkingV1AwsNetwork.GetVpc()
 			human.AwsAccount = network.Status.Cloud.NetworkingV1AwsNetwork.GetAccount()
 			describeFields = append(describeFields, "AwsVpc", "AwsAccount")
-		case resource.CloudGcp:
+		case publiccloud.CloudGcp:
 			human.GcpVpcNetwork = network.Status.Cloud.NetworkingV1GcpNetwork.GetVpcNetwork()
 			human.GcpProject = network.Status.Cloud.NetworkingV1GcpNetwork.GetProject()
 			describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
-		case resource.CloudAzure:
+		case publiccloud.CloudAzure:
 			human.AzureVNet = network.Status.Cloud.NetworkingV1AzureNetwork.GetVnet()
 			human.AzureSubscription = network.Status.Cloud.NetworkingV1AzureNetwork.GetSubscription()
 			describeFields = append(describeFields, "AzureVNet", "AzureSubscription")

@@ -9,7 +9,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 func (c *command) newPeeringCreateCommand() *cobra.Command {
@@ -97,7 +96,7 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	switch cloud {
-	case resource.CloudAws:
+	case publiccloud.CloudAws:
 		awsPeering, err := createAwsPeeringRequest(cmd, region)
 		if err != nil {
 			return err
@@ -105,7 +104,7 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 		createPeering.Spec.Cloud = &networkingv1.NetworkingV1PeeringSpecCloudOneOf{
 			NetworkingV1AwsPeering: awsPeering,
 		}
-	case resource.CloudGcp:
+	case publiccloud.CloudGcp:
 		gcpPeering, err := createGcpPeeringRequest(cmd)
 		if err != nil {
 			return err
@@ -113,7 +112,7 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 		createPeering.Spec.Cloud = &networkingv1.NetworkingV1PeeringSpecCloudOneOf{
 			NetworkingV1GcpPeering: gcpPeering,
 		}
-	case resource.CloudAzure:
+	case publiccloud.CloudAzure:
 		azurePeering, err := createAzurePeeringRequest(cmd, region)
 		if err != nil {
 			return err
