@@ -37,6 +37,12 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 		c.handleStatementError(*err)
 		return nil, err
 	}
+
+	if processedStatement.IsDryRunStatement() {
+		processedStatement.PrintOutputDryRunStatement()
+		return processedStatement, nil
+	}
+
 	c.createdStatementName = processedStatement.StatementName
 	processedStatement.PrintStatusMessage()
 
