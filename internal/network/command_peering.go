@@ -7,9 +7,9 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
+	"github.com/confluentinc/cli/v3/pkg/clouds"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/publiccloud"
 )
 
 type peeringOut struct {
@@ -85,11 +85,11 @@ func getPeeringCloud(peering networkingv1.NetworkingV1Peering) (string, error) {
 	cloud := peering.Spec.GetCloud()
 
 	if cloud.NetworkingV1AwsPeering != nil {
-		return publiccloud.CloudAws, nil
+		return clouds.CloudAws, nil
 	} else if cloud.NetworkingV1GcpPeering != nil {
-		return publiccloud.CloudGcp, nil
+		return clouds.CloudGcp, nil
 	} else if cloud.NetworkingV1AzurePeering != nil {
-		return publiccloud.CloudAzure, nil
+		return clouds.CloudAzure, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "cloud")
@@ -119,17 +119,17 @@ func printPeeringTable(cmd *cobra.Command, peering networkingv1.NetworkingV1Peer
 	describeFields := []string{"Id", "Name", "Network", "Cloud", "Phase"}
 
 	switch cloud {
-	case publiccloud.CloudAws:
+	case clouds.CloudAws:
 		out.AwsVpc = peering.Spec.Cloud.NetworkingV1AwsPeering.GetVpc()
 		out.AwsAccount = peering.Spec.Cloud.NetworkingV1AwsPeering.GetAccount()
 		out.AwsRoutes = peering.Spec.Cloud.NetworkingV1AwsPeering.GetRoutes()
 		out.CustomRegion = peering.Spec.Cloud.NetworkingV1AwsPeering.GetCustomerRegion()
 		describeFields = append(describeFields, "AwsVpc", "AwsAccount", "AwsRoutes", "CustomRegion")
-	case publiccloud.CloudGcp:
+	case clouds.CloudGcp:
 		out.GcpVpcNetwork = peering.Spec.Cloud.NetworkingV1GcpPeering.GetVpcNetwork()
 		out.GcpProject = peering.Spec.Cloud.NetworkingV1GcpPeering.GetProject()
 		describeFields = append(describeFields, "GcpVpcNetwork", "GcpProject")
-	case publiccloud.CloudAzure:
+	case clouds.CloudAzure:
 		out.AzureVNet = peering.Spec.Cloud.NetworkingV1AzurePeering.GetVnet()
 		out.AzureTenant = peering.Spec.Cloud.NetworkingV1AzurePeering.GetTenant()
 		out.CustomRegion = peering.Spec.Cloud.NetworkingV1AzurePeering.GetCustomerRegion()

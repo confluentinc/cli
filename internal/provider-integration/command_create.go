@@ -9,10 +9,10 @@ import (
 	providerintegrationv1 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/clouds"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/publiccloud"
 	"github.com/confluentinc/cli/v3/pkg/utils"
 )
 
@@ -110,7 +110,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 func getProviderConfigKind(provider string) (string, error) {
 	switch strings.ToUpper(provider) {
-	case publiccloud.CloudAws:
+	case clouds.CloudAws:
 		return "AwsIntegrationConfig", nil
 	default:
 		return "", fmt.Errorf(`cloud provider "%s" is not supported`, provider)

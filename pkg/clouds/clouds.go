@@ -1,4 +1,4 @@
-package publiccloud
+package clouds
 
 const (
 	CloudAws   = "AWS"

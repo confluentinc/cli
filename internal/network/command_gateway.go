@@ -8,7 +8,7 @@ import (
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/publiccloud"
+	"github.com/confluentinc/cli/v3/pkg/clouds"
 )
 
 type gatewayOut struct {
@@ -68,11 +68,11 @@ func getGatewayCloud(gateway networkingv1.NetworkingV1Gateway) string {
 	cloud := gateway.Status.GetCloudGateway()
 
 	if cloud.NetworkingV1AwsEgressPrivateLinkGatewayStatus != nil {
-		return publiccloud.CloudAws
+		return clouds.CloudAws
 	}
 
 	if cloud.NetworkingV1AzureEgressPrivateLinkGatewayStatus != nil {
-		return publiccloud.CloudAzure
+		return clouds.CloudAzure
 	}
 
 	return ""
