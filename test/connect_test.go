@@ -208,7 +208,6 @@ func (s *CLITestSuite) TestConnectCustomPluginVersioning() {
 		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version-number 0.0.1 `, fixture: "connect/custom-plugin/create-version.golden"},
 		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf" --version-number 0.0.1 `, fixture: "connect/custom-plugin/create-version-invalid-extension.golden", exitCode: 1},
 		{args: "connect custom-plugin version list --plugin plugin23", fixture: "connect/custom-plugin/list-version.golden"},
-		{args: "connect custom-plugin version list --plugin plugin23", fixture: "connect/custom-plugin/list-version.golden"},
 		{args: "connect custom-plugin version list --plugin plugin23 -o json", fixture: "connect/custom-plugin/list-version-json.golden"},
 		{args: "connect custom-plugin version list --plugin plugin23 -o yaml", fixture: "connect/custom-plugin/list-version-yaml.golden"},
 		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456", fixture: "connect/custom-plugin/describe-version.golden"},
