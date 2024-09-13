@@ -1,14 +1,14 @@
-Describe a Provider Integration, specified by the given provider integration ID.
+Describe a provider integration, specified by the given provider integration ID.
 
 Usage:
   confluent provider-integration describe <id> [flags]
 
 Examples:
-Describe a Provider Integration with id=cspi-12345 in current environment
+Describe provider integration "cspi-12345" in the current environment.
 
   $ confluent provider-integration describe cspi-12345
 
-Describe a Provider Integration with id=cspi-12345 in environment env-abcdef
+Describe provider integration "cspi-12345" in environment "env-abcdef".
 
   $ confluent provider-integration describe cspi-12345 --environment env-abcdef
 
