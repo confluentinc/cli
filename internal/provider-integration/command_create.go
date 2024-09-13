@@ -20,7 +20,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a provider integration.",
-		Long:  "Create a provider integration that allow users to manage access to public cloud service provider resources through Confluent resources.",
+		Long:  "Create a provider integration that allows users to manage access to public cloud service provider resources through Confluent resources.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -29,13 +29,13 @@ func (c *command) newCreateCommand() *cobra.Command {
 				Code: "confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role",
 			},
 			examples.Example{
-				Text: `Create provider integration "s3-provider-integration" associated with AWS IAM role ARN "arn:aws:iam::000000000000:role/my-test-aws-role" in the environment "env-abcdef".`,
+				Text: `Create provider integration "s3-provider-integration" associated with AWS IAM role ARN "arn:aws:iam::000000000000:role/my-test-aws-role" in environment "env-abcdef".`,
 				Code: "confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef",
 			},
 		),
 	}
 
-	cmd.Flags().String("customer-role-arn", "", "Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.")
+	cmd.Flags().String("customer-role-arn", "", "Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, and must be unique in the same environment.")
 	c.addCloudFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -70,7 +70,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Populate the PimV1Integration request object
 	request := &providerintegrationv1.PimV1Integration{
 		DisplayName: providerintegrationv1.PtrString(name),
 		Provider:    providerintegrationv1.PtrString(cloud),

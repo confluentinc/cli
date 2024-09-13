@@ -1,4 +1,4 @@
-Create a provider integration that allow users to manage access to public cloud service provider resources through Confluent resources.
+Create a provider integration that allows users to manage access to public cloud service provider resources through Confluent resources.
 
 Usage:
   confluent provider-integration create <name> [flags]
@@ -8,12 +8,12 @@ Create provider integration "s3-provider-integration" associated with AWS IAM ro
 
   $ confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role
 
-Create provider integration "s3-provider-integration" associated with AWS IAM role ARN "arn:aws:iam::000000000000:role/my-test-aws-role" in the environment "env-abcdef".
+Create provider integration "s3-provider-integration" associated with AWS IAM role ARN "arn:aws:iam::000000000000:role/my-test-aws-role" in environment "env-abcdef".
 
   $ confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef
 
 Flags:
-      --customer-role-arn string   REQUIRED: Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.
+      --customer-role-arn string   REQUIRED: Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, and must be unique in the same environment.
       --cloud string               REQUIRED: Specify the cloud provider as "aws".
       --environment string         Environment ID.
       --context string             CLI context name.
