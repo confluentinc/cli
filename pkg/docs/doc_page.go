@@ -55,7 +55,7 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 			"start-after": "cli_new_local_kafka_broker_describe_start",
 			"end-before":  "cli_new_kafka_broker_describe_end",
 		}
-		rows = append(rows, printSphinxBlock("include", include, args)...)		
+		rows = append(rows, printSphinxBlock("include", include, args)...)
 	} else if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		args := map[string]string{
 			"start-after": "cli_limitations_start",
@@ -91,7 +91,6 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 		rows = append(rows, printSphinxBlock("include", include, args)...)
 	}
 
-
 	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka replica list") {
 		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
 		args := map[string]string{
@@ -100,7 +99,6 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 		}
 		rows = append(rows, printSphinxBlock("include", include, args)...)
 	}
-
 
 	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka topic describe") {
 		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
