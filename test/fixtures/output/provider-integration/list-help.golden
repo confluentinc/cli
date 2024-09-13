@@ -1,20 +1,16 @@
-List Provider Integrations, optionally filtered by cloud provider.
+List provider integrations, optionally filtered by cloud provider.
 
 Usage:
   confluent provider-integration list [flags]
 
 Examples:
-List Provider Integrations in current environment.
+List provider integrations in the current environment.
 
   $ confluent provider-integration list
 
-List Provider Integrations in environment env-abcdef.
+List provider integrations in environment "env-abcdef".
 
   $ confluent provider-integration list --environment env-abcdef
-
-List Provider Integrations in current environment with AWS as cloud provider.
-
-  $ confluent provider-integration list --cloud aws
 
 Flags:
       --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".

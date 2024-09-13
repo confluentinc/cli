@@ -12,16 +12,16 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a provider integration.",
-		Long:  "Describe a Provider Integration, specified by the given provider integration ID.",
+		Long:  "Describe a provider integration, specified by the given provider integration ID.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe a Provider Integration with id=cspi-12345 in current environment",
+				Text: `Describe provider integration "cspi-12345" in the current environment.`,
 				Code: "confluent provider-integration describe cspi-12345",
 			},
 			examples.Example{
-				Text: "Describe a Provider Integration with id=cspi-12345 in environment env-abcdef",
+				Text: `Describe provider integration "cspi-12345" in environment "env-abcdef".`,
 				Code: "confluent provider-integration describe cspi-12345 --environment env-abcdef",
 			},
 		),

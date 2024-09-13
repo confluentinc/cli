@@ -1,14 +1,14 @@
-Create a Provider Integration that allow users to manage access to public cloud service provider resources through Confluent resources.
+Create a provider integration that allow users to manage access to public cloud service provider resources through Confluent resources.
 
 Usage:
   confluent provider-integration create <name> [flags]
 
 Examples:
-Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in current environment".
+Create provider integration "s3-provider-integration" associated with AWS IAM role ARN "arn:aws:iam::000000000000:role/my-test-aws-role" in the current environment.
 
   $ confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role
 
-Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in environment env-abcdef".
+Create provider integration "s3-provider-integration" associated with AWS IAM role ARN "arn:aws:iam::000000000000:role/my-test-aws-role" in the environment "env-abcdef".
 
   $ confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef
 

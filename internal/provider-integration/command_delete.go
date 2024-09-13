@@ -13,26 +13,25 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
 		Short: "Delete one or more provider integrations.",
-		Long:  "Delete one or more Provider Integrations, specified by the given provider integration ID.",
+		Long:  "Delete one or more provider integrations, specified by the given provider integration ID.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete the Provider Integration "cspi-12345".`,
+				Text: `Delete the provider integration "cspi-12345" in the current environment.`,
 				Code: "confluent provider-integration delete cspi-12345",
 			},
 			examples.Example{
-				Text: `Delete the Provider Integrations "cspi-12345" and "cspi-67890" in environment "env-abcdef".`,
+				Text: `Delete the provider integrations "cspi-12345" and "cspi-67890" in environment "env-abcdef".`,
 				Code: "confluent provider-integration delete cspi-12345 cspi-67890 --environment env-abcdef",
 			},
 		),
 	}
 
-	// Auto-complete flags
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }

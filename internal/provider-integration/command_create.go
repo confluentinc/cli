@@ -20,29 +20,27 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a provider integration.",
-		Long:  "Create a Provider Integration that allow users to manage access to public cloud service provider resources through Confluent resources.",
+		Long:  "Create a provider integration that allow users to manage access to public cloud service provider resources through Confluent resources.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in current environment".`,
+				Text: `Create provider integration "s3-provider-integration" associated with AWS IAM role ARN "arn:aws:iam::000000000000:role/my-test-aws-role" in the current environment.`,
 				Code: "confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role",
 			},
 			examples.Example{
-				Text: `Create a provider integration "s3-provider-integration" associated with AWS IAM role arn "arn:aws:iam::000000000000:role/my-test-aws-role in environment env-abcdef".`,
+				Text: `Create provider integration "s3-provider-integration" associated with AWS IAM role ARN "arn:aws:iam::000000000000:role/my-test-aws-role" in the environment "env-abcdef".`,
 				Code: "confluent provider-integration create s3-provider-integration --cloud aws --customer-role-arn arn:aws:iam::000000000000:role/my-test-aws-role --environment env-abcdef",
 			},
 		),
 	}
 
-	// Handle the flags, for cloud flag only AWS is supported now
 	cmd.Flags().String("customer-role-arn", "", "Amazon Resource Name (ARN) that identifies the AWS Identity and Access Management (IAM) role that Confluent Cloud assumes when it accesses resources in your AWS account, having to be unique in the same environment.")
 	c.addCloudFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	// Check the argument from flags
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("customer-role-arn"))
 
