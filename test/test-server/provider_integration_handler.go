@@ -79,7 +79,7 @@ func handleProviderIntegrationDelete(t *testing.T) http.HandlerFunc {
 
 func handleProviderIntegrationList(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		configs := getPimV1IntegrationConfigList("aws")
+		configs := getPimV1IntegrationConfigList()
 		require.Len(t, configs, 2, "expected 2 configs, but got a different length")
 		mockResponse := []pi.PimV1Integration{
 			{
@@ -141,8 +141,7 @@ func getPimV1IntegrationConfig(provider string) *pi.PimV1IntegrationConfigOneOf 
 	}
 }
 
-func getPimV1IntegrationConfigList(provider string) []*pi.PimV1IntegrationConfigOneOf {
-	provider = strings.ToLower(provider)
+func getPimV1IntegrationConfigList() []*pi.PimV1IntegrationConfigOneOf {
 	return []*pi.PimV1IntegrationConfigOneOf{
 		{
 			PimV1AwsIntegrationConfig: &pi.PimV1AwsIntegrationConfig{
