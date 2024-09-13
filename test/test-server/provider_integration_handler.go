@@ -124,7 +124,6 @@ func handleProviderIntegrationCreate(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Return provider specific config, Azure and Gcp are to be implemented from SDK
 func getPimV1IntegrationConfig(provider string) *pi.PimV1IntegrationConfigOneOf {
 	provider = strings.ToLower(provider)
 	switch provider {
@@ -142,30 +141,24 @@ func getPimV1IntegrationConfig(provider string) *pi.PimV1IntegrationConfigOneOf 
 	}
 }
 
-// Return provider specific config list, Azure and Gcp are to be implemented from SDK
 func getPimV1IntegrationConfigList(provider string) []*pi.PimV1IntegrationConfigOneOf {
 	provider = strings.ToLower(provider)
-	switch provider {
-	case "aws":
-		return []*pi.PimV1IntegrationConfigOneOf{
-			{
-				PimV1AwsIntegrationConfig: &pi.PimV1AwsIntegrationConfig{
-					IamRoleArn:         pi.PtrString("arn:aws:iam::851725421142:role/cspi-42o61"),
-					ExternalId:         pi.PtrString("999219d4-37f4-49ac-abfe-d2b6528fb21b"),
-					CustomerIamRoleArn: pi.PtrString("arn:aws:iam::037803949979:role/tarun-iam-test-role"),
-					Kind:               AwsIntegrationConfig,
-				},
+	return []*pi.PimV1IntegrationConfigOneOf{
+		{
+			PimV1AwsIntegrationConfig: &pi.PimV1AwsIntegrationConfig{
+				IamRoleArn:         pi.PtrString("arn:aws:iam::851725421142:role/cspi-42o61"),
+				ExternalId:         pi.PtrString("999219d4-37f4-49ac-abfe-d2b6528fb21b"),
+				CustomerIamRoleArn: pi.PtrString("arn:aws:iam::037803949979:role/tarun-iam-test-role"),
+				Kind:               AwsIntegrationConfig,
 			},
-			{
-				PimV1AwsIntegrationConfig: &pi.PimV1AwsIntegrationConfig{
-					IamRoleArn:         pi.PtrString("arn:aws:iam::851725421142:role/cspi-4xgwq"),
-					ExternalId:         pi.PtrString("b5f0a7e6-15e3-4879-aa01-881910554cd4"),
-					CustomerIamRoleArn: pi.PtrString("arn:aws:iam::000000000000:role/my-test-aws-role"),
-					Kind:               AwsIntegrationConfig,
-				},
+		},
+		{
+			PimV1AwsIntegrationConfig: &pi.PimV1AwsIntegrationConfig{
+				IamRoleArn:         pi.PtrString("arn:aws:iam::851725421142:role/cspi-4xgwq"),
+				ExternalId:         pi.PtrString("b5f0a7e6-15e3-4879-aa01-881910554cd4"),
+				CustomerIamRoleArn: pi.PtrString("arn:aws:iam::000000000000:role/my-test-aws-role"),
+				Kind:               AwsIntegrationConfig,
 			},
-		}
-	default:
-		return []*pi.PimV1IntegrationConfigOneOf{}
+		},
 	}
 }

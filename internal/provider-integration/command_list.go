@@ -12,21 +12,17 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List provider integrations.",
-		Long:  "List Provider Integrations, optionally filtered by cloud provider.",
+		Long:  "List provider integrations, optionally filtered by cloud provider.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List Provider Integrations in current environment.",
+				Text: "List provider integrations in the current environment.",
 				Code: "confluent provider-integration list",
 			},
 			examples.Example{
-				Text: "List Provider Integrations in environment env-abcdef.",
+				Text: `List provider integrations in environment "env-abcdef".`,
 				Code: "confluent provider-integration list --environment env-abcdef",
-			},
-			examples.Example{
-				Text: "List Provider Integrations in current environment with AWS as cloud provider.",
-				Code: "confluent provider-integration list --cloud aws",
 			},
 		),
 	}
@@ -45,10 +41,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Provider information is optional
-	provider, _ := cmd.Flags().GetString("cloud")
+	cloud, _ := cmd.Flags().GetString("cloud")
 
-	providerIntegrations, err := c.V2Client.ListProviderIntegrations(provider, environmentId)
+	providerIntegrations, err := c.V2Client.ListProviderIntegrations(cloud, environmentId)
 	if err != nil {
 		return err
 	}

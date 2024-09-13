@@ -33,13 +33,13 @@ func (c *Client) DescribeProviderIntegration(id, environment string) (pi.PimV1In
 	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListProviderIntegrations(provider, environment string) ([]pi.PimV1Integration, error) {
+func (c *Client) ListProviderIntegrations(cloud, environment string) ([]pi.PimV1Integration, error) {
 	var list []pi.PimV1Integration
 	done := false
 	pageToken := ""
 
 	for !done {
-		page, httpResp, err := c.executeListProviderIntegration(provider, pageToken, environment)
+		page, httpResp, err := c.executeListProviderIntegration(cloud, pageToken, environment)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
