@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+
+	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
 )
 
 func TestGetPrivateLinkAccessCloudWithAws(t *testing.T) {
@@ -27,7 +29,7 @@ func TestGetPrivateLinkAccessCloudWithAws(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, CloudAws, cloud)
+	assert.Equal(t, pcloud.Aws, cloud)
 }
 
 func TestGetPrivateLinkAccessCloudWithAzure(t *testing.T) {
@@ -49,7 +51,7 @@ func TestGetPrivateLinkAccessCloudWithAzure(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, CloudAzure, cloud)
+	assert.Equal(t, pcloud.Azure, cloud)
 }
 
 func TestGetPrivateLinkAccessCloudWithGcp(t *testing.T) {
@@ -71,7 +73,7 @@ func TestGetPrivateLinkAccessCloudWithGcp(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, CloudGcp, cloud)
+	assert.Equal(t, pcloud.Gcp, cloud)
 }
 
 func TestGetPrivateLinkAccessCloudWithEmptyValue(t *testing.T) {
