@@ -27,6 +27,10 @@ var (
 	ByocSupportClouds = []string{"aws", "azure"}
 )
 
+var (
+	ProviderIntegrationSupportClouds = []string{"aws"}
+)
+
 type NullableString interface {
 	Get() *string
 	IsSet() bool

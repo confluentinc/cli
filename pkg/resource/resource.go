@@ -56,6 +56,7 @@ const (
 	PrivateLinkAccess               = "private link access"
 	PrivateLinkAttachment           = "private link attachment"
 	PrivateLinkAttachmentConnection = "private link attachment connection"
+	ProviderIntegration             = "provider integration"
 	ProviderShare                   = "provider share"
 	Pipeline                        = "pipeline"
 	SchemaExporter                  = "schema exporter"
