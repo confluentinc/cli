@@ -34,13 +34,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
-	if governancePackage != "" {
-		environment.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
-			Package: strings.ToUpper(governancePackage),
-		})
+	environment := orgv2.OrgV2Environment{
+		DisplayName:            orgv2.PtrString(args[0]),
+		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: strings.ToUpper(governancePackage)},
 	}
-
 	environment, err = c.V2Client.CreateOrgEnvironment(environment)
 	if err != nil {
 		return err
