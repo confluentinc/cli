@@ -52,9 +52,8 @@ type SRNotEnabledError struct {
 
 func NewSRNotEnabledError() CLITypedError {
 	return &SRNotEnabledError{
-		ErrorMsg: "Schema Registry not enabled",
-		SuggestionsMsg: "Schema Registry must be enabled for the environment in order to run the command.\n" +
-			"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`.",
+		ErrorMsg:       "Schema Registry not enabled",
+		SuggestionsMsg: "Enable Schema Registry for this environment by creating a Kafka cluster with `confluent kafka cluster create`.",
 	}
 }
 
