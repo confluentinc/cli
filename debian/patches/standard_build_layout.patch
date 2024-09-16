@@ -1,4 +1,4 @@
---- cli/Makefile	2024-09-11 12:14:11.637318219 -0700
+--- cli/Makefile	2024-09-16 09:46:22.868477422 -0700
 +++ debian/Makefile	2024-09-11 13:09:21.649421504 -0700
 @@ -1,139 +1,163 @@
 -SHELL := /bin/bash
@@ -31,7 +31,7 @@
 -	endif
 -else
 -	ifeq ($(GOOS),windows) # windows/amd64
--		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
+-		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-fstack-protector -static" $(MAKE) cli-builder
 -	else ifeq ($(GOOS),linux) # linux/amd64
 -		CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
 -	else # darwin/amd64
