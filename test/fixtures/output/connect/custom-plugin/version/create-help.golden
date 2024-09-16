@@ -12,7 +12,7 @@ Flags:
       --plugin string                  REQUIRED: ID of custom connector plugin.
       --plugin-file string             REQUIRED: Custom plugin ZIP or JAR file.
       --version-number string          REQUIRED: Version number of custom plugin version.
-      --beta                           Mark the custom plugin version as beta.
+      --beta string                    Flag to specify stability of the version. (default "false")
       --release-notes string           Release notes for custom plugin version.
       --sensitive-properties strings   A comma-separated list of sensitive property names.
       --context string                 CLI context name.

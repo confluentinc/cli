@@ -1,14 +1,12 @@
 package connect
 
 import (
-	"fmt"
-
+	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/deletion"
 	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
@@ -60,12 +58,12 @@ func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCustomPluginVersion(plugin, version)
+	err = c.V2Client.DeleteCustomPluginVersion(plugin, version)
+	if err != nil {
+		return err
 	}
 
-	_, err = deletion.DeleteWithoutMessage(args, deleteFunc)
-	deletedResourceMsg := fmt.Sprintf(`Deleted %s "%s" version "%s".`, resource.CustomConnectorPlugin, plugin, version)
-	output.Printf(false, deletedResourceMsg)
-	return err
+	deletedResourceMsg := "Deleted %s \"%s\" version \"%s\".\n"
+	output.Printf(false, deletedResourceMsg, resource.CustomConnectorPlugin, plugin, version)
+	return nil
 }

@@ -1,7 +1,8 @@
 package connect
 
 import (
-	"strconv"
+	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -16,7 +17,7 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update a custom connector plugin version metadata.",
-		Args:  cobra.NoArgs,
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.updateVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -29,7 +30,7 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
 	cmd.Flags().String("version", "", "ID of custom connector plugin version.")
 	cmd.Flags().String("version-number", "", "Version number of custom plugin version.")
-	cmd.Flags().Bool("beta", false, "Mark the custom plugin version as beta.")
+	cmd.Flags().String("beta", "false", "Flag to specify stability of the version.")
 	cmd.Flags().String("release-notes", "", "Release notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -61,11 +62,14 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		}
 	}
 	if cmd.Flags().Changed("beta") {
-		beta, err := cmd.Flags().GetBool("beta")
+		beta, err := cmd.Flags().GetString("beta")
 		if err != nil {
 			return err
 		}
-		isBetaString := strconv.FormatBool(beta)
+		isBetaString := strings.ToLower(beta)
+		if isBetaString != "true" && isBetaString != "false" {
+			return fmt.Errorf(`--beta flag must be "true" or "false"`)
+		}
 		updateCustomPluginVersionRequest.SetIsBeta(isBetaString)
 	}
 	if cmd.Flags().Changed("release-notes") {
