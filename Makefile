@@ -27,7 +27,7 @@ ifeq ($(GOARCH),arm64)
 	endif
 else
 	ifeq ($(GOOS),windows) # windows/amd64
-		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
+		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-fstack-protector -static" $(MAKE) cli-builder
 	else ifeq ($(GOOS),linux) # linux/amd64
 		CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
 	else # darwin/amd64
