@@ -8,7 +8,6 @@ Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the specifi
 
   $ confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --kafka-cluster 0000000000000000000000 --resource Topic:my-topic
 
-
 Flags:
       --role string                      REQUIRED: Role name of the existing role binding.
       --principal string                 REQUIRED: Principal type and identifier using "Prefix:ID" format.
