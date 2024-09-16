@@ -428,7 +428,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		return err
 	}
 	if len(clusters) == 0 {
-		return errors.NewSRNotEnabledError()
+		return schemaregistry.ErrNotEnabled
 	}
 
 	details.kafkaClusterId = cluster.ID
