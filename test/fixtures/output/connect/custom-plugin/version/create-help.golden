@@ -4,17 +4,18 @@ Usage:
   confluent connect custom-plugin version create [flags]
 
 Examples:
-Create custom connector plugin version --plugin "ccp-12345".
+Create custom connector plugin version for plugin "ccp-123456".
 
-  $ confluent connect custom-plugin version create --plugin ccp-12345. --plugin-file datagen.zip --version-number 0.0.1 --is-beta=true
+  $ confluent connect custom-plugin version create --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1
 
 Flags:
       --plugin string                  REQUIRED: ID of custom connector plugin.
       --plugin-file string             REQUIRED: Custom plugin ZIP or JAR file.
       --version-number string          REQUIRED: Version number of custom plugin version.
-      --is-beta bool                   Mark the custom plugin version as beta.
+      --beta                           Mark the custom plugin version as beta.
       --release-notes string           Release notes for custom plugin version.
       --sensitive-properties strings   A comma-separated list of sensitive property names.
+      --context string                 CLI context name.
   -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

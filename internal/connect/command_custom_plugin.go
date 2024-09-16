@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,7 +10,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 

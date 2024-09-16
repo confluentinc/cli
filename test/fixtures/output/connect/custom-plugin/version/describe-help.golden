@@ -4,13 +4,13 @@ Usage:
   confluent connect custom-plugin version describe [flags]
 
 Examples:
-Describe custom connector plugin version
+Describe custom connector plugin "ccp-123456" version "ver-12345".
 
   $ confluent connect custom-plugin version describe --plugin ccp-123456 --version ver-12345
 
 Flags:
-      --plugin string    REQUIRED: Id of the base plugin
-      --version string   REQUIRED: Id of the version to be deleted
+      --plugin string    REQUIRED: ID of custom connector plugin.
+      --version string   REQUIRED: ID of custom connector plugin version.
       --context string   CLI context name.
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
 
