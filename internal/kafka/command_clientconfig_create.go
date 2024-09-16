@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/examples"
 	"github.com/confluentinc/cli/v3/pkg/kafka"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 )
 
 type clientConfig struct {
@@ -274,7 +275,7 @@ func (c *clientConfigCommand) getSchemaRegistryCluster() (*srcmv3.SrcmV3Cluster,
 		return nil, err
 	}
 	if len(clusters) == 0 {
-		return nil, errors.NewSRNotEnabledError()
+		return nil, schemaregistry.ErrNotEnabled
 	}
 
 	return &clusters[0], nil
