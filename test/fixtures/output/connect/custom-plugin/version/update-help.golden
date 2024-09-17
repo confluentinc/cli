@@ -6,7 +6,7 @@ Usage:
 Examples:
 Update custom connector plugin version for plugin "ccp-123456" version "ver-12345."
 
-  $ confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345. --version-number 0.0.1
+  $ confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta true
 
 Flags:
       --plugin string                  REQUIRED: ID of custom connector plugin.

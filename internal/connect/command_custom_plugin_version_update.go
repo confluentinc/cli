@@ -22,7 +22,7 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update custom connector plugin version for plugin "ccp-123456" version "ver-12345."`,
-				Code: "confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345. --version-number 0.0.1",
+				Code: "confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta true",
 			},
 		),
 	}
