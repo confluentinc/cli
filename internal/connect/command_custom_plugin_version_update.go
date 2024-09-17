@@ -1,8 +1,7 @@
 package connect
 
 import (
-	"fmt"
-	"strings"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -22,7 +21,7 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update custom connector plugin version for plugin "ccp-123456" version "ver-12345."`,
-				Code: "confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta true",
+				Code: "confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta=true",
 			},
 		),
 	}
@@ -30,7 +29,7 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
 	cmd.Flags().String("version", "", "ID of custom connector plugin version.")
 	cmd.Flags().String("version-number", "", "Version number of custom plugin version.")
-	cmd.Flags().String("beta", "false", "Specify the stability of the version.")
+	cmd.Flags().Bool("beta", false, "Specify the stability of the version.")
 	cmd.Flags().String("release-notes", "", "Release notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -62,14 +61,11 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		}
 	}
 	if cmd.Flags().Changed("beta") {
-		beta, err := cmd.Flags().GetString("beta")
+		beta, err := cmd.Flags().GetBool("beta")
 		if err != nil {
 			return err
 		}
-		isBetaString := strings.ToLower(beta)
-		if isBetaString != "true" && isBetaString != "false" {
-			return fmt.Errorf(`--beta flag must be "true" or "false"`)
-		}
+		isBetaString := strconv.FormatBool(beta)
 		updateCustomPluginVersionRequest.SetIsBeta(isBetaString)
 	}
 	if cmd.Flags().Changed("release-notes") {

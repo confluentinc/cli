@@ -6,13 +6,13 @@ Usage:
 Examples:
 Update custom connector plugin version for plugin "ccp-123456" version "ver-12345."
 
-  $ confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta true
+  $ confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta=true
 
 Flags:
       --plugin string                  REQUIRED: ID of custom connector plugin.
       --version string                 REQUIRED: ID of custom connector plugin version.
       --version-number string          Version number of custom plugin version.
-      --beta string                    Specify the stability of the version. (default "false")
+      --beta                           Specify the stability of the version. (default "false")
       --release-notes string           Release notes for custom plugin version.
       --sensitive-properties strings   A comma-separated list of sensitive property names.
       --context string                 CLI context name.

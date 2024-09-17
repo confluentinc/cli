@@ -3,6 +3,7 @@ package connect
 import (
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -40,7 +41,7 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
 	cmd.Flags().String("plugin-file", "", "Custom plugin ZIP or JAR file.")
 	cmd.Flags().String("version-number", "", "Version number of custom plugin version.")
-	cmd.Flags().String("beta", "false", "Specify the stability of the version.")
+	cmd.Flags().Bool("beta", false, "Specify the stability of the version.")
 	cmd.Flags().String("release-notes", "", "Release notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -76,14 +77,12 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 	if err != nil {
 		return err
 	}
-	beta, err := cmd.Flags().GetString("beta")
+
+	beta, err := cmd.Flags().GetBool("beta")
 	if err != nil {
 		return err
 	}
-	isBetaString := strings.ToLower(beta)
-	if isBetaString != "true" && isBetaString != "false" {
-		return fmt.Errorf(`--beta flag must be "true" or "false"`)
-	}
+	isBetaString := strconv.FormatBool(beta)
 
 	releaseNotes, err := cmd.Flags().GetString("release-notes")
 	if err != nil {
