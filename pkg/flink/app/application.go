@@ -69,7 +69,10 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 
 	// Instantiate LSP
 	handlerCh := make(chan *jsonrpc2.Request) // This is the channel used for the messages received by the language to be passed through to the input controller
-	lspClient := lsp.NewWebsocketClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
+	lspClient, err := lsp.NewWebsocketClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
+	if err != nil {
+		log.CliLogger.Errorf("Failed to initialize LSP client: %s", err.Error())
+	}
 
 	stdinBefore := utils.GetStdin()
 	consoleParser, err := utils.GetConsoleParser()
