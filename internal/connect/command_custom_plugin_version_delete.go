@@ -45,8 +45,7 @@ func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	_, err = c.V2Client.DescribeCustomPluginVersion(plugin, version)
-	if err != nil {
+	if _, err := c.V2Client.DescribeCustomPluginVersion(plugin, version); err != nil {
 		return err
 	}
 
@@ -58,8 +57,7 @@ func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	err = c.V2Client.DeleteCustomPluginVersion(plugin, version)
-	if err != nil {
+	if err := c.V2Client.DeleteCustomPluginVersion(plugin, version); err != nil {
 		return err
 	}
 

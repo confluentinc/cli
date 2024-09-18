@@ -10,6 +10,6 @@
   sensitive_properties: []
 - version: ver-123456
   version_number: 0.0.2
-  is_beta: "false"
+  is_beta: "true"
   release_notes: ""
   sensitive_properties: []

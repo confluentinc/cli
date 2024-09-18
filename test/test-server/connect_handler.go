@@ -514,7 +514,7 @@ func handleCustomConnectorPluginsVersions(t *testing.T) http.HandlerFunc {
 			version3 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
 				Id:      connectcustompluginv1.PtrString("ver-123456"),
 				Version: connectcustompluginv1.PtrString("0.0.2"),
-				IsBeta:  connectcustompluginv1.PtrString("false"),
+				IsBeta:  connectcustompluginv1.PtrString("true"),
 			}
 
 			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginVersionList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{version1, version2, version3}})

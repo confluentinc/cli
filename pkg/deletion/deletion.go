@@ -148,10 +148,8 @@ func DefaultYesNoDeletePromptString(resourceType string, idList []string) string
 	return promptMsg
 }
 
-func VersionDeleteYesNoDeletePromptString(resourceType, pluginId, versionID string) string {
-	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" version "%s"?`, resourceType, pluginId, versionID)
-
-	return promptMsg
+func VersionDeleteYesNoDeletePromptString(resourceType, pluginId, versionId string) string {
+	return fmt.Sprintf(`Are you sure you want to delete %s "%s" version "%s"?`, resourceType, pluginId, versionId)
 }
 
 func ValidateAndConfirmUndeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {

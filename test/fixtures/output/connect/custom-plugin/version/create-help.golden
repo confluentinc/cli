@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create custom connector plugin version for plugin "ccp-123456".
 
-  $ confluent connect custom-plugin version create --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1
+  $ confluent connect custom-plugin version create --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1 --beta=false --sensitive-properties=property1,property2
 
 Flags:
       --plugin string                  REQUIRED: ID of custom connector plugin.
