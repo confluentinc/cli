@@ -26,7 +26,6 @@ func (c *mirrorCommand) newTruncateAndRestoreCommand() *cobra.Command {
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually truncate the local topic, but simply validates it.")
-	cmd.Flags().Bool(includePartitionDataFlagName, false, "If set, returns the number of messages truncated per partition.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -48,11 +47,6 @@ func (c *mirrorCommand) truncateAndRestore(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	includePartitionData, err := cmd.Flags().GetBool(includePartitionDataFlagName)
-	if err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
@@ -60,7 +54,7 @@ func (c *mirrorCommand) truncateAndRestore(cmd *cobra.Command, args []string) er
 
 	data := kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: &args}
 
-	results, err := kafkaREST.CloudClient.UpdateKafkaTruncateAndRestore(link, dryRun, includePartitionData, data)
+	results, err := kafkaREST.CloudClient.UpdateKafkaTruncateAndRestore(link, dryRun, data)
 	if err != nil {
 		return err
 	}
