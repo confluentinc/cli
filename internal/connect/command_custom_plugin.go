@@ -52,7 +52,7 @@ func newCustomPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra
 	cmd.AddCommand(c.newUpdateCommand())
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.custom_plugin_versioning.enable", cfg.Context(), config.CliLaunchDarklyClient, false, false) {
+	if cfg.IsTest || featureflags.Manager.BoolVariation("custom-connect.plugin.versioning.cli.enabled", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(c.newCustomPluginVersionCommand())
 	}
 

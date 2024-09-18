@@ -29,7 +29,7 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
 	cmd.Flags().String("version", "", "ID of custom connector plugin version.")
 	cmd.Flags().String("version-number", "", "Version number of custom plugin version.")
-	cmd.Flags().Bool("beta", false, "Specify the stability of the version. (default \"false\")")
+	cmd.Flags().Bool("beta", false, `Mark the custom plugin version as beta. (default "false")`)
 	cmd.Flags().String("release-notes", "", "Release notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
