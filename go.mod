@@ -22,7 +22,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0
-	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.5
+	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.6
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.9.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0
@@ -104,7 +104,7 @@ require (
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.25.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	golang.org/x/oauth2 v0.21.0
+	golang.org/x/oauth2 v0.22.0
 	golang.org/x/term v0.22.0
 	golang.org/x/text v0.16.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
