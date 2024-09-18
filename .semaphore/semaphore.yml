@@ -64,7 +64,7 @@ blocks:
             # Do not install Go with Chocolatey since it is community maintained and may not have the latest version
             - Invoke-WebRequest -OutFile go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
             - Expand-Archive go.zip
-            - $Env:PATH = $(pwd)\go\bin:$Env:PATH
+            - $Env:PATH = $(pwd)\go\bin;$Env:PATH
             - $Env:GOROOT = $(pwd)\go
             - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
             - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
