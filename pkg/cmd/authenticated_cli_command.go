@@ -28,6 +28,7 @@ type AuthenticatedCLICommand struct {
 
 	Client            *ccloudv1.Client
 	KafkaRESTProvider *KafkaRESTProvider
+	CmfRESTProvider   *CmfRESTProvider
 	MDSClient         *mdsv1.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	V2Client          *ccloudv2.Client
@@ -284,4 +285,8 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 	}
 
 	return c.schemaRegistryClient, nil
+}
+
+func (c *AuthenticatedCLICommand) GetCmfREST() (*CmfREST, error) {
+	return (*c.CmfRESTProvider)()
 }

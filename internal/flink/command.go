@@ -16,24 +16,38 @@ type command struct {
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "flink",
-		Short:       "Manage Apache Flink.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "flink",
+		Short: "Manage Apache Flink.",
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(c.newConnectionCommand())
+	if cfg.IsCloudLogin() {
+		// Cloud login specific annotations
+		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin}
+
+		if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
+			cmd.AddCommand(c.newConnectionCommand())
+		}
+
+		cmd.AddCommand(c.newArtifactCommand())
+		cmd.AddCommand(c.newComputePoolCommand())
+		cmd.AddCommand(c.newConnectivityTypeCommand())
+		cmd.AddCommand(c.newRegionCommand())
+		cmd.AddCommand(c.newShellCommand(prerunner))
+		cmd.AddCommand(c.newStatementCommand())
+	} else {
+		// On-prem specific annotations
+		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin}
+
+		cmd.AddCommand(c.newApplicationCommand())
+
+		cmd.PersistentFlags().String("url", "", "Base URL of the Confluent Manager for Apache Flink (CMF). Flag must be set or CONFLUENT_CMF_URL.")
+		cmd.PersistentFlags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
+		cmd.PersistentFlags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
+		cmd.PersistentFlags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
+		c.PersistentPreRunE = prerunner.InitializeOnPremCmfRest(c.AuthenticatedCLICommand)
 	}
-
-	cmd.AddCommand(c.newArtifactCommand())
-	cmd.AddCommand(c.newComputePoolCommand())
-	cmd.AddCommand(c.newConnectivityTypeCommand())
-	cmd.AddCommand(c.newRegionCommand())
-	cmd.AddCommand(c.newShellCommand(prerunner))
-	cmd.AddCommand(c.newStatementCommand())
-
 	return cmd
 }
 
