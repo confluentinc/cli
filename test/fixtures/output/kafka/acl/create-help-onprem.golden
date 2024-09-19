@@ -23,7 +23,7 @@ You can also run the example above without logging in if you provide the Kafka R
   $ confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --topic "*"
 
 Flags:
-      --principal string                    REQUIRED: Principal for this operation with User: or Group: prefix.
+      --principal string                    REQUIRED: Principal for this operation, prefixed with "User:" or "Group:".
       --operation string                    REQUIRED: Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --host string                         Set host for access. Only IP addresses are supported. (default "*")
       --allow                               ACL permission to allow access.
