@@ -77,10 +77,10 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 	}
 }
 
-func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) LspInterface {
+func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (LspInterface, error) {
 	lspClient, conn, err := newLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId, handlerCh)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	websocketClient := &WebsocketLSPClient{
 		baseUrl:        baseUrl,
@@ -91,7 +91,7 @@ func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, env
 		lspClient:      lspClient,
 		conn:           conn,
 	}
-	return websocketClient
+	return websocketClient, nil
 }
 
 func newLSPConnection(baseUrl, authToken, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (LspInterface, *jsonrpc2.Conn, error) {

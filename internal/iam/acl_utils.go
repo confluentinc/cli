@@ -25,18 +25,15 @@ type ACLConfiguration struct {
 func aclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("kafka-cluster", "", "Kafka cluster ID for scope of ACL commands.")
-	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
+	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:" or "Group:".`)
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", acl.ConvertToLower(acl.Operations)))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
-	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
-access to the provided operations on the Kafka cluster itself.`)
+	flgSet.Bool("cluster-scope", false, "Set the cluster resource. With this option the ACL grants access to the provided operations on the Kafka cluster itself.")
 	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
 	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
-	flgSet.String("topic", "", `Set the topic resource. With this option the ACL grants the provided
-operations on the topics that start with that prefix, depending on whether
-the "--prefix" option was also passed.`)
+	flgSet.String("topic", "", `Set the topic resource. With this option the ACL grants the provided operations on the topics that start with that prefix, depending on whether the "--prefix" option was also passed.`)
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
 	flgSet.SortFlags = false
 	return flgSet
@@ -44,19 +41,9 @@ the "--prefix" option was also passed.`)
 
 // parse returns ACLConfiguration from the contents of cmd
 func parse(cmd *cobra.Command) *ACLConfiguration {
-	aclConfiguration := &ACLConfiguration{
-		CreateAclRequest: &mdsv1.CreateAclRequest{
-			Scope: mdsv1.KafkaScope{
-				Clusters: mdsv1.KafkaScopeClusters{},
-			},
-			AclBinding: mdsv1.AclBinding{
-				Entry: mdsv1.AccessControlEntry{
-					Host: "*",
-				},
-				Pattern: mdsv1.KafkaResourcePattern{},
-			},
-		},
-	}
+	aclConfiguration := &ACLConfiguration{CreateAclRequest: &mdsv1.CreateAclRequest{
+		AclBinding: mdsv1.AclBinding{Entry: mdsv1.AccessControlEntry{Host: "*"}},
+	}}
 	cmd.Flags().Visit(fromArgs(aclConfiguration))
 	return aclConfiguration
 }
@@ -130,8 +117,7 @@ func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	n = ccloudv2.ToUpper(n)
 
 	enumUtils := utils.EnumUtils{}
-	enumUtils.Init(mdsv1.ACLRESOURCETYPE_TOPIC, mdsv1.ACLRESOURCETYPE_GROUP,
-		mdsv1.ACLRESOURCETYPE_CLUSTER, mdsv1.ACLRESOURCETYPE_TRANSACTIONAL_ID)
+	enumUtils.Init(mdsv1.ACLRESOURCETYPE_TOPIC, mdsv1.ACLRESOURCETYPE_GROUP, mdsv1.ACLRESOURCETYPE_CLUSTER, mdsv1.ACLRESOURCETYPE_TRANSACTIONAL_ID)
 	conf.AclBinding.Pattern.ResourceType = enumUtils[n].(mdsv1.AclResourceType)
 
 	if conf.AclBinding.Pattern.ResourceType == mdsv1.ACLRESOURCETYPE_CLUSTER {
