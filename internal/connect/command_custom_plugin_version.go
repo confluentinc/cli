@@ -1,9 +1,8 @@
 package connect
 
 import (
-	"github.com/spf13/cobra"
-
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
@@ -18,7 +17,7 @@ type customPluginVersionOut struct {
 	ConnectorType       string   `human:"Connector Type" serialized:"connector_type"`
 	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
 	VersionNumber       string   `human:"Version Number" serialized:"version_number"`
-	IsBeta              string   `human:"Beta" serialized:"is_beta"`
+	IsBeta              bool     `human:"Beta" serialized:"is_beta"`
 	ReleaseNotes        string   `human:"Release Notes" serialized:"release_notes"`
 	ErrorTrace          string   `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
@@ -50,7 +49,7 @@ func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV
 		SensitiveProperties: version.GetSensitiveConfigProperties(),
 		Version:             version.GetId(),
 		VersionNumber:       version.GetVersion(),
-		IsBeta:              version.GetIsBeta(),
+		IsBeta:              version.GetIsBeta() == "true",
 		ReleaseNotes:        version.GetReleaseNotes(),
 	})
 
