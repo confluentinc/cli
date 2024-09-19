@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -119,6 +120,31 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			"items": items,
 		}
 		err := json.NewEncoder(w).Encode(applicationPage)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET "cmf/api/v1/environments"
+func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		environments := []cmfsdk.GetEnvironment{
+			{
+				Name:            "default",
+				CreatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+				UpdatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+				DefaultStrategy: "default",
+			},
+			{
+				Name:            "etl-team",
+				CreatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+				UpdatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+				DefaultStrategy: "custom",
+			},
+		}
+		environmentPage := map[string]interface{}{
+			"items": environments,
+		}
+		err := json.NewEncoder(w).Encode(environmentPage)
 		require.NoError(t, err)
 	}
 }

@@ -17,3 +17,17 @@ func (s *CLITestSuite) TestListFlinkApplications() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestListFlinkEnvironments() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink environment list --output json", fixture: "flink/onprem/environment/list-json.golden"},
+		{args: "flink environment list --output human", fixture: "flink/onprem/environment/list-human.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.workflow = false
+		s.runIntegrationTest(test)
+	}
+}
