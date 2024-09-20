@@ -21,6 +21,7 @@ func (c *customPluginCommand) newVersionListCommand() *cobra.Command {
 			},
 		),
 	}
+
 	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

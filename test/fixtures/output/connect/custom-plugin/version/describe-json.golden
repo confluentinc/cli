@@ -8,6 +8,6 @@
   "connector_type": "source",
   "sensitive_properties": null,
   "version_number": "0.0.0",
-  "is_beta": "false",
+  "is_beta": false,
   "release_notes": "test release notes"
 }

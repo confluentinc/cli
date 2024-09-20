@@ -33,7 +33,7 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create custom connector plugin version for plugin "ccp-123456".`,
-				Code: "confluent connect custom-plugin version create --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1 --beta=false --sensitive-properties=property1,property2",
+				Code: "confluent connect custom-plugin version create --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1 --beta=true --sensitive-properties=passwords,keys,tokens",
 			},
 		),
 	}

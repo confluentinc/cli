@@ -4,9 +4,13 @@ Usage:
   confluent connect custom-plugin version update [flags]
 
 Examples:
-Update custom connector plugin version for plugin "ccp-123456" version "ver-12345."
+Update custom connector plugin version number, beta and sensitive properties for plugin "ccp-123456" version "ver-12345."
 
-  $ confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta=false --sensitive-properties=property1,property2
+  $ confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta=true --sensitive-properties=passwords,keys,tokens
+
+Update release notes for custom connector plugin "ccp-123456" version "ver-12345."
+
+  $ confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --release-notes "New release."
 
 Flags:
       --plugin string                  REQUIRED: ID of custom connector plugin.
