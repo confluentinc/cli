@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -100,11 +100,11 @@ func (c *command) autocompleteTopics() []string {
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (c *command) validateTopic(client *ckgo.AdminClient, topic string, cluster *config.KafkaClusterConfig) error {
+func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluster *config.KafkaClusterConfig) error {
 	timeout := 10 * time.Second
 	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
-		if err.Error() == ckgo.ErrTransport.String() {
+		if err.Error() == ckafka.ErrTransport.String() {
 			err = fmt.Errorf("API key may not be provisioned yet")
 		}
 		return fmt.Errorf("failed to obtain topics from client: %w", err)
@@ -206,7 +206,7 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 	return nil
 }
 
-func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckgo.Producer) error {
+func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckafka.Producer) error {
 	keys := "Ctrl-C or Ctrl-D"
 	if runtime.GOOS == "windows" {
 		keys = "Ctrl-C"
@@ -226,7 +226,7 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 	// Prime reader
 	go scan()
 
-	deliveryChan := make(chan ckgo.Event)
+	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
 		if data == "" {
 			if scanErr != nil {
@@ -252,7 +252,7 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 		}
 
 		e := <-deliveryChan                // read a ckafka event from the channel
-		m := e.(*ckgo.Message)             // extract the message from the event
+		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
 			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}

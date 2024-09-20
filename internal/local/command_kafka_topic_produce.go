@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	"github.com/confluentinc/cli/v3/internal/kafka"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -56,7 +56,7 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
-	adminClient, err := ckgo.NewAdminClientFromProducer(producer)
+	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
@@ -76,8 +76,8 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	return kafka.ProduceToTopic(cmd, []byte{}, []byte{}, topicName, serializationProvider, serializationProvider, producer)
 }
 
-func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckgo.Producer, error) {
-	configMap := &ckgo.ConfigMap{
+func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, error) {
+	configMap := &ckafka.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             "confluent-local",
 		"bootstrap.servers":                     bootstrap,
@@ -104,5 +104,5 @@ func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckgo.Producer, er
 		return nil, err
 	}
 
-	return ckgo.NewProducer(configMap)
+	return ckafka.NewProducer(configMap)
 }
