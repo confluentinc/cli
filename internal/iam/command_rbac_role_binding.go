@@ -190,6 +190,8 @@ func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CL
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for the role binding.")
 		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID for the role binding.")
+		cmd.Flags().String("cmf", "", "cmf ID, which specifies the cmf scope")
+		cmd.Flags().String("flink-environment", "", "flink-environment ID, which specifies the flink-environment scope")
 		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 		pcmd.AddContextFlag(cmd, cliCommand)
 	}
@@ -204,8 +206,10 @@ func (c *roleBindingCommand) validatePrincipalFormat(principal string) error {
 }
 
 func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.MdsScope, error) {
-	scope := &mdsv1.MdsScopeClusters{}
+	scope := &mdsv1.ScopeClusters{}
 	nonKafkaScopesSet := 0
+	cmfScope := 0
+	flinkEnvironmentScope := 0
 
 	clusterName, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
@@ -225,6 +229,12 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.M
 		case "connect-cluster":
 			scope.ConnectCluster = flag.Value.String()
 			nonKafkaScopesSet++
+		case "cmf":
+			scope.Cmf = flag.Value.String()
+			cmfScope++
+		case "flink-environment":
+			scope.FlinkEnvironment = flag.Value.String()
+			flinkEnvironmentScope++
 		}
 	})
 
@@ -233,11 +243,16 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.M
 	}
 
 	if clusterName == "" {
+
 		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
 			return nil, fmt.Errorf(errors.SpecifyKafkaIdErrorMsg)
 		}
 
-		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
+		if scope.Cmf == "" && flinkEnvironmentScope > 0 {
+			return nil, fmt.Errorf(errors.SpecifyCmfErrorMsg)
+		}
+
+		if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 && cmfScope == 0 && flinkEnvironmentScope == 0 {
 			return nil, fmt.Errorf("must specify either cluster ID to indicate role binding scope or the cluster name")
 		}
 
