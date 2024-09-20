@@ -24,8 +24,8 @@ func (c *customPluginCommand) newVersionUpdateCommand() *cobra.Command {
 				Code: "confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --version-number 0.0.1 --beta=true --sensitive-properties=passwords,keys,tokens",
 			},
 			examples.Example{
-				Text: `Update custom connector plugin version release notes for plugin "ccp-123456" version "ver-12345."`,
-				Code: "confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --release-notes \"New release.\"",
+				Text: `Update release notes for custom connector plugin "ccp-123456" version "ver-12345."`,
+				Code: `confluent connect custom-plugin version update --plugin ccp-123456 --version ver-12345 --release-notes "New release."`,
 			},
 		),
 	}
