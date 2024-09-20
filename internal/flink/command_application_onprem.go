@@ -11,7 +11,7 @@ type flinkApplicationOut struct {
 	JobState    string `human:"Job State" serialized:"job_state"`
 }
 
-func (c *command) newApplicationCommand() *cobra.Command {
+func (c *command) newApplicationCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "application",
 		Short:   "Manage Flink Application",

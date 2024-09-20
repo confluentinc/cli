@@ -60,21 +60,21 @@ func (c *command) listApplicationsOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		table := output.NewTable(cmd)
+		list := output.NewList(cmd)
 		for _, app := range applications {
 			jobStatus := app.Status["jobStatus"].(map[string]interface{})
 			environment, ok := app.Metadata["environment"].(string)
 			if !ok {
 				environment = environmentName
 			}
-			table.Add(&flinkApplicationOut{
+			list.Add(&flinkApplicationOut{
 				Name:        app.Metadata["name"].(string),
 				Environment: environment,
 				JobId:       jobStatus["jobId"].(string),
 				JobState:    jobStatus["state"].(string),
 			})
 		}
-		return table.Print()
+		return list.Print()
 	}
 	return output.SerializedOutput(cmd, applications)
 }

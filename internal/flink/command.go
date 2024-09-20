@@ -40,8 +40,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		// On-prem specific annotations
 		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin}
 
-		cmd.AddCommand(c.newApplicationCommand())
 		cmd.AddCommand(c.newEnvironmentOnPremCommand())
+		cmd.AddCommand(c.newApplicationCommandOnPrem())
 		cmd.PersistentFlags().String("url", "", "Base URL of the Confluent Manager for Apache Flink (CMF). Flag must be set or CONFLUENT_CMF_URL.")
 		cmd.PersistentFlags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
 		cmd.PersistentFlags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
