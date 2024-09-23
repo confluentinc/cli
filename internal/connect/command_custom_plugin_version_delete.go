@@ -53,6 +53,7 @@ func (c *customPluginCommand) deleteVersion(cmd *cobra.Command, args []string) e
 		return id == version || id == plugin
 	}
 
+	args = []string{version}
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.CustomConnectorPluginVersion); err != nil {
 		return err
 	}
