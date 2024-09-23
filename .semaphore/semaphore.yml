@@ -67,6 +67,7 @@ blocks:
             - $Env:GOROOT = "$PWD/go"
             - $Env:PATH = "$Env:GOROOT/bin;$Env:PATH"
             - $Env:PATH = "$(go env GOPATH)/bin;$Env:PATH"
+            - echo $Env:Path
             - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
             - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
             - $Env:GOCOVERDIR = "test/coverage"
