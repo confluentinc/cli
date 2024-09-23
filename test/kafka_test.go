@@ -351,6 +351,8 @@ func (s *CLITestSuite) TestKafkaMirror() {
 		{args: "kafka mirror reverse-and-start topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/reverse-and-start-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror reverse-and-pause topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/reverse-and-pause-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/truncate-and-restore-mirror.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/truncate-and-restore-mirror-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/truncate-and-restore-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
 	}
 
 	for _, test := range tests {

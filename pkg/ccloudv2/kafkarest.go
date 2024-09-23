@@ -213,7 +213,7 @@ func (c *KafkaRestClient) UpdateKafkaMirrorTopicsReverseAndPauseMirror(linkName 
 }
 
 func (c *KafkaRestClient) UpdateKafkaTruncateAndRestore(linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) ([]kafkarestv3.AlterMirrorStatusResponseData, error) {
-	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsTruncateAndRestoreMirror(c.kafkaRestApiContext(), c.ClusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
+	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsTruncateAndRestoreMirror(c.kafkaRestApiContext(), c.ClusterId, linkName).ValidateOnly(validateOnly).IncludePartitionLevelTruncationData(true).AlterMirrorsRequestData(data).Execute()
 	if err != nil {
 		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
 	}
