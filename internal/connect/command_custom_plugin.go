@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/featureflags"
 	"github.com/spf13/cobra"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
@@ -23,7 +25,7 @@ type customPluginOut struct {
 	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
 }
 
-func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newCustomPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "custom-plugin",
 		Short:       "Manage custom connector plugins.",
@@ -37,6 +39,11 @@ func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
+
+	_ = cfg.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.custom-connect.plugin.versioning.enabled", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(c.newCustomPluginVersionCommand())
+	}
 
 	return cmd
 }
