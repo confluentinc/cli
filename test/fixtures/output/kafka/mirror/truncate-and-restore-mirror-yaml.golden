@@ -4,7 +4,7 @@
   last_source_fetch_offset: -1
   error_message: Not authorized
   error_code: "401"
-  messages_truncated: 0
+  messages_truncated: ""
   offset_truncated_to: ""
 - mirror_topic_name: topic-1
   partition: 0
@@ -12,7 +12,7 @@
   last_source_fetch_offset: 1000
   error_message: ""
   error_code: ""
-  messages_truncated: 25
+  messages_truncated: "25"
   offset_truncated_to: "10"
 - mirror_topic_name: topic-1
   partition: 1
@@ -20,7 +20,7 @@
   last_source_fetch_offset: 10000
   error_message: ""
   error_code: ""
-  messages_truncated: 0
+  messages_truncated: "0"
   offset_truncated_to: ""
 - mirror_topic_name: topic-1
   partition: 2
@@ -28,5 +28,5 @@
   last_source_fetch_offset: 100000
   error_message: ""
   error_code: ""
-  messages_truncated: 25
+  messages_truncated: "25"
   offset_truncated_to: "15"

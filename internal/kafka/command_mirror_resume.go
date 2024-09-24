@@ -96,10 +96,6 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 		nextTruncationDataIndex := 0
 		for _, partitionLag := range result.GetMirrorLags().Items {
 			if len(result.GetPartitionLevelTruncationData().Items) > 0 && result.GetPartitionLevelTruncationData().Items[nextTruncationDataIndex].GetPartitionId() == partitionLag.GetPartition() {
-				messagesTruncated, err := strconv.ParseInt(result.GetPartitionLevelTruncationData().Items[nextTruncationDataIndex].GetMessagesTruncated(), 10, 64)
-				if err != nil {
-					return err
-				}
 				list.Add(&mirrorOut{
 					MirrorTopicName:       result.GetMirrorTopicName(),
 					Partition:             partitionLag.GetPartition(),
@@ -107,7 +103,7 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 					ErrorCode:             errorCode,
 					PartitionMirrorLag:    partitionLag.GetLag(),
 					LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
-					MessagesTruncated:     messagesTruncated,
+					MessagesTruncated:     result.GetPartitionLevelTruncationData().Items[nextTruncationDataIndex].GetMessagesTruncated(),
 					OffsetTruncatedTo:     result.GetPartitionLevelTruncationData().Items[nextTruncationDataIndex].GetOffsetTruncatedTo(),
 				})
 				nextTruncationDataIndex += 1
@@ -119,7 +115,7 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 					ErrorCode:             errorCode,
 					PartitionMirrorLag:    partitionLag.GetLag(),
 					LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
-					MessagesTruncated:     0,
+					MessagesTruncated:     "0",
 					OffsetTruncatedTo:     "",
 				})
 			}
