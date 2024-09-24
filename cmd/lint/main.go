@@ -38,6 +38,8 @@ var commandRules = []linter.CommandRule{
 
 	linter.RequireListRequiredFlagsFirst(),
 	linter.Filter(linter.RequireValidExamples(),
+		linter.ExcludeCommand("connect custom-plugin version create"),
+		linter.ExcludeCommand("connect custom-plugin version update"),
 		linter.ExcludeCommand("pipeline update"),
 		linter.ExcludeCommand("flink statement update")),
 
