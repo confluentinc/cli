@@ -5,7 +5,6 @@ import (
 	"io"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go"
 	"github.com/spf13/cobra"
@@ -28,7 +27,7 @@ func (c *command) listApplicationsOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if environmentName == "" {
-		log.CliLogger.Error("Environment name is required")
+		fmt.Errorf("Environment name is required")
 		return nil
 	}
 

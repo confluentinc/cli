@@ -8,7 +8,9 @@ import (
 
 var flinkRoutes = []route{
 	{"/cmf/api/v1/environments/{environment}/applications", handleCmfApplications},
+	{"/cmf/api/v1/environments/{environment}/applications/{application}", handleCmfApplication},
 	{"/cmf/api/v1/environments", handleCmfEnvironments},
+	{"/cmf/api/v1/environments/{environment}", handleCmfEnvironment},
 }
 
 func NewFlinkOnPremRouter(t *testing.T) *mux.Router {

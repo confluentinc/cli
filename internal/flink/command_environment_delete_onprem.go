@@ -1,0 +1,75 @@
+package flink
+
+import (
+	"fmt"
+	"io"
+	"strings"
+
+	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/spf13/cobra"
+)
+
+type deleteEnvironmentFailure struct {
+	Environment string `human:"Environment" serialized:"environment"`
+	Reason      string `human:"Reason" serialized:"reason"`
+	StausCode   int    `human:"Status Code" serialized:"status_code"`
+}
+
+func (c *command) newEnvironmentDeleteOnPremCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delete <name>[, <name>*]",
+		Short: "Delete given Flink Environment(s).",
+		Long:  "Delete given Flink Environment(s). In case you want to delete multiple environments, the names should be separated by a comma.",
+
+		Args: cobra.MinimumNArgs(1),
+		RunE: c.deleteEnvironmentOnPrem,
+	}
+
+	return cmd
+}
+
+func (c *command) deleteEnvironmentOnPrem(cmd *cobra.Command, _ []string) error {
+	cmfREST, err := c.GetCmfREST()
+	if err != nil {
+		return err
+	}
+
+	// Range over the arguments and split them by comma
+	args := cmd.Flags().Args()
+	environmentNames := make([]string, 0)
+	environmentNames = append(environmentNames, strings.Split(args[0], ",")...)
+	// create a list of failed environment deletions
+	failedDeletions := make([]deleteEnvironmentFailure, 0)
+	for _, envName := range environmentNames {
+		envName = strings.TrimSpace(envName) // Clean up whitespace if any
+		if envName != "" {
+			httpResponse, err := cmfREST.Client.DefaultApi.DeleteEnvironment(cmd.Context(), envName)
+			fmt.Printf("Recieved response %+v\n", httpResponse)
+			if err != nil {
+				if httpResponse != nil && httpResponse.StatusCode != 200 {
+					if httpResponse.Body != nil {
+						defer httpResponse.Body.Close()
+						respBody, parseError := io.ReadAll(httpResponse.Body)
+						if parseError == nil {
+							failedDeletions = append(failedDeletions, deleteEnvironmentFailure{
+								Environment: envName,
+								Reason:      string(respBody),
+								StausCode:   httpResponse.StatusCode,
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+	if len(failedDeletions) == 0 {
+		fmt.Printf("Environment(s) deleted successfully\n")
+		return nil
+	}
+	fmt.Errorf("failed to delete the following environment(s):")
+	failedDeletionsList := output.NewList(cmd)
+	for _, failedDeletion := range failedDeletions {
+		failedDeletionsList.Add(&failedDeletion)
+	}
+	return failedDeletionsList.Print()
+}

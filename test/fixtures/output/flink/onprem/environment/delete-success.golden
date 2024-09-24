@@ -1,0 +1,3 @@
+Recieved response &{Status:200 OK StatusCode:200 Proto:HTTP/1.1 ProtoMajor:1 ProtoMinor:1 Header:map[Content-Length:[0] Content-Type:[application/json] Date:[Tue, 24 Sep 2024 15:09:55 GMT]] Body:{Reader:} ContentLength:0 TransferEncoding:[] Close:false Uncompressed:false Trailer:map[] Request:0x140005a4500 TLS:<nil>}
+Recieved response &{Status:200 OK StatusCode:200 Proto:HTTP/1.1 ProtoMajor:1 ProtoMinor:1 Header:map[Content-Length:[0] Content-Type:[application/json] Date:[Tue, 24 Sep 2024 15:09:55 GMT]] Body:{Reader:} ContentLength:0 TransferEncoding:[] Close:false Uncompressed:false Trailer:map[] Request:0x1400072e140 TLS:<nil>}
+Environment(s) deleted successfully

@@ -14,7 +14,6 @@ import (
 
 // Handler for GET "cmf/api/v1/environments/{environment}/applications"
 func handleCmfApplications(t *testing.T) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		environmentName := vars["environment"]
@@ -124,6 +123,31 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "cmf/api/v1/environments/{environment}/applications/{application}"
+func handleCmfApplication(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodDelete:
+			vars := mux.Vars(r)
+			environmentName := vars["environment"]
+			applicationName := vars["application"]
+			if environmentName == "non-existent" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+			if applicationName == "non-existent" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+		case http.MethodPatch:
+			http.Error(w, "Not implemented", http.StatusNotImplemented)
+		case http.MethodGet:
+			http.Error(w, "Not implemented", http.StatusNotImplemented)
+		}
+	}
+}
+
 // Handler for GET "cmf/api/v1/environments"
 func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -146,5 +170,25 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 		}
 		err := json.NewEncoder(w).Encode(environmentPage)
 		require.NoError(t, err)
+	}
+}
+
+// Handler for "cmf/api/v1/environments/{environment}"
+func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodDelete:
+			vars := mux.Vars(r)
+			environmentName := vars["environment"]
+			if environmentName == "non-existent" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+		case http.MethodPatch:
+			http.Error(w, "Not implemented", http.StatusNotImplemented)
+		case http.MethodGet:
+			http.Error(w, "Not implemented", http.StatusNotImplemented)
+		}
 	}
 }

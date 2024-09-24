@@ -1,0 +1,4 @@
+  Application | Environment  |        Reason         | Status Code  
+--------------+--------------+-----------------------+--------------
+  test-app    | non-existent | Environment not found |         404  
+              |              |                       |              

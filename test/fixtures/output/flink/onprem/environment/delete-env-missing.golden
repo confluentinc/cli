@@ -1,0 +1,13 @@
+Error: requires at least 1 arg(s), only received 0
+Usage:
+  confluent flink environment delete <name>[, <name>*] [flags]
+
+Global Flags:
+      --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.
+      --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.
+      --client-key-path string              Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.
+  -h, --help                                Show help for this command.
+      --unsafe-trace                        Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+      --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Flag must be set or CONFLUENT_CMF_URL.
+  -v, --verbose count                       Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
