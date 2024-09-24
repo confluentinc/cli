@@ -85,6 +85,7 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 				ErrorCode:             errorCode,
 				PartitionMirrorLag:    -1,
 				LastSourceFetchOffset: -1,
+				MessagesTruncated:     "0",
 			})
 			continue
 		}
