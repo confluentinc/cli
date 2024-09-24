@@ -30,7 +30,6 @@ func (c *command) newRotateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("passphrase"))
-	cobra.CheckErr(cmd.MarkFlagRequired("passphrase-new"))
 
 	return cmd
 }
