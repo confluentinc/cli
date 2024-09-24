@@ -33,7 +33,7 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create custom connector plugin version for plugin "ccp-123456".`,
-				Code: "confluent connect custom-plugin version create --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1 --sensitive-properties passwords,keys,tokens",
+				Code: "confluent connect custom-plugin version create --plugin ccp-123456 --plugin-file datagen.zip --version-number 0.0.1 --beta=true --sensitive-properties passwords,keys,tokens",
 			},
 		),
 	}
@@ -41,7 +41,7 @@ func (c *customPluginCommand) newVersionCreateCommand() *cobra.Command {
 	cmd.Flags().String("plugin", "", "ID of custom connector plugin.")
 	cmd.Flags().String("plugin-file", "", "Custom plugin ZIP or JAR file.")
 	cmd.Flags().String("version-number", "", "Version number of custom plugin version.")
-	cmd.Flags().Bool("beta", false, `Mark the custom plugin version as beta. (default "false").`)
+	cmd.Flags().Bool("beta", false, `Mark the custom plugin version as beta.`)
 	cmd.Flags().String("release-notes", "", "Release notes for custom plugin version.")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive property names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
