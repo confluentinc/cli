@@ -190,8 +190,8 @@ func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CL
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for the role binding.")
 		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID for the role binding.")
-		cmd.Flags().String("cmf", "", "cmf ID, which specifies the cmf scope")
-		cmd.Flags().String("flink-environment", "", "flink-environment ID, which specifies the flink-environment scope")
+		cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID, which specifies the CMF scope")
+		cmd.Flags().String("flink-environment", "", "Flink environment ID, which specifies the flink environment scope")
 		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 		pcmd.AddContextFlag(cmd, cliCommand)
 	}
