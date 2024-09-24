@@ -1,7 +1,7 @@
-Recieved response &{Status:200 OK StatusCode:200 Proto:HTTP/1.1 ProtoMajor:1 ProtoMinor:1 Header:map[Content-Length:[0] Content-Type:[application/json] Date:[Tue, 24 Sep 2024 15:09:55 GMT]] Body:{Reader:} ContentLength:0 TransferEncoding:[] Close:false Uncompressed:false Trailer:map[] Request:0x14000168f00 TLS:<nil>}
-Recieved response &{Status:404 Not Found StatusCode:404 Proto:HTTP/1.1 ProtoMajor:1 ProtoMinor:1 Header:map[Content-Length:[22] Content-Type:[text/plain; charset=utf-8] Date:[Tue, 24 Sep 2024 15:09:55 GMT] X-Content-Type-Options:[nosniff]] Body:{Reader:Environment not found
-} ContentLength:22 TransferEncoding:[] Close:false Uncompressed:false Trailer:map[] Request:0x14000169180 TLS:<nil>}
+Environment(s) deleted successfully: test
+
+failed to delete the following environment(s):
   Environment  |        Reason         | Status Code  
 ---------------+-----------------------+--------------
-  non-existent | Environment not found |           0  
+  non-existent | Environment not found |         404  
                |                       |              

@@ -49,6 +49,7 @@ func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error 
 	applicationNames = append(applicationNames, strings.Split(args[0], ",")...)
 	// create a list of failed application deletions
 	failedDeletions := make([]deleteApplicationFailure, 0)
+	successfulDeletions := make([]string, 0)
 	for _, appName := range applicationNames {
 		appName = strings.TrimSpace(appName) // Clean up whitespace if any
 		if appName != "" {
@@ -68,14 +69,19 @@ func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error 
 						}
 					}
 				}
+			} else {
+				successfulDeletions = append(successfulDeletions, appName)
 			}
 		}
 	}
+	if len(successfulDeletions) > 0 {
+		fmt.Printf("Application(s) deleted successfully: %s\n\n", strings.Join(successfulDeletions, ", "))
+	}
 	if len(failedDeletions) == 0 {
-		fmt.Printf("Application(s) deleted successfully\n")
 		return nil
 	}
-	fmt.Errorf("failed to delete the following application(s):")
+
+	fmt.Printf("failed to delete the following application(s):\n")
 	failedDeletionsList := output.NewList(cmd)
 	for _, failedDeletion := range failedDeletions {
 		failedDeletionsList.Add(&failedDeletion)

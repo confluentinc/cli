@@ -40,11 +40,11 @@ func (c *command) deleteEnvironmentOnPrem(cmd *cobra.Command, _ []string) error 
 	environmentNames = append(environmentNames, strings.Split(args[0], ",")...)
 	// create a list of failed environment deletions
 	failedDeletions := make([]deleteEnvironmentFailure, 0)
+	successfulDeletions := make([]string, 0)
 	for _, envName := range environmentNames {
 		envName = strings.TrimSpace(envName) // Clean up whitespace if any
 		if envName != "" {
 			httpResponse, err := cmfREST.Client.DefaultApi.DeleteEnvironment(cmd.Context(), envName)
-			fmt.Printf("Recieved response %+v\n", httpResponse)
 			if err != nil {
 				if httpResponse != nil && httpResponse.StatusCode != 200 {
 					if httpResponse.Body != nil {
@@ -59,14 +59,18 @@ func (c *command) deleteEnvironmentOnPrem(cmd *cobra.Command, _ []string) error 
 						}
 					}
 				}
+			} else {
+				successfulDeletions = append(successfulDeletions, envName)
 			}
 		}
 	}
+	if len(successfulDeletions) > 0 {
+		fmt.Printf("Environment(s) deleted successfully: %s\n\n", strings.Join(successfulDeletions, ", "))
+	}
 	if len(failedDeletions) == 0 {
-		fmt.Printf("Environment(s) deleted successfully\n")
 		return nil
 	}
-	fmt.Errorf("failed to delete the following environment(s):")
+	fmt.Printf("failed to delete the following environment(s):\n")
 	failedDeletionsList := output.NewList(cmd)
 	for _, failedDeletion := range failedDeletions {
 		failedDeletionsList.Add(&failedDeletion)

@@ -6,9 +6,9 @@ package mock
 
 import (
 	context "context"
+	reflect "reflect"
 	types "github.com/confluentinc/cli/v3/pkg/flink/types"
 	gomock "go.uber.org/mock/gomock"
-	reflect "reflect"
 )
 
 // MockStoreInterface is a mock of StoreInterface interface.

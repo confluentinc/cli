@@ -1,3 +1,6 @@
+Application(s) deleted successfully: test
+
+failed to delete the following application(s):
   Application  | Environment |        Reason         | Status Code  
 ---------------+-------------+-----------------------+--------------
   non-existent | default     | Application not found |         404  
