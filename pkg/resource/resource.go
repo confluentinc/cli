@@ -25,6 +25,7 @@ const (
 	ClusterLink                     = "cluster link"
 	Connector                       = "connector"
 	CustomConnectorPlugin           = "custom connector plugin"
+	CustomConnectorPluginVersion    = "custom connector plugin version"
 	ConsumerShare                   = "consumer share"
 	Context                         = "context"
 	Dek                             = "DEK"
