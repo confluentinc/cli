@@ -11,7 +11,9 @@ var v1RbacRoles = map[string]string{
                                       {"resourceType":"Group","operations":["Read","Describe"]},
                                       {"resourceType":"Subject","operations":["Read","ReadCompatibility"]},
                                       {"resourceType":"Connector","operations":["ReadStatus","ReadConfig"]},
-                                      {"resourceType":"Topic","operations":["Read","Describe"]}]}}`,
+                                      {"resourceType":"Topic","operations":["Read","Describe"]},
+                                      {"resourceType":"FlinkApplication","operations":["View","AccessWebUI"]},
+                                      {"resourceType":"FlinkEnvironment","operations":["View"]}]}}`,
 	"DeveloperWrite": `{
                       "name":"DeveloperWrite",
                       "accessPolicy":{

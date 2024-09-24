@@ -38,8 +38,8 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID.")
 	cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID.")
 	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
-	cmd.Flags().String("cmf", "", "cmf ID")
-	cmd.Flags().String("flink-environment", "", "flink-environment ID")
+	cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID")
+	cmd.Flags().String("flink-environment", "", "Flink environment ID")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))

@@ -1,0 +1,7 @@
++---------------+------------------+
+| Principal     | User:bob         |
+| Role          | DeveloperRead    |
+| Resource Type | FlinkEnvironment |
+| Name          | testEnvironment  |
+| Pattern Type  | LITERAL          |
++---------------+------------------+

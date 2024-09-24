@@ -243,7 +243,6 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mdsv1.M
 	}
 
 	if clusterName == "" {
-
 		if scope.KafkaCluster == "" && nonKafkaScopesSet > 0 {
 			return nil, fmt.Errorf(errors.SpecifyKafkaIdErrorMsg)
 		}

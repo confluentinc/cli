@@ -3,11 +3,6 @@ Delete a role binding.
 Usage:
   confluent iam rbac role-binding delete [flags]
 
-Examples:
-Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the specified Kafka cluster:
-
-  $ confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --kafka-cluster 0000000000000000000000 --resource Topic:my-topic
-
 Flags:
       --role string                      REQUIRED: Role name of the existing role binding.
       --principal string                 REQUIRED: Principal type and identifier using "Prefix:ID" format.
@@ -16,6 +11,8 @@ Flags:
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster ID for the role binding.
       --connect-cluster string           Kafka Connect cluster ID for the role binding.
+      --cmf string                       cmf ID, which specifies the cmf scope
+      --flink-environment string         flink-environment ID, which specifies the flink-environment scope
       --cluster-name string              Cluster name to uniquely identify the cluster for role binding listings.
       --context string                   CLI context name.
       --resource string                  Resource type and identifier using "Prefix:ID" format.

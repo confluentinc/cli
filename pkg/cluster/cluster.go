@@ -26,7 +26,7 @@ type prettyCluster struct {
 	Name           string `human:"Name" serialized:"name"`
 	Type           string `human:"Type" serialized:"type"`
 	KafkaClusterId string `human:"Kafka Cluster" serialized:"kafka_cluster_id"`
-	Cmf            string `human:"cmf" serialized:"cmf_id"`
+	Cmf            string `human:"CMF" serialized:"cmf"`
 	ComponentId    string `human:"Component ID" serialized:"component_id"`
 	Hosts          string `human:"Hosts" serialized:"hosts"`
 	Protocol       string `human:"Protocol" serialized:"protocol"`

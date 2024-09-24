@@ -102,7 +102,10 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_OnPrem() {
 		{args: "iam rbac role-binding delete --principal User:bob --role DeveloperRead --resource Topic:connect-configs --ksql-cluster ksql-name --force", fixture: "iam/rbac/role-binding/missing-kafka-cluster-id-onprem.golden", exitCode: 1},
 		{args: "iam rbac role-binding delete --principal User:bob --role DeveloperRead --resource Topic:connect-configs --ksql-cluster ksqlName --connect-cluster connectID --kafka-cluster kafka-GUID --force", fixture: "iam/rbac/role-binding/multiple-non-kafka-id-onprem.golden", exitCode: 1},
 		{args: "iam rbac role-binding create --principal User:bob@Kafka --role DeveloperRead --resource Topic:connect-configs --kafka-cluster kafka-GUID", fixture: "iam/rbac/role-binding/create-cluster-id-at-onprem.golden"},
-		{args: "iam rbac role-binding delete --principal User:bob", fixture: "iam/rbac/role-binding/delete-missing-role-onprem.golden", exitCode: 1},
+		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource FlinkEnvironment:testEnvironment --cmf testCmf", fixture: "iam/rbac/role-binding/create-cmf-resource-onprem.golden"},
+		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource FlinkApplication:testApplication --cmf testCmf --flink-environment testFLINKEnv ", fixture: "iam/rbac/role-binding/create-flink-environment-resource-onprem.golden"},
+		{args: "iam rbac role-binding delete --principal User:bob --role DeveloperRead --resource FlinkEnvironment:testEnvironment --cmf testCmf --force", fixture: "iam/rbac/role-binding/delete-cmf-resource-onprem.golden"},
+		{args: "iam rbac role-binding delete --principal User:bob --role DeveloperRead --resource FlinkApplication:testApplication --cmf testCmf --flink-environment testFLINKEnv --force", fixture: "iam/rbac/role-binding/delete-flink-environment-resource-onprem.golden"},
 	}
 
 	for _, test := range tests {
