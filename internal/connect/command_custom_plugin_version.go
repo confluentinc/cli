@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
+
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
