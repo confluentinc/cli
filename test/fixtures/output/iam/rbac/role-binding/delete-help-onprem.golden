@@ -16,6 +16,8 @@ Flags:
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster ID for the role binding.
       --connect-cluster string           Kafka Connect cluster ID for the role binding.
+      --cmf string                       Confluent Managed Flink (CMF) ID, which specifies the CMF scope.
+      --flink-environment string         Flink environment ID, which specifies the Flink environment scope.
       --cluster-name string              Cluster name to uniquely identify the cluster for role binding listings.
       --context string                   CLI context name.
       --resource string                  Resource type and identifier using "Prefix:ID" format.
