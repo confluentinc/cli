@@ -23,3 +23,10 @@ accesspolicy:
           operations:
             - Read
             - Describe
+        - resourcetype: FlinkApplication
+          operations:
+            - View
+            - AccessWebUI
+        - resourcetype: FlinkEnvironment
+          operations:
+            - View

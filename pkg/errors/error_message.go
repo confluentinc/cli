@@ -20,6 +20,7 @@ const (
 	ServiceAccountNotFoundErrorMsg    = `service account "%s" not found`
 	ServiceAccountNotFoundSuggestions = "List service accounts with `confluent service-account list`."
 	SpecifyKafkaIdErrorMsg            = "must specify `--kafka-cluster` to uniquely identify the scope"
+	SpecifyCmfErrorMsg                = "must specify `--cmf` to uniquely identify the Flink environment scope"
 	UnknownConnectorIdErrorMsg        = `unknown connector ID "%s"`
 	InvalidApiKeyErrorMsg             = `invalid API key "%s" for resource "%s"`
 	InvalidApiKeySuggestions          = "To list API keys that belong to resource \"%[1]s\", use `confluent api-key list --resource %[1]s`.\nTo create new API key for resource \"%[1]s\", use `confluent api-key create --resource %[1]s`."
