@@ -274,9 +274,6 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
-		return err
-	}
 
 	valueSchemaConfigs := &schemaregistry.RegisterSchemaConfigs{
 		Subject:    valueSubject,
@@ -419,7 +416,7 @@ func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 		return nil, err
 	}
 
-	key, value, err := serializeMessage(keyMetaInfo, valueMetaInfo, data, delimiter, parseKey, keySerializer, valueSerializer)
+	key, value, err := serializeMessage(keyMetaInfo, valueMetaInfo, topic, data, delimiter, parseKey, keySerializer, valueSerializer)
 	if err != nil {
 		return nil, err
 	}
@@ -446,7 +443,7 @@ func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 	return message, nil
 }
 
-func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
+func serializeMessage(keyMetaInfo, valueMetaInfo []byte, topic, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
 	var serializedKey []byte
 	val := data
 	if parseKey {
@@ -456,7 +453,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 			return nil, nil, err
 		}
 
-		serializedKey, err = keySerializer.Serialize(key)
+		serializedKey, err = keySerializer.Serialize(topic, &key)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -464,7 +461,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 		val = value
 	}
 
-	serializedValue, err := valueSerializer.Serialize(val)
+	serializedValue, err := valueSerializer.Serialize(topic, &val)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -595,11 +592,32 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		}
 	}
 
-	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
-		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
+	// We need the endpoint for schema registry client for internal serializer/deserializer
+	srEndpoint, err := c.getSchemaRegistryEndPointFromClient(cmd)
+	if err != nil {
+		return nil, nil, err
 	}
-
+	err = serializationProvider.InitSerializer(srEndpoint, mode)
+	if err != nil {
+		return nil, nil, err
+	}
 	return serializationProvider, metaInfo, nil
+}
+
+func (c *command) getSchemaRegistryEndPointFromClient(cmd *cobra.Command) (string, error) {
+	srClient, err := c.GetSchemaRegistryClient(cmd)
+	if err != nil {
+		return "", err
+	}
+	cfg := srClient.GetConfig()
+	if cfg == nil {
+		return "", fmt.Errorf("unable to fetch the configuration for the regular schema registery client")
+	}
+	if cfg.Servers == nil || len(cfg.Servers) <= 1 {
+		return "", fmt.Errorf("unable to fetch the servers from regular schema registery client configuration")
+	}
+	schemaRegistryEndpoint := cfg.Servers[0].URL
+	return schemaRegistryEndpoint, nil
 }
 
 func getMetaInfoFromSchemaId(id int32) []byte {

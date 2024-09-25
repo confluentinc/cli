@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -187,24 +186,24 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 }
 
 func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
+	srEndpoint, err := getSchemaRegistryEndpointFromGroupHandler(h)
+	if err != nil {
+		return err
+	}
+
 	if h.Properties.PrintKey {
 		keyDeserializer, err := serdes.GetDeserializationProvider(h.KeyFormat)
 		if err != nil {
 			return err
 		}
 
-		if slices.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
-			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
-			if err != nil {
-				return err
-			}
-			message.Key = message.Key[messageOffset:]
-			if err := keyDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
-				return err
-			}
+		err = keyDeserializer.InitDeserializer(srEndpoint, "key")
+		if err != nil {
+			return err
 		}
 
-		jsonMessage, err := keyDeserializer.Deserialize(message.Key)
+		var jsonMessage string
+		err = keyDeserializer.Deserialize(h.Subject, message.Key, &jsonMessage)
 		if err != nil {
 			return err
 		}
@@ -222,19 +221,12 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if slices.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
-		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
-		if err != nil {
-			return err
-		}
-		// Message body is encoded after 5 bytes of meta information.
-		message.Value = message.Value[messageOffset:]
-		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
-			return err
-		}
+	err = valueDeserializer.InitDeserializer(srEndpoint, "value")
+	if err != nil {
+		return err
 	}
 
-	messageString, err := getMessageString(message, valueDeserializer, h.Properties)
+	messageString, err := getMessageString(message, valueDeserializer, h.Properties, h.Subject)
 	if err != nil {
 		return err
 	}
@@ -255,8 +247,9 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	return nil
 }
 
-func getMessageString(message *ckafka.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties) (string, error) {
-	messageString, err := valueDeserializer.Deserialize(message.Value)
+func getMessageString(message *ckafka.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties, topic string) (string, error) {
+	var messageString string
+	err := valueDeserializer.Deserialize(topic, message.Value, &messageString)
 	if err != nil {
 		return "", err
 	}
@@ -393,4 +386,18 @@ func getHeaderString(header ckafka.Header) string {
 	} else {
 		return fmt.Sprintf(`%s="%s"`, header.Key, string(header.Value))
 	}
+}
+
+func getSchemaRegistryEndpointFromGroupHandler(h *GroupHandler) (string, error) {
+	if h == nil || h.SrClient == nil {
+		return "", fmt.Errorf("unable to find the group handler or schema registery client during consume")
+	}
+	cfg := h.SrClient.GetConfig()
+	if cfg == nil {
+		return "", fmt.Errorf("unable to fetch the configuration from schema registery client during consume")
+	}
+	if cfg.Servers == nil || len(cfg.Servers) <= 1 {
+		return "", fmt.Errorf("unable to fetch the servers info from schema registery client configuration during consume")
+	}
+	return cfg.Servers[0].URL, nil
 }

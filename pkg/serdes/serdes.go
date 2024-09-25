@@ -49,14 +49,14 @@ const (
 )
 
 type SerializationProvider interface {
-	LoadSchema(string, map[string]string) error
-	Serialize(string) ([]byte, error)
+	InitSerializer(string, string) error
+	Serialize(string, interface{}) ([]byte, error)
 	GetSchemaName() string
 }
 
 type DeserializationProvider interface {
-	LoadSchema(string, map[string]string) error
-	Deserialize([]byte) (string, error)
+	InitDeserializer(string, string) error
+	Deserialize(string, []byte, interface{}) error
 }
 
 func FormatTranslation(backendValueFormat string) (string, error) {
@@ -77,17 +77,11 @@ func FormatTranslation(backendValueFormat string) (string, error) {
 func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
 	switch valueFormat {
 	case avroSchemaName:
-		return new(AvroSerializationProvider), nil
-	case doubleSchemaName:
-		return new(DoubleSerializationProvider), nil
-	case integerSchemaName:
-		return new(IntegerSerializationProvider), nil
+		return new(Avro2SerializationProvider), nil
 	case jsonSchemaName:
-		return new(JsonSerializationProvider), nil
+		return new(Json2SerializationProvider), nil
 	case protobufSchemaName:
-		return new(ProtobufSerializationProvider), nil
-	case stringSchemaName:
-		return new(StringSerializationProvider), nil
+		return new(Protobuf2SerializationProvider), nil
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
@@ -96,17 +90,11 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 func GetDeserializationProvider(valueFormat string) (DeserializationProvider, error) {
 	switch valueFormat {
 	case avroSchemaName:
-		return new(AvroDeserializationProvider), nil
-	case doubleSchemaName:
-		return new(DoubleDeserializationProvider), nil
-	case integerSchemaName:
-		return new(IntegerDeserializationProvider), nil
+		return new(Avro2DeserializationProvider), nil
 	case jsonSchemaName:
-		return new(JsonSchemaDeserializationProvider), nil
+		return new(Json2DeserializationProvider), nil
 	case protobufSchemaName:
-		return new(ProtobufDeserializationProvider), nil
-	case stringSchemaName:
-		return new(StringDeserializationProvider), nil
+		return new(Protobuf2DeserializationProvider), nil
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
