@@ -17,6 +17,8 @@ func (c *command) newApplicationCommandOnPrem() *cobra.Command {
 		Short:   "Manage Flink Application",
 		Aliases: []string{"app"},
 	}
+	cmd.AddCommand(c.newApplicationCreateCommandOnPrem())
+	cmd.AddCommand(c.newApplicationUpdateCommandOnPrem())
 	cmd.AddCommand(c.newApplicationListCommandOnPrem())
 	cmd.AddCommand(c.newApplicationDeleteCommandOnPrem())
 	cmd.PersistentFlags().String("environment", "", "REQUIRED: Name of the Environment for the Flink Application.")
