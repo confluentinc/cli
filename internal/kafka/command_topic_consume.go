@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -170,7 +170,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	}
 	log.CliLogger.Trace("Create consumer succeeded")
 
-	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	adminClient, err := ckgo.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
@@ -320,7 +320,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	adminClient, err := ckgo.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
