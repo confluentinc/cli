@@ -11,8 +11,8 @@ Flags:
       --schema-registry-cluster string   Schema Registry cluster ID.
       --ksql-cluster string              ksqlDB cluster ID.
       --connect-cluster string           Kafka Connect cluster ID.
-      --cmf string                       Confluent Managed Flink (CMF) ID
-      --flink-environment string         Flink environment ID
+      --cmf string                       Confluent Managed Flink (CMF) ID.
+      --flink-environment string         Flink environment ID.
       --context string                   CLI context name.
 
 Global Flags:
