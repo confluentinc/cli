@@ -15,9 +15,8 @@ type configurationOut struct {
 
 func (c *clusterCommand) newConfigurationCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "configuration",
-		Short:       "Manage Kafka cluster configurations.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+		Use:   "configuration",
+		Short: "Manage Kafka cluster configurations.",
 	}
 
 	if cfg.IsCloudLogin() {

@@ -16,11 +16,12 @@ const kafkaClusterTypeName = "kafka-cluster"
 
 func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Args:  cobra.NoArgs,
-		Short: "List registered Kafka clusters.",
-		Long:  "List Kafka clusters that are registered with the MDS cluster registry.",
-		RunE:  c.listOnPrem,
+		Use:         "list",
+		Args:        cobra.NoArgs,
+		Short:       "List registered Kafka clusters.",
+		Long:        "List Kafka clusters that are registered with the MDS cluster registry.",
+		RunE:        c.listOnPrem,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

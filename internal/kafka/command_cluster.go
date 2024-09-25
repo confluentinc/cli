@@ -32,9 +32,8 @@ type clusterCommand struct {
 
 func newClusterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "cluster",
-		Short:       "Manage Kafka clusters.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+		Use:   "cluster",
+		Short: "Manage Kafka clusters.",
 	}
 
 	c := &clusterCommand{}
