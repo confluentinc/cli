@@ -202,7 +202,7 @@ var vocabWords = []string{
 	"cku",
 	"cli",
 	"clojure",
-        "cmf",
+	"cmf",
 	"codec",
 	"config",
 	"configs",

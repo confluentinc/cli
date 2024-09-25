@@ -73,7 +73,6 @@ func createPrettyCluster(clusterInfo mdsv1.ClusterInfo) *prettyCluster {
 		cid = clusterInfo.Scope.Clusters.FlinkEnvironment
 	case clusterInfo.Scope.Clusters.Cmf != "":
 		t = cmfClusterTypeName
-		cid = ""
 	default:
 		t = kafkaClusterTypeName
 		cid = ""
