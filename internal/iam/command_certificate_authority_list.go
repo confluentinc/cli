@@ -37,7 +37,9 @@ func (c *certificateAuthorityCommand) list(cmd *cobra.Command, _ []string) error
 			ExpirationDates:          certificateAuthority.GetExpirationDates(),
 			SerialNumbers:            certificateAuthority.GetSerialNumbers(),
 			CertificateChainFilename: certificateAuthority.GetCertificateChainFilename(),
-			State:                    certificateAuthority.GetState(),
+			CrlSource:                certificateAuthority.GetCrlSource(),
+			CrlUrl:                   certificateAuthority.GetCrlUrl(),
+			CrlUpdatedAt:             certificateAuthority.CrlUpdatedAt,
 		})
 	}
 	return list.Print()

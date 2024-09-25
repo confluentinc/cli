@@ -13,6 +13,8 @@ Flags:
       --description string                  Description of the certificate authority.
       --certificate-chain string            A base64 encoded string containing the signing certificate chain.
       --certificate-chain-filename string   The name of the certificate file.
+      --crl-url string                      The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.
+      --crl-chain string                    A base64 encoded string containing the CRL for this certificate authority.
       --context string                      CLI context name.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 

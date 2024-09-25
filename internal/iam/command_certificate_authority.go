@@ -25,7 +25,9 @@ type certificateAuthorityOut struct {
 	ExpirationDates          []time.Time `human:"Expiration Dates" serialized:"expiration_dates"`
 	SerialNumbers            []string    `human:"Serial Numbers" serialized:"serial_numbers"`
 	CertificateChainFilename string      `human:"Certificate Chain Filename" serialized:"certificate_chain_filename"`
-	State                    string      `human:"State" serialized:"state"`
+	CrlSource                string      `human:"CRL Source,omitempty" serialized:"crl_source,omitempty"`
+	CrlUrl                   string      `human:"CRL URL,omitempty" serialized:"crl_url,omitempty"`
+	CrlUpdatedAt             *time.Time  `human:"CRL Updated At,omitempty" serialized:"crl_updated_at,omitempty"`
 }
 
 func newCertificateAuthorityCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -57,7 +59,9 @@ func printCertificateAuthority(cmd *cobra.Command, certificateAuthority certific
 		ExpirationDates:          certificateAuthority.GetExpirationDates(),
 		SerialNumbers:            certificateAuthority.GetSerialNumbers(),
 		CertificateChainFilename: certificateAuthority.GetCertificateChainFilename(),
-		State:                    certificateAuthority.GetState(),
+		CrlSource:                certificateAuthority.GetCrlSource(),
+		CrlUrl:                   certificateAuthority.GetCrlUrl(),
+		CrlUpdatedAt:             certificateAuthority.CrlUpdatedAt,
 	})
 	return table.Print()
 }
