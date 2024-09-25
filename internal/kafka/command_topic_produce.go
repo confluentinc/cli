@@ -14,7 +14,7 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -168,7 +168,7 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
-	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
+	adminClient, err := ckgo.NewAdminClientFromProducer(producer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
@@ -205,7 +205,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
+	adminClient, err := ckgo.NewAdminClientFromProducer(producer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
@@ -408,7 +408,7 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 	}
 }
 
-func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckafka.Message, error) {
+func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckgo.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return nil, err
@@ -424,10 +424,10 @@ func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 		return nil, err
 	}
 
-	message := &ckafka.Message{
-		TopicPartition: ckafka.TopicPartition{
+	message := &ckgo.Message{
+		TopicPartition: ckgo.TopicPartition{
 			Topic:     &topic,
-			Partition: ckafka.PartitionAny,
+			Partition: ckgo.PartitionAny,
 		},
 		Key:   key,
 		Value: value,
@@ -645,8 +645,8 @@ func setSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, sche
 	return tempStorePath, referencePathMap, nil
 }
 
-func parseHeaders(headers []string, delimiter string) ([]ckafka.Header, error) {
-	kafkaHeaders := make([]ckafka.Header, len(headers))
+func parseHeaders(headers []string, delimiter string) ([]ckgo.Header, error) {
+	kafkaHeaders := make([]ckgo.Header, len(headers))
 
 	for i, header := range headers {
 		parts := strings.SplitN(header, delimiter, 2)
@@ -655,7 +655,7 @@ func parseHeaders(headers []string, delimiter string) ([]ckafka.Header, error) {
 			return nil, fmt.Errorf(invalidHeadersErrorMsg, delimiter)
 		}
 
-		kafkaHeaders[i] = ckafka.Header{
+		kafkaHeaders[i] = ckgo.Header{
 			Key:   strings.TrimSpace(parts[0]),
 			Value: []byte(strings.TrimSpace(parts[1])),
 		}

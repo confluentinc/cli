@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
 	"github.com/confluentinc/cli/v3/internal/kafka"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -77,7 +77,7 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
-	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	adminClient, err := ckgo.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
@@ -126,7 +126,7 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	return kafka.RunConsumer(consumer, groupHandler)
 }
 
-func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckafka.Consumer, error) {
+func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckgo.Consumer, error) {
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckafka.Consumer, 
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
 
-	configMap := &ckafka.ConfigMap{
+	configMap := &ckgo.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"group.id":                              group,
 		"client.id":                             "confluent-local",
@@ -163,5 +163,5 @@ func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckafka.Consumer, 
 		return nil, err
 	}
 
-	return ckafka.NewConsumer(configMap)
+	return ckgo.NewConsumer(configMap)
 }
