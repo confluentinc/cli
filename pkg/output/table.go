@@ -221,6 +221,10 @@ func getListValueString(value reflect.Value, tag []string) string {
 			return " "
 		}
 	}
+	if value.Kind() == reflect.Pointer && value.IsNil() {
+		// don't print <nil> for empty pointer fields in a list
+		return ""
+	}
 
 	return getTableValueString(value)
 }
