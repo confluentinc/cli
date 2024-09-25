@@ -6,15 +6,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 )
 
 func TestGetMessageString(t *testing.T) {
-	message := &ckafka.Message{
+	message := &ckgo.Message{
 		Value:          []byte("message"),
-		TopicPartition: ckafka.TopicPartition{Offset: 2, Partition: 1},
+		TopicPartition: ckgo.TopicPartition{Offset: 2, Partition: 1},
 		Timestamp:      time.Date(1997, time.July, 5, 0, 0, 0, 0, time.UTC),
 	}
 	valueDeserializer, err := serdes.GetDeserializationProvider("string")
