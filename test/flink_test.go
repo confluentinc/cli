@@ -215,17 +215,18 @@ func (s *CLITestSuite) TestFlinkRegion() {
 func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
 		{args: "flink statement delete my-statement --force --cloud aws --region eu-west-1", fixture: "flink/statement/delete.golden"},
+		{args: "flink statement describe my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-yaml.golden"},
+		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1", fixture: "flink/statement/list.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/list-yaml.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 --status completed", fixture: "flink/statement/list-completed.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 --status pending", fixture: "flink/statement/list-pending.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 --compute-pool lfcp-nonexistent", fixture: "flink/statement/list-cp-not-found.golden", exitCode: 1},
 		{args: "flink statement list --cloud aws --region eu-west-2 --compute-pool lfcp-123456", fixture: "flink/statement/list-cp-incorrect-region.golden", exitCode: 1},
-		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
-		{args: "flink statement describe my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-yaml.golden"},
-		{args: "flink statement stop my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/stop.golden"},
-		{args: "flink statement exception list my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/exception/list.golden"},
-		{args: "flink statement exception list my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/exception/list-yaml.golden"},
+		{args: "flink statement stop my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/stop.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-123456", fixture: "flink/statement/update-compute-pool.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --principal sa-123456", fixture: "flink/statement/update-principal.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false", fixture: "flink/statement/update-stopped.golden"},
 	}
 
 	for _, test := range tests {
@@ -255,6 +256,7 @@ func (s *CLITestSuite) TestFlink_Autocomplete() {
 		{args: `__complete flink compute-pool delete ""`, fixture: "flink/compute-pool/delete-autocomplete.golden"},
 		{args: `__complete flink compute-pool list --region ""`, fixture: "flink/compute-pool/list-region-autocomplete.golden"},
 		{args: `__complete flink statement create my-statement --database ""`, fixture: "flink/statement/create-database-autocomplete.golden"},
+		{args: `__complete flink statement update my-statement --principal ""`, fixture: "flink/statement/update-database-autocomplete.golden"},
 		{args: `__complete flink connection create my-connection --cloud ""`, fixture: "flink/connection/create/create-cloud-autocomplete.golden"},
 	}
 
@@ -472,4 +474,16 @@ func removeAnsiEscapeSequences(input string) string {
 	}
 
 	return strings.TrimSpace(input)
+}
+
+func (s *CLITestSuite) TestFlinkStatmentExceptionList() {
+	tests := []CLITest{
+		{args: "flink statement exception list my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/exception/list.golden"},
+		{args: "flink statement exception list my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/exception/list-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }
