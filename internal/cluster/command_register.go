@@ -38,8 +38,8 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID.")
 	cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID.")
 	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
-	cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID")
-	cmd.Flags().String("flink-environment", "", "Flink environment ID")
+	cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID.")
+	cmd.Flags().String("flink-environment", "", "Flink environment ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
@@ -87,9 +87,6 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeC
 
 	nonKafkaScopesSet := 0
 
-	cmfScope := 0
-	flinkEnvironmentScope := 0
-
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		switch flag.Name {
 		case "kafka-cluster":
@@ -105,10 +102,8 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeC
 			nonKafkaScopesSet++
 		case "cmf":
 			scope.Cmf = flag.Value.String()
-			cmfScope++
 		case "flink-environment":
 			scope.FlinkEnvironment = flag.Value.String()
-			flinkEnvironmentScope++
 		}
 	})
 
@@ -116,7 +111,7 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeC
 		return nil, fmt.Errorf(errors.SpecifyKafkaIdErrorMsg)
 	}
 
-	if scope.Cmf == "" && flinkEnvironmentScope > 0 {
+	if scope.Cmf == "" && scope.FlinkEnvironment != "" {
 		return nil, fmt.Errorf(errors.SpecifyCmfErrorMsg)
 	}
 

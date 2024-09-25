@@ -37,9 +37,7 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
-	linter.Filter(linter.RequireValidExamples(),
-		linter.ExcludeCommand("pipeline update"),
-		linter.ExcludeCommand("flink statement update")),
+	linter.Filter(linter.RequireValidExamples(), linter.ExcludeCommand("pipeline update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -202,6 +200,7 @@ var vocabWords = []string{
 	"cku",
 	"cli",
 	"clojure",
+	"cmf",
 	"codec",
 	"config",
 	"configs",
