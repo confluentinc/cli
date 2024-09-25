@@ -37,7 +37,11 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
-	linter.Filter(linter.RequireValidExamples(), linter.ExcludeCommand("pipeline update")),
+	linter.Filter(linter.RequireValidExamples(),
+		linter.ExcludeCommand("connect custom-plugin version create"),
+		linter.ExcludeCommand("connect custom-plugin version update"),
+		linter.ExcludeCommand("pipeline update"),
+		linter.ExcludeCommand("flink statement update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),

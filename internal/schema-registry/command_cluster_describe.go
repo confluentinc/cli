@@ -12,9 +12,9 @@ import (
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/log"
 	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 )
 
 type clusterOut struct {
@@ -70,7 +70,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if len(clusters) == 0 {
-		return errors.NewSRNotEnabledError()
+		return schemaregistry.ErrNotEnabled
 	}
 	cluster := clusters[0]
 

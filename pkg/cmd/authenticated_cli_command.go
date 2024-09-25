@@ -250,7 +250,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				return nil, err
 			}
 			if len(clusters) == 0 {
-				return nil, errors.NewSRNotEnabledError()
+				return nil, schemaregistry.ErrNotEnabled
 			}
 			if clusters[0].Spec.GetHttpEndpoint() != "" {
 				configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetHttpEndpoint()}}
