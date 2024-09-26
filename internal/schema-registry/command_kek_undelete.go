@@ -3,10 +3,10 @@ package schemaregistry
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newKekUndeleteCommand(cfg *config.Config) *cobra.Command {

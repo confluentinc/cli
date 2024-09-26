@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 var (

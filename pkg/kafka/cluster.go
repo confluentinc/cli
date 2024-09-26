@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func GetClusterForCommand(client *ccloudv2.Client, ctx *config.Context) (*config.KafkaClusterConfig, error) {

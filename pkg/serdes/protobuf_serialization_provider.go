@@ -10,7 +10,7 @@ import (
 	parse "github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type ProtobufSerializationProvider struct {

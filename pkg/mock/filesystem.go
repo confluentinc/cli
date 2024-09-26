@@ -10,7 +10,7 @@ import (
 	sync "sync"
 	time "time"
 
-	github_com_confluentinc_cli_internal_pkg_io "github.com/confluentinc/cli/v3/pkg/io"
+	github_com_confluentinc_cli_internal_pkg_io "github.com/confluentinc/cli/v4/pkg/io"
 )
 
 // FileSystem is a mock of FileSystem interface

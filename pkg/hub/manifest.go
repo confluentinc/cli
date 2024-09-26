@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	"github.com/confluentinc/cli/v3/pkg/cpstructs"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/cpstructs"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 const clientNotInitializedErrorMsg = "Hub client not initialized"

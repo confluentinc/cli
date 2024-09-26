@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type KafkaClusterContext struct {

@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type refreshState struct {

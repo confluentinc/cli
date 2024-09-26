@@ -6,7 +6,7 @@ import (
 
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newByokV1Client(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *byokv1.APIClient {

@@ -8,8 +8,8 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_ccloud_sdk_go_v1_public "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	github_com_confluentinc_cli_v3_pkg_auth "github.com/confluentinc/cli/v3/pkg/auth"
-	github_com_confluentinc_cli_v3_pkg_config "github.com/confluentinc/cli/v3/pkg/config"
+	github_com_confluentinc_cli_v3_pkg_auth "github.com/confluentinc/cli/v4/pkg/auth"
+	github_com_confluentinc_cli_v3_pkg_config "github.com/confluentinc/cli/v4/pkg/config"
 )
 
 // LoginCredentialsManager is a mock of LoginCredentialsManager interface

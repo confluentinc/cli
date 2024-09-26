@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/sourcegraph/go-lsp"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type LspInterface interface {

@@ -6,7 +6,7 @@ import (
 
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newNetworkingIpClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *networkingipv1.APIClient {

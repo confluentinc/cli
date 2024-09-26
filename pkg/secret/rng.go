@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	mrand "math/rand"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 // Provide an entropy-based source of randomness.

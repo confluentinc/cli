@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/rivo/tview"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 const ExitRowViewShortcut = "Q"

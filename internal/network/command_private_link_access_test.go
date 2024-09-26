@@ -7,7 +7,7 @@ import (
 
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
-	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
+	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 )
 
 func TestGetPrivateLinkAccessCloudWithAws(t *testing.T) {

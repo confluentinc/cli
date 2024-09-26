@@ -8,7 +8,7 @@ import (
 	"github.com/sourcegraph/go-lsp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
 )
 
 func TestLSPIntialize(t *testing.T) {

@@ -15,8 +15,8 @@ import (
 	"github.com/panta/machineid"
 	"golang.org/x/crypto/pbkdf2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 const (

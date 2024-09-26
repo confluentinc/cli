@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/ccloud_client_factory.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 ccloud_client_factory.go CCloudClientFactory
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/ccloud_client_factory.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 ccloud_client_factory.go CCloudClientFactory
 package auth
 
 import (
@@ -6,7 +6,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type CCloudClientFactory interface {

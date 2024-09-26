@@ -7,7 +7,7 @@ import (
 
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newApiKeysClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *apikeysv2.APIClient {

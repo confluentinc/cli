@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/confluentinc/cli/v3/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
 var SQLKeywords = types.NewSet(

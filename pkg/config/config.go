@@ -13,11 +13,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/secret"
-	"github.com/confluentinc/cli/v3/pkg/utils"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/secret"
+	"github.com/confluentinc/cli/v4/pkg/utils"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 const emptyFieldIndicator = "EMPTY"
