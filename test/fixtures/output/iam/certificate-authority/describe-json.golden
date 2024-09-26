@@ -5,6 +5,5 @@
   "fingerprints": ["B1BC968BD4f49D622AA89A81F2150152A41D829C"],
   "expiration_dates": ["2017-07-21T17:32:28Z"],
   "serial_numbers": ["219C542DE8f6EC7177FA4EE8C3705797"],
-  "certificate_chain_filename": "certificate.pem",
-  "state": "ENABLED"
+  "certificate_chain_filename": "certificate.pem"
 }
