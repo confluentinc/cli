@@ -67,6 +67,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 
 func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirrorStatusResponseData) error {
 	list := output.NewList(cmd)
+	isTruncateAndRestore := false
 	for _, result := range results {
 		errorMessage := result.GetErrorMessage()
 
@@ -88,17 +89,55 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 			continue
 		}
 
+		var truncationData []*kafkarestv3.PartitionLevelTruncationData
+		if result.GetMessagesTruncated() != -1 {
+			isTruncateAndRestore = true
+			nextPartitionDataIndex := 0
+			for i := range result.GetMirrorLags().Items {
+				if nextPartitionDataIndex >= len(result.GetPartitionLevelTruncationData().Items) {
+					truncationData = append(truncationData, nil)
+				} else {
+					var data kafkarestv3.PartitionLevelTruncationData = result.GetPartitionLevelTruncationData().Items[nextPartitionDataIndex]
+					if data.GetPartitionId() == int32(i) {
+						truncationData = append(truncationData, &data)
+						nextPartitionDataIndex++
+					} else {
+						truncationData = append(truncationData, nil)
+					}
+				}
+
+			}
+		}
+
 		for _, partitionLag := range result.GetMirrorLags().Items {
-			list.Add(&mirrorOut{
-				MirrorTopicName:       result.GetMirrorTopicName(),
-				Partition:             partitionLag.GetPartition(),
-				ErrorMessage:          errorMessage,
-				ErrorCode:             errorCode,
-				PartitionMirrorLag:    partitionLag.GetLag(),
-				LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
-			})
+			partitionId := partitionLag.GetPartition()
+			if isTruncateAndRestore && truncationData[partitionId] != nil {
+				list.Add(&mirrorOut{
+					MirrorTopicName:       result.GetMirrorTopicName(),
+					Partition:             partitionId,
+					ErrorMessage:          errorMessage,
+					ErrorCode:             errorCode,
+					PartitionMirrorLag:    partitionLag.GetLag(),
+					LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
+					MessagesTruncated:     truncationData[partitionId].GetMessagesTruncated(),
+					OffsetTruncatedTo:     strconv.FormatInt(truncationData[partitionId].GetOffsetTruncatedTo(), 10),
+				})
+			} else {
+				list.Add(&mirrorOut{
+					MirrorTopicName:       result.GetMirrorTopicName(),
+					Partition:             partitionLag.GetPartition(),
+					ErrorMessage:          errorMessage,
+					ErrorCode:             errorCode,
+					PartitionMirrorLag:    partitionLag.GetLag(),
+					LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
+				})
+			}
 		}
 	}
-	list.Filter([]string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode", "LastSourceFetchOffset"})
+	if isTruncateAndRestore {
+		list.Filter([]string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode", "LastSourceFetchOffset", "OffsetTruncatedTo", "MessagesTruncated"})
+	} else {
+		list.Filter([]string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode", "LastSourceFetchOffset"})
+	}
 	return list.Print()
 }

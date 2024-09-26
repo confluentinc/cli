@@ -19,6 +19,8 @@ type mirrorOut struct {
 	LastSourceFetchOffset    int64  `human:"Last Source Fetch Offset" serialized:"last_source_fetch_offset"`
 	ErrorMessage             string `human:"Error Message" serialized:"error_message"`
 	ErrorCode                string `human:"Error Code" serialized:"error_code"`
+	MessagesTruncated        int64  `human:"Messages Truncated" serialized:"messages_truncated"`
+	OffsetTruncatedTo        string `human:"Offset Truncated To" serialized:"offset_truncated_to"`
 }
 
 type mirrorCommand struct {
@@ -44,6 +46,7 @@ func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newReverseAndPauseMirrorCommand())
 	cmd.AddCommand(c.newReverseAndStartMirrorCommand())
 	cmd.AddCommand(c.newStateTransitionErrorCommand())
+	cmd.AddCommand(c.newTruncateAndRestoreCommand())
 
 	return cmd
 }
