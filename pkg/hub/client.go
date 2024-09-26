@@ -5,8 +5,8 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 type Client struct {

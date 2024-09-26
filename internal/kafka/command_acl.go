@@ -6,11 +6,11 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/ccstructs"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type aclCommand struct {

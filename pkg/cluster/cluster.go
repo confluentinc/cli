@@ -9,8 +9,8 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 const (

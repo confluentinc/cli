@@ -11,9 +11,9 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/v3/pkg/cluster"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/cluster"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type registerCommand struct {

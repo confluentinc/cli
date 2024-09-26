@@ -6,17 +6,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
-	client "github.com/confluentinc/cli/v3/pkg/flink/app"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/jwt"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
+	client "github.com/confluentinc/cli/v4/pkg/flink/app"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/jwt"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	ppanic "github.com/confluentinc/cli/v4/pkg/panic-recovery"
 )
 
 func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {

@@ -7,9 +7,9 @@ import (
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/types"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
 type offsetCommand struct {

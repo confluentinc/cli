@@ -5,8 +5,8 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/color"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
 )
 
 type Word struct {

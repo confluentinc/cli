@@ -13,16 +13,16 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	pauth "github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/billing"
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/keychain"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/billing"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/keychain"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type command struct {

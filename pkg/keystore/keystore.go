@@ -1,9 +1,9 @@
 package keystore
 
 import (
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
 )
 
 type ConfigKeyStore struct {

@@ -8,8 +8,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type TableViewInterface interface {

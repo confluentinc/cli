@@ -8,9 +8,9 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *aclCommand) newCreateCommand() *cobra.Command {

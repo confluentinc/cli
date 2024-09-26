@@ -14,15 +14,15 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	climock "github.com/confluentinc/cli/v3/mock"
-	pauth "github.com/confluentinc/cli/v3/pkg/auth"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
-	"github.com/confluentinc/cli/v3/pkg/jwt"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	pmock "github.com/confluentinc/cli/v3/pkg/mock"
+	climock "github.com/confluentinc/cli/v4/mock"
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
+	"github.com/confluentinc/cli/v4/pkg/jwt"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	pmock "github.com/confluentinc/cli/v4/pkg/mock"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 // ScopedIdService allows introspecting details from a Confluent cluster.

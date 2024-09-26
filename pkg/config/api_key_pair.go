@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/confluentinc/cli/v3/pkg/secret"
+	"github.com/confluentinc/cli/v4/pkg/secret"
 )
 
 // APIKeyPair holds an API Key and Secret.

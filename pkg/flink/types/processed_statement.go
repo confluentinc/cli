@@ -6,9 +6,9 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type PHASE string

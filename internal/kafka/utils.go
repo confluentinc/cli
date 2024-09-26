@@ -8,9 +8,9 @@ import (
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	"github.com/confluentinc/cli/v3/pkg/kafkarest"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/ccstructs"
+	"github.com/confluentinc/cli/v4/pkg/kafkarest"
 )
 
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {

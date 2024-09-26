@@ -10,11 +10,11 @@ import (
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 )
 
 type clusterOut struct {

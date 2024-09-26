@@ -5,8 +5,8 @@ import (
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *clusterCommand) newListCommand() *cobra.Command {

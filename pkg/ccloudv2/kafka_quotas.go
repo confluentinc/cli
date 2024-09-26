@@ -6,7 +6,7 @@ import (
 
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newKafkaQuotasClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *kafkaquotasv1.APIClient {

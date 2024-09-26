@@ -8,15 +8,15 @@ import (
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/kafkarest"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/properties"
-	"github.com/confluentinc/cli/v3/pkg/resource"
-	"github.com/confluentinc/cli/v3/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafkarest"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/properties"
+	"github.com/confluentinc/cli/v4/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
 type topicConfigurationOut struct {

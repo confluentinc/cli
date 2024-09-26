@@ -5,13 +5,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/acl"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/kafkarest"
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/acl"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafkarest"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {

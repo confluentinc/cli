@@ -3,8 +3,8 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/broker"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/broker"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 func (c *brokerCommand) newDescribeCommand() *cobra.Command {

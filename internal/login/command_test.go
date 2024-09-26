@@ -25,13 +25,13 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	mdsmock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
-	"github.com/confluentinc/cli/v3/internal/logout"
-	climock "github.com/confluentinc/cli/v3/mock"
-	pauth "github.com/confluentinc/cli/v3/pkg/auth"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/internal/logout"
+	climock "github.com/confluentinc/cli/v4/mock"
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const (

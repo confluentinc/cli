@@ -11,10 +11,10 @@ import (
 
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
-	pauth "github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type ksqlCommand struct {

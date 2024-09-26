@@ -8,13 +8,13 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/types"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
+	"github.com/confluentinc/cli/v4/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {

@@ -13,10 +13,10 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	testUtils "github.com/confluentinc/cli/v3/pkg/flink/test"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	testUtils "github.com/confluentinc/cli/v4/pkg/flink/test"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type StatementControllerTestSuite struct {

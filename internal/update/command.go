@@ -15,13 +15,13 @@ import (
 	"github.com/inconshreveable/go-update"
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	pupdate "github.com/confluentinc/cli/v3/pkg/update"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/form"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	pupdate "github.com/confluentinc/cli/v4/pkg/update"
 )
 
 const homebrewTap = "confluentinc/tap/cli"

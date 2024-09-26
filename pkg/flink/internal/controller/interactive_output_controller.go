@@ -8,12 +8,12 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/components"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/flink/components"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 const errorDuringTableView = "Error: internal error occurred while in table view"

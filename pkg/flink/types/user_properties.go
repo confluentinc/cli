@@ -1,6 +1,6 @@
 package types
 
-import "github.com/confluentinc/cli/v3/pkg/flink/config"
+import "github.com/confluentinc/cli/v4/pkg/flink/config"
 
 type UserPropertiesInterface interface {
 	Clear()

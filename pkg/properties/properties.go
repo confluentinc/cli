@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 // GetMap reads newline-separated configuration files or comma-separated lists of key=value pairs, and supports configuration values containing commas.

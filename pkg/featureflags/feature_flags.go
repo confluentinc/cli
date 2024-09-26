@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/launch_darkly.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 launch_darkly.go LaunchDarklyManager
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/launch_darkly.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 launch_darkly.go LaunchDarklyManager
 
 package featureflags
 
@@ -14,14 +14,14 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
-	"github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
-	"github.com/confluentinc/cli/v3/pkg/version"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	ppanic "github.com/confluentinc/cli/v4/pkg/panic-recovery"
+	"github.com/confluentinc/cli/v4/pkg/version"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 const (

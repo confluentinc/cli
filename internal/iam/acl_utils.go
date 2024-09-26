@@ -11,9 +11,9 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/v3/pkg/acl"
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/acl"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation

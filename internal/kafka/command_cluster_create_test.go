@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/ccstructs"
+	"github.com/confluentinc/cli/v4/pkg/ccstructs"
 )
 
 func TestGetKafkaProvisionEstimate_Basic(t *testing.T) {

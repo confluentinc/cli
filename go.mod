@@ -1,4 +1,4 @@
-module github.com/confluentinc/cli/v3
+module github.com/confluentinc/cli/v4
 
 go 1.22.7
 

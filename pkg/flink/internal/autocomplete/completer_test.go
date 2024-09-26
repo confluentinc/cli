@@ -9,7 +9,7 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/generators"
 )
 
 func mockGetSmartCompletion() bool {

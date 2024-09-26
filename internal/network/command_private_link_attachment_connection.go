@@ -7,9 +7,9 @@ import (
 
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 
-	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type privateLinkAttachmentConnectionOut struct {
