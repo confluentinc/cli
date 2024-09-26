@@ -580,6 +580,8 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		if err != nil {
 			return nil, nil, err
 		}
+
+		// refs are needed during schema registration
 		refs, err := schemaregistry.ReadSchemaReferences(references)
 		if err != nil {
 			return nil, nil, err
@@ -593,7 +595,11 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	// We need the endpoint for schema registry client for internal serializer/deserializer
-	srEndpoint, err := c.getSchemaRegistryEndPointFromClient(cmd)
+	// TODO: remove below comments after code review
+	// [Channing] SR client must already be available at this point
+	// If schemaId.IsSet() == true, that means client is created in line532
+	// If schemaId.IsSet() == false, that means client is created in line591
+	srEndpoint, err := c.getSchemaRegistryEndpointFromClient(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -604,20 +610,19 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	return serializationProvider, metaInfo, nil
 }
 
-func (c *command) getSchemaRegistryEndPointFromClient(cmd *cobra.Command) (string, error) {
+func (c *command) getSchemaRegistryEndpointFromClient(cmd *cobra.Command) (string, error) {
 	srClient, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return "", err
 	}
 	cfg := srClient.GetConfig()
 	if cfg == nil {
-		return "", fmt.Errorf("unable to fetch the configuration for the regular schema registery client")
+		return "", fmt.Errorf("unable to fetch the configuration for Schema Registry client")
 	}
 	if cfg.Servers == nil || len(cfg.Servers) <= 1 {
-		return "", fmt.Errorf("unable to fetch the servers from regular schema registery client configuration")
+		return "", fmt.Errorf("unable to fetch the servers from Schema Registry client configuration")
 	}
-	schemaRegistryEndpoint := cfg.Servers[0].URL
-	return schemaRegistryEndpoint, nil
+	return cfg.Servers[0].URL, nil
 }
 
 func getMetaInfoFromSchemaId(id int32) []byte {

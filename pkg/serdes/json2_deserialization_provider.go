@@ -17,7 +17,7 @@ func (a *Json2DeserializationProvider) InitDeserializer(srClientUrl, mode string
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create deserializer specific schema registry client: %s\n", err)
+		return fmt.Errorf("failed to create deserializer-specific Schema Registry client: %w", err)
 	}
 
 	serdeConfig := jsonschema.NewDeserializerConfig()
@@ -34,7 +34,7 @@ func (a *Json2DeserializationProvider) InitDeserializer(srClientUrl, mode string
 	deser, err := jsonschema.NewDeserializer(serdeClient, serdeType, serdeConfig)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create deserializer: %s\n", err)
+		return fmt.Errorf("failed to create deserializer: %w", err)
 	}
 
 	a.deser = *deser

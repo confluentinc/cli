@@ -17,7 +17,7 @@ func (a *Avro2SerializationProvider) InitSerializer(srClientUrl, mode string) er
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create serializer specific schema registry client: %s\n", err)
+		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
 
 	serdeConfig := avrov2.NewSerializerConfig()
@@ -36,7 +36,7 @@ func (a *Avro2SerializationProvider) InitSerializer(srClientUrl, mode string) er
 	ser, err := avrov2.NewSerializer(serdeClient, serdeType, serdeConfig)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create serializer: %s\n", err)
+		return fmt.Errorf("failed to create serializer: %w", err)
 	}
 
 	a.ser = *ser
@@ -50,7 +50,7 @@ func (a *Avro2SerializationProvider) GetSchemaName() string {
 func (a *Avro2SerializationProvider) Serialize(topic string, msg interface{}) ([]byte, error) {
 	payload, err := a.ser.Serialize(topic, msg)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to serialize payload: %s\n", err)
+		return nil, fmt.Errorf("failed to serialize payload: %w", err)
 	}
 	return payload, nil
 }
