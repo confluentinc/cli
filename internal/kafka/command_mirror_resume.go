@@ -90,27 +90,38 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 			continue
 		}
 
+		var truncationData []*kafkarestv3.PartitionLevelTruncationData
 		if result.GetMessagesTruncated() != -1 {
 			isTruncateAndRestore = true
+			nextPartitionDataIndex := 0
+			for i := 0; i < len(result.GetMirrorLags().Items); i += 1 {
+				if nextPartitionDataIndex >= len(result.GetPartitionLevelTruncationData().Items) {
+					truncationData = append(truncationData, nil)
+				} else {
+					var data kafkarestv3.PartitionLevelTruncationData = result.GetPartitionLevelTruncationData().Items[nextPartitionDataIndex]
+					if data.GetPartitionId() == int32(i) {
+						truncationData = append(truncationData, &data)
+						nextPartitionDataIndex += 1
+					} else {
+						truncationData = append(truncationData, nil)
+					}
+				}
+
+			}
 		}
 
 		for _, partitionLag := range result.GetMirrorLags().Items {
-			var partitionTruncationData *kafkarestv3.PartitionLevelTruncationData
-			for _, data := range result.GetPartitionLevelTruncationData().Items {
-				if data.GetPartitionId() == partitionLag.GetPartition() {
-					partitionTruncationData = &data
-				}
-			}
-			if len(result.GetPartitionLevelTruncationData().Items) > 0 && partitionTruncationData != nil {
+			partitionId := partitionLag.GetPartition()
+			if isTruncateAndRestore && truncationData[partitionId] != nil {
 				list.Add(&mirrorOut{
 					MirrorTopicName:       result.GetMirrorTopicName(),
-					Partition:             partitionLag.GetPartition(),
+					Partition:             partitionId,
 					ErrorMessage:          errorMessage,
 					ErrorCode:             errorCode,
 					PartitionMirrorLag:    partitionLag.GetLag(),
 					LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
-					MessagesTruncated:     partitionTruncationData.GetMessagesTruncated(),
-					OffsetTruncatedTo:     strconv.FormatInt(partitionTruncationData.GetOffsetTruncatedTo(), 10),
+					MessagesTruncated:     truncationData[partitionId].GetMessagesTruncated(),
+					OffsetTruncatedTo:     strconv.FormatInt(truncationData[partitionId].GetOffsetTruncatedTo(), 10),
 				})
 			} else {
 				list.Add(&mirrorOut{

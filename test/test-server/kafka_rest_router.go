@@ -1190,11 +1190,6 @@ func handleKafkaRestTruncateAndRestore(t *testing.T) http.HandlerFunc {
 							OffsetTruncatedTo: int64(10),
 						},
 						{
-							PartitionId:       1,
-							MessagesTruncated: int64(10),
-							OffsetTruncatedTo: int64(10),
-						},
-						{
 							PartitionId:       2,
 							MessagesTruncated: int64(25),
 							OffsetTruncatedTo: int64(15),

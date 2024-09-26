@@ -26,8 +26,8 @@
     "last_source_fetch_offset": 10000,
     "error_message": "",
     "error_code": "",
-    "messages_truncated": 10,
-    "offset_truncated_to": "10"
+    "messages_truncated": 0,
+    "offset_truncated_to": ""
   },
   {
     "mirror_topic_name": "topic-1",
