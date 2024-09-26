@@ -6,7 +6,7 @@
     "last_source_fetch_offset": -1,
     "error_message": "Not authorized",
     "error_code": "401",
-    "messages_truncated": "0",
+    "messages_truncated": 0,
     "offset_truncated_to": ""
   },
   {
@@ -16,7 +16,7 @@
     "last_source_fetch_offset": 1000,
     "error_message": "",
     "error_code": "",
-    "messages_truncated": "25",
+    "messages_truncated": 25,
     "offset_truncated_to": "10"
   },
   {
@@ -26,7 +26,7 @@
     "last_source_fetch_offset": 10000,
     "error_message": "",
     "error_code": "",
-    "messages_truncated": "0",
+    "messages_truncated": 0,
     "offset_truncated_to": ""
   },
   {
@@ -36,7 +36,7 @@
     "last_source_fetch_offset": 100000,
     "error_message": "",
     "error_code": "",
-    "messages_truncated": "25",
+    "messages_truncated": 25,
     "offset_truncated_to": "15"
   }
 ]
