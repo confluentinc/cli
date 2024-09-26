@@ -47,7 +47,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.4.0
 	github.com/confluentinc/go-editor v0.11.0
-	github.com/confluentinc/go-prompt v0.2.31
+	github.com/confluentinc/go-prompt v0.2.38
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240923163156-b922b35891f9
