@@ -105,7 +105,6 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 						truncationData = append(truncationData, nil)
 					}
 				}
-
 			}
 		}
 
