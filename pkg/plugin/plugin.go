@@ -12,9 +12,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 var pluginRegex = regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+$`)

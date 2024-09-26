@@ -3,7 +3,7 @@ package errors
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 const parsedGenericOpenApiErrorMsg = "metadata service backend error: %s"

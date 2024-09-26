@@ -5,8 +5,8 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	"github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type Client struct {

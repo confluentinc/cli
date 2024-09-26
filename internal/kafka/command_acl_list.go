@@ -3,8 +3,8 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	aclutil "github.com/confluentinc/cli/v3/pkg/acl"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	aclutil "github.com/confluentinc/cli/v4/pkg/acl"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 func (c *aclCommand) newListCommand() *cobra.Command {

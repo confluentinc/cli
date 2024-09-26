@@ -5,7 +5,7 @@ import (
 
 	"github.com/bradleyjkemp/cupaloy/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/test"
+	"github.com/confluentinc/cli/v4/pkg/flink/test"
 )
 
 func TestDefaultPanicRecovery(t *testing.T) {

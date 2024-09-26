@@ -18,13 +18,13 @@ import (
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
-	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const (

@@ -8,10 +8,10 @@ import (
 
 	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
-	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func (c *accessPointCommand) newCreateCommand() *cobra.Command {

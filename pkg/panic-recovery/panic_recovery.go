@@ -11,8 +11,8 @@ import (
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/usage"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/usage"
 )
 
 // CollectPanic collects relevant usage data for when panics occur and command execution is not completed.

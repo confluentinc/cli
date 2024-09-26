@@ -5,10 +5,10 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type BaseOutputController struct {

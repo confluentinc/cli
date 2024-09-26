@@ -8,8 +8,8 @@ import (
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type Usage cliv1.CliV1Usage

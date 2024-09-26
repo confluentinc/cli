@@ -11,8 +11,8 @@ import (
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type shell struct {

@@ -11,8 +11,8 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/generators"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type ResultFormatterTestSuite struct {

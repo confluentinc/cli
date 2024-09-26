@@ -1,4 +1,4 @@
-//go:generate mocker --dst ../../mock/login_credentials_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 login_credentials_manager.go LoginCredentialsManager --prefix ""
+//go:generate mocker --dst ../../mock/login_credentials_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 login_credentials_manager.go LoginCredentialsManager --prefix ""
 package auth
 
 import (
@@ -11,15 +11,15 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/auth/sso"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/jwt"
-	"github.com/confluentinc/cli/v3/pkg/keychain"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/secret"
+	"github.com/confluentinc/cli/v4/pkg/auth/sso"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/form"
+	"github.com/confluentinc/cli/v4/pkg/jwt"
+	"github.com/confluentinc/cli/v4/pkg/keychain"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/secret"
 )
 
 const stopNonInteractiveMsg = "remove these credentials or use the `--prompt` flag to bypass non-interactive login"

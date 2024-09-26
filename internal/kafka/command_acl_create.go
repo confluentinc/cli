@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pacl "github.com/confluentinc/cli/v3/pkg/acl"
-	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
+	pacl "github.com/confluentinc/cli/v4/pkg/acl"
+	"github.com/confluentinc/cli/v4/pkg/ccstructs"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *aclCommand) newCreateCommand() *cobra.Command {

@@ -8,7 +8,7 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c invitationCommand) newCreateCommand() *cobra.Command {

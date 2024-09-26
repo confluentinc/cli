@@ -3,7 +3,7 @@ package context
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 func (c *command) newUseCommand() *cobra.Command {

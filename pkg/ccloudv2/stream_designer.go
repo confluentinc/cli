@@ -6,7 +6,7 @@ import (
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newStreamDesignerClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *streamdesignerv1.APIClient {

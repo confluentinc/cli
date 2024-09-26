@@ -6,7 +6,7 @@ import (
 
 	"github.com/linkedin/goavro/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type AvroSerializationProvider struct {

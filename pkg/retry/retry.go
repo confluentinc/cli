@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 func Retry(tick, timeout time.Duration, f func() error) error {

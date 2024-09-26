@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-jose/go-jose/v3/jwt"
 
-	"github.com/confluentinc/cli/v3/pkg/secret"
+	"github.com/confluentinc/cli/v4/pkg/secret"
 )
 
 const (

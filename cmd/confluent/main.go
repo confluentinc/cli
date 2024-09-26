@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/internal"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/internal"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 // Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
