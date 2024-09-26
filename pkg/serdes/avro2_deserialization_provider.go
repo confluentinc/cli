@@ -9,7 +9,7 @@ import (
 )
 
 type Avro2DeserializationProvider struct {
-	deser avrov2.Deserializer
+	deser *avrov2.Deserializer
 }
 
 func (a *Avro2DeserializationProvider) InitDeserializer(srClientUrl, mode string) error {
@@ -23,11 +23,12 @@ func (a *Avro2DeserializationProvider) InitDeserializer(srClientUrl, mode string
 	serdeConfig := avrov2.NewDeserializerConfig()
 
 	var serdeType serde.Type
-	if mode == "key" {
+	switch mode {
+	case "key":
 		serdeType = serde.KeySerde
-	} else if mode == "value" {
+	case "value":
 		serdeType = serde.ValueSerde
-	} else {
+	default:
 		return fmt.Errorf("unknown deserialization mode: %s", mode)
 	}
 
@@ -37,10 +38,14 @@ func (a *Avro2DeserializationProvider) InitDeserializer(srClientUrl, mode string
 		return fmt.Errorf("failed to create deserializer: %w", err)
 	}
 
-	a.deser = *deser
+	a.deser = deser
 	return nil
 }
 
 func (a *Avro2DeserializationProvider) Deserialize(topic string, payload []byte, msg interface{}) error {
-	return a.deser.DeserializeInto(topic, payload, msg)
+	err := a.deser.DeserializeInto(topic, payload, msg)
+	if err != nil {
+		return fmt.Errorf("failed to deserialize payload: %w", err)
+	}
+	return nil
 }

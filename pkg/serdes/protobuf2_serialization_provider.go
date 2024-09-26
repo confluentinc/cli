@@ -9,7 +9,7 @@ import (
 )
 
 type Protobuf2SerializationProvider struct {
-	ser protobuf.Serializer
+	ser *protobuf.Serializer
 }
 
 func (a *Protobuf2SerializationProvider) InitSerializer(srClientUrl, mode string) error {
@@ -39,7 +39,7 @@ func (a *Protobuf2SerializationProvider) InitSerializer(srClientUrl, mode string
 		return fmt.Errorf("failed to create serializer: %w", err)
 	}
 
-	a.ser = *ser
+	a.ser = ser
 	return nil
 }
 
@@ -50,7 +50,7 @@ func (a *Protobuf2SerializationProvider) GetSchemaName() string {
 func (a *Protobuf2SerializationProvider) Serialize(topic string, msg interface{}) ([]byte, error) {
 	payload, err := a.ser.Serialize(topic, msg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize payload: %w", err)
+		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 	return payload, nil
 }
