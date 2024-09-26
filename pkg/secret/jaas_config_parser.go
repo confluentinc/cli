@@ -9,7 +9,7 @@ import (
 
 	"github.com/confluentinc/properties"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type JAASParserInterface interface {

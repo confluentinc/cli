@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	ppanic "github.com/confluentinc/cli/v3/pkg/panic-recovery"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	ppanic "github.com/confluentinc/cli/v4/pkg/panic-recovery"
 )
 
 func DisableHelpText(command *cobra.Command, flags []string) {

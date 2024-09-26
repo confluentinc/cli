@@ -6,7 +6,7 @@ import (
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newOrgClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *orgv2.APIClient {

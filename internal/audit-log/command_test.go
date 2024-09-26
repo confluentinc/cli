@@ -17,8 +17,8 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
-	climock "github.com/confluentinc/cli/v3/mock"
-	"github.com/confluentinc/cli/v3/pkg/config"
+	climock "github.com/confluentinc/cli/v4/mock"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 var (

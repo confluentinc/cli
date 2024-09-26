@@ -3,7 +3,7 @@ package spinner
 import (
 	"time"
 
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 var frames = []string{"|", "/", "-", "\\"}

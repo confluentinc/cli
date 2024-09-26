@@ -1,11 +1,11 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/auth_mds_client.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 mds_client.go MDSClientManager
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/auth_mds_client.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 mds_client.go MDSClientManager
 package auth
 
 import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient

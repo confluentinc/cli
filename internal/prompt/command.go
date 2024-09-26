@@ -7,9 +7,9 @@ import (
 
 	"github.com/confluentinc/go-ps1"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/utils"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/utils"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 const none = "(none)"

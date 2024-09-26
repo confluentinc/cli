@@ -9,8 +9,8 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type out struct {

@@ -6,18 +6,18 @@ import (
 
 	"github.com/sourcegraph/jsonrpc2"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/flink/components"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/flink/components"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/controller"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/store"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/flink/lsp"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type Application struct {

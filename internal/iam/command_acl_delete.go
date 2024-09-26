@@ -5,11 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pacl "github.com/confluentinc/cli/v3/pkg/acl"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	pacl "github.com/confluentinc/cli/v4/pkg/acl"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {

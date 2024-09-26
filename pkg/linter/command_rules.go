@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type CommandRule func(cmd *cobra.Command) error

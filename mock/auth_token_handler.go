@@ -7,7 +7,7 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_cli_v3_pkg_auth "github.com/confluentinc/cli/v3/pkg/auth"
+	github_com_confluentinc_cli_v3_pkg_auth "github.com/confluentinc/cli/v4/pkg/auth"
 	github_com_confluentinc_mds_sdk_go_public_mdsv1 "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 

@@ -8,10 +8,10 @@ import (
 
 	"github.com/client9/gospell"
 
-	"github.com/confluentinc/cli/v3/internal"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/linter"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/internal"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/linter"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 var commandRules = []linter.CommandRule{

@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/browser"
 
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func Login(authURL string, noBrowser bool, connectionName string) (string, string, error) {

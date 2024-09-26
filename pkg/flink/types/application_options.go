@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type ApplicationOptions struct {

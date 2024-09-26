@@ -18,7 +18,7 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	pauth "github.com/confluentinc/cli/v3/pkg/auth"
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 )
 
 const (
