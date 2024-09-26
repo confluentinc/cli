@@ -18,7 +18,7 @@ import (
 
 /*
 	HANDLECOMMON HELPERS
-	see: https://github.com/confluentinc/cli/v3/blob/master/errors.md
+	see: https://github.com/confluentinc/cli/v4/blob/master/errors.md
 */
 
 const quotaExceededRegex = ".* is currently limited to .*"

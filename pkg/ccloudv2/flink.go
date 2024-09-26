@@ -6,8 +6,8 @@ import (
 
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func newFlinkClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *flinkv2.APIClient {

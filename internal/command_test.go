@@ -9,10 +9,10 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 var (

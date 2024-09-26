@@ -8,7 +8,7 @@ import (
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	"github.com/confluentinc/cli/v3/pkg/serdes"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
 )
 
 func TestGetMessageString(t *testing.T) {

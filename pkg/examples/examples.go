@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 type Example struct {

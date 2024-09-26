@@ -5,8 +5,8 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 func (c *command) newKekUpdateCommand(cfg *config.Config) *cobra.Command {

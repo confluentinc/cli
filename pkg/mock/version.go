@@ -1,6 +1,6 @@
 package mock
 
-import "github.com/confluentinc/cli/v3/pkg/version"
+import "github.com/confluentinc/cli/v4/pkg/version"
 
 func NewVersionMock() *version.Version {
 	return &version.Version{

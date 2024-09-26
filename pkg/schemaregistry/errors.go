@@ -1,6 +1,6 @@
 package schemaregistry
 
-import "github.com/confluentinc/cli/v3/pkg/errors"
+import "github.com/confluentinc/cli/v4/pkg/errors"
 
 var ErrNotEnabled = errors.NewErrorWithSuggestions(
 	"Schema Registry not enabled",

@@ -14,8 +14,8 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
 )
 
 type InputControllerTestSuite struct {

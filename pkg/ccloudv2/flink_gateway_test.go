@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/errors/flink"
+	"github.com/confluentinc/cli/v4/pkg/errors/flink"
 )
 
 func TestFlinkErrorCodeWhenErrors(t *testing.T) {

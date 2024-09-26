@@ -5,10 +5,10 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	"github.com/confluentinc/cli/v3/pkg/acl"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/kafkarest"
+	"github.com/confluentinc/cli/v4/pkg/acl"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafkarest"
 )
 
 func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {

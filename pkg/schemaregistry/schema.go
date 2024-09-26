@@ -8,7 +8,7 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 type RegisterSchemaConfigs struct {

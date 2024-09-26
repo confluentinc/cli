@@ -3,8 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/v3/pkg/errors/flink"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/errors/flink"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 type StatementError struct {

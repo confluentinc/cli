@@ -8,8 +8,8 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 var (

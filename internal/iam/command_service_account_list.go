@@ -3,8 +3,8 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *serviceAccountCommand) newListCommand() *cobra.Command {

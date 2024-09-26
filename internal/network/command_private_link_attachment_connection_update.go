@@ -5,8 +5,8 @@ import (
 
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *command) newPrivateLinkAttachmentConnectionUpdateCommand() *cobra.Command {

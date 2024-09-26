@@ -16,16 +16,16 @@ import (
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	"github.com/confluentinc/cli/v3/internal/kafka"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	pkafka "github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
-	"github.com/confluentinc/cli/v3/pkg/serdes"
+	"github.com/confluentinc/cli/v4/internal/kafka"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	pkafka "github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
 )
 
 type confluentBinding struct {

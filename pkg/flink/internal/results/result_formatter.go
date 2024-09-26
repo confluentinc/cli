@@ -3,7 +3,7 @@ package results
 import (
 	"github.com/samber/lo"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
 )
 
 type truncatedColumn struct {

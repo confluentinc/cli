@@ -7,9 +7,9 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors/flink"
-	flinkerror "github.com/confluentinc/cli/v3/pkg/errors/flink"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/errors/flink"
+	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type GatewayClientInterface interface {

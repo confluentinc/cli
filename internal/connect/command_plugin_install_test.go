@@ -10,8 +10,8 @@ import (
 
 	"github.com/confluentinc/properties"
 
-	"github.com/confluentinc/cli/v3/pkg/cpstructs"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/cpstructs"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 type MockCommand struct {

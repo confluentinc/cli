@@ -7,7 +7,7 @@ import (
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/token"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 const (

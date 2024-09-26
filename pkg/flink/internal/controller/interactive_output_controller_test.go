@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/components"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/components"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/store"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type InteractiveOutputControllerTestSuite struct {

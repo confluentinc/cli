@@ -13,14 +13,14 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/flink/test"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/controller"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/store"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/flink/test"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type ApplicationTestSuite struct {

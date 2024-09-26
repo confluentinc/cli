@@ -3,9 +3,9 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/broker"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/broker"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *brokerCommand) newConfigurationListCommand() *cobra.Command {

@@ -11,7 +11,7 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 	websocket2 "github.com/sourcegraph/jsonrpc2/websocket"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type WebsocketLSPClient struct {

@@ -6,7 +6,7 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newIamClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *iamv2.APIClient {

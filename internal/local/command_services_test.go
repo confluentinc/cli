@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	climock "github.com/confluentinc/cli/v3/mock"
+	climock "github.com/confluentinc/cli/v4/mock"
 )
 
 const (

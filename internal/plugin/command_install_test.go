@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/confluentinc/cli/v3/pkg/plugin"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/plugin"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func TestGetPluginManifest(t *testing.T) {

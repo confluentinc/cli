@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func (s *CLITestSuite) TestLogout_RemoveUsernamePassword() {

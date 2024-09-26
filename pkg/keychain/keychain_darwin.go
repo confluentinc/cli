@@ -8,8 +8,8 @@ import (
 
 	"github.com/keybase/go-keychain"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 const (
