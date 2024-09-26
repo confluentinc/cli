@@ -32,7 +32,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 const autoLoginMsg = "Successful auto-login with non-interactive credentials."

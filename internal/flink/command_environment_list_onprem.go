@@ -6,7 +6,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +41,7 @@ func (c *command) listEnvironmentsOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var list []cmfsdk.GetEnvironment
+	var list []cmfsdk.Environment
 	environments := append(list, environmentsPage.Items...)
 
 	// TODO: Add pagination support once the API supports it

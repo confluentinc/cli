@@ -1,2 +1,2 @@
-Error: failed to list applications in the environment "non-existent": Environment not found
+Error: failed to list applications in the environment "list-non-existent": Environment not found
 

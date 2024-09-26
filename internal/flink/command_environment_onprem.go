@@ -18,6 +18,8 @@ func (c *command) newEnvironmentOnPremCommand() *cobra.Command {
 		Aliases: []string{"env"},
 	}
 	cmd.AddCommand(c.newEnvironmentListOnPremCommand())
+	cmd.AddCommand(c.newEnvironmentCreateCommandOnPrem())
+	cmd.AddCommand(c.newEnvironmentUpdateCommandOnPrem())
 	cmd.AddCommand(c.newEnvironmentDeleteOnPremCommand())
 	return cmd
 }

@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/confluentinc/cli/v3/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 func (c *command) newApplicationUpdateCommandOnPrem() *cobra.Command {
@@ -64,25 +64,28 @@ func (c *command) updateApplicationOnPrem(cmd *cobra.Command, args []string) err
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
 	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environmentName, applicationName, nil)
-	// TODO: Check what to do with the error
 	// check if the application exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode != 200 {
 		return fmt.Errorf("application \"%s\" does not exist in the environment \"%s\"", applicationName, environmentName)
 	}
 
-	_, httpResponse, err = cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environmentName, application)
+	outputApplication, httpResponse, err := cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environmentName, application)
 	defer httpResponse.Body.Close()
-	respBody, parseError := ioutil.ReadAll(httpResponse.Body)
 	if err != nil {
 		if httpResponse != nil && httpResponse.StatusCode != 200 {
+			respBody, parseError := ioutil.ReadAll(httpResponse.Body)
 			if httpResponse.Body != nil {
 				if parseError == nil {
 					return fmt.Errorf("failed to update application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, string(respBody))
 				}
 			}
 		}
-		return err
+		return fmt.Errorf("failed to update application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, err)
 	}
-	// TODO: Add different output formats
-	return output.SerializedOutput(cmd, application)
+	// TODO: can err == nil and status code non-20x?
+
+	if output.GetFormat(cmd) == output.Human {
+		// TODO: Add different output formats
+	}
+	return output.SerializedOutput(cmd, outputApplication)
 }

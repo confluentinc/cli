@@ -2,6 +2,7 @@ package flink
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/confluentinc/cli/v3/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 func (c *command) newApplicationCreateCommandOnPrem() *cobra.Command {
@@ -30,8 +31,7 @@ func (c *command) createApplicationOnPrem(cmd *cobra.Command, args []string) err
 		return err
 	}
 	if environmentName == "" {
-		fmt.Errorf("Environment name is required")
-		return nil
+		return errors.New("environment name is required")
 	}
 
 	cmfREST, err := c.GetCmfREST()
@@ -71,17 +71,21 @@ func (c *command) createApplicationOnPrem(cmd *cobra.Command, args []string) err
 
 	_, httpResponse, err = cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environmentName, application)
 	defer httpResponse.Body.Close()
-	respBody, parseError := ioutil.ReadAll(httpResponse.Body)
 	if err != nil {
-		if httpResponse != nil && httpResponse.StatusCode != 201 {
+		if httpResponse != nil {
 			if httpResponse.Body != nil {
+				respBody, parseError := ioutil.ReadAll(httpResponse.Body)
 				if parseError == nil {
 					return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, string(respBody))
 				}
 			}
 		}
-		return err
+		return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, err)
 	}
-	// TODO: Add different output formats
+	// TODO: can err == nil and status code non-20x?
+
+	if output.GetFormat(cmd) == output.Human {
+		// TODO: Add different output formats
+	}
 	return output.SerializedOutput(cmd, application)
 }

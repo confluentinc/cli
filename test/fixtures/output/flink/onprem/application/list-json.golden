@@ -3,10 +3,10 @@
     "apiVersion": "cmf.confluent.io/v1alpha1",
     "kind": "FlinkApplication",
     "metadata": {
-      "name": "state-machine-example"
+      "name": "list-application-application"
     },
     "spec": {
-      "environmentNameRef": "default",
+      "environmentNameRef": "list-test",
       "jobRef": {
         "flinkConfiguration": {
           "metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",

@@ -13,19 +13,19 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
-func (c *command) newEnvironmentCreateCommandOnPrem() *cobra.Command {
+func (c *command) newEnvironmentUpdateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create a Flink environment.",
+		Use:   "update <name>",
+		Short: "Update a Flink environment.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.createEnvironmentOnPrem,
+		RunE:  c.updateEnvironmentOnPrem,
 	}
 
 	cmd.Flags().String("defaults", "", "JSON string defining the environment defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension)")
 	return cmd
 }
 
-func (c *command) createEnvironmentOnPrem(cmd *cobra.Command, args []string) error {
+func (c *command) updateEnvironmentOnPrem(cmd *cobra.Command, args []string) error {
 	cmfREST, err := c.GetCmfREST()
 	if err != nil {
 		return err
@@ -65,8 +65,8 @@ func (c *command) createEnvironmentOnPrem(cmd *cobra.Command, args []string) err
 
 	_, httpResponse, err := cmfREST.Client.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
 	// check if the environment exists by checking the status code
-	if httpResponse != nil && httpResponse.StatusCode == 200 {
-		return fmt.Errorf("environment \"%s\" already exists", environmentName)
+	if httpResponse == nil || httpResponse.StatusCode != 200 {
+		return fmt.Errorf("environment \"%s\" does not exist", environmentName)
 	}
 
 	var environment cmfsdk.PostEnvironment
@@ -81,11 +81,11 @@ func (c *command) createEnvironmentOnPrem(cmd *cobra.Command, args []string) err
 			if httpResponse.Body != nil {
 				respBody, parseError := ioutil.ReadAll(httpResponse.Body)
 				if parseError == nil {
-					return fmt.Errorf("failed to create environment \"%s\": %s", environmentName, string(respBody))
+					return fmt.Errorf("failed to update environment \"%s\": %s", environmentName, string(respBody))
 				}
 			}
 		}
-		return fmt.Errorf("failed to create environment \"%s\": %s", environmentName, err)
+		return fmt.Errorf("failed to update environment \"%s\": %s", environmentName, err)
 	}
 	// TODO: can err == nil and status code non-20x?
 

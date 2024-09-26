@@ -1,5 +1,5 @@
 failed to delete the following environment(s):
-  Environment  |        Reason         | Status Code  
----------------+-----------------------+--------------
-  non-existent | Environment not found |         404  
-               |                       |              
+      Environment     |        Reason         | Status Code  
+----------------------+-----------------------+--------------
+  delete-non-existent | Environment not found |         404  
+                      |                       |              
