@@ -6,21 +6,21 @@ Install Bash completions on macOS:
   #. Install Homebrew (https://brew.sh/).
 
   #. Install Bash completions using the `brew` command:
-  
+
      ::
-     
+
         brew install bash-completion
-  
+
   #. Update your Bash profile:
-  
+
      ::
-     
+
        echo '[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile
-  
+
   #. Run the following command to install auto completion:
-  
+
      ::
-     
+
        confluent completion bash > $(brew --prefix)/etc/bash_completion.d/confluent
 
 Install Bash completions on Linux:
@@ -31,15 +31,15 @@ Install Bash completions on Linux:
         sudo apt-get install bash-completion
 
   #. Set the `confluent completion` code for Bash to a file that's sourced on login:
-  
+
      ::
-     
+
         confluent completion bash > /etc/bash_completion.d/confluent
 
   #. Load the `confluent completion` code for Bash into the current shell:
-  
+
      ::
-  
+
         source /etc/bash_completion.d/confluent
 
   #. Add the source command above to your `~/.bashrc` or `~/.bash_profile` to enable completions for new terminals.
@@ -54,9 +54,9 @@ Install Zsh completions:
         confluent completion zsh > ${fpath[1]}/_confluent
 
   #. Enable Zsh completions:
-  
+
      ::
-     
+
         autoload -U compinit && compinit
 
   #. Add the autoload command in your `~/.zshrc` to enable completions for new terminals. If you encounter error messages about insecure files, you can resolve by running the `chown` command to change the `_confluent` file to the same `user:group` as the other files in `${fpath[1]}/`.
