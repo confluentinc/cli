@@ -11,13 +11,14 @@ type flinkApplicationOut struct {
 	JobState    string `human:"Job State" serialized:"job_state"`
 }
 
-func (c *command) newApplicationCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "application",
 		Short:   "Manage Flink Application",
 		Aliases: []string{"app"},
 	}
 
-	cmd.AddCommand(c.newApplicationListCommandOnPrem())
+	cmd.AddCommand(c.newApplicationListCommand())
+
 	return cmd
 }

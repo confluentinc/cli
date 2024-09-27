@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newEnvironmentListCommand() *cobra.Command {
+func (c *unauthenticatedCommand) newEnvironmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink Environments.",
@@ -23,13 +23,13 @@ func (c *command) newEnvironmentListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
-	cmfREST, err := c.GetCmfRest()
+func (c *unauthenticatedCommand) environmentList(cmd *cobra.Command, _ []string) error {
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	environmentsPage, httpResponse, err := cmfREST.Client.DefaultApi.GetEnvironments(cmd.Context(), nil)
+	environmentsPage, httpResponse, err := cmfClient.DefaultApi.GetEnvironments(cmd.Context(), nil)
 	if err != nil {
 		if httpResponse != nil && httpResponse.StatusCode != 200 {
 			if httpResponse.Body != nil {
