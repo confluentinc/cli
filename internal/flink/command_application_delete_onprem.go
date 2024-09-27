@@ -27,7 +27,7 @@ func (c *unauthenticatedCommand) newApplicationDeleteCommand() *cobra.Command {
 		RunE:  c.applicationDelete,
 	}
 
-	cmd.Flags().StringP("environment", "e", "", "Name of the Environment to get the FlinkApplication from.")
+	cmd.Flags().String("environment", "", "Name of the Environment to get the FlinkApplication from.")
 	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
 	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
 	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")

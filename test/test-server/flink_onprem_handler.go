@@ -234,7 +234,7 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 
 		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "describe" {
 			if environment == "describe-success" {
-				outputEnvironment := createEnvironment(environment, "default")
+				outputEnvironment := createEnvironment(environment)
 				err := json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return

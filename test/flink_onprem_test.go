@@ -118,7 +118,7 @@ func (s *CLITestSuite) TestUpdateFlinkEnvironment() {
 	}
 }
 
-func (s *CLITestSuite) TestDescribeFlinkEnvironments() {
+func (s *CLITestSuite) TestDescribeFlinkEnvironment() {
 	tests := []CLITest{
 		// success
 		{args: "flink environment describe describe-success", fixture: "flink/onprem/environment/describe-success.golden"},
@@ -128,13 +128,11 @@ func (s *CLITestSuite) TestDescribeFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestDescribeFlinkApplications() {
+func (s *CLITestSuite) TestDescribeFlinkApplication() {
 	tests := []CLITest{
 		// success
 		{args: "flink application describe --environment describe-test describe-success", fixture: "flink/onprem/application/describe-success.golden"},
@@ -146,8 +144,6 @@ func (s *CLITestSuite) TestDescribeFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }

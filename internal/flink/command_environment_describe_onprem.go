@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -53,20 +54,16 @@ func (c *unauthenticatedCommand) environmentDescribe(cmd *cobra.Command, args []
 		}
 	}
 
-	// In case err != nil but status code is 200 - if that's possible.
-	if err != nil {
-		return fmt.Errorf("failed to describe environment \"%s\": %s", environmentName, err)
-	}
+	table := output.NewTable(cmd)
+	var defaultsBytes []byte
+	defaultsBytes, err = json.Marshal(cmfEnvironment.Defaults)
 
-	if output.GetFormat(cmd) == output.Human {
-		environmentTable := output.NewTable(cmd)
-		environmentTable.Add(&flinkEnvironmentSummary{
-			Name:        cmfEnvironment.Name,
-			CreatedTime: cmfEnvironment.CreatedTime.String(),
-			UpdatedTime: cmfEnvironment.UpdatedTime.String(),
-		})
-		return environmentTable.Print()
-	}
-	return output.SerializedOutput(cmd, cmfEnvironment)
+	table.Add(&flinkEnvironmentOutput{
+		Name:        cmfEnvironment.Name,
+		Defaults:    string(defaultsBytes),
+		CreatedTime: cmfEnvironment.CreatedTime.String(),
+		UpdatedTime: cmfEnvironment.UpdatedTime.String(),
+	})
+	return table.Print()
 
 }

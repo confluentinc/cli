@@ -25,7 +25,7 @@ func (c *unauthenticatedCommand) newEnvironmentCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newEnvironmentCreateCommand())
-	cmd.AddCommand(c.newApplicationDescribeCommand())
+	cmd.AddCommand(c.newEnvironmentDescribeCommand())
 	cmd.AddCommand(c.newEnvironmentDeleteCommand())
 	cmd.AddCommand(c.newEnvironmentListCommand())
 	cmd.AddCommand(c.newEnvironmentUpdateCommand())
