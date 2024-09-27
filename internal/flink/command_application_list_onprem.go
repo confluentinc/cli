@@ -5,13 +5,13 @@ import (
 	"io"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newApplicationListCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink Applications.",
@@ -19,7 +19,12 @@ func (c *command) newApplicationListCommandOnPrem() *cobra.Command {
 		RunE:  c.applicationList,
 	}
 
-	cmd.Flags().StringP("environment", "e", "", "REQUIRED: Name of the Environment to get the FlinkApplication from.")
+	cmd.Flags().StringP("environment", "e", "", "Name of the Environment to get the FlinkApplication from.")
+	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
+	cmd.Flags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
+
 	cmd.MarkFlagRequired("environment")
 
 	pcmd.AddOutputFlag(cmd)
@@ -27,22 +32,21 @@ func (c *command) newApplicationListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
+func (c *unauthenticatedCommand) applicationList(cmd *cobra.Command, _ []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}
 	if environment == "" {
-		log.CliLogger.Error("environment is required")
-		return nil
+		return errors.NewErrorWithSuggestions("environment is required", "set the environment with --environment flag")
 	}
 
-	cmfREST, err := c.GetCmfRest()
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	applicationsPage, httpResponse, err := cmfREST.Client.DefaultApi.GetApplications(cmd.Context(), environment, nil)
+	applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(cmd.Context(), environment, nil)
 	if err != nil {
 		if httpResponse != nil && httpResponse.StatusCode != 200 {
 			if httpResponse.Body != nil {
