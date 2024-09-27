@@ -1,8 +1,6 @@
 module github.com/confluentinc/cli/v3
 
-go 1.22.2
-
-replace github.com/confluentinc/cmf-sdk-go => ../cp-flink-cmf/client-go/v1
+go 1.23.1
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -47,7 +45,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
-	github.com/confluentinc/cmf-sdk-go v1.0.0
+	github.com/confluentinc/cmf-sdk-go v0.0.1-0.20240926071016-909cc56512ed
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.31
@@ -193,7 +191,7 @@ require (
 	github.com/swaggest/jsonschema-go v0.3.45 // indirect
 	github.com/swaggest/refl v1.1.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
-	github.com/travisjeffery/mocker v1.1.0 // indirect
+	github.com/travisjeffery/mocker v1.1.1 // indirect
 	github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87 // indirect
 	github.com/ugorji/go/codec v1.2.8 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect

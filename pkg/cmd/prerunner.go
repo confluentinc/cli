@@ -32,7 +32,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/utils"
 	pversion "github.com/confluentinc/cli/v3/pkg/version"
 	testserver "github.com/confluentinc/cli/v3/test/test-server"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 const autoLoginMsg = "Successful auto-login with non-interactive credentials."
@@ -664,7 +664,7 @@ func resolveOnPremCMFRestFlags(cmd *cobra.Command) (*onPremCMFRestFlagValues, er
 	return values, nil
 }
 
-func createOnPremCmfRestClient(caCertPath, clientCertPath, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
+func createCmfRestClient(caCertPath, clientCertPath, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
 	// If caCertPath is not provided via flag, check if it is set in the environment
 	if caCertPath == "" {
 		caCertPath = os.Getenv(pauth.ConfluentPlatformCmfCertificateAuthorityPath)
@@ -712,7 +712,7 @@ func (r *PreRun) InitializeOnPremCmfRest(command *AuthenticatedCLICommand) func(
 			if err != nil {
 				return nil, err
 			}
-			cfg.HTTPClient, err = createOnPremCmfRestClient(restFlags.caCertPath, restFlags.clientCertPath, restFlags.clientKeyPath, log.CliLogger)
+			cfg.HTTPClient, err = createCmfRestClient(restFlags.caCertPath, restFlags.clientCertPath, restFlags.clientKeyPath, log.CliLogger)
 			if err != nil {
 				return nil, err
 			}

@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 // Handler for GET "cmf/api/v1/environments/{environment}/applications"
