@@ -1,5 +1,2 @@
-failed to delete the following application(s):
-  Application  | Environment |        Reason         | Status Code  
----------------+-------------+-----------------------+--------------
-  non-existent | default     | Application not found |         404  
-               |             |                       |              
+Error: failed to delete non-existent: Application not found
+

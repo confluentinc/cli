@@ -5,21 +5,20 @@ import (
 )
 
 type flinkEnvironmentOut struct {
-	Name            string `human:"Name" serialized:"name"`
-	DefaultStrategy string `human:"Default Strategy" serialized:"default_strategy"`
-	CreatedTime     string `human:"Created Time" serialized:"created_time"`
-	UpdatedTime     string `human:"Updated Time" serialized:"updated_time"`
+	Name        string `human:"Name" serialized:"name"`
+	CreatedTime string `human:"Created Time" serialized:"created_time"`
+	UpdatedTime string `human:"Updated Time" serialized:"updated_time"`
 }
 
-func (c *command) newEnvironmentOnPremCommand() *cobra.Command {
+func (c *unauthenticatedCommand) newEnvironmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "environment",
 		Short:   "Manage Flink Environments",
 		Aliases: []string{"env"},
 	}
-	cmd.AddCommand(c.newEnvironmentListOnPremCommand())
-	cmd.AddCommand(c.newEnvironmentCreateCommandOnPrem())
-	cmd.AddCommand(c.newEnvironmentUpdateCommandOnPrem())
-	cmd.AddCommand(c.newEnvironmentDeleteOnPremCommand())
+	cmd.AddCommand(c.newEnvironmentListCommand())
+	cmd.AddCommand(c.newEnvironmentDeleteommand())
+	cmd.AddCommand(c.newEnvironmentCreateCommand())
+	cmd.AddCommand(c.newEnvironmentUpdateCommand())
 	return cmd
 }

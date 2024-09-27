@@ -11,17 +11,17 @@ type flinkApplicationOut struct {
 	JobState    string `human:"Job State" serialized:"job_state"`
 }
 
-func (c *command) newApplicationCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "application",
 		Short:   "Manage Flink Application",
 		Aliases: []string{"app"},
 	}
-	cmd.AddCommand(c.newApplicationCreateCommandOnPrem())
-	cmd.AddCommand(c.newApplicationUpdateCommandOnPrem())
-	cmd.AddCommand(c.newApplicationListCommandOnPrem())
-	cmd.AddCommand(c.newApplicationDeleteCommandOnPrem())
-	cmd.PersistentFlags().String("environment", "", "REQUIRED: Name of the Environment for the Flink Application.")
-	cmd.MarkPersistentFlagRequired("environment")
+
+	cmd.AddCommand(c.newApplicationListCommand())
+	cmd.AddCommand(c.newApplicationDeleteCommand())
+	cmd.AddCommand(c.newApplicationCreateCommand())
+	cmd.AddCommand(c.newApplicationUpdateCommand())
+
 	return cmd
 }

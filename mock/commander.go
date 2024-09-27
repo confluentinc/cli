@@ -21,7 +21,6 @@ type Commander struct {
 	MDSClient         *mdsv1.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
-	CmfRESTProvider   *pcmd.CmfRESTProvider
 	QuotasClient      *servicequotav1.APIClient
 	Version           *version.Version
 	Config            *config.Config
@@ -90,13 +89,6 @@ func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLIComm
 			return err
 		}
 		command.KafkaRESTProvider = c.KafkaRESTProvider
-		return nil
-	}
-}
-
-func (c *Commander) InitializeOnPremCmfRest(command *pcmd.AuthenticatedCLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		command.CmfRESTProvider = c.CmfRESTProvider
 		return nil
 	}
 }
