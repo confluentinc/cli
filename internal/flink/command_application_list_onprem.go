@@ -3,7 +3,9 @@ package flink
 import (
 	"fmt"
 	"io"
+	"net/http"
 
+	"github.com/antihax/optional"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -32,6 +34,47 @@ func (c *unauthenticatedCommand) newApplicationListCommand() *cobra.Command {
 	return cmd
 }
 
+// Run through all the pages until we get an empty page, in that case, return.
+func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environment string) ([]cmfsdk.Application, error) {
+	applications := make([]cmfsdk.Application, 0)
+	page := 0
+	lastPageEmpty := false
+
+	pagingOptions := &cmfsdk.GetApplicationsOpts{
+		Page: optional.NewInt32(int32(page)),
+		// 100 is an arbitrary page size we've chosen.
+		Size: optional.NewInt32(100),
+	}
+
+	for !lastPageEmpty {
+		applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(cmd.Context(), environment, pagingOptions)
+		if err != nil {
+			if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
+				if httpResponse.Body != nil {
+					defer httpResponse.Body.Close()
+					respBody, parseError := io.ReadAll(httpResponse.Body)
+					if parseError == nil {
+						return nil, fmt.Errorf("failed to list applications in the environment \"%s\": %s", environment, string(respBody))
+					}
+				}
+			}
+			return nil, err
+		}
+
+		if applicationsPage.Items == nil || len(applicationsPage.Items) == 0 {
+			lastPageEmpty = true
+			break
+		}
+		applications = append(applications, applicationsPage.Items...)
+
+		page += 1
+		pagingOptions.Page = optional.NewInt32(int32(page))
+	}
+
+	return applications, nil
+
+}
+
 func (c *unauthenticatedCommand) applicationList(cmd *cobra.Command, _ []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
@@ -46,27 +89,15 @@ func (c *unauthenticatedCommand) applicationList(cmd *cobra.Command, _ []string)
 		return err
 	}
 
-	applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(cmd.Context(), environment, nil)
+	applications, err := getAllApplications(cmfClient, cmd, environment)
 	if err != nil {
-		if httpResponse != nil && httpResponse.StatusCode != 200 {
-			if httpResponse.Body != nil {
-				defer httpResponse.Body.Close()
-				respBody, parseError := io.ReadAll(httpResponse.Body)
-				if parseError == nil {
-					return fmt.Errorf("failed to list applications in the environment \"%s\": %s", environment, string(respBody))
-				}
-			}
-		}
 		return err
 	}
-
-	var list []cmfsdk.Application
-	applications := append(list, applicationsPage.Items...)
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, app := range applications {
-			jobStatus := app.Status["jobStatus"].(map[string]interface{})
+			jobStatus, ok := app.Status["jobStatus"].(map[string]interface{})
 			envInApp, ok := app.Spec["environment"].(string)
 			if !ok {
 				envInApp = environment
