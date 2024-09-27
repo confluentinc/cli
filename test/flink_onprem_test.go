@@ -147,7 +147,7 @@ func (s *CLITestSuite) TestDescribeFlinkApplication() {
 	}
 }
 
-func (s *CLITestSuite) TestWebUiFlinkApplications() {
+func (s *CLITestSuite) TestFlinkApplicationForwardWebUi() {
 	// We cannot test the success cases as they require a running CMF service. However we can test some basic failure cases.
 	tests := []CLITest{
 		// failure
