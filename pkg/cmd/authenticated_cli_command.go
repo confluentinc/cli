@@ -287,6 +287,6 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 	return c.schemaRegistryClient, nil
 }
 
-func (c *AuthenticatedCLICommand) GetCmfREST() (*CmfREST, error) {
+func (c *AuthenticatedCLICommand) GetCmfRest() (*CmfREST, error) {
 	return (*c.CmfRESTProvider)()
 }

@@ -2,13 +2,11 @@
   {
     "name": "default",
     "created_time": "2024-09-10T23:00:00Z",
-    "updated_time": "2024-09-10T23:00:00Z",
-    "default_strategy": "default"
+    "updated_time": "2024-09-10T23:00:00Z"
   },
   {
     "name": "etl-team",
     "created_time": "2024-09-10T23:00:00Z",
-    "updated_time": "2024-09-10T23:00:00Z",
-    "default_strategy": "custom"
+    "updated_time": "2024-09-10T23:00:00Z"
   }
 ]

@@ -6,23 +6,25 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newEnvironmentListOnPremCommand() *cobra.Command {
+func (c *command) newEnvironmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink Environments.",
-		RunE:  c.listEnvironmentsOnPrem,
+		Args:  cobra.NoArgs,
+		RunE:  c.environmentList,
 	}
 
 	pcmd.AddOutputFlag(cmd)
+
 	return cmd
 }
 
-func (c *command) listEnvironmentsOnPrem(cmd *cobra.Command, _ []string) error {
-	cmfREST, err := c.GetCmfREST()
+func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
+	cmfREST, err := c.GetCmfRest()
 	if err != nil {
 		return err
 	}
@@ -41,22 +43,18 @@ func (c *command) listEnvironmentsOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var list []cmfsdk.GetEnvironment
+	var list []cmfsdk.Environment
 	environments := append(list, environmentsPage.Items...)
 
 	// TODO: Add pagination support once the API supports it
-	if len(environments) == 0 {
-		return fmt.Errorf("no environments found")
-	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, env := range environments {
 			list.Add(&flinkEnvironmentOut{
-				Name:            env.Name,
-				DefaultStrategy: env.DefaultStrategy,
-				CreatedTime:     env.CreatedTime.String(),
-				UpdatedTime:     env.UpdatedTime.String(),
+				Name:        env.Name,
+				CreatedTime: env.CreatedTime.String(),
+				UpdatedTime: env.UpdatedTime.String(),
 			})
 		}
 		return list.Print()

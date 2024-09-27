@@ -29,7 +29,7 @@ func (c *command) newApplicationDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error {
-	cmfREST, err := c.GetCmfREST()
+	cmfREST, err := c.GetCmfRest()
 	if err != nil {
 		return err
 	}

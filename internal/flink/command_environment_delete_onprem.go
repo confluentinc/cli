@@ -29,7 +29,7 @@ func (c *command) newEnvironmentDeleteOnPremCommand() *cobra.Command {
 }
 
 func (c *command) deleteEnvironmentOnPrem(cmd *cobra.Command, _ []string) error {
-	cmfREST, err := c.GetCmfREST()
+	cmfREST, err := c.GetCmfRest()
 	if err != nil {
 		return err
 	}
