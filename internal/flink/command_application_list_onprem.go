@@ -63,7 +63,7 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 		list := output.NewList(cmd)
 		for _, app := range applications {
 			jobStatus := app.Status["jobStatus"].(map[string]interface{})
-			envInApp, ok := app.Metadata["environment"].(string)
+			envInApp, ok := app.Spec["environment"].(string)
 			if !ok {
 				envInApp = environment
 			}
