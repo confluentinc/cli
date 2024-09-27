@@ -125,18 +125,16 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 // Handler for GET "cmf/api/v1/environments"
 func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		environments := []cmfsdk.GetEnvironment{
+		environments := []cmfsdk.Environment{
 			{
-				Name:            "default",
-				CreatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
-				UpdatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
-				DefaultStrategy: "default",
+				Name:        "default",
+				CreatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+				UpdatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
 			},
 			{
-				Name:            "etl-team",
-				CreatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
-				UpdatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
-				DefaultStrategy: "custom",
+				Name:        "etl-team",
+				CreatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+				UpdatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
 			},
 		}
 		environmentPage := map[string]interface{}{

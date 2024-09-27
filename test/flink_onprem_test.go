@@ -25,7 +25,6 @@ func (s *CLITestSuite) TestListFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}

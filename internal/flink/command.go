@@ -37,6 +37,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	// On-Prem Specific Commands
 	cmd.AddCommand(c.newApplicationCommandOnPrem())
+	cmd.AddCommand(c.newEnvironmentCommand())
 
 	cmd.PersistentFlags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
 	cmd.PersistentFlags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
