@@ -132,6 +132,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 // Handler for GET "cmf/api/v1/environments"
 func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		page := r.URL.Query().Get("page")
 		environments := []cmfsdk.Environment{
 			{
 				Name:        "default",
@@ -144,8 +145,14 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 				UpdatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
 			},
 		}
+		// Return empty list of applications for pages other than 0
 		environmentPage := map[string]interface{}{
-			"items": environments,
+			"items": []cmfsdk.Environment{},
+		}
+		if page == "0" {
+			environmentPage = map[string]interface{}{
+				"items": environments,
+			}
 		}
 		err := json.NewEncoder(w).Encode(environmentPage)
 		require.NoError(t, err)

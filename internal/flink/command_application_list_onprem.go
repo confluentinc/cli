@@ -6,11 +6,12 @@ import (
 	"net/http"
 
 	"github.com/antihax/optional"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
-	"github.com/spf13/cobra"
 )
 
 func (c *unauthenticatedCommand) newApplicationListCommand() *cobra.Command {
