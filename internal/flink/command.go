@@ -29,6 +29,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	unauthenticatedCmd := &unauthenticatedCommand{pcmd.NewAnonymousCLICommandWithoutContext(cmd, prerunner)}
 
 	// Cloud Specific Commands
+
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(authenticatedCommand.newConnectionCommand())
 	}
