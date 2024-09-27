@@ -125,6 +125,8 @@ func commandTypeByEnvironment(environmentName string) string {
 		return "delete"
 	} else if strings.HasPrefix(environmentName, "describe") {
 		return "describe"
+	} else if strings.HasPrefix(environmentName, "forward") { // web-ui forward
+		return "forward"
 	}
 	return "unknown"
 }
@@ -351,8 +353,9 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 // Handler for "cmf/api/v1/environments/{environment}/applications/{application}"
 // Used by TestCreateFlinkApplications (GET, "create-", applicationName) for listing before create
 // Used by TestUpdateFlinkApplications (GET, "update-", applicationName) for listing before update
-// Used bt TestDeleteFlinkApplications (DELETE, "delete-", applicationName)
-// Used bt TestDescribeFlinkApplications (GET, "describe-", applicationName)
+// Used by TestDeleteFlinkApplications (DELETE, "delete-", applicationName)
+// Used by TestDescribeFlinkApplications (GET, "describe-", applicationName)
+// Used by TestWebUiFlinkApplications (GET, "forward-", applicationName)
 func handleCmfApplication(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -414,5 +417,14 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 				return
 			}
 		}
+
+		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "forward" {
+			if application == "forward-nonexistent-application" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+		}
+
+		require.Fail(t, fmt.Sprintf("Unexpected method %s or environment %s", r.Method, environment))
 	}
 }

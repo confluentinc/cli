@@ -38,8 +38,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(c.newStatementCommand())
 	} else {
 		// On-prem specific annotations
-		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin}
-
 		cmd.AddCommand(c.newEnvironmentOnPremCommand())
 		cmd.AddCommand(c.newApplicationCommandOnPrem())
 		cmd.PersistentFlags().String("url", "", "Base URL of the Confluent Manager for Apache Flink (CMF). Flag must be set or CONFLUENT_CMF_URL.")

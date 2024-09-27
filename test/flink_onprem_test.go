@@ -166,3 +166,18 @@ func (s *CLITestSuite) TestDescribeFlinkApplications() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestWebUiFlinkApplications() {
+	// We cannot test the success cases as they require a running CMF service. However we can test some basic failure cases.
+	tests := []CLITest{
+		// failure
+		{args: "flink --url dummy-url application forward-web-ui forward-negative-port --environment forward-test --port -30", fixture: "flink/onprem/environment/forward-negative-port.golden", exitCode: 1},
+		{args: "flink --url dummy-url application forward-web-ui forward-nonexistent-application --environment forward-test", fixture: "flink/onprem/environment/forward-nonexistent-application.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.workflow = false
+		s.runIntegrationTest(test)
+	}
+}
