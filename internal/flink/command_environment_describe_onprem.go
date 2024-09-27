@@ -10,26 +10,26 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *command) newEnvironmentDescribeCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newEnvironmentDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe a Flink Environment.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describeFlinkEnvironment,
+		RunE:  c.environmentDescribe,
 	}
 
 	return cmd
 }
 
-func (c *command) describeFlinkEnvironment(cmd *cobra.Command, args []string) error {
-	cmfRest, err := c.GetCmfREST()
+func (c *unauthenticatedCommand) environmentDescribe(cmd *cobra.Command, args []string) error {
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
 	// Get the name of the application to be retrieved
 	environmentName := args[0]
-	cmfEnvironment, httpResponse, err := cmfRest.Client.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
+	cmfEnvironment, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
 
 	if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
 		// Read response body if any
@@ -60,11 +60,10 @@ func (c *command) describeFlinkEnvironment(cmd *cobra.Command, args []string) er
 
 	if output.GetFormat(cmd) == output.Human {
 		environmentTable := output.NewTable(cmd)
-		environmentTable.Add(&flinkEnvironmentOut{
-			Name:            cmfEnvironment.Name,
-			DefaultStrategy: cmfEnvironment.DefaultStrategy,
-			CreatedTime:     cmfEnvironment.CreatedTime.String(),
-			UpdatedTime:     cmfEnvironment.UpdatedTime.String(),
+		environmentTable.Add(&flinkEnvironmentSummary{
+			Name:        cmfEnvironment.Name,
+			CreatedTime: cmfEnvironment.CreatedTime.String(),
+			UpdatedTime: cmfEnvironment.UpdatedTime.String(),
 		})
 		return environmentTable.Print()
 	}

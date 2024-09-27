@@ -1,14 +1,17 @@
 Error: required flag(s) "environment" not set
 Usage:
-  confluent flink application delete <name>[, <name>*] [flags]
+  confluent flink application delete <name-1> [name-2] ... [name-n] [flags]
+
+Flags:
+  -e, --environment string                  REQUIRED: Name of the Environment to get the FlinkApplication from.
+      --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
+      --client-key-path string              Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.
+      --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.
+      --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.
+      --force                               Skip the deletion confirmation prompt.
 
 Global Flags:
-      --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.
-      --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.
-      --client-key-path string              Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.
-      --environment string                  REQUIRED: Name of the Environment for the Flink Application.
-  -h, --help                                Show help for this command.
-      --unsafe-trace                        Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-      --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Flag must be set or CONFLUENT_CMF_URL.
-  -v, --verbose count                       Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

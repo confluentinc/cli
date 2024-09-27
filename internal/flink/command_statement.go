@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 type statementOut struct {
@@ -17,8 +19,9 @@ type statementOut struct {
 
 func (c *command) newStatementCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "statement",
-		Short: "Manage Flink SQL statements.",
+		Use:         "statement",
+		Short:       "Manage Flink SQL statements.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.AddCommand(c.newStatementCreateCommand())

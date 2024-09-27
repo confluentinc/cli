@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *command) newApplicationDescribeCommand() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe a flinkApplication.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describeFlinkApplication,
+		RunE:  c.applicationDescribe,
 	}
 
 	cmd.Flags().String("environment", "", "REQUIRED: Name of the Environment for the Flink Application.")
@@ -25,7 +25,7 @@ func (c *command) newApplicationDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describeFlinkApplication(cmd *cobra.Command, args []string) error {
+func (c *unauthenticatedCommand) applicationDescribe(cmd *cobra.Command, args []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
@@ -34,14 +34,14 @@ func (c *command) describeFlinkApplication(cmd *cobra.Command, args []string) er
 		return errors.New("environment is required")
 	}
 
-	cmfRest, err := c.GetCmfREST()
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
 	// Get the name of the application to be retrieved
 	applicationName := args[0]
-	cmfApplication, httpResponse, err := cmfRest.Client.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
+	cmfApplication, httpResponse, err := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
 
 	if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
 		// Read response body if any
@@ -73,7 +73,7 @@ func (c *command) describeFlinkApplication(cmd *cobra.Command, args []string) er
 	if output.GetFormat(cmd) == output.Human {
 		applicationTable := output.NewTable(cmd)
 		jobStatus := cmfApplication.Status["jobStatus"].(map[string]interface{})
-		applicationTable.Add(&flinkApplicationOut{
+		applicationTable.Add(&flinkApplicationSummary{
 			Name:        cmfApplication.Metadata["name"].(string),
 			Environment: environment,
 			JobId:       jobStatus["jobId"].(string),
