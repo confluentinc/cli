@@ -16,20 +16,20 @@ type deleteApplicationFailure struct {
 	StausCode   int    `human:"Status Code" serialized:"status_code"`
 }
 
-func (c *command) newApplicationDeleteCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>[, <name>*]",
 		Short: "Delete given Flink Application(s).",
 		Long:  "Delete given Flink Application(s). In case you want to delete multiple applications, the names should be separated by a comma and the applications should belong to the same environment.",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.deleteApplicationOnPrem,
+		RunE:  c.applicationDelete,
 	}
 
 	return cmd
 }
 
-func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error {
-	cmfREST, err := c.GetCmfRest()
+func (c *unauthenticatedCommand) applicationDelete(cmd *cobra.Command, _ []string) error {
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error 
 	for _, appName := range applicationNames {
 		appName = strings.TrimSpace(appName) // Clean up whitespace if any
 		if appName != "" {
-			httpResponse, err := cmfREST.Client.DefaultApi.DeleteApplication(cmd.Context(), environmentName, appName)
+			httpResponse, err := cmfClient.DefaultApi.DeleteApplication(cmd.Context(), environmentName, appName)
 			if err != nil {
 				if httpResponse != nil && httpResponse.StatusCode != 200 {
 					if httpResponse.Body != nil {

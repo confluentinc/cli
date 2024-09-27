@@ -15,21 +15,21 @@ type deleteEnvironmentFailure struct {
 	StausCode   int    `human:"Status Code" serialized:"status_code"`
 }
 
-func (c *command) newEnvironmentDeleteOnPremCommand() *cobra.Command {
+func (c *unauthenticatedCommand) newEnvironmentDeleteommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>[, <name>*]",
 		Short: "Delete given Flink Environment(s).",
 		Long:  "Delete given Flink Environment(s). In case you want to delete multiple environments, the names should be separated by a comma.",
 
 		Args: cobra.MinimumNArgs(1),
-		RunE: c.deleteEnvironmentOnPrem,
+		RunE: c.environmentDelete,
 	}
 
 	return cmd
 }
 
-func (c *command) deleteEnvironmentOnPrem(cmd *cobra.Command, _ []string) error {
-	cmfREST, err := c.GetCmfRest()
+func (c *unauthenticatedCommand) environmentDelete(cmd *cobra.Command, _ []string) error {
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (c *command) deleteEnvironmentOnPrem(cmd *cobra.Command, _ []string) error 
 	for _, envName := range environmentNames {
 		envName = strings.TrimSpace(envName) // Clean up whitespace if any
 		if envName != "" {
-			httpResponse, err := cmfREST.Client.DefaultApi.DeleteEnvironment(cmd.Context(), envName)
+			httpResponse, err := cmfClient.DefaultApi.DeleteEnvironment(cmd.Context(), envName)
 			if err != nil {
 				if httpResponse != nil && httpResponse.StatusCode != 200 {
 					if httpResponse.Body != nil {

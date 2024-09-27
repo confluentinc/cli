@@ -14,36 +14,37 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
+type unauthenticatedCommand struct {
+	*pcmd.CLICommand
+}
+
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "flink",
 		Short: "Manage Apache Flink.",
 	}
 
-	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	authenticatedCommand := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
+	unauthenticatedCmd := &unauthenticatedCommand{pcmd.NewAnonymousCLICommandWithoutContext(cmd, prerunner)}
 
 	// Cloud Specific Commands
 
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(c.newConnectionCommand())
+		cmd.AddCommand(authenticatedCommand.newConnectionCommand())
 	}
 
-	cmd.AddCommand(c.newArtifactCommand())
-	cmd.AddCommand(c.newComputePoolCommand())
-	cmd.AddCommand(c.newConnectivityTypeCommand())
-	cmd.AddCommand(c.newRegionCommand())
-	cmd.AddCommand(c.newShellCommand(prerunner))
-	cmd.AddCommand(c.newStatementCommand())
+	cmd.AddCommand(authenticatedCommand.newArtifactCommand())
+	cmd.AddCommand(authenticatedCommand.newComputePoolCommand())
+	cmd.AddCommand(authenticatedCommand.newConnectivityTypeCommand())
+	cmd.AddCommand(authenticatedCommand.newRegionCommand())
+	cmd.AddCommand(authenticatedCommand.newShellCommand(prerunner))
+	cmd.AddCommand(authenticatedCommand.newStatementCommand())
 
 	// On-Prem Specific Commands
-	cmd.AddCommand(c.newApplicationCommandOnPrem())
-	cmd.AddCommand(c.newEnvironmentCommand())
+	cmd.AddCommand(unauthenticatedCmd.newApplicationCommand())
+	cmd.AddCommand(unauthenticatedCmd.newEnvironmentCommand())
 
-	cmd.PersistentFlags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
-	cmd.PersistentFlags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
-	cmd.PersistentFlags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
-	cmd.PersistentFlags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
-	c.PersistentPreRunE = prerunner.InitializeOnPremCmfRest(c.AuthenticatedCLICommand)
 	return cmd
 }
 
