@@ -132,3 +132,37 @@ func (s *CLITestSuite) TestUpdateFlinkEnvironments() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestDescribeFlinkEnvironments() {
+	tests := []CLITest{
+		// success
+		{args: "flink environment describe describe-success", fixture: "flink/onprem/environment/describe-success.golden"},
+		// failure
+		{args: "flink environment describe describe-failure", fixture: "flink/onprem/environment/describe-failure.golden", exitCode: 1},
+		{args: "flink environment describe describe-non-existent", fixture: "flink/onprem/environment/describe-non-existent.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.workflow = false
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestDescribeFlinkApplications() {
+	tests := []CLITest{
+		// success
+		{args: "flink application describe --environment describe-test describe-success", fixture: "flink/onprem/application/describe-success.golden"},
+		// failure
+		{args: "flink application describe  --environment describe-test describe-failure", fixture: "flink/onprem/environment/describe-failure.golden", exitCode: 1},
+		{args: "flink application describe --environment describe-test describe-non-existent", fixture: "flink/onprem/environment/describe-non-existent.golden", exitCode: 1},
+		{args: "flink application describe --environment describe-non-existent describe-non-existent-environment", fixture: "flink/onprem/environment/describe-non-existent-environment.golden", exitCode: 1},
+		{args: "flink application describe describe-no-environment", fixture: "flink/onprem/environment/describe-no-environment.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.workflow = false
+		s.runIntegrationTest(test)
+	}
+}

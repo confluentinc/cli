@@ -123,6 +123,8 @@ func commandTypeByEnvironment(environmentName string) string {
 		return "list"
 	} else if strings.HasPrefix(environmentName, "delete") {
 		return "delete"
+	} else if strings.HasPrefix(environmentName, "describe") {
+		return "describe"
 	}
 	return "unknown"
 }
@@ -196,6 +198,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 // Used by TestDeleteFlinkEnvironments (DELETE, "delete-", nil)
 // Used by TestCreateeFlinkEnvironments (POST, "create-", nil) for listing before create
 // Used by TestUpdateFlinkEnvironments (POST, "update-", nil) for listing before update
+// Used by TestDescribeFlinkEnvironments (GET, "describe-", nil)
 func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		environment := mux.Vars(r)["environment"]
@@ -231,6 +234,25 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 			}
 
 			if environment == "update-non-existent" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+		}
+
+		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "describe" {
+			if environment == "describe-success" {
+				outputEnvironment := createEnvironment(environment, "default")
+				err := json.NewEncoder(w).Encode(outputEnvironment)
+				require.NoError(t, err)
+				return
+			}
+
+			if environment == "describe-failure" {
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
+			if environment == "describe-non-existent" {
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
@@ -330,6 +352,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 // Used by TestCreateFlinkApplications (GET, "create-", applicationName) for listing before create
 // Used by TestUpdateFlinkApplications (GET, "update-", applicationName) for listing before update
 // Used bt TestDeleteFlinkApplications (DELETE, "delete-", applicationName)
+// Used bt TestDescribeFlinkApplications (GET, "describe-", applicationName)
 func handleCmfApplication(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -371,6 +394,25 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 
 		if r.Method == http.MethodDelete && commandTypeByEnvironment(environment) == "delete" {
 			require.Fail(t, "Not implemented.")
+		}
+
+		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "describe" {
+			if application == "describe-success" {
+				application := createApplication(application, "describe-test")
+				err := json.NewEncoder(w).Encode(application)
+				require.NoError(t, err)
+				return
+			}
+
+			if application == "describe-failure" {
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
+			if application == "describe-non-existent" || application == "describe-non-existent-environment" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
 		}
 	}
 }
