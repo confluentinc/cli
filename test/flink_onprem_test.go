@@ -12,7 +12,6 @@ func (s *CLITestSuite) TestListFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
@@ -31,7 +30,6 @@ func (s *CLITestSuite) TestDeleteFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
@@ -44,7 +42,6 @@ func (s *CLITestSuite) TestListFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
@@ -61,12 +58,11 @@ func (s *CLITestSuite) TestDeleteFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestCreateFlinkApplications() {
+func (s *CLITestSuite) TestCreateFlinkApplication() {
 	tests := []CLITest{
 		{args: "flink application create --environment create-test test/fixtures/input/flink/onprem/application/create-new.json", fixture: "flink/onprem/application/create-success.golden"},
 		{args: "flink application create --environment create-test test/fixtures/input/flink/onprem/application/create-unsuccessful-application.json", fixture: "flink/onprem/application/create-unsuccessful-application.golden", exitCode: 1},
@@ -75,12 +71,11 @@ func (s *CLITestSuite) TestCreateFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestUpdateFlinkApplications() {
+func (s *CLITestSuite) TestUpdateFlinkApplication() {
 	tests := []CLITest{
 		{args: "flink application update --environment update-test test/fixtures/input/flink/onprem/application/update-successful.json", fixture: "flink/onprem/application/update-successful.golden"},
 		{args: "flink application update --environment update-test test/fixtures/input/flink/onprem/application/update-non-existent.json", fixture: "flink/onprem/application/update-non-existent.golden", exitCode: 1},
@@ -94,7 +89,7 @@ func (s *CLITestSuite) TestUpdateFlinkApplications() {
 	}
 }
 
-func (s *CLITestSuite) TestCreateFlinkEnvironments() {
+func (s *CLITestSuite) TestCreateFlinkEnvironment() {
 	tests := []CLITest{
 		// success
 		{args: "flink environment create create-success", fixture: "flink/onprem/environment/create-success.golden"},
@@ -105,27 +100,20 @@ func (s *CLITestSuite) TestCreateFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestUpdateFlinkEnvironments() {
+func (s *CLITestSuite) TestUpdateFlinkEnvironment() {
 	tests := []CLITest{
 		// success
 		{args: "flink environment update update-success --defaults '{\"property\": \"value\"}'", fixture: "flink/onprem/environment/update-success.golden"},
 		// failure
 		{args: "flink environment update update-failure", fixture: "flink/onprem/environment/update-failure.golden", exitCode: 1},
 		{args: "flink environment update update-non-existent", fixture: "flink/onprem/environment/update-non-existent.golden", exitCode: 1},
-		{args: "flink environment delete non-existent", fixture: "flink/onprem/environment/delete-non-existent-env.golden", exitCode: 1},
-		// success scenarios
-		{args: "flink environment delete test test2", fixture: "flink/onprem/environment/delete-success.golden"},
-		// some failures and some successes
-		{args: "flink environment delete test non-existent", fixture: "flink/onprem/environment/delete-mixed.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }

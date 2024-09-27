@@ -87,10 +87,16 @@ func (c *unauthenticatedCommand) environmentUpdate(cmd *cobra.Command, args []st
 		}
 		return fmt.Errorf("failed to update environment \"%s\": %s", environmentName, err)
 	}
-	// TODO: can err == nil and status code non-20x?
 
-	if output.GetFormat(cmd) == output.Human {
-		// TODO: Add different output formats
-	}
-	return output.SerializedOutput(cmd, outputEnvironment)
+	table := output.NewTable(cmd)
+	var defaultsBytes []byte
+	defaultsBytes, err = json.Marshal(outputEnvironment.Defaults)
+
+	table.Add(&flinkEnvironmentOutput{
+		Name:        outputEnvironment.Name,
+		Defaults:    string(defaultsBytes),
+		CreatedTime: outputEnvironment.CreatedTime.String(),
+		UpdatedTime: outputEnvironment.UpdatedTime.String(),
+	})
+	return table.Print()
 }

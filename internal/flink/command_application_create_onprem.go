@@ -2,7 +2,6 @@ package flink
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	perrors "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
@@ -39,7 +39,7 @@ func (c *unauthenticatedCommand) applicationCreate(cmd *cobra.Command, args []st
 		return err
 	}
 	if environment == "" {
-		return errors.New("environment name is required")
+		return perrors.NewErrorWithSuggestions("environment is required", "set the environment with --environment flag")
 	}
 
 	cmfClient, err := c.GetCmfClient(cmd)
@@ -77,23 +77,30 @@ func (c *unauthenticatedCommand) applicationCreate(cmd *cobra.Command, args []st
 		return fmt.Errorf("application \"%s\" already exists in the environment \"%s\"", applicationName, environment)
 	}
 
-	_, httpResponse, err = cmfClient.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environment, application)
+	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environment, application)
 	defer httpResponse.Body.Close()
 	if err != nil {
-		if httpResponse != nil {
-			if httpResponse.Body != nil {
-				respBody, parseError := ioutil.ReadAll(httpResponse.Body)
-				if parseError == nil {
-					return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, string(respBody))
-				}
+		if httpResponse != nil && httpResponse.Body != nil {
+			respBody, parseError := ioutil.ReadAll(httpResponse.Body)
+			if parseError == nil {
+				return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, string(respBody))
 			}
 		}
 		return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, err)
 	}
-	// TODO: can err == nil and status code non-20x?
 
-	if output.GetFormat(cmd) == output.Human {
-		// TODO: Add different output formats
-	}
-	return output.SerializedOutput(cmd, application)
+	table := output.NewTable(cmd)
+	var metadataBytes, specBytes, statusBytes []byte
+	metadataBytes, err = json.Marshal(outputApplication.Metadata)
+	specBytes, err = json.Marshal(outputApplication.Spec)
+	statusBytes, err = json.Marshal(outputApplication.Status)
+
+	table.Add(&flinkApplicationOutput{
+		ApiVersion: outputApplication.ApiVersion,
+		Kind:       outputApplication.Kind,
+		Metadata:   string(metadataBytes),
+		Spec:       string(specBytes),
+		Status:     string(statusBytes),
+	})
+	return table.Print()
 }

@@ -103,7 +103,7 @@ func (c *unauthenticatedCommand) applicationList(cmd *cobra.Command, _ []string)
 			if !ok {
 				envInApp = environment
 			}
-			list.Add(&flinkApplicationOut{
+			list.Add(&flinkApplicationSummary{
 				Name:        app.Metadata["name"].(string),
 				Environment: envInApp,
 				JobId:       jobStatus["jobId"].(string),

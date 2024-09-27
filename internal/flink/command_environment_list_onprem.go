@@ -40,7 +40,7 @@ func (c *unauthenticatedCommand) environmentList(cmd *cobra.Command, _ []string)
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, env := range environments {
-			list.Add(&flinkEnvironmentOut{
+			list.Add(&flinkEnvironmentSummary{
 				Name:        env.Name,
 				CreatedTime: env.CreatedTime.String(),
 				UpdatedTime: env.UpdatedTime.String(),

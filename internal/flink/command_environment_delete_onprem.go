@@ -15,7 +15,7 @@ type deleteEnvironmentFailure struct {
 	StausCode   int    `human:"Status Code" serialized:"status_code"`
 }
 
-func (c *unauthenticatedCommand) newEnvironmentDeleteommand() *cobra.Command {
+func (c *unauthenticatedCommand) newEnvironmentDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
 		Short: "Delete one or more Flink Environments.",

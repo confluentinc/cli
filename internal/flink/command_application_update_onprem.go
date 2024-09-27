@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	perrors "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
@@ -38,8 +39,7 @@ func (c *unauthenticatedCommand) applicationUpdate(cmd *cobra.Command, args []st
 		return err
 	}
 	if environmentName == "" {
-		fmt.Errorf("Environment name is required")
-		return nil
+		return perrors.NewErrorWithSuggestions("environment is required", "set the environment with --environment flag")
 	}
 
 	cmfClient, err := c.GetCmfClient(cmd)
@@ -90,10 +90,20 @@ func (c *unauthenticatedCommand) applicationUpdate(cmd *cobra.Command, args []st
 		}
 		return fmt.Errorf("failed to update application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, err)
 	}
-	// TODO: can err == nil and status code non-20x?
 
-	if output.GetFormat(cmd) == output.Human {
-		// TODO: Add different output formats
-	}
-	return output.SerializedOutput(cmd, outputApplication)
+	table := output.NewTable(cmd)
+
+	var metadataBytes, specBytes, statusBytes []byte
+	metadataBytes, err = json.Marshal(outputApplication.Metadata)
+	specBytes, err = json.Marshal(outputApplication.Spec)
+	statusBytes, err = json.Marshal(outputApplication.Status)
+
+	table.Add(&flinkApplicationOutput{
+		ApiVersion: outputApplication.ApiVersion,
+		Kind:       outputApplication.Kind,
+		Metadata:   string(metadataBytes),
+		Spec:       string(specBytes),
+		Status:     string(statusBytes),
+	})
+	return table.Print()
 }
