@@ -353,6 +353,9 @@ func (s *CLITestSuite) TestKafkaMirror() {
 		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/truncate-and-restore-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/truncate-and-restore-mirror-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/mirror/truncate-and-restore-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1 --include-partition-data", fixture: "kafka/mirror/truncate-and-restore-mirror-with-partition-data.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1 --include-partition-data -o json", fixture: "kafka/mirror/truncate-and-restore-mirror-with-partition-data-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka mirror truncate-and-restore topic1 topic2 --cluster lkc-describe-topic --link link-1 --include-partition-data -o yaml", fixture: "kafka/mirror/truncate-and-restore-mirror-with-partition-data-yaml.golden", useKafka: "lkc-describe-topic"},
 	}
 
 	for _, test := range tests {
