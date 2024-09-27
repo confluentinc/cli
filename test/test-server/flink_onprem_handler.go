@@ -18,6 +18,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		environmentName := vars["environment"]
+		page := r.URL.Query().Get("page")
 		if environmentName == "non-existent" {
 			http.Error(w, "Environment not found", http.StatusNotFound)
 			return
@@ -114,8 +115,14 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 				},
 			},
 		}
+		// Return empty list of applications for pages other than 0
 		applicationPage := map[string]interface{}{
-			"items": items,
+			"items": []cmfsdk.Application{},
+		}
+		if page == "0" {
+			applicationPage = map[string]interface{}{
+				"items": items,
+			}
 		}
 		err := json.NewEncoder(w).Encode(applicationPage)
 		require.NoError(t, err)
