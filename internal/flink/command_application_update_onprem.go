@@ -2,6 +2,7 @@ package flink
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -25,13 +26,9 @@ func (c *command) newApplicationUpdateCommandOnPrem() *cobra.Command {
 }
 
 func (c *command) updateApplicationOnPrem(cmd *cobra.Command, args []string) error {
-	environmentName, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
-	if environmentName == "" {
-		fmt.Errorf("Environment name is required")
-		return nil
+	environment := getEnvironment(cmd)
+	if environment == "" {
+		return errors.New("environment name is required. You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
 	}
 
 	cmfREST, err := c.GetCmfREST()
@@ -63,24 +60,24 @@ func (c *command) updateApplicationOnPrem(cmd *cobra.Command, args []string) err
 
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environmentName, applicationName, nil)
+	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
 	// check if the application exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode != 200 {
-		return fmt.Errorf("application \"%s\" does not exist in the environment \"%s\"", applicationName, environmentName)
+		return fmt.Errorf("application \"%s\" does not exist in the environment \"%s\"", applicationName, environment)
 	}
 
-	outputApplication, httpResponse, err := cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environmentName, application)
+	outputApplication, httpResponse, err := cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environment, application)
 	defer httpResponse.Body.Close()
 	if err != nil {
 		if httpResponse != nil && httpResponse.StatusCode != 200 {
 			respBody, parseError := ioutil.ReadAll(httpResponse.Body)
 			if httpResponse.Body != nil {
 				if parseError == nil {
-					return fmt.Errorf("failed to update application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, string(respBody))
+					return fmt.Errorf("failed to update application \"%s\" in the environment \"%s\": %s", applicationName, environment, string(respBody))
 				}
 			}
 		}
-		return fmt.Errorf("failed to update application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, err)
+		return fmt.Errorf("failed to update application \"%s\" in the environment \"%s\": %s", applicationName, environment, err)
 	}
 	// TODO: can err == nil and status code non-20x?
 

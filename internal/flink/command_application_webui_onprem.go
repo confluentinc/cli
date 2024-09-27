@@ -2,6 +2,7 @@ package flink
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -32,12 +33,9 @@ func (c *command) webUiApplication(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("url is required")
 	}
 
-	environment, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
+	environment := getEnvironment(cmd)
 	if environment == "" {
-		return fmt.Errorf("environment name is required")
+		return errors.New("environment name is required. You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
 	}
 
 	port, err := cmd.Flags().GetInt("port")

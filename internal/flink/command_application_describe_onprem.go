@@ -19,19 +19,15 @@ func (c *command) newApplicationDescribeCommand() *cobra.Command {
 		RunE:  c.describeFlinkApplication,
 	}
 
-	cmd.Flags().String("environment", "", "REQUIRED: Name of the Environment for the Flink Application.")
-	cmd.MarkFlagRequired("environment")
+	cmd.Flags().String("environment", "", "REQUIRED: Name of the Environment for the Flink Application. You can also set the default environment using `confluent flink environment use <name>` command")
 
 	return cmd
 }
 
 func (c *command) describeFlinkApplication(cmd *cobra.Command, args []string) error {
-	environment, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
+	environment := getEnvironment(cmd)
 	if environment == "" {
-		return errors.New("environment is required")
+		return errors.New("environment name is required. You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
 	}
 
 	cmfRest, err := c.GetCmfREST()

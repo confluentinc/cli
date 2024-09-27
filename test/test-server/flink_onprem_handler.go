@@ -201,6 +201,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 // Used by TestCreateeFlinkEnvironments (POST, "create-", nil) for listing before create
 // Used by TestUpdateFlinkEnvironments (POST, "update-", nil) for listing before update
 // Used by TestDescribeFlinkEnvironments (GET, "describe-", nil)
+// Any non-existent environment (unhandled) will return a 404.
 func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		environment := mux.Vars(r)["environment"]
@@ -260,7 +261,8 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 			}
 		}
 
-		require.Fail(t, fmt.Sprintf("Unexpected method %s or environment name %s", r.Method, environment))
+		// Handle all non-existent environments.
+		http.Error(w, "", http.StatusNotFound)
 	}
 }
 
@@ -332,7 +334,6 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 				// The 'update' is going to be spec.serviceAccount. This is just a dummy update,
 				// and we don't do any actual merge logic.
 				outputApplication := createApplication("update-successful", "update-test")
-				fmt.Printf("SANTWANA:: %v\n", outputApplication)
 				err = json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
@@ -356,6 +357,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 // Used by TestDeleteFlinkApplications (DELETE, "delete-", applicationName)
 // Used by TestDescribeFlinkApplications (GET, "describe-", applicationName)
 // Used by TestWebUiFlinkApplications (GET, "forward-", applicationName)
+// Any non-existent application (unhandled) will return a 404.
 func handleCmfApplication(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -425,6 +427,7 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 			}
 		}
 
-		require.Fail(t, fmt.Sprintf("Unexpected method %s or environment %s", r.Method, environment))
+		// Handle all non-existent applications.
+		http.Error(w, "", http.StatusNotFound)
 	}
 }

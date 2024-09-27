@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -22,13 +23,9 @@ func (c *command) newApplicationListCommandOnPrem() *cobra.Command {
 }
 
 func (c *command) listApplicationsOnPrem(cmd *cobra.Command, _ []string) error {
-	environmentName, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
-	if environmentName == "" {
-		fmt.Errorf("Environment name is required")
-		return nil
+	environment := getEnvironment(cmd)
+	if environment == "" {
+		return errors.New("environment name is required. You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
 	}
 
 	cmfREST, err := c.GetCmfREST()
@@ -36,14 +33,14 @@ func (c *command) listApplicationsOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	applicationsPage, httpResponse, err := cmfREST.Client.DefaultApi.GetApplications(cmd.Context(), environmentName, nil)
+	applicationsPage, httpResponse, err := cmfREST.Client.DefaultApi.GetApplications(cmd.Context(), environment, nil)
 	if err != nil {
 		if httpResponse != nil && httpResponse.StatusCode != 200 {
 			if httpResponse.Body != nil {
 				defer httpResponse.Body.Close()
 				respBody, parseError := io.ReadAll(httpResponse.Body)
 				if parseError == nil {
-					return fmt.Errorf("failed to list applications in the environment \"%s\": %s", environmentName, string(respBody))
+					return fmt.Errorf("failed to list applications in the environment \"%s\": %s", environment, string(respBody))
 				}
 			}
 		}
@@ -55,20 +52,20 @@ func (c *command) listApplicationsOnPrem(cmd *cobra.Command, _ []string) error {
 
 	// TODO: Add pagination support once the API supports it
 	if len(applications) == 0 {
-		return fmt.Errorf("no applications found in the environment \"%s\"", environmentName)
+		return fmt.Errorf("no applications found in the environment \"%s\"", environment)
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, app := range applications {
 			jobStatus := app.Status["jobStatus"].(map[string]interface{})
-			environment, ok := app.Metadata["environment"].(string)
+			envInResponse, ok := app.Metadata["environment"].(string)
 			if !ok {
-				environment = environmentName
+				envInResponse = environment
 			}
 			list.Add(&flinkApplicationOut{
 				Name:        app.Metadata["name"].(string),
-				Environment: environment,
+				Environment: envInResponse,
 				JobId:       jobStatus["jobId"].(string),
 				JobState:    jobStatus["state"].(string),
 			})

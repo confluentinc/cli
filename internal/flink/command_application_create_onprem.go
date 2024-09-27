@@ -26,12 +26,9 @@ func (c *command) newApplicationCreateCommandOnPrem() *cobra.Command {
 }
 
 func (c *command) createApplicationOnPrem(cmd *cobra.Command, args []string) error {
-	environmentName, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
-	if environmentName == "" {
-		return errors.New("environment name is required")
+	environment := getEnvironment(cmd)
+	if environment == "" {
+		return errors.New("environment name is required. You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
 	}
 
 	cmfREST, err := c.GetCmfREST()
@@ -63,24 +60,23 @@ func (c *command) createApplicationOnPrem(cmd *cobra.Command, args []string) err
 
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environmentName, applicationName, nil)
-	// check if the application exists by checking the status code
+	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
 	if httpResponse != nil && httpResponse.StatusCode == 200 {
-		return fmt.Errorf("application \"%s\" already exists in the environment \"%s\"", applicationName, environmentName)
+		return fmt.Errorf("application \"%s\" already exists in the environment \"%s\"", applicationName, environment)
 	}
 
-	_, httpResponse, err = cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environmentName, application)
+	_, httpResponse, err = cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environment, application)
 	defer httpResponse.Body.Close()
 	if err != nil {
 		if httpResponse != nil {
 			if httpResponse.Body != nil {
 				respBody, parseError := ioutil.ReadAll(httpResponse.Body)
 				if parseError == nil {
-					return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, string(respBody))
+					return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, string(respBody))
 				}
 			}
 		}
-		return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, err)
+		return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, err)
 	}
 	// TODO: can err == nil and status code non-20x?
 

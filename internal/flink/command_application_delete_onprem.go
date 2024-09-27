@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -29,18 +30,15 @@ func (c *command) newApplicationDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error {
+
+	environment := getEnvironment(cmd)
+	if environment == "" {
+		return errors.New("environment name is required. You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
+	}
+
 	cmfREST, err := c.GetCmfREST()
 	if err != nil {
 		return err
-	}
-
-	environmentName, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
-	if environmentName == "" {
-		fmt.Errorf("Environment name is required")
-		return nil
 	}
 
 	// Range over the arguments and split them by comma
@@ -53,7 +51,7 @@ func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error 
 	for _, appName := range applicationNames {
 		appName = strings.TrimSpace(appName) // Clean up whitespace if any
 		if appName != "" {
-			httpResponse, err := cmfREST.Client.DefaultApi.DeleteApplication(cmd.Context(), environmentName, appName)
+			httpResponse, err := cmfREST.Client.DefaultApi.DeleteApplication(cmd.Context(), environment, appName)
 			if err != nil {
 				if httpResponse != nil && httpResponse.StatusCode != 200 {
 					if httpResponse.Body != nil {
@@ -62,7 +60,7 @@ func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error 
 						if parseError == nil {
 							failedDeletions = append(failedDeletions, deleteApplicationFailure{
 								Application: appName,
-								Environment: environmentName,
+								Environment: environment,
 								Reason:      string(respBody),
 								StausCode:   httpResponse.StatusCode,
 							})

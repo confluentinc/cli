@@ -12,7 +12,6 @@ func (s *CLITestSuite) TestListFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -32,7 +31,6 @@ func (s *CLITestSuite) TestDeleteFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -46,7 +44,6 @@ func (s *CLITestSuite) TestListFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -64,7 +61,6 @@ func (s *CLITestSuite) TestDeleteFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -79,7 +75,6 @@ func (s *CLITestSuite) TestCreateFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -94,7 +89,6 @@ func (s *CLITestSuite) TestUpdateFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -111,7 +105,6 @@ func (s *CLITestSuite) TestCreateFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -127,7 +120,6 @@ func (s *CLITestSuite) TestUpdateFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -143,7 +135,6 @@ func (s *CLITestSuite) TestDescribeFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -161,7 +152,6 @@ func (s *CLITestSuite) TestDescribeFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
 		s.runIntegrationTest(test)
 	}
@@ -176,8 +166,25 @@ func (s *CLITestSuite) TestWebUiFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.login = "onprem"
 		test.workflow = false
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestUseEnvironmentFlinkApplications() {
+	// The test harness already creates a "temporary" home directory for us to use, so
+	// we don't need to change env with a $HOME variable.
+	tests := []CLITest{
+		// failure
+		{args: "flink environment use non-existent", fixture: "flink/onprem/environment/use-non-existent.golden", exitCode: 1},
+		// success, followed by listing applications
+		{args: "flink environment use describe-success", fixture: "flink/onprem/environment/use-success.golden"},
+		{args: "flink application describe describe-success", fixture: "flink/onprem/application/describe-after-use-success.golden"},
+	}
+
+	for _, test := range tests {
+		// Don't reset state between tests
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }

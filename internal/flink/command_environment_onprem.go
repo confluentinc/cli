@@ -17,6 +17,7 @@ func (c *command) newEnvironmentOnPremCommand() *cobra.Command {
 		Short:   "Manage Flink Environments",
 		Aliases: []string{"env"},
 	}
+	cmd.AddCommand(c.newEnvironmentUseCommand())
 	cmd.AddCommand(c.newEnvironmentListOnPremCommand())
 	cmd.AddCommand(c.newEnvironmentCreateCommandOnPrem())
 	cmd.AddCommand(c.newEnvironmentUpdateCommandOnPrem())
