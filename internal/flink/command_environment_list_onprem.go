@@ -6,7 +6,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 	"github.com/spf13/cobra"
 )
 

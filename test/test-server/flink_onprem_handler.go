@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	cmfsdk "github.com/confluentinc/cmf-sdk-go"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 // Handler for GET "cmf/api/v1/environments/{environment}/applications"
@@ -38,35 +38,33 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 					"name": "state-machine-example",
 				},
 				Spec: map[string]interface{}{
-					"jobRef": map[string]interface{}{
-						"image":        "confluentinc/cp-flink:1.19.1-cp1",
-						"flinkVersion": "v1_19",
-						"flinkConfiguration": map[string]interface{}{
-							"taskmanager.numberOfTaskSlots":       "8",
-							"metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",
-							"metrics.reporter.prom.port":          "9249-9250",
-						},
-						"serviceAccount": "flink",
-						"jobManager": map[string]interface{}{
-							"resource": map[string]interface{}{
-								"memory": "1048m",
-								"cpu":    1,
-							},
-						},
-						"taskManager": map[string]interface{}{
-							"resource": map[string]interface{}{
-								"memory": "1048m",
-								"cpu":    1,
-							},
-						},
-						"job": map[string]interface{}{
-							"jarURI":      "local:///opt/flink/examples/streaming/StateMachineExample.jar",
-							"state":       "running",
-							"parallelism": 3,
-							"upgradeMode": "stateless",
+					"flinkEnvironment": "default",
+					"image":            "confluentinc/cp-flink:1.19.1-cp1",
+					"flinkVersion":     "v1_19",
+					"flinkConfiguration": map[string]interface{}{
+						"taskmanager.numberOfTaskSlots":       "8",
+						"metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",
+						"metrics.reporter.prom.port":          "9249-9250",
+					},
+					"serviceAccount": "flink",
+					"jobManager": map[string]interface{}{
+						"resource": map[string]interface{}{
+							"memory": "1048m",
+							"cpu":    1,
 						},
 					},
-					"environmentNameRef": "default",
+					"taskManager": map[string]interface{}{
+						"resource": map[string]interface{}{
+							"memory": "1048m",
+							"cpu":    1,
+						},
+					},
+					"job": map[string]interface{}{
+						"jarURI":      "local:///opt/flink/examples/streaming/StateMachineExample.jar",
+						"state":       "running",
+						"parallelism": 3,
+						"upgradeMode": "stateless",
+					},
 				},
 				Status: map[string]interface{}{
 					"jobStatus": map[string]interface{}{
