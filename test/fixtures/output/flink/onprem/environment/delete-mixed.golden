@@ -1,7 +1,3 @@
-Environment(s) deleted successfully: test
+Deleted flink environment "test".
+Error: failed to delete non-existent: Environment not found
 
-failed to delete the following environment(s):
-  Environment  |        Reason         | Status Code  
----------------+-----------------------+--------------
-  non-existent | Environment not found |         404  
-               |                       |              

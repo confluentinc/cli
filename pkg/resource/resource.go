@@ -70,6 +70,11 @@ const (
 )
 
 const (
+	OnPremFlinkApplication = "flink application"
+	OnPremFlinkEnvrionment = "flink environment"
+)
+
+const (
 	AccessPointPrefix           = "ap"
 	ConnectorPrefix             = "lcc"
 	DnsRecordPrefix             = "dnsrec"

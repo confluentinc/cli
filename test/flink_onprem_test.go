@@ -21,13 +21,13 @@ func (s *CLITestSuite) TestDeleteFlinkApplications() {
 	tests := []CLITest{
 		// failure scenarios
 		{args: "flink application delete test-app", fixture: "flink/onprem/application/delete-env-missing.golden", exitCode: 1},
-		{args: "flink application delete --environment defauklt", fixture: "flink/onprem/application/delete-missing-app.golden", exitCode: 1},
-		{args: "flink application delete --environment non-existent test-app", fixture: "flink/onprem/application/delete-non-existent-env.golden"},
-		{args: "flink application delete --environment default non-existent", fixture: "flink/onprem/application/delete-non-existent-app.golden"},
+		{args: "flink application delete --environment default", fixture: "flink/onprem/application/delete-missing-app.golden", exitCode: 1},
+		{args: "flink application delete --force --environment non-existent test-app", fixture: "flink/onprem/application/delete-non-existent-env.golden", exitCode: 1},
+		{args: "flink application delete --environment default non-existent", fixture: "flink/onprem/application/delete-non-existent-app.golden", exitCode: 1},
 		// success scenarios
-		{args: "flink application delete --environment default test,test-app", fixture: "flink/onprem/application/delete-success.golden"},
-		// mixed scnearios
-		{args: "flink application delete --environment default test,non-existent", fixture: "flink/onprem/application/delete-mixed.golden"},
+		{args: "flink application delete --environment default test test-app", fixture: "flink/onprem/application/delete-success.golden"},
+		// mixed scenarios
+		{args: "flink application delete --environment default test non-existent", fixture: "flink/onprem/application/delete-mixed.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -54,11 +54,11 @@ func (s *CLITestSuite) TestDeleteFlinkEnvironments() {
 	tests := []CLITest{
 		// failure scenarios
 		{args: "flink environment delete", fixture: "flink/onprem/environment/delete-env-missing.golden", exitCode: 1},
-		{args: "flink environment delete non-existent", fixture: "flink/onprem/environment/delete-non-existent-env.golden"},
+		{args: "flink environment delete non-existent", fixture: "flink/onprem/environment/delete-non-existent-env.golden", exitCode: 1},
 		// success scenarios
-		{args: "flink environment delete test,test2", fixture: "flink/onprem/environment/delete-success.golden"},
+		{args: "flink environment delete test test2", fixture: "flink/onprem/environment/delete-success.golden"},
 		// some failures and some successes
-		{args: "flink environment delete test,non-existent", fixture: "flink/onprem/environment/delete-mixed.golden"},
+		{args: "flink environment delete test non-existent", fixture: "flink/onprem/environment/delete-mixed.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
