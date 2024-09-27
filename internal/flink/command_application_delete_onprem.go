@@ -1,12 +1,15 @@
 package flink
 
 import (
-	"fmt"
+	"errors"
 	"io"
-	"strings"
 
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/deletion"
+	perrors "github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
 type deleteApplicationFailure struct {
@@ -16,20 +19,28 @@ type deleteApplicationFailure struct {
 	StausCode   int    `human:"Status Code" serialized:"status_code"`
 }
 
-func (c *command) newApplicationDeleteCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <name>[, <name>*]",
-		Short: "Delete given Flink Application(s).",
-		Long:  "Delete given Flink Application(s). In case you want to delete multiple applications, the names should be separated by a comma and the applications should belong to the same environment.",
+		Use:   "delete <name-1> [name-2] ... [name-n]",
+		Short: "Delete one or more Flink Applications.",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.deleteApplicationOnPrem,
+		RunE:  c.applicationDelete,
 	}
+
+	cmd.Flags().String("environment", "", "Name of the Environment to get the FlinkApplication from.")
+	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
+	cmd.Flags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
+	cmd.MarkFlagRequired("environment")
+
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error {
-	cmfREST, err := c.GetCmfREST()
+func (c *unauthenticatedCommand) applicationDelete(cmd *cobra.Command, args []string) error {
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -39,52 +50,23 @@ func (c *command) deleteApplicationOnPrem(cmd *cobra.Command, _ []string) error 
 		return err
 	}
 	if environmentName == "" {
-		fmt.Errorf("Environment name is required")
-		return nil
+		return perrors.NewErrorWithSuggestions("environment is required", "set the environment with --environment flag")
 	}
 
-	// Range over the arguments and split them by comma
-	args := cmd.Flags().Args()
-	applicationNames := make([]string, 0)
-	applicationNames = append(applicationNames, strings.Split(args[0], ",")...)
-	// create a list of failed application deletions
-	failedDeletions := make([]deleteApplicationFailure, 0)
-	successfulDeletions := make([]string, 0)
-	for _, appName := range applicationNames {
-		appName = strings.TrimSpace(appName) // Clean up whitespace if any
-		if appName != "" {
-			httpResponse, err := cmfREST.Client.DefaultApi.DeleteApplication(cmd.Context(), environmentName, appName)
-			if err != nil {
-				if httpResponse != nil && httpResponse.StatusCode != 200 {
-					if httpResponse.Body != nil {
-						defer httpResponse.Body.Close()
-						respBody, parseError := io.ReadAll(httpResponse.Body)
-						if parseError == nil {
-							failedDeletions = append(failedDeletions, deleteApplicationFailure{
-								Application: appName,
-								Environment: environmentName,
-								Reason:      string(respBody),
-								StausCode:   httpResponse.StatusCode,
-							})
-						}
-					}
+	deleteFunc := func(name string) error {
+		httpResp, err := cmfClient.DefaultApi.DeleteApplication(cmd.Context(), environmentName, name)
+		if err != nil && httpResp != nil {
+			if httpResp.Body != nil {
+				defer httpResp.Body.Close()
+				respBody, parseError := io.ReadAll(httpResp.Body)
+				if parseError == nil {
+					return errors.New(string(respBody))
 				}
-			} else {
-				successfulDeletions = append(successfulDeletions, appName)
 			}
 		}
-	}
-	if len(successfulDeletions) > 0 {
-		fmt.Printf("Application(s) deleted successfully: %s\n\n", strings.Join(successfulDeletions, ", "))
-	}
-	if len(failedDeletions) == 0 {
-		return nil
+		return err
 	}
 
-	fmt.Printf("failed to delete the following application(s):\n")
-	failedDeletionsList := output.NewList(cmd)
-	for _, failedDeletion := range failedDeletions {
-		failedDeletionsList.Add(&failedDeletion)
-	}
-	return failedDeletionsList.Print()
+	_, err = deletion.Delete(args, deleteFunc, resource.OnPremFlinkApplication)
+	return err
 }

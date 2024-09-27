@@ -11,19 +11,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newApplicationWebUiCommand() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationWebUiCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "forward-web-ui <name>",
 		Short: "Forward the web UI of a Flink Application.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.webUiApplication,
+		RunE:  c.applicationForwardWebUi,
 	}
 	cmd.Flags().String("environment", "", "Name of the environment for the Flink Application.")
 	cmd.Flags().Int("port", 0, "Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.")
 	return cmd
 }
 
-func (c *command) webUiApplication(cmd *cobra.Command, args []string) error {
+func (c *unauthenticatedCommand) applicationForwardWebUi(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
@@ -48,14 +48,14 @@ func (c *command) webUiApplication(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("port must be a positive integer")
 	}
 
-	cmfREST, err := c.GetCmfREST()
+	cmfClient, err := c.GetCmfClient()
 	if err != nil {
 		return err
 	}
 
 	// Get the name of the application
 	applicationName := args[0]
-	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
+	_, httpResponse, err := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
 
 	// check if the application exists
 	if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {

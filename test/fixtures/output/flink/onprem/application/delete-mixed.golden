@@ -1,7 +1,3 @@
-Application(s) deleted successfully: test
+Deleted flink application "test".
+Error: failed to delete non-existent: Application not found
 
-failed to delete the following application(s):
-  Application  | Environment |        Reason         | Status Code  
----------------+-------------+-----------------------+--------------
-  non-existent | default     | Application not found |         404  
-               |             |                       |              

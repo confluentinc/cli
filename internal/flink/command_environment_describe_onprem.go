@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,26 +11,26 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *command) newEnvironmentDescribeCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newEnvironmentDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe a Flink Environment.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describeFlinkEnvironment,
+		RunE:  c.environmentDescribe,
 	}
 
 	return cmd
 }
 
-func (c *command) describeFlinkEnvironment(cmd *cobra.Command, args []string) error {
-	cmfRest, err := c.GetCmfREST()
+func (c *unauthenticatedCommand) environmentDescribe(cmd *cobra.Command, args []string) error {
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
 	// Get the name of the application to be retrieved
 	environmentName := args[0]
-	cmfEnvironment, httpResponse, err := cmfRest.Client.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
+	cmfEnvironment, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
 
 	if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
 		// Read response body if any
@@ -53,21 +54,16 @@ func (c *command) describeFlinkEnvironment(cmd *cobra.Command, args []string) er
 		}
 	}
 
-	// In case err != nil but status code is 200 - if that's possible.
-	if err != nil {
-		return fmt.Errorf("failed to describe environment \"%s\": %s", environmentName, err)
-	}
+	table := output.NewTable(cmd)
+	var defaultsBytes []byte
+	defaultsBytes, err = json.Marshal(cmfEnvironment.Defaults)
 
-	if output.GetFormat(cmd) == output.Human {
-		environmentTable := output.NewTable(cmd)
-		environmentTable.Add(&flinkEnvironmentOut{
-			Name:            cmfEnvironment.Name,
-			DefaultStrategy: cmfEnvironment.DefaultStrategy,
-			CreatedTime:     cmfEnvironment.CreatedTime.String(),
-			UpdatedTime:     cmfEnvironment.UpdatedTime.String(),
-		})
-		return environmentTable.Print()
-	}
-	return output.SerializedOutput(cmd, cmfEnvironment)
+	table.Add(&flinkEnvironmentOutput{
+		Name:        cmfEnvironment.Name,
+		Defaults:    string(defaultsBytes),
+		CreatedTime: cmfEnvironment.CreatedTime.String(),
+		UpdatedTime: cmfEnvironment.UpdatedTime.String(),
+	})
+	return table.Print()
 
 }

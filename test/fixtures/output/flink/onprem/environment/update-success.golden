@@ -1,9 +1,6 @@
-{
-  "name": "update-success",
-  "created_time": "2024-09-10T23:00:00Z",
-  "updated_time": "2024-09-10T23:00:00Z",
-  "default_strategy": "default",
-  "defaults": {
-    "property": "value"
-  }
-}
++--------------+-------------------------------+
+| Name         | update-success                |
+| Created Time | 2024-09-10 23:00:00 +0000 UTC |
+| Updated Time | 2024-09-10 23:00:00 +0000 UTC |
+| Defaults     | {"property":"value"}          |
++--------------+-------------------------------+

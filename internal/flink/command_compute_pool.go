@@ -2,6 +2,8 @@ package flink
 
 import (
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 type computePoolOut struct {
@@ -18,8 +20,9 @@ type computePoolOut struct {
 
 func (c *command) newComputePoolCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "compute-pool",
-		Short: "Manage Flink compute pools.",
+		Use:         "compute-pool",
+		Short:       "Manage Flink compute pools.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.AddCommand(c.newComputePoolCreateCommand())

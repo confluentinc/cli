@@ -1,5 +1,2 @@
-failed to delete the following application(s):
-  Application | Environment  |        Reason         | Status Code  
---------------+--------------+-----------------------+--------------
-  test-app    | non-existent | Environment not found |         404  
-              |              |                       |              
+Error: failed to delete test-app: Environment not found
+

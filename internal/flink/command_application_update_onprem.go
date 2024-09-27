@@ -9,32 +9,40 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	perrors "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
-func (c *command) newApplicationUpdateCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <resourceFilePath>",
 		Short: "Update a Flink application.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.updateApplicationOnPrem,
+		RunE:  c.applicationUpdate,
 	}
+
+	cmd.Flags().StringP("environment", "e", "", "Name of the Environment to update the FlinkApplication in.")
+	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
+	cmd.Flags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
+
+	cmd.MarkFlagRequired("environment")
 
 	return cmd
 }
 
-func (c *command) updateApplicationOnPrem(cmd *cobra.Command, args []string) error {
+func (c *unauthenticatedCommand) applicationUpdate(cmd *cobra.Command, args []string) error {
 	environmentName, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}
 	if environmentName == "" {
-		fmt.Errorf("Environment name is required")
-		return nil
+		return perrors.NewErrorWithSuggestions("environment is required", "set the environment with --environment flag")
 	}
 
-	cmfREST, err := c.GetCmfREST()
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -63,13 +71,13 @@ func (c *command) updateApplicationOnPrem(cmd *cobra.Command, args []string) err
 
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environmentName, applicationName, nil)
+	_, httpResponse, err := cmfClient.DefaultApi.GetApplication(cmd.Context(), environmentName, applicationName, nil)
 	// check if the application exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode != 200 {
 		return fmt.Errorf("application \"%s\" does not exist in the environment \"%s\"", applicationName, environmentName)
 	}
 
-	outputApplication, httpResponse, err := cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environmentName, application)
+	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environmentName, application)
 	defer httpResponse.Body.Close()
 	if err != nil {
 		if httpResponse != nil && httpResponse.StatusCode != 200 {
@@ -82,10 +90,20 @@ func (c *command) updateApplicationOnPrem(cmd *cobra.Command, args []string) err
 		}
 		return fmt.Errorf("failed to update application \"%s\" in the environment \"%s\": %s", applicationName, environmentName, err)
 	}
-	// TODO: can err == nil and status code non-20x?
 
-	if output.GetFormat(cmd) == output.Human {
-		// TODO: Add different output formats
-	}
-	return output.SerializedOutput(cmd, outputApplication)
+	table := output.NewTable(cmd)
+
+	var metadataBytes, specBytes, statusBytes []byte
+	metadataBytes, err = json.Marshal(outputApplication.Metadata)
+	specBytes, err = json.Marshal(outputApplication.Spec)
+	statusBytes, err = json.Marshal(outputApplication.Status)
+
+	table.Add(&flinkApplicationOutput{
+		ApiVersion: outputApplication.ApiVersion,
+		Kind:       outputApplication.Kind,
+		Metadata:   string(metadataBytes),
+		Spec:       string(specBytes),
+		Status:     string(statusBytes),
+	})
+	return table.Print()
 }
