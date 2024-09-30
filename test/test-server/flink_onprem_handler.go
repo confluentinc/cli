@@ -137,12 +137,18 @@ func commandTypeByEnvironment(environmentName string) string {
 func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
+			page := r.URL.Query().Get("page")
 			environments := []cmfsdk.Environment{
 				createEnvironment("default"),
 				createEnvironment("etl-team"),
 			}
 			environmentPage := map[string]interface{}{
-				"items": environments,
+				"items": []cmfsdk.Environment{},
+			}
+			if page == "0" {
+				environmentPage = map[string]interface{}{
+					"items": environments,
+				}
 			}
 			err := json.NewEncoder(w).Encode(environmentPage)
 			require.NoError(t, err)
@@ -263,6 +269,7 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 // Used by TestListFlinkApplications (GET, "list-", nil)
 // Used by TestCreateFlinkApplications (POST, "create-", applicationName)
 // Used by TestUpdateFlinkApplications (POST, "update-", applicationName)
+// Used by TestDeleteFlinkApplications (DELETE, "delete-", applicationName)
 func handleCmfApplications(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -281,10 +288,15 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 				require.NoError(t, err)
 				return
 			}
-
+			page := r.URL.Query().Get("page")
 			items := []cmfsdk.Application{createApplication("list-application-application", "list-test")}
 			applicationPage := map[string]interface{}{
-				"items": items,
+				"items": []cmfsdk.Application{},
+			}
+			if page == "0" {
+				applicationPage = map[string]interface{}{
+					"items": items,
+				}
 			}
 			err := json.NewEncoder(w).Encode(applicationPage)
 			require.NoError(t, err)
@@ -327,6 +339,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 				// The 'update' is going to be spec.serviceAccount. This is just a dummy update,
 				// and we don't do any actual merge logic.
 				outputApplication := createApplication("update-successful", "update-test")
+				outputApplication.Spec["serviceAccount"] = application.Spec["serviceAccount"]
 				err = json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
@@ -391,7 +404,23 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 		}
 
 		if r.Method == http.MethodDelete && commandTypeByEnvironment(environment) == "delete" {
-			require.Fail(t, "Not implemented.")
+			if application == "delete-non-existent" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+
+			if environment == "delete-non-existent" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
+			if application == "delete-test-app1" || application == "delete-test-app2" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			require.Fail(t, fmt.Sprintf("Unexpected application name %s", application))
+			return
 		}
 
 		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "describe" {

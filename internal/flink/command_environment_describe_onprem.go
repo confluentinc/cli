@@ -28,7 +28,7 @@ func (c *unauthenticatedCommand) environmentDescribe(cmd *cobra.Command, args []
 		return err
 	}
 
-	// Get the name of the application to be retrieved
+	// Get the name of the environment to be retrieved
 	environmentName := args[0]
 	cmfEnvironment, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
 
