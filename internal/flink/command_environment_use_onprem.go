@@ -9,19 +9,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newEnvironmentUseCommand() *cobra.Command {
+func (c *unauthenticatedCommand) newEnvironmentUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use <name>",
 		Short: "Use an environment as default for flink application",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.useEnvironment,
+		RunE:  c.environmentUse,
 	}
 
 	return cmd
 }
 
-func (c *command) useEnvironment(cmd *cobra.Command, args []string) error {
-	cmfREST, err := c.GetCmfREST()
+func (c *unauthenticatedCommand) environmentUse(cmd *cobra.Command, args []string) error {
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (c *command) useEnvironment(cmd *cobra.Command, args []string) error {
 	environment := args[0]
 
 	// Check if the environment exists or not
-	_, httpResponse, err := cmfREST.Client.DefaultApi.GetEnvironment(cmd.Context(), environment)
+	_, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environment)
 	if httpResponse != nil && httpResponse.StatusCode != 200 {
 		return fmt.Errorf("environment \"%s\" does not exist", environment)
 	}

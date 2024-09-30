@@ -2,29 +2,35 @@ package flink
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 
+	perrors "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newApplicationWebUiCommand() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationWebUiCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "forward-web-ui <name>",
 		Short: "Forward the web UI of a Flink Application.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.webUiApplication,
+		RunE:  c.applicationForwardWebUi,
 	}
-	cmd.Flags().String("environment", "", "Name of the environment for the Flink Application.")
+
+	cmd.Flags().String("environment", "", "Name of the Environment to get the FlinkApplication from.")
+	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
+	cmd.Flags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
 	cmd.Flags().Int("port", 0, "Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.")
+
 	return cmd
 }
 
-func (c *command) webUiApplication(cmd *cobra.Command, args []string) error {
+func (c *unauthenticatedCommand) applicationForwardWebUi(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
@@ -35,7 +41,7 @@ func (c *command) webUiApplication(cmd *cobra.Command, args []string) error {
 
 	environment := getEnvironment(cmd)
 	if environment == "" {
-		return errors.New("environment name is required. You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
+		return perrors.NewErrorWithSuggestions("environment name is required.", "You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command.")
 	}
 
 	port, err := cmd.Flags().GetInt("port")
@@ -46,14 +52,14 @@ func (c *command) webUiApplication(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("port must be a positive integer")
 	}
 
-	cmfREST, err := c.GetCmfREST()
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
 	// Get the name of the application
 	applicationName := args[0]
-	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
+	_, httpResponse, err := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
 
 	// check if the application exists
 	if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {

@@ -13,20 +13,20 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
-func (c *command) newEnvironmentCreateCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newEnvironmentCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Flink environment.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.createEnvironmentOnPrem,
+		RunE:  c.environmentCreate,
 	}
 
 	cmd.Flags().String("defaults", "", "JSON string defining the environment defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension)")
 	return cmd
 }
 
-func (c *command) createEnvironmentOnPrem(cmd *cobra.Command, args []string) error {
-	cmfREST, err := c.GetCmfREST()
+func (c *unauthenticatedCommand) environmentCreate(cmd *cobra.Command, args []string) error {
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (c *command) createEnvironmentOnPrem(cmd *cobra.Command, args []string) err
 		}
 	}
 
-	_, httpResponse, err := cmfREST.Client.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
+	_, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == 200 {
 		return fmt.Errorf("environment \"%s\" already exists", environmentName)
@@ -74,7 +74,7 @@ func (c *command) createEnvironmentOnPrem(cmd *cobra.Command, args []string) err
 	if defaultsParsed != nil {
 		environment.Defaults = defaultsParsed
 	}
-	outputEnvironment, httpResponse, err := cmfREST.Client.DefaultApi.CreateOrUpdateEnvironment(cmd.Context(), environment)
+	outputEnvironment, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateEnvironment(cmd.Context(), environment)
 	defer httpResponse.Body.Close()
 	if err != nil {
 		if httpResponse != nil && httpResponse.StatusCode != 201 {
@@ -87,10 +87,16 @@ func (c *command) createEnvironmentOnPrem(cmd *cobra.Command, args []string) err
 		}
 		return fmt.Errorf("failed to create environment \"%s\": %s", environmentName, err)
 	}
-	// TODO: can err == nil and status code non-20x?
 
-	if output.GetFormat(cmd) == output.Human {
-		// TODO: Add different output formats
-	}
-	return output.SerializedOutput(cmd, outputEnvironment)
+	table := output.NewTable(cmd)
+	var defaultsBytes []byte
+	defaultsBytes, err = json.Marshal(outputEnvironment.Defaults)
+
+	table.Add(&flinkEnvironmentOutput{
+		Name:        outputEnvironment.Name,
+		Defaults:    string(defaultsBytes),
+		CreatedTime: outputEnvironment.CreatedTime.String(),
+		UpdatedTime: outputEnvironment.UpdatedTime.String(),
+	})
+	return table.Print()
 }

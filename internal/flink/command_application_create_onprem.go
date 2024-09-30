@@ -2,7 +2,6 @@ package flink
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -10,28 +9,35 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	perrors "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
-func (c *command) newApplicationCreateCommandOnPrem() *cobra.Command {
+func (c *unauthenticatedCommand) newApplicationCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <resourceFilePath>",
-		Short: "Create a Flink application.",
+		Short: "Create a Flink Application.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.createApplicationOnPrem,
+		RunE:  c.applicationCreate,
 	}
+
+	cmd.Flags().String("environment", "", "Name of the Environment to create the FlinkApplication from.")
+	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
+	cmd.Flags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
 
 	return cmd
 }
 
-func (c *command) createApplicationOnPrem(cmd *cobra.Command, args []string) error {
+func (c *unauthenticatedCommand) applicationCreate(cmd *cobra.Command, args []string) error {
 	environment := getEnvironment(cmd)
 	if environment == "" {
-		return errors.New("environment name is required. You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
+		return perrors.NewErrorWithSuggestions("environment name is required.", "You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
 	}
 
-	cmfREST, err := c.GetCmfREST()
+	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -60,28 +66,36 @@ func (c *command) createApplicationOnPrem(cmd *cobra.Command, args []string) err
 
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, err := cmfREST.Client.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
+	_, httpResponse, err := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
+	// check if the application exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == 200 {
 		return fmt.Errorf("application \"%s\" already exists in the environment \"%s\"", applicationName, environment)
 	}
 
-	_, httpResponse, err = cmfREST.Client.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environment, application)
+	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environment, application)
 	defer httpResponse.Body.Close()
 	if err != nil {
-		if httpResponse != nil {
-			if httpResponse.Body != nil {
-				respBody, parseError := ioutil.ReadAll(httpResponse.Body)
-				if parseError == nil {
-					return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, string(respBody))
-				}
+		if httpResponse != nil && httpResponse.Body != nil {
+			respBody, parseError := ioutil.ReadAll(httpResponse.Body)
+			if parseError == nil {
+				return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, string(respBody))
 			}
 		}
 		return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, err)
 	}
-	// TODO: can err == nil and status code non-20x?
 
-	if output.GetFormat(cmd) == output.Human {
-		// TODO: Add different output formats
-	}
-	return output.SerializedOutput(cmd, application)
+	table := output.NewTable(cmd)
+	var metadataBytes, specBytes, statusBytes []byte
+	metadataBytes, err = json.Marshal(outputApplication.Metadata)
+	specBytes, err = json.Marshal(outputApplication.Spec)
+	statusBytes, err = json.Marshal(outputApplication.Status)
+
+	table.Add(&flinkApplicationOutput{
+		ApiVersion: outputApplication.ApiVersion,
+		Kind:       outputApplication.Kind,
+		Metadata:   string(metadataBytes),
+		Spec:       string(specBytes),
+		Status:     string(statusBytes),
+	})
+	return table.Print()
 }

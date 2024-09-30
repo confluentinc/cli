@@ -1,5 +1,1 @@
-failed to delete the following environment(s):
-      Environment     |        Reason         | Status Code  
-----------------------+-----------------------+--------------
-  delete-non-existent | Environment not found |         404  
-                      |                       |              
+Error: failed to delete non-existent: Delete "http://127.0.0.1:1079/cmf/api/v1/environments/non-existent": EOF

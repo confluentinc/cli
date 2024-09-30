@@ -2,12 +2,15 @@ package flink
 
 import (
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 func (c *command) newRegionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "region",
-		Short: "List Flink regions.",
+		Use:         "region",
+		Short:       "List Flink regions.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.AddCommand(c.newRegionListCommand())

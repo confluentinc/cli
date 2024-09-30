@@ -23,35 +23,33 @@ func createApplication(name string, environment string) cmfsdk.Application {
 			"name": name,
 		},
 		Spec: map[string]interface{}{
-			"jobRef": map[string]interface{}{
-				"image":        "confluentinc/cp-flink:1.19.1-cp1",
-				"flinkVersion": "v1_19",
-				"flinkConfiguration": map[string]interface{}{
-					"taskmanager.numberOfTaskSlots":       "8",
-					"metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",
-					"metrics.reporter.prom.port":          "9249-9250",
-				},
-				"serviceAccount": "flink",
-				"jobManager": map[string]interface{}{
-					"resource": map[string]interface{}{
-						"memory": "1048m",
-						"cpu":    1,
-					},
-				},
-				"taskManager": map[string]interface{}{
-					"resource": map[string]interface{}{
-						"memory": "1048m",
-						"cpu":    1,
-					},
-				},
-				"job": map[string]interface{}{
-					"jarURI":      "local:///opt/flink/examples/streaming/StateMachineExample.jar",
-					"state":       "running",
-					"parallelism": 3,
-					"upgradeMode": "stateless",
+			"flinkEnvironmentName": environment,
+			"image":                "confluentinc/cp-flink:1.19.1-cp1",
+			"flinkVersion":         "v1_19",
+			"flinkConfiguration": map[string]interface{}{
+				"taskmanager.numberOfTaskSlots":       "8",
+				"metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",
+				"metrics.reporter.prom.port":          "9249-9250",
+			},
+			"serviceAccount": "flink",
+			"jobManager": map[string]interface{}{
+				"resource": map[string]interface{}{
+					"memory": "1048m",
+					"cpu":    1,
 				},
 			},
-			"environmentNameRef": environment,
+			"taskManager": map[string]interface{}{
+				"resource": map[string]interface{}{
+					"memory": "1048m",
+					"cpu":    1,
+				},
+			},
+			"job": map[string]interface{}{
+				"jarURI":      "local:///opt/flink/examples/streaming/StateMachineExample.jar",
+				"state":       "running",
+				"parallelism": 3,
+				"upgradeMode": "stateless",
+			},
 		},
 		Status: map[string]interface{}{
 			"jobStatus": map[string]interface{}{
@@ -102,12 +100,11 @@ func createApplication(name string, environment string) cmfsdk.Application {
 	}
 }
 
-func createEnvironment(name string, strategy string) cmfsdk.Environment {
+func createEnvironment(name string) cmfsdk.Environment {
 	return cmfsdk.Environment{
-		Name:            name,
-		CreatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
-		UpdatedTime:     time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
-		DefaultStrategy: strategy,
+		Name:        name,
+		CreatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+		UpdatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
 	}
 }
 
@@ -141,8 +138,8 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			environments := []cmfsdk.Environment{
-				createEnvironment("default", "default"),
-				createEnvironment("etl-team", "custom"),
+				createEnvironment("default"),
+				createEnvironment("etl-team"),
 			}
 			environmentPage := map[string]interface{}{
 				"items": environments,
@@ -161,11 +158,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 
 			environmentName := environment.Name
 			if environmentName == "create-success" || environmentName == "create-success-with-defaults" {
-				strategy := "default"
-				if environment.DefaultStrategy != "" {
-					strategy = environment.DefaultStrategy
-				}
-				outputEnvironment := createEnvironment(environmentName, strategy)
+				outputEnvironment := createEnvironment(environmentName)
 				outputEnvironment.Defaults = environment.Defaults
 				err = json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
@@ -178,7 +171,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			}
 
 			if environmentName == "update-success" {
-				outputEnvironment := createEnvironment("update-success", "default")
+				outputEnvironment := createEnvironment("update-success")
 				// This is a dummy update - only the defaults can be updated anyway.
 				outputEnvironment.Defaults = environment.Defaults
 				err = json.NewEncoder(w).Encode(outputEnvironment)
@@ -216,7 +209,7 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 
 		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "create" {
 			if environment == "create-existing" {
-				outputEnvironment := createEnvironment("create-existing", "default")
+				outputEnvironment := createEnvironment("create-existing")
 				err := json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return
@@ -230,7 +223,7 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 
 		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "update" {
 			if environment == "update-success" || environment == "update-failure" {
-				outputEnvironment := createEnvironment(environment, "default")
+				outputEnvironment := createEnvironment(environment)
 				err := json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return
@@ -244,7 +237,7 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 
 		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "describe" {
 			if environment == "describe-success" {
-				outputEnvironment := createEnvironment(environment, "default")
+				outputEnvironment := createEnvironment(environment)
 				err := json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return

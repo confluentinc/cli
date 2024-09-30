@@ -1,2 +1,1 @@
-Environment(s) deleted successfully: delete-test, delete-test2
-
+Deleted flink environments "test" and "test2".
