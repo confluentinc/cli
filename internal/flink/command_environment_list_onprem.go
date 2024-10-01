@@ -54,16 +54,18 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 // Run through all the pages until we get an empty page, in that case, return.
 func getAllEnvironments(cmfClient *cmfsdk.APIClient, cmd *cobra.Command) ([]cmfsdk.Environment, error) {
 	environments := make([]cmfsdk.Environment, 0)
-	page := 0
-	lastPageEmpty := false
+	currentPageNumber := 0
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
 
 	pagingOptions := &cmfsdk.GetEnvironmentsOpts{
-		Page: optional.NewInt32(int32(page)),
+		Page: optional.NewInt32(int32(currentPageNumber)),
 		// 100 is an arbitrary page size we've chosen.
-		Size: optional.NewInt32(100),
+		Size: optional.NewInt32(pageSize),
 	}
 
-	for !lastPageEmpty {
+	for !done {
 		environmentsPage, httpResponse, err := cmfClient.DefaultApi.GetEnvironments(cmd.Context(), pagingOptions)
 		if err != nil {
 			if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
@@ -78,16 +80,10 @@ func getAllEnvironments(cmfClient *cmfsdk.APIClient, cmd *cobra.Command) ([]cmfs
 			return nil, err
 		}
 
-		if environmentsPage.Items == nil || len(environmentsPage.Items) == 0 {
-			lastPageEmpty = true
-			break
-		}
 		environments = append(environments, environmentsPage.Items...)
-
-		page += 1
-		pagingOptions.Page = optional.NewInt32(int32(page))
+		currentPageNumber, done = extractPageOptions(len(environmentsPage.Items), currentPageNumber)
+		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
 	}
 
 	return environments, nil
-
 }
