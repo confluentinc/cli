@@ -14,7 +14,7 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
-func (c *unauthenticatedCommand) newApplicationListCommand() *cobra.Command {
+func (c *command) newApplicationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink Applications.",
@@ -38,16 +38,17 @@ func (c *unauthenticatedCommand) newApplicationListCommand() *cobra.Command {
 // Run through all the pages until we get an empty page, in that case, return.
 func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environment string) ([]cmfsdk.Application, error) {
 	applications := make([]cmfsdk.Application, 0)
-	page := 0
-	lastPageEmpty := false
+	currentPageNumber := 0
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
 
 	pagingOptions := &cmfsdk.GetApplicationsOpts{
-		Page: optional.NewInt32(int32(page)),
-		// 100 is an arbitrary page size we've chosen.
-		Size: optional.NewInt32(100),
+		Page: optional.NewInt32(int32(currentPageNumber)),
+		Size: optional.NewInt32(pageSize),
 	}
 
-	for !lastPageEmpty {
+	for !done {
 		applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(cmd.Context(), environment, pagingOptions)
 		if err != nil {
 			if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
@@ -55,28 +56,21 @@ func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environ
 					defer httpResponse.Body.Close()
 					respBody, parseError := io.ReadAll(httpResponse.Body)
 					if parseError == nil {
-						return nil, fmt.Errorf("failed to list applications in the environment \"%s\": %s", environment, string(respBody))
+						return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, respBody)
 					}
 				}
 			}
 			return nil, err
 		}
-
-		if applicationsPage.Items == nil || len(applicationsPage.Items) == 0 {
-			lastPageEmpty = true
-			break
-		}
 		applications = append(applications, applicationsPage.Items...)
-
-		page += 1
-		pagingOptions.Page = optional.NewInt32(int32(page))
+		currentPageNumber, done = extractPageOptions(len(applicationsPage.Items), currentPageNumber)
+		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
 	}
 
 	return applications, nil
-
 }
 
-func (c *unauthenticatedCommand) applicationList(cmd *cobra.Command, _ []string) error {
+func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
@@ -98,7 +92,10 @@ func (c *unauthenticatedCommand) applicationList(cmd *cobra.Command, _ []string)
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, app := range applications {
-			jobStatus, ok := app.Status["jobStatus"].(map[string]interface{})
+			jobStatus, ok := app.Status["jobStatus"].(map[string]any)
+			if !ok {
+				jobStatus = map[string]any{}
+			}
 			envInApp, ok := app.Spec["environment"].(string)
 			if !ok {
 				envInApp = environment

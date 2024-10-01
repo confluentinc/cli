@@ -10,7 +10,7 @@ type flinkEnvironmentOut struct {
 	UpdatedTime string `human:"Updated Time" serialized:"updated_time"`
 }
 
-func (c *unauthenticatedCommand) newEnvironmentCommand() *cobra.Command {
+func (c *command) newEnvironmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "environment",
 		Short:   "Manage Flink Environments",
