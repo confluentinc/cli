@@ -1,2 +1,1 @@
-Error: failed to create application "default-application-failure" in the environment "default": 
-
+Error: failed to create application "default-application-failure" in the environment "default": 422 Unprocessable Entity

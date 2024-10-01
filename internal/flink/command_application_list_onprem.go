@@ -2,8 +2,6 @@ package flink
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -11,7 +9,6 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -23,11 +20,11 @@ func (c *command) newApplicationListCommand() *cobra.Command {
 		RunE:  c.applicationList,
 	}
 
-	cmd.Flags().StringP("environment", "e", "", "Name of the Environment to get the FlinkApplications from.")
+	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink application from.")
 	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
-	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Can also be set with "CONFLUENT_CMF_CLIENT_KEY_PATH".`)
-	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Can also be set via "CONFLUENT_CMF_CLIENT_CERT_PATH".`)
-	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Can also be set via "CONFLUENT_CERT_AUTHORITY_PATH".`)
+	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CERT_AUTHORITY_PATH" may be set in place of this flag.`)
 
 	cmd.MarkFlagRequired("environment")
 
@@ -51,17 +48,8 @@ func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environ
 
 	for !done {
 		applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(cmd.Context(), environment, pagingOptions)
-		if err != nil {
-			if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
-				if httpResponse.Body != nil {
-					defer httpResponse.Body.Close()
-					respBody, parseError := io.ReadAll(httpResponse.Body)
-					if parseError == nil {
-						return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, respBody)
-					}
-				}
-			}
-			return nil, err
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, parsedErr)
 		}
 		applications = append(applications, applicationsPage.Items...)
 		currentPageNumber, done = extractPageOptions(len(applicationsPage.Items), currentPageNumber)
@@ -75,9 +63,6 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
-	}
-	if environment == "" {
-		return errors.NewErrorWithSuggestions("environment is required", "set the environment with --environment flag")
 	}
 
 	cmfClient, err := c.GetCmfClient(cmd)

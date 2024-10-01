@@ -2,8 +2,6 @@ package flink
 
 import (
 	"fmt"
-	"io"
-	"net/http"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -68,17 +66,8 @@ func getAllEnvironments(cmfClient *cmfsdk.APIClient, cmd *cobra.Command) ([]cmfs
 
 	for !done {
 		environmentsPage, httpResponse, err := cmfClient.DefaultApi.GetEnvironments(cmd.Context(), pagingOptions)
-		if err != nil {
-			if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
-				if httpResponse.Body != nil {
-					defer httpResponse.Body.Close()
-					respBody, parseError := io.ReadAll(httpResponse.Body)
-					if parseError == nil {
-						return nil, fmt.Errorf("failed to list environments: %s", string(respBody))
-					}
-				}
-			}
-			return nil, err
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf("failed to list environments: %s", parsedErr)
 		}
 
 		environments = append(environments, environmentsPage.Items...)

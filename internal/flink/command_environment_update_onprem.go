@@ -3,14 +3,16 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"net/http"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newEnvironmentUpdateCommand() *cobra.Command {
@@ -43,13 +45,15 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 	if defaults != "" {
 		defaultsParsed = make(map[string]interface{})
 		if strings.HasSuffix(defaults, ".json") {
-			data, err := ioutil.ReadFile(defaults)
+			var data []byte
+			data, err = os.ReadFile(defaults)
 			if err != nil {
 				return fmt.Errorf("failed to read defaults file: %v", err)
 			}
 			err = json.Unmarshal(data, &defaultsParsed)
 		} else if strings.HasSuffix(defaults, ".yaml") || strings.HasSuffix(defaults, ".yml") {
-			data, err := ioutil.ReadFile(defaults)
+			var data []byte
+			data, err = os.ReadFile(defaults)
 			if err != nil {
 				return fmt.Errorf("failed to read defaults file: %v", err)
 			}
@@ -63,10 +67,10 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	_, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
+	_, httpResponse, _ := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
 	// check if the environment exists by checking the status code
-	if httpResponse == nil || httpResponse.StatusCode != 200 {
-		return fmt.Errorf("environment \"%s\" does not exist", environmentName)
+	if httpResponse == nil || httpResponse.StatusCode != http.StatusOK {
+		return fmt.Errorf(`environment "%s" does not exist`, environmentName)
 	}
 
 	var environment cmfsdk.PostEnvironment
@@ -75,22 +79,16 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 		environment.Defaults = defaultsParsed
 	}
 	outputEnvironment, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateEnvironment(cmd.Context(), environment)
-	defer httpResponse.Body.Close()
-	if err != nil {
-		if httpResponse != nil && httpResponse.StatusCode != 201 {
-			if httpResponse.Body != nil {
-				respBody, parseError := ioutil.ReadAll(httpResponse.Body)
-				if parseError == nil {
-					return fmt.Errorf("failed to update environment \"%s\": %s", environmentName, string(respBody))
-				}
-			}
-		}
-		return fmt.Errorf("failed to update environment \"%s\": %s", environmentName, err)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return fmt.Errorf(`failed to update environment "%s": %s`, environmentName, parsedErr)
 	}
 
 	table := output.NewTable(cmd)
 	var defaultsBytes []byte
 	defaultsBytes, err = json.Marshal(outputEnvironment.Defaults)
+	if err != nil {
+		return fmt.Errorf("failed to marshal defaults: %s", err)
+	}
 
 	table.Add(&flinkEnvironmentOutput{
 		Name:        outputEnvironment.Name,

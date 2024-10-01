@@ -10,12 +10,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/resource"
 )
 
-type deleteEnvironmentFailure struct {
-	Environment string `human:"Environment" serialized:"environment"`
-	Reason      string `human:"Reason" serialized:"reason"`
-	StausCode   int    `human:"Status Code" serialized:"status_code"`
-}
-
 func (c *command) newEnvironmentDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
