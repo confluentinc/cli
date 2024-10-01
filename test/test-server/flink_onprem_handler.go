@@ -23,7 +23,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			return
 		}
 		if environmentName == "empty-environment" {
-			applicationPage := map[string]interface{}{
+			applicationPage := map[string]any{
 				"items": []cmfsdk.Application{},
 			}
 			err := json.NewEncoder(w).Encode(applicationPage)
@@ -34,55 +34,55 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			{
 				ApiVersion: "cmf.confluent.io/v1alpha1",
 				Kind:       "FlinkApplication",
-				Metadata: map[string]interface{}{
+				Metadata: map[string]any{
 					"name": "state-machine-example",
 				},
-				Spec: map[string]interface{}{
+				Spec: map[string]any{
 					"flinkEnvironment": "default",
 					"image":            "confluentinc/cp-flink:1.19.1-cp1",
 					"flinkVersion":     "v1_19",
-					"flinkConfiguration": map[string]interface{}{
+					"flinkConfiguration": map[string]any{
 						"taskmanager.numberOfTaskSlots":       "8",
 						"metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",
 						"metrics.reporter.prom.port":          "9249-9250",
 					},
 					"serviceAccount": "flink",
-					"jobManager": map[string]interface{}{
-						"resource": map[string]interface{}{
+					"jobManager": map[string]any{
+						"resource": map[string]any{
 							"memory": "1048m",
 							"cpu":    1,
 						},
 					},
-					"taskManager": map[string]interface{}{
-						"resource": map[string]interface{}{
+					"taskManager": map[string]any{
+						"resource": map[string]any{
 							"memory": "1048m",
 							"cpu":    1,
 						},
 					},
-					"job": map[string]interface{}{
+					"job": map[string]any{
 						"jarURI":      "local:///opt/flink/examples/streaming/StateMachineExample.jar",
 						"state":       "running",
 						"parallelism": 3,
 						"upgradeMode": "stateless",
 					},
 				},
-				Status: map[string]interface{}{
-					"jobStatus": map[string]interface{}{
+				Status: map[string]any{
+					"jobStatus": map[string]any{
 						"jobName":    "State machine job",
 						"jobId":      "dcabb1ad6c40495bc2d7fa7a0097c5aa",
 						"state":      "RECONCILING",
 						"startTime":  "1726640263746",
 						"updateTime": "1726640280561",
-						"savepointInfo": map[string]interface{}{
+						"savepointInfo": map[string]any{
 							"lastSavepoint":                  nil,
 							"triggerId":                      nil,
 							"triggerTimestamp":               nil,
 							"triggerType":                    nil,
 							"formatType":                     nil,
-							"savepointHistory":               []interface{}{},
+							"savepointHistory":               []any{},
 							"lastPeriodicSavepointTimestamp": 0,
 						},
-						"checkpointInfo": map[string]interface{}{
+						"checkpointInfo": map[string]any{
 							"lastCheckpoint":                  nil,
 							"triggerId":                       nil,
 							"triggerTimestamp":                nil,
@@ -94,20 +94,20 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 					"error":              nil,
 					"observedGeneration": 4,
 					"lifecycleState":     "DEPLOYED",
-					"clusterInfo": map[string]interface{}{
+					"clusterInfo": map[string]any{
 						"flink-revision": "89d0b8f @ 2024-06-22T13:19:31+02:00",
 						"flink-version":  "1.19.1-cp1",
 						"total-cpu":      "3.0",
 						"total-memory":   "3296722944",
 					},
 					"jobManagerDeploymentStatus": "DEPLOYING",
-					"reconciliationStatus": map[string]interface{}{
+					"reconciliationStatus": map[string]any{
 						"reconciliationTimestamp": 1726640346899,
 						"lastReconciledSpec":      "",
 						"lastStableSpec":          "",
 						"state":                   "DEPLOYED",
 					},
-					"taskManager": map[string]interface{}{
+					"taskManager": map[string]any{
 						"labelSelector": "component=taskmanager,app=basic-example",
 						"replicas":      1,
 					},
@@ -115,11 +115,11 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			},
 		}
 		// Return empty list of applications for pages other than 0
-		applicationPage := map[string]interface{}{
+		applicationPage := map[string]any{
 			"items": []cmfsdk.Application{},
 		}
 		if page == "0" {
-			applicationPage = map[string]interface{}{
+			applicationPage = map[string]any{
 				"items": items,
 			}
 		}

@@ -6,14 +6,16 @@ import (
 	"net/http"
 
 	"github.com/antihax/optional"
+	"github.com/spf13/cobra"
+
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
-	"github.com/spf13/cobra"
 )
 
-func (c *unauthenticatedCommand) newApplicationListCommand() *cobra.Command {
+func (c *command) newApplicationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink Applications.",
@@ -54,16 +56,16 @@ func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environ
 					defer httpResponse.Body.Close()
 					respBody, parseError := io.ReadAll(httpResponse.Body)
 					if parseError == nil {
-						return nil, fmt.Errorf("failed to list applications in the environment \"%s\": %s", environment, string(respBody))
+						return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, respBody)
 					}
 				}
 			}
 			return nil, err
 		}
 
-		if applicationsPage.Items == nil || len(applicationsPage.Items) == 0 {
+		if len(applicationsPage.Items) == 0 {
 			lastPageEmpty = true
-			break
+			continue
 		}
 		applications = append(applications, applicationsPage.Items...)
 
@@ -72,10 +74,9 @@ func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environ
 	}
 
 	return applications, nil
-
 }
 
-func (c *unauthenticatedCommand) applicationList(cmd *cobra.Command, _ []string) error {
+func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
@@ -97,7 +98,10 @@ func (c *unauthenticatedCommand) applicationList(cmd *cobra.Command, _ []string)
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, app := range applications {
-			jobStatus, ok := app.Status["jobStatus"].(map[string]interface{})
+			jobStatus, ok := app.Status["jobStatus"].(map[string]any)
+			if !ok {
+				jobStatus = map[string]any{}
+			}
 			envInApp, ok := app.Spec["environment"].(string)
 			if !ok {
 				envInApp = environment
