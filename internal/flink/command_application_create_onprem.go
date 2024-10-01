@@ -14,7 +14,7 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
-func (c *unauthenticatedCommand) newApplicationCreateCommand() *cobra.Command {
+func (c *command) newApplicationCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <resourceFilePath>",
 		Short: "Create a Flink application.",
@@ -33,7 +33,7 @@ func (c *unauthenticatedCommand) newApplicationCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *unauthenticatedCommand) applicationCreate(cmd *cobra.Command, args []string) error {
+func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err

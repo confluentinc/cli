@@ -13,7 +13,7 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
-func (c *unauthenticatedCommand) newEnvironmentCreateCommand() *cobra.Command {
+func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Flink environment.",
@@ -25,7 +25,7 @@ func (c *unauthenticatedCommand) newEnvironmentCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *unauthenticatedCommand) environmentCreate(cmd *cobra.Command, args []string) error {
+func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err

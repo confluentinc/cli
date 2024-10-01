@@ -14,36 +14,34 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type unauthenticatedCommand struct {
-	*pcmd.CLICommand
-}
-
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "flink",
 		Short: "Manage Apache Flink.",
 	}
 
-	authenticatedCommand := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	command := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	unauthenticatedCmd := &unauthenticatedCommand{pcmd.NewAnonymousCLICommandWithoutContext(cmd, prerunner)}
-
-	// Cloud Specific Commands
-
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(authenticatedCommand.newConnectionCommand())
+	if !cfg.IsCloudLogin() {
+		// On-prem commands don't require login, so change the pre-runner to account for that.
+		cmd.PersistentPreRunE = prerunner.Anonymous(command.AuthenticatedCLICommand.CLICommand, false)
 	}
 
-	cmd.AddCommand(authenticatedCommand.newArtifactCommand())
-	cmd.AddCommand(authenticatedCommand.newComputePoolCommand())
-	cmd.AddCommand(authenticatedCommand.newConnectivityTypeCommand())
-	cmd.AddCommand(authenticatedCommand.newRegionCommand())
-	cmd.AddCommand(authenticatedCommand.newShellCommand(prerunner))
-	cmd.AddCommand(authenticatedCommand.newStatementCommand())
+	// Cloud Specific Commands
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(command.newConnectionCommand())
+	}
+
+	cmd.AddCommand(command.newArtifactCommand())
+	cmd.AddCommand(command.newComputePoolCommand())
+	cmd.AddCommand(command.newConnectivityTypeCommand())
+	cmd.AddCommand(command.newRegionCommand())
+	cmd.AddCommand(command.newShellCommand(prerunner))
+	cmd.AddCommand(command.newStatementCommand())
 
 	// On-Prem Specific Commands
-	cmd.AddCommand(unauthenticatedCmd.newApplicationCommand())
-	cmd.AddCommand(unauthenticatedCmd.newEnvironmentCommand())
+	cmd.AddCommand(command.newApplicationCommand())
+	cmd.AddCommand(command.newEnvironmentCommand())
 
 	return cmd
 }
