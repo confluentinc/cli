@@ -39,16 +39,17 @@ func (c *command) newApplicationListCommand() *cobra.Command {
 // Run through all the pages until we get an empty page, in that case, return.
 func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environment string) ([]cmfsdk.Application, error) {
 	applications := make([]cmfsdk.Application, 0)
-	page := 0
-	lastPageEmpty := false
+	currentPageNumber := 0
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
 
 	pagingOptions := &cmfsdk.GetApplicationsOpts{
-		Page: optional.NewInt32(int32(page)),
-		// 100 is an arbitrary page size we've chosen.
-		Size: optional.NewInt32(100),
+		Page: optional.NewInt32(int32(currentPageNumber)),
+		Size: optional.NewInt32(pageSize),
 	}
 
-	for !lastPageEmpty {
+	for !done {
 		applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(cmd.Context(), environment, pagingOptions)
 		if err != nil {
 			if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
@@ -62,15 +63,9 @@ func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environ
 			}
 			return nil, err
 		}
-
-		if len(applicationsPage.Items) == 0 {
-			lastPageEmpty = true
-			continue
-		}
 		applications = append(applications, applicationsPage.Items...)
-
-		page += 1
-		pagingOptions.Page = optional.NewInt32(int32(page))
+		currentPageNumber, done = extractPageOptions(len(applicationsPage.Items), currentPageNumber)
+		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
 	}
 
 	return applications, nil
