@@ -134,13 +134,11 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodDelete:
 			vars := mux.Vars(r)
-			environmentName := vars["environment"]
-			applicationName := vars["application"]
-			if environmentName == "non-existent" {
+			if vars["environment"] == "non-existent" {
 				http.Error(w, "Environment not found", http.StatusNotFound)
 				return
 			}
-			if applicationName == "non-existent" {
+			if vars["application"] == "non-existent" {
 				http.Error(w, "Application not found", http.StatusNotFound)
 				return
 			}
@@ -148,7 +146,13 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 		case http.MethodPatch:
 			http.Error(w, "Not implemented", http.StatusNotImplemented)
 		case http.MethodGet:
-			http.Error(w, "Not implemented", http.StatusNotImplemented)
+			vars := mux.Vars(r)
+			if vars["application"] == "non-existent" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+			// Just write the status code for now, more details will be added later.
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 }
@@ -198,7 +202,14 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 		case http.MethodPatch:
 			http.Error(w, "Not implemented", http.StatusNotImplemented)
 		case http.MethodGet:
-			http.Error(w, "Not implemented", http.StatusNotImplemented)
+			vars := mux.Vars(r)
+			environmentName := vars["environment"]
+			if environmentName == "non-existent" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+			// Just write the status code for now, more details will be added later.
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 }

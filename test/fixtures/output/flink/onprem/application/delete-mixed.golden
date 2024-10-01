@@ -1,3 +1,4 @@
-Deleted flink application "test".
-Error: failed to delete non-existent: Application not found
+Error: Flink application "non-existent" not found
 
+Suggestions:
+    List available Flink applications with `confluent flink application list`.

@@ -8,10 +8,11 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 func (c *command) newApplicationListCommand() *cobra.Command {
@@ -24,9 +25,9 @@ func (c *command) newApplicationListCommand() *cobra.Command {
 
 	cmd.Flags().StringP("environment", "e", "", "Name of the Environment to get the FlinkApplication from.")
 	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
-	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
-	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
-	cmd.Flags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
+	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Can also be set with "CONFLUENT_CMF_CLIENT_KEY_PATH".`)
+	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Can also be set via "CONFLUENT_CMF_CLIENT_CERT_PATH".`)
+	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Can also be set via "CONFLUENT_CERT_AUTHORITY_PATH".`)
 
 	cmd.MarkFlagRequired("environment")
 

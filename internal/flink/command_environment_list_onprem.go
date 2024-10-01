@@ -8,9 +8,10 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 func (c *command) newEnvironmentListCommand() *cobra.Command {

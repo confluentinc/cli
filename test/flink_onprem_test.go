@@ -12,7 +12,6 @@ func (s *CLITestSuite) TestListFlinkApplications() {
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
@@ -25,14 +24,13 @@ func (s *CLITestSuite) TestDeleteFlinkApplications() {
 		{args: "flink application delete --force --environment non-existent test-app", fixture: "flink/onprem/application/delete-non-existent-env.golden", exitCode: 1},
 		{args: "flink application delete --environment default non-existent", fixture: "flink/onprem/application/delete-non-existent-app.golden", exitCode: 1},
 		// success scenarios
-		{args: "flink application delete --environment default test test-app", fixture: "flink/onprem/application/delete-success.golden"},
+		{args: "flink application delete --environment default test test-app --force", fixture: "flink/onprem/application/delete-success.golden"},
 		// mixed scenarios
 		{args: "flink application delete --environment default test non-existent", fixture: "flink/onprem/application/delete-mixed.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
 		test.login = "onprem"
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
@@ -45,7 +43,6 @@ func (s *CLITestSuite) TestListFlinkEnvironments() {
 	}
 
 	for _, test := range tests {
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
@@ -56,14 +53,13 @@ func (s *CLITestSuite) TestDeleteFlinkEnvironments() {
 		{args: "flink environment delete", fixture: "flink/onprem/environment/delete-env-missing.golden", exitCode: 1},
 		{args: "flink environment delete non-existent", fixture: "flink/onprem/environment/delete-non-existent-env.golden", exitCode: 1},
 		// success scenarios
-		{args: "flink environment delete test test2", fixture: "flink/onprem/environment/delete-success.golden"},
+		{args: "flink environment delete test test2 --force", fixture: "flink/onprem/environment/delete-success.golden"},
 		// some failures and some successes
-		{args: "flink environment delete test non-existent", fixture: "flink/onprem/environment/delete-mixed.golden", exitCode: 1},
+		{args: "flink environment delete test non-existent --force", fixture: "flink/onprem/environment/delete-mixed.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
 		test.login = "onprem"
-		test.workflow = false
 		s.runIntegrationTest(test)
 	}
 }
