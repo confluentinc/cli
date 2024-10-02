@@ -128,6 +128,7 @@ func (s *CLITestSuite) TestDescribeFlinkEnvironment() {
 		// success
 		{args: "flink environment describe default", fixture: "flink/onprem/environment/describe-success.golden"},
 		{args: "flink environment describe default --output json", fixture: "flink/onprem/environment/describe-success-json.golden"},
+		{args: "flink environment describe default --output yaml", fixture: "flink/onprem/environment/describe-success-yaml.golden"},
 		// failure
 		{args: "flink environment describe non-existent", fixture: "flink/onprem/environment/describe-non-existent.golden", exitCode: 1},
 		{args: "flink environment describe", fixture: "flink/onprem/environment/describe-no-environment.golden", exitCode: 1},
@@ -142,6 +143,7 @@ func (s *CLITestSuite) TestDescribeFlinkApplication() {
 	tests := []CLITest{
 		// success
 		{args: "flink application describe --environment default default-application-1", fixture: "flink/onprem/application/describe-success.golden"},
+		{args: "flink application describe --environment default default-application-1 --output yaml", fixture: "flink/onprem/application/describe-success-yaml.golden"},
 		// failure
 		{args: "flink application describe --environment default non-existent", fixture: "flink/onprem/application/describe-non-existent.golden", exitCode: 1},
 		{args: "flink application describe --environment non-existent default-application", fixture: "flink/onprem/application/describe-non-existent-environment.golden", exitCode: 1},
