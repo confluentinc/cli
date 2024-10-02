@@ -10,7 +10,7 @@ Create a group mapping named "demo-group-mapping".
 
 Flags:
       --description string   Description of the group mapping.
-      --filter string        A supported Common Expression Language (CEL) filter expression for group mappings. (default "true")
+      --filter string        A supported Common Expression Language (CEL) filter expression. (default "true")
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

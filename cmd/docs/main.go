@@ -62,16 +62,9 @@ func main() {
 		panic(err)
 	}
 
-	removeUnreleasedDocs()
-
 	if err := os.Setenv("HOME", home); err != nil {
 		panic(err)
 	}
-}
-
-func removeUnreleasedDocs() {
-	removeUnreleasedCommands("iam certificate-authority")
-	removeUnreleasedCommands("iam certificate-pool")
 }
 
 func removeUnreleasedCommands(command string) {
