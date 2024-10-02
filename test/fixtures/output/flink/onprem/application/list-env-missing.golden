@@ -1,4 +1,4 @@
-Error: environment name is required.
+Error: environment is required.
 
 Suggestions:
-    You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command.
+    Specify an environment with `--environment` or set the default environment using `confluent flink environment use`.

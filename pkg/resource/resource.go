@@ -35,6 +35,8 @@ const (
 	FlinkArtifact                   = "Flink artifact"
 	FlinkConnectivityType           = "Flink connectivity type"
 	FlinkComputePool                = "Flink compute pool"
+	FlinkApplication                = "Flink application"
+	FlinkEnvironment                = "Flink environment"
 	FlinkRegion                     = "Flink region"
 	FlinkStatement                  = "Flink SQL statement"
 	FlinkConnection                 = "Flink connection"
@@ -67,11 +69,6 @@ const (
 	Topic                           = "topic"
 	TransitGatewayAttachment        = "transit gateway attachment"
 	User                            = "user"
-)
-
-const (
-	OnPremFlinkApplication = "flink application"
-	OnPremFlinkEnvrionment = "flink environment"
 )
 
 const (

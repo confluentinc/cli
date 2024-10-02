@@ -1,0 +1,4 @@
+Error: environment is required.
+
+Suggestions:
+    Specify an environment with `--environment` or set the default environment using `confluent flink environment use`.

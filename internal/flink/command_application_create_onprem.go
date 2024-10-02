@@ -3,38 +3,46 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	perrors "github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
-func (c *unauthenticatedCommand) newApplicationCreateCommand() *cobra.Command {
+func (c *command) newApplicationCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <resourceFilePath>",
-		Short: "Create a Flink Application.",
+		Short: "Create a Flink application.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.applicationCreate,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the Environment to create the FlinkApplication from.")
+	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink application from.")
 	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
-	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_KEY_PATH.")
-	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Flag can also be set via CONFLUENT_CMF_CLIENT_CERT_PATH.")
-	cmd.Flags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
+	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CERT_AUTHORITY_PATH" may be set in place of this flag.`)
+	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
 	return cmd
 }
 
-func (c *unauthenticatedCommand) applicationCreate(cmd *cobra.Command, args []string) error {
-	environment := getEnvironment(cmd)
-	if environment == "" {
-		return perrors.NewErrorWithSuggestions("environment name is required.", "You can use the --environment flag or set the default environment using `confluent flink environment use <name>` command")
+func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
+	environment, err := getEnvironment(cmd)
+	if err != nil {
+		return err
+	}
+	// Disallow human output for this command
+	if output.GetFormat(cmd) == output.Human {
+		return errors.NewErrorWithSuggestions("human output is not supported for this command", "Try using --output flag with json or yaml.\n")
 	}
 
 	cmfClient, err := c.GetCmfClient(cmd)
@@ -45,7 +53,7 @@ func (c *unauthenticatedCommand) applicationCreate(cmd *cobra.Command, args []st
 	// Check if the application already exists
 	resourceFilePath := args[0]
 	// Read file contents
-	data, err := ioutil.ReadFile(resourceFilePath)
+	data, err := os.ReadFile(resourceFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
@@ -66,29 +74,31 @@ func (c *unauthenticatedCommand) applicationCreate(cmd *cobra.Command, args []st
 
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, err := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
+	_, httpResponse, _ := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
 	// check if the application exists by checking the status code
-	if httpResponse != nil && httpResponse.StatusCode == 200 {
-		return fmt.Errorf("application \"%s\" already exists in the environment \"%s\"", applicationName, environment)
+	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
+		return fmt.Errorf(`application "%s" already exists in the environment "%s"`, applicationName, environment)
 	}
 
 	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environment, application)
-	defer httpResponse.Body.Close()
-	if err != nil {
-		if httpResponse != nil && httpResponse.Body != nil {
-			respBody, parseError := ioutil.ReadAll(httpResponse.Body)
-			if parseError == nil {
-				return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, string(respBody))
-			}
-		}
-		return fmt.Errorf("failed to create application \"%s\" in the environment \"%s\": %s", applicationName, environment, err)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return fmt.Errorf(`failed to create application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
 	}
 
 	table := output.NewTable(cmd)
 	var metadataBytes, specBytes, statusBytes []byte
 	metadataBytes, err = json.Marshal(outputApplication.Metadata)
+	if err != nil {
+		return fmt.Errorf("failed to marshal metadata: %s", err)
+	}
 	specBytes, err = json.Marshal(outputApplication.Spec)
+	if err != nil {
+		return fmt.Errorf("failed to marshal spec: %s", err)
+	}
 	statusBytes, err = json.Marshal(outputApplication.Status)
+	if err != nil {
+		return fmt.Errorf("failed to marshal status: %s", err)
+	}
 
 	table.Add(&flinkApplicationOutput{
 		ApiVersion: outputApplication.ApiVersion,

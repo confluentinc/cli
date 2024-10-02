@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *unauthenticatedCommand) newEnvironmentUseCommand() *cobra.Command {
+func (c *command) newEnvironmentUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use <name>",
-		Short: "Use an environment as default for flink application",
+		Short: "Use an environment as default for Flink applications",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.environmentUse,
 	}
@@ -20,7 +20,7 @@ func (c *unauthenticatedCommand) newEnvironmentUseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *unauthenticatedCommand) environmentUse(cmd *cobra.Command, args []string) error {
+func (c *command) environmentUse(cmd *cobra.Command, args []string) error {
 	cmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err

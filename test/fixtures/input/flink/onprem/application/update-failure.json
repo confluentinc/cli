@@ -2,7 +2,7 @@
     "apiVersion": "cmf.confluent.io/v1alpha1",
     "kind": "FlinkApplication",
     "metadata": {
-        "name": "update-failure"
+        "name": "update-failure-application"
     },
     "spec": {
         "serviceAccount": "flink-new-service-account"

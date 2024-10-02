@@ -1,1 +1,1 @@
-Error: application "update-with-non-existent-environment" does not exist in the environment "update-with-non-existent-environment"
+Error: application "default-application-3" does not exist in the environment "non-existent"

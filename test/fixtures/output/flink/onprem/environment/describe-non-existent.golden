@@ -1,2 +1,1 @@
-Error: environment "describe-non-existent" not found 
-
+Error: failed to describe environment "non-existent": Environment not found
