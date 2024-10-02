@@ -29,6 +29,8 @@ func (c *certificatePoolCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the certificate pool.")
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddExternalIdentifierFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 

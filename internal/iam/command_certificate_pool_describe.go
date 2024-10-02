@@ -23,6 +23,9 @@ func (c *certificatePoolCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	c.AddProviderFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
+
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 	return cmd
 }
