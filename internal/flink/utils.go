@@ -8,9 +8,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	perrors "github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 const cmfEnvironmentConfigPath = "~/.cmf/environment"

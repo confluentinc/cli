@@ -15,6 +15,7 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
+// Helper function to create a Flink application.
 func createApplication(name string, environment string) cmfsdk.Application {
 	return cmfsdk.Application{
 		ApiVersion: "cmf.confluent.io/v1alpha1",
@@ -100,6 +101,7 @@ func createApplication(name string, environment string) cmfsdk.Application {
 	}
 }
 
+// Helper function to create a Flink environment.
 func createEnvironment(name string) cmfsdk.Environment {
 	return cmfsdk.Environment{
 		Name:        name,
@@ -112,9 +114,10 @@ func createEnvironment(name string) cmfsdk.Environment {
 // We assume the following set of existing environments and applications as already existing:
 // default: default-application-1, default-application-2
 // test: [empty environment]
-// update-failure: update-failure-application -> Only used by environment/application update failure test
+// update-failure: update-failure-application (Only used by environment/application update failure test)
 // All other environments and applications don't exist.
 // In case an environment or application name has the substring "failure", the operation will fail with a 422 status code.
+// There is some special handling required to make update-failure-application work, but that's pretty much the only special case.
 
 // Global level handlers which dispatch specific handlers as required.
 

@@ -2,11 +2,13 @@ package flink
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
 func (c *command) newEnvironmentUseCommand() *cobra.Command {
@@ -30,33 +32,28 @@ func (c *command) environmentUse(cmd *cobra.Command, args []string) error {
 
 	// Check if the environment exists or not
 	_, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environment)
-	if httpResponse != nil && httpResponse.StatusCode != 200 {
-		return fmt.Errorf("environment \"%s\" does not exist", environment)
+	if err != nil || (httpResponse != nil && httpResponse.StatusCode != http.StatusOK) {
+		return fmt.Errorf(`environment "%s" does not exist`, environment)
 	}
 
 	cmfConfigFilePath := expandHomeDir(cmfEnvironmentConfigPath)
-	configWritten := true
+	var fileWriteErr error
+
 	// See if the file exists or not
 	if _, err := os.Stat(cmfConfigFilePath); os.IsNotExist(err) {
-		// try to create the file
-		if err := os.MkdirAll(filepath.Dir(cmfConfigFilePath), 0755); err != nil {
-			// if you failed to create the file, save the environment in an environment variable
-			configWritten = false
-		} else {
-			// create the file and write the environment in it
-			if err := os.WriteFile(cmfConfigFilePath, []byte(environment), 0644); err != nil {
-				configWritten = false
-			}
+		// Try to create the directory.
+		if fileWriteErr = os.MkdirAll(filepath.Dir(cmfConfigFilePath), 0755); fileWriteErr == nil {
+			// Create the file and write the environment in it
+			fileWriteErr = os.WriteFile(cmfConfigFilePath, []byte(environment), 0644)
 		}
 	} else {
-		// if the file exists, write the environment in it
-		if err := os.WriteFile(cmfConfigFilePath, []byte(environment), 0644); err != nil {
-			configWritten = false
-		}
+		// If the file exists, write the environment in it.
+		fileWriteErr = os.WriteFile(cmfConfigFilePath, []byte(environment), 0644)
 	}
-	if !configWritten {
-		return fmt.Errorf("failed to set the environment \"%s\" as default", environment)
+	if fileWriteErr != nil {
+		return fmt.Errorf(`failed to set the environment "%s" as default, couldn't write to file "%s": %w`, environment, cmfConfigFilePath, fileWriteErr)
 	}
-	output.Printf(false, "Environment \"%s\" is set as default", environment)
+
+	output.Printf(false, `Environment "%s" is set as default`, environment)
 	return nil
 }
