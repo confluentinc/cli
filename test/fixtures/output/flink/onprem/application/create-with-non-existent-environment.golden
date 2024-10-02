@@ -1,2 +1,1 @@
-Error: failed to create application "create-with-non-existent-environment" in the environment "create-with-non-existent-environment": 
-
+Error: failed to create application "default-application-1" in the environment "non-existent": Environment not found

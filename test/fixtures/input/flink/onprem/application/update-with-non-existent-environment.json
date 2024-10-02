@@ -2,7 +2,7 @@
     "apiVersion": "cmf.confluent.io/v1alpha1",
     "kind": "FlinkApplication",
     "metadata": {
-        "name": "update-with-non-existent-environment"
+        "name": "default-application-3"
     },
     "spec": {
         "serviceAccount": "flink-new-service-account"

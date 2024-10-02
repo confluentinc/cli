@@ -1,3 +1,4 @@
-Deleted flink environment "delete-test".
-Error: failed to delete delete-non-existent: Environment not found
+Error: Flink environment "non-existent" not found
 
+Suggestions:
+    List available Flink environments with `confluent flink environment list`.

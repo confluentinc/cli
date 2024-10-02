@@ -1,2 +1,1 @@
-Error: application "describe-non-existent-environment" not found 
-
+Error: failed to describe application "default-application" in the environment "non-existent": Environment not found

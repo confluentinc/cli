@@ -1,2 +1,1 @@
-Error: failed to create application "create-non-existent-unsuccessfully" in the environment "create-test": 
-
+Error: failed to create application "default-application-failure" in the environment "default": 422 Unprocessable Entity

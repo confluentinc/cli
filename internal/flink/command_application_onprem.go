@@ -2,6 +2,8 @@ package flink
 
 import (
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 type flinkApplicationSummary struct {
@@ -19,17 +21,18 @@ type flinkApplicationOutput struct {
 	Status     string `human:"Status" serialized:"status"`
 }
 
-func (c *unauthenticatedCommand) newApplicationCommand() *cobra.Command {
+func (c *command) newApplicationCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "application",
-		Short:   "Manage Flink Application",
-		Aliases: []string{"app"},
+		Use:         "application",
+		Short:       "Manage Flink application",
+		Aliases:     []string{"app"},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
 	cmd.AddCommand(c.newApplicationCreateCommand())
 	cmd.AddCommand(c.newApplicationDescribeCommand())
 	cmd.AddCommand(c.newApplicationDeleteCommand())
-	cmd.AddCommand(c.newApplicationWebUiCommand())
+	cmd.AddCommand(c.newApplicationWebUiForwardCommand())
 	cmd.AddCommand(c.newApplicationListCommand())
 	cmd.AddCommand(c.newApplicationUpdateCommand())
 
