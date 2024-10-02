@@ -24,7 +24,7 @@ type flinkApplicationOutput struct {
 func (c *command) newApplicationCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "application",
-		Short:       "Manage Flink Application",
+		Short:       "Manage Flink application",
 		Aliases:     []string{"app"},
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}

@@ -32,7 +32,7 @@ func (c *command) newApplicationUpdateCommand() *cobra.Command {
 	cmd.Flags().String("certificate-authority-path", "", "Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Flag can also be set via CONFLUENT_CERT_AUTHORITY_PATH.")
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
-	cmd.MarkFlagRequired("environment")
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
 }

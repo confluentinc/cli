@@ -125,6 +125,7 @@ func (s *CLITestSuite) TestDescribeFlinkEnvironment() {
 	tests := []CLITest{
 		// success
 		{args: "flink environment describe default", fixture: "flink/onprem/environment/describe-success.golden"},
+		{args: "flink environment describe default --output json", fixture: "flink/onprem/environment/describe-success-json.golden"},
 		// failure
 		{args: "flink environment describe non-existent", fixture: "flink/onprem/environment/describe-non-existent.golden", exitCode: 1},
 		{args: "flink environment describe", fixture: "flink/onprem/environment/describe-no-environment.golden", exitCode: 1},

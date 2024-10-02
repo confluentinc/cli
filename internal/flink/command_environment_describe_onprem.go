@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -16,6 +17,8 @@ func (c *command) newEnvironmentDescribeCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.environmentDescribe,
 	}
+
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -37,6 +40,9 @@ func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
 	table := output.NewTable(cmd)
 	var defaultsBytes []byte
 	defaultsBytes, err = json.Marshal(cmfEnvironment.Defaults)
+	if err != nil {
+		return fmt.Errorf(`failed to marshal defaults for environment "%s": %s`, environmentName, err)
+	}
 
 	table.Add(&flinkEnvironmentOutput{
 		Name:        cmfEnvironment.Name,
@@ -45,5 +51,4 @@ func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
 		UpdatedTime: cmfEnvironment.UpdatedTime.String(),
 	})
 	return table.Print()
-
 }

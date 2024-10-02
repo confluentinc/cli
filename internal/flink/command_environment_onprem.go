@@ -20,7 +20,7 @@ type flinkEnvironmentOutput struct {
 func (c *command) newEnvironmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "environment",
-		Short:   "Manage Flink Environments",
+		Short:   "Manage Flink environments",
 		Aliases: []string{"env"},
 	}
 

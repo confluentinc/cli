@@ -25,7 +25,7 @@ func (c *command) newApplicationDeleteCommand() *cobra.Command {
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CERT_AUTHORITY_PATH" may be set in place of this flag.`)
 	pcmd.AddForceFlag(cmd)
 
-	cmd.MarkFlagRequired("environment")
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
 }

@@ -8,7 +8,7 @@ import (
 )
 
 // Returns the next page number and whether we need to fetch more pages or not.
-func extractPageOptions(receivedItemsLength int, currentPageNumber int) (nextPageNumber int, done bool) {
+func extractPageOptions(receivedItemsLength int, currentPageNumber int) (int, bool) {
 	if receivedItemsLength == 0 {
 		return currentPageNumber, true
 	}

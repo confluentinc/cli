@@ -15,7 +15,7 @@ import (
 func (c *command) newEnvironmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Flink Environments.",
+		Short: "List Flink environments.",
 		Args:  cobra.NoArgs,
 		RunE:  c.environmentList,
 	}
