@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -51,27 +50,5 @@ func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(`failed to describe application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
 	}
 
-	table := output.NewTable(cmd)
-	var metadataBytes, specBytes, statusBytes []byte
-	metadataBytes, err = json.Marshal(cmfApplication.Metadata)
-	if err != nil {
-		return fmt.Errorf("failed to marshal metadata: %s", err)
-	}
-	specBytes, err = json.Marshal(cmfApplication.Spec)
-	if err != nil {
-		return fmt.Errorf("failed to marshal spec: %s", err)
-	}
-	statusBytes, err = json.Marshal(cmfApplication.Status)
-	if err != nil {
-		return fmt.Errorf("failed to marshal status: %s", err)
-	}
-
-	table.Add(&flinkApplicationOutput{
-		ApiVersion: cmfApplication.ApiVersion,
-		Kind:       cmfApplication.Kind,
-		Metadata:   string(metadataBytes),
-		Spec:       string(specBytes),
-		Status:     string(statusBytes),
-	})
-	return table.Print()
+	return output.SerializedOutput(cmd, cmfApplication)
 }
