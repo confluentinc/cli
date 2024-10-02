@@ -109,40 +109,31 @@ func createEnvironment(name string) cmfsdk.Environment {
 }
 
 // There are a number of request and responses for each path depending on the test case.
-// They can be uniquely distinguished by a per API-path tuple (request method, [environment name prefix, [application name]]).
-
-func commandTypeByEnvironment(environmentName string) string {
-	if strings.HasPrefix(environmentName, "create") {
-		return "create"
-	} else if strings.HasPrefix(environmentName, "update") {
-		return "update"
-	} else if strings.HasPrefix(environmentName, "list") {
-		return "list"
-	} else if strings.HasPrefix(environmentName, "delete") {
-		return "delete"
-	} else if strings.HasPrefix(environmentName, "describe") {
-		return "describe"
-	}
-	return "unknown"
-}
+// We assume the following set of existing environments and applications as already existing:
+// default: default-application-1, default-application-2
+// test: [empty environment]
+// update-failure: update-failure-application -> Only used by environment/application update failure test
+// All other environments and applications don't exist.
+// In case an environment or application name has the substring "failure", the operation will fail with a 422 status code.
 
 // Global level handlers which dispatch specific handlers as required.
 
-// Handler for GET "cmf/api/v1/environments"
-// Used by TestListFlinkEnvironments (GET, nil, nil)
-// Used by TestCreateFlinkEnvironments (POST, "create-", nil)
-// Used by TestUpdateFlinkEnvironments (POST, "update-", nil)
+// Handler for "cmf/api/v1/environments"
+// Used to list, create and update environments.
 func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			page := r.URL.Query().Get("page")
 			environments := []cmfsdk.Environment{
 				createEnvironment("default"),
-				createEnvironment("etl-team"),
+				createEnvironment("test"),
+				createEnvironment("update-failure"),
 			}
 			environmentPage := map[string]interface{}{
 				"items": []cmfsdk.Environment{},
 			}
+			// Only return the environments on page 0, otherwise return an empty list.
 			if page == "0" {
 				environmentPage = map[string]interface{}{
 					"items": environments,
@@ -151,31 +142,21 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(environmentPage)
 			require.NoError(t, err)
 			return
-		}
-
-		if r.Method == http.MethodPost {
+		case http.MethodPost:
 			reqBody, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
 			var environment cmfsdk.PostEnvironment
 			err = json.Unmarshal(reqBody, &environment)
 			require.NoError(t, err)
 
-			environmentName := environment.Name
-			if environmentName == "create-success" || environmentName == "create-success-with-defaults" {
-				outputEnvironment := createEnvironment(environmentName)
-				outputEnvironment.Defaults = environment.Defaults
-				err = json.NewEncoder(w).Encode(outputEnvironment)
-				require.NoError(t, err)
-				return
-			}
-
-			if environmentName == "create-failure" {
+			if strings.Contains(environment.Name, "failure") {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
-			if environmentName == "update-success" {
-				outputEnvironment := createEnvironment("update-success")
+			// Already existing environment: update
+			if environment.Name == "default" || environment.Name == "test" {
+				outputEnvironment := createEnvironment(environment.Name)
 				// This is a dummy update - only the defaults can be updated anyway.
 				outputEnvironment.Defaults = environment.Defaults
 				err = json.NewEncoder(w).Encode(outputEnvironment)
@@ -183,124 +164,100 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 				return
 			}
 
-			if environmentName == "update-failure" {
-				http.Error(w, "", http.StatusUnprocessableEntity)
-				return
-			}
-
-			require.Fail(t, fmt.Sprintf("Unexpected environment name %s", environmentName))
+			// New environment: create
+			outputEnvironment := createEnvironment(environment.Name)
+			outputEnvironment.Defaults = environment.Defaults
+			err = json.NewEncoder(w).Encode(outputEnvironment)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
 	}
 }
 
 // Handler for "cmf/api/v1/environments/{environment}"
-// Used by TestDeleteFlinkEnvironments (DELETE, "delete-", nil)
-// Used by TestCreateeFlinkEnvironments (POST, "create-", nil) for listing before create
-// Used by TestUpdateFlinkEnvironments (POST, "update-", nil) for listing before update
-// Used by TestDescribeFlinkEnvironments (GET, "describe-", nil)
+// Used by create and update (to validate existence).
+// Used by describe and delete.
 func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		environment := mux.Vars(r)["environment"]
-		if r.Method == http.MethodDelete && commandTypeByEnvironment(environment) == "delete" {
-			if environment == "delete-non-existent" {
-				http.Error(w, "Environment not found", http.StatusNotFound)
+		switch r.Method {
+		case http.MethodGet:
+			if environment == "default" || environment == "test" || environment == "update-failure" {
+				outputEnvironment := createEnvironment(environment)
+				err := json.NewEncoder(w).Encode(outputEnvironment)
+				require.NoError(t, err)
 				return
 			}
-			w.WriteHeader(http.StatusOK)
+
+			http.Error(w, "Environment not found", http.StatusNotFound)
 			return
-		}
-
-		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "create" {
-			if environment == "create-existing" {
-				outputEnvironment := createEnvironment("create-existing")
-				err := json.NewEncoder(w).Encode(outputEnvironment)
-				require.NoError(t, err)
-				return
-			}
-
-			if environment == "create-success" || environment == "create-failure" || environment == "create-success-with-defaults" {
-				http.Error(w, "", http.StatusNotFound)
-				return
-			}
-		}
-
-		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "update" {
-			if environment == "update-success" || environment == "update-failure" {
-				outputEnvironment := createEnvironment(environment)
-				err := json.NewEncoder(w).Encode(outputEnvironment)
-				require.NoError(t, err)
-				return
-			}
-
-			if environment == "update-non-existent" {
-				http.Error(w, "", http.StatusNotFound)
-				return
-			}
-		}
-
-		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "describe" {
-			if environment == "describe-success" {
-				outputEnvironment := createEnvironment(environment)
-				err := json.NewEncoder(w).Encode(outputEnvironment)
-				require.NoError(t, err)
-				return
-			}
-
-			if environment == "describe-failure" {
+		case http.MethodDelete:
+			if strings.Contains(environment, "failure") {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
-			if environment == "describe-non-existent" {
-				http.Error(w, "", http.StatusNotFound)
+			if environment == "default" || environment == "test" {
+				w.WriteHeader(http.StatusOK)
 				return
 			}
-		}
 
-		require.Fail(t, fmt.Sprintf("Unexpected method %s or environment name %s", r.Method, environment))
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
 	}
 }
 
 // Handler for "cmf/api/v1/environments/{environment}/applications"
-// Used by TestListFlinkApplications (GET, "list-", nil)
-// Used by TestCreateFlinkApplications (POST, "create-", applicationName)
-// Used by TestUpdateFlinkApplications (POST, "update-", applicationName)
-// Used by TestDeleteFlinkApplications (DELETE, "delete-", applicationName)
+// Used by list, create and update applications.
 func handleCmfApplications(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		environment := vars["environment"]
-		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "list" {
-			if environment == "list-non-existent" {
+		switch r.Method {
+		case http.MethodGet:
+			if environment != "default" && environment != "test" && environment != "update-failure" {
 				http.Error(w, "Environment not found", http.StatusNotFound)
 				return
 			}
 
-			if environment == "list-empty-environment" {
-				applicationPage := map[string]interface{}{
-					"items": []cmfsdk.Application{},
-				}
-				err := json.NewEncoder(w).Encode(applicationPage)
-				require.NoError(t, err)
-				return
-			}
-			page := r.URL.Query().Get("page")
-			items := []cmfsdk.Application{createApplication("list-application-application", "list-test")}
-			applicationPage := map[string]interface{}{
+			// For the 'test' environment, return an empty list.
+			// For the 'default' environment, return applications but only on page 0.
+			// For the 'update-failure' environment, return the 'update-failure-application' application.
+			applicationsPage := map[string]interface{}{
 				"items": []cmfsdk.Application{},
 			}
-			if page == "0" {
-				applicationPage = map[string]interface{}{
+
+			page := r.URL.Query().Get("page")
+
+			if environment == "default" && page == "0" {
+				items := []cmfsdk.Application{createApplication("default-application-1", "default"), createApplication("default-application-2", "default")}
+				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
 			}
-			err := json.NewEncoder(w).Encode(applicationPage)
+
+			if environment == "update-failure" && page == "0" {
+				items := []cmfsdk.Application{createApplication("update-failure-application", "update-failure")}
+				applicationsPage = map[string]interface{}{
+					"items": items,
+				}
+			}
+
+			err := json.NewEncoder(w).Encode(applicationsPage)
 			require.NoError(t, err)
-
 			return
-		}
 
-		if r.Method == http.MethodPost && commandTypeByEnvironment(environment) == "create" {
+		case http.MethodPost:
+			if environment != "default" && environment != "test" && environment != "update-failure" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
 			reqBody, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
 			var application cmfsdk.Application
@@ -308,132 +265,78 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 
 			applicationName := application.Metadata["name"].(string)
-			if applicationName == "create-non-existent-successfully" {
-				// Success case - just echo the application back to the user.
-				err = json.NewEncoder(w).Encode(application)
-				require.NoError(t, err)
-				return
-			}
-			if environment == "create-with-non-existent-environment" || applicationName == "create-non-existent-unsuccessfully" {
+			if strings.Contains(applicationName, "failure") {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
-			require.Fail(t, fmt.Sprintf("Unexpected application name %s", applicationName))
-		}
-
-		if r.Method == http.MethodPost && commandTypeByEnvironment(environment) == "update" {
-			reqBody, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
-			var application cmfsdk.Application
-			err = json.Unmarshal(reqBody, &application)
-			require.NoError(t, err)
-
-			applicationName := application.Metadata["name"].(string)
-			if applicationName == "update-successful" {
-				// Success case - send the application back to the user with the 'update'.
+			// If application already exists, return the application with the 'update'.
+			if applicationName == "default-application-1" || applicationName == "default-application-2" {
 				// The 'update' is going to be spec.serviceAccount. This is just a dummy update,
 				// and we don't do any actual merge logic.
-				outputApplication := createApplication("update-successful", "update-test")
+				outputApplication := createApplication(applicationName, environment)
 				outputApplication.Spec["serviceAccount"] = application.Spec["serviceAccount"]
 				err = json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
 			}
 
-			if applicationName == "update-failure" {
-				http.Error(w, "", http.StatusUnprocessableEntity)
-				return
-			}
-
-			require.Fail(t, fmt.Sprintf("Unexpected application name %s", applicationName))
+			// If application does not exist, return the application newly 'created'.
+			err = json.NewEncoder(w).Encode(application)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
-
-		require.Fail(t, fmt.Sprintf("Unexpected method %s or environment %s", r.Method, environment))
 	}
 }
 
 // Handler for "cmf/api/v1/environments/{environment}/applications/{application}"
-// Used by TestCreateFlinkApplications (GET, "create-", applicationName) for listing before create
-// Used by TestUpdateFlinkApplications (GET, "update-", applicationName) for listing before update
-// Used bt TestDeleteFlinkApplications (DELETE, "delete-", applicationName)
-// Used bt TestDescribeFlinkApplications (GET, "describe-", applicationName)
+// Used by create and update (to validate existence).
+// Used by describe and delete applications.
 func handleCmfApplication(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		environment := vars["environment"]
 		application := vars["application"]
-		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "create" {
-			if environment == "create-with-non-existent-environment" || application == "create-non-existent-unsuccessfully" || application == "create-non-existent-successfully" {
-				http.Error(w, "Application not found", http.StatusNotFound)
-				return
-			}
 
-			if application == "create-already-existing" {
-				application := createApplication("create-already-existing", "create-test")
-				err := json.NewEncoder(w).Encode(application)
+		if environment != "default" && environment != "test" && environment != "update-failure" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			// In case the application actually exists, let the handler return the application.
+			if (application == "default-application-1" || application == "default-application-2") && environment == "default" {
+				outputApplication := createApplication(application, environment)
+				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
 			}
 
-			require.Fail(t, fmt.Sprintf("Unexpected application name %s", application))
-			return
-		}
-
-		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "update" {
-			if environment == "update-with-non-existent-environment" || application == "update-non-existent" {
-				http.Error(w, "Application not found", http.StatusNotFound)
-				return
-			}
-
-			if application == "update-successful" || application == "update-failure" {
-				application := createApplication(application, "update-test")
-				err := json.NewEncoder(w).Encode(application)
+			if application == "update-failure-application" && environment == "update-failure" {
+				outputApplication := createApplication(application, environment)
+				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
 			}
 
-			require.Fail(t, fmt.Sprintf("Unexpected application name %s", application))
-			return
-		}
-
-		if r.Method == http.MethodDelete && commandTypeByEnvironment(environment) == "delete" {
-			if application == "delete-non-existent" {
-				http.Error(w, "Application not found", http.StatusNotFound)
-				return
-			}
-
-			if environment == "delete-non-existent" {
-				http.Error(w, "Environment not found", http.StatusNotFound)
-				return
-			}
-
-			if application == "delete-test-app1" || application == "delete-test-app2" {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
-
-			require.Fail(t, fmt.Sprintf("Unexpected application name %s", application))
-			return
-		}
-
-		if r.Method == http.MethodGet && commandTypeByEnvironment(environment) == "describe" {
-			if application == "describe-success" {
-				application := createApplication(application, "describe-test")
-				err := json.NewEncoder(w).Encode(application)
-				require.NoError(t, err)
-				return
-			}
-
-			if application == "describe-failure" {
+			http.Error(w, "Application not found", http.StatusNotFound)
+		case http.MethodDelete:
+			if strings.Contains(application, "failure") {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
-			if application == "describe-non-existent" || application == "describe-non-existent-environment" {
-				http.Error(w, "", http.StatusNotFound)
+			if (application == "default-application-1" || application == "default-application-2") && environment == "default" {
+				w.WriteHeader(http.StatusOK)
 				return
 			}
+
+			http.Error(w, "Application not found", http.StatusNotFound)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
 	}
 }

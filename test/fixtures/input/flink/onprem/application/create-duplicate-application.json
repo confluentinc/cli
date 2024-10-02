@@ -2,10 +2,10 @@
     "apiVersion": "cmf.confluent.io/v1alpha1",
     "kind": "FlinkApplication",
     "metadata": {
-        "name": "create-already-existing"
+        "name": "default-application-1"
     },
     "spec": {
-        "flinkEnvironment": "create-test",
+        "flinkEnvironment": "default",
         "image": "confluentinc/cp-f link:1.19.1-cp1",
         "flinkVersion": "v1_19",
         "flinkConfiguration": {
