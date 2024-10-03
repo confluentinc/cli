@@ -118,8 +118,8 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 		}
 
 		if !isTruncateAndRestore || includePartitionLevelTruncationData {
-			for _, partitionLag := range result.GetMirrorLags().Items {
-				partitionId := partitionLag.GetPartition()
+			for _, mirrorLag := range result.GetMirrorLags().Items {
+				partitionId := mirrorLag.GetPartition()
 				if isTruncateAndRestore && truncationData[partitionId] != nil {
 					list.Add(&mirrorOut{
 						MirrorTopicName:   result.GetMirrorTopicName(),
@@ -132,11 +132,11 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 				} else {
 					list.Add(&mirrorOut{
 						MirrorTopicName:       result.GetMirrorTopicName(),
-						Partition:             partitionLag.GetPartition(),
+						Partition:             mirrorLag.GetPartition(),
 						ErrorMessage:          errorMessage,
 						ErrorCode:             errorCode,
-						PartitionMirrorLag:    partitionLag.GetLag(),
-						LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
+						PartitionMirrorLag:    mirrorLag.GetLag(),
+						LastSourceFetchOffset: mirrorLag.GetLastSourceFetchOffset(),
 					})
 				}
 			}

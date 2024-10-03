@@ -9,7 +9,7 @@ import (
 
 const (
 	configFileFlagName           = "config-file"
-	dryrunFlagName               = "dry-run"
+	dryRunFlagName               = "dry-run"
 	includePartitionDataFlagName = "include-partition-data"
 )
 
