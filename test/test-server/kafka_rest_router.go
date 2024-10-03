@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -59,6 +60,7 @@ var kafkaRestRoutes = []route{
 	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:resume", handleKafkaRestMirrorsResume},
 	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:reverse-and-start-mirror", handleKafkaRestMirrorsReverseAndStart},
 	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:reverse-and-pause-mirror", handleKafkaRestMirrorsReverseAndPause},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:truncate-and-restore", handleKafkaRestTruncateAndRestore},
 	{"/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status", handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus},
 	{"/kafka/v3/clusters/{cluster}/topics", handleKafkaRestTopics},
 	{"/kafka/v3/clusters/{cluster}/topics/{topic}", handleKafkaRestTopic},
@@ -1040,6 +1042,7 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:reverse-and-start-mirror"
 func handleKafkaRestMirrorsReverseAndStart(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		i := int64(-1)
 		switch r.Method {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
@@ -1064,6 +1067,10 @@ func handleKafkaRestMirrorsReverseAndStart(t *testing.T) http.HandlerFunc {
 							},
 						},
 					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
 				},
 				{
 					MirrorTopicName: "topic 2",
@@ -1087,6 +1094,10 @@ func handleKafkaRestMirrorsReverseAndStart(t *testing.T) http.HandlerFunc {
 								LastSourceFetchOffset: 5739304,
 							},
 						},
+					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
 					},
 				},
 			}})
@@ -1098,6 +1109,7 @@ func handleKafkaRestMirrorsReverseAndStart(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:reverse-and-pause-mirror"
 func handleKafkaRestMirrorsReverseAndPause(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		i := int64(-1)
 		switch r.Method {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
@@ -1122,6 +1134,10 @@ func handleKafkaRestMirrorsReverseAndPause(t *testing.T) http.HandlerFunc {
 							},
 						},
 					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
 				},
 				{
 					MirrorTopicName: "topic 2",
@@ -1145,6 +1161,97 @@ func handleKafkaRestMirrorsReverseAndPause(t *testing.T) http.HandlerFunc {
 								LastSourceFetchOffset: 5739304,
 							},
 						},
+					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
+				},
+			}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:truncate-and-restore"
+func handleKafkaRestTruncateAndRestore(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		i := int64(-1)
+		i2 := int64(50)
+		switch r.Method {
+		case http.MethodPost:
+			var partitionLevelTruncationData cckafkarestv3.PartitionLevelTruncationDataList
+			if strings.Contains(r.RequestURI, "include_partition_level_truncation_data=true") {
+				partitionLevelTruncationData = cckafkarestv3.PartitionLevelTruncationDataList{
+					Items: []cckafkarestv3.PartitionLevelTruncationData{
+						{
+							PartitionId:       0,
+							MessagesTruncated: int64(25),
+							OffsetTruncatedTo: int64(10),
+						},
+						{
+							PartitionId:       2,
+							MessagesTruncated: int64(25),
+							OffsetTruncatedTo: int64(15),
+						},
+					},
+				}
+			} else {
+				partitionLevelTruncationData = cckafkarestv3.PartitionLevelTruncationDataList{
+					Items: []cckafkarestv3.PartitionLevelTruncationData{},
+				}
+			}
+			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
+				{
+					MirrorTopicName: "topic-1",
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1000,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 10000,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 100000,
+							},
+						},
+					},
+					MessagesTruncated:            *cckafkarestv3.NewNullableInt64(&i2),
+					PartitionLevelTruncationData: partitionLevelTruncationData,
+				},
+				{
+					MirrorTopicName: "topic 2",
+					ErrorMessage:    *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Not authorized")),
+					ErrorCode:       *cckafkarestv3.NewNullableInt32(cckafkarestv3.PtrInt32(401)),
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
+						},
+					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
 					},
 				},
 			}})
@@ -1156,6 +1263,7 @@ func handleKafkaRestMirrorsReverseAndPause(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:failover"
 func handleKafkaRestMirrorsFailover(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		i := int64(-1)
 		switch r.Method {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
@@ -1180,6 +1288,10 @@ func handleKafkaRestMirrorsFailover(t *testing.T) http.HandlerFunc {
 							},
 						},
 					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
 				},
 				{
 					MirrorTopicName: "topic 2",
@@ -1204,6 +1316,10 @@ func handleKafkaRestMirrorsFailover(t *testing.T) http.HandlerFunc {
 							},
 						},
 					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
 				},
 			}})
 			require.NoError(t, err)
@@ -1214,6 +1330,7 @@ func handleKafkaRestMirrorsFailover(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:pause"
 func handleKafkaRestMirrorsPause(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		i := int64(-1)
 		switch r.Method {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
@@ -1233,6 +1350,10 @@ func handleKafkaRestMirrorsPause(t *testing.T) http.HandlerFunc {
 							},
 						},
 					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
 				},
 				{
 					MirrorTopicName: "topic 2",
@@ -1257,6 +1378,10 @@ func handleKafkaRestMirrorsPause(t *testing.T) http.HandlerFunc {
 							},
 						},
 					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
 				},
 			}})
 			require.NoError(t, err)
@@ -1267,6 +1392,7 @@ func handleKafkaRestMirrorsPause(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:promote"
 func handleKafkaRestMirrorsPromote(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		i := int64(-1)
 		switch r.Method {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
@@ -1290,6 +1416,10 @@ func handleKafkaRestMirrorsPromote(t *testing.T) http.HandlerFunc {
 								LastSourceFetchOffset: 5739304,
 							},
 						},
+					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
 					},
 				},
 				{
@@ -1315,6 +1445,10 @@ func handleKafkaRestMirrorsPromote(t *testing.T) http.HandlerFunc {
 							},
 						},
 					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
 				},
 			}})
 			require.NoError(t, err)
@@ -1325,6 +1459,7 @@ func handleKafkaRestMirrorsPromote(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/mirrors:resume"
 func handleKafkaRestMirrorsResume(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		i := int64(-1)
 		switch r.Method {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
@@ -1344,6 +1479,10 @@ func handleKafkaRestMirrorsResume(t *testing.T) http.HandlerFunc {
 							},
 						},
 					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
+					},
 				},
 				{
 					MirrorTopicName: "topic 2",
@@ -1367,6 +1506,10 @@ func handleKafkaRestMirrorsResume(t *testing.T) http.HandlerFunc {
 								LastSourceFetchOffset: 5739304,
 							},
 						},
+					},
+					MessagesTruncated: *cckafkarestv3.NewNullableInt64(&i),
+					PartitionLevelTruncationData: cckafkarestv3.PartitionLevelTruncationDataList{
+						Items: []cckafkarestv3.PartitionLevelTruncationData{},
 					},
 				},
 			}})
