@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	configFileFlagName = "config-file"
-	dryrunFlagName     = "dry-run"
+	configFileFlagName           = "config-file"
+	dryRunFlagName               = "dry-run"
+	includePartitionDataFlagName = "include-partition-data"
 )
 
 const createdLinkResourceMsg = `Created %s "%s" with configs:`
