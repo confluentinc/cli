@@ -148,7 +148,6 @@ func printAlterMirrorResult(cmd *cobra.Command, results []kafkarestv3.AlterMirro
 				MessagesTruncated: result.GetMessagesTruncated(),
 			})
 		}
-
 	}
 	if isTruncateAndRestore && includePartitionLevelTruncationData {
 		list.Filter([]string{"MirrorTopicName", "Partition", "ErrorMessage", "ErrorCode", "OffsetTruncatedTo", "MessagesTruncated"})
