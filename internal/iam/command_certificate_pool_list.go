@@ -3,6 +3,7 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -15,6 +16,9 @@ func (c *certificatePoolCommand) newListCommand() *cobra.Command {
 	}
 
 	c.AddProviderFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
+
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 	return cmd
 }

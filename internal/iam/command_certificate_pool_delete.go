@@ -26,6 +26,7 @@ func (c *certificatePoolCommand) newDeleteCommand() *cobra.Command {
 
 	c.AddProviderFlag(cmd)
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
