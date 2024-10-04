@@ -102,11 +102,12 @@ func createApplication(name string, environment string) cmfsdk.Application {
 }
 
 // Helper function to create a Flink environment.
-func createEnvironment(name string) cmfsdk.Environment {
+func createEnvironment(name string, namespace string) cmfsdk.Environment {
 	return cmfsdk.Environment{
-		Name:        name,
-		CreatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
-		UpdatedTime: time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+		Name:                name,
+		KubernetesNamespace: namespace,
+		CreatedTime:         time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+		UpdatedTime:         time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
 	}
 }
 
@@ -129,9 +130,9 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			page := r.URL.Query().Get("page")
 			environments := []cmfsdk.Environment{
-				createEnvironment("default"),
-				createEnvironment("test"),
-				createEnvironment("update-failure"),
+				createEnvironment("default", "default-namespace"),
+				createEnvironment("test", "test-namespace"),
+				createEnvironment("update-failure", "update-failure-namespace"),
 			}
 			environmentPage := map[string]interface{}{
 				"items": []cmfsdk.Environment{},
@@ -159,7 +160,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 
 			// Already existing environment: update
 			if environment.Name == "default" || environment.Name == "test" {
-				outputEnvironment := createEnvironment(environment.Name)
+				outputEnvironment := createEnvironment(environment.Name, environment.Name+"-namespace")
 				// This is a dummy update - only the defaults can be updated anyway.
 				outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 				err = json.NewEncoder(w).Encode(outputEnvironment)
@@ -168,7 +169,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			}
 
 			// New environment: create
-			outputEnvironment := createEnvironment(environment.Name)
+			outputEnvironment := createEnvironment(environment.Name, environment.KubernetesNamespace)
 			outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 			err = json.NewEncoder(w).Encode(outputEnvironment)
 			require.NoError(t, err)
@@ -188,7 +189,7 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			if environment == "default" || environment == "test" || environment == "update-failure" {
-				outputEnvironment := createEnvironment(environment)
+				outputEnvironment := createEnvironment(environment, environment+"-namespace")
 				err := json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return

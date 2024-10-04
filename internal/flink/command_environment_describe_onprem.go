@@ -50,6 +50,7 @@ func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
 
 	table.Add(&flinkEnvironmentOutput{
 		Name:                     environment.Name,
+		KubernetesNamespace:      environment.KubernetesNamespace,
 		FlinkApplicationDefaults: string(defaultsBytes),
 		CreatedTime:              environment.CreatedTime.String(),
 		UpdatedTime:              environment.UpdatedTime.String(),

@@ -12,6 +12,7 @@ type flinkEnvironmentSummary struct {
 
 type flinkEnvironmentOutput struct {
 	Name                     string `human:"Name" serialized:"name"`
+	KubernetesNamespace      string `human:"Kubernetes Namespace" serialized:"kubernetes_namespace"`
 	CreatedTime              string `human:"Created Time" serialized:"created_time"`
 	UpdatedTime              string `human:"Updated Time" serialized:"updated_time"`
 	FlinkApplicationDefaults string `human:"Flink Application Defaults" serialized:"flinkApplicationDefaults"`

@@ -27,6 +27,9 @@ func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CERT_AUTHORITY_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension)")
+	cmd.Flags().String("kubernetes-namespace", "", "Kubernetes namespace to deploy Flink applications to.")
+
+	cobra.CheckErr(cmd.MarkFlagRequired("kubernetes-namespace"))
 
 	return cmd
 }
@@ -38,6 +41,11 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	environmentName := args[0]
+
+	kubernetesNamespace, err := cmd.Flags().GetString("kubernetes-namespace")
+	if err != nil {
+		return fmt.Errorf("failed to read kubernetes-namespace: %v", err)
+	}
 
 	// Read file contents or parse defaults if applicable
 	var defaultsParsed map[string]interface{}
@@ -76,6 +84,7 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	if defaultsParsed != nil {
 		postEnvironment.FlinkApplicationDefaults = defaultsParsed
 	}
+	postEnvironment.KubernetesNamespace = kubernetesNamespace
 
 	outputEnvironment, err := cmfClient.CreateEnvironment(cmd.Context(), postEnvironment)
 	if err != nil {
@@ -91,6 +100,7 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 
 	table.Add(&flinkEnvironmentOutput{
 		Name:                     outputEnvironment.Name,
+		KubernetesNamespace:      outputEnvironment.KubernetesNamespace,
 		FlinkApplicationDefaults: string(defaultsBytes),
 		CreatedTime:              outputEnvironment.CreatedTime.String(),
 		UpdatedTime:              outputEnvironment.UpdatedTime.String(),

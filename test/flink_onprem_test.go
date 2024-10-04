@@ -97,11 +97,12 @@ func (s *CLITestSuite) TestUpdateFlinkApplication() {
 func (s *CLITestSuite) TestCreateFlinkEnvironment() {
 	tests := []CLITest{
 		// success
-		{args: "flink environment create default-2", fixture: "flink/onprem/environment/create-success.golden"},
-		{args: "flink environment create default-2 --defaults test/fixtures/input/flink/onprem/environment/create-success-with-defaults.json", fixture: "flink/onprem/environment/create-success-with-defaults.golden"},
+		{args: "flink environment create default-2 --kubernetes-namespace default-staging", fixture: "flink/onprem/environment/create-success.golden"},
+		{args: "flink environment create default-2 --defaults test/fixtures/input/flink/onprem/environment/create-success-with-defaults.json --kubernetes-namespace default-staging", fixture: "flink/onprem/environment/create-success-with-defaults.golden"},
 		// failure
-		{args: "flink environment create default-failure", fixture: "flink/onprem/environment/create-failure.golden", exitCode: 1},
-		{args: "flink environment create default", fixture: "flink/onprem/environment/create-existing.golden", exitCode: 1},
+		{args: "flink environment create default-failure --kubernetes-namespace default-staging", fixture: "flink/onprem/environment/create-failure.golden", exitCode: 1},
+		{args: "flink environment create default --kubernetes-namespace default-staging", fixture: "flink/onprem/environment/create-existing.golden", exitCode: 1},
+		{args: "flink environment create default", fixture: "flink/onprem/environment/create-no-namespace.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
