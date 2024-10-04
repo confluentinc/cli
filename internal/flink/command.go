@@ -32,16 +32,14 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(command.newConnectionCommand())
 	}
 
+	cmd.AddCommand(command.newApplicationCommand())
 	cmd.AddCommand(command.newArtifactCommand())
 	cmd.AddCommand(command.newComputePoolCommand())
 	cmd.AddCommand(command.newConnectivityTypeCommand())
+	cmd.AddCommand(command.newEnvironmentCommand())
 	cmd.AddCommand(command.newRegionCommand())
 	cmd.AddCommand(command.newShellCommand(prerunner))
 	cmd.AddCommand(command.newStatementCommand())
-
-	// On-Prem Specific Commands
-	cmd.AddCommand(command.newApplicationCommand())
-	cmd.AddCommand(command.newEnvironmentCommand())
 
 	return cmd
 }
