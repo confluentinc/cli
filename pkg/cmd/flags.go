@@ -204,7 +204,7 @@ func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 }
 
 func AddFilterFlag(cmd *cobra.Command) {
-	cmd.Flags().String("filter", "true", "A supported Common Expression Language (CEL) filter expression for group mappings.")
+	cmd.Flags().String("filter", "true", "A supported Common Expression Language (CEL) filter expression.")
 }
 
 func AddExternalIdentifierFlag(cmd *cobra.Command) {

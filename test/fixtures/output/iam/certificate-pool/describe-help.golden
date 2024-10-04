@@ -10,6 +10,8 @@ Describe a certificate pool with ID "pool-123".
 
 Flags:
       --provider string   REQUIRED: ID of this pool's certificate authority.
+      --context string    CLI context name.
+  -o, --output string     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
