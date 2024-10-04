@@ -9,21 +9,24 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 const (
-	connectClusterTypeName        = "connect-cluster"
-	kafkaClusterTypeName          = "kafka-cluster"
-	ksqlClusterTypeName           = "ksql-cluster"
-	schemaRegistryClusterTypeName = "schema-registry-cluster"
+	connectClusterTypeName          = "connect-cluster"
+	kafkaClusterTypeName            = "kafka-cluster"
+	ksqlClusterTypeName             = "ksql-cluster"
+	schemaRegistryClusterTypeName   = "schema-registry-cluster"
+	cmfClusterTypeName              = "cmf"
+	flinkEnvironmentClusterTypeName = "flink-environment"
 )
 
 type prettyCluster struct {
 	Name           string `human:"Name" serialized:"name"`
 	Type           string `human:"Type" serialized:"type"`
 	KafkaClusterId string `human:"Kafka Cluster" serialized:"kafka_cluster_id"`
+	Cmf            string `human:"CMF" serialized:"cmf"`
 	ComponentId    string `human:"Component ID" serialized:"component_id"`
 	Hosts          string `human:"Hosts" serialized:"hosts"`
 	Protocol       string `human:"Protocol" serialized:"protocol"`
@@ -65,6 +68,11 @@ func createPrettyCluster(clusterInfo mdsv1.ClusterInfo) *prettyCluster {
 		t = schemaRegistryClusterTypeName
 		id = clusterInfo.Scope.Clusters.KafkaCluster
 		cid = clusterInfo.Scope.Clusters.SchemaRegistryCluster
+	case clusterInfo.Scope.Clusters.FlinkEnvironment != "":
+		t = flinkEnvironmentClusterTypeName
+		cid = clusterInfo.Scope.Clusters.FlinkEnvironment
+	case clusterInfo.Scope.Clusters.Cmf != "":
+		t = cmfClusterTypeName
 	default:
 		t = kafkaClusterTypeName
 		cid = ""
@@ -79,6 +87,7 @@ func createPrettyCluster(clusterInfo mdsv1.ClusterInfo) *prettyCluster {
 		Name:           clusterInfo.ClusterName,
 		Type:           t,
 		KafkaClusterId: id,
+		Cmf:            clusterInfo.Scope.Clusters.Cmf,
 		ComponentId:    cid,
 		Hosts:          strings.Join(hosts, ", "),
 		Protocol:       p,

@@ -10,8 +10,8 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	"github.com/confluentinc/cli/v3/pkg/ccstructs"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/ccstructs"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func TestParseRequest(t *testing.T) {

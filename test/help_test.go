@@ -8,12 +8,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/internal"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/internal"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/version"
 )
 
 func (s *CLITestSuite) TestHelp() {
+	s.createCH([]string{ // Include Control Center in help tests even if Confluent Platform is not installed locally
+		"share/java/confluent-control-center/control-center-0.0.0.jar",
+	})
+	defer s.destroy()
+
 	configurations := []*config.Config{
 		{
 			CurrentContext: "cloud",

@@ -3,7 +3,7 @@ package errors
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 const parsedGenericOpenApiErrorMsg = "metadata service backend error: %s"
@@ -43,27 +43,6 @@ func (e *SRNotAuthenticatedError) Error() string {
 
 func (e *SRNotAuthenticatedError) UserFacingError() error {
 	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, "You must specify the endpoint for a Schema Registry cluster (`--schema-registry-endpoint`) or be logged in using `confluent login` to run this command.\n"+AvoidTimeoutSuggestions)
-}
-
-type SRNotEnabledError struct {
-	ErrorMsg       string
-	SuggestionsMsg string
-}
-
-func NewSRNotEnabledError() CLITypedError {
-	return &SRNotEnabledError{
-		ErrorMsg: "Schema Registry not enabled",
-		SuggestionsMsg: "Schema Registry must be enabled for the environment in order to run the command.\n" +
-			"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`.",
-	}
-}
-
-func (e *SRNotEnabledError) Error() string {
-	return e.ErrorMsg
-}
-
-func (e *SRNotEnabledError) UserFacingError() error {
-	return NewErrorWithSuggestions(e.ErrorMsg, e.SuggestionsMsg)
 }
 
 type KafkaClusterNotFoundError struct {

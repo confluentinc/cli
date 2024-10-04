@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/flink"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/flink"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newApplicationWebUiForwardCommand() *cobra.Command {

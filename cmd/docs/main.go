@@ -7,10 +7,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/confluentinc/cli/v3/internal"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/docs"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/internal"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/docs"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 // Auto-generate documentation files for all CLI commands. Documentation uses reStructured Text (ReST) format, and is
@@ -28,6 +28,14 @@ func main() {
 	if err := os.Setenv("HOME", "$HOME"); err != nil {
 		panic(err)
 	}
+
+	tempCH, err := createTemporaryConfluentHome()
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = os.RemoveAll(tempCH)
+	}()
 
 	// Generate documentation for both subsets of commands: cloud and on-prem
 	configs := []*config.Config{
@@ -103,4 +111,23 @@ func removeLineFromFile(line, file string) error {
 	out = re.ReplaceAll(out, []byte(""))
 
 	return os.WriteFile(file, out, 0644)
+}
+
+func createTemporaryConfluentHome() (string, error) {
+	dir := filepath.Join(os.TempDir(), "ch")
+	if err := os.Setenv("CONFLUENT_HOME", dir); err != nil {
+		return "", err
+	}
+
+	path := filepath.Join(dir, "share/java/confluent-control-center/control-center-0.0.0.jar")
+
+	if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
+		return "", err
+	}
+
+	if err := os.WriteFile(path, []byte{}, 0644); err != nil {
+		return "", err
+	}
+
+	return dir, nil
 }

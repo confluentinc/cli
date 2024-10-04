@@ -1,4 +1,4 @@
-//go:generate mocker --dst ../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 login_organization_manager.go LoginOrganizationManager --prefix ""
+//go:generate mocker --dst ../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 login_organization_manager.go LoginOrganizationManager --prefix ""
 package auth
 
 import (
@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type LoginOrganizationManager interface {

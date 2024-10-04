@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 // validate that a topic exists before attempting to produce/consume messages
-func ValidateTopic(adminClient *ckafka.AdminClient, topic string) error {
+func ValidateTopic(adminClient *ckgo.AdminClient, topic string) error {
 	timeout := 10 * time.Second
 	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {

@@ -5,8 +5,8 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {

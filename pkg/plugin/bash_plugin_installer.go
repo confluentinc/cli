@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/go-version"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/exec"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/exec"
 )
 
 type BashPluginInstaller struct {

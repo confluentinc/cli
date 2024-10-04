@@ -14,13 +14,13 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	"github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
-	"github.com/confluentinc/cli/v3/pkg/utils"
-	testserver "github.com/confluentinc/cli/v3/test/test-server"
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
+	"github.com/confluentinc/cli/v4/pkg/utils"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 type AuthenticatedCLICommand struct {
@@ -250,7 +250,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				return nil, err
 			}
 			if len(clusters) == 0 {
-				return nil, errors.NewSRNotEnabledError()
+				return nil, schemaregistry.ErrNotEnabled
 			}
 			if clusters[0].Spec.GetHttpEndpoint() != "" {
 				configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetHttpEndpoint()}}

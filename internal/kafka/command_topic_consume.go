@@ -9,16 +9,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
-	"github.com/confluentinc/cli/v3/pkg/serdes"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
 )
 
 func (c *command) newConsumeCommand() *cobra.Command {
@@ -170,7 +170,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	}
 	log.CliLogger.Trace("Create consumer succeeded")
 
-	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	adminClient, err := ckgo.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
@@ -320,7 +320,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	adminClient, err := ckgo.NewAdminClientFromConsumer(consumer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}

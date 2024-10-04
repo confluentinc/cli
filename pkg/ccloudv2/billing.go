@@ -6,7 +6,7 @@ import (
 
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newBillingClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *billingv1.APIClient {

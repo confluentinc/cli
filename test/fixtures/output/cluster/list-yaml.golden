@@ -5,6 +5,8 @@
         connectcluster: connect-name
         ksqlcluster: ""
         schemaregistrycluster: ""
+        cmf: ""
+        flinkenvironment: ""
   hosts:
     - host: 10.5.5.5
       port: 9005
@@ -16,6 +18,8 @@
         connectcluster: ""
         ksqlcluster: ksql-name
         schemaregistrycluster: ""
+        cmf: ""
+        flinkenvironment: ""
   hosts:
     - host: 10.4.4.4
       port: 9004
@@ -27,6 +31,8 @@
         connectcluster: ""
         ksqlcluster: ""
         schemaregistrycluster: ""
+        cmf: ""
+        flinkenvironment: ""
   hosts:
     - host: 10.10.10.10
       port: 8090
@@ -40,6 +46,8 @@
         connectcluster: ""
         ksqlcluster: ""
         schemaregistrycluster: schema-registry-name
+        cmf: ""
+        flinkenvironment: ""
   hosts:
     - host: 10.3.3.3
       port: 9003

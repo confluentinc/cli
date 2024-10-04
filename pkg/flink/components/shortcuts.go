@@ -6,8 +6,8 @@ import (
 
 	"github.com/rivo/tview"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/color"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 func NewShortcuts(shortcuts []types.Shortcut) *tview.TextView {

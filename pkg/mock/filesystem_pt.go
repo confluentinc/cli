@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	pio "github.com/confluentinc/cli/v3/pkg/io"
+	pio "github.com/confluentinc/cli/v4/pkg/io"
 )
 
 // PassThroughFileSystem is useful for optionally mocking some methods

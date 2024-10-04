@@ -5,8 +5,8 @@ import (
 
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *certificateAuthorityCommand) newCreateCommand() *cobra.Command {
@@ -47,6 +47,8 @@ X4XSQRjbgbMEHMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==
 	cmd.Flags().String("description", "", "Description of the certificate authority.")
 	cmd.Flags().String("certificate-chain", "", "A base64 encoded string containing the signing certificate chain.")
 	cmd.Flags().String("certificate-chain-filename", "", "The name of the certificate file.")
+	cmd.Flags().String("crl-url", "", "The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.")
+	cmd.Flags().String("crl-chain", "", "A base64 encoded string containing the CRL for this certificate authority.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -73,11 +75,23 @@ func (c *certificateAuthorityCommand) create(cmd *cobra.Command, args []string) 
 		return err
 	}
 
+	crlUrl, err := cmd.Flags().GetString("crl-url")
+	if err != nil {
+		return err
+	}
+
+	crlChain, err := cmd.Flags().GetString("crl-chain")
+	if err != nil {
+		return err
+	}
+
 	certRequest := certificateauthorityv2.IamV2CreateCertRequest{
 		DisplayName:              certificateauthorityv2.PtrString(args[0]),
 		Description:              certificateauthorityv2.PtrString(description),
 		CertificateChain:         certificateauthorityv2.PtrString(certificateChain),
 		CertificateChainFilename: certificateauthorityv2.PtrString(certificateChainFilename),
+		CrlUrl:                   certificateauthorityv2.PtrString(crlUrl),
+		CrlChain:                 certificateauthorityv2.PtrString(crlChain),
 	}
 
 	certificateAuthority, err := c.V2Client.CreateCertificateAuthority(certRequest)

@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/cli/v3/pkg/auth"
-	perrors "github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	perrors "github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 	"github.com/spf13/cobra"
 )

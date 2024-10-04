@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/auth_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli/v3 auth_token_handler.go AuthTokenHandler
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/auth_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 auth_token_handler.go AuthTokenHandler
 package auth
 
 import (
@@ -11,13 +11,13 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/v3/pkg/auth/sso"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/retry"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/auth/sso"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/form"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/retry"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 type AuthTokenHandler interface {

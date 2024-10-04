@@ -5,11 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcloud "github.com/confluentinc/cli/v3/pkg/cloud"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 type listPrivateLinkAccessOut struct {

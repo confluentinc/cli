@@ -8,10 +8,10 @@ import (
 
 	"github.com/client9/gospell"
 
-	"github.com/confluentinc/cli/v3/internal"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/linter"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/internal"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/linter"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 var commandRules = []linter.CommandRule{
@@ -37,7 +37,11 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
-	linter.Filter(linter.RequireValidExamples(), linter.ExcludeCommand("pipeline update")),
+	linter.Filter(linter.RequireValidExamples(),
+		linter.ExcludeCommand("connect custom-plugin version create"),
+		linter.ExcludeCommand("connect custom-plugin version update"),
+		linter.ExcludeCommand("pipeline update"),
+		linter.ExcludeCommand("flink statement update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -150,6 +154,7 @@ var properNouns = []string{
 	"Confluent",
 	"Connect",
 	"Control Center",
+	"CRL",
 	"Data Encryption Key",
 	"DEK",
 	"Flink",
@@ -200,11 +205,13 @@ var vocabWords = []string{
 	"cku",
 	"cli",
 	"clojure",
+	"cmf",
 	"codec",
 	"config",
 	"configs",
 	"consumer.config",
 	"cpp",
+	"crl",
 	"crn",
 	"csharp",
 	"csu",

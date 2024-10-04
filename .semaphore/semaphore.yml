@@ -61,13 +61,18 @@ blocks:
           commands:
             - checkout
             # https://confluentinc.atlassian.net/browse/DP-9532
-            - choco install -y golang --version $(Get-Content .go-version)
-            - $env:GOCOVERDIR = 'test/coverage'
-            - New-Item $env:GOCOVERDIR -ItemType Directory
+            # Do not install Go with Chocolatey since it is community maintained and may not have the latest version
+            - Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
+            - Expand-Archive Go.zip -DestinationPath C:\
+            - $Env:PATH = "C:\Go\bin;$Env:PATH"
+            - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
+            - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
+            - $Env:GOCOVERDIR = "test/coverage"
+            - New-Item $Env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
             - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test)
-            - go tool covdata textfmt -i $env:GOCOVERDIR -o test/coverage.out
+            - go tool covdata textfmt -i $Env:GOCOVERDIR -o test/coverage.out
       epilogue:
         always:
           commands:

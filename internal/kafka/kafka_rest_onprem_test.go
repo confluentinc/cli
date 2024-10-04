@@ -8,7 +8,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type KafkaRestTestSuite struct {

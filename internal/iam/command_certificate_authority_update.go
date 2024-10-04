@@ -5,8 +5,8 @@ import (
 
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *certificateAuthorityCommand) newUpdateCommand() *cobra.Command {
@@ -28,6 +28,8 @@ func (c *certificateAuthorityCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the certificate authority.")
 	cmd.Flags().String("certificate-chain", "", "A base64 encoded string containing the signing certificate chain.")
 	cmd.Flags().String("certificate-chain-filename", "", "The name of the certificate file.")
+	cmd.Flags().String("crl-url", "", "The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.")
+	cmd.Flags().String("crl-chain", "", "A base64 encoded string containing the CRL for this certificate authority.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -48,6 +50,7 @@ func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) 
 		DisplayName:              currentCertificateAuthority.DisplayName,
 		Description:              currentCertificateAuthority.Description,
 		CertificateChainFilename: currentCertificateAuthority.CertificateChainFilename,
+		CrlUrl:                   currentCertificateAuthority.CrlUrl,
 	}
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
@@ -75,6 +78,20 @@ func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) 
 			return err
 		}
 		update.CertificateChainFilename = certificateauthorityv2.PtrString(certificateChainFilename)
+	}
+	if cmd.Flags().Changed("crl-url") {
+		crlUrl, err := cmd.Flags().GetString("crl-url")
+		if err != nil {
+			return err
+		}
+		update.CrlUrl = certificateauthorityv2.PtrString(crlUrl)
+	}
+	if cmd.Flags().Changed("crl-chain") {
+		crlChain, err := cmd.Flags().GetString("crl-chain")
+		if err != nil {
+			return err
+		}
+		update.CrlChain = certificateauthorityv2.PtrString(crlChain)
 	}
 
 	certificateAuthority, err := c.V2Client.UpdateCertificateAuthority(update)

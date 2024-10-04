@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/go-editor"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 func (c *configCommand) newEditCommand() *cobra.Command {

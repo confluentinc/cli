@@ -3,9 +3,9 @@ package billing
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/admin"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/admin"
+	"github.com/confluentinc/cli/v4/pkg/form"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {

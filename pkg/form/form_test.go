@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/mock"
+	"github.com/confluentinc/cli/v4/pkg/mock"
 )
 
 func TestPrompt(t *testing.T) {

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/confluentinc/cli/v3/internal"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/types"
-	"github.com/confluentinc/cli/v3/pkg/usage"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/internal"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/usage"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 var version = "v0.0.0"

@@ -7,10 +7,10 @@ import (
 
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type certificateAuthorityCommand struct {
@@ -25,7 +25,9 @@ type certificateAuthorityOut struct {
 	ExpirationDates          []time.Time `human:"Expiration Dates" serialized:"expiration_dates"`
 	SerialNumbers            []string    `human:"Serial Numbers" serialized:"serial_numbers"`
 	CertificateChainFilename string      `human:"Certificate Chain Filename" serialized:"certificate_chain_filename"`
-	State                    string      `human:"State" serialized:"state"`
+	CrlSource                string      `human:"CRL Source,omitempty" serialized:"crl_source,omitempty"`
+	CrlUrl                   string      `human:"CRL URL,omitempty" serialized:"crl_url,omitempty"`
+	CrlUpdatedAt             *time.Time  `human:"CRL Updated At,omitempty" serialized:"crl_updated_at,omitempty"`
 }
 
 func newCertificateAuthorityCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -57,7 +59,9 @@ func printCertificateAuthority(cmd *cobra.Command, certificateAuthority certific
 		ExpirationDates:          certificateAuthority.GetExpirationDates(),
 		SerialNumbers:            certificateAuthority.GetSerialNumbers(),
 		CertificateChainFilename: certificateAuthority.GetCertificateChainFilename(),
-		State:                    certificateAuthority.GetState(),
+		CrlSource:                certificateAuthority.GetCrlSource(),
+		CrlUrl:                   certificateAuthority.GetCrlUrl(),
+		CrlUpdatedAt:             certificateAuthority.CrlUpdatedAt,
 	})
 	return table.Print()
 }

@@ -13,9 +13,9 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
-	climock "github.com/confluentinc/cli/v3/mock"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	climock "github.com/confluentinc/cli/v4/mock"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 /*************** TEST command_acl ***************/

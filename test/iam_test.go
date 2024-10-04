@@ -102,6 +102,10 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_OnPrem() {
 		{args: "iam rbac role-binding delete --principal User:bob --role DeveloperRead --resource Topic:connect-configs --ksql-cluster ksql-name --force", fixture: "iam/rbac/role-binding/missing-kafka-cluster-id-onprem.golden", exitCode: 1},
 		{args: "iam rbac role-binding delete --principal User:bob --role DeveloperRead --resource Topic:connect-configs --ksql-cluster ksqlName --connect-cluster connectID --kafka-cluster kafka-GUID --force", fixture: "iam/rbac/role-binding/multiple-non-kafka-id-onprem.golden", exitCode: 1},
 		{args: "iam rbac role-binding create --principal User:bob@Kafka --role DeveloperRead --resource Topic:connect-configs --kafka-cluster kafka-GUID", fixture: "iam/rbac/role-binding/create-cluster-id-at-onprem.golden"},
+		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource FlinkEnvironment:testEnvironment --cmf testCmf", fixture: "iam/rbac/role-binding/create-cmf-resource-onprem.golden"},
+		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource FlinkApplication:testApplication --cmf testCmf --flink-environment testFLINKEnv ", fixture: "iam/rbac/role-binding/create-flink-environment-resource-onprem.golden"},
+		{args: "iam rbac role-binding delete --principal User:bob --role DeveloperRead --resource FlinkEnvironment:testEnvironment --cmf testCmf --force", fixture: "iam/rbac/role-binding/delete-cmf-resource-onprem.golden"},
+		{args: "iam rbac role-binding delete --principal User:bob --role DeveloperRead --resource FlinkApplication:testApplication --cmf testCmf --flink-environment testFLINKEnv --force", fixture: "iam/rbac/role-binding/delete-flink-environment-resource-onprem.golden"},
 	}
 
 	for _, test := range tests {
@@ -306,12 +310,14 @@ func (s *CLITestSuite) TestIamPool() {
 func (s *CLITestSuite) TestIamCertificateAuthority() {
 	tests := []CLITest{
 		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem`, fixture: "iam/certificate-authority/create.golden"},
+		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem --crl-chain DEF456`, fixture: "iam/certificate-authority/create-url-chain.golden"},
 		{args: "iam certificate-authority delete op-12345 --force", fixture: "iam/certificate-authority/delete.golden"},
 		{args: "iam certificate-authority delete op-12345 op-67890", fixture: "iam/certificate-authority/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam certificate-authority delete op-12345 op-54321", input: "y\n", fixture: "iam/certificate-authority/delete-multiple-success.golden"},
 		{args: "iam certificate-authority describe op-12345", fixture: "iam/certificate-authority/describe.golden"},
 		{args: "iam certificate-authority describe op-12345 -o json", fixture: "iam/certificate-authority/describe-json.golden"},
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update.golden"},
+		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem --crl-url example.url`, fixture: "iam/certificate-authority/update-crl-url.golden"},
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-fail.golden", exitCode: 1},
 		{args: "iam certificate-authority list", fixture: "iam/certificate-authority/list.golden"},
 		{args: "iam certificate-authority list -o json", fixture: "iam/certificate-authority/list-json.golden"},

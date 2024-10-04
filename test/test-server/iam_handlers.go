@@ -476,7 +476,7 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 		}
 		switch r.Method {
 		case http.MethodGet:
-			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem")
+			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", "", "")
 			err := json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -485,7 +485,7 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 			var req certificateauthorityv2.IamV2UpdateCertRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			certificateAuthority := buildIamCertificateAuthority(id, req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename())
+			certificateAuthority := buildIamCertificateAuthority(id, req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain())
 			err = json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		}
@@ -498,8 +498,9 @@ func handleIamCertificateAuthorities(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			certificateAuthorityList := &certificateauthorityv2.IamV2CertificateAuthorityList{Data: []certificateauthorityv2.IamV2CertificateAuthority{
-				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem"),
-				buildIamCertificateAuthority("op-54321", "my-ca-2", "my other certificate authority", "certificate-2.pem"),
+				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem", "", ""),
+				buildIamCertificateAuthority("op-54321", "my-ca-2", "my other certificate authority", "certificate-2.pem", "", "DEF456"),
+				buildIamCertificateAuthority("op-67890", "my-ca-3", "my other certificate authority", "certificate-3.pem", "example.url", ""),
 			}}
 			err := json.NewEncoder(w).Encode(certificateAuthorityList)
 			require.NoError(t, err)
@@ -507,7 +508,7 @@ func handleIamCertificateAuthorities(t *testing.T) http.HandlerFunc {
 			var req certificateauthorityv2.IamV2CreateCertRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			certificateAuthority := buildIamCertificateAuthority("op-12345", req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename())
+			certificateAuthority := buildIamCertificateAuthority("op-12345", req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain())
 			err = json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		}
@@ -790,8 +791,24 @@ func buildIamPool(id, name, description, identityClaim, filter string) identityp
 	}
 }
 
-func buildIamCertificateAuthority(id, name, description, certificateChainFilename string) certificateauthorityv2.IamV2CertificateAuthority {
+func buildIamCertificateAuthority(id, name, description, certificateChainFilename, crlUrl, crlChain string) certificateauthorityv2.IamV2CertificateAuthority {
 	expDate, _ := time.Parse(time.RFC3339, "2017-07-21T17:32:28Z")
+
+	crlSource := ""
+	if crlUrl != "" {
+		crlSource = "URL"
+	}
+	if crlChain != "" {
+		crlUrl = "" // prefer chain over url
+		crlSource = "LOCAL"
+	}
+
+	var crlUpdatedAt *time.Time
+	if crlUrl != "" || crlChain != "" {
+		updatedAt, _ := time.Parse(time.RFC3339, "2024-07-21T17:32:28Z")
+		crlUpdatedAt = &updatedAt
+	}
+
 	return certificateauthorityv2.IamV2CertificateAuthority{
 		Id:                       certificateauthorityv2.PtrString(id),
 		DisplayName:              certificateauthorityv2.PtrString(name),
@@ -800,7 +817,9 @@ func buildIamCertificateAuthority(id, name, description, certificateChainFilenam
 		ExpirationDates:          &[]time.Time{expDate},
 		SerialNumbers:            &[]string{"219C542DE8f6EC7177FA4EE8C3705797"},
 		CertificateChainFilename: certificateauthorityv2.PtrString(certificateChainFilename),
-		State:                    certificateauthorityv2.PtrString("ENABLED"),
+		CrlSource:                certificateauthorityv2.PtrString(crlSource),
+		CrlUrl:                   certificateauthorityv2.PtrString(crlUrl),
+		CrlUpdatedAt:             crlUpdatedAt,
 	}
 }
 

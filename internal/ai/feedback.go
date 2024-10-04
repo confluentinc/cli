@@ -3,7 +3,7 @@ package ai
 import (
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 )
 
 // Feedback is collected across three interactions:

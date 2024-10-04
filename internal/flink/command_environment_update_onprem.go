@@ -11,7 +11,7 @@ import (
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newEnvironmentUpdateCommand() *cobra.Command {

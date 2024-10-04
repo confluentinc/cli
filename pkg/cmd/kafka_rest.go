@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 )
 
 type KafkaREST struct {

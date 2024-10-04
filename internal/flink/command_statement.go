@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type statementOut struct {
@@ -30,6 +30,7 @@ func (c *command) newStatementCommand() *cobra.Command {
 	cmd.AddCommand(c.newStatementExceptionCommand())
 	cmd.AddCommand(c.newStatementListCommand())
 	cmd.AddCommand(c.newStatementStopCommand())
+	cmd.AddCommand(c.newStatementUpdateCommand())
 
 	return cmd
 }

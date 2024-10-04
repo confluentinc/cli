@@ -3,11 +3,13 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
+
+var extraWarning = "\nThis action is irreversible and is going to break all Flink statements using this Artifact!\nDo you still want to proceed?"
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -53,7 +55,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
-	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkArtifact); err != nil {
+	if err := deletion.ValidateAndConfirmWithExtraWarning(cmd, args, existenceFunc, resource.FlinkArtifact, extraWarning); err != nil {
 		return err
 	}
 
