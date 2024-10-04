@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/sourcegraph/go-lsp"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type LspInterface interface {
@@ -26,10 +26,11 @@ type LSPClient struct {
 }
 
 type CliContext struct {
-	AuthToken     string
-	Catalog       string
-	Database      string
-	ComputePoolId string
+	AuthToken           string
+	Catalog             string
+	Database            string
+	ComputePoolId       string
+	StatementProperties map[string]string
 }
 
 func NewLSPClient(conn types.JSONRpcConn) *LSPClient {

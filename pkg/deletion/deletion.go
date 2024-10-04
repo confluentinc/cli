@@ -7,11 +7,11 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/resource"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/form"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func ValidateAndConfirm(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
@@ -23,7 +23,19 @@ func ValidateAndConfirm(cmd *cobra.Command, args []string, checkExistence func(s
 		return err
 	}
 
-	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(resourceType, args))
+	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(resourceType, args, ""))
+}
+
+func ValidateAndConfirmWithExtraWarning(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string, extraWarning string) error {
+	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
+		return err
+	}
+
+	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
+		return err
+	}
+
+	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(resourceType, args, extraWarning))
 }
 
 func ConfirmPrompt(cmd *cobra.Command, promptMsg string) error {
@@ -73,12 +85,15 @@ func Delete(args []string, callDeleteEndpoint func(string) error, resourceType s
 	return deletedIds, err
 }
 
-func DefaultYesNoDeletePromptString(resourceType string, idList []string) string {
+func DefaultYesNoDeletePromptString(resourceType string, idList []string, extraWarning string) string {
 	var promptMsg string
 	if len(idList) == 1 {
 		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
+		promptMsg += extraWarning
 	} else {
-		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
+		plural := resource.Plural(resourceType)
+		promptMsg = fmt.Sprintf("Are you sure you want to delete %s %s?", plural, utils.ArrayToCommaDelimitedString(idList, "and"))
+		promptMsg += extraWarning
 	}
 
 	return promptMsg

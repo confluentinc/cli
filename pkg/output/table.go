@@ -221,6 +221,10 @@ func getListValueString(value reflect.Value, tag []string) string {
 			return " "
 		}
 	}
+	if value.Kind() == reflect.Pointer && value.IsNil() {
+		// don't print <nil> for empty pointer fields in a list
+		return ""
+	}
 
 	return getTableValueString(value)
 }
@@ -237,7 +241,7 @@ func getTableValueString(value reflect.Value) string {
 	case reflect.Slice:
 		s := make([]string, value.Len())
 		for i := range value.Len() {
-			s[i] = value.Index(i).String()
+			s[i] = fmt.Sprint(value.Index(i))
 		}
 		return strings.Join(s, ", ")
 	default:

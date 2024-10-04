@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/internal/cluster"
+	"github.com/confluentinc/cli/v4/internal/cluster"
 )
 
 func (s *CLITestSuite) TestCluster() {

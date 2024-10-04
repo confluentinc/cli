@@ -9,10 +9,10 @@ import (
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/deletion"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 const rbacPromptMsg = "Are you sure you want to delete this role binding?"
@@ -30,6 +30,13 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 			examples.Example{
 				Text: `Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka cluster "lkc-123456":`,
 				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-123456 --kafka-cluster lkc-123456 --resource Topic:my-topic",
+			},
+		)
+	} else {
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: `Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the specified Kafka cluster:`,
+				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --kafka-cluster 0000000000000000000000 --resource Topic:my-topic",
 			},
 		)
 	}

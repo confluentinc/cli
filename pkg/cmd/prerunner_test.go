@@ -14,16 +14,15 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	climock "github.com/confluentinc/cli/v3/mock"
-	pauth "github.com/confluentinc/cli/v3/pkg/auth"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
-	"github.com/confluentinc/cli/v3/pkg/jwt"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	pmock "github.com/confluentinc/cli/v3/pkg/mock"
-	"github.com/confluentinc/cli/v3/pkg/update/mock"
+	climock "github.com/confluentinc/cli/v4/mock"
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
+	"github.com/confluentinc/cli/v4/pkg/jwt"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	pmock "github.com/confluentinc/cli/v4/pkg/mock"
 )
 
 const (
@@ -87,11 +86,6 @@ func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
 		Config:  config.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
-		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
-				return "", "", nil
-			},
-		},
 		CCloudClientFactory: &climock.CCloudClientFactory{
 			JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 				return &ccloudv1.Client{}

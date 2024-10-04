@@ -8,7 +8,7 @@ import (
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	"github.com/confluentinc/cli/v3/pkg/kafkarest"
+	"github.com/confluentinc/cli/v4/pkg/kafkarest"
 )
 
 const AbbreviationLength = 25

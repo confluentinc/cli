@@ -1,0 +1,34 @@
+[
+  {
+    "id": "op-12345",
+    "name": "my-ca",
+    "description": "my certificate authority",
+    "fingerprints": ["B1BC968BD4f49D622AA89A81F2150152A41D829C"],
+    "expiration_dates": ["2017-07-21T17:32:28Z"],
+    "serial_numbers": ["219C542DE8f6EC7177FA4EE8C3705797"],
+    "certificate_chain_filename": "certificate.pem"
+  },
+  {
+    "id": "op-54321",
+    "name": "my-ca-2",
+    "description": "my other certificate authority",
+    "fingerprints": ["B1BC968BD4f49D622AA89A81F2150152A41D829C"],
+    "expiration_dates": ["2017-07-21T17:32:28Z"],
+    "serial_numbers": ["219C542DE8f6EC7177FA4EE8C3705797"],
+    "certificate_chain_filename": "certificate-2.pem",
+    "crl_source": "LOCAL",
+    "crl_updated_at": "2024-07-21T17:32:28Z"
+  },
+  {
+    "id": "op-67890",
+    "name": "my-ca-3",
+    "description": "my other certificate authority",
+    "fingerprints": ["B1BC968BD4f49D622AA89A81F2150152A41D829C"],
+    "expiration_dates": ["2017-07-21T17:32:28Z"],
+    "serial_numbers": ["219C542DE8f6EC7177FA4EE8C3705797"],
+    "certificate_chain_filename": "certificate-3.pem",
+    "crl_source": "URL",
+    "crl_url": "example.url",
+    "crl_updated_at": "2024-07-21T17:32:28Z"
+  }
+]

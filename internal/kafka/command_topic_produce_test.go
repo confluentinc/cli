@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 type splitTest struct {
@@ -108,7 +108,7 @@ func TestHeaders(t *testing.T) {
 	t.Run("It should return valid Kafka headers", func(t *testing.T) {
 		headers := []string{"contenttype:application/json", "x-request-id:12345"}
 
-		expected := []ckafka.Header{
+		expected := []ckgo.Header{
 			{Key: "contenttype", Value: []byte("application/json")},
 			{Key: "x-request-id", Value: []byte("12345")},
 		}

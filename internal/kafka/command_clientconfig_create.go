@@ -12,14 +12,15 @@ import (
 	"github.com/spf13/cobra"
 
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 )
 
 type clientConfig struct {
@@ -274,7 +275,7 @@ func (c *clientConfigCommand) getSchemaRegistryCluster() (*srcmv3.SrcmV3Cluster,
 		return nil, err
 	}
 	if len(clusters) == 0 {
-		return nil, errors.NewSRNotEnabledError()
+		return nil, schemaregistry.ErrNotEnabled
 	}
 
 	return &clusters[0], nil
@@ -285,14 +286,14 @@ func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.Kafk
 	if err != nil {
 		return err
 	}
-	adminClient, err := ckafka.NewAdminClient(configMap)
+	adminClient, err := ckgo.NewAdminClient(configMap)
 	if err != nil {
 		return err
 	}
 	defer adminClient.Close()
 	timeout := 5 * time.Second
 	if _, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds())); err != nil {
-		if err.Error() == ckafka.ErrTransport.String() {
+		if err.Error() == ckgo.ErrTransport.String() {
 			err = errors.NewErrorWithSuggestions("failed to validate Kafka API credential", "Verify that the correct Kafka API credential is used.\n"+
 				"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store --force`.\n"+
 				"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`.")

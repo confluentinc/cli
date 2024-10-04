@@ -13,9 +13,10 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	testUtils "github.com/confluentinc/cli/v3/pkg/flink/test"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/mock"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	testUtils "github.com/confluentinc/cli/v4/pkg/flink/test"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type StatementControllerTestSuite struct {
@@ -382,6 +383,68 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedSt
 		s.T().Run(test.name, func(t *testing.T) {
 			actual := testUtils.RunAndCaptureSTDOUT(s.T(), test.statement.PrintStatusMessage)
 			cupaloy.SnapshotT(t, actual)
+		})
+	}
+}
+
+func (s *StatementControllerTestSuite) TestOutputOfDryRunStatements() {
+	tests := []struct {
+		name      string
+		statement types.ProcessedStatement
+		want      string
+	}{
+		{
+			name:      "failed dry run",
+			statement: types.ProcessedStatement{StatementName: "failed-test-statement", Status: types.FAILED, StatusDetail: "Parse Error"},
+		},
+		{
+			name:      "successful dry run",
+			statement: types.ProcessedStatement{StatementName: "successful-test-statement", Status: types.COMPLETED, StatusDetail: "No errors"},
+		},
+		{
+			name:      "unexpected status dry run",
+			statement: types.ProcessedStatement{StatementName: "unexpected-test-statement", Status: types.RUNNING, StatusDetail: "unexpected status"},
+		},
+	}
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			actual := testUtils.RunAndCaptureSTDOUT(s.T(), test.statement.PrintOutputDryRunStatement)
+			cupaloy.SnapshotT(t, actual)
+		})
+	}
+}
+
+func (s *StatementControllerTestSuite) TestIsDryRunStatements() {
+	tests := []struct {
+		name      string
+		statement types.ProcessedStatement
+		expected  bool
+	}{
+		{
+			name: "is dry run statement",
+			statement: types.ProcessedStatement{Properties: map[string]string{
+				config.KeyDryRun: "true",
+			}},
+			expected: true,
+		},
+		{
+			name: "dry run is false",
+			statement: types.ProcessedStatement{Properties: map[string]string{
+				config.KeyDryRun: "false",
+			}},
+			expected: false,
+		},
+		{
+			name:      "dry run not set",
+			statement: types.ProcessedStatement{},
+			expected:  false,
+		},
+	}
+
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			actual := test.statement.IsDryRunStatement()
+			require.Equal(t, test.expected, actual)
 		})
 	}
 }

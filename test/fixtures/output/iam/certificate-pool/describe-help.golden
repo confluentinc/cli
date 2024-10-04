@@ -1,0 +1,17 @@
+Describe a certificate pool.
+
+Usage:
+  confluent iam certificate-pool describe <id> [flags]
+
+Examples:
+Describe a certificate pool with ID "pool-123".
+
+  $ confluent iam certificate-pool describe pool-123 --provider provider-123
+
+Flags:
+      --provider string   REQUIRED: ID of this pool's certificate authority.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

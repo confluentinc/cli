@@ -6,8 +6,9 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type PHASE string
@@ -31,6 +32,7 @@ type ProcessedStatement struct {
 	IsLocalStatement     bool
 	IsSensitiveStatement bool
 	PageToken            string
+	Properties           map[string]string
 	StatementResults     *StatementResults
 	Traits               flinkgatewayv1.SqlV1StatementTraits
 }
@@ -43,6 +45,7 @@ func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *Processe
 		Principal:     statementObj.Spec.GetPrincipal(),
 		StatusDetail:  statementObj.Status.GetDetail(),
 		Status:        PHASE(statementObj.Status.GetPhase()),
+		Properties:    statementObj.Spec.GetProperties(),
 		Traits:        statementObj.Status.GetTraits(),
 	}
 }
@@ -75,6 +78,22 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	}
 }
 
+func (s ProcessedStatement) PrintOutputDryRunStatement() {
+	if s.StatementName != "" {
+		utils.OutputInfof("Statement name: %s\n", s.StatementName)
+	}
+	utils.OutputInfo(fmt.Sprintf("Statement successfully submitted. Statement phase is %s.", s.Status))
+	if s.Status == "FAILED" {
+		utils.OutputErr(fmt.Sprintf("Dry run statement was verified and there were issues found.\nError: %s", s.StatusDetail))
+	} else if s.Status == "COMPLETED" {
+		utils.OutputInfo("Dry run statement was verified and there were no issues found.")
+		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before submitting your statement with \"set 'sql.dry-run' = 'false';\"")
+	} else {
+		utils.OutputErr(fmt.Sprintf("Dry run statement execution resulted in unexpected status.\nStatus: %s", s.Status))
+		utils.OutputErr(fmt.Sprintf("Details: %s", s.StatusDetail))
+	}
+}
+
 func (s ProcessedStatement) GetPageSize() int {
 	return len(s.StatementResults.GetRows())
 }
@@ -97,4 +116,13 @@ func (s ProcessedStatement) IsTerminalState() bool {
 func (s ProcessedStatement) IsSelectStatement() bool {
 	return strings.EqualFold(s.Traits.GetSqlKind(), "SELECT") ||
 		strings.HasPrefix(strings.ToUpper(s.Statement), "SELECT")
+}
+
+func (s ProcessedStatement) IsDryRunStatement() bool {
+	keyVal, ok := s.Properties[config.KeyDryRun]
+
+	if ok && strings.ToLower(keyVal) == "true" {
+		return true
+	}
+	return false
 }

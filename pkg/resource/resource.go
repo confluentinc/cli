@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/types"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const (
@@ -18,11 +18,14 @@ const (
 	ApiKey                          = "API key"
 	Broker                          = "broker"
 	ByokKey                         = "self-managed key"
+	CertificateAuthority            = "certificate authority"
+	CertificatePool                 = "certificate pool"
 	ClientQuota                     = "client quota"
 	Cloud                           = "cloud"
 	ClusterLink                     = "cluster link"
 	Connector                       = "connector"
 	CustomConnectorPlugin           = "custom connector plugin"
+	CustomConnectorPluginVersion    = "custom connector plugin version"
 	ConsumerShare                   = "consumer share"
 	Context                         = "context"
 	Dek                             = "DEK"
@@ -30,10 +33,12 @@ const (
 	DnsRecord                       = "DNS record"
 	Environment                     = "environment"
 	Flink                           = "flink"
+	FlinkArtifact                   = "Flink artifact"
 	FlinkConnectivityType           = "Flink connectivity type"
 	FlinkComputePool                = "Flink compute pool"
 	FlinkRegion                     = "Flink region"
 	FlinkStatement                  = "Flink SQL statement"
+	FlinkConnection                 = "Flink connection"
 	IdentityPool                    = "identity pool"
 	IdentityProvider                = "identity provider"
 	IpGroup                         = "IP group"
@@ -52,6 +57,7 @@ const (
 	PrivateLinkAccess               = "private link access"
 	PrivateLinkAttachment           = "private link attachment"
 	PrivateLinkAttachmentConnection = "private link attachment connection"
+	ProviderIntegration             = "provider integration"
 	ProviderShare                   = "provider share"
 	Pipeline                        = "pipeline"
 	SchemaExporter                  = "schema exporter"
@@ -185,7 +191,7 @@ func ResourcesNotFoundError(cmd *cobra.Command, resourceType string, invalidArgs
 		fullParentCommand = fmt.Sprintf("%s %s", cmd.Parent().Name(), fullParentCommand)
 		cmd = cmd.Parent()
 	}
-	invalidResourceSuggestion := fmt.Sprintf(errors.ListResourceSuggestions, resourceType, fullParentCommand)
+	invalidResourceSuggestion := fmt.Sprintf("List available %s with `%s list`.", Plural(resourceType), fullParentCommand)
 
 	return errors.NewErrorWithSuggestions(invalidArgsErrMsg, invalidResourceSuggestion)
 }
@@ -193,6 +199,11 @@ func ResourcesNotFoundError(cmd *cobra.Command, resourceType string, invalidArgs
 func Plural(resource string) string {
 	if resource == "" {
 		return ""
+	}
+
+	// Words ending in `-ty` generally replace it with `-ties` in their plural forms
+	if strings.HasSuffix(resource, "ty") {
+		return strings.TrimSuffix(resource, "y") + "ies"
 	}
 
 	// Singular words ending w/ these suffixes generally add an extra -es syllable in their plural forms

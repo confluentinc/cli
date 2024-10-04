@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v3/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func TestPrintDocPage(t *testing.T) {

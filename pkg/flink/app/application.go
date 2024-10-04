@@ -6,18 +6,18 @@ import (
 
 	"github.com/sourcegraph/jsonrpc2"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/flink/components"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/controller"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/store"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/flink/lsp"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/flink/components"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/controller"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/store"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/flink/lsp"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type Application struct {
@@ -69,7 +69,10 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 
 	// Instantiate LSP
 	handlerCh := make(chan *jsonrpc2.Request) // This is the channel used for the messages received by the language to be passed through to the input controller
-	lspClient := lsp.NewWebsocketClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
+	lspClient, err := lsp.NewWebsocketClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
+	if err != nil {
+		log.CliLogger.Errorf("Failed to initialize LSP client: %s", err.Error())
+	}
 
 	stdinBefore := utils.GetStdin()
 	consoleParser, err := utils.GetConsoleParser()
@@ -88,10 +91,11 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 	// Instantiate Component Controllers
 	lspCompleter := lsp.LspCompleter(lspClient, func() lsp.CliContext {
 		return lsp.CliContext{
-			AuthToken:     getAuthToken(),
-			Catalog:       userProperties.Get(config.KeyCatalog),
-			Database:      userProperties.Get(config.KeyDatabase),
-			ComputePoolId: appOptions.GetComputePoolId(),
+			AuthToken:           getAuthToken(),
+			Catalog:             userProperties.Get(config.KeyCatalog),
+			Database:            userProperties.Get(config.KeyDatabase),
+			ComputePoolId:       appOptions.GetComputePoolId(),
+			StatementProperties: userProperties.GetMaskedNonLocalProperties(),
 		}
 	})
 
@@ -148,8 +152,10 @@ func (a *Application) readEvalPrint() {
 		a.history.Append(userInput)
 	}
 
-	a.resultFetcher.Init(*executedStatement)
-	a.getOutputController(*executedStatement).VisualizeResults()
+	if !executedStatement.IsDryRunStatement() {
+		a.resultFetcher.Init(*executedStatement)
+		a.getOutputController(*executedStatement).VisualizeResults()
+	}
 }
 
 func (a *Application) panicRecovery() {

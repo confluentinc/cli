@@ -7,10 +7,10 @@ import (
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/kafka"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -150,7 +150,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			if len(clusters) == 0 {
-				return errors.NewSRNotEnabledError()
+				return schemaregistry.ErrNotEnabled
 			}
 			pipeline.Spec.SetStreamGovernanceCluster(streamdesignerv1.ObjectReference{Id: clusters[0].GetId()})
 		}

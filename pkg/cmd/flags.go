@@ -8,13 +8,13 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/kafka"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/types"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
+	"github.com/confluentinc/cli/v4/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
@@ -207,6 +207,10 @@ func AddFilterFlag(cmd *cobra.Command) {
 	cmd.Flags().String("filter", "true", "A supported Common Expression Language (CEL) filter expression for group mappings.")
 }
 
+func AddExternalIdentifierFlag(cmd *cobra.Command) {
+	cmd.Flags().String("external-identifier", "", "External Identifier for this pool.")
+}
+
 func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
 	groupMappings, err := client.ListGroupMappings()
 	if err != nil {
@@ -217,6 +221,20 @@ func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
 	for i, groupMapping := range groupMappings {
 		description := fmt.Sprintf("%s: %s", groupMapping.GetDisplayName(), groupMapping.GetDescription())
 		suggestions[i] = fmt.Sprintf("%s\t%s", groupMapping.GetId(), description)
+	}
+	return suggestions
+}
+
+func AutocompleteCertificatePool(client *ccloudv2.Client, provider string) []string {
+	certificatePools, err := client.ListCertificatePool(provider)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(certificatePools))
+	for i, certificatePool := range certificatePools {
+		description := fmt.Sprintf("%s: %s", certificatePool.GetDisplayName(), certificatePool.GetDescription())
+		suggestions[i] = fmt.Sprintf("%s\t%s", certificatePool.GetId(), description)
 	}
 	return suggestions
 }
@@ -311,6 +329,19 @@ func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 	for i, identityProvider := range identityProviders {
 		description := fmt.Sprintf("%s: %s", identityProvider.GetDisplayName(), identityProvider.GetDescription())
 		suggestions[i] = fmt.Sprintf("%s\t%s", identityProvider.GetId(), description)
+	}
+	return suggestions
+}
+
+func AutocompleteCertificateAuthorities(client *ccloudv2.Client) []string {
+	certificateAuthorities, err := client.ListCertificateAuthorities()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(certificateAuthorities))
+	for i, certificateAuthority := range certificateAuthorities {
+		suggestions[i] = fmt.Sprintf("%s\t%s", certificateAuthority.GetId(), certificateAuthority.GetDisplayName())
 	}
 	return suggestions
 }

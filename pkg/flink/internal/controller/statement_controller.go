@@ -10,10 +10,10 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/color"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type StatementController struct {
@@ -37,6 +37,12 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 		c.handleStatementError(*err)
 		return nil, err
 	}
+
+	if processedStatement.IsDryRunStatement() {
+		processedStatement.PrintOutputDryRunStatement()
+		return processedStatement, nil
+	}
+
 	c.createdStatementName = processedStatement.StatementName
 	processedStatement.PrintStatusMessage()
 

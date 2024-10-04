@@ -1,6 +1,6 @@
---- cli/Makefile	2024-08-07 12:56:17.727187329 -0700
-+++ debian/Makefile	2024-08-13 15:17:56.588603066 -0700
-@@ -1,146 +1,159 @@
+--- cli/Makefile	2024-09-26 10:12:52.818827565 -0700
++++ debian/Makefile	2024-09-11 13:09:21.649421504 -0700
+@@ -1,139 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -31,7 +31,7 @@
 -	endif
 -else
 -	ifeq ($(GOOS),windows) # windows/amd64
--		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
+-		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-fstack-protector -static" $(MAKE) cli-builder
 -	else ifeq ($(GOOS),linux) # linux/amd64
 -		CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
 -	else # darwin/amd64
@@ -68,25 +68,91 @@
 -include ./mk-files/dry-run.mk
 -include ./mk-files/release.mk
 -include ./mk-files/release-test.mk
--
--REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
--DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 +export PACKAGE_TITLE=cli
 +export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
 +export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
- 
--S3_BUCKET_PATH=s3://confluent.cloud
--S3_STAG_FOLDER_NAME=cli-release-stag
--S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
++
 +# Defaults that are likely to vary by platform. These are cleanly separated so
 +# it should be easy to maintain altered values on platform-specific branches
 +# when the values aren't overridden by the script invoking the Makefile
++
++APPLY_PATCHES?=yes
++
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
++endif
++
++ifeq ($(PACKAGE_TYPE),archive)
++PREFIX=$(PACKAGE_NAME)
++SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
++else
++PREFIX=/usr
++SYSCONFDIR=/etc/$(PACKAGE_TITLE)
++endif
++
++_empty :=
++_space := $(_empty) $(empty)
++split_version := $(subst .,$(_space),$(CLI_VERSION))
++
++all: install
++
++archive: install
++	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
++	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
++
++apply-patches: $(wildcard debian/patches/*)
++ifeq ($(APPLY_PATCHES),yes)
++	git reset --hard HEAD
++	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
++endif
++
++BINPATH=$(PREFIX)/bin
++LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
++DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
++
++# Notes on the archive download links:
++# As of v3.0.0, the version number no longer has the 'v' prefix
++# As of v3.43.0, we download the '_disableupdates' variant
++# As of v4.1.0, the base URL is 'packages.confluent.io' and there is no version in the archive/binary name
++install: apply-patches
++	rm -rf $(DESTDIR)$(PREFIX)
++	mkdir -p $(DESTDIR)$(PREFIX)
++
++	mkdir -p $(DESTDIR)$(BINPATH)
++	mkdir -p $(DESTDIR)$(LIBPATH)
++	mkdir -p $(DESTDIR)$(DOCPATH)
++	mkdir -p $(DESTDIR)$(SYSCONFDIR)
++
++	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
++	chmod 755 $(DESTDIR)$(BINPATH)/confluent
++
++	cd $(DESTDIR)$(LIBPATH); \
++	v=""; if [[ $(word 1,$(split_version)) -eq 2 ]]; then v="v"; fi; \
++	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
++	baseurl="s3-us-west-2.amazonaws.com/confluent.cloud"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then baseurl="packages.confluent.io"; fi; \
++	version="_$${v}$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
++	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do \
++		archive=confluent$${version}_$${dir}$${disableupdates}.tar.gz; \
++		curl -fs https://$${baseurl}/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
++		mkdir -p $${dir} $${dir}-temp; \
++		tar -xzf $${archive} -C $${dir}-temp confluent/confluent; \
++		mv $${dir}-temp/confluent/confluent $${dir}/confluent; \
++		rm -rf $${archive} $${dir}-temp; \
++		chmod 755 $${dir}/confluent; \
++	done; \
++	mkdir -p windows_amd64; \
++	version="_$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
++	filepath=windows_amd64/confluent.exe; \
++	curl -fs https://$${baseurl}/confluent-cli/binaries/$(CLI_VERSION)/confluent$${version}_windows_amd64.exe -o $${filepath}; \
++	chmod 755 $${filepath}
  
 -S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
 -S3_DEB_RPM_PROD_PREFIX=confluent-cli
 -S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
 -S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
-+APPLY_PATCHES?=yes
++	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
++	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
  
 -.PHONY: clean
 -clean:
@@ -118,103 +184,27 @@
 -unit-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.8.2 && \
--	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test)
+-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 -else
--	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v3/test) $(UNIT_TEST_ARGS)
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
- endif
+-	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
+-endif
++	chown -R root:root $(DESTDIR)$(PREFIX)
  
 -.PHONY: build-for-integration-test
 -build-for-integration-test:
 -ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
-+ifeq ($(PACKAGE_TYPE),archive)
-+PREFIX=$(PACKAGE_NAME)
-+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
- else
--	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
- endif
- 
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-else
+-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-endif
+-
 -.PHONY: build-for-integration-test-windows
 -build-for-integration-test-windows:
 -ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 -else
--	go build -ldflags="-s -w -X main.commit="0000000" -X main.date="2023-12-07T19:01:49Z" -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 -endif
-+_empty :=
-+_space := $(_empty) $(empty)
-+split_version := $(subst .,$(_space),$(CLI_VERSION))
- 
--.PHONY: integration-test
--integration-test:
--ifdef CI
--	go install gotest.tools/gotestsum@v1.8.2 && \
--	export GOCOVERDIR=test/coverage && \
--	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v3/test) && \
--	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
--else
--	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v3/test) $(INTEGRATION_TEST_ARGS)
-+all: install
-+
-+archive: install
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
-+
-+apply-patches: $(wildcard debian/patches/*)
-+ifeq ($(APPLY_PATCHES),yes)
-+	git reset --hard HEAD
-+	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
- endif
- 
--.PHONY: test
--test: unit-test integration-test
-+BINPATH=$(PREFIX)/bin
-+LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
-+DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
-+
-+# Notes on the archive download links:
-+# For CLI v2, the version number has the 'v' prefix
-+# For CLI v3.43.0 and above, we download the '_disableupdates' variant
-+install: apply-patches
-+	rm -rf $(DESTDIR)$(PREFIX)
-+	mkdir -p $(DESTDIR)$(PREFIX)
-+
-+	mkdir -p $(DESTDIR)$(BINPATH)
-+	mkdir -p $(DESTDIR)$(LIBPATH)
-+	mkdir -p $(DESTDIR)$(DOCPATH)
-+	mkdir -p $(DESTDIR)$(SYSCONFDIR)
-+
-+	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
-+	chmod 755 $(DESTDIR)$(BINPATH)/confluent
-+
-+	cd $(DESTDIR)$(LIBPATH); \
-+	v=""; if [[ $(word 1,$(split_version)) -eq 2 ]]; then v="v"; fi; \
-+	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
-+	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do \
-+		archive=confluent_$${v}$(CLI_VERSION)_$${dir}$${disableupdates}.tar.gz; \
-+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
-+		mkdir -p $${dir} $${dir}-temp; \
-+		tar -xzf $${archive} -C $${dir}-temp confluent/confluent; \
-+		mv $${dir}-temp/confluent/confluent $${dir}/confluent; \
-+		rm -rf $${archive} $${dir}-temp; \
-+		chmod 755 $${dir}/confluent; \
-+	done; \
-+	mkdir -p windows_amd64; \
-+	filepath=windows_amd64/confluent.exe; \
-+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_windows_amd64.exe -o $${filepath}; \
-+	chmod 755 $${filepath}
-+
-+	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
-+
-+	chown -R root:root $(DESTDIR)$(PREFIX)
-+
 +clean:
 +	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
@@ -280,9 +270,22 @@
 +	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH##/amd64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 +	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+
+ 
+-.PHONY: integration-test
+-integration-test:
+-ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
+-	export GOCOVERDIR=test/coverage && \
+-	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
+-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+-else
+-	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
+-endif
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
-+
+ 
+-.PHONY: test
+-test: unit-test integration-test
 +RPM_BUILDING/%:
 +	mkdir -p $@
  

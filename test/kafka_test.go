@@ -200,6 +200,18 @@ func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
 		s.runIntegrationTest(test)
 	}
+
+	// test logged out version
+	tests = []CLITest{
+		{args: "kafka cluster configuration update --config compression.type=zip,sasl_mechanism=SASL/PLAIN --no-authentication", fixture: "kafka/cluster/configuration/update-onprem.golden"},
+		{args: "kafka cluster configuration list --no-authentication", fixture: "kafka/cluster/configuration/list-onprem.golden"},
+		{args: "kafka cluster configuration list --config compression.type --no-authentication", fixture: "kafka/cluster/configuration/list-specific-config-onprem.golden"},
+	}
+
+	for _, test := range tests {
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestKafkaClientConfig() {

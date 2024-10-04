@@ -5,10 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 type listPrivateLinkAccessOut struct {
@@ -84,11 +85,11 @@ func (c *command) privateLinkAccessList(cmd *cobra.Command, _ []string) error {
 		}
 
 		switch cloud {
-		case CloudAws:
+		case pcloud.Aws:
 			out.CloudAccount = access.Spec.Cloud.NetworkingV1AwsPrivateLinkAccess.GetAccount()
-		case CloudGcp:
+		case pcloud.Gcp:
 			out.CloudAccount = access.Spec.Cloud.NetworkingV1GcpPrivateServiceConnectAccess.GetProject()
-		case CloudAzure:
+		case pcloud.Azure:
 			out.CloudAccount = access.Spec.Cloud.NetworkingV1AzurePrivateLinkAccess.GetSubscription()
 		}
 

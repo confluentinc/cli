@@ -5,14 +5,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	"github.com/confluentinc/cli/v3/internal/kafka"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/serdes"
+	"github.com/confluentinc/cli/v4/internal/kafka"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
 )
 
 func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
@@ -56,7 +56,7 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
-	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
+	adminClient, err := ckgo.NewAdminClientFromProducer(producer)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
@@ -76,8 +76,8 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	return kafka.ProduceToTopic(cmd, []byte{}, []byte{}, topicName, serializationProvider, serializationProvider, producer)
 }
 
-func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, error) {
-	configMap := &ckafka.ConfigMap{
+func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckgo.Producer, error) {
+	configMap := &ckgo.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             "confluent-local",
 		"bootstrap.servers":                     bootstrap,
@@ -104,5 +104,5 @@ func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, 
 		return nil, err
 	}
 
-	return ckafka.NewProducer(configMap)
+	return ckgo.NewProducer(configMap)
 }

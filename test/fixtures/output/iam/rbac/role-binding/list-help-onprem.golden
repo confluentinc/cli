@@ -32,6 +32,8 @@ Flags:
       --schema-registry-cluster string   Schema Registry cluster ID, which specifies the Schema Registry cluster scope.
       --ksql-cluster string              ksqlDB cluster ID, which specifies the ksqlDB cluster scope.
       --connect-cluster string           Kafka Connect cluster ID, which specifies the Connect cluster scope.
+      --cmf string                       Confluent Managed Flink (CMF) ID, which specifies the CMF scope.
+      --flink-environment string         Flink environment ID, which specifies the Flink environment scope.
       --cluster-name string              Cluster name, which specifies the cluster scope.
       --context string                   CLI context name.
       --resource string                  Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.

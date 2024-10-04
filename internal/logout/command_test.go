@@ -10,10 +10,10 @@ import (
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	climock "github.com/confluentinc/cli/v3/mock"
-	pauth "github.com/confluentinc/cli/v3/pkg/auth"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
+	climock "github.com/confluentinc/cli/v4/mock"
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 const (

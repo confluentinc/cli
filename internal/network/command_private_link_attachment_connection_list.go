@@ -5,10 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newPrivateLinkAttachmentConnectionListCommand() *cobra.Command {
@@ -70,10 +71,10 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 		if connection.Spec.HasCloud() {
 			switch {
 			case connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection != nil:
-				out.Cloud = CloudAws
+				out.Cloud = pcloud.Aws
 				out.AwsVpcEndpointId = connection.Spec.Cloud.NetworkingV1AwsPrivateLinkAttachmentConnection.GetVpcEndpointId()
 			case connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection != nil:
-				out.Cloud = CloudAzure
+				out.Cloud = pcloud.Azure
 				out.AzurePrivateEndpointResourceId = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
 			}
 		}

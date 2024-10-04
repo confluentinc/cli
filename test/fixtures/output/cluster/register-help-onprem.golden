@@ -7,10 +7,12 @@ Flags:
       --hosts strings                    REQUIRED: A comma-separated list of hosts.
       --protocol string                  REQUIRED: Security protocol.
       --cluster-name string              REQUIRED: Cluster name.
-      --kafka-cluster string             REQUIRED: Kafka cluster ID.
+      --kafka-cluster string             Kafka cluster ID.
       --schema-registry-cluster string   Schema Registry cluster ID.
       --ksql-cluster string              ksqlDB cluster ID.
       --connect-cluster string           Kafka Connect cluster ID.
+      --cmf string                       Confluent Managed Flink (CMF) ID.
+      --flink-environment string         Flink environment ID.
       --context string                   CLI context name.
 
 Global Flags:

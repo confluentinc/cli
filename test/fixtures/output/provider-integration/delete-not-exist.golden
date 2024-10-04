@@ -1,0 +1,4 @@
+Error: provider integration "cspi-invalid" not found
+
+Suggestions:
+    List available provider integrations with `confluent provider-integration list`.

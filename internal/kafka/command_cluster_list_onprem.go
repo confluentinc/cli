@@ -8,19 +8,20 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/v3/pkg/cluster"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/cluster"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 const kafkaClusterTypeName = "kafka-cluster"
 
 func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Args:  cobra.NoArgs,
-		Short: "List registered Kafka clusters.",
-		Long:  "List Kafka clusters that are registered with the MDS cluster registry.",
-		RunE:  c.listOnPrem,
+		Use:         "list",
+		Args:        cobra.NoArgs,
+		Short:       "List registered Kafka clusters.",
+		Long:        "List Kafka clusters that are registered with the MDS cluster registry.",
+		RunE:        c.listOnPrem,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

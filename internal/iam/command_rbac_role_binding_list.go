@@ -14,9 +14,9 @@ import (
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/examples"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 const principalOrRoleRequiredErrorMsg = "must specify either principal or role"
@@ -104,6 +104,8 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID, which specifies the ksqlDB cluster scope.")
 		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID, which specifies the Connect cluster scope.")
+		cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID, which specifies the CMF scope.")
+		cmd.Flags().String("flink-environment", "", "Flink environment ID, which specifies the Flink environment scope.")
 		cmd.Flags().String("cluster-name", "", "Cluster name, which specifies the cluster scope.")
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}

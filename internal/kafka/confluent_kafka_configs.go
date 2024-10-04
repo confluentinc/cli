@@ -9,13 +9,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/form"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/properties"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/form"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/properties"
 )
 
 type kafkaClientConfigs struct {
@@ -27,12 +27,12 @@ type PartitionFilter struct {
 	Index   int32
 }
 
-func getCommonConfig(kafka *config.KafkaClusterConfig, clientId string) (*ckafka.ConfigMap, error) {
+func getCommonConfig(kafka *config.KafkaClusterConfig, clientId string) (*ckgo.ConfigMap, error) {
 	if err := kafka.DecryptAPIKeys(); err != nil {
 		return nil, err
 	}
 
-	configMap := &ckafka.ConfigMap{
+	configMap := &ckgo.ConfigMap{
 		"security.protocol":                     "SASL_SSL",
 		"sasl.mechanism":                        "PLAIN",
 		"ssl.endpoint.identification.algorithm": "https",
@@ -45,7 +45,7 @@ func getCommonConfig(kafka *config.KafkaClusterConfig, clientId string) (*ckafka
 	return configMap, nil
 }
 
-func getProducerConfigMap(kafka *config.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+func getProducerConfigMap(kafka *config.KafkaClusterConfig, clientID string) (*ckgo.ConfigMap, error) {
 	configMap, err := getCommonConfig(kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func getProducerConfigMap(kafka *config.KafkaClusterConfig, clientID string) (*c
 	return configMap, nil
 }
 
-func getConsumerConfigMap(group string, kafka *config.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+func getConsumerConfigMap(group string, kafka *config.KafkaClusterConfig, clientID string) (*ckgo.ConfigMap, error) {
 	configMap, err := getCommonConfig(kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -86,15 +86,15 @@ func getConsumerConfigMap(group string, kafka *config.KafkaClusterConfig, client
 	return configMap, nil
 }
 
-func getOnPremCommonConfig(clientID, bootstrap string) *ckafka.ConfigMap {
-	return &ckafka.ConfigMap{
+func getOnPremCommonConfig(clientID, bootstrap string) *ckgo.ConfigMap {
+	return &ckgo.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             clientID,
 		"bootstrap.servers":                     bootstrap,
 	}
 }
 
-func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.ConfigMap, error) {
+func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckgo.ConfigMap, error) {
 	bootstrap, err := cmd.Flags().GetString("bootstrap")
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	return setProtocolConfig(cmd, configMap)
 }
 
-func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.ConfigMap, error) {
+func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckgo.ConfigMap, error) {
 	bootstrap, err := cmd.Flags().GetString("bootstrap")
 	if err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	return setProtocolConfig(cmd, configMap)
 }
 
-func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+func setProtocolConfig(cmd *cobra.Command, configMap *ckgo.ConfigMap) (*ckgo.ConfigMap, error) {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return nil, err
@@ -214,14 +214,14 @@ func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka
 	return configMap, nil
 }
 
-func setPlaintextConfig(configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+func setPlaintextConfig(configMap *ckgo.ConfigMap) (*ckgo.ConfigMap, error) {
 	if err := configMap.SetKey("security.protocol", "PLAINTEXT"); err != nil {
 		return nil, err
 	}
 	return configMap, nil
 }
 
-func setSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+func setSSLConfig(cmd *cobra.Command, configMap *ckgo.ConfigMap) (*ckgo.ConfigMap, error) {
 	certLocation, err := cmd.Flags().GetString("cert-location")
 	if err != nil {
 		return nil, err
@@ -248,7 +248,7 @@ func setSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Conf
 	return configMap, nil
 }
 
-func setSaslConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+func setSaslConfig(cmd *cobra.Command, configMap *ckgo.ConfigMap) (*ckgo.ConfigMap, error) {
 	saslMechanism, err := cmd.Flags().GetString("sasl-mechanism")
 	if err != nil {
 		return nil, err
@@ -297,43 +297,43 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
 }
 
-func GetOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
+func GetOffsetWithFallback(cmd *cobra.Command) (ckgo.Offset, error) {
 	if cmd.Flags().Changed("offset") {
 		offset, err := cmd.Flags().GetInt64("offset")
 		if err != nil {
-			return ckafka.OffsetInvalid, err
+			return ckgo.OffsetInvalid, err
 		}
 		if offset < 0 {
-			return ckafka.OffsetInvalid, fmt.Errorf("offset value must be a non-negative integer")
+			return ckgo.OffsetInvalid, fmt.Errorf("offset value must be a non-negative integer")
 		}
-		return ckafka.NewOffset(offset)
+		return ckgo.NewOffset(offset)
 	} else {
 		fromBeginning, err := cmd.Flags().GetBool("from-beginning")
 		if err != nil {
-			return ckafka.OffsetInvalid, err
+			return ckgo.OffsetInvalid, err
 		}
 		autoOffsetReset := "latest"
 		if fromBeginning {
 			autoOffsetReset = "earliest"
 		}
-		return ckafka.NewOffset(autoOffsetReset)
+		return ckgo.NewOffset(autoOffsetReset)
 	}
 }
 
-func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter PartitionFilter) []ckafka.TopicPartition {
+func getPartitionsByIndex(partitions []ckgo.TopicPartition, partitionFilter PartitionFilter) []ckgo.TopicPartition {
 	if partitionFilter.Changed {
 		for _, partition := range partitions {
 			if partition.Partition == partitionFilter.Index {
 				log.CliLogger.Debugf("Consuming from partition: %d", partitionFilter.Index)
-				return []ckafka.TopicPartition{partition}
+				return []ckgo.TopicPartition{partition}
 			}
 		}
-		return []ckafka.TopicPartition{}
+		return []ckgo.TopicPartition{}
 	}
 	return partitions
 }
 
-func SetProducerDebugOption(configMap *ckafka.ConfigMap) error {
+func SetProducerDebugOption(configMap *ckgo.ConfigMap) error {
 	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol")
@@ -343,7 +343,7 @@ func SetProducerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
-func SetConsumerDebugOption(configMap *ckafka.ConfigMap) error {
+func SetConsumerDebugOption(configMap *ckgo.ConfigMap) error {
 	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
@@ -353,23 +353,23 @@ func SetConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
-func newProducerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newProducerWithOverwrittenConfigs(configMap *ckgo.ConfigMap, configPath string, configStrings []string) (*ckgo.Producer, error) {
 	if err := OverwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
 	log.CliLogger.Debug("Creating Confluent Kafka producer with the configuration map.")
-	return ckafka.NewProducer(configMap)
+	return ckgo.NewProducer(configMap)
 }
 
-func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newConsumerWithOverwrittenConfigs(configMap *ckgo.ConfigMap, configPath string, configStrings []string) (*ckgo.Consumer, error) {
 	if err := OverwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
 	log.CliLogger.Debug("Creating Confluent Kafka consumer with the configuration map.")
-	return ckafka.NewConsumer(configMap)
+	return ckgo.NewConsumer(configMap)
 }
 
-func OverwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configs []string) error {
+func OverwriteKafkaClientConfigs(configMap *ckgo.ConfigMap, configPath string, configs []string) error {
 	configurations := make(map[string]string)
 	if configPath != "" {
 		configFile, err := os.Open(configPath)

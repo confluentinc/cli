@@ -8,8 +8,8 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
-	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
-	"github.com/confluentinc/cli/v3/pkg/flink/test/generators"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/flink/test/generators"
 )
 
 const (
@@ -22,9 +22,11 @@ const (
 )
 
 type FakeFlinkGatewayClient struct {
-	statement  flinkgatewayv1.SqlV1Statement
-	statements []flinkgatewayv1.SqlV1Statement
-	fakeCount  int
+	statement   flinkgatewayv1.SqlV1Statement
+	statements  []flinkgatewayv1.SqlV1Statement
+	connection  flinkgatewayv1.SqlV1Connection
+	connections []flinkgatewayv1.SqlV1Connection
+	fakeCount   int
 }
 
 func (c *FakeFlinkGatewayClient) GetAuthToken() string {
@@ -33,6 +35,32 @@ func (c *FakeFlinkGatewayClient) GetAuthToken() string {
 
 func NewFakeFlinkGatewayClient() ccloudv2.GatewayClientInterface {
 	return &FakeFlinkGatewayClient{}
+}
+
+func (c *FakeFlinkGatewayClient) CreateConnection(connection flinkgatewayv1.SqlV1Connection, _, _ string) (flinkgatewayv1.SqlV1Connection, error) {
+	c.fakeCount = 0
+	c.connection = connection
+	c.connections = append(c.connections, c.connection)
+	return c.connection, nil
+}
+
+func (c *FakeFlinkGatewayClient) ListConnections(_, _, _ string) ([]flinkgatewayv1.SqlV1Connection, error) {
+	return c.connections, nil
+}
+
+func (c *FakeFlinkGatewayClient) GetConnection(_, _, _ string) (flinkgatewayv1.SqlV1Connection, error) {
+	secondsToWait := time.Duration(rapid.IntRange(1, 3).Example())
+	time.Sleep(secondsToWait * time.Second)
+	c.connection.Status.Phase = "Completed"
+	return c.connection, nil
+}
+
+func (c *FakeFlinkGatewayClient) DeleteConnection(_, _, _ string) error {
+	return nil
+}
+
+func (c *FakeFlinkGatewayClient) UpdateConnection(_, _, _ string, _ flinkgatewayv1.SqlV1Connection) error {
+	return nil
 }
 
 func (c *FakeFlinkGatewayClient) DeleteStatement(_, _, _ string) error {

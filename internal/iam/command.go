@@ -3,9 +3,9 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/featureflags"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 )
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -27,6 +27,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(newGroupMappingCommand(prerunner))
 	}
 	cmd.AddCommand(newAclCommand(prerunner))
+	cmd.AddCommand(newCertificateAuthorityCommand(cfg, prerunner))
+	cmd.AddCommand(newCertificatePoolCommand(cfg, prerunner))
 	cmd.AddCommand(newIpFilterCommand(prerunner))
 	cmd.AddCommand(newIpGroupCommand(prerunner))
 	cmd.AddCommand(newPoolCommand(prerunner))

@@ -12,14 +12,14 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/components"
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/autocomplete"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/highlighting"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/history"
-	"github.com/confluentinc/cli/v3/pkg/flink/internal/reverseisearch"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
-	"github.com/confluentinc/cli/v3/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/flink/components"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/autocomplete"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/highlighting"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/reverseisearch"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type InputController struct {
@@ -141,6 +141,8 @@ func (c *InputController) initPrompt() (prompt.IPrompt, error) {
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
 		prompt.OptionSuggestionBGColor(prompt.DarkGray),
 		prompt.OptionSetLexer(highlighting.Lexer),
+		prompt.OptionDiagnosticsDetailsBGColor(prompt.Red),
+		prompt.OptionDiagnosticsDetailsTextColor(prompt.White),
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)

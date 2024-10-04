@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type UserPropertiesTestSuite struct {
@@ -174,7 +174,26 @@ func (s *UserPropertiesTestSuite) TestShouldOnlyReturnNonLocalNamespacePropertie
 	s.userProperties.Set(config.KeyCatalog, "test-catalog")
 
 	require.Equal(s.T(), map[string]string{
-		config.KeyCatalog: "test-catalog",
 		"default-key":     "default-value",
+		config.KeyCatalog: "test-catalog",
 	}, s.userProperties.GetNonLocalProperties())
+}
+
+func (s *UserPropertiesTestSuite) TestShouldReturnMaskedProperties() {
+	// Test if non local non sensitive keys are preserved
+	s.userProperties.Set(config.KeyResultsTimeout, "1000")
+	s.userProperties.Set(config.KeyCatalog, "test-catalog")
+
+	expectedProperties := map[string]string{
+		"default-key":     "default-value",
+		config.KeyCatalog: "test-catalog",
+	}
+	require.Equal(s.T(), expectedProperties, s.userProperties.GetMaskedNonLocalProperties())
+
+	// Test if sensitive keys are masked
+	secretKey := config.KeySqlSecrets + "api_key_1"
+	s.userProperties.Set(secretKey, "my-apy-key-value")
+
+	expectedProperties[secretKey] = "hidden"
+	require.Equal(s.T(), expectedProperties, s.userProperties.GetMaskedNonLocalProperties())
 }

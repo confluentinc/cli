@@ -6,8 +6,8 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 var (

@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
@@ -464,6 +465,115 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/iam/v2/certificate-authorities/{id}"
+func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		if id != "op-12345" && id != "op-54321" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
+		switch r.Method {
+		case http.MethodGet:
+			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", "", "")
+			err := json.NewEncoder(w).Encode(certificateAuthority)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodPut:
+			var req certificateauthorityv2.IamV2UpdateCertRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			certificateAuthority := buildIamCertificateAuthority(id, req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain())
+			err = json.NewEncoder(w).Encode(certificateAuthority)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/certificate-authorities"
+func handleIamCertificateAuthorities(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			certificateAuthorityList := &certificateauthorityv2.IamV2CertificateAuthorityList{Data: []certificateauthorityv2.IamV2CertificateAuthority{
+				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem", "", ""),
+				buildIamCertificateAuthority("op-54321", "my-ca-2", "my other certificate authority", "certificate-2.pem", "", "DEF456"),
+				buildIamCertificateAuthority("op-67890", "my-ca-3", "my other certificate authority", "certificate-3.pem", "example.url", ""),
+			}}
+			err := json.NewEncoder(w).Encode(certificateAuthorityList)
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req certificateauthorityv2.IamV2CreateCertRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			certificateAuthority := buildIamCertificateAuthority("op-12345", req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain())
+			err = json.NewEncoder(w).Encode(certificateAuthority)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/certificate-authorities/{provider_id}/identity-pools/{id}"
+func handleIamCertificatePool(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		if id != identityPoolId && id != "pool-55555" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
+		switch r.Method {
+		case http.MethodPut:
+			var req certificateauthorityv2.IamV2CertificateIdentityPool
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := &certificateauthorityv2.IamV2CertificateIdentityPool{
+				Id:                 req.Id,
+				DisplayName:        req.DisplayName,
+				Description:        req.Description,
+				ExternalIdentifier: req.ExternalIdentifier,
+				Filter:             req.Filter,
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodGet:
+			certificatePool := buildIamCertificatePool(id, "certificate-pool", "certificate pool identities", "external-entity", "true")
+			err := json.NewEncoder(w).Encode(certificatePool)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/certificate-authorities/{provider_id}/identity-pools"
+func handleIamCertificatePools(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			certificatePool := buildIamCertificatePool(identityPoolId, "certificate-pool", "certificate pool identities", "external-entity", "true")
+			anotherCertificatePool := buildIamCertificatePool("pool-abc", "another-pool", "another description", "sub", "true")
+			err := json.NewEncoder(w).Encode(certificateauthorityv2.IamV2CertificateIdentityPoolList{Data: []certificateauthorityv2.IamV2CertificateIdentityPool{certificatePool, anotherCertificatePool}})
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req certificateauthorityv2.IamV2CertificateIdentityPool
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			certificatePool := &certificateauthorityv2.IamV2CertificateIdentityPool{
+				Id:                 certificateauthorityv2.PtrString("pool-55555"),
+				DisplayName:        req.DisplayName,
+				Description:        req.Description,
+				ExternalIdentifier: req.ExternalIdentifier,
+				Filter:             req.Filter,
+			}
+			err = json.NewEncoder(w).Encode(certificatePool)
+			require.NoError(t, err)
+		}
+	}
+}
+
 // Handler for: "iam/v2/ip-filters"
 func handleIamIpFilters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -678,6 +788,48 @@ func buildIamPool(id, name, description, identityClaim, filter string) identityp
 		Description:   iamv2.PtrString(description),
 		IdentityClaim: iamv2.PtrString(identityClaim),
 		Filter:        ssov2.PtrString(filter),
+	}
+}
+
+func buildIamCertificateAuthority(id, name, description, certificateChainFilename, crlUrl, crlChain string) certificateauthorityv2.IamV2CertificateAuthority {
+	expDate, _ := time.Parse(time.RFC3339, "2017-07-21T17:32:28Z")
+
+	crlSource := ""
+	if crlUrl != "" {
+		crlSource = "URL"
+	}
+	if crlChain != "" {
+		crlUrl = "" // prefer chain over url
+		crlSource = "LOCAL"
+	}
+
+	var crlUpdatedAt *time.Time
+	if crlUrl != "" || crlChain != "" {
+		updatedAt, _ := time.Parse(time.RFC3339, "2024-07-21T17:32:28Z")
+		crlUpdatedAt = &updatedAt
+	}
+
+	return certificateauthorityv2.IamV2CertificateAuthority{
+		Id:                       certificateauthorityv2.PtrString(id),
+		DisplayName:              certificateauthorityv2.PtrString(name),
+		Description:              certificateauthorityv2.PtrString(description),
+		Fingerprints:             &[]string{"B1BC968BD4f49D622AA89A81F2150152A41D829C"},
+		ExpirationDates:          &[]time.Time{expDate},
+		SerialNumbers:            &[]string{"219C542DE8f6EC7177FA4EE8C3705797"},
+		CertificateChainFilename: certificateauthorityv2.PtrString(certificateChainFilename),
+		CrlSource:                certificateauthorityv2.PtrString(crlSource),
+		CrlUrl:                   certificateauthorityv2.PtrString(crlUrl),
+		CrlUpdatedAt:             crlUpdatedAt,
+	}
+}
+
+func buildIamCertificatePool(id, name, description, externalIdentifier, filter string) certificateauthorityv2.IamV2CertificateIdentityPool {
+	return certificateauthorityv2.IamV2CertificateIdentityPool{
+		Id:                 iamv2.PtrString(id),
+		DisplayName:        iamv2.PtrString(name),
+		Description:        iamv2.PtrString(description),
+		ExternalIdentifier: iamv2.PtrString(externalIdentifier),
+		Filter:             certificateauthorityv2.PtrString(filter),
 	}
 }
 

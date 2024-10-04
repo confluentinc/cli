@@ -6,7 +6,7 @@ import (
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newIdentityProviderClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *identityproviderv2.APIClient {

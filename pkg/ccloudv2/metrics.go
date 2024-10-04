@@ -9,8 +9,8 @@ import (
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 
-	"github.com/confluentinc/cli/v3/pkg/auth"
-	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type flatQueryResponse struct {

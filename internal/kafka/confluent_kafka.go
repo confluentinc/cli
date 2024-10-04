@@ -15,16 +15,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/log"
-	"github.com/confluentinc/cli/v3/pkg/output"
-	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
-	"github.com/confluentinc/cli/v3/pkg/serdes"
-	"github.com/confluentinc/cli/v3/pkg/utils"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const (
@@ -63,7 +63,7 @@ type GroupHandler struct {
 	Properties  ConsumerProperties
 }
 
-func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
+func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle) error {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Hand
 		return err
 	}
 	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
-		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
+		oart := ckgo.OAuthBearerTokenRefresh{Config: oauthConfig}
 		if c.Context.GetState() == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
@@ -92,10 +92,10 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Hand
 	return nil
 }
 
-func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string) (ckafka.OAuthBearerToken, error) {
+func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string) (ckgo.OAuthBearerToken, error) {
 	config := e.Config
 	if !oauthbearerConfigRegex.MatchString(config) {
-		return ckafka.OAuthBearerToken{}, fmt.Errorf("ignoring event %T due to malformed config: %s", e, config)
+		return ckgo.OAuthBearerToken{}, fmt.Errorf("ignoring event %T due to malformed config: %s", e, config)
 	}
 	oauthbearerConfigMap := map[string]string{
 		principalClaimNameKey: "sub",
@@ -105,16 +105,16 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 	}
 	principal := oauthbearerConfigMap[principalKey]
 	if principal == "" {
-		return ckafka.OAuthBearerToken{}, fmt.Errorf("ignoring event %T: no %s: %s", e, principalKey, config)
+		return ckgo.OAuthBearerToken{}, fmt.Errorf("ignoring event %T: no %s: %s", e, principalKey, config)
 	}
 
 	if len(oauthbearerConfigMap) > 2 { // do not proceed if there are any unknown name=value pairs
-		return ckafka.OAuthBearerToken{}, fmt.Errorf("ignoring event %T: unrecognized key(s): %s", e, config)
+		return ckgo.OAuthBearerToken{}, fmt.Errorf("ignoring event %T: unrecognized key(s): %s", e, config)
 	}
 
 	now := time.Now()
 	expiration := now.Add(time.Second * time.Duration(3600)) // timeout after 60 mins. TODO: re-authenticate after timout
-	oauthBearerToken := ckafka.OAuthBearerToken{
+	oauthBearerToken := ckgo.OAuthBearerToken{
 		TokenValue: tokenValue,
 		Expiration: expiration,
 		Principal:  principal,
@@ -122,7 +122,7 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 	return oauthBearerToken, nil
 }
 
-func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckgo.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
 	if err != nil {
 		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
@@ -131,7 +131,7 @@ func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, 
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckgo.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
 		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
@@ -140,7 +140,7 @@ func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, confi
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckgo.Producer, error) {
 	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
@@ -149,7 +149,7 @@ func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configSt
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newOnPremConsumer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newOnPremConsumer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckgo.Consumer, error) {
 	configMap, err := getOnPremConsumerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
@@ -159,11 +159,11 @@ func newOnPremConsumer(cmd *cobra.Command, clientID, configPath string, configSt
 }
 
 // example: https://github.com/confluentinc/confluent-kafka-go/blob/e01dd295220b5bf55f3fbfabdf8cc6d3f0ae185f/examples/cooperative_consumer_example/cooperative_consumer_example.go#L121
-func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
-	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
+func GetRebalanceCallback(offset ckgo.Offset, partitionFilter PartitionFilter) func(*ckgo.Consumer, ckgo.Event) error {
+	return func(consumer *ckgo.Consumer, event ckgo.Event) error {
 		switch ev := event.(type) { // ev is of type ckafka.Event
-		case ckafka.AssignedPartitions:
-			partitions := make([]ckafka.TopicPartition, len(ev.Partitions))
+		case ckgo.AssignedPartitions:
+			partitions := make([]ckgo.TopicPartition, len(ev.Partitions))
 			for i, partition := range ev.Partitions {
 				partition.Offset = offset
 				partitions[i] = partition
@@ -173,7 +173,7 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 			if err := consumer.IncrementalAssign(partitions); err != nil {
 				return err
 			}
-		case ckafka.RevokedPartitions:
+		case ckgo.RevokedPartitions:
 			if consumer.AssignmentLost() {
 				output.ErrPrintln(false, "%% Current assignment lost.")
 			}
@@ -186,7 +186,7 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 	}
 }
 
-func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
+func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
 	if h.Properties.PrintKey {
 		keyDeserializer, err := serdes.GetDeserializationProvider(h.KeyFormat)
 		if err != nil {
@@ -255,7 +255,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	return nil
 }
 
-func getMessageString(message *ckafka.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties) (string, error) {
+func getMessageString(message *ckgo.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties) (string, error) {
 	messageString, err := valueDeserializer.Deserialize(message.Value)
 	if err != nil {
 		return "", err
@@ -276,7 +276,7 @@ func getMessageString(message *ckafka.Message, valueDeserializer serdes.Deserial
 	return messageString, nil
 }
 
-func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+func RunConsumer(consumer *ckgo.Consumer, groupHandler *GroupHandler) error {
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -295,7 +295,7 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 				continue
 			}
 			switch e := event.(type) {
-			case *ckafka.Message:
+			case *ckgo.Message:
 				if err := consumeMessage(e, groupHandler); err != nil {
 					commitErrCh := make(chan error, 1)
 					go func() {
@@ -314,9 +314,9 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 
 					return err
 				}
-			case ckafka.Error:
+			case ckgo.Error:
 				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
-				if e.Code() == ckafka.ErrAllBrokersDown {
+				if e.Code() == ckgo.ErrAllBrokersDown {
 					run = false
 				}
 			}
@@ -377,7 +377,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	return tempStorePath, referencePathMap, nil
 }
 
-func getFullHeaders(headers []ckafka.Header) []string {
+func getFullHeaders(headers []ckgo.Header) []string {
 	headerStrings := make([]string, len(headers))
 	for i, header := range headers {
 		headerStrings[i] = getHeaderString(header)
@@ -385,7 +385,7 @@ func getFullHeaders(headers []ckafka.Header) []string {
 	return headerStrings
 }
 
-func getHeaderString(header ckafka.Header) string {
+func getHeaderString(header ckgo.Header) string {
 	if header.Value == nil {
 		return fmt.Sprintf("%s=nil", header.Key)
 	} else if len(header.Value) == 0 {

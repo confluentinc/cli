@@ -11,8 +11,8 @@ import (
 
 	"github.com/texttheater/golang-levenshtein/levenshtein"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 type StatementType string

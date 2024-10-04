@@ -1,0 +1,7 @@
++---------------+------------------+
+| Principal     | User:bob         |
+| Role          | DeveloperRead    |
+| Resource Type | FlinkApplication |
+| Name          | testApplication  |
+| Pattern Type  | LITERAL          |
++---------------+------------------+

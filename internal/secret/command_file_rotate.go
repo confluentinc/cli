@@ -3,9 +3,9 @@ package secret
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type rotateOut struct {
@@ -30,7 +30,6 @@ func (c *command) newRotateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("passphrase"))
-	cobra.CheckErr(cmd.MarkFlagRequired("passphrase-new"))
 
 	return cmd
 }

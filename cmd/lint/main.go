@@ -8,10 +8,10 @@ import (
 
 	"github.com/client9/gospell"
 
-	"github.com/confluentinc/cli/v3/internal"
-	"github.com/confluentinc/cli/v3/pkg/config"
-	"github.com/confluentinc/cli/v3/pkg/linter"
-	pversion "github.com/confluentinc/cli/v3/pkg/version"
+	"github.com/confluentinc/cli/v4/internal"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/linter"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 var commandRules = []linter.CommandRule{
@@ -37,7 +37,11 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
-	linter.Filter(linter.RequireValidExamples(), linter.ExcludeCommand("pipeline update")),
+	linter.Filter(linter.RequireValidExamples(),
+		linter.ExcludeCommand("connect custom-plugin version create"),
+		linter.ExcludeCommand("connect custom-plugin version update"),
+		linter.ExcludeCommand("pipeline update"),
+		linter.ExcludeCommand("flink statement update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -89,6 +93,7 @@ var flagRules = []linter.FlagRule{
 			"accepted-environments",
 			"azure-subscription",
 			"certificate-authority-path",
+			"certificate-chain-filename",
 			"destination-api-key",
 			"destination-api-secret",
 			"destination-bootstrap-server",
@@ -149,6 +154,7 @@ var properNouns = []string{
 	"Confluent",
 	"Connect",
 	"Control Center",
+	"CRL",
 	"Data Encryption Key",
 	"DEK",
 	"Flink",
@@ -187,7 +193,11 @@ var vocabWords = []string{
 	"auth",
 	"avro",
 	"aws",
+	"azureml",
+	"azureopenai",
 	"backoff",
+	"base64",
+	"bedrock",
 	"byok",
 	"cel",
 	"cfu",
@@ -195,11 +205,13 @@ var vocabWords = []string{
 	"cku",
 	"cli",
 	"clojure",
+	"cmf",
 	"codec",
 	"config",
 	"configs",
 	"consumer.config",
 	"cpp",
+	"crl",
 	"crn",
 	"csharp",
 	"csu",
@@ -208,6 +220,7 @@ var vocabWords = []string{
 	"deserializer",
 	"deserializers",
 	"dns",
+	"elastic",
 	"env",
 	"eu",
 	"failover",
@@ -217,6 +230,7 @@ var vocabWords = []string{
 	"gcm",
 	"gcp",
 	"geo",
+	"googleai",
 	"gzip",
 	"hostname",
 	"https",
@@ -243,8 +257,11 @@ var vocabWords = []string{
 	"lz4",
 	"md",
 	"mds",
+	"mongodb",
 	"nodejs",
+	"openai",
 	"pem",
+	"pinecone",
 	"plaintext",
 	"prem",
 	"privatelink",
@@ -256,6 +273,7 @@ var vocabWords = []string{
 	"recv",
 	"restapi",
 	"ruleset",
+	"sagemaker",
 	"sasl",
 	"scala",
 	"schemas",
@@ -279,6 +297,7 @@ var vocabWords = []string{
 	"url",
 	"us",
 	"v2",
+	"vertexai",
 	"vv",
 	"vvv",
 	"vvvv",

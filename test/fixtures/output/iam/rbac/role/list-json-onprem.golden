@@ -26,6 +26,14 @@
         {
           "resourceType": "Topic",
           "operations": ["Read", "Describe"]
+        },
+        {
+          "resourceType": "FlinkApplication",
+          "operations": ["View", "AccessWebUI"]
+        },
+        {
+          "resourceType": "FlinkEnvironment",
+          "operations": ["View"]
         }
       ]
     }

@@ -11,9 +11,9 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	"github.com/confluentinc/cli/v3/pkg/cluster"
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/cluster"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type registerCommand struct {
@@ -38,10 +38,11 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID.")
 	cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID.")
 	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
+	cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID.")
+	cmd.Flags().String("flink-environment", "", "Flink environment ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
-	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
 	cobra.CheckErr(cmd.MarkFlagRequired("hosts"))
 	cobra.CheckErr(cmd.MarkFlagRequired("protocol"))
 
@@ -99,6 +100,10 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeC
 		case "connect-cluster":
 			scope.ConnectCluster = flag.Value.String()
 			nonKafkaScopesSet++
+		case "cmf":
+			scope.Cmf = flag.Value.String()
+		case "flink-environment":
+			scope.FlinkEnvironment = flag.Value.String()
 		}
 	})
 
@@ -106,8 +111,8 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mdsv1.ScopeC
 		return nil, fmt.Errorf(errors.SpecifyKafkaIdErrorMsg)
 	}
 
-	if scope.KafkaCluster == "" && nonKafkaScopesSet == 0 {
-		return nil, fmt.Errorf("must specify at least one cluster ID")
+	if scope.Cmf == "" && scope.FlinkEnvironment != "" {
+		return nil, fmt.Errorf(errors.SpecifyCmfErrorMsg)
 	}
 
 	if nonKafkaScopesSet > 1 {

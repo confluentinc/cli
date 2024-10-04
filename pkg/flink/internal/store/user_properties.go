@@ -7,8 +7,8 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/confluentinc/cli/v3/pkg/flink/config"
-	"github.com/confluentinc/cli/v3/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
 const emptyStringTag = "<unset>"
@@ -96,6 +96,19 @@ func (p *UserProperties) GetNonLocalProperties() map[string]string {
 		}
 	}
 	return nonLocalProperties
+}
+
+// GetMaskedNonLocalProperties returns the same as GetNonLocalProperties but with sensitive values masked
+func (p *UserProperties) GetMaskedNonLocalProperties() map[string]string {
+	maskedProperties := p.GetNonLocalProperties()
+	for key := range maskedProperties {
+		if !strings.HasPrefix(key, config.NamespaceClient) {
+			if hasSensitiveKey(key) {
+				maskedProperties[key] = "hidden"
+			}
+		}
+	}
+	return maskedProperties
 }
 
 func (p *UserProperties) Delete(key string) {

@@ -13,7 +13,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v3/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
 const tab = "   "

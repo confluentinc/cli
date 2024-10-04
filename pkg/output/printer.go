@@ -8,12 +8,12 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/confluentinc/cli/v3/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 var (
 	codeSnippetRegexp = regexp.MustCompile("`[^`]+`")
-	linkRegexp        = regexp.MustCompile(`https?://(www\.)?[a-z\-]+\.[/a-z\-]+`)
+	linkRegexp        = regexp.MustCompile(`https?://([a-z\-]+\.)?[a-z\-]+\.[/a-z\-]+(.[a-z]+)?`)
 	resourceRegexp    = regexp.MustCompile(`"[^"]+"`)
 )
 

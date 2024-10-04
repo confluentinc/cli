@@ -5,8 +5,8 @@ import (
 
 	fColor "github.com/fatih/color"
 
-	"github.com/confluentinc/cli/v3/pkg/color"
-	"github.com/confluentinc/cli/v3/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/color"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func OutputErr(s string) {

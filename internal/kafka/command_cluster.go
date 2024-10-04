@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/config"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 const (
@@ -32,9 +32,8 @@ type clusterCommand struct {
 
 func newClusterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "cluster",
-		Short:       "Manage Kafka clusters.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+		Use:   "cluster",
+		Short: "Manage Kafka clusters.",
 	}
 
 	c := &clusterCommand{}

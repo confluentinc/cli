@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
-	"github.com/confluentinc/cli/v3/pkg/types"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
 // generateDocPage creates a file which contains the command description, usage, flags, examples, and more.
@@ -43,8 +43,20 @@ func printDocPage(tabs []Tab, depth int) []string {
 func printWarnings(cmd *cobra.Command, depth int) []string {
 	var rows []string
 
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		include := strings.Repeat("../", depth) + "includes/cli.rst"
+	include := strings.Repeat("../", depth) + "includes/cli.rst"
+	if cmd.CommandPath() == "confluent local kafka start" {
+		args := map[string]string{
+			"start-after": "cli_limitations_confluent_kafka_local_start",
+			"end-before":  "cli_limitations_confluent_kafka_local_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	} else if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka broker describe") {
+		args := map[string]string{
+			"start-after": "cli_new_local_kafka_broker_describe_start",
+			"end-before":  "cli_new_kafka_broker_describe_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	} else if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		args := map[string]string{
 			"start-after": "cli_limitations_start",
 			"end-before":  "cli_limitations_end",
@@ -57,6 +69,42 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 		args := map[string]string{
 			"start-after": "cli_cloud_logout_note_start",
 			"end-before":  "cli_cloud_logout_note_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka broker describe") {
+		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
+		args := map[string]string{
+			"start-after": "cli_new_kafka_broker_describe_start",
+			"end-before":  "cli_new_kafka_broker_describe_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka broker task list") {
+		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
+		args := map[string]string{
+			"start-after": "cli_new_kafka_broker_task_list_start",
+			"end-before":  "cli_new_kafka_broker_task_list_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka replica list") {
+		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
+		args := map[string]string{
+			"start-after": "cli_new_kafka_replica_list_start",
+			"end-before":  "cli_new_kafka_replica_list_end",
+		}
+		rows = append(rows, printSphinxBlock("include", include, args)...)
+	}
+
+	if strings.HasPrefix(cmd.CommandPath(), "confluent kafka topic describe") {
+		include := strings.Repeat("../", depth) + "includes/cli-share.rst"
+		args := map[string]string{
+			"start-after": "cli_new_kafka_topic_describe_start",
+			"end-before":  "cli_new_kafka_topic_describe_end",
 		}
 		rows = append(rows, printSphinxBlock("include", include, args)...)
 	}

@@ -1,0 +1,6 @@
+Statement name: unexpected-test-statement
+Statement successfully submitted. Statement phase is RUNNING.
+Dry run statement execution resulted in unexpected status.
+Status: RUNNING
+Details: unexpected status
+
