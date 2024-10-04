@@ -28,18 +28,9 @@ type CmfRestClient struct {
 	*cmfsdk.APIClient
 }
 
-func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagValues) (*CmfRestClient, error) {
-	cmfRestClient := &CmfRestClient{}
-	httpClient := utils.DefaultClient()
+func NewCmfRestHttpClient(restFlags *OnPremCMFRestFlagValues) (*http.Client, error) {
 	var err error
-
-	// Set the base path if it's not set (it'll be already set in case of tests).
-	if cfg.BasePath == "" {
-		if restFlags.url == "" {
-			return nil, perrors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
-		}
-		cfg.BasePath = restFlags.url + "/cmf/api/v1"
-	}
+	httpClient := utils.DefaultClient()
 
 	// If caCertPath is not provided via flag, check if it is set in the environment
 	if restFlags.caCertPath == "" {
@@ -58,7 +49,26 @@ func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagVal
 		}
 	}
 
-	cfg.HTTPClient = httpClient
+	return httpClient, nil
+}
+
+func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagValues) (*CmfRestClient, error) {
+	var err error
+	cmfRestClient := &CmfRestClient{}
+
+	// Set the base path if it's not set (it'll be already set in case of tests).
+	if cfg.BasePath == "" {
+		if restFlags.url == "" {
+			return nil, perrors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
+		}
+		cfg.BasePath = restFlags.url + "/cmf/api/v1"
+	}
+
+	cfg.HTTPClient, err = NewCmfRestHttpClient(restFlags)
+	if err != nil {
+		return nil, err
+	}
+
 	client := cmfsdk.NewAPIClient(cfg)
 	cmfRestClient.APIClient = client
 	return cmfRestClient, nil

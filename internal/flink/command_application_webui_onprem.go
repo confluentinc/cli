@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v3/pkg/flink"
 	"github.com/confluentinc/cli/v3/pkg/output"
 )
 
@@ -59,7 +60,16 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 		return fmt.Errorf(`application "%s" does not exist in the environment "%s" or environment "%s" does not exist`, applicationName, environment, environment)
 	}
 
-	client := &http.Client{}
+	restFlags, err := flink.ResolveOnPremCmfRestFlags(cmd)
+	if err != nil {
+		return err
+	}
+
+	client, err := flink.NewCmfRestHttpClient(restFlags)
+	if err != nil {
+		return err
+	}
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handleRequest(w, r, url, environment, applicationName, client)
 	})
