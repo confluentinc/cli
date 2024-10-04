@@ -3,7 +3,6 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -72,17 +71,9 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Get the name of the application
-	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, _ := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
-	// check if the application exists by checking the status code
-	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
-		return fmt.Errorf(`application "%s" already exists in the environment "%s"`, applicationName, environment)
-	}
-
-	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(cmd.Context(), environment, application)
-	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-		return fmt.Errorf(`failed to create application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
+	outputApplication, err := cmfClient.CreateApplication(cmd.Context(), environment, application)
+	if err != nil {
+		return err
 	}
 
 	return output.SerializedOutput(cmd, outputApplication)

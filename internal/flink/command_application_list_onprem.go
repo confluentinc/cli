@@ -1,12 +1,7 @@
 package flink
 
 import (
-	"fmt"
-
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
-
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/output"
@@ -31,32 +26,6 @@ func (c *command) newApplicationListCommand() *cobra.Command {
 	return cmd
 }
 
-// Run through all the pages until we get an empty page, in that case, return.
-func getAllApplications(cmfClient *cmfsdk.APIClient, cmd *cobra.Command, environment string) ([]cmfsdk.Application, error) {
-	applications := make([]cmfsdk.Application, 0)
-	currentPageNumber := 0
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-
-	pagingOptions := &cmfsdk.GetApplicationsOpts{
-		Page: optional.NewInt32(int32(currentPageNumber)),
-		Size: optional.NewInt32(pageSize),
-	}
-
-	for !done {
-		applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(cmd.Context(), environment, pagingOptions)
-		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-			return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, parsedErr)
-		}
-		applications = append(applications, applicationsPage.Items...)
-		currentPageNumber, done = extractPageOptions(len(applicationsPage.Items), currentPageNumber)
-		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
-	}
-
-	return applications, nil
-}
-
 func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	environment, err := getEnvironment(cmd)
 	if err != nil {
@@ -68,7 +37,7 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	applications, err := getAllApplications(cmfClient, cmd, environment)
+	applications, err := cmfClient.ListApplications(cmd.Context(), environment)
 	if err != nil {
 		return err
 	}

@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"net/http"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -18,7 +16,13 @@ func (c *command) newEnvironmentDeleteCommand() *cobra.Command {
 		RunE:  c.environmentDelete,
 	}
 
+	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
+	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CERT_AUTHORITY_PATH" may be set in place of this flag.`)
+
 	pcmd.AddForceFlag(cmd)
+
 	return cmd
 }
 
@@ -29,8 +33,8 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(name string) bool {
-		_, httpResp, err := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), name)
-		return err == nil && httpResp.StatusCode == http.StatusOK
+		_, err := cmfClient.DescribeEnvironment(cmd.Context(), name)
+		return err == nil
 	}
 
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkEnvironment); err != nil {
@@ -38,8 +42,7 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(name string) error {
-		httpResp, err := cmfClient.DefaultApi.DeleteEnvironment(cmd.Context(), name)
-		return parseSdkError(httpResp, err)
+		return cmfClient.DeleteEnvironment(cmd.Context(), name)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkEnvironment)

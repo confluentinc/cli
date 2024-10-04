@@ -45,7 +45,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
-	github.com/confluentinc/cmf-sdk-go v0.0.1-0.20240926071016-909cc56512ed
+	github.com/confluentinc/cmf-sdk-go v0.0.1-0.20241002115638-ca05f48d1a65
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.31

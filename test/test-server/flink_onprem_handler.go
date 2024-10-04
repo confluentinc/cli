@@ -161,7 +161,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			if environment.Name == "default" || environment.Name == "test" {
 				outputEnvironment := createEnvironment(environment.Name)
 				// This is a dummy update - only the defaults can be updated anyway.
-				outputEnvironment.Defaults = environment.Defaults
+				outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 				err = json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return
@@ -169,7 +169,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 
 			// New environment: create
 			outputEnvironment := createEnvironment(environment.Name)
-			outputEnvironment.Defaults = environment.Defaults
+			outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 			err = json.NewEncoder(w).Encode(outputEnvironment)
 			require.NoError(t, err)
 			return

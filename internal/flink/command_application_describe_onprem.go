@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -43,12 +41,11 @@ func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Get the name of the application to be retrieved
 	applicationName := args[0]
-	cmfApplication, httpResponse, err := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, applicationName, nil)
-	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-		return fmt.Errorf(`failed to describe application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
+	application, err := cmfClient.DescribeApplication(cmd.Context(), environment, applicationName)
+	if err != nil {
+		return err
 	}
 
-	return output.SerializedOutput(cmd, cmfApplication)
+	return output.SerializedOutput(cmd, application)
 }

@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"net/http"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
@@ -39,8 +37,8 @@ func (c *command) applicationDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(name string) bool {
-		_, httpResp, err := cmfClient.DefaultApi.GetApplication(cmd.Context(), environment, name, nil)
-		return err == nil && httpResp.StatusCode == http.StatusOK
+		_, err := cmfClient.DescribeApplication(cmd.Context(), environment, name)
+		return err == nil
 	}
 
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkApplication); err != nil {
@@ -48,8 +46,7 @@ func (c *command) applicationDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(name string) error {
-		httpResp, err := cmfClient.DefaultApi.DeleteApplication(cmd.Context(), environment, name)
-		return parseSdkError(httpResp, err)
+		return cmfClient.DeleteApplication(cmd.Context(), environment, name)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkApplication)

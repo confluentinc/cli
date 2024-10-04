@@ -11,10 +11,10 @@ type flinkEnvironmentSummary struct {
 }
 
 type flinkEnvironmentOutput struct {
-	Name        string `human:"Name" serialized:"name"`
-	CreatedTime string `human:"Created Time" serialized:"created_time"`
-	UpdatedTime string `human:"Updated Time" serialized:"updated_time"`
-	Defaults    string `human:"Defaults" serialized:"defaults"`
+	Name                     string `human:"Name" serialized:"name"`
+	CreatedTime              string `human:"Created Time" serialized:"created_time"`
+	UpdatedTime              string `human:"Updated Time" serialized:"updated_time"`
+	FlinkApplicationDefaults string `human:"Flink Application Defaults" serialized:"flinkApplicationDefaults"`
 }
 
 func (c *command) newEnvironmentCommand() *cobra.Command {

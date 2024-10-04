@@ -3,7 +3,6 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
@@ -23,7 +22,12 @@ func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 		RunE:  c.environmentCreate,
 	}
 
-	cmd.Flags().String("defaults", "", "JSON string defining the environment defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension)")
+	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
+	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CERT_AUTHORITY_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension)")
+
 	return cmd
 }
 
@@ -67,34 +71,29 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	_, httpResponse, _ := cmfClient.DefaultApi.GetEnvironment(cmd.Context(), environmentName)
-	// check if the environment exists by checking the status code
-	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
-		return fmt.Errorf(`environment "%s" already exists`, environmentName)
+	var postEnvironment cmfsdk.PostEnvironment
+	postEnvironment.Name = environmentName
+	if defaultsParsed != nil {
+		postEnvironment.FlinkApplicationDefaults = defaultsParsed
 	}
 
-	var environment cmfsdk.PostEnvironment
-	environment.Name = environmentName
-	if defaultsParsed != nil {
-		environment.Defaults = defaultsParsed
-	}
-	outputEnvironment, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateEnvironment(cmd.Context(), environment)
-	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-		return fmt.Errorf(`failed to create environment "%s": %s`, environmentName, parsedErr)
+	outputEnvironment, err := cmfClient.CreateEnvironment(cmd.Context(), postEnvironment)
+	if err != nil {
+		return err
 	}
 
 	table := output.NewTable(cmd)
 	var defaultsBytes []byte
-	defaultsBytes, err = json.Marshal(outputEnvironment.Defaults)
+	defaultsBytes, err = json.Marshal(outputEnvironment.FlinkApplicationDefaults)
 	if err != nil {
 		return fmt.Errorf("failed to marshal defaults: %s", err)
 	}
 
 	table.Add(&flinkEnvironmentOutput{
-		Name:        outputEnvironment.Name,
-		Defaults:    string(defaultsBytes),
-		CreatedTime: outputEnvironment.CreatedTime.String(),
-		UpdatedTime: outputEnvironment.UpdatedTime.String(),
+		Name:                     outputEnvironment.Name,
+		FlinkApplicationDefaults: string(defaultsBytes),
+		CreatedTime:              outputEnvironment.CreatedTime.String(),
+		UpdatedTime:              outputEnvironment.UpdatedTime.String(),
 	})
 	return table.Print()
 }
