@@ -2,8 +2,6 @@ package flink
 
 import (
 	"github.com/spf13/cobra"
-
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type flinkApplicationSummary struct {
@@ -15,10 +13,9 @@ type flinkApplicationSummary struct {
 
 func (c *command) newApplicationCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "application",
-		Short:       "Manage Flink application",
-		Aliases:     []string{"app"},
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
+		Use:     "application",
+		Short:   "Manage Flink application",
+		Aliases: []string{"app"},
 	}
 
 	cmd.AddCommand(c.newApplicationCreateCommand())
