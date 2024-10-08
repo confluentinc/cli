@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) TestListFlinkApplications() {
+func (s *CLITestSuite) TestFlinkApplicationList() {
 	tests := []CLITest{
 		// failure scenarios
 		{args: "flink application list", fixture: "flink/application/list-env-missing.golden", exitCode: 1},
@@ -16,7 +16,7 @@ func (s *CLITestSuite) TestListFlinkApplications() {
 	}
 }
 
-func (s *CLITestSuite) TestDeleteFlinkApplications() {
+func (s *CLITestSuite) TestFlinkApplicationDelete() {
 	tests := []CLITest{
 		// failure scenarios
 		{args: "flink application delete default-application-1", fixture: "flink/application/delete-env-missing.golden", exitCode: 1},
@@ -34,7 +34,7 @@ func (s *CLITestSuite) TestDeleteFlinkApplications() {
 	}
 }
 
-func (s *CLITestSuite) TestListFlinkEnvironments() {
+func (s *CLITestSuite) TestFlinkEnvironmentList() {
 	tests := []CLITest{
 		// success scenarios
 		{args: "flink environment list --output json", fixture: "flink/environment/list-json.golden"},
@@ -46,7 +46,7 @@ func (s *CLITestSuite) TestListFlinkEnvironments() {
 	}
 }
 
-func (s *CLITestSuite) TestDeleteFlinkEnvironments() {
+func (s *CLITestSuite) TestFlinkEnvironmentDelete() {
 	tests := []CLITest{
 		// failure scenarios
 		{args: "flink environment delete", fixture: "flink/environment/delete-env-missing.golden", exitCode: 1},
@@ -62,7 +62,7 @@ func (s *CLITestSuite) TestDeleteFlinkEnvironments() {
 	}
 }
 
-func (s *CLITestSuite) TestCreateFlinkApplication() {
+func (s *CLITestSuite) TestFlinkApplicationCreate() {
 	tests := []CLITest{
 		// failure
 		{args: "flink application create --environment default test/fixtures/input/flink/application/create-unsuccessful-application.json", fixture: "flink/application/create-unsuccessful-application.golden", exitCode: 1},
@@ -77,7 +77,7 @@ func (s *CLITestSuite) TestCreateFlinkApplication() {
 	}
 }
 
-func (s *CLITestSuite) TestUpdateFlinkApplication() {
+func (s *CLITestSuite) TestFlinkApplicationUpdate() {
 	tests := []CLITest{
 		// failure
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-non-existent.json", fixture: "flink/application/update-non-existent.golden", exitCode: 1},
@@ -92,7 +92,7 @@ func (s *CLITestSuite) TestUpdateFlinkApplication() {
 	}
 }
 
-func (s *CLITestSuite) TestCreateFlinkEnvironment() {
+func (s *CLITestSuite) TestFlinkEnvironmentCreate() {
 	tests := []CLITest{
 		// success
 		{args: "flink environment create default-2 --kubernetes-namespace default-staging", fixture: "flink/environment/create-success.golden"},
@@ -108,7 +108,7 @@ func (s *CLITestSuite) TestCreateFlinkEnvironment() {
 	}
 }
 
-func (s *CLITestSuite) TestUpdateFlinkEnvironment() {
+func (s *CLITestSuite) TestFlinkEnvironmentUpdate() {
 	tests := []CLITest{
 		// success
 		{args: "flink environment update default --defaults '{\"property\": \"value\"}'", fixture: "flink/environment/update-success.golden"},
@@ -122,7 +122,7 @@ func (s *CLITestSuite) TestUpdateFlinkEnvironment() {
 	}
 }
 
-func (s *CLITestSuite) TestDescribeFlinkEnvironment() {
+func (s *CLITestSuite) TestFlinkEnvironmentDescribe() {
 	tests := []CLITest{
 		// success
 		{args: "flink environment describe default", fixture: "flink/environment/describe-success.golden"},
@@ -138,7 +138,7 @@ func (s *CLITestSuite) TestDescribeFlinkEnvironment() {
 	}
 }
 
-func (s *CLITestSuite) TestDescribeFlinkApplication() {
+func (s *CLITestSuite) TestFlinkApplicationDescribe() {
 	tests := []CLITest{
 		// success
 		{args: "flink application describe --environment default default-application-1", fixture: "flink/application/describe-success.golden"},
@@ -154,7 +154,7 @@ func (s *CLITestSuite) TestDescribeFlinkApplication() {
 	}
 }
 
-func (s *CLITestSuite) TestForwardWebUiFlinkApplication() {
+func (s *CLITestSuite) TestFlinkApplicationWebUiForward() {
 	// We cannot test the success cases as they require a running CMF service. However we can test some basic failure cases.
 	tests := []CLITest{
 		// failure
