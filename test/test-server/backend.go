@@ -18,6 +18,7 @@ var (
 	TestFlinkGatewayUrlPrivate = url.URL{Scheme: "http", Host: "127.0.0.1:1040"}
 	TestSchemaRegistryUrl      = url.URL{Scheme: "http", Host: "127.0.0.1:1027"}
 	TestPackagesUrl            = url.URL{Scheme: "http", Host: "127.0.0.1:1029"}
+	TestCmfUrl                 = url.URL{Scheme: "http", Host: "127.0.0.1:1079"}
 )
 
 // TestBackend consists of the servers for necessary mocked backend services
@@ -31,6 +32,7 @@ type TestBackend struct {
 	sr             *httptest.Server
 	hub            *httptest.Server
 	packages       *httptest.Server
+	cmf            *httptest.Server
 }
 
 func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
@@ -43,6 +45,7 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 		sr:             newTestCloudServer(NewSRRouter(t), TestSchemaRegistryUrl.Host),
 		hub:            newTestCloudServer(NewHubRouter(t), TestHubUrl.Host),
 		packages:       newTestCloudServer(NewPackagesRouter(t), TestPackagesUrl.Host),
+		cmf:            newTestCloudServer(NewFlinkOnPremRouter(t), TestCmfUrl.Host),
 	}
 }
 
@@ -95,6 +98,9 @@ func (b *TestBackend) Close() {
 	}
 	if b.packages != nil {
 		b.packages.Close()
+	}
+	if b.cmf != nil {
+		b.cmf.Close()
 	}
 }
 

@@ -1,0 +1,4 @@
+Error: Flink application "default-application-1" not found
+
+Suggestions:
+    List available Flink applications with `confluent flink application list`.
