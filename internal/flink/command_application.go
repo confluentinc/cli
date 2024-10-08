@@ -7,8 +7,8 @@ import (
 type flinkApplicationSummary struct {
 	Name        string `human:"Name" serialized:"name"`
 	Environment string `human:"Environment" serialized:"environment"`
-	JobId       string `human:"Job ID" serialized:"job_id"`
-	JobState    string `human:"Job State" serialized:"job_state"`
+	JobName     string `human:"Job Name" serialized:"job_name"`
+	JobStatus   string `human:"Job Status" serialized:"job_status"`
 }
 
 func (c *command) newApplicationCommand() *cobra.Command {

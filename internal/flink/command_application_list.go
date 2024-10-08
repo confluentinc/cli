@@ -56,8 +56,8 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 			list.Add(&flinkApplicationSummary{
 				Name:        app.Metadata["name"].(string),
 				Environment: envInApp,
-				JobId:       jobStatus["jobId"].(string),
-				JobState:    jobStatus["state"].(string),
+				JobName:     jobStatus["jobName"].(string),
+				JobStatus:   jobStatus["state"].(string),
 			})
 		}
 		return list.Print()
