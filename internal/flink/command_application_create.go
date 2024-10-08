@@ -31,11 +31,13 @@ func (c *command) newApplicationCreateCommand() *cobra.Command {
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+
 	return cmd
 }
 
 func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
-	environment, err := getEnvironment(cmd)
+	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}

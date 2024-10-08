@@ -24,6 +24,5 @@ func (c *command) newEnvironmentCommand() *cobra.Command {
 	cmd.AddCommand(c.newEnvironmentDescribeCommand())
 	cmd.AddCommand(c.newEnvironmentListCommand())
 	cmd.AddCommand(c.newEnvironmentUpdateCommand())
-	cmd.AddCommand(c.newEnvironmentUseCommand())
 	return cmd
 }

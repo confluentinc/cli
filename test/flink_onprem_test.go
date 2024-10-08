@@ -1,7 +1,5 @@
 package test
 
-import "os"
-
 func (s *CLITestSuite) TestListFlinkApplications() {
 	tests := []CLITest{
 		// failure scenarios
@@ -165,30 +163,6 @@ func (s *CLITestSuite) TestForwardWebUiFlinkApplication() {
 	}
 
 	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestUseEnvironmentFlinkApplications() {
-	// The test harness already creates a "temporary" home directory for us to use, but it is the same across tests.
-	// So, we need to change $HOME.
-
-	tmpDir, err := os.MkdirTemp("", "environment-use-test-home")
-	if err != nil {
-		s.T().Fatalf("Failed to create temporary directory: %v", err)
-	}
-	// we don't need to change env with a $HOME variable.
-	tests := []CLITest{
-		// failure
-		{args: "flink environment use non-existent", fixture: "flink/environment/use-non-existent.golden", exitCode: 1},
-		// success, followed by listing applications
-		{args: "flink environment use default", fixture: "flink/environment/use-success.golden", env: []string{"HOME=" + tmpDir}},
-		{args: "flink application describe default-application-1", fixture: "flink/application/describe-after-use-success.golden", env: []string{"HOME=" + tmpDir}},
-	}
-
-	for _, test := range tests {
-		// Don't reset state between tests
-		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }

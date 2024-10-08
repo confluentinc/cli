@@ -23,11 +23,13 @@ func (c *command) newApplicationListCommand() *cobra.Command {
 
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+
 	return cmd
 }
 
 func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
-	environment, err := getEnvironment(cmd)
+	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}

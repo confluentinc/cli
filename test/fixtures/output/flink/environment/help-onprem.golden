@@ -12,7 +12,6 @@ Available Commands:
   describe    Describe a Flink environment.
   list        List Flink environments.
   update      Update a Flink environment.
-  use         Use an environment as default for Flink applications
 
 Global Flags:
   -h, --help            Show help for this command.

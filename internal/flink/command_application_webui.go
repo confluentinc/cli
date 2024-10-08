@@ -28,6 +28,7 @@ func (c *command) newApplicationWebUiForwardCommand() *cobra.Command {
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
 	cmd.Flags().Uint16("port", 0, "Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.")
 
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 	cobra.CheckErr(cmd.MarkFlagRequired("url"))
 
 	return cmd
@@ -39,10 +40,11 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	environment, err := getEnvironment(cmd)
+	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}
+
 	port, err := cmd.Flags().GetUint16("port")
 	if err != nil {
 		return err
