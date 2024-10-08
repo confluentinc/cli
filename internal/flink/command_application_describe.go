@@ -1,40 +1,32 @@
 package flink
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *command) newApplicationCreateCommand() *cobra.Command {
+func (c *command) newApplicationDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <resourceFilePath>",
-		Short: "Create a Flink application.",
+		Use:   "describe <name>",
+		Short: "Describe a Flink application.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.applicationCreate,
+		RunE:  c.applicationDescribe,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink application from.")
 	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
 	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
-	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CERT_AUTHORITY_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
 	return cmd
 }
 
-func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
+func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 	environment, err := getEnvironment(cmd)
 	if err != nil {
 		return err
@@ -49,32 +41,11 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Check if the application already exists
-	resourceFilePath := args[0]
-	// Read file contents
-	data, err := os.ReadFile(resourceFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %v", err)
-	}
-
-	var application cmfsdk.Application
-	ext := filepath.Ext(resourceFilePath)
-	switch ext {
-	case ".json":
-		err = json.Unmarshal(data, &application)
-	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &application)
-	default:
-		return fmt.Errorf("unsupported file format: %s", ext)
-	}
+	applicationName := args[0]
+	application, err := cmfClient.DescribeApplication(cmd.Context(), environment, applicationName)
 	if err != nil {
 		return err
 	}
 
-	outputApplication, err := cmfClient.CreateApplication(cmd.Context(), environment, application)
-	if err != nil {
-		return err
-	}
-
-	return output.SerializedOutput(cmd, outputApplication)
+	return output.SerializedOutput(cmd, application)
 }

@@ -18,7 +18,7 @@ func (c *command) newEnvironmentListCommand() *cobra.Command {
 	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
 	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
-	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CERT_AUTHORITY_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
 
 	pcmd.AddOutputFlag(cmd)
 
@@ -38,8 +38,9 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
+		list.Filter([]string{"Name", "CreatedTime", "UpdatedTime"})
 		for _, env := range environments {
-			list.Add(&flinkEnvironmentSummary{
+			list.Add(&flinkEnvironmentOutput{
 				Name:        env.Name,
 				CreatedTime: env.CreatedTime.String(),
 				UpdatedTime: env.UpdatedTime.String(),

@@ -20,26 +20,26 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Apache Flink.",
 	}
 
-	command := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	if !cfg.IsCloudLogin() {
 		// On-prem commands don't require login, so change the pre-runner to account for that.
-		cmd.PersistentPreRunE = prerunner.Anonymous(command.AuthenticatedCLICommand.CLICommand, false)
+		cmd.PersistentPreRunE = prerunner.Anonymous(c.AuthenticatedCLICommand.CLICommand, false)
 	}
 
 	// Cloud Specific Commands
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(command.newConnectionCommand())
+		cmd.AddCommand(c.newConnectionCommand())
 	}
 
-	cmd.AddCommand(command.newApplicationCommand())
-	cmd.AddCommand(command.newArtifactCommand())
-	cmd.AddCommand(command.newComputePoolCommand())
-	cmd.AddCommand(command.newConnectivityTypeCommand())
-	cmd.AddCommand(command.newEnvironmentCommand())
-	cmd.AddCommand(command.newRegionCommand())
-	cmd.AddCommand(command.newShellCommand(prerunner))
-	cmd.AddCommand(command.newStatementCommand())
+	cmd.AddCommand(c.newApplicationCommand())
+	cmd.AddCommand(c.newArtifactCommand())
+	cmd.AddCommand(c.newComputePoolCommand())
+	cmd.AddCommand(c.newConnectivityTypeCommand())
+	cmd.AddCommand(c.newEnvironmentCommand())
+	cmd.AddCommand(c.newRegionCommand())
+	cmd.AddCommand(c.newShellCommand(prerunner))
+	cmd.AddCommand(c.newStatementCommand())
 
 	return cmd
 }

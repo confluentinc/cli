@@ -14,7 +14,7 @@ type flinkApplicationSummary struct {
 func (c *command) newApplicationCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "application",
-		Short:   "Manage Flink application",
+		Short:   "Manage Flink applications.",
 		Aliases: []string{"app"},
 	}
 

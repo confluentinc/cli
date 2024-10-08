@@ -1,4 +1,4 @@
-Manage Flink application
+Manage Flink applications.
 
 Usage:
   confluent flink application [command]

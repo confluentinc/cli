@@ -4,8 +4,8 @@ Usage:
   confluent flink [command]
 
 Available Commands:
-  application       Manage Flink application
-  environment       Manage Flink environments
+  application       Manage Flink applications.
+  environment       Manage Flink environments.
 
 Global Flags:
   -h, --help            Show help for this command.

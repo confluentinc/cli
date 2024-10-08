@@ -4,12 +4,12 @@ Usage:
   confluent flink [command]
 
 Available Commands:
-  application       Manage Flink application
+  application       Manage Flink applications.
   artifact          Manage Flink UDF artifacts.
   compute-pool      Manage Flink compute pools.
   connection        Manage Flink connections.
   connectivity-type Manage Flink connectivity type.
-  environment       Manage Flink environments
+  environment       Manage Flink environments.
   region            List Flink regions.
   shell             Start Flink interactive SQL client.
   statement         Manage Flink SQL statements.

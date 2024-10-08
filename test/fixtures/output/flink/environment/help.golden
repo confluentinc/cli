@@ -1,4 +1,4 @@
-Manage Flink environments
+Manage Flink environments.
 
 Usage:
   confluent flink environment [command]
