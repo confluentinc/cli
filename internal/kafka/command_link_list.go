@@ -83,5 +83,5 @@ func getListFields(includeTopics bool) []string {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage")
+	return append(x, "RemoteCluster", "State", "Error", "ErrorMessage")
 }
