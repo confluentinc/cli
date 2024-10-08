@@ -8,12 +8,16 @@ import (
 
 type DoubleSerializationProvider struct{}
 
+func (DoubleSerializationProvider) InitSerializer(_ string, _ string) error {
+	return nil
+}
+
 func (DoubleSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
-func (DoubleSerializationProvider) Serialize(str string) ([]byte, error) {
-	f, err := strconv.ParseFloat(str, 64)
+func (DoubleSerializationProvider) Serialize(_ string, message any) ([]byte, error) {
+	f, err := strconv.ParseFloat(message.(string), 64)
 	if err != nil {
 		return nil, err
 	}

@@ -2,46 +2,50 @@ package serdes
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/linkedin/goavro/v2"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avrov2"
 )
 
 type AvroDeserializationProvider struct {
-	codec *goavro.Codec
+	deser *avrov2.Deserializer
 }
 
-func (a *AvroDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
-	if len(referencePathMap) > 0 {
-		return fmt.Errorf(errors.AvroReferenceNotSupportedErrorMsg)
+func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, mode string) error {
+	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
+	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
+
+	if err != nil {
+		return fmt.Errorf("failed to create deserializer-specific Schema Registry client: %w", err)
 	}
 
-	schema, err := os.ReadFile(schemaPath)
-	if err != nil {
-		return err
+	serdeConfig := avrov2.NewDeserializerConfig()
+
+	var serdeType serde.Type
+	switch mode {
+	case "key":
+		serdeType = serde.KeySerde
+	case "value":
+		serdeType = serde.ValueSerde
+	default:
+		return fmt.Errorf("unknown deserialization mode: %s", mode)
 	}
 
-	codec, err := goavro.NewCodec(string(schema))
+	deser, err := avrov2.NewDeserializer(serdeClient, serdeType, serdeConfig)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create deserializer: %w", err)
 	}
-	a.codec = codec
+
+	a.deser = deser
 	return nil
 }
 
-func (a *AvroDeserializationProvider) Deserialize(data []byte) (string, error) {
-	// Convert to native Go object.
-	native, _, err := a.codec.NativeFromBinary(data)
+func (a *AvroDeserializationProvider) Deserialize(topic string, payload []byte, msg interface{}) error {
+	err := a.deser.DeserializeInto(topic, payload, msg)
 	if err != nil {
-		return "", err
+		return fmt.Errorf("failed to deserialize payload: %w", err)
 	}
-
-	textual, err := a.codec.TextualFromNative(nil, native)
-	if err != nil {
-		return "", err
-	}
-
-	return string(textual), nil
+	return nil
 }

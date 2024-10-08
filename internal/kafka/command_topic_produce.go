@@ -270,7 +270,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		SchemaPath: keySchema,
 		Refs:       refs,
 	}
-	keyMetaInfo, keyReferencePathMap, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
+	keyMetaInfo, _, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
 	if err != nil {
 		return err
 	}
@@ -283,11 +283,16 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		SchemaPath: schema,
 		Refs:       refs,
 	}
-	valueMetaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
+	valueMetaInfo, _, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
 	if err != nil {
 		return err
 	}
-	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
+
+	srEndpoint, err := c.getSchemaRegistryEndpointFromClient(cmd)
+	if err != nil {
+		return err
+	}
+	if err := valueSerializer.InitSerializer(srEndpoint, "value"); err != nil {
 		return err
 	}
 
@@ -351,8 +356,10 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *schemaregistry.R
 	// Registering schema and fill metaInfo array.
 	var metaInfo []byte // Meta info contains a magic byte and schema ID (4 bytes).
 	referencePathMap := map[string]string{}
+	fmt.Printf("I am outside the registerSchema loop\n")
 
 	if len(schemaCfg.SchemaPath) > 0 {
+		fmt.Printf("I am inside the registerSchema loop\n")
 		srClient, err := c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
@@ -461,6 +468,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, topic, data, delimiter 
 		val = value
 	}
 
+	// Line to update: parse the val and give serializer a map?
 	serializedValue, err := valueSerializer.Serialize(topic, &val)
 	if err != nil {
 		return nil, nil, err
@@ -525,7 +533,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	var format string
-	referencePathMap := map[string]string{}
+	//referencePathMap := map[string]string{}
 	metaInfo := []byte{}
 
 	if schemaId.IsSet() {
@@ -544,7 +552,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		schema, referencePathMap, err = setSchemaPathRef(schemaString, schemaDir, subject, schemaId.Value(), client)
+		schema, _, err = setSchemaPathRef(schemaString, schemaDir, subject, schemaId.Value(), client)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -557,11 +565,13 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		}
 	}
 
+	fmt.Printf("Mode is %s and format is %s\n", mode, format)
 	serializationProvider, err := serdes.GetSerializationProvider(format)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	fmt.Printf("Schema is %s and schemaId is %d\n", schema, schemaId.Value())
 	if schema != "" && !schemaId.IsSet() {
 		// read schema info from local file and register schema
 		schemaCfg := &schemaregistry.RegisterSchemaConfigs{
@@ -572,6 +582,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			SchemaType: serializationProvider.GetSchemaName(),
 		}
 
+		fmt.Printf("I need to registery with SR first\n")
 		flag := "references"
 		if mode == "key" {
 			flag = "key-references"
@@ -588,14 +599,14 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		}
 		schemaCfg.Refs = refs
 
-		metaInfo, referencePathMap, err = c.registerSchema(cmd, schemaCfg)
+		metaInfo, _, err = c.registerSchema(cmd, schemaCfg)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	// We need the endpoint for schema registry client for internal serializer/deserializer
 	// TODO: remove below comments after code review
+	// We need the endpoint for schema registry client for internal serializer/deserializer
 	// [Channing] SR client must already be available at this point
 	// If schemaId.IsSet() == true, that means client is created in line532
 	// If schemaId.IsSet() == false, that means client is created in line591
@@ -619,7 +630,7 @@ func (c *command) getSchemaRegistryEndpointFromClient(cmd *cobra.Command) (strin
 	if cfg == nil {
 		return "", fmt.Errorf("unable to fetch the configuration for Schema Registry client")
 	}
-	if cfg.Servers == nil || len(cfg.Servers) <= 1 {
+	if cfg.Servers == nil || len(cfg.Servers) == 0 {
 		return "", fmt.Errorf("unable to fetch the servers from Schema Registry client configuration")
 	}
 	return cfg.Servers[0].URL, nil

@@ -7,12 +7,16 @@ import (
 
 type IntegerSerializationProvider struct{}
 
+func (IntegerSerializationProvider) InitSerializer(_ string, _ string) error {
+	return nil
+}
+
 func (IntegerSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
-func (IntegerSerializationProvider) Serialize(str string) ([]byte, error) {
-	i, err := strconv.ParseUint(str, 10, 32)
+func (IntegerSerializationProvider) Serialize(topic string, message any) ([]byte, error) {
+	i, err := strconv.ParseUint(message.(string), 10, 32)
 	if err != nil {
 		return nil, err
 	}

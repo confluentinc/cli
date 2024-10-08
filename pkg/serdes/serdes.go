@@ -50,13 +50,14 @@ const (
 
 type SerializationProvider interface {
 	InitSerializer(string, string) error
-	Serialize(string, interface{}) ([]byte, error)
+	LoadSchema(string, map[string]string) error
+	Serialize(string, any) ([]byte, error)
 	GetSchemaName() string
 }
 
 type DeserializationProvider interface {
 	InitDeserializer(string, string) error
-	Deserialize(string, []byte, interface{}) error
+	Deserialize(string, []byte, any) error
 }
 
 func FormatTranslation(backendValueFormat string) (string, error) {
@@ -77,11 +78,17 @@ func FormatTranslation(backendValueFormat string) (string, error) {
 func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
 	switch valueFormat {
 	case avroSchemaName:
-		return new(Avro2SerializationProvider), nil
+		return new(AvroSerializationProvider), nil
+	case doubleSchemaName:
+		return new(DoubleSerializationProvider), nil
+	case integerSchemaName:
+		return new(IntegerSerializationProvider), nil
 	case jsonSchemaName:
-		return new(Json2SerializationProvider), nil
+		return new(JsonSerializationProvider), nil
 	case protobufSchemaName:
-		return new(Protobuf2SerializationProvider), nil
+		return new(ProtobufSerializationProvider), nil
+	case stringSchemaName:
+		return new(StringSerializationProvider), nil
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
@@ -90,11 +97,15 @@ func GetSerializationProvider(valueFormat string) (SerializationProvider, error)
 func GetDeserializationProvider(valueFormat string) (DeserializationProvider, error) {
 	switch valueFormat {
 	case avroSchemaName:
-		return new(Avro2DeserializationProvider), nil
+		return new(AvroDeserializationProvider), nil
+	case doubleSchemaName:
+		return new(DoubleDeserializationProvider), nil
+	case integerSchemaName:
+		return new(IntegerDeserializationProvider), nil
 	case jsonSchemaName:
-		return new(Json2DeserializationProvider), nil
+		return new(JsonDeserializationProvider), nil
 	case protobufSchemaName:
-		return new(Protobuf2DeserializationProvider), nil
+		return new(ProtobufDeserializationProvider), nil
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}

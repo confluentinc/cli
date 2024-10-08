@@ -7,18 +7,19 @@ import (
 
 type IntegerDeserializationProvider struct{}
 
-func (IntegerDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (IntegerDeserializationProvider) InitDeserializer(_ string, _ string) error {
 	return nil
 }
 
-func (IntegerDeserializationProvider) Deserialize(data []byte) (string, error) {
+func (IntegerDeserializationProvider) Deserialize(_ string, data []byte, message any) error {
 	if len(data) == 0 {
-		return "", nil
+		return nil
 	}
 
 	if len(data) != 4 {
-		return "", fmt.Errorf("the integer key is invalid")
+		return fmt.Errorf("the integer key is invalid")
 	}
 
-	return fmt.Sprintf("%d", binary.LittleEndian.Uint32(data)), nil
+	message = fmt.Sprintf("%d", binary.LittleEndian.Uint32(data))
+	return nil
 }

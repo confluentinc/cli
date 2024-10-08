@@ -1,73 +1,68 @@
 package serdes
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"os"
 
-	"github.com/xeipuuv/gojsonschema"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"encoding/json"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/jsonschema"
 )
 
 type JsonSerializationProvider struct {
-	schemaLoader *gojsonschema.Schema
+	ser *jsonschema.Serializer
 }
 
-func (j *JsonSerializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
-	schemaLoader, err := parseSchema(schemaPath, referencePathMap)
+func (a *JsonSerializationProvider) InitSerializer(srClientUrl, mode string) error {
+	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
+	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
-	j.schemaLoader = schemaLoader
+
+	serdeConfig := jsonschema.NewSerializerConfig()
+	serdeConfig.AutoRegisterSchemas = false
+	serdeConfig.UseLatestVersion = true
+
+	var serdeType serde.Type
+	if mode == "key" {
+		serdeType = serde.KeySerde
+	} else if mode == "value" {
+		serdeType = serde.ValueSerde
+	} else {
+		return fmt.Errorf("unknown serialization mode: %s", mode)
+	}
+
+	ser, err := jsonschema.NewSerializer(serdeClient, serdeType, serdeConfig)
+
+	if err != nil {
+		return fmt.Errorf("failed to create serializer: %w", err)
+	}
+
+	a.ser = ser
 	return nil
 }
 
-func (j *JsonSerializationProvider) GetSchemaName() string {
+func (a *JsonSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
+	return nil
+}
+
+func (a *JsonSerializationProvider) GetSchemaName() string {
 	return jsonSchemaBackendName
 }
 
-func (j *JsonSerializationProvider) Serialize(str string) ([]byte, error) {
-	documentLoader := gojsonschema.NewStringLoader(str)
-
-	// JSON schema conducts validation on JSON string before serialization.
-	result, err := j.schemaLoader.Validate(documentLoader)
+func (a *JsonSerializationProvider) Serialize(topic string, message any) ([]byte, error) {
+	// Convert the plain string message from customer into map
+	var result map[string]any
+	err := json.Unmarshal([]byte(message.(string)), &result)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert message string into map struct for serialization: %w", err)
 	}
 
-	if !result.Valid() {
-		return nil, fmt.Errorf(errors.JsonDocumentInvalidErrorMsg)
-	}
-
-	data := []byte(str)
-
-	// Compact JSON string, i.e. remove redundant space, etc.
-	compactedBuffer := new(bytes.Buffer)
-	if err := json.Compact(compactedBuffer, data); err != nil {
-		return nil, err
-	}
-	return compactedBuffer.Bytes(), nil
-}
-
-func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojsonschema.Schema, error) {
-	sl := gojsonschema.NewSchemaLoader()
-	for referenceName, referencePath := range referencePathMap {
-		refSchema, err := os.ReadFile(referencePath)
-		if err != nil {
-			return nil, err
-		}
-		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
-		if err := sl.AddSchema("/"+referenceName, referenceLoader); err != nil {
-			return nil, err
-		}
-	}
-
-	schema, err := os.ReadFile(schemaPath)
+	payload, err := a.ser.Serialize(topic, &result)
 	if err != nil {
-		return nil, fmt.Errorf("the JSON schema is invalid")
+		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
-
-	return sl.Compile(gojsonschema.NewStringLoader(string(schema)))
+	return payload, nil
 }

@@ -13,7 +13,6 @@ import (
 
 	"github.com/confluentinc/cli/v3/internal/ai"
 	apikey "github.com/confluentinc/cli/v3/internal/api-key"
-	"github.com/confluentinc/cli/v3/internal/asyncapi"
 	auditlog "github.com/confluentinc/cli/v3/internal/audit-log"
 	"github.com/confluentinc/cli/v3/internal/billing"
 	"github.com/confluentinc/cli/v3/internal/byok"
@@ -99,7 +98,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	cmd.AddCommand(apikey.New(prerunner))
-	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
