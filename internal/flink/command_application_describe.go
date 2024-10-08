@@ -38,13 +38,13 @@ func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions("human output is not supported for this command", "Try using --output flag with json or yaml.\n")
 	}
 
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
 	applicationName := args[0]
-	application, err := cmfClient.DescribeApplication(cmd.Context(), environment, applicationName)
+	application, err := client.DescribeApplication(cmd.Context(), environment, applicationName)
 	if err != nil {
 		return err
 	}

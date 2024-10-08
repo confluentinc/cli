@@ -46,7 +46,7 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions("human output is not supported for this command", "Try using --output flag with json or yaml.\n")
 	}
 
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -67,13 +67,13 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 	case ".yaml", ".yml":
 		err = yaml.Unmarshal(data, &application)
 	default:
-		return fmt.Errorf("unsupported file format: %s", ext)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
 	if err != nil {
 		return err
 	}
 
-	outputApplication, err := cmfClient.CreateApplication(cmd.Context(), environment, application)
+	outputApplication, err := client.CreateApplication(cmd.Context(), environment, application)
 	if err != nil {
 		return err
 	}

@@ -20,7 +20,6 @@ func (c *command) newApplicationListCommand() *cobra.Command {
 	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
-
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
@@ -34,12 +33,12 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	applications, err := cmfClient.ListApplications(cmd.Context(), environment)
+	applications, err := client.ListApplications(cmd.Context(), environment)
 	if err != nil {
 		return err
 	}
@@ -55,7 +54,7 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 			if !ok {
 				envInApp = environment
 			}
-			list.Add(&flinkApplicationSummary{
+			list.Add(&flinkApplicationSummaryOut{
 				Name:        app.Metadata["name"].(string),
 				Environment: envInApp,
 				JobName:     jobStatus["jobName"].(string),

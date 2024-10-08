@@ -29,14 +29,14 @@ func (c *command) newEnvironmentDescribeCommand() *cobra.Command {
 }
 
 func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
 	// Get the name of the environment to be retrieved
 	environmentName := args[0]
-	environment, err := cmfClient.DescribeEnvironment(cmd.Context(), environmentName)
+	environment, err := client.DescribeEnvironment(cmd.Context(), environmentName)
 	if err != nil {
 		return err
 	}

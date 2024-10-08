@@ -33,13 +33,13 @@ func (c *command) applicationDelete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
 	existenceFunc := func(name string) bool {
-		_, err := cmfClient.DescribeApplication(cmd.Context(), environment, name)
+		_, err := client.DescribeApplication(cmd.Context(), environment, name)
 		return err == nil
 	}
 
@@ -48,7 +48,7 @@ func (c *command) applicationDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(name string) error {
-		return cmfClient.DeleteApplication(cmd.Context(), environment, name)
+		return client.DeleteApplication(cmd.Context(), environment, name)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkApplication)

@@ -35,7 +35,7 @@ func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 }
 
 func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	}
 	postEnvironment.KubernetesNamespace = kubernetesNamespace
 
-	outputEnvironment, err := cmfClient.CreateEnvironment(cmd.Context(), postEnvironment)
+	outputEnvironment, err := client.CreateEnvironment(cmd.Context(), postEnvironment)
 	if err != nil {
 		return err
 	}

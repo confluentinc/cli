@@ -26,12 +26,12 @@ func (c *command) newEnvironmentListCommand() *cobra.Command {
 }
 
 func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	environments, err := cmfClient.ListEnvironments(cmd.Context())
+	environments, err := client.ListEnvironments(cmd.Context())
 	if err != nil {
 		return err
 	}

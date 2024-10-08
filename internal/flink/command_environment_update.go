@@ -32,7 +32,7 @@ func (c *command) newEnvironmentUpdateCommand() *cobra.Command {
 }
 
 func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 		environment.FlinkApplicationDefaults = defaultsParsed
 	}
 
-	outputEnvironment, err := cmfClient.UpdateEnvironment(cmd.Context(), environment)
+	outputEnvironment, err := client.UpdateEnvironment(cmd.Context(), environment)
 	if err != nil {
 		return err
 	}

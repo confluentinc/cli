@@ -98,7 +98,7 @@ func handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Req
 	newUrl := fmt.Sprintf("%s/cmf/api/v1/environments/%s/applications/%s/flink-web-ui%s", url, environmentName, applicationName, userRequest.RequestURI)
 	reqToCmf, err := http.NewRequest(userRequest.Method, newUrl, bytes.NewReader(body))
 	if err != nil {
-		http.Error(userResponseWriter, fmt.Sprintf("failed to forward the web-ui: %s", err), http.StatusInternalServerError)
+		http.Error(userResponseWriter, fmt.Sprintf("failed to forward the web UI: %s", err), http.StatusInternalServerError)
 		return
 	}
 	reqToCmf.Header = userRequest.Header
@@ -121,7 +121,7 @@ func handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Req
 	// Copy response body.
 	resBody, err := io.ReadAll(resFromCmf.Body)
 	if err != nil {
-		http.Error(userResponseWriter, fmt.Sprintf("failed to return response from the web-ui: %s", err), http.StatusInternalServerError)
+		http.Error(userResponseWriter, fmt.Sprintf("failed to return response from the web UI: %s", err), http.StatusInternalServerError)
 		return
 	}
 	_, err = userResponseWriter.Write(resBody)

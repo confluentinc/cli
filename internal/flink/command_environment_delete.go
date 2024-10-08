@@ -27,13 +27,13 @@ func (c *command) newEnvironmentDeleteCommand() *cobra.Command {
 }
 
 func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
-	cmfClient, err := c.GetCmfClient(cmd)
+	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
 	existenceFunc := func(name string) bool {
-		_, err := cmfClient.DescribeEnvironment(cmd.Context(), name)
+		_, err := client.DescribeEnvironment(cmd.Context(), name)
 		return err == nil
 	}
 
@@ -42,7 +42,7 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(name string) error {
-		return cmfClient.DeleteEnvironment(cmd.Context(), name)
+		return client.DeleteEnvironment(cmd.Context(), name)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkEnvironment)
