@@ -3,11 +3,12 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/version"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 type CLICommand struct {

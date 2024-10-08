@@ -10,11 +10,13 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
+	"github.com/spf13/cobra"
+
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	perrors "github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/utils"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
-	"github.com/spf13/cobra"
 )
 
 type OnPremCMFRestFlagValues struct {
