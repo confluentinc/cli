@@ -38,12 +38,13 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		list.Filter([]string{"Name", "CreatedTime", "UpdatedTime"})
+		list.Filter([]string{"Name", "CreatedTime", "UpdatedTime", "KubernetesNamespace"})
 		for _, env := range environments {
 			list.Add(&flinkEnvironmentOutput{
-				Name:        env.Name,
-				CreatedTime: env.CreatedTime.String(),
-				UpdatedTime: env.UpdatedTime.String(),
+				Name:                env.Name,
+				KubernetesNamespace: env.KubernetesNamespace,
+				CreatedTime:         env.CreatedTime.String(),
+				UpdatedTime:         env.UpdatedTime.String(),
 			})
 		}
 		return list.Print()
