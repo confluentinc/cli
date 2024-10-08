@@ -82,7 +82,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	}
 
 	// We log just before starting because Serve() blocks, so we can't print after it.
-	output.Printf(false, "Starting web UI at http://localhost:%+v/ ... (Press ^C to stop)\n", listener.Addr().(*net.TCPAddr).Port)
+	output.Printf(false, "Starting web UI at http://localhost:%+v/ ... (Press Ctrl-C to stop)\n", listener.Addr().(*net.TCPAddr).Port)
 
 	_ = http.Serve(listener, nil)
 	return nil
