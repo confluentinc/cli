@@ -88,5 +88,4 @@ func getListFields(includeTopics bool, isListLink bool) []string {
 	} else {
 		return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage")
 	}
-
 }
