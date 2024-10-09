@@ -21,8 +21,9 @@ import (
 
 func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "shell",
-		Short: "Start Flink interactive SQL client.",
+		Use:         "shell",
+		Short:       "Start Flink interactive SQL client.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClient(prerunner, cmd)
 		},

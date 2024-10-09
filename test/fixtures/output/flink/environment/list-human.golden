@@ -1,0 +1,5 @@
+       Name      |   Kubernetes Namespace   |         Created Time          |         Updated Time           
+-----------------+--------------------------+-------------------------------+--------------------------------
+  default        | default-namespace        | 2024-09-10 23:00:00 +0000 UTC | 2024-09-10 23:00:00 +0000 UTC  
+  test           | test-namespace           | 2024-09-10 23:00:00 +0000 UTC | 2024-09-10 23:00:00 +0000 UTC  
+  update-failure | update-failure-namespace | 2024-09-10 23:00:00 +0000 UTC | 2024-09-10 23:00:00 +0000 UTC  
