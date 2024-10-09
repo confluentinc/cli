@@ -22,9 +22,10 @@ func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 		RunE:  c.environmentCreate,
 	}
 
-	addCmfFlagSet(cmd)
-	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 	cmd.Flags().String("kubernetes-namespace", "", "Kubernetes namespace to deploy Flink applications to.")
+	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
+
+	addCmfFlagSet(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("kubernetes-namespace"))
 
