@@ -1,0 +1,15 @@
+Manage Apache Flink.
+
+Usage:
+  confluent flink [command]
+
+Available Commands:
+  application       Manage Flink applications.
+  environment       Manage Flink environments.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink [command] --help" for more information about a command.

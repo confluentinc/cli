@@ -16,20 +16,27 @@ type command struct {
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "flink",
-		Short:       "Manage Apache Flink.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "flink",
+		Short: "Manage Apache Flink.",
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	if !cfg.IsCloudLogin() {
+		// On-prem commands don't require login, so change the pre-runner to account for that.
+		cmd.PersistentPreRunE = prerunner.Anonymous(c.AuthenticatedCLICommand.CLICommand, false)
+	}
+
+	// Cloud Specific Commands
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(c.newConnectionCommand())
 	}
 
+	cmd.AddCommand(c.newApplicationCommand())
 	cmd.AddCommand(c.newArtifactCommand())
 	cmd.AddCommand(c.newComputePoolCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())
+	cmd.AddCommand(c.newEnvironmentCommand())
 	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newShellCommand(prerunner))
 	cmd.AddCommand(c.newStatementCommand())
@@ -89,4 +96,11 @@ func (c *command) autocompleteDatabases(cmd *cobra.Command, args []string) []str
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
+}
+
+func addCmfFlagSet(cmd *cobra.Command) {
+	cmd.Flags().String("url", "", `Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.`)
+	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
+	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
 }

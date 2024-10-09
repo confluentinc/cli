@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -24,8 +25,9 @@ type connectionOut struct {
 
 func (c *command) newConnectionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "connection",
-		Short: "Manage Flink connections.",
+		Use:         "connection",
+		Short:       "Manage Flink connections.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.AddCommand(c.newConnectionCreateCommand())

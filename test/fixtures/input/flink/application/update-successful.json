@@ -1,0 +1,10 @@
+{
+    "apiVersion": "cmf.confluent.io/v1alpha1",
+    "kind": "FlinkApplication",
+    "metadata": {
+        "name": "default-application-2"
+    },
+    "spec": {
+        "serviceAccount": "flink-new-service-account"
+    }
+}

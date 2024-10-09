@@ -28,6 +28,12 @@ const (
 	ConfluentPlatformMDSURL                   = "CONFLUENT_PLATFORM_MDS_URL"
 	ConfluentPlatformCertificateAuthorityPath = "CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH"
 	ConfluentPlatformSSO                      = "CONFLUENT_PLATFORM_SSO"
+
+	// Confluent Platform CMF environment variables
+	ConfluentPlatformCmfURL                      = "CONFLUENT_CMF_URL"
+	ConfluentPlatformCmfClientKeyPath            = "CONFLUENT_CMF_CLIENT_KEY_PATH"
+	ConfluentPlatformCmfClientCertPath           = "CONFLUENT_CMF_CLIENT_CERT_PATH"
+	ConfluentPlatformCmfCertificateAuthorityPath = "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH"
 )
 
 func IsOnPremSSOEnv() bool {
