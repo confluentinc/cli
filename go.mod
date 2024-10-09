@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.23.1
+go 1.22.7
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -45,7 +45,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
-	github.com/confluentinc/cmf-sdk-go v0.0.1
+	github.com/confluentinc/cmf-sdk-go v0.0.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.4.0
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.38
