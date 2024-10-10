@@ -30,3 +30,7 @@ func (IntegerSerializationProvider) Serialize(topic string, message any) ([]byte
 func (IntegerSerializationProvider) GetSchemaName() string {
 	return ""
 }
+
+func (IntegerSerializationProvider) GetSchemaRegistryClient() any {
+	return nil
+}

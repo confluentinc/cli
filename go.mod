@@ -45,7 +45,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
-	github.com/confluentinc/confluent-kafka-go/v2 v2.5.4
+	github.com/confluentinc/confluent-kafka-go/v2 v2.5.5-0.20241007235105-1a3ef0ee6678
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.31
 	github.com/confluentinc/go-ps1 v1.0.2
@@ -81,7 +81,6 @@ require (
 	github.com/jhump/protoreflect v1.16.0
 	github.com/jonboulle/clockwork v0.4.0
 	github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100
-	github.com/linkedin/goavro/v2 v2.13.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.1.0
@@ -97,12 +96,10 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	github.com/stripe/stripe-go/v76 v76.25.0
-	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/texttheater/golang-levenshtein v1.0.1
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
-	github.com/xeipuuv/gojsonschema v1.2.0
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.27.0
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
@@ -111,7 +108,6 @@ require (
 	golang.org/x/text v0.18.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.30.2
 	pgregory.net/rapid v1.1.0
 )
 
@@ -152,7 +148,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
@@ -192,16 +187,12 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
-	github.com/swaggest/jsonschema-go v0.3.45 // indirect
-	github.com/swaggest/refl v1.1.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/travisjeffery/mocker v1.1.0 // indirect
 	github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87 // indirect
 	github.com/ugorji/go/codec v1.2.8 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
-	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yuin/goldmark v1.5.4 // indirect
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
@@ -226,9 +217,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 	k8s.io/api v0.29.2 // indirect
+	k8s.io/apimachinery v0.30.2 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
 )

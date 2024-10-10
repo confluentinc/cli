@@ -3,6 +3,7 @@ package serdes
 import (
 	"fmt"
 
+	"encoding/json"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/jsonschema"
@@ -12,9 +13,25 @@ type JsonDeserializationProvider struct {
 	deser *jsonschema.Deserializer
 }
 
-func (a *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode string) error {
-	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
-	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
+func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode string, existingClient any) error {
+	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
+	// If existingClient is not nil, we should share this client between ser and deser
+	// This client is referred to as mock client to store the same set of schemas in cache
+	// If existingClient is nil (which is normal case), ser and deser don't have to share
+	// A REST call will be made to backend SR service in case of cache miss
+	var serdeClient schemaregistry.Client
+	var err error
+	var ok bool
+
+	if existingClient != nil {
+		serdeClient, ok = existingClient.(schemaregistry.Client)
+		if !ok {
+			return fmt.Errorf("failed to cast existing schema registry client to expected format")
+		}
+	} else {
+		serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
+		serdeClient, err = schemaregistry.NewClient(serdeClientConfig)
+	}
 
 	if err != nil {
 		return fmt.Errorf("failed to create deserializer-specific Schema Registry client: %w", err)
@@ -38,14 +55,20 @@ func (a *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode string)
 		return fmt.Errorf("failed to create deserializer: %w", err)
 	}
 
-	a.deser = deser
+	j.deser = deser
 	return nil
 }
 
-func (a *JsonDeserializationProvider) Deserialize(topic string, payload []byte, msg interface{}) error {
-	err := a.deser.DeserializeInto(topic, payload, msg)
+func (j *JsonDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
+	message := make(map[string]interface{})
+	err := j.deser.DeserializeInto(topic, payload, &message)
 	if err != nil {
-		return fmt.Errorf("failed to deserialize payload: %w", err)
+		return "", fmt.Errorf("failed to deserialize payload: %w", err)
 	}
-	return nil
+	jsonBytes, err := json.Marshal(message)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert message map struct into string after deserialization: %w", err)
+	}
+
+	return string(jsonBytes), nil
 }

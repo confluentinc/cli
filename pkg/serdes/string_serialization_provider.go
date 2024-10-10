@@ -17,3 +17,7 @@ func (s *StringSerializationProvider) Serialize(_ string, message any) ([]byte, 
 func (s *StringSerializationProvider) GetSchemaName() string {
 	return ""
 }
+
+func (s *StringSerializationProvider) GetSchemaRegistryClient() any {
+	return nil
+}

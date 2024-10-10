@@ -13,7 +13,7 @@ type JsonSerializationProvider struct {
 	ser *jsonschema.Serializer
 }
 
-func (a *JsonSerializationProvider) InitSerializer(srClientUrl, mode string) error {
+func (j *JsonSerializationProvider) InitSerializer(srClientUrl, mode string) error {
 	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
@@ -22,8 +22,7 @@ func (a *JsonSerializationProvider) InitSerializer(srClientUrl, mode string) err
 	}
 
 	serdeConfig := jsonschema.NewSerializerConfig()
-	serdeConfig.AutoRegisterSchemas = false
-	serdeConfig.UseLatestVersion = true
+	serdeConfig.NormalizeSchemas = true
 
 	var serdeType serde.Type
 	if mode == "key" {
@@ -40,19 +39,19 @@ func (a *JsonSerializationProvider) InitSerializer(srClientUrl, mode string) err
 		return fmt.Errorf("failed to create serializer: %w", err)
 	}
 
-	a.ser = ser
+	j.ser = ser
 	return nil
 }
 
-func (a *JsonSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (j *JsonSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
-func (a *JsonSerializationProvider) GetSchemaName() string {
+func (j *JsonSerializationProvider) GetSchemaName() string {
 	return jsonSchemaBackendName
 }
 
-func (a *JsonSerializationProvider) Serialize(topic string, message any) ([]byte, error) {
+func (j *JsonSerializationProvider) Serialize(topic string, message any) ([]byte, error) {
 	// Convert the plain string message from customer into map
 	var result map[string]any
 	err := json.Unmarshal([]byte(message.(string)), &result)
@@ -60,9 +59,13 @@ func (a *JsonSerializationProvider) Serialize(topic string, message any) ([]byte
 		return nil, fmt.Errorf("failed to convert message string into map struct for serialization: %w", err)
 	}
 
-	payload, err := a.ser.Serialize(topic, &result)
+	payload, err := j.ser.Serialize(topic, &result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 	return payload, nil
+}
+
+func (j *JsonSerializationProvider) GetSchemaRegistryClient() any {
+	return j.ser.Client
 }

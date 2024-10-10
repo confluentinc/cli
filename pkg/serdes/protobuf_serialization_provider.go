@@ -31,8 +31,6 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string)
 	}
 
 	serdeConfig := protobuf.NewSerializerConfig()
-	serdeConfig.AutoRegisterSchemas = false
-	serdeConfig.UseLatestVersion = true
 
 	var serdeType serde.Type
 	if mode == "key" {
@@ -102,4 +100,8 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.
 	messageDescriptor := messageDescriptors[0]
 	messageFactory := dynamic.NewMessageFactoryWithDefaults()
 	return messageFactory.NewMessage(messageDescriptor), nil
+}
+
+func (p *ProtobufSerializationProvider) GetSchemaRegistryClient() any {
+	return p.ser.Client
 }

@@ -31,3 +31,7 @@ func (DoubleSerializationProvider) Serialize(_ string, message any) ([]byte, err
 func (DoubleSerializationProvider) GetSchemaName() string {
 	return ""
 }
+
+func (DoubleSerializationProvider) GetSchemaRegistryClient() any {
+	return nil
+}

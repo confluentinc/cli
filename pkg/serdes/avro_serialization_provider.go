@@ -26,10 +26,6 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string) err
 	}
 
 	serdeConfig := avrov2.NewSerializerConfig()
-	//serdeConfig.AutoRegisterSchemas = false
-	//serdeConfig.UseLatestVersion = true
-	//serdeConfig.UseSchemaID = 100002
-	//serdeConfig.NormalizeSchemas = true
 
 	var serdeType serde.Type
 	if mode == "key" {
@@ -74,4 +70,8 @@ func (a *AvroSerializationProvider) Serialize(topic string, message any) ([]byte
 		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 	return payload, nil
+}
+
+func (a *AvroSerializationProvider) GetSchemaRegistryClient() any {
+	return a.ser.Client
 }

@@ -53,11 +53,12 @@ type SerializationProvider interface {
 	LoadSchema(string, map[string]string) error
 	Serialize(string, any) ([]byte, error)
 	GetSchemaName() string
+	GetSchemaRegistryClient() any
 }
 
 type DeserializationProvider interface {
-	InitDeserializer(string, string) error
-	Deserialize(string, []byte, any) error
+	InitDeserializer(string, string, any) error
+	Deserialize(string, []byte) (string, error)
 }
 
 func FormatTranslation(backendValueFormat string) (string, error) {
