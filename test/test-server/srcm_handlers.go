@@ -20,6 +20,7 @@ const (
 	srClusterId     = "lsrc-1234"
 	ksqlClusterId   = "lksqlc-ksql5"
 	ksqlClusterId2  = "lksqlc-woooo"
+	ksqlClusterId3  = "lksqlc-ksql5-fail"
 	srClusterStatus = "PROVISIONED"
 )
 
@@ -79,25 +80,34 @@ func getSchemaRegistryClusterListV3(httpEndpoint string) srcmv3.SrcmV3ClusterLis
 func handleSchemaRegistryClusterV3Access(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != ksqlClusterId && id != ksqlClusterId2 {
+		if id != ksqlClusterId && id != ksqlClusterId2 && id != ksqlClusterId3 {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
 		}
 		switch r.Method {
 		case http.MethodGet:
-			sgCluster := getSchemaRegistryClusterV3Access()
+			sgCluster := getSchemaRegistryClusterV3Access(id)
 			err := json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getSchemaRegistryClusterV3Access() srcmv3Access.SrcmV3Access {
-	return srcmv3Access.SrcmV3Access{
-		Id: srcmv3Access.PtrString(ksqlClusterId),
-		Spec: &srcmv3Access.SrcmV3AccessSpec{
-			Allowed: srcmv3Access.PtrBool(true),
-		},
+func getSchemaRegistryClusterV3Access(id string) srcmv3Access.SrcmV3Access {
+	if id == ksqlClusterId3 {
+		return srcmv3Access.SrcmV3Access{
+			Id: srcmv3Access.PtrString(ksqlClusterId3),
+			Spec: &srcmv3Access.SrcmV3AccessSpec{
+				Allowed: srcmv3Access.PtrBool(false),
+			},
+		}
+	} else {
+		return srcmv3Access.SrcmV3Access{
+			Id: srcmv3Access.PtrString(ksqlClusterId),
+			Spec: &srcmv3Access.SrcmV3AccessSpec{
+				Allowed: srcmv3Access.PtrBool(true),
+			},
+		}
 	}
 }
