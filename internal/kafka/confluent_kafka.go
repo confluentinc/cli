@@ -197,16 +197,16 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
-		err = keyDeserializer.InitDeserializer(srEndpoint, "key")
+		err = keyDeserializer.InitDeserializer(srEndpoint, "key", nil)
 		if err != nil {
 			return err
 		}
 
-		var jsonMessage string
-		err = keyDeserializer.Deserialize(h.Subject, message.Key, &jsonMessage)
+		jsonMessage, err := keyDeserializer.Deserialize(h.Subject, message.Key)
 		if err != nil {
 			return err
 		}
+
 		if jsonMessage == "" {
 			jsonMessage = "null"
 		}
@@ -221,7 +221,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	err = valueDeserializer.InitDeserializer(srEndpoint, "value")
+	err = valueDeserializer.InitDeserializer(srEndpoint, "value", nil)
 	if err != nil {
 		return err
 	}
@@ -248,8 +248,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 }
 
 func getMessageString(message *ckafka.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties, topic string) (string, error) {
-	var messageString string
-	err := valueDeserializer.Deserialize(topic, message.Value, &messageString)
+	messageString, err := valueDeserializer.Deserialize(topic, message.Value)
 	if err != nil {
 		return "", err
 	}

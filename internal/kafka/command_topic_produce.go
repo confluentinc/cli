@@ -278,10 +278,11 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// Initialize the key serializer with the same SR endpoint and intended schema ID
-	// as the serializer is tightly coupled with SR now
+
+	// Initialize the key serializer with the same SR endpoint during registration
+	// The intended schema ID is also a required parameter for the serializer
 	keySchemaId := binary.BigEndian.Uint32(keyMetaInfo[1:5])
-	if err := valueSerializer.InitSerializer(srEndpoint, "value", int(keySchemaId)); err != nil {
+	if err := keySerializer.InitSerializer(srEndpoint, "value", int(keySchemaId)); err != nil {
 		return err
 	}
 	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
@@ -300,8 +301,9 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// Initialize the value serializer with the same SR endpoint and intended schema ID
-	// as the serializer is tightly coupled with SR now
+
+	// Initialize the value serializer with the same SR endpoint during registration
+	// The intended schema ID is also a required parameter for the serializer
 	valueSchemaId := binary.BigEndian.Uint32(valueMetaInfo[1:5])
 	if err := valueSerializer.InitSerializer(srEndpoint, "value", int(valueSchemaId)); err != nil {
 		return err
@@ -472,7 +474,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, topic, data, delimiter 
 			return nil, nil, err
 		}
 
-		serializedKey, err = keySerializer.Serialize(topic, &key)
+		serializedKey, err = keySerializer.Serialize(topic, key)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -480,8 +482,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, topic, data, delimiter 
 		val = value
 	}
 
-	// Line to update: parse the val and give serializer a map?
-	serializedValue, err := valueSerializer.Serialize(topic, &val)
+	serializedValue, err := valueSerializer.Serialize(topic, val)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -600,14 +601,13 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		if err != nil {
 			return nil, nil, err
 		}
-
 		refs, err := schemaregistry.ReadSchemaReferences(references)
 		if err != nil {
 			return nil, nil, err
 		}
 		schemaCfg.Refs = refs
 
-		metaInfo, _, err = c.registerSchema(cmd, schemaCfg)
+		metaInfo, referencePathMap, err = c.registerSchema(cmd, schemaCfg)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -619,8 +619,8 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		return nil, nil, err
 	}
 
-	// Initialize the serializer with the same SR endpoint and intended schema ID
-	// as the serializer is tightly coupled with SR now
+	// Initialize the serializer with the same SR endpoint during registration
+	// The intended schema ID is also a required parameter for the serializer
 	parsedSchemaId := binary.BigEndian.Uint32(metaInfo[1:5])
 	err = serializationProvider.InitSerializer(srEndpoint, mode, int(parsedSchemaId))
 	if err != nil {
@@ -633,6 +633,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
 		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
 	}
+
 	return serializationProvider, metaInfo, nil
 }
 
