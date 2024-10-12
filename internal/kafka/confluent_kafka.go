@@ -59,6 +59,7 @@ type GroupHandler struct {
 	ValueFormat string
 	Out         io.Writer
 	Subject     string
+	Topic       string
 	Properties  ConsumerProperties
 }
 
@@ -202,7 +203,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
-		jsonMessage, err := keyDeserializer.Deserialize(h.Subject, message.Key)
+		jsonMessage, err := keyDeserializer.Deserialize(h.Topic, message.Key)
 		if err != nil {
 			return err
 		}
@@ -226,7 +227,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	messageString, err := getMessageString(message, valueDeserializer, h.Properties, h.Subject)
+	messageString, err := getMessageString(message, valueDeserializer, h.Properties, h.Topic)
 	if err != nil {
 		return err
 	}

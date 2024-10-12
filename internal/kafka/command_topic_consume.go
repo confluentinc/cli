@@ -250,6 +250,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		ValueFormat: valueFormat,
 		Out:         cmd.OutOrStdout(),
 		Subject:     subject,
+		Topic:       topic,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,
 			FullHeader:  fullHeader,
@@ -373,6 +374,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		KeyFormat:   keyFormat,
 		ValueFormat: valueFormat,
 		Out:         cmd.OutOrStdout(),
+		Topic:       topicName,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,
 			FullHeader:  fullHeader,

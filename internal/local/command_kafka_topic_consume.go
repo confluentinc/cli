@@ -117,6 +117,7 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 		Out:         cmd.OutOrStdout(),
 		KeyFormat:   "string",
 		ValueFormat: "string",
+		Topic:       topicName,
 		Properties: kafka.ConsumerProperties{
 			PrintKey:  printKey,
 			Timestamp: timestamp,
