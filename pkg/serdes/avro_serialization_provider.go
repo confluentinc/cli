@@ -22,6 +22,9 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string, sch
 	}
 
 	// Configure the serde settings
+	// If schemaId > 0 then use the intended schema ID
+	// otherwise use the latest schema ID
+	// Configuring this correctly determines the underlying serialize strategy
 	serdeConfig := avrov2.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
@@ -58,7 +61,7 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 }
 
 func (a *AvroSerializationProvider) Serialize(topic, message string) ([]byte, error) {
-	// Convert the plain string message from customer into generic map
+	// Convert the plain string message from customer type-in into generic map
 	var result map[string]any
 	err := json.Unmarshal([]byte(message), &result)
 	if err != nil {
@@ -72,6 +75,8 @@ func (a *AvroSerializationProvider) Serialize(topic, message string) ([]byte, er
 	return payload, nil
 }
 
+// GetSchemaRegistryClient This getter function is used in mock testing
+// as serializer and deserializer have to share the same SR client instance
 func (a *AvroSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return a.ser.Client
 }

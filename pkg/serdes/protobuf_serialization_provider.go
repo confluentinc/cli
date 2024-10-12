@@ -33,6 +33,9 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string,
 	}
 
 	// Configure the serde settings
+	// If schemaId > 0 then use the intended schema ID
+	// otherwise use the latest schema ID
+	// Configuring this correctly determines the underlying serialize strategy
 	serdeConfig := protobuf.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
@@ -74,7 +77,8 @@ func (p *ProtobufSerializationProvider) GetSchemaName() string {
 }
 
 func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]byte, error) {
-	// Convert the plain string message from customer into proto.message
+	// Convert the plain string message from customer type-in into proto.Message
+	// TODO: replace the message if possible
 	if err := jsonpb.UnmarshalString(message, p.message); err != nil {
 		return nil, fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
 	}
@@ -111,6 +115,8 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.
 	return messageFactory.NewMessage(messageDescriptor), nil
 }
 
+// GetSchemaRegistryClient This getter function is used in mock testing
+// as serializer and deserializer have to share the same SR client instance
 func (p *ProtobufSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return p.ser.Client
 }

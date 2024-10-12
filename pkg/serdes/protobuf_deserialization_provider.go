@@ -15,10 +15,9 @@ type ProtobufDeserializationProvider struct {
 
 func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, mode string, existingClient any) error {
 	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
-	// If existingClient is not nil, we should share this client between ser and deser
-	// This client is referred to as mock client to store the same set of schemas in cache
-	// If existingClient is nil (which is normal case), ser and deser don't have to share
-	// A REST call will be made to backend SR service in case of cache miss
+	// If existingClient is not nil, we should share this client between ser and deser.
+	// As the shared client is referred as mock client to store the same set of schemas in cache
+	// If existingClient is nil (which is normal case), ser and deser don't have to share the same client.
 	var serdeClient schemaregistry.Client
 	var err error
 	var ok bool
@@ -26,7 +25,7 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, mode str
 	if existingClient != nil {
 		serdeClient, ok = existingClient.(schemaregistry.Client)
 		if !ok {
-			return fmt.Errorf("failed to cast existing schema registry client to expected format")
+			return fmt.Errorf("failed to cast existing schema registry client to expected type")
 		}
 	} else {
 		serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
@@ -67,7 +66,7 @@ func (p *ProtobufDeserializationProvider) Deserialize(topic string, payload []by
 	}
 	jsonBytes, err := json.Marshal(message)
 	if err != nil {
-		return "", fmt.Errorf("failed to convert message map struct into string after deserialization: %w", err)
+		return "", fmt.Errorf("failed to convert generic map message into string after deserialization: %w", err)
 	}
 
 	return string(jsonBytes), nil

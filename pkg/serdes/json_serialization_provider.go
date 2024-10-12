@@ -22,6 +22,9 @@ func (j *JsonSerializationProvider) InitSerializer(srClientUrl, mode string, sch
 	}
 
 	// Configure the serde settings
+	// If schemaId > 0 then use the intended schema ID
+	// otherwise use the latest schema ID
+	// Configuring this correctly determines the underlying serialize strategy
 	serdeConfig := jsonschema.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
@@ -59,7 +62,7 @@ func (j *JsonSerializationProvider) GetSchemaName() string {
 }
 
 func (j *JsonSerializationProvider) Serialize(topic, message string) ([]byte, error) {
-	// Convert the plain string message from customer into generic map
+	// Convert the plain string message from customer type-in into generic map
 	var result map[string]any
 	err := json.Unmarshal([]byte(message), &result)
 	if err != nil {
@@ -73,6 +76,8 @@ func (j *JsonSerializationProvider) Serialize(topic, message string) ([]byte, er
 	return payload, nil
 }
 
+// GetSchemaRegistryClient This getter function is used in mock testing
+// as serializer and deserializer have to share the same SR client instance
 func (j *JsonSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return j.ser.Client
 }
