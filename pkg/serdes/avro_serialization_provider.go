@@ -14,13 +14,8 @@ type AvroSerializationProvider struct {
 }
 
 func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string, schemaId int) error {
-	//TODO: clean up the authentication part here
 	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
-	serdeClientConfig.BasicAuthCredentialsSource = "USER_INFO"
-	serdeClientConfig.BasicAuthUserInfo = "IZ7RGM7EFPH6TJP4:gi3a/MpHzh8wQZXcWrbQ+emhZZKOoyI1gQo20EaYoa0EFU4TAH69rAk1KXjm0+sN"
-
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
-	fmt.Printf("The srClientUrl is %s, mode is %s\n", srClientUrl, mode)
 
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)

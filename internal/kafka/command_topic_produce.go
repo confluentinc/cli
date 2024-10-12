@@ -270,8 +270,21 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		SchemaPath: keySchema,
 		Refs:       refs,
 	}
-	keyMetaInfo, _, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
+	keyMetaInfo, keyReferencePathMap, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
 	if err != nil {
+		return err
+	}
+	srEndpoint, err := c.getSchemaRegistryEndpointFromClient(cmd)
+	if err != nil {
+		return err
+	}
+	// Initialize the key serializer with the same SR endpoint and intended schema ID
+	// as the serializer is tightly coupled with SR now
+	keySchemaId := binary.BigEndian.Uint32(keyMetaInfo[1:5])
+	if err := valueSerializer.InitSerializer(srEndpoint, "value", int(keySchemaId)); err != nil {
+		return err
+	}
+	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
 		return err
 	}
 
@@ -283,16 +296,17 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		SchemaPath: schema,
 		Refs:       refs,
 	}
-	valueMetaInfo, _, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
+	valueMetaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
 	if err != nil {
 		return err
 	}
-
-	srEndpoint, err := c.getSchemaRegistryEndpointFromClient(cmd)
-	if err != nil {
+	// Initialize the value serializer with the same SR endpoint and intended schema ID
+	// as the serializer is tightly coupled with SR now
+	valueSchemaId := binary.BigEndian.Uint32(valueMetaInfo[1:5])
+	if err := valueSerializer.InitSerializer(srEndpoint, "value", int(valueSchemaId)); err != nil {
 		return err
 	}
-	if err := valueSerializer.InitSerializer(srEndpoint, "value"); err != nil {
+	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
 		return err
 	}
 
