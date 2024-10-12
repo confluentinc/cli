@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	parse "github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
+	gproto "google.golang.org/protobuf/proto"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
@@ -18,11 +19,12 @@ import (
 )
 
 type ProtobufSerializationProvider struct {
-	ser     *protobuf.Serializer
-	message proto.Message
+	ser      *protobuf.Serializer
+	message  proto.Message
+	message2 gproto.Message
 }
 
-func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string) error {
+func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string, schemaId int) error {
 	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
@@ -30,7 +32,14 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string)
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
 
+	// Configure the serde settings
 	serdeConfig := protobuf.NewSerializerConfig()
+	serdeConfig.AutoRegisterSchemas = false
+	serdeConfig.UseLatestVersion = true
+	if schemaId > 0 {
+		serdeConfig.UseSchemaID = schemaId
+		serdeConfig.UseLatestVersion = false
+	}
 
 	var serdeType serde.Type
 	if mode == "key" {
@@ -64,13 +73,13 @@ func (p *ProtobufSerializationProvider) GetSchemaName() string {
 	return protobufSchemaBackendName
 }
 
-func (p *ProtobufSerializationProvider) Serialize(topic string, message any) ([]byte, error) {
-	// Convert from JSON string to proto message type.
-	if err := jsonpb.UnmarshalString(message.(string), p.message); err != nil {
+func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]byte, error) {
+	// Convert the plain string message from customer into proto.message
+	if err := jsonpb.UnmarshalString(message, p.message); err != nil {
 		return nil, fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
 	}
 
-	payload, err := p.ser.Serialize(topic, p.message)
+	payload, err := p.ser.Serialize(topic, proto.MessageV2(p.message))
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
@@ -102,6 +111,6 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.
 	return messageFactory.NewMessage(messageDescriptor), nil
 }
 
-func (p *ProtobufSerializationProvider) GetSchemaRegistryClient() any {
+func (p *ProtobufSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return p.ser.Client
 }

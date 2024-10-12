@@ -38,6 +38,7 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode string,
 	}
 
 	serdeConfig := jsonschema.NewDeserializerConfig()
+	serdeConfig.EnableValidation = true
 
 	var serdeType serde.Type
 	switch mode {

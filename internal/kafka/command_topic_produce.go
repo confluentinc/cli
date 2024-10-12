@@ -356,10 +356,8 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *schemaregistry.R
 	// Registering schema and fill metaInfo array.
 	var metaInfo []byte // Meta info contains a magic byte and schema ID (4 bytes).
 	referencePathMap := map[string]string{}
-	fmt.Printf("I am outside the registerSchema loop\n")
 
 	if len(schemaCfg.SchemaPath) > 0 {
-		fmt.Printf("I am inside the registerSchema loop\n")
 		srClient, err := c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
@@ -533,7 +531,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	var format string
-	//referencePathMap := map[string]string{}
+	referencePathMap := map[string]string{}
 	metaInfo := []byte{}
 
 	if schemaId.IsSet() {
@@ -552,7 +550,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		schema, _, err = setSchemaPathRef(schemaString, schemaDir, subject, schemaId.Value(), client)
+		schema, referencePathMap, err = setSchemaPathRef(schemaString, schemaDir, subject, schemaId.Value(), client)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -565,13 +563,11 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		}
 	}
 
-	fmt.Printf("Mode is %s and format is %s\n", mode, format)
 	serializationProvider, err := serdes.GetSerializationProvider(format)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	fmt.Printf("Schema is %s and schemaId is %d\n", schema, schemaId.Value())
 	if schema != "" && !schemaId.IsSet() {
 		// read schema info from local file and register schema
 		schemaCfg := &schemaregistry.RegisterSchemaConfigs{
@@ -582,7 +578,6 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			SchemaType: serializationProvider.GetSchemaName(),
 		}
 
-		fmt.Printf("I need to registery with SR first\n")
 		flag := "references"
 		if mode == "key" {
 			flag = "key-references"
@@ -592,7 +587,6 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		// refs are needed during schema registration
 		refs, err := schemaregistry.ReadSchemaReferences(references)
 		if err != nil {
 			return nil, nil, err
@@ -605,18 +599,25 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		}
 	}
 
-	// TODO: remove below comments after code review
-	// We need the endpoint for schema registry client for internal serializer/deserializer
-	// [Channing] SR client must already be available at this point
-	// If schemaId.IsSet() == true, that means client is created in line532
-	// If schemaId.IsSet() == false, that means client is created in line591
+	// Fetch the SR client endpoint during schema registration
 	srEndpoint, err := c.getSchemaRegistryEndpointFromClient(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
-	err = serializationProvider.InitSerializer(srEndpoint, mode)
+
+	// Initialize the serializer with the same SR endpoint and intended schema ID
+	// as the serializer is tightly coupled with SR now
+	parsedSchemaId := binary.BigEndian.Uint32(metaInfo[1:5])
+	err = serializationProvider.InitSerializer(srEndpoint, mode, int(parsedSchemaId))
 	if err != nil {
 		return nil, nil, err
+	}
+
+	// LoadSchema won't be needed for JSON and AVRO format
+	// as we can now retrieve the schema info from schema registry during serialize
+	// But PROTOBUF still needs this function
+	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
+		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
 	}
 	return serializationProvider, metaInfo, nil
 }

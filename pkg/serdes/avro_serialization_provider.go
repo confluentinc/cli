@@ -13,7 +13,8 @@ type AvroSerializationProvider struct {
 	ser *avrov2.Serializer
 }
 
-func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string) error {
+func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string, schemaId int) error {
+	//TODO: clean up the authentication part here
 	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
 	serdeClientConfig.BasicAuthCredentialsSource = "USER_INFO"
 	serdeClientConfig.BasicAuthUserInfo = "IZ7RGM7EFPH6TJP4:gi3a/MpHzh8wQZXcWrbQ+emhZZKOoyI1gQo20EaYoa0EFU4TAH69rAk1KXjm0+sN"
@@ -25,7 +26,14 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string) err
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
 
+	// Configure the serde settings
 	serdeConfig := avrov2.NewSerializerConfig()
+	serdeConfig.AutoRegisterSchemas = false
+	serdeConfig.UseLatestVersion = true
+	if schemaId > 0 {
+		serdeConfig.UseSchemaID = schemaId
+		serdeConfig.UseLatestVersion = false
+	}
 
 	var serdeType serde.Type
 	if mode == "key" {
@@ -42,9 +50,6 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string) err
 		return fmt.Errorf("failed to create serializer: %w", err)
 	}
 
-	jsonSer, err := json.Marshal(*ser)
-	fmt.Printf("The serializer object is %s\n", string(jsonSer))
-
 	a.ser = ser
 	return nil
 }
@@ -57,12 +62,12 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 	return avroSchemaBackendName
 }
 
-func (a *AvroSerializationProvider) Serialize(topic string, message any) ([]byte, error) {
-	// Convert the plain string message from customer into map
+func (a *AvroSerializationProvider) Serialize(topic, message string) ([]byte, error) {
+	// Convert the plain string message from customer into generic map
 	var result map[string]any
-	err := json.Unmarshal([]byte(message.(string)), &result)
+	err := json.Unmarshal([]byte(message), &result)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert message string into map struct for serialization: %w", err)
+		return nil, fmt.Errorf("failed to convert message string into generic map for serialization: %w", err)
 	}
 
 	payload, err := a.ser.Serialize(topic, &result)
@@ -72,6 +77,6 @@ func (a *AvroSerializationProvider) Serialize(topic string, message any) ([]byte
 	return payload, nil
 }
 
-func (a *AvroSerializationProvider) GetSchemaRegistryClient() any {
+func (a *AvroSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return a.ser.Client
 }

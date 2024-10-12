@@ -60,14 +60,14 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, mode string,
 }
 
 func (a *AvroDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
-	message := make(map[string]interface{})
+	message := make(map[string]any)
 	err := a.deser.DeserializeInto(topic, payload, &message)
 	if err != nil {
 		return "", fmt.Errorf("failed to deserialize payload: %w", err)
 	}
 	jsonBytes, err := json.Marshal(message)
 	if err != nil {
-		return "", fmt.Errorf("failed to convert message map struct into string after deserialization: %w", err)
+		return "", fmt.Errorf("failed to convert message generic map into string after deserialization: %w", err)
 	}
 
 	return string(jsonBytes), nil

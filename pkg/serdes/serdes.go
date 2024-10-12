@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 )
 
 var DekAlgorithms = []string{
@@ -49,11 +50,11 @@ const (
 )
 
 type SerializationProvider interface {
-	InitSerializer(string, string) error
+	InitSerializer(string, string, int) error
 	LoadSchema(string, map[string]string) error
-	Serialize(string, any) ([]byte, error)
+	Serialize(string, string) ([]byte, error)
 	GetSchemaName() string
-	GetSchemaRegistryClient() any
+	GetSchemaRegistryClient() schemaregistry.Client
 }
 
 type DeserializationProvider interface {
@@ -107,6 +108,8 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 		return new(JsonDeserializationProvider), nil
 	case protobufSchemaName:
 		return new(ProtobufDeserializationProvider), nil
+	case stringSchemaName:
+		return new(StringDeserializationProvider), nil
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}

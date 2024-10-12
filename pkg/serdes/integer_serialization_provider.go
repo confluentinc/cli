@@ -2,12 +2,13 @@ package serdes
 
 import (
 	"encoding/binary"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"strconv"
 )
 
 type IntegerSerializationProvider struct{}
 
-func (IntegerSerializationProvider) InitSerializer(_ string, _ string) error {
+func (IntegerSerializationProvider) InitSerializer(_, _ string, _ int) error {
 	return nil
 }
 
@@ -15,8 +16,8 @@ func (IntegerSerializationProvider) LoadSchema(_ string, _ map[string]string) er
 	return nil
 }
 
-func (IntegerSerializationProvider) Serialize(topic string, message any) ([]byte, error) {
-	i, err := strconv.ParseUint(message.(string), 10, 32)
+func (IntegerSerializationProvider) Serialize(_, message string) ([]byte, error) {
+	i, err := strconv.ParseUint(message, 10, 32)
 	if err != nil {
 		return nil, err
 	}
@@ -31,6 +32,6 @@ func (IntegerSerializationProvider) GetSchemaName() string {
 	return ""
 }
 
-func (IntegerSerializationProvider) GetSchemaRegistryClient() any {
+func (IntegerSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return nil
 }
