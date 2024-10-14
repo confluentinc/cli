@@ -2,7 +2,6 @@ package testserver
 
 import (
 	"encoding/json"
-	srcmv3Access "github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access/v1"
 	"net/http"
 	"testing"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
+	srcmv3Access "github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access/v1"
 )
 
 const (
