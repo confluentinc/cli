@@ -130,6 +130,13 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 			output.ErrPrintln(c.Config.EnableColor, "[WARN] Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.")
 		}
 	}
+	clustersAllowed, err := c.V2Client.GetSchemaRegistryV3AccessById(cluster.GetId(), environmentId)
+	if err != nil {
+		return err
+	}
+	if !clustersAllowed.Spec.GetAllowed() {
+		return fmt.Errorf("KSQL cluster not allowed to access Schema Registry cluster due to failed backend validation")
+	}
 
 	table := output.NewTable(cmd)
 	table.Add(c.formatClusterForDisplayAndList(&cluster))
