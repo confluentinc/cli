@@ -113,6 +113,7 @@ var ccloudV2Routes = []route{
 	{"/service-quota/v2/applied-quotas", handleAppliedQuotas},
 	{"/srcm/v3/clusters", handleSchemaRegistryClustersV3},
 	{"/srcm/v3/clusters/{id}", handleSchemaRegistryClusterV3},
+	{"/srcm/v3/clusters/{id}/access", handleSchemaRegistryClusterV3Access},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 }
 
