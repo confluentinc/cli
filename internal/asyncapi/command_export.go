@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -16,7 +15,6 @@ import (
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	"github.com/confluentinc/cli/v3/internal/kafka"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/config"
 	"github.com/confluentinc/cli/v3/pkg/errors"
@@ -276,24 +274,13 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	if err != nil {
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
-	groupHandler := kafka.GroupHandler{
-		SrClient:    srClient,
-		ValueFormat: valueFormat,
-		Subject:     topicName + "-value",
-		Properties:  kafka.ConsumerProperties{},
+
+	err = deserializationProvider.InitDeserializer("", "value", srClient)
+	if err != nil {
+		return nil, err
 	}
-	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {
-		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)
-		if err != nil {
-			return nil, err
-		}
-		// Message body is encoded after 5 bytes of meta information.
-		value = value[messageOffset:]
-		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
-			return nil, err
-		}
-	}
-	jsonMessage, err := deserializationProvider.Deserialize(value)
+
+	jsonMessage, err := deserializationProvider.Deserialize(topicName, value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deserialize example: %v", err)
 	}
