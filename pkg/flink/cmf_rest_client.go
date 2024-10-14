@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -63,7 +64,10 @@ func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagVal
 		if restFlags.url == "" {
 			return nil, perrors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
 		}
-		cfg.BasePath = restFlags.url + "/cmf/api/v1"
+		cfg.BasePath, err = url.JoinPath(restFlags.url, "/cmf/api/v1")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	cfg.HTTPClient, err = NewCmfRestHttpClient(restFlags)
