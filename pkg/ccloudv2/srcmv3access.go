@@ -2,9 +2,11 @@ package ccloudv2
 
 import (
 	"context"
-	srcmv3access "github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access/v1"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"net/http"
+
+	srcmv3access "github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newSrcmV3AccessClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *srcmv3access.APIClient {

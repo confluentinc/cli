@@ -134,7 +134,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if clustersAllowed.Spec.GetAllowed() == false {
+	if !clustersAllowed.Spec.GetAllowed() {
 		return fmt.Errorf("KSQL cluster not allowed to access Schema Registry cluster due to failed backend validation")
 	}
 
