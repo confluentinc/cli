@@ -43,6 +43,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.0
+	github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.4.0

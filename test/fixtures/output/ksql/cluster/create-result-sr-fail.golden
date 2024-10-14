@@ -1,0 +1,2 @@
+[WARN] Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
+Error: KSQL cluster not allowed to access Schema Registry cluster due to failed backend validation
