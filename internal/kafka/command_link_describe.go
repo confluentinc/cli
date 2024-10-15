@@ -52,7 +52,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(newDescribeLink(link, ""))
-	table.Filter(getListFields(false))
+	table.Filter(getListFields(false, false))
 	return table.Print()
 }
 

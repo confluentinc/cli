@@ -1,14 +1,8 @@
 - link_name: link-1
-  source_cluster: cluster-1
-  destination_cluster: cluster-2
   state: ""
 - link_name: link-2
-  source_cluster: cluster-1
-  destination_cluster: cluster-2
   state: AVAILABLE
 - link_name: link-3
-  source_cluster: cluster-1
-  destination_cluster: cluster-2
   state: UNAVAILABLE
   error: AUTHENTICATION_ERROR
   error_message: Please check your API key and secret.
