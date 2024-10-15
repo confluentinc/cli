@@ -41,6 +41,7 @@ func (c *CLICommand) GetCmfClient(cmd *cobra.Command) (*flink.CmfRestClient, err
 			return nil, err
 		}
 		cfg.Debug = unsafeTrace
+		cfg.UserAgent = c.Version.UserAgent
 
 		restFlags, err := flink.ResolveOnPremCmfRestFlags(cmd)
 		if err != nil {
