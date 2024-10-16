@@ -414,7 +414,11 @@ func getHeaderString(header ckafka.Header) string {
 }
 
 func getSchemaRegistryEndpointFromGroupHandler(h *GroupHandler) (string, error) {
-	if h == nil || h.SrClient == nil {
+	// If both key and value format are not schema based, then SR endpoint/client will not be needed
+	if !slices.Contains(serdes.SchemaBasedFormats, h.KeyFormat) && !slices.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
+		return "", nil
+	}
+	if h.SrClient == nil {
 		return "", fmt.Errorf("unable to find the group handler or schema registery client during consume")
 	}
 	cfg := h.SrClient.GetConfig()
