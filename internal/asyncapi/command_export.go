@@ -24,6 +24,8 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/output"
 	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
+	"github.com/confluentinc/cli/v3/internal/kafka"
+	"slices"
 )
 
 type confluentBinding struct {
@@ -278,6 +280,23 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	err = deserializationProvider.InitDeserializer("", "value", srClient)
 	if err != nil {
 		return nil, err
+	}
+	groupHandler := kafka.GroupHandler{
+		SrClient:    srClient,
+		ValueFormat: valueFormat,
+		Subject:     topicName + "-value",
+		Properties:  kafka.ConsumerProperties{},
+	}
+	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {
+		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)
+		if err != nil {
+			return nil, err
+		}
+		// Message body is encoded after 5 bytes of meta information.
+		value = value[messageOffset:]
+		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
+			return nil, err
+		}
 	}
 
 	jsonMessage, err := deserializationProvider.Deserialize(topicName, value)

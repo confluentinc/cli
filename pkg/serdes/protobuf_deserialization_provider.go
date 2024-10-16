@@ -53,7 +53,7 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, mode str
 	deser, err := protobuf.NewDeserializer(serdeClient, serdeType, serdeConfig)
 
 	if err != nil {
-		return fmt.Errorf("failed to create deserializer: %w", err)
+		return fmt.Errorf("failed to initialize PROTOBUF deserializer: %w", err)
 	}
 
 	p.deser = deser

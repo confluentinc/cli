@@ -24,6 +24,7 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 	"github.com/confluentinc/cli/v3/pkg/utils"
+	"slices"
 )
 
 const (
@@ -203,11 +204,21 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
+		if slices.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
+			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
+			if err != nil {
+				return err
+			}
+			message.Key = message.Key[messageOffset:]
+			if err := keyDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
+				return err
+			}
+		}
+
 		jsonMessage, err := keyDeserializer.Deserialize(h.Topic, message.Key)
 		if err != nil {
 			return err
 		}
-
 		if jsonMessage == "" {
 			jsonMessage = "null"
 		}
@@ -225,6 +236,18 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	err = valueDeserializer.InitDeserializer(srEndpoint, "value", nil)
 	if err != nil {
 		return err
+	}
+
+	if slices.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
+		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
+		if err != nil {
+			return err
+		}
+		// Message body is encoded after 5 bytes of meta information.
+		message.Value = message.Value[messageOffset:]
+		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
+			return err
+		}
 	}
 
 	messageString, err := getMessageString(message, valueDeserializer, h.Properties, h.Topic)

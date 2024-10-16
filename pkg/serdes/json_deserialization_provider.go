@@ -52,7 +52,7 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode string,
 	deser, err := jsonschema.NewDeserializer(serdeClient, serdeType, serdeConfig)
 
 	if err != nil {
-		return fmt.Errorf("failed to create deserializer: %w", err)
+		return fmt.Errorf("failed to initialize JSON deserializer: %w", err)
 	}
 
 	j.deser = deser

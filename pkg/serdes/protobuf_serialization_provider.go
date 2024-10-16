@@ -34,7 +34,6 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string,
 	// Configure the serde settings
 	// If schemaId > 0 then use the intended schema ID
 	// otherwise use the latest schema ID
-	// Configuring this correctly determines the underlying serialize strategy
 	serdeConfig := protobuf.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
@@ -55,7 +54,7 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string,
 	ser, err := protobuf.NewSerializer(serdeClient, serdeType, serdeConfig)
 
 	if err != nil {
-		return fmt.Errorf("failed to create serializer: %w", err)
+		return fmt.Errorf("failed to initialize PROTOBUF serializer: %w", err)
 	}
 
 	p.ser = ser

@@ -51,7 +51,7 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, mode string,
 	deser, err := avrov2.NewDeserializer(serdeClient, serdeType, serdeConfig)
 
 	if err != nil {
-		return fmt.Errorf("failed to create deserializer: %w", err)
+		return fmt.Errorf("failed to initialize AVRO deserializer: %w", err)
 	}
 
 	a.deser = deser

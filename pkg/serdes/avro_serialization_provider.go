@@ -24,7 +24,6 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string, sch
 	// Configure the serde settings
 	// If schemaId > 0 then use the intended schema ID
 	// otherwise use the latest schema ID
-	// Configuring this correctly determines the underlying serialize strategy
 	serdeConfig := avrov2.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
@@ -45,7 +44,7 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string, sch
 	ser, err := avrov2.NewSerializer(serdeClient, serdeType, serdeConfig)
 
 	if err != nil {
-		return fmt.Errorf("failed to create serializer: %w", err)
+		return fmt.Errorf("failed to initialize AVRO serializer: %w", err)
 	}
 
 	a.ser = ser

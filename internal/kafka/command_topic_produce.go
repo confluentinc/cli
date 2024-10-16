@@ -280,7 +280,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initialize the key serializer with the same SR endpoint during registration
-	// The intended schema ID is also a required parameter for the serializer
+	// The associated schema ID is also required to initialize the serializer
 	keySchemaId := binary.BigEndian.Uint32(keyMetaInfo[1:5])
 	if err := keySerializer.InitSerializer(srEndpoint, "value", int(keySchemaId)); err != nil {
 		return err
@@ -303,7 +303,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initialize the value serializer with the same SR endpoint during registration
-	// The intended schema ID is also a required parameter for the serializer
+	// The associated schema ID is also required to initialize the serializer
 	valueSchemaId := binary.BigEndian.Uint32(valueMetaInfo[1:5])
 	if err := valueSerializer.InitSerializer(srEndpoint, "value", int(valueSchemaId)); err != nil {
 		return err
@@ -620,16 +620,14 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	// Initialize the serializer with the same SR endpoint during registration
-	// The intended schema ID is also a required parameter for the serializer
+	// The associated schema ID is also required to initialize the serializer
 	parsedSchemaId := binary.BigEndian.Uint32(metaInfo[1:5])
 	err = serializationProvider.InitSerializer(srEndpoint, mode, int(parsedSchemaId))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// LoadSchema won't be needed for JSON and AVRO format
-	// as we can now retrieve the schema info from schema registry during serialize
-	// But PROTOBUF still needs this function
+	// LoadSchema() is only required for schemas with PROTOBUF format
 	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
 		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
 	}
