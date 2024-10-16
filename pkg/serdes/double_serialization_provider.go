@@ -9,7 +9,7 @@ import (
 
 type DoubleSerializationProvider struct{}
 
-func (DoubleSerializationProvider) InitSerializer(_, _ string, _ int) error {
+func (DoubleSerializationProvider) InitSerializer(_, _, _, _ string, _ int) error {
 	return nil
 }
 

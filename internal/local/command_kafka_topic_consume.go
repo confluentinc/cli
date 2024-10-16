@@ -65,6 +65,15 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return err
+	}
+	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return err
+	}
+
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
@@ -114,6 +123,8 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	output.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
 
 	groupHandler := &kafka.GroupHandler{
+		SrApiKey:    srApiKey,
+		SrApiSecret: srApiSecret,
 		Out:         cmd.OutOrStdout(),
 		KeyFormat:   "string",
 		ValueFormat: "string",

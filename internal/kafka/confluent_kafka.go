@@ -56,6 +56,8 @@ type ConsumerProperties struct {
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
 	SrClient    *schemaregistry.Client
+	SrApiKey    string
+	SrApiSecret string
 	KeyFormat   string
 	ValueFormat string
 	Out         io.Writer
@@ -199,7 +201,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
-		err = keyDeserializer.InitDeserializer(srEndpoint, "key", nil)
+		err = keyDeserializer.InitDeserializer(srEndpoint, "key", h.SrApiKey, h.SrApiSecret, nil)
 		if err != nil {
 			return err
 		}
@@ -233,7 +235,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	err = valueDeserializer.InitDeserializer(srEndpoint, "value", nil)
+	err = valueDeserializer.InitDeserializer(srEndpoint, "value", h.SrApiKey, h.SrApiSecret, nil)
 	if err != nil {
 		return err
 	}
@@ -419,7 +421,7 @@ func getSchemaRegistryEndpointFromGroupHandler(h *GroupHandler) (string, error) 
 	if cfg == nil {
 		return "", fmt.Errorf("unable to fetch the configuration from schema registery client during consume")
 	}
-	if cfg.Servers == nil || len(cfg.Servers) <= 1 {
+	if cfg.Servers == nil || len(cfg.Servers) == 0 {
 		return "", fmt.Errorf("unable to fetch the servers info from schema registery client configuration during consume")
 	}
 	return cfg.Servers[0].URL, nil

@@ -13,8 +13,8 @@ type AvroSerializationProvider struct {
 	ser *avrov2.Serializer
 }
 
-func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode string, schemaId int) error {
-	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
+func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode, srApiKey, srApiSecret string, schemaId int) error {
+	serdeClientConfig := schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	if err != nil {

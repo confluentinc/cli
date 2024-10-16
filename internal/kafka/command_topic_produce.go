@@ -278,11 +278,22 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return err
+	}
+	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return err
+	}
 
 	// Initialize the key serializer with the same SR endpoint during registration
 	// The associated schema ID is also required to initialize the serializer
-	keySchemaId := binary.BigEndian.Uint32(keyMetaInfo[1:5])
-	if err := keySerializer.InitSerializer(srEndpoint, "value", int(keySchemaId)); err != nil {
+	var keySchemaId = -1
+	if len(keyMetaInfo) >= 5 {
+		keySchemaId = int(binary.BigEndian.Uint32(keyMetaInfo[1:5]))
+	}
+	if err := keySerializer.InitSerializer(srEndpoint, "key", srApiKey, srApiSecret, keySchemaId); err != nil {
 		return err
 	}
 	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
@@ -304,8 +315,11 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 
 	// Initialize the value serializer with the same SR endpoint during registration
 	// The associated schema ID is also required to initialize the serializer
-	valueSchemaId := binary.BigEndian.Uint32(valueMetaInfo[1:5])
-	if err := valueSerializer.InitSerializer(srEndpoint, "value", int(valueSchemaId)); err != nil {
+	var valueSchemaId = -1
+	if len(valueMetaInfo) >= 5 {
+		valueSchemaId = int(binary.BigEndian.Uint32(valueMetaInfo[1:5]))
+	}
+	if err := valueSerializer.InitSerializer(srEndpoint, "value", srApiKey, srApiSecret, valueSchemaId); err != nil {
 		return err
 	}
 	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
@@ -621,8 +635,19 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 
 	// Initialize the serializer with the same SR endpoint during registration
 	// The associated schema ID is also required to initialize the serializer
-	parsedSchemaId := binary.BigEndian.Uint32(metaInfo[1:5])
-	err = serializationProvider.InitSerializer(srEndpoint, mode, int(parsedSchemaId))
+	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return nil, nil, err
+	}
+	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return nil, nil, err
+	}
+	var parsedSchemaId = -1
+	if len(metaInfo) >= 5 {
+		parsedSchemaId = int(binary.BigEndian.Uint32(metaInfo[1:5]))
+	}
+	err = serializationProvider.InitSerializer(srEndpoint, mode, srApiKey, srApiSecret, parsedSchemaId)
 	if err != nil {
 		return nil, nil, err
 	}

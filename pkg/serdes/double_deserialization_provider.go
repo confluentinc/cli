@@ -8,7 +8,7 @@ import (
 
 type DoubleDeserializationProvider struct{}
 
-func (DoubleDeserializationProvider) InitDeserializer(_ string, _ string, _ any) error {
+func (DoubleDeserializationProvider) InitDeserializer(_, _, _, _ string, _ any) error {
 	return nil
 }
 

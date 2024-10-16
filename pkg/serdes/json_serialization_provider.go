@@ -13,8 +13,8 @@ type JsonSerializationProvider struct {
 	ser *jsonschema.Serializer
 }
 
-func (j *JsonSerializationProvider) InitSerializer(srClientUrl, mode string, schemaId int) error {
-	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
+func (j *JsonSerializationProvider) InitSerializer(srClientUrl, mode, srApiKey, srApiSecret string, schemaId int) error {
+	serdeClientConfig := schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	if err != nil {

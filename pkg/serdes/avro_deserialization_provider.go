@@ -13,7 +13,7 @@ type AvroDeserializationProvider struct {
 	deser *avrov2.Deserializer
 }
 
-func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, mode string, existingClient any) error {
+func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, mode, srApiKey, srApiSecret string, existingClient any) error {
 	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
 	// If existingClient is not nil, we should share this client between ser and deser.
 	// As the shared client is referred as mock client to store the same set of schemas in cache
@@ -28,7 +28,7 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, mode string,
 			return fmt.Errorf("failed to cast existing schema registry client to expected type")
 		}
 	} else {
-		serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
+		serdeClientConfig := schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
 		serdeClient, err = schemaregistry.NewClient(serdeClientConfig)
 	}
 

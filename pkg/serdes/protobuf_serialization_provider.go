@@ -23,8 +23,8 @@ type ProtobufSerializationProvider struct {
 	message gproto.Message
 }
 
-func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string, schemaId int) error {
-	serdeClientConfig := schemaregistry.NewConfig(srClientUrl)
+func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode, srApiKey, srApiSecret string, schemaId int) error {
+	serdeClientConfig := schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	if err != nil {

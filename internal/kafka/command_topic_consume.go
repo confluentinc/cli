@@ -164,6 +164,15 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return err
+	}
+	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return err
+	}
+
 	consumer, err := newConsumer(group, cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err)
@@ -246,6 +255,8 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 
 	groupHandler := &GroupHandler{
 		SrClient:    srClient,
+		SrApiKey:    srApiKey,
+		SrApiSecret: srApiSecret,
 		KeyFormat:   keyFormat,
 		ValueFormat: valueFormat,
 		Out:         cmd.OutOrStdout(),
@@ -304,6 +315,15 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
+	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return err
+	}
+	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return err
 	}
@@ -371,6 +391,8 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 
 	groupHandler := &GroupHandler{
 		SrClient:    srClient,
+		SrApiKey:    srApiKey,
+		SrApiSecret: srApiSecret,
 		KeyFormat:   keyFormat,
 		ValueFormat: valueFormat,
 		Out:         cmd.OutOrStdout(),

@@ -277,7 +277,7 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
 
-	err = deserializationProvider.InitDeserializer("", "value", srClient)
+	err = deserializationProvider.InitDeserializer("", "value", "", "", srClient)
 	if err != nil {
 		return nil, err
 	}
