@@ -12,6 +12,10 @@ func (DoubleDeserializationProvider) InitDeserializer(_ string, _ string, _ any)
 	return nil
 }
 
+func (DoubleDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+	return nil
+}
+
 func (DoubleDeserializationProvider) Deserialize(_ string, data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", nil

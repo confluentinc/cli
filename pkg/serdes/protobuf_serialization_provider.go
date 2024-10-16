@@ -5,23 +5,22 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
-	parse "github.com/jhump/protoreflect/desc/protoparse"
-	"github.com/jhump/protoreflect/dynamic"
 	gproto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/dynamicpb"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
+	"github.com/bufbuild/protocompile"
+	"context"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ProtobufSerializationProvider struct {
-	ser      *protobuf.Serializer
-	message  proto.Message
-	message2 gproto.Message
+	ser     *protobuf.Serializer
+	message gproto.Message
 }
 
 func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode string, schemaId int) error {
@@ -77,42 +76,58 @@ func (p *ProtobufSerializationProvider) GetSchemaName() string {
 }
 
 func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]byte, error) {
-	// Convert the plain string message from customer type-in into proto.Message
-	// TODO: replace the message if possible
-	if err := jsonpb.UnmarshalString(message, p.message); err != nil {
+	// Need to materialize the message into the schema of p.message
+	if err := protojson.Unmarshal([]byte(message), p.message); err != nil {
 		return nil, fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
 	}
 
-	payload, err := p.ser.Serialize(topic, proto.MessageV2(p.message))
+	payload, err := p.ser.Serialize(topic, p.message)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 	return payload, nil
 }
 
-func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.Message, error) {
+func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto.Message, error) {
+	// Collect import paths
 	importPaths := []string{filepath.Dir(schemaPath)}
 	for _, path := range referencePathMap {
 		importPaths = append(importPaths, strings.SplitAfter(path, "ccloud-schema")[0])
 	}
-	parser := parse.Parser{ImportPaths: importPaths}
-	fileDescriptors, err := parser.ParseFiles(filepath.Base(schemaPath))
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", errors.ProtoSchemaInvalidErrorMsg, err)
-	}
-	if len(fileDescriptors) == 0 {
-		return nil, fmt.Errorf(errors.ProtoSchemaInvalidErrorMsg)
-	}
-	fileDescriptor := fileDescriptors[0]
 
-	messageDescriptors := fileDescriptor.GetMessageTypes()
-	if len(messageDescriptors) == 0 {
-		return nil, fmt.Errorf(errors.ProtoSchemaInvalidErrorMsg)
+	resolver := &protocompile.SourceResolver{
+		ImportPaths: importPaths,
 	}
-	// We're always using the outermost first message.
-	messageDescriptor := messageDescriptors[0]
-	messageFactory := dynamic.NewMessageFactoryWithDefaults()
-	return messageFactory.NewMessage(messageDescriptor), nil
+
+	// Create the compiler
+	compiler := protocompile.Compiler{
+		Resolver: resolver,
+	}
+
+	// Parse and compile the .proto files
+	compiledFiles, err := compiler.Compile(context.Background(), filepath.Base(schemaPath))
+	if err != nil {
+		return nil, fmt.Errorf("error compiling .proto files: %w", err)
+	}
+	if len(compiledFiles) == 0 {
+		return nil, fmt.Errorf("error fetching valid compiled files")
+	}
+
+	// Get the first compiled file descriptor
+	fileDescriptor := compiledFiles[0]
+
+	// Get the message descriptors
+	messageDescriptors := fileDescriptor.Messages()
+	if messageDescriptors.Len() == 0 {
+		return nil, fmt.Errorf("proto schema invalid: no message descriptors found")
+	}
+
+	// Always use the outermost first message
+	messageDescriptor := messageDescriptors.Get(0)
+
+	// Create a dynamic message from the descriptor
+	dynamicMessage := dynamicpb.NewMessage(messageDescriptor)
+	return dynamicMessage, nil
 }
 
 // GetSchemaRegistryClient This getter function is used in mock testing

@@ -59,6 +59,10 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode string,
 	return nil
 }
 
+func (j *JsonDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+	return nil
+}
+
 func (j *JsonDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
 	message := make(map[string]interface{})
 	err := j.deser.DeserializeInto(topic, payload, &message)

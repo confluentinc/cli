@@ -58,6 +58,10 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, mode string,
 	return nil
 }
 
+func (a *AvroDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+	return nil
+}
+
 func (a *AvroDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
 	message := make(map[string]any)
 	err := a.deser.DeserializeInto(topic, payload, &message)

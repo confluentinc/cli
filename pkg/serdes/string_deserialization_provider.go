@@ -6,6 +6,10 @@ func (s *StringDeserializationProvider) InitDeserializer(_ string, _ string, _ a
 	return nil
 }
 
+func (s *StringDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+	return nil
+}
+
 func (s *StringDeserializationProvider) Deserialize(_ string, data []byte) (string, error) {
 	message := string(data)
 	return message, nil

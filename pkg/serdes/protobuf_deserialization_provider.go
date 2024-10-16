@@ -3,14 +3,16 @@ package serdes
 import (
 	"fmt"
 
-	"encoding/json"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
+	gproto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ProtobufDeserializationProvider struct {
-	deser *protobuf.Deserializer
+	deser   *protobuf.Deserializer
+	message gproto.Message
 }
 
 func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, mode string, existingClient any) error {
@@ -58,15 +60,23 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, mode str
 	return nil
 }
 
+func (p *ProtobufDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	message, err := parseMessage(schemaPath, referencePathMap)
+	if err != nil {
+		return err
+	}
+	p.message = message
+	return nil
+}
+
 func (p *ProtobufDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
-	message := make(map[string]interface{})
-	err := p.deser.DeserializeInto(topic, payload, &message)
+	err := p.deser.DeserializeInto(topic, payload, p.message)
 	if err != nil {
 		return "", fmt.Errorf("failed to deserialize payload: %w", err)
 	}
-	jsonBytes, err := json.Marshal(message)
+	jsonBytes, err := protojson.Marshal(p.message)
 	if err != nil {
-		return "", fmt.Errorf("failed to convert generic map message into string after deserialization: %w", err)
+		return "", fmt.Errorf("failed to convert protobuf message into string after deserialization: %w", err)
 	}
 
 	return string(jsonBytes), nil
