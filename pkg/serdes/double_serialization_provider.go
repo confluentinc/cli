@@ -2,9 +2,10 @@ package serdes
 
 import (
 	"encoding/binary"
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"math"
 	"strconv"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 )
 
 type DoubleSerializationProvider struct{}

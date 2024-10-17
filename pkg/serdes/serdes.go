@@ -3,8 +3,9 @@ package serdes
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+
+	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
 var DekAlgorithms = []string{

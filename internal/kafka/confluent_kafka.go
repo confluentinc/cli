@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -24,7 +25,6 @@ import (
 	"github.com/confluentinc/cli/v3/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v3/pkg/serdes"
 	"github.com/confluentinc/cli/v3/pkg/utils"
-	"slices"
 )
 
 const (
@@ -419,14 +419,14 @@ func getSchemaRegistryEndpointFromGroupHandler(h *GroupHandler) (string, error) 
 		return "", nil
 	}
 	if h.SrClient == nil {
-		return "", fmt.Errorf("unable to find the group handler or schema registery client during consume")
+		return "", fmt.Errorf("unable to find the group handler or schema registry client during consume")
 	}
 	cfg := h.SrClient.GetConfig()
 	if cfg == nil {
-		return "", fmt.Errorf("unable to fetch the configuration from schema registery client during consume")
+		return "", fmt.Errorf("unable to fetch the configuration from schema registry client during consume")
 	}
 	if cfg.Servers == nil || len(cfg.Servers) == 0 {
-		return "", fmt.Errorf("unable to fetch the servers info from schema registery client configuration during consume")
+		return "", fmt.Errorf("unable to fetch the servers info from schema registry client configuration during consume")
 	}
 	return cfg.Servers[0].URL, nil
 }

@@ -3,11 +3,12 @@ package serdes
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/encoding/protojson"
+	gproto "google.golang.org/protobuf/proto"
+
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
-	gproto "google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ProtobufDeserializationProvider struct {

@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 )
 
 func TestGetSerializationProvider(t *testing.T) {

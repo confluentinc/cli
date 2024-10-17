@@ -1,9 +1,9 @@
 package serdes
 
 import (
+	"encoding/json"
 	"fmt"
 
-	"encoding/json"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/jsonschema"

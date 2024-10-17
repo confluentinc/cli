@@ -1,10 +1,13 @@
 package serdes
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
 
+	"github.com/bufbuild/protocompile"
+	"google.golang.org/protobuf/encoding/protojson"
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/dynamicpb"
 
@@ -12,10 +15,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
-	"github.com/bufbuild/protocompile"
-	"context"
 	"github.com/confluentinc/cli/v3/pkg/errors"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ProtobufSerializationProvider struct {
