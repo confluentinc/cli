@@ -255,7 +255,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			// for new-env, return an application where some of the fields are missing.
 			if environment == "new-env" && page == "0" {
 				newApplication := createApplication("new-env-application", "new-env")
-				delete(newApplication.Spec, "environment")
+				delete(newApplication.Spec, "flinkEnvironment")
 				delete(newApplication.Status["jobStatus"].(map[string]interface{}), "jobName")
 				delete(newApplication.Status["jobStatus"].(map[string]interface{}), "state")
 				items := []cmfsdk.Application{newApplication}

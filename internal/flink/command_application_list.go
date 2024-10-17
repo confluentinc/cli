@@ -61,7 +61,7 @@ func populateFlinkApplicationSummaryOut(application cmfsdk.Application, envFromF
 	jobNameString := getOrDefault(jobStatus, "jobName", "")
 	jobStatusString := getOrDefault(jobStatus, "state", "")
 	name := getOrDefault(application.Metadata, "name", "")
-	environment := getOrDefault(application.Spec, "environment", envFromFlag)
+	environment := getOrDefault(application.Spec, "flinkEnvironment", envFromFlag)
 
 	appSummary = &flinkApplicationSummaryOut{
 		Name:        name,
