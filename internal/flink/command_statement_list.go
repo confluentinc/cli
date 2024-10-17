@@ -94,14 +94,14 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, statement := range statements {
 		list.Add(&statementOut{
-			CreationDate:                 statement.Metadata.GetCreatedAt(),
-			Name:                         statement.GetName(),
-			Statement:                    statement.Spec.GetStatement(),
-			ComputePool:                  statement.Spec.GetComputePoolId(),
-			Status:                       statement.Status.GetPhase(),
-			StatusDetail:                 statement.Status.GetDetail(),
-			StatusLatestOffsets:          statement.Status.GetLatestOffsets(),
-			StatusLatestOffsetsTimestamp: statement.Status.GetLatestOffsetsTimestamp(),
+			CreationDate:           statement.Metadata.GetCreatedAt(),
+			Name:                   statement.GetName(),
+			Statement:              statement.Spec.GetStatement(),
+			ComputePool:            statement.Spec.GetComputePoolId(),
+			Status:                 statement.Status.GetPhase(),
+			StatusDetail:           statement.Status.GetDetail(),
+			LatestOffsets:          statement.Status.GetLatestOffsets(),
+			LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(statement.Status.GetLatestOffsetsTimestamp()),
 		})
 	}
 	return list.Print()

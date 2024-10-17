@@ -141,14 +141,15 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&statementOut{
-		CreationDate:                 statement.Metadata.GetCreatedAt(),
-		Name:                         statement.GetName(),
-		Statement:                    statement.Spec.GetStatement(),
-		ComputePool:                  statement.Spec.GetComputePoolId(),
-		Status:                       statement.Status.GetPhase(),
-		StatusDetail:                 statement.Status.GetDetail(),
-		StatusLatestOffsets:          statement.Status.GetLatestOffsets(),
-		StatusLatestOffsetsTimestamp: statement.Status.GetLatestOffsetsTimestamp(),
+		CreationDate:           statement.Metadata.GetCreatedAt(),
+		Name:                   statement.GetName(),
+		Statement:              statement.Spec.GetStatement(),
+		ComputePool:            statement.Spec.GetComputePoolId(),
+		Status:                 statement.Status.GetPhase(),
+		StatusDetail:           statement.Status.GetDetail(),
+		LatestOffsets:          statement.Status.GetLatestOffsets(),
+		LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(statement.Status.GetLatestOffsetsTimestamp()),
 	})
+	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail"})
 	return table.Print()
 }

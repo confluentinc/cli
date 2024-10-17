@@ -1,10 +1,8 @@
-+--------------------------+---------------------------------------------------------+
-| Creation Date            | 2022-01-01 00:00:00 +0000 UTC                           |
-| Name                     | my-statement                                            |
-| Statement                | CREATE TABLE test;                                      |
-| Compute Pool             | lfcp-123456                                             |
-| Status                   | COMPLETED                                               |
-| Status Detail            | SQL statement is completed                              |
-| Latest Offsets           | customers_source=partition:0,offset:9223372036854775808 |
-| Latest Offsets Timestamp | 2022-01-01 00:00:00 +0000 UTC                           |
-+--------------------------+---------------------------------------------------------+
++---------------+-------------------------------+
+| Creation Date | 2022-01-01 00:00:00 +0000 UTC |
+| Name          | my-statement                  |
+| Statement     | CREATE TABLE test;            |
+| Compute Pool  | lfcp-123456                   |
+| Status        | COMPLETED                     |
+| Status Detail | SQL statement is completed    |
++---------------+-------------------------------+
