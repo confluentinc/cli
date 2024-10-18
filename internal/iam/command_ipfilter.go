@@ -1,11 +1,10 @@
 package iam
 
 import (
+	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 	"slices"
 
 	"github.com/spf13/cobra"
-
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -41,7 +40,7 @@ func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func printIpFilter(cmd *cobra.Command, ipFilter iamv2.IamV2IpFilter) error {
+func printIpFilter(cmd *cobra.Command, ipFilter sdk.IamV2IpFilter) error {
 	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
@@ -67,7 +66,7 @@ func (c *ipFilterCommand) validArgs(cmd *cobra.Command, args []string) []string 
 	return pcmd.AutocompleteIpFilters(c.V2Client)
 }
 
-func convertIpGroupsToIds(ipGroups []iamv2.GlobalObjectReference) []string {
+func convertIpGroupsToIds(ipGroups []sdk.GlobalObjectReference) []string {
 	ipGroupIds := make([]string, len(ipGroups))
 	for i, group := range ipGroups {
 		ipGroupIds[i] = group.GetId()

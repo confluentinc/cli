@@ -1,11 +1,10 @@
 package iam
 
 import (
+	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 	"slices"
 
 	"github.com/spf13/cobra"
-
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -40,7 +39,7 @@ func newIpGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func printIpGroup(cmd *cobra.Command, ipGroup iamv2.IamV2IpGroup) error {
+func printIpGroup(cmd *cobra.Command, ipGroup sdk.IamV2IpGroup) error {
 	cidrBlocks := ipGroup.GetCidrBlocks()
 	slices.Sort(cidrBlocks)
 
