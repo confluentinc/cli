@@ -75,7 +75,15 @@ func (p *ProtobufDeserializationProvider) Deserialize(topic string, payload []by
 	if err != nil {
 		return "", fmt.Errorf("failed to deserialize payload: %w", err)
 	}
-	jsonBytes, err := protojson.Marshal(p.message)
+
+	// Use protojson to marshal the message to JSON in a compact format
+	marshaler := protojson.MarshalOptions{
+		UseProtoNames:   true,  // Use original field names (snake_case) instead of camelCase
+		EmitUnpopulated: false, // Emit unset fields, false here to omit
+		Indent:          "",    // No indentation or additional formatting
+	}
+
+	jsonBytes, err := marshaler.Marshal(p.message)
 	if err != nil {
 		return "", fmt.Errorf("failed to convert protobuf message into string after deserialization: %w", err)
 	}

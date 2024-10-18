@@ -106,7 +106,7 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto
 	// Parse and compile the .proto files
 	compiledFiles, err := compiler.Compile(context.Background(), filepath.Base(schemaPath))
 	if err != nil {
-		return nil, fmt.Errorf("error compiling .proto files: %w", err)
+		return nil, fmt.Errorf("error compiling or finding .proto files")
 	}
 	if len(compiledFiles) == 0 {
 		return nil, fmt.Errorf("error fetching valid compiled files")

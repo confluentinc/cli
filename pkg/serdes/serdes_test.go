@@ -291,7 +291,6 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-// TODO: Check why there are sporadic IO failures sometimes
 func TestProtobufSerdesValid(t *testing.T) {
 	req := require.New(t)
 
@@ -309,7 +308,6 @@ func TestProtobufSerdesValid(t *testing.T) {
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","page":1,"result":2}`
-	expectedBytes := []byte{0, 0, 0, 0, 1, 0, 10, 3, 97, 98, 99, 16, 1, 24, 2}
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
 	err = serializationProvider.InitSerializer("mock://", "value", "", "", -1)
@@ -329,10 +327,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	data, err := serializationProvider.Serialize("topic1", expectedString)
 	req.Nil(err)
 
-	result := bytes.Compare(expectedBytes, data)
-	req.Zero(result)
-
-	data = expectedBytes
+	//TODO: We miss a deterministic marshal option to make sure the bytes are always in that order
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
 	err = deserializationProvider.InitDeserializer("mock://", "value", "", "", client)
 	req.Nil(err)
