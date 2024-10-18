@@ -1,11 +1,10 @@
 package iam
 
 import (
+	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 	"strings"
 
 	"github.com/spf13/cobra"
-
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -48,13 +47,13 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// Convert the IP group IDs into IP group objects
-	ipGroupIdObjects := make([]iamv2.GlobalObjectReference, len(ipGroups))
+	ipGroupIdObjects := make([]sdk.GlobalObjectReference, len(ipGroups))
 	for i, ipGroupId := range ipGroups {
 		// The empty string fields will get filled in automatically by the cc-policy-service
-		ipGroupIdObjects[i] = iamv2.GlobalObjectReference{Id: ipGroupId}
+		ipGroupIdObjects[i] = sdk.GlobalObjectReference{Id: ipGroupId}
 	}
 
-	createIpFilter := iamv2.IamV2IpFilter{
+	createIpFilter := sdk.IamV2IpFilter{
 		FilterName:    &args[0],
 		ResourceGroup: &resourceGroup,
 		IpGroups:      &ipGroupIdObjects,
