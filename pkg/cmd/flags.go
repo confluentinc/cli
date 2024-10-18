@@ -361,8 +361,8 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []str
 }
 
 func AddResourceGroupFlag(cmd *cobra.Command) {
-	arr := []string{"management"}
-	cmd.Flags().String("resource-group", "management", "Name of resource group. Currently, only \"management\" is supported.")
+	arr := []string{"management", "multiple"}
+	cmd.Flags().String("resource-group", "management", "Name of resource group. Currently, \"management\" and \"multiple\" are supported.")
 	RegisterFlagCompletionFunc(cmd, "resource-group", func(_ *cobra.Command, _ []string) []string {
 		return arr
 	})

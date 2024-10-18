@@ -26,6 +26,8 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
+	cmd.Flags().String("environment", "", "Name of the environment or org for which this filter applies. By default will apply to the org only.")
+	cmd.Flags().StringSlice("operations", []string{}, "Name of operation group. Currently, \"MANAGEMENT\" and \"SCHEMA\" are supported.")
 	pcmd.AddResourceGroupFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -46,6 +48,15 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	resourceScope, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+	operationGroups, err := cmd.Flags().GetStringSlice("operations")
+	if err != nil {
+		return err
+	}
+
 	// Convert the IP group IDs into IP group objects
 	ipGroupIdObjects := make([]sdk.GlobalObjectReference, len(ipGroups))
 	for i, ipGroupId := range ipGroups {
@@ -54,9 +65,11 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	createIpFilter := sdk.IamV2IpFilter{
-		FilterName:    &args[0],
-		ResourceGroup: &resourceGroup,
-		IpGroups:      &ipGroupIdObjects,
+		FilterName:      &args[0],
+		ResourceGroup:   &resourceGroup,
+		IpGroups:        &ipGroupIdObjects,
+		ResourceScope:   &resourceScope,
+		OperationGroups: &operationGroups,
 	}
 
 	filter, err := c.V2Client.CreateIamIpFilter(createIpFilter)
