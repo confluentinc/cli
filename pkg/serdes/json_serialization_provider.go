@@ -13,8 +13,17 @@ type JsonSerializationProvider struct {
 	ser *jsonschema.Serializer
 }
 
-func (j *JsonSerializationProvider) InitSerializer(srClientUrl, mode, srApiKey, srApiSecret string, schemaId int) error {
-	serdeClientConfig := schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+func (j *JsonSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, schemaId int) error {
+	var serdeClientConfig *schemaregistry.Config
+	fmt.Printf("apikey is %s, apisecret is %s, token is %s\n", srApiKey, srApiSecret, token)
+
+	if srApiKey != "" && srApiSecret != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+	} else if token != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
+	} else {
+		return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
+	}
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	if err != nil {

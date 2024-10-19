@@ -51,7 +51,7 @@ const (
 )
 
 type SerializationProvider interface {
-	InitSerializer(string, string, string, string, int) error
+	InitSerializer(string, string, string, string, string, string, int) error
 	LoadSchema(string, map[string]string) error
 	Serialize(string, string) ([]byte, error)
 	GetSchemaName() string
@@ -59,7 +59,7 @@ type SerializationProvider interface {
 }
 
 type DeserializationProvider interface {
-	InitDeserializer(string, string, string, string, any) error
+	InitDeserializer(string, string, string, string, string, string, any) error
 	LoadSchema(string, map[string]string) error
 	Deserialize(string, []byte) (string, error)
 }

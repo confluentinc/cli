@@ -13,7 +13,7 @@ type JsonDeserializationProvider struct {
 	deser *jsonschema.Deserializer
 }
 
-func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode, srApiKey, srApiSecret string, existingClient any) error {
+func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, existingClient any) error {
 	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
 	// If existingClient is not nil, we should share this client between ser and deser.
 	// As the shared client is referred as mock client to store the same set of schemas in cache
@@ -21,6 +21,7 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode, srApiK
 	var serdeClient schemaregistry.Client
 	var err error
 	var ok bool
+	fmt.Printf("apikey is %s, apisecret is %s, token is %s\n", srApiKey, srApiSecret, token)
 
 	if existingClient != nil {
 		serdeClient, ok = existingClient.(schemaregistry.Client)
@@ -28,7 +29,14 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, mode, srApiK
 			return fmt.Errorf("failed to cast existing schema registry client to expected type")
 		}
 	} else {
-		serdeClientConfig := schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+		var serdeClientConfig *schemaregistry.Config
+		if srApiKey != "" && srApiSecret != "" {
+			serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+		} else if token != "" {
+			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
+		} else {
+			return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
+		}
 		serdeClient, err = schemaregistry.NewClient(serdeClientConfig)
 	}
 

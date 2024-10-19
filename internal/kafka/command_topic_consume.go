@@ -11,6 +11,7 @@ import (
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
+	"github.com/confluentinc/cli/v3/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 	"github.com/confluentinc/cli/v3/pkg/errors"
 	"github.com/confluentinc/cli/v3/pkg/examples"
@@ -172,6 +173,10 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	token, err := auth.GetDataplaneToken(c.Context)
+	if err != nil {
+		return err
+	}
 
 	consumer, err := newConsumer(group, cluster, c.clientID, configFile, config)
 	if err != nil {
@@ -253,15 +258,24 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		subject = schemaRegistryContext
 	}
 
+	// Fetch the current SR cluster id and endpoint
+	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+	if err != nil {
+		return err
+	}
+
 	groupHandler := &GroupHandler{
-		SrClient:    srClient,
-		SrApiKey:    srApiKey,
-		SrApiSecret: srApiSecret,
-		KeyFormat:   keyFormat,
-		ValueFormat: valueFormat,
-		Out:         cmd.OutOrStdout(),
-		Subject:     subject,
-		Topic:       topic,
+		SrClient:          srClient,
+		SrApiKey:          srApiKey,
+		SrApiSecret:       srApiSecret,
+		SrClusterId:       srClusterId,
+		SrClusterEndpoint: srEndpoint,
+		Token:             token,
+		KeyFormat:         keyFormat,
+		ValueFormat:       valueFormat,
+		Out:               cmd.OutOrStdout(),
+		Subject:           subject,
+		Topic:             topic,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,
 			FullHeader:  fullHeader,
@@ -324,6 +338,16 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return err
+	}
+	token, err := auth.GetDataplaneToken(c.Context)
+	if err != nil {
+		return err
+	}
+
+	// Fetch the current SR cluster id and endpoint
+	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
 	if err != nil {
 		return err
 	}
@@ -390,13 +414,16 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	}()
 
 	groupHandler := &GroupHandler{
-		SrClient:    srClient,
-		SrApiKey:    srApiKey,
-		SrApiSecret: srApiSecret,
-		KeyFormat:   keyFormat,
-		ValueFormat: valueFormat,
-		Out:         cmd.OutOrStdout(),
-		Topic:       topicName,
+		SrClient:          srClient,
+		SrApiKey:          srApiKey,
+		SrApiSecret:       srApiSecret,
+		SrClusterId:       srClusterId,
+		SrClusterEndpoint: srEndpoint,
+		Token:             token,
+		KeyFormat:         keyFormat,
+		ValueFormat:       valueFormat,
+		Out:               cmd.OutOrStdout(),
+		Topic:             topicName,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,
 			FullHeader:  fullHeader,

@@ -13,8 +13,16 @@ type AvroSerializationProvider struct {
 	ser *avrov2.Serializer
 }
 
-func (a *AvroSerializationProvider) InitSerializer(srClientUrl, mode, srApiKey, srApiSecret string, schemaId int) error {
-	serdeClientConfig := schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, schemaId int) error {
+	var serdeClientConfig *schemaregistry.Config
+	if srApiKey != "" && srApiSecret != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+	} else if token != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
+	} else {
+		return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
+	}
+
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	if err != nil {

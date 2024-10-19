@@ -55,15 +55,18 @@ type ConsumerProperties struct {
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	SrClient    *schemaregistry.Client
-	SrApiKey    string
-	SrApiSecret string
-	KeyFormat   string
-	ValueFormat string
-	Out         io.Writer
-	Subject     string
-	Topic       string
-	Properties  ConsumerProperties
+	SrClient          *schemaregistry.Client
+	SrApiKey          string
+	SrApiSecret       string
+	SrClusterId       string
+	SrClusterEndpoint string
+	Token             string
+	KeyFormat         string
+	ValueFormat       string
+	Out               io.Writer
+	Subject           string
+	Topic             string
+	Properties        ConsumerProperties
 }
 
 func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
@@ -190,18 +193,13 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 }
 
 func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
-	srEndpoint, err := getSchemaRegistryEndpointFromGroupHandler(h)
-	if err != nil {
-		return err
-	}
-
 	if h.Properties.PrintKey {
 		keyDeserializer, err := serdes.GetDeserializationProvider(h.KeyFormat)
 		if err != nil {
 			return err
 		}
 
-		err = keyDeserializer.InitDeserializer(srEndpoint, "key", h.SrApiKey, h.SrApiSecret, nil)
+		err = keyDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "key", h.SrApiKey, h.SrApiSecret, h.Token, nil)
 		if err != nil {
 			return err
 		}
@@ -235,7 +233,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	err = valueDeserializer.InitDeserializer(srEndpoint, "value", h.SrApiKey, h.SrApiSecret, nil)
+	err = valueDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "value", h.SrApiKey, h.SrApiSecret, h.Token, nil)
 	if err != nil {
 		return err
 	}
@@ -411,22 +409,4 @@ func getHeaderString(header ckafka.Header) string {
 	} else {
 		return fmt.Sprintf(`%s="%s"`, header.Key, string(header.Value))
 	}
-}
-
-func getSchemaRegistryEndpointFromGroupHandler(h *GroupHandler) (string, error) {
-	// If both key and value format are not schema based, then SR endpoint/client will not be needed
-	if !slices.Contains(serdes.SchemaBasedFormats, h.KeyFormat) && !slices.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
-		return "", nil
-	}
-	if h.SrClient == nil {
-		return "", fmt.Errorf("unable to find the group handler or schema registry client during consume")
-	}
-	cfg := h.SrClient.GetConfig()
-	if cfg == nil {
-		return "", fmt.Errorf("unable to fetch the configuration from schema registry client during consume")
-	}
-	if cfg.Servers == nil || len(cfg.Servers) == 0 {
-		return "", fmt.Errorf("unable to fetch the servers info from schema registry client configuration during consume")
-	}
-	return cfg.Servers[0].URL, nil
 }

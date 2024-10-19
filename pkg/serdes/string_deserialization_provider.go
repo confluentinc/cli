@@ -2,7 +2,7 @@ package serdes
 
 type StringDeserializationProvider struct{}
 
-func (s *StringDeserializationProvider) InitDeserializer(_, _, _, _ string, _ any) error {
+func (s *StringDeserializationProvider) InitDeserializer(_, _, _, _, _, _ string, _ any) error {
 	return nil
 }
 

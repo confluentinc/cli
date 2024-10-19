@@ -23,8 +23,16 @@ type ProtobufSerializationProvider struct {
 	message gproto.Message
 }
 
-func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, mode, srApiKey, srApiSecret string, schemaId int) error {
-	serdeClientConfig := schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, schemaId int) error {
+	var serdeClientConfig *schemaregistry.Config
+
+	if srApiKey != "" && srApiSecret != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+	} else if token != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
+	} else {
+		return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
+	}
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	if err != nil {
