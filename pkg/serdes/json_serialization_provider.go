@@ -15,8 +15,6 @@ type JsonSerializationProvider struct {
 
 func (j *JsonSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, schemaId int) error {
 	var serdeClientConfig *schemaregistry.Config
-	fmt.Printf("apikey is %s, apisecret is %s, token is %s\n", srApiKey, srApiSecret, token)
-
 	if srApiKey != "" && srApiSecret != "" {
 		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
 	} else if token != "" {

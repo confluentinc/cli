@@ -21,8 +21,6 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 	var serdeClient schemaregistry.Client
 	var err error
 	var ok bool
-	fmt.Printf("apikey is %s, apisecret is %s, token is %s\n", srApiKey, srApiSecret, token)
-
 	if existingClient != nil {
 		serdeClient, ok = existingClient.(schemaregistry.Client)
 		if !ok {

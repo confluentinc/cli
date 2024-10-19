@@ -257,8 +257,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1 h1:WZJYfgXJrvTIYQpCFps/qHF7T
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1/go.mod h1:kB+MXWYYg9ohrTCb27LlfpTbuexAzyYAmum105ow0ho=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0 h1:zI59UpVm88hQn+dG4KO3TRxD2xdSVQbg5aqSm9/3LXo=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
-github.com/confluentinc/confluent-kafka-go/v2 v2.5.5-0.20241007235105-1a3ef0ee6678 h1:duj7Fg+o3WewDWZiK7/UWwuOrgX7voiXVYzttMWM1Oc=
-github.com/confluentinc/confluent-kafka-go/v2 v2.5.5-0.20241007235105-1a3ef0ee6678/go.mod h1:hScqtFIGUI1wqHIgM3mjoqEou4VweGGGX7dMpcUKves=
+github.com/confluentinc/confluent-kafka-go/v2 v2.6.0 h1:VKnMT71Tl0dCp3lfGBp2D8eqQwc+amoDY5EeUgFHDDE=
+github.com/confluentinc/confluent-kafka-go/v2 v2.6.0/go.mod h1:hScqtFIGUI1wqHIgM3mjoqEou4VweGGGX7dMpcUKves=
 github.com/confluentinc/go-editor v0.11.0 h1:fcEALYHj7xV/fRSp54/IHi2DS4GlZMJWVgrYvi/llvU=
 github.com/confluentinc/go-editor v0.11.0/go.mod h1:nEjwqdqx8S7ZGjXsDvRgawsA04Fu2P/KAtA8fa5afMI=
 github.com/confluentinc/go-prompt v0.2.31 h1:h8hztTsDjKaey66RFDmBIMu3q78g5pCjrizhIkquMeU=
