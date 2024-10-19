@@ -28,7 +28,7 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	cmd.Flags().String("environment", "", "Name of the environment or org for which this filter applies. By default will apply to the org only.")
 	cmd.Flags().StringSlice("operations", []string{}, "Name of operation group. Currently, \"MANAGEMENT\" and \"SCHEMA\" are supported.")
-	cmd.Flags().StringSlice("no-public-networks", []string{"ipg-none"}, "Use in place of ip-groups")
+	cmd.Flags().StringSlice("no-public-networks", []string{}, "Use in place of ip-groups")
 
 	pcmd.AddResourceGroupFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -63,12 +63,12 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if npnGroup != nil {
-		if ipGroups != nil {
+	if len(npnGroup) > 0 {
+		if len(ipGroups) > 0 {
 			return errors.NewErrorWithSuggestions("Invalid value for --no-public-networks",
 				"The no-public-networks flag is mutually exclusive with the ip-groups flag. Please use one or the other.")
 		}
-		ipGroups = npnGroup
+		ipGroups = []string{"ipg-none"}
 	}
 	// Convert the IP group IDs into IP group objects
 	ipGroupIdObjects := make([]sdk.GlobalObjectReference, len(ipGroups))

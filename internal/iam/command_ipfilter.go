@@ -15,10 +15,12 @@ type ipFilterCommand struct {
 }
 
 type ipFilterOut struct {
-	ID            string   `human:"ID" serialized:"id"`
-	Name          string   `human:"Name" serialized:"name"`
-	ResourceGroup string   `human:"Resource group" serialized:"resource_group"`
-	IpGroups      []string `human:"IP groups" serialized:"ip_groups"`
+	ID              string   `human:"ID" serialized:"id"`
+	Name            string   `human:"Name" serialized:"name"`
+	ResourceGroup   string   `human:"Resource group" serialized:"resource_group"`
+	IpGroups        []string `human:"IP groups" serialized:"ip_groups"`
+	OperationGroups []string `human:"Operation groups" serialized:"operation_groups,omitempty"`
+	ResourceScope   string   `human:"Resource scope" serialized:"resource_scope"`
 }
 
 func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -44,12 +46,13 @@ func printIpFilter(cmd *cobra.Command, ipFilter sdk.IamV2IpFilter) error {
 	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
-
 	table.Add(&ipFilterOut{
-		ID:            ipFilter.GetId(),
-		Name:          ipFilter.GetFilterName(),
-		ResourceGroup: ipFilter.GetResourceGroup(),
-		IpGroups:      ipGroupIds,
+		ID:              ipFilter.GetId(),
+		Name:            ipFilter.GetFilterName(),
+		ResourceGroup:   ipFilter.GetResourceGroup(),
+		IpGroups:        ipGroupIds,
+		ResourceScope:   ipFilter.GetResourceScope(),
+		OperationGroups: ipFilter.GetOperationGroups(),
 	})
 	return table.Print()
 }

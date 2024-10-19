@@ -398,9 +398,10 @@ func (s *CLITestSuite) TestIamIpGroup() {
 	}
 }
 
-func (s *CLITestSuite) TestIamIpFilter() {
+func (s *CLITestSuite) TestIamIpFilterCreate() {
 	tests := []CLITest{
 		{args: "iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
+		{args: "iam ip-filter create demo-ip-filter --resource-group multiple --operations MANAGEMENT --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create-operation-groups.golden"},
 		{args: "iam ip-filter create demo-ip-filter --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
 		{args: "iam ip-filter list", fixture: "iam/ip-filter/list.golden"},
 		{args: "iam ip-filter describe ipf-34dq3", fixture: "iam/ip-filter/describe.golden"},

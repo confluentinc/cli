@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	"context"
 	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"net/http"
@@ -16,8 +17,12 @@ func newIamIpFiltering(httpClient *http.Client, url, userAgent string, unsafeTra
 	return sdk.NewAPIClient(cfg)
 }
 
+func (c *Client) iamIpFilteringContext() context.Context {
+	return context.WithValue(context.Background(), sdk.ContextAccessToken, c.cfg.Context().GetAuthToken())
+}
+
 func (c *Client) CreateIamIpFilter(ipFilter sdk.IamV2IpFilter) (sdk.IamV2IpFilter, error) {
-	resp, httpResp, err := c.IamIpFilteringClient.IPFiltersIamV2Api.CreateIamV2IpFilter(c.iamApiContext()).IamV2IpFilter(ipFilter).Execute()
+	resp, httpResp, err := c.IamIpFilteringClient.IPFiltersIamV2Api.CreateIamV2IpFilter(c.iamIpFilteringContext()).IamV2IpFilter(ipFilter).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
