@@ -1,6 +1,6 @@
 +------------------+----------------------+
 | ID               | ipf-34dq3            |
-| Name             | demo-ip-filter       |
+| Name             | demo-ip-filter1      |
 | Resource group   | management           |
 | IP groups        | ipg-3g5jw, ipg-wjnde |
 | Operation groups |                      |
