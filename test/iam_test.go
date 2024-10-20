@@ -398,11 +398,12 @@ func (s *CLITestSuite) TestIamIpGroup() {
 	}
 }
 
-func (s *CLITestSuite) TestIamIpFilterCreate() {
+func (s *CLITestSuite) TestIamIpFilter() {
 	tests := []CLITest{
-		{args: "iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
-		{args: "iam ip-filter create demo-ip-filter --resource-group multiple --operations MANAGEMENT --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create-operation-groups.golden"},
-		{args: "iam ip-filter create demo-ip-filter --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
+		{args: "iam ip-filter create demo-ip-filter1 --resource-group management --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
+		{args: "iam ip-filter create demo-ip-filter1 --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
+		{args: "iam ip-filter create demo-ip-filter3 --resource-group multiple --operations MANAGEMENT --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create-operation-groups.golden"},
+		{args: "iam ip-filter create demo-ip-filter4 --resource-group multiple --operations MANAGEMENT --no-public-networks", fixture: "iam/ip-filter/create-npn-group.golden"},
 		{args: "iam ip-filter list", fixture: "iam/ip-filter/list.golden"},
 		{args: "iam ip-filter describe ipf-34dq3", fixture: "iam/ip-filter/describe.golden"},
 		{args: "iam ip-filter delete ipf-34dq3", fixture: "iam/ip-filter/delete.golden"},

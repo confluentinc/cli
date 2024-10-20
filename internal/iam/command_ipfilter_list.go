@@ -31,10 +31,12 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, filter := range ipFilters {
 		list.Add(&ipFilterOut{
-			ID:            filter.GetId(),
-			Name:          filter.GetFilterName(),
-			ResourceGroup: filter.GetResourceGroup(),
-			IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
+			ID:              filter.GetId(),
+			Name:            filter.GetFilterName(),
+			ResourceGroup:   filter.GetResourceGroup(),
+			IpGroups:        convertIpGroupObjectsToIpGroupIds(filter),
+			OperationGroups: filter.GetOperationGroups(),
+			ResourceScope:   filter.GetResourceScope(),
 		})
 	}
 	return list.Print()
