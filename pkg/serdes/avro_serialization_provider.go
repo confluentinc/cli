@@ -1,8 +1,9 @@
 package serdes
 
 import (
-	"encoding/json"
 	"fmt"
+
+	"github.com/linkedin/goavro/v2"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
@@ -10,12 +11,16 @@ import (
 )
 
 type AvroSerializationProvider struct {
-	ser *avrov2.Serializer
+	ser      *avrov2.Serializer
+	schemaId int
+	mode     string
 }
 
 func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, schemaId int) error {
 	var serdeClientConfig *schemaregistry.Config
-	if srApiKey != "" && srApiSecret != "" {
+	if srClientUrl == mockClientUrl {
+		serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
+	} else if srApiKey != "" && srApiSecret != "" {
 		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
 	} else if token != "" {
 		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
@@ -56,6 +61,11 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 	}
 
 	a.ser = ser
+	a.schemaId = schemaId
+	if schemaId < 0 {
+		a.schemaId = 1
+	}
+	a.mode = mode
 	return nil
 }
 
@@ -68,14 +78,28 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 }
 
 func (a *AvroSerializationProvider) Serialize(topic, message string) ([]byte, error) {
-	// Convert the plain string message from customer type-in into generic map
-	var result map[string]any
-	err := json.Unmarshal([]byte(message), &result)
+	// Step#1: Fetch the schemaInfo based on subject and schema ID
+	schemaObj, err := a.GetSchemaRegistryClient().GetBySubjectAndID(topic+"-"+a.mode, a.schemaId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert message string into generic map for serialization: %w", err)
+		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 
-	payload, err := a.ser.Serialize(topic, &result)
+	// Step#2: Prepare the Codec based on schemaInfo
+	schemaString := schemaObj.Schema
+	codec, err := goavro.NewCodec(schemaString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize message: %w", err)
+	}
+
+	// Step#3: Convert the Avro message data in JSON text format into Go native
+	// data types in accordance with the Avro schema supplied when creating the Codec
+	object, _, err := codec.NativeFromTextual([]byte(message))
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize message: %w", err)
+	}
+
+	// Step#4: Serialize the Go native data object with the confluent-kafka-go Serialize() library
+	payload, err := a.ser.Serialize(topic, &object)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}

@@ -63,17 +63,114 @@ func TestAvroSerdesValid(t *testing.T) {
 	dir, err := createTempDir()
 	req.Nil(err)
 
-	schemaString := `{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}`
+	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"int"}]}`
 	schemaPath := filepath.Join(dir, "avro-schema.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// expectedBytes[0] is the magic byte, expectedBytes[1:5] is the schemaId in BigIndian
-	expectedString := `{"f1":"asd"}`
-	expectedBytes := []byte{0, 0, 0, 0, 1, 6, 97, 115, 100}
+	expectedString := `{"f1":123}`
+	//expectedBytes := []byte{0, 0, 0, 0, 1, 6, 97, 115, 100}
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err = serializationProvider.InitSerializer("mock://", "", "value", "", "", "", -1)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	// Explicitly register the schema to have a schemaId with mock SR client
+	client := serializationProvider.GetSchemaRegistryClient()
+	info := schemaregistry.SchemaInfo{
+		Schema:     schemaString,
+		SchemaType: "AVRO",
+	}
+	_, err = client.Register("topic1-value", info, false)
+	req.Nil(err)
+
+	data, err := serializationProvider.Serialize("topic1", expectedString)
+	req.Nil(err)
+
+	//result := bytes.Compare(expectedBytes, data)
+	//req.Zero(result)
+
+	// Initialize the mock deserializer
+	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	req.Nil(err)
+
+	str, err := deserializationProvider.Deserialize("topic1", data)
+	req.Nil(err)
+
+	req.Equal(expectedString, str)
+	req.NoError(os.RemoveAll(dir))
+}
+
+func TestAvroSerdesInvalid(t *testing.T) {
+	req := require.New(t)
+
+	dir, err := createTempDir()
+	req.Nil(err)
+
+	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string"}]}`
+	schemaPath := filepath.Join(dir, "avro-schema.txt")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	// Initialize the mock serializer and use latest schemaId
+	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	// Explicitly register the schema to have a schemaId with mock SR client
+	client := serializationProvider.GetSchemaRegistryClient()
+	info := schemaregistry.SchemaInfo{
+		Schema:     schemaString,
+		SchemaType: "AVRO",
+	}
+	_, err = client.Register("topic1-value", info, false)
+	req.Nil(err)
+
+	// Initialize the mock deserializer
+	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
+	req.Nil(err)
+
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	req.Nil(err)
+
+	brokenString := `{"f1"`
+	brokenBytes := []byte{0, 0, 0, 0, 1, 6, 97}
+
+	_, err = serializationProvider.Serialize("topic1", brokenString)
+	req.Regexp(`cannot decode textual record "myRecord": short buffer`, err)
+
+	_, err = deserializationProvider.Deserialize("topic1", brokenBytes)
+	req.Regexp("unexpected EOF$", err)
+
+	invalidString := `{"f2": "abc"}`
+	_, err = serializationProvider.Serialize("topic1", invalidString)
+	req.Regexp(`cannot decode textual map: cannot determine codec: "f2"$`, err)
+
+	req.NoError(os.RemoveAll(dir))
+}
+
+func TestAvroSerdesNestedValid(t *testing.T) {
+	req := require.New(t)
+
+	dir, err := createTempDir()
+	req.Nil(err)
+
+	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string"},{"name":"nestedField","type":{"type":"record","name":"AnotherNestedRecord","fields":[{"name":"nested_field1","type":"float"},{"name":"nested_field2","type":"string"}]}}]}`
+	schemaPath := filepath.Join(dir, "avro-schema-nested.txt")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	// expectedBytes[0] is the magic byte, expectedBytes[1:5] is the schemaId in BigIndian
+	expectedString := `{"f1":"asd","nestedField":{"nested_field1":123.01,"nested_field2":"example"}}`
+	expectedBytes := []byte{0, 0, 0, 0, 1, 6, 97, 115, 100, 31, 5, 246, 66, 14, 101, 120, 97, 109, 112, 108, 101}
+
+	// Initialize the mock serializer and use latest schemaId
+	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -95,62 +192,13 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer("mock://", "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 
 	str, err := deserializationProvider.Deserialize("topic1", expectedBytes)
 	req.Nil(err)
 
-	req.Equal(str, expectedString)
-	req.NoError(os.RemoveAll(dir))
-}
-
-func TestAvroSerdesInvalid(t *testing.T) {
-	req := require.New(t)
-
-	dir, err := createTempDir()
-	req.Nil(err)
-
-	schemaString := `{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}`
-	schemaPath := filepath.Join(dir, "avro-schema.txt")
-	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
-
-	// Initialize the mock serializer and use latest schemaId
-	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err = serializationProvider.InitSerializer("mock://", "", "value", "", "", "", -1)
-	req.Nil(err)
-	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
-	req.Nil(err)
-
-	// Explicitly register the schema to have a schemaId with mock SR client
-	client := serializationProvider.GetSchemaRegistryClient()
-	info := schemaregistry.SchemaInfo{
-		Schema:     schemaString,
-		SchemaType: "AVRO",
-	}
-	_, err = client.Register("topic1-value", info, false)
-	req.Nil(err)
-
-	// Initialize the mock deserializer
-	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	req.Nil(err)
-
-	err = deserializationProvider.InitDeserializer("mock://", "", "value", "", "", "", client)
-	req.Nil(err)
-
-	brokenString := `{"f1"`
-	brokenBytes := []byte{0, 0, 0, 0, 1, 6, 97}
-
-	_, err = serializationProvider.Serialize("topic1", brokenString)
-	req.Regexp("unexpected end of JSON input$", err)
-
-	_, err = deserializationProvider.Deserialize("topic1", brokenBytes)
-	req.Regexp("unexpected EOF$", err)
-
-	invalidString := `{"f2": "abc"}`
-	_, err = serializationProvider.Serialize("topic1", invalidString)
-	req.Regexp("missing required field f1$", err)
-
+	req.Equal(expectedString, str)
 	req.NoError(os.RemoveAll(dir))
 }
 

@@ -27,6 +27,7 @@ const (
 	jsonSchemaName     = "jsonschema"
 	protobufSchemaName = "protobuf"
 	stringSchemaName   = "string"
+	mockClientUrl      = "mock://"
 )
 
 var Formats = []string{
