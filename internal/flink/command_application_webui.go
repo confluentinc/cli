@@ -6,9 +6,12 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	perrors "github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -26,7 +29,6 @@ func (c *command) newApplicationWebUiForwardCommand() *cobra.Command {
 	cmd.Flags().Uint16("port", 0, "Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.")
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
-	cobra.CheckErr(cmd.MarkFlagRequired("url"))
 
 	return cmd
 }
@@ -35,6 +37,12 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
+	}
+	if url == "" {
+		url = os.Getenv(auth.ConfluentPlatformCmfURL)
+		if url == "" {
+			return perrors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
+		}
 	}
 
 	environment, err := cmd.Flags().GetString("environment")

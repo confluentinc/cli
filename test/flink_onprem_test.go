@@ -1,5 +1,11 @@
 package test
 
+import (
+	"os"
+
+	"github.com/confluentinc/cli/v4/pkg/auth"
+)
+
 func (s *CLITestSuite) TestFlinkApplicationList() {
 	tests := []CLITest{
 		// failure scenarios
@@ -160,9 +166,14 @@ func (s *CLITestSuite) TestFlinkApplicationWebUiForward() {
 		// failure
 		{args: "flink --url dummy-url application web-ui-forward forward-negative-port --environment forward-test --port -30", fixture: "flink/application/forward-negative-port.golden", exitCode: 1},
 		{args: "flink --url dummy-url application web-ui-forward non-existent --environment default", fixture: "flink/application/forward-nonexistent-application.golden", exitCode: 1},
+		{name: "no-url-set", args: "flink application web-ui-forward --environment does-not-matter does-not-matter", fixture: "flink/application/url-missing.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
+		if test.name == "no-url-set" {
+			// unset the environment variable
+			os.Unsetenv(auth.ConfluentPlatformCmfURL)
+		}
 		s.runIntegrationTest(test)
 	}
 }
