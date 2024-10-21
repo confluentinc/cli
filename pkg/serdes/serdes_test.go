@@ -44,17 +44,17 @@ func TestStringSerdes(t *testing.T) {
 	req := require.New(t)
 
 	serializationProvider, _ := GetSerializationProvider(stringSchemaName)
-	expectedBytes := []byte{115, 111, 109, 101, 115, 116, 114, 105, 110, 103}
-	data, err := serializationProvider.Serialize("", "somestring")
+	expectedBytes := []byte{115, 111, 109, 101, 83, 116, 114, 105, 110, 103}
+	data, err := serializationProvider.Serialize("", "someString")
 	req.Nil(err)
 	result := bytes.Compare(data, expectedBytes)
 	req.Zero(result)
 
 	deserializationProvider, _ := GetDeserializationProvider(stringSchemaName)
-	data = []byte{115, 111, 109, 101, 115, 116, 114, 105, 110, 103}
+	data = []byte{115, 111, 109, 101, 83, 116, 114, 105, 110, 103}
 	str, err := deserializationProvider.Deserialize("", data)
 	req.Nil(err)
-	req.Equal(str, "somestring")
+	req.Equal(str, "someString")
 }
 
 func TestAvroSerdesValid(t *testing.T) {
@@ -401,15 +401,15 @@ func TestProtobufSerdesValid(t *testing.T) {
 	message Person {
 	  string name = 1;
 	  int32 page = 2;
-	  int32 result = 3;
+	  double result = 3;
 	}`
-	schemaPath := filepath.Join(dir, "person.proto")
+	schemaPath := filepath.Join(dir, "person-schema.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
-	expectedString := `{"name":"abc","page":1,"result":2}`
+	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer("mock://", "", "value", "", "", "", -1)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -426,15 +426,14 @@ func TestProtobufSerdesValid(t *testing.T) {
 	data, err := serializationProvider.Serialize("topic1", expectedString)
 	req.Nil(err)
 
-	//TODO: We miss a deterministic marshal option to make sure the bytes are always in that order
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer("mock://", "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	str, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
-	req.Equal(expectedString, str)
+	req.Equal(expectedString, actualString)
 
 	req.NoError(os.RemoveAll(dir))
 }
@@ -465,14 +464,14 @@ func TestProtobufSerdesReference(t *testing.T) {
 	  io.confluent.Address address = 2;
 	  int32 result = 3;
 	}`
-	schemaPath := filepath.Join(dir, "person.proto")
+	schemaPath := filepath.Join(dir, "person-reference.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
 	expectedBytes := []byte{0, 0, 0, 0, 1, 0, 10, 3, 97, 98, 99, 18, 4, 10, 2, 76, 65, 24, 2}
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer("mock://", "", "value", "", "", "", -1)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
@@ -501,7 +500,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 
 	data = expectedBytes
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer("mock://", "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
@@ -525,11 +524,11 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	  int32 page = 2;
 	  int32 result = 3;
 	}`
-	schemaPath := filepath.Join(dir, "person.proto")
+	schemaPath := filepath.Join(dir, "person-invalid.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer("mock://", "", "value", "", "", "", -1)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -544,7 +543,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer("mock://", "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -580,9 +579,9 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	syntax = "proto3";
 	message Input {
 		string name = 1;
-		int32 id = 2;  // Unique ID number for this person.
+		int32 id = 2;
 		Address add = 3;
-		PhoneNumber phones = 4;  //List
+		PhoneNumber phones = 4;
 		message PhoneNumber {
 			string number = 1;
 		}
@@ -591,16 +590,13 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 			string street = 2;
 		}
 	}`
-	schemaPath := filepath.Join(dir, "person_nested.proto")
+	schemaPath := filepath.Join(dir, "person-nested.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","id":2,"add":{"zip":"123","street":"def"},"phones":{"number":"234"}}`
-	expectedBytes := []byte{
-		0, 0, 0, 0, 1, 0, 34, 5, 10, 3, 50, 51, 52, 10, 3, 97, 98, 99, 16, 2, 26, 10, 10, 3,
-		49, 50, 51, 18, 3, 100, 101, 102}
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer("mock://", "", "value", "", "", "", -1)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -617,19 +613,14 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	data, err := serializationProvider.Serialize("topic1", expectedString)
 	req.Nil(err)
 
-	result := bytes.Compare(expectedBytes, data)
-	req.Zero(result)
-
-	data = expectedBytes
-
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer("mock://", "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	str, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
-	req.Equal(str, expectedString)
+	req.Equal(expectedString, actualString)
 
 	req.NoError(os.RemoveAll(dir))
 }

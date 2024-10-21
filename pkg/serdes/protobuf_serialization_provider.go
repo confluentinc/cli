@@ -26,7 +26,9 @@ type ProtobufSerializationProvider struct {
 func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, schemaId int) error {
 	var serdeClientConfig *schemaregistry.Config
 
-	if srApiKey != "" && srApiSecret != "" {
+	if srClientUrl == mockClientUrl {
+		serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
+	} else if srApiKey != "" && srApiSecret != "" {
 		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
 	} else if token != "" {
 		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
