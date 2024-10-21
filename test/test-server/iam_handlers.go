@@ -621,7 +621,7 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet:
-			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "management", []string{"ipg-12345", "ipg-abcde"}, "", nil)
+			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "", []string{"MANAGEMENT"})
 			err := json.NewEncoder(w).Encode(ipFilter)
 			require.NoError(t, err)
 		case http.MethodDelete:

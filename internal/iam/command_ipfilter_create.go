@@ -33,7 +33,11 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddResourceGroupFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-	
+
+	err := cmd.MarkFlagRequired("resource-group")
+	if err != nil {
+		return nil
+	}
 	cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")
 
 	return cmd

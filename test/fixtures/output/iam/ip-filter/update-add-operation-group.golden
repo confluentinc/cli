@@ -3,6 +3,6 @@
 | Name             | demo-ip-filter       |
 | Resource group   | multiple             |
 | IP groups        | ipg-12345, ipg-abcde |
-| Operation groups | SCHEMA               |
+| Operation groups | SCHEMA, MANAGEMENT   |
 | Resource scope   |                      |
 +------------------+----------------------+

@@ -401,7 +401,6 @@ func (s *CLITestSuite) TestIamIpGroup() {
 func (s *CLITestSuite) TestIamIpFilter() {
 	tests := []CLITest{
 		{args: "iam ip-filter create demo-ip-filter1 --resource-group management --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
-		{args: "iam ip-filter create demo-ip-filter1 --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
 		{args: "iam ip-filter create demo-ip-filter3 --resource-group multiple --operations MANAGEMENT --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create-operation-groups.golden"},
 		{args: "iam ip-filter create demo-ip-filter4 --resource-group multiple --operations MANAGEMENT --no-public-networks", fixture: "iam/ip-filter/create-npn-group.golden"},
 		{args: "iam ip-filter list", fixture: "iam/ip-filter/list.golden"},
@@ -411,8 +410,8 @@ func (s *CLITestSuite) TestIamIpFilter() {
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-abcde --remove-ip-groups ipg-12345", fixture: "iam/ip-filter/update-resource-duplicate.golden"},
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-azbye --remove-ip-groups ipg-azbye", fixture: "iam/ip-filter/update-resource-add-and-remove.golden"},
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-hjkil --remove-ip-groups ipg-fedbc", fixture: "iam/ip-filter/update-resource-remove-not-exist.golden"},
-		{args: "iam ip-filter update ipf-34dq3 --resource-group multiple --add-operation-groups SCHEMA", fixture: "iam/ip-filter/update-operation-group-add.golden"},
-		{args: "iam ip-filter update ipf-34dq3 --remove-operation-groups SCHEMA", fixture: "iam/ip-filter/update-operation-group-remove.golden"},
+		{args: "iam ip-filter update ipf-34dq3 --resource-group multiple --add-operation-groups SCHEMA", fixture: "iam/ip-filter/update-add-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq3 --remove-operation-groups SCHEMA", fixture: "iam/ip-filter/update-remove-operation-group.golden"},
 	}
 
 	for _, test := range tests {
