@@ -9,12 +9,16 @@ Create an IP filter named "demo-ip-filter" with resource group "management" and 
   $ confluent iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-12345,ipg-67890
 
 Flags:
-      --ip-groups strings       REQUIRED: A comma-separated list of IP group IDs.
-      --resource-group string   Name of resource group. Currently, only "management" is supported. (default "management")
-      --context string          CLI context name.
-  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
+      --ip-groups strings            REQUIRED: A comma-separated list of IP group IDs.
+      --environment string           Name of the environment or org for which this filter applies. By default will apply to the org only.
+      --operations strings           Name of operation group. Currently, "MANAGEMENT" and "SCHEMA" are supported.
+      --no-public-networks strings   Use in place of ip-groups
+      --resource-group string        Name of resource group. Currently, "management" and "multiple" are supported. (default "management")
+      --context string               CLI context name.
+  -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
