@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"encoding/json"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 )
 
@@ -251,42 +252,74 @@ func TestJsonSerdesValid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-//func TestJsonSerdesReference(t *testing.T) {
-//	req := require.New(t)
-//
-//	dir, err := createTempDir()
-//	req.Nil(err)
-//
-//	referenceString := `{"type": "string"}`
-//	referencePath := filepath.Join(dir, "json-reference.json")
-//	req.NoError(os.WriteFile(referencePath, []byte(referenceString), 0644))
-//
-//	schemaString := `{"type":"object","properties":{"f1":{"$ref":"json-reference.json"}},"required":["f1"]}`
-//	schemaPath := filepath.Join(dir, "json-demo.json")
-//	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
-//
-//	expectedString := `{"f1":"asd"}`
-//	expectedBytes := []byte{123, 34, 102, 49, 34, 58, 34, 97, 115, 100, 34, 125}
-//
-//	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-//	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"json-reference.json": referencePath})
-//	req.Nil(err)
-//	data, err := serializationProvider.Serialize(expectedString)
-//	req.Nil(err)
-//
-//	result := bytes.Compare(expectedBytes, data)
-//	req.Zero(result)
-//
-//	data = expectedBytes
-//	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-//	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{"json-reference.json": referencePath})
-//	req.Nil(err)
-//	str, err := deserializationProvider.Deserialize(data)
-//	req.Nil(err)
-//	req.Equal(str, expectedString)
-//
-//	req.NoError(os.RemoveAll(dir))
-//}
+func TestJsonSerdesReference(t *testing.T) {
+	req := require.New(t)
+
+	dir, err := createTempDir()
+	req.Nil(err)
+
+	// Reference schema should be registered from user side prior to be used as reference
+	// So subject and schema version will be known value at this time
+	referenceContent := `[{"name":"RefSchema","subject":"topic2-value","version":1}]`
+	referenceString := `{"type": "string"}`
+	referencePath := filepath.Join(dir, "json-reference.json")
+	req.NoError(os.WriteFile(referencePath, []byte(referenceContent), 0644))
+
+	// Prepare main schema information
+	schemaString := `{"type":"object","properties":{"f1":{"$ref":"RefSchema"}},"required":["f1"]}`
+	schemaPath := filepath.Join(dir, "json-schema.json")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	// Read references from local reference schema file
+	references, err := readSchemaReferences(referencePath)
+	req.Nil(err)
+
+	expectedString := `{"f1":"asd"}`
+	expectedBytes := []byte{0, 0, 0, 0, 2, 123, 34, 102, 49, 34, 58, 34, 97, 115, 100, 34, 125}
+
+	// Initialize the mock serializer and use latest schemaId
+	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	// Explicitly register the reference schema and root schema to have a schemaId with mock SR client
+	client := serializationProvider.GetSchemaRegistryClient()
+	referenceInfo := schemaregistry.SchemaInfo{
+		Schema:     referenceString,
+		SchemaType: "JSON",
+	}
+	_, err = client.Register("topic2-value", referenceInfo, false)
+	req.Nil(err)
+
+	info := schemaregistry.SchemaInfo{
+		Schema:     schemaString,
+		SchemaType: "JSON",
+		References: references,
+	}
+	_, err = client.Register("topic1-value", info, false)
+	req.Nil(err)
+
+	data, err := serializationProvider.Serialize("topic1", expectedString)
+	req.Nil(err)
+
+	result := bytes.Compare(expectedBytes, data)
+	req.Zero(result)
+
+	// Initialize the mock deserializer
+	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	req.Nil(err)
+
+	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	req.Nil(err)
+	req.Equal(expectedString, actualString)
+
+	req.NoError(os.RemoveAll(dir))
+}
 
 func TestJsonSerdesInvalid(t *testing.T) {
 	req := require.New(t)
@@ -452,6 +485,8 @@ func TestProtobufSerdesReference(t *testing.T) {
 	  string city = 1;
 	}`
 
+	// Reference schema should be registered from user side prior to be used as reference
+	// So subject and schema version will be known value at this time
 	referencePath := filepath.Join(dir, "address.proto")
 	req.NoError(os.WriteFile(referencePath, []byte(referenceString), 0644))
 
@@ -464,7 +499,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 	  io.confluent.Address address = 2;
 	  int32 result = 3;
 	}`
-	schemaPath := filepath.Join(dir, "person-reference.proto")
+	schemaPath := filepath.Join(dir, "person.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
@@ -476,18 +511,19 @@ func TestProtobufSerdesReference(t *testing.T) {
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
 
-	// Explicitly register the schema to have a schemaId with mock SR client
+	// Explicitly register the reference schema and root schema to have a schemaId with mock SR client
 	client := serializationProvider.GetSchemaRegistryClient()
+	referenceInfo := schemaregistry.SchemaInfo{
+		Schema:     referenceString,
+		SchemaType: "PROTOBUF",
+	}
+	_, err = client.Register("address.proto", referenceInfo, false)
+	req.Nil(err)
+
 	info := schemaregistry.SchemaInfo{
 		Schema:     schemaString,
 		SchemaType: "PROTOBUF",
 	}
-	refInfo := schemaregistry.SchemaInfo{
-		Schema:     referenceString,
-		SchemaType: "PROTOBUF",
-	}
-	_, err = client.Register("address.proto", refInfo, false)
-	req.Nil(err)
 	_, err = client.Register("topic1-value", info, false)
 	req.Nil(err)
 
@@ -629,4 +665,22 @@ func createTempDir() (string, error) {
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	err := os.MkdirAll(dir, 0755)
 	return dir, err
+}
+
+func readSchemaReferences(references string) ([]schemaregistry.Reference, error) {
+	if references == "" {
+		return []schemaregistry.Reference{}, nil
+	}
+
+	data, err := os.ReadFile(references)
+	if err != nil {
+		return nil, err
+	}
+
+	var refs []schemaregistry.Reference
+	if err := json.Unmarshal(data, &refs); err != nil {
+		return nil, err
+	}
+
+	return refs, nil
 }
