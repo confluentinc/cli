@@ -18,7 +18,7 @@ func (c *ipFilterCommand) newListCommand() *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-
+	
 	return cmd
 }
 

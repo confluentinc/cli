@@ -411,6 +411,8 @@ func (s *CLITestSuite) TestIamIpFilter() {
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-abcde --remove-ip-groups ipg-12345", fixture: "iam/ip-filter/update-resource-duplicate.golden"},
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-azbye --remove-ip-groups ipg-azbye", fixture: "iam/ip-filter/update-resource-add-and-remove.golden"},
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-hjkil --remove-ip-groups ipg-fedbc", fixture: "iam/ip-filter/update-resource-remove-not-exist.golden"},
+		{args: "iam ip-filter update ipf-34dq3 --resource-group multiple --add-operation-groups SCHEMA", fixture: "iam/ip-filter/update-operation-group-add.golden"},
+		{args: "iam ip-filter update ipf-34dq3 --remove-operation-groups SCHEMA", fixture: "iam/ip-filter/update-operation-group-remove.golden"},
 	}
 
 	for _, test := range tests {

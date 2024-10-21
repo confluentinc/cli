@@ -580,7 +580,7 @@ func handleIamIpFilters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "management", []string{"ipg-12345", "ipg-abcde"}, "", nil)
+			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", []string{"MANAGEMENT"})
 			err := json.NewEncoder(w).Encode(sdk.IamV2IpFilterList{Data: []sdk.IamV2IpFilter{ipFilter}})
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -607,14 +607,16 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPatch:
-			var req iamv2.IamV2IpFilter
+			var req sdk.IamV2IpFilter
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamv2.IamV2IpFilter{
-				Id:            req.Id,
-				FilterName:    req.FilterName,
-				ResourceGroup: req.ResourceGroup,
-				IpGroups:      req.IpGroups,
+			res := &sdk.IamV2IpFilter{
+				Id:              req.Id,
+				FilterName:      req.FilterName,
+				ResourceGroup:   req.ResourceGroup,
+				IpGroups:        req.IpGroups,
+				ResourceScope:   req.ResourceScope,
+				OperationGroups: req.OperationGroups,
 			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
