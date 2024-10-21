@@ -15,7 +15,9 @@ type JsonSerializationProvider struct {
 
 func (j *JsonSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, schemaId int) error {
 	var serdeClientConfig *schemaregistry.Config
-	if srApiKey != "" && srApiSecret != "" {
+	if srClientUrl == mockClientUrl {
+		serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
+	} else if srApiKey != "" && srApiSecret != "" {
 		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
 	} else if token != "" {
 		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
@@ -68,7 +70,7 @@ func (j *JsonSerializationProvider) GetSchemaName() string {
 }
 
 func (j *JsonSerializationProvider) Serialize(topic, message string) ([]byte, error) {
-	// Convert the plain string message from customer type-in into generic map
+	// Convert the plain string message from customer type-in in CLI terminal into generic map
 	var result map[string]any
 	err := json.Unmarshal([]byte(message), &result)
 	if err != nil {

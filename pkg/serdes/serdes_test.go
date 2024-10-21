@@ -69,7 +69,7 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	// expectedBytes[0] is the magic byte, expectedBytes[1:5] is the schemaId in BigIndian
 	expectedString := `{"f1":123}`
-	//expectedBytes := []byte{0, 0, 0, 0, 1, 6, 97, 115, 100}
+	expectedBytes := []byte{0, 0, 0, 0, 1, 246, 1}
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
@@ -90,18 +90,18 @@ func TestAvroSerdesValid(t *testing.T) {
 	data, err := serializationProvider.Serialize("topic1", expectedString)
 	req.Nil(err)
 
-	//result := bytes.Compare(expectedBytes, data)
-	//req.Zero(result)
+	result := bytes.Compare(expectedBytes, data)
+	req.Zero(result)
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
 	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 
-	str, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
 
-	req.Equal(expectedString, str)
+	req.Equal(expectedString, actualString)
 	req.NoError(os.RemoveAll(dir))
 }
 
@@ -112,7 +112,7 @@ func TestAvroSerdesInvalid(t *testing.T) {
 	req.Nil(err)
 
 	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string"}]}`
-	schemaPath := filepath.Join(dir, "avro-schema.txt")
+	schemaPath := filepath.Join(dir, "avro-schema-invalid.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// Initialize the mock serializer and use latest schemaId
@@ -195,10 +195,10 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 
-	str, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
 	req.Nil(err)
 
-	req.Equal(expectedString, str)
+	req.Equal(expectedString, actualString)
 	req.NoError(os.RemoveAll(dir))
 }
 
@@ -209,7 +209,7 @@ func TestJsonSerdesValid(t *testing.T) {
 	req.Nil(err)
 
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
-	schemaPath := filepath.Join(dir, "json-demo.json")
+	schemaPath := filepath.Join(dir, "json-schema.json")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"f1":"asd"}`
@@ -217,7 +217,7 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err = serializationProvider.InitSerializer("mock://", "", "value", "", "", "", -1)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -239,14 +239,14 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer("mock://", "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 
-	//err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
-	//req.Nil(err)
-	str, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	req.Equal(str, expectedString)
+	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	req.Nil(err)
+	req.Equal(expectedString, actualString)
 
 	req.NoError(os.RemoveAll(dir))
 }
@@ -295,12 +295,12 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	req.Nil(err)
 
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
-	schemaPath := filepath.Join(dir, "json-demo.json")
+	schemaPath := filepath.Join(dir, "json-schema-invalid.json")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err = serializationProvider.InitSerializer("mock://", "", "value", "", "", "", -1)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -316,7 +316,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer("mock://", "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
 
 	brokenString := `{"f1":`
@@ -337,6 +337,56 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	_, err = deserializationProvider.Deserialize("topic1", invalidBytes)
 	req.Regexp("unknown magic byte$", err)
 
+	req.NoError(os.RemoveAll(dir))
+}
+
+func TestJsonSerdesNestedValid(t *testing.T) {
+	req := require.New(t)
+
+	dir, err := createTempDir()
+	req.Nil(err)
+
+	schemaString := `{"type":"object","name":"myRecord","properties":{"f1":{"type":"string"},"nestedField":{"type":"object","name":"AnotherNestedRecord","properties":{"nested_field1":{"type":"number"},"nested_field2":{"type":"string"}}}},"required":["f1","nestedField"]}`
+	schemaPath := filepath.Join(dir, "json-schema-nested.txt")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	// expectedBytes[0] is the magic byte, expectedBytes[1:5] is the schemaId in BigIndian
+	expectedString := `{"f1":"asd","nestedField":{"nested_field1":123.01,"nested_field2":"example"}}`
+	expectedBytes := []byte{0, 0, 0, 0, 1, 123, 34, 102, 49, 34, 58, 34, 97, 115, 100, 34, 44, 34, 110, 101, 115, 116, 101, 100, 70, 105, 101, 108, 100, 34,
+		58, 123, 34, 110, 101, 115, 116, 101, 100, 95, 102, 105, 101, 108, 100, 49, 34, 58, 49, 50, 51, 46, 48, 49, 44, 34, 110, 101, 115, 116, 101, 100, 95,
+		102, 105, 101, 108, 100, 50, 34, 58, 34, 101, 120, 97, 109, 112, 108, 101, 34, 125, 125}
+
+	// Initialize the mock serializer and use latest schemaId
+	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	// Explicitly register the schema to have a schemaId with mock SR client
+	client := serializationProvider.GetSchemaRegistryClient()
+	info := schemaregistry.SchemaInfo{
+		Schema:     schemaString,
+		SchemaType: "JSON",
+	}
+	_, err = client.Register("topic1-value", info, false)
+	req.Nil(err)
+
+	data, err := serializationProvider.Serialize("topic1", expectedString)
+	req.Nil(err)
+
+	result := bytes.Compare(expectedBytes, data)
+	req.Zero(result)
+
+	// Initialize the mock deserializer
+	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	req.Nil(err)
+
+	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	req.Nil(err)
+
+	req.Equal(expectedString, actualString)
 	req.NoError(os.RemoveAll(dir))
 }
 
