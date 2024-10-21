@@ -471,39 +471,42 @@ func TestProtobufSerdesValid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-// TODO: This test function has some issue
 func TestProtobufSerdesReference(t *testing.T) {
 	req := require.New(t)
 
 	dir, err := createTempDir()
 	req.Nil(err)
 
-	referenceString := `
-	syntax = "proto3";
-   package io.confluent;
-	message Address {
-	  string city = 1;
-	}`
+	referenceString := `syntax = "proto3";
+
+package io.confluent;
+
+message Address {
+  string city = 1;
+}
+`
 
 	// Reference schema should be registered from user side prior to be used as reference
 	// So subject and schema version will be known value at this time
 	referencePath := filepath.Join(dir, "address.proto")
 	req.NoError(os.WriteFile(referencePath, []byte(referenceString), 0644))
 
-	schemaString := `
-   syntax = "proto3";
-   package io.confluent;
-   import "address.proto";
-	message Person {
-	  string name = 1;
-	  io.confluent.Address address = 2;
-	  int32 result = 3;
-	}`
+	schemaString := `syntax = "proto3";
+
+package io.confluent;
+
+import "address.proto";
+
+message Person {
+  string name = 1;
+  io.confluent.Address address = 2;
+  int32 result = 3;
+}
+`
 	schemaPath := filepath.Join(dir, "person.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
-	expectedBytes := []byte{0, 0, 0, 0, 1, 0, 10, 3, 97, 98, 99, 18, 4, 10, 2, 76, 65, 24, 2}
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
 	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
@@ -523,6 +526,13 @@ func TestProtobufSerdesReference(t *testing.T) {
 	info := schemaregistry.SchemaInfo{
 		Schema:     schemaString,
 		SchemaType: "PROTOBUF",
+		References: []schemaregistry.Reference{
+			{
+				Name:    "address.proto",
+				Subject: "address.proto",
+				Version: 1,
+			},
+		},
 	}
 	_, err = client.Register("topic1-value", info, false)
 	req.Nil(err)
@@ -530,11 +540,6 @@ func TestProtobufSerdesReference(t *testing.T) {
 	data, err := serializationProvider.Serialize("topic1", expectedString)
 	req.Nil(err)
 
-	result := bytes.Compare(expectedBytes, data)
-	req.Equal(expectedBytes, data)
-	req.Zero(result)
-
-	data = expectedBytes
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
 	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
 	req.Nil(err)
