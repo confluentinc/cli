@@ -285,6 +285,9 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	token, err := auth.GetDataplaneToken(c.Context)
+	if err != nil {
+		return err
+	}
 
 	// Initialize the key serializer with the same SR endpoint during registration
 	// The associated schema ID is also required to initialize the serializer
@@ -654,8 +657,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 
 	token, err := auth.GetDataplaneToken(c.Context)
 	if err != nil {
-		fmt.Printf("The err is %w\n", err)
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("The err is %w\n", err)
 	}
 	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, srApiKey, srApiSecret, token, parsedSchemaId)
 	if err != nil {
@@ -668,21 +670,6 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	return serializationProvider, metaInfo, nil
-}
-
-func (c *command) getSchemaRegistryEndpointFromClient(cmd *cobra.Command) (string, error) {
-	srClient, err := c.GetSchemaRegistryClient(cmd)
-	if err != nil {
-		return "", err
-	}
-	cfg := srClient.GetConfig()
-	if cfg == nil {
-		return "", fmt.Errorf("unable to fetch the configuration for Schema Registry client")
-	}
-	if cfg.Servers == nil || len(cfg.Servers) == 0 {
-		return "", fmt.Errorf("unable to fetch the servers from Schema Registry client configuration")
-	}
-	return cfg.Servers[0].URL, nil
 }
 
 func getMetaInfoFromSchemaId(id int32) []byte {

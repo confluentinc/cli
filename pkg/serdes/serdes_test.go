@@ -2,13 +2,13 @@ package serdes
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"encoding/json"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 )
 
