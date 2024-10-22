@@ -45,7 +45,7 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, app := range applications {
-			appSummary := populateFlinkApplicationSummaryOut(app, environment)
+			appSummary := populateFlinkApplicationSummaryOut(app)
 			list.Add(appSummary)
 		}
 		return list.Print()
@@ -54,20 +54,18 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	return output.SerializedOutput(cmd, applications)
 }
 
-func populateFlinkApplicationSummaryOut(application cmfsdk.Application, envFromFlag string) *flinkApplicationSummaryOut {
+func populateFlinkApplicationSummaryOut(application cmfsdk.Application) *flinkApplicationSummaryOut {
 	var appSummary *flinkApplicationSummaryOut
 
 	var jobStatus map[string]any = getOrDefault(application.Status, "jobStatus", map[string]any{})
 	jobNameString := getOrDefault(jobStatus, "jobName", "")
 	jobStatusString := getOrDefault(jobStatus, "state", "")
 	name := getOrDefault(application.Metadata, "name", "")
-	environment := getOrDefault(application.Spec, "flinkEnvironment", envFromFlag)
 
 	appSummary = &flinkApplicationSummaryOut{
-		Name:        name,
-		Environment: environment,
-		JobName:     jobNameString,
-		JobStatus:   jobStatusString,
+		Name:      name,
+		JobName:   jobNameString,
+		JobStatus: jobStatusString,
 	}
 
 	return appSummary
