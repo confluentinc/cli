@@ -27,12 +27,12 @@ func (c *Client) CreateIamIpFilter(ipFilter sdk.IamV2IpFilter) (sdk.IamV2IpFilte
 }
 
 func (c *Client) DeleteIamIpFilter(id string) error {
-	httpResp, err := c.IamIpFilteringClient.IPFiltersIamV2Api.DeleteIamV2IpFilter(c.iamApiContext(), id).Execute()
+	httpResp, err := c.IamIpFilteringClient.IPFiltersIamV2Api.DeleteIamV2IpFilter(c.iamIpFilteringContext(), id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamIpFilter(id string) (sdk.IamV2IpFilter, error) {
-	resp, httpResp, err := c.IamIpFilteringClient.IPFiltersIamV2Api.GetIamV2IpFilter(c.iamApiContext(), id).Execute()
+	resp, httpResp, err := c.IamIpFilteringClient.IPFiltersIamV2Api.GetIamV2IpFilter(c.iamIpFilteringContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -57,7 +57,7 @@ func (c *Client) ListIamIpFilters() ([]sdk.IamV2IpFilter, error) {
 }
 
 func (c *Client) executeListIpFilters(pageToken string) (sdk.IamV2IpFilterList, *http.Response, error) {
-	req := c.IamIpFilteringClient.IPFiltersIamV2Api.ListIamV2IpFilters(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
+	req := c.IamIpFilteringClient.IPFiltersIamV2Api.ListIamV2IpFilters(c.iamIpFilteringContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
@@ -65,24 +65,24 @@ func (c *Client) executeListIpFilters(pageToken string) (sdk.IamV2IpFilterList, 
 }
 
 func (c *Client) UpdateIamIpFilter(filter sdk.IamV2IpFilter, id string) (sdk.IamV2IpFilter, error) {
-	resp, httpResp, err := c.IamIpFilteringClient.IPFiltersIamV2Api.UpdateIamV2IpFilter(c.iamApiContext(), id).IamV2IpFilter(filter).Execute()
+	resp, httpResp, err := c.IamIpFilteringClient.IPFiltersIamV2Api.UpdateIamV2IpFilter(c.iamIpFilteringContext(), id).IamV2IpFilter(filter).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 // iam ip group api calls
 
 func (c *Client) CreateIamIpGroup(ipGroup sdk.IamV2IpGroup) (sdk.IamV2IpGroup, error) {
-	resp, httpResp, err := c.IamIpFilteringClient.IPGroupsIamV2Api.CreateIamV2IpGroup(c.iamApiContext()).IamV2IpGroup(ipGroup).Execute()
+	resp, httpResp, err := c.IamIpFilteringClient.IPGroupsIamV2Api.CreateIamV2IpGroup(c.iamIpFilteringContext()).IamV2IpGroup(ipGroup).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteIamIpGroup(id string) error {
-	httpResp, err := c.IamIpFilteringClient.IPGroupsIamV2Api.DeleteIamV2IpGroup(c.iamApiContext(), id).Execute()
+	httpResp, err := c.IamIpFilteringClient.IPGroupsIamV2Api.DeleteIamV2IpGroup(c.iamIpFilteringContext(), id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamIpGroup(id string) (sdk.IamV2IpGroup, error) {
-	resp, httpResp, err := c.IamIpFilteringClient.IPGroupsIamV2Api.GetIamV2IpGroup(c.iamApiContext(), id).Execute()
+	resp, httpResp, err := c.IamIpFilteringClient.IPGroupsIamV2Api.GetIamV2IpGroup(c.iamIpFilteringContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -107,7 +107,7 @@ func (c *Client) ListIamIpGroups() ([]sdk.IamV2IpGroup, error) {
 }
 
 func (c *Client) executeListIpGroups(pageToken string) (sdk.IamV2IpGroupList, *http.Response, error) {
-	req := c.IamIpFilteringClient.IPGroupsIamV2Api.ListIamV2IpGroups(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
+	req := c.IamIpFilteringClient.IPGroupsIamV2Api.ListIamV2IpGroups(c.iamIpFilteringContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
@@ -115,6 +115,6 @@ func (c *Client) executeListIpGroups(pageToken string) (sdk.IamV2IpGroupList, *h
 }
 
 func (c *Client) UpdateIamIpGroup(group sdk.IamV2IpGroup, id string) (sdk.IamV2IpGroup, error) {
-	resp, httpResp, err := c.IamIpFilteringClient.IPGroupsIamV2Api.UpdateIamV2IpGroup(c.iamApiContext(), id).IamV2IpGroup(group).Execute()
+	resp, httpResp, err := c.IamIpFilteringClient.IPGroupsIamV2Api.UpdateIamV2IpGroup(c.iamIpFilteringContext(), id).IamV2IpGroup(group).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
