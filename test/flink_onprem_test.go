@@ -9,6 +9,9 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		{args: "flink application list --environment test", fixture: "flink/application/list-empty-env.golden"},
 		{args: "flink application list --environment default  --output json", fixture: "flink/application/list-json.golden"},
 		{args: "flink application list --environment default  --output human", fixture: "flink/application/list-human.golden"},
+		{args: "flink application list --environment new-env", fixture: "flink/application/list-success-human-missing-attribute.golden"},
+		{args: "flink application list --environment new-env --output yaml", fixture: "flink/application/list-success-yaml-missing-attribute.golden"},
+		{args: "flink application list --environment new-env --output json", fixture: "flink/application/list-success-json-missing-attribute.golden"},
 	}
 
 	for _, test := range tests {

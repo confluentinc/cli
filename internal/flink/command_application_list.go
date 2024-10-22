@@ -3,6 +3,8 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -43,23 +45,40 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, app := range applications {
-			jobStatus, ok := app.Status["jobStatus"].(map[string]any)
-			if !ok {
-				jobStatus = map[string]any{}
-			}
-			envInApp, ok := app.Spec["environment"].(string)
-			if !ok {
-				envInApp = environment
-			}
-			list.Add(&flinkApplicationSummaryOut{
-				Name:        app.Metadata["name"].(string),
-				Environment: envInApp,
-				JobName:     jobStatus["jobName"].(string),
-				JobStatus:   jobStatus["state"].(string),
-			})
+			appSummary := populateFlinkApplicationSummaryOut(app)
+			list.Add(appSummary)
 		}
 		return list.Print()
 	}
 	// if the output format is not human, we serialize the output as it is (JSON or YAML)
 	return output.SerializedOutput(cmd, applications)
+}
+
+func populateFlinkApplicationSummaryOut(application cmfsdk.Application) *flinkApplicationSummaryOut {
+	var appSummary *flinkApplicationSummaryOut
+
+	var jobStatus map[string]any = getOrDefault(application.Status, "jobStatus", map[string]any{})
+	jobNameString := getOrDefault(jobStatus, "jobName", "")
+	jobStatusString := getOrDefault(jobStatus, "state", "")
+	name := getOrDefault(application.Metadata, "name", "")
+
+	appSummary = &flinkApplicationSummaryOut{
+		Name:      name,
+		JobName:   jobNameString,
+		JobStatus: jobStatusString,
+	}
+
+	return appSummary
+}
+
+func getOrDefault[T any](m map[string]any, key string, d T) T {
+	value, ok := m[key]
+	if !ok {
+		return d
+	}
+	valueCast, ok := value.(T)
+	if !ok {
+		return d
+	}
+	return valueCast
 }

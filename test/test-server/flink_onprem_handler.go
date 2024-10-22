@@ -24,9 +24,8 @@ func createApplication(name string, environment string) cmfsdk.Application {
 			"name": name,
 		},
 		Spec: map[string]interface{}{
-			"flinkEnvironmentName": environment,
-			"image":                "confluentinc/cp-flink:1.19.1-cp1",
-			"flinkVersion":         "v1_19",
+			"image":        "confluentinc/cp-flink:1.19.1-cp1",
+			"flinkVersion": "v1_19",
 			"flinkConfiguration": map[string]interface{}{
 				"taskmanager.numberOfTaskSlots":       "8",
 				"metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",
@@ -224,7 +223,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 		environment := vars["environment"]
 		switch r.Method {
 		case http.MethodGet:
-			if environment != "default" && environment != "test" && environment != "update-failure" {
+			if environment != "default" && environment != "test" && environment != "update-failure" && environment != "new-env" {
 				http.Error(w, "Environment not found", http.StatusNotFound)
 				return
 			}
@@ -247,6 +246,17 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 
 			if environment == "update-failure" && page == "0" {
 				items := []cmfsdk.Application{createApplication("update-failure-application", "update-failure")}
+				applicationsPage = map[string]interface{}{
+					"items": items,
+				}
+			}
+
+			// for new-env, return an application where some of the fields are missing.
+			if environment == "new-env" && page == "0" {
+				newApplication := createApplication("new-env-application", "new-env")
+				delete(newApplication.Status["jobStatus"].(map[string]interface{}), "jobName")
+				delete(newApplication.Status["jobStatus"].(map[string]interface{}), "state")
+				items := []cmfsdk.Application{newApplication}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
