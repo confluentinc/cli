@@ -434,7 +434,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	details.kafkaClusterId = cluster.ID
 	details.schemaRegistryClusterId = clusters[0].GetId()
 	details.clusterCreds = clusterCreds
-	details.kafkaUrl = kafkaREST.CloudClient.GetUrl()
+	details.kafkaUrl = cluster.Bootstrap
 	details.schemaRegistryUrl = clusters[0].Spec.GetHttpEndpoint()
 	details.topics = topics.Data
 
