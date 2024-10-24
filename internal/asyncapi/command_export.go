@@ -276,6 +276,11 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	if err != nil {
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
+
+	err = deserializationProvider.InitDeserializer("", "", "value", "", "", "", srClient)
+	if err != nil {
+		return nil, err
+	}
 	groupHandler := kafka.GroupHandler{
 		SrClient:    srClient,
 		ValueFormat: valueFormat,
@@ -293,7 +298,8 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 			return nil, err
 		}
 	}
-	jsonMessage, err := deserializationProvider.Deserialize(value)
+
+	jsonMessage, err := deserializationProvider.Deserialize(topicName, value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deserialize example: %v", err)
 	}

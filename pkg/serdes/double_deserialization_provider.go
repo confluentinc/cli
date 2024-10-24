@@ -8,11 +8,15 @@ import (
 
 type DoubleDeserializationProvider struct{}
 
+func (DoubleDeserializationProvider) InitDeserializer(_, _, _, _, _, _ string, _ any) error {
+	return nil
+}
+
 func (DoubleDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
-func (DoubleDeserializationProvider) Deserialize(data []byte) (string, error) {
+func (DoubleDeserializationProvider) Deserialize(_ string, data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", nil
 	}
@@ -21,5 +25,6 @@ func (DoubleDeserializationProvider) Deserialize(data []byte) (string, error) {
 		return "", fmt.Errorf("the double key is invalid")
 	}
 
-	return fmt.Sprintf("%f", math.Float64frombits(binary.LittleEndian.Uint64(data))), nil
+	message := fmt.Sprintf("%f", math.Float64frombits(binary.LittleEndian.Uint64(data)))
+	return message, nil
 }
