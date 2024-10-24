@@ -4,16 +4,22 @@ import (
 	"encoding/binary"
 	"math"
 	"strconv"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 )
 
 type DoubleSerializationProvider struct{}
+
+func (DoubleSerializationProvider) InitSerializer(_, _, _, _, _, _ string, _ int) error {
+	return nil
+}
 
 func (DoubleSerializationProvider) LoadSchema(_ string, _ map[string]string) error {
 	return nil
 }
 
-func (DoubleSerializationProvider) Serialize(str string) ([]byte, error) {
-	f, err := strconv.ParseFloat(str, 64)
+func (DoubleSerializationProvider) Serialize(_, message string) ([]byte, error) {
+	f, err := strconv.ParseFloat(message, 64)
 	if err != nil {
 		return nil, err
 	}
@@ -26,4 +32,8 @@ func (DoubleSerializationProvider) Serialize(str string) ([]byte, error) {
 
 func (DoubleSerializationProvider) GetSchemaName() string {
 	return ""
+}
+
+func (DoubleSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
+	return nil
 }
