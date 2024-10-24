@@ -369,7 +369,7 @@ func AddResourceGroupFlag(cmd *cobra.Command) {
 }
 
 func AutocompleteIpFilters(client *ccloudv2.Client) []string {
-	ipFilters, err := client.ListIamIpFilters()
+	ipFilters, err := client.ListIamIpFilters("", "", "")
 	if err != nil {
 		return nil
 	}

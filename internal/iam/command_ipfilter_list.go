@@ -2,11 +2,10 @@ package iam
 
 import (
 	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
-	"github.com/spf13/cobra"
-	"strconv"
-
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/spf13/cobra"
+	"strconv"
 )
 
 func (c *ipFilterCommand) newListCommand() *cobra.Command {
@@ -45,13 +44,20 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	orgOnly := ""
+	if cmd.Flags().Changed("include-only-org-scope-filters") {
+		orgOnly = strconv.FormatBool(includeOnlyOrgScopeFilters)
+	}
 
 	includeParentScope, err := cmd.Flags().GetBool("include-parent-scope")
 	if err != nil {
 		return err
 	}
-
-	ipFilters, err := c.V2Client.ListIamIpFilters(resourceScope, strconv.FormatBool(includeOnlyOrgScopeFilters), strconv.FormatBool(includeParentScope))
+	parentScope := ""
+	if cmd.Flags().Changed("include-parent-scope") {
+		parentScope = strconv.FormatBool(includeParentScope)
+	}
+	ipFilters, err := c.V2Client.ListIamIpFilters(resourceScope, orgOnly, parentScope)
 	if err != nil {
 		return err
 	}
