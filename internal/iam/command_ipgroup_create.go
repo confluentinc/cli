@@ -1,7 +1,7 @@
 package iam
 
 import (
-	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
+	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -37,7 +37,7 @@ func (c *ipGroupCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createIPGroup := sdk.IamV2IpGroup{
+	createIPGroup := iamipfilteringv2.IamV2IpGroup{
 		GroupName:  &args[0],
 		CidrBlocks: &cidrBlocks,
 	}

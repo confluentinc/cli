@@ -2,7 +2,7 @@ package iam
 
 import (
 	"fmt"
-	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
+	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -65,7 +65,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initialize the IP group object that we will pass into the update command
-	updateIpGroup := sdk.IamV2IpGroup{
+	updateIpGroup := iamipfilteringv2.IamV2IpGroup{
 		Id:        &args[0],
 		GroupName: currentIpGroup.GroupName,
 	}
