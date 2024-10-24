@@ -1,49 +1,84 @@
 package serdes
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 
-	"github.com/xeipuuv/gojsonschema"
-
-	"github.com/confluentinc/cli/v3/pkg/errors"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/jsonschema"
 )
 
-type JsonSchemaDeserializationProvider struct {
-	schemaLoader *gojsonschema.Schema
+type JsonDeserializationProvider struct {
+	deser *jsonschema.Deserializer
 }
 
-func (j *JsonSchemaDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
-	schemaLoader, err := parseSchema(schemaPath, referencePathMap)
-	if err != nil {
-		return err
+func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, existingClient any) error {
+	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
+	// If existingClient is not nil, we should share this client between ser and deser.
+	// As the shared client is referred as mock client to store the same set of schemas in cache
+	// If existingClient is nil (which is normal case), ser and deser don't have to share the same client.
+	var serdeClient schemaregistry.Client
+	var err error
+	var ok bool
+	if existingClient != nil {
+		serdeClient, ok = existingClient.(schemaregistry.Client)
+		if !ok {
+			return fmt.Errorf("failed to cast existing schema registry client to expected type")
+		}
+	} else {
+		var serdeClientConfig *schemaregistry.Config
+		if srApiKey != "" && srApiSecret != "" {
+			serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
+		} else if token != "" {
+			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
+		} else {
+			return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
+		}
+		serdeClient, err = schemaregistry.NewClient(serdeClientConfig)
 	}
-	j.schemaLoader = schemaLoader
+
+	if err != nil {
+		return fmt.Errorf("failed to create deserializer-specific Schema Registry client: %w", err)
+	}
+
+	serdeConfig := jsonschema.NewDeserializerConfig()
+	serdeConfig.EnableValidation = true
+
+	var serdeType serde.Type
+	switch mode {
+	case "key":
+		serdeType = serde.KeySerde
+	case "value":
+		serdeType = serde.ValueSerde
+	default:
+		return fmt.Errorf("unknown deserialization mode: %s", mode)
+	}
+
+	deser, err := jsonschema.NewDeserializer(serdeClient, serdeType, serdeConfig)
+
+	if err != nil {
+		return fmt.Errorf("failed to initialize JSON deserializer: %w", err)
+	}
+
+	j.deser = deser
 	return nil
 }
 
-func (j *JsonSchemaDeserializationProvider) Deserialize(data []byte) (string, error) {
-	str := string(data)
+func (j *JsonDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+	return nil
+}
 
-	documentLoader := gojsonschema.NewStringLoader(str)
-
-	// JSON schema conducts validation on JSON string before serialization.
-	result, err := j.schemaLoader.Validate(documentLoader)
+func (j *JsonDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
+	message := make(map[string]interface{})
+	err := j.deser.DeserializeInto(topic, payload, &message)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to deserialize payload: %w", err)
+	}
+	jsonBytes, err := json.Marshal(message)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert generic map message into string after deserialization: %w", err)
 	}
 
-	if !result.Valid() {
-		return "", fmt.Errorf(errors.JsonDocumentInvalidErrorMsg)
-	}
-
-	data = []byte(str)
-
-	// Compact JSON string, i.e. remove redundant space, etc.
-	compactedBuffer := new(bytes.Buffer)
-	if err := json.Compact(compactedBuffer, data); err != nil {
-		return "", err
-	}
-	return compactedBuffer.String(), nil
+	return string(jsonBytes), nil
 }

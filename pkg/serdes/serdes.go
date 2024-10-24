@@ -3,6 +3,8 @@ package serdes
 import (
 	"fmt"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+
 	"github.com/confluentinc/cli/v3/pkg/errors"
 )
 
@@ -25,6 +27,7 @@ const (
 	jsonSchemaName     = "jsonschema"
 	protobufSchemaName = "protobuf"
 	stringSchemaName   = "string"
+	mockClientUrl      = "mock://"
 )
 
 var Formats = []string{
@@ -49,14 +52,17 @@ const (
 )
 
 type SerializationProvider interface {
+	InitSerializer(string, string, string, string, string, string, int) error
 	LoadSchema(string, map[string]string) error
-	Serialize(string) ([]byte, error)
+	Serialize(string, string) ([]byte, error)
 	GetSchemaName() string
+	GetSchemaRegistryClient() schemaregistry.Client
 }
 
 type DeserializationProvider interface {
+	InitDeserializer(string, string, string, string, string, string, any) error
 	LoadSchema(string, map[string]string) error
-	Deserialize([]byte) (string, error)
+	Deserialize(string, []byte) (string, error)
 }
 
 func FormatTranslation(backendValueFormat string) (string, error) {
@@ -102,7 +108,7 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 	case integerSchemaName:
 		return new(IntegerDeserializationProvider), nil
 	case jsonSchemaName:
-		return new(JsonSchemaDeserializationProvider), nil
+		return new(JsonDeserializationProvider), nil
 	case protobufSchemaName:
 		return new(ProtobufDeserializationProvider), nil
 	case stringSchemaName:
