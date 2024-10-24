@@ -136,8 +136,12 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 				Status: &flinkgatewayv1.SqlV1StatementStatus{
 					Phase:  "COMPLETED",
 					Detail: flinkgatewayv1.PtrString("SQL statement is completed"),
+					LatestOffsets: &map[string]string{
+						"customers_source": "partition:0,offset:9223372036854775808",
+					},
+					LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
 				},
-				Metadata: &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+				Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
 			}, {
 				Name: flinkgatewayv1.PtrString("22222222-2222-2222-2"),
 				Spec: &flinkgatewayv1.SqlV1StatementSpec{
@@ -147,8 +151,12 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 				Status: &flinkgatewayv1.SqlV1StatementStatus{
 					Phase:  "COMPLETED",
 					Detail: flinkgatewayv1.PtrString("SQL statement is completed"),
+					LatestOffsets: &map[string]string{
+						"customers_source": "partition:0,offset:9223372036854775808",
+					},
+					LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
 				},
-				Metadata: &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
+				Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
 			}}}
 
 			err := json.NewEncoder(w).Encode(statements)
@@ -158,7 +166,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(statement)
 			require.NoError(t, err)
 
-			statement.Metadata = &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+			statement.Metadata = &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
 			statement.Spec.ComputePoolId = flinkgatewayv1.PtrString("lfcp-123456")
 			statement.Status = &flinkgatewayv1.SqlV1StatementStatus{Phase: "PENDING"}
 
@@ -203,8 +211,12 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
 				Detail: flinkgatewayv1.PtrString("SQL statement is completed"),
+				LatestOffsets: &map[string]string{
+					"customers_source": "partition:0,offset:9223372036854775808",
+				},
+				LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
 			},
-			Metadata: &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
+			Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
 		}
 
 		err := json.NewEncoder(w).Encode(statement)

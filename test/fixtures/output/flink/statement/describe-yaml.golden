@@ -4,6 +4,9 @@ statement: CREATE TABLE test;
 compute_pool: lfcp-123456
 status: COMPLETED
 status_detail: SQL statement is completed
+latest_offsets:
+    customers_source: partition:0,offset:9223372036854775808
+latest_offsets_timestamp: 2022-01-01T00:00:00Z
 properties:
     sql.current-catalog: default
     sql.current-database: my-cluster
