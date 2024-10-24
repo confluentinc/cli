@@ -64,7 +64,10 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resourceScope := crnBase + organizationStr + orgId + environmentStr + environment
+	resourceScope := ""
+	if environment != "" {
+		resourceScope = crnBase + organizationStr + orgId + environmentStr + environment
+	}
 
 	operationGroups, err := cmd.Flags().GetStringSlice("operations")
 	if err != nil {
