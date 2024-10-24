@@ -11,6 +11,10 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
+const crnBase = "crn://confluent.cloud"
+const organizationStr = "/organization="
+const environmentStr = "/environment="
+
 func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -26,7 +30,7 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
-	cmd.Flags().String("environment", "", "Name of the environment or org for which this filter applies. By default will apply to the org only.")
+	cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
 	cmd.Flags().StringSlice("operations", []string{}, "Name of operation group. Currently, \"MANAGEMENT\" and \"SCHEMA\" are supported.")
 	cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 
@@ -54,10 +58,14 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resourceScope, err := cmd.Flags().GetString("environment")
+	orgId := c.Context.GetCurrentOrganization()
+	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}
+
+	resourceScope := crnBase + organizationStr + orgId + environmentStr + environment
+
 	operationGroups, err := cmd.Flags().GetStringSlice("operations")
 	if err != nil {
 		return err
@@ -83,7 +91,6 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		ResourceScope:   &resourceScope,
 		OperationGroups: &operationGroups,
 	}
-
 	filter, err := c.V2Client.CreateIamIpFilter(createIpFilter)
 	if err != nil {
 		/*

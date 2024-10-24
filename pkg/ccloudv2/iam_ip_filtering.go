@@ -18,6 +18,7 @@ func newIamIpFiltering(httpClient *http.Client, url, userAgent string, unsafeTra
 }
 
 func (c *Client) iamIpFilteringContext() context.Context {
+	c.cfg.Context().GetCurrentOrganization()
 	return context.WithValue(context.Background(), sdk.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
