@@ -10,7 +10,7 @@ Create an IP filter named "demo-ip-filter" with resource group "management" and 
 
 Flags:
       --ip-groups strings            REQUIRED: A comma-separated list of IP group IDs.
-      --environment string           Name of the environment or org for which this filter applies. By default will apply to the org only.
+      --environment string           Name of the environment for which this filter applies. By default will apply to the org only.
       --operations strings           Name of operation group. Currently, "MANAGEMENT" and "SCHEMA" are supported.
       --no-public-networks strings   Use in place of ip-groups
       --resource-group string        Name of resource group. Currently, "management" and "multiple" are supported. (default "management")
