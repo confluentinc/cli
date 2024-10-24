@@ -17,10 +17,10 @@ type ipFilterCommand struct {
 type ipFilterOut struct {
 	ID              string   `human:"ID" serialized:"id"`
 	Name            string   `human:"Name" serialized:"name"`
-	ResourceGroup   string   `human:"Resource group" serialized:"resource_group"`
-	IpGroups        []string `human:"IP groups" serialized:"ip_groups"`
-	OperationGroups []string `human:"Operation groups" serialized:"operation_groups,omitempty"`
-	ResourceScope   string   `human:"Resource scope" serialized:"resource_scope"`
+	ResourceGroup   string   `human:"Resource Group" serialized:"resource_group"`
+	IpGroups        []string `human:"IP Groups" serialized:"ip_groups"`
+	OperationGroups []string `human:"Operation Groups" serialized:"operation_groups,omitempty"`
+	ResourceScope   string   `human:"Resource Scope" serialized:"resource_scope"`
 }
 
 func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
