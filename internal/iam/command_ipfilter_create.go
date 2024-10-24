@@ -30,7 +30,7 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
-	cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
+	cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
 	cmd.Flags().StringSlice("operations", []string{}, "Name of operation group. Currently, \"MANAGEMENT\" and \"SCHEMA\" are supported.")
 	cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 
