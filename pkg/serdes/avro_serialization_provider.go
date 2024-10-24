@@ -3,6 +3,8 @@ package serdes
 import (
 	"fmt"
 
+	"github.com/linkedin/goavro/v2"
+
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avrov2"
