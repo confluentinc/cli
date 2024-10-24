@@ -657,7 +657,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 
 	token, err := auth.GetDataplaneToken(c.Context)
 	if err != nil {
-		return nil, nil, fmt.Errorf("The err is %w\n", err)
+		return nil, nil, err
 	}
 	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, srApiKey, srApiSecret, token, parsedSchemaId)
 	if err != nil {
