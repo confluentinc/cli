@@ -148,5 +148,6 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		Status:       statement.Status.GetPhase(),
 		StatusDetail: statement.Status.GetDetail(),
 	})
+	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail"})
 	return table.Print()
 }
