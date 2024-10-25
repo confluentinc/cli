@@ -466,7 +466,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	req.Nil(err)
 	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
-	req.Equal(expectedString, actualString)
+	req.JSONEq(expectedString, actualString)
 
 	req.NoError(os.RemoveAll(dir))
 }
@@ -547,7 +547,7 @@ message Person {
 	req.Nil(err)
 	str, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
-	req.Equal(str, expectedString)
+	req.JSONEq(str, expectedString)
 
 	req.NoError(os.RemoveAll(dir))
 }
@@ -661,7 +661,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	req.Nil(err)
 	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
-	req.Equal(expectedString, actualString)
+	req.JSONEq(expectedString, actualString)
 
 	req.NoError(os.RemoveAll(dir))
 }
