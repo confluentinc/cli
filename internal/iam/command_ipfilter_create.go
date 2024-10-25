@@ -11,9 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-const crnBase = "crn://confluent.cloud"
-const organizationStr = "/organization="
-const environmentStr = "/environment="
+const resourceScopeStr = "crn://confluent.cloud/organization=%s/environment=%s"
 
 func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
