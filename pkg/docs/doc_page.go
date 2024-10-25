@@ -53,7 +53,7 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 	} else if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka broker describe") {
 		args := map[string]string{
 			"start-after": "cli_new_local_kafka_broker_describe_start",
-			"end-before":  "cli_new_kafka_broker_describe_end",
+			"end-before":  "cli_new_local_kafka_broker_describe_end",
 		}
 		rows = append(rows, printSphinxBlock("include", include, args)...)
 	} else if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
