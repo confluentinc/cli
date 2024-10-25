@@ -1,4 +1,1 @@
-Error: failed to load schema: error compiling or finding .proto files
-
-Suggestions:
-    Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.
+Error: schema registry client authentication should be provider to initialize serializer
