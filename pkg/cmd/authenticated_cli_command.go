@@ -285,3 +285,23 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 
 	return c.schemaRegistryClient, nil
 }
+
+func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint() (string, string, error) {
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+	if err != nil {
+		return "", "", err
+	}
+	if len(clusters) == 0 {
+		return "", "", schemaregistry.ErrNotEnabled
+	}
+	cluster := clusters[0]
+	var endpoint string
+
+	if cluster.Spec.GetHttpEndpoint() != "" {
+		endpoint = cluster.Spec.GetHttpEndpoint()
+	} else {
+		endpoint = cluster.Spec.GetPrivateHttpEndpoint()
+	}
+
+	return cluster.GetId(), endpoint, nil
+}
