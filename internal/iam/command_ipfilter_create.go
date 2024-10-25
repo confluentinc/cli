@@ -1,14 +1,17 @@
 package iam
 
 import (
-	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const resourceScopeStr = "crn://confluent.cloud/organization=%s/environment=%s"
@@ -26,13 +29,13 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 			},
 		),
 	}
+	pcmd.AddResourceGroupFlag(cmd)
 
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
-	cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or"))) 
+	cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
 	cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 
-	pcmd.AddResourceGroupFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -64,7 +67,7 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 
 	resourceScope := ""
 	if environment != "" {
-		resourceScope = crnBase + organizationStr + orgId + environmentStr + environment
+		resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
 	}
 
 	operationGroups, err := cmd.Flags().GetStringSlice("operations")

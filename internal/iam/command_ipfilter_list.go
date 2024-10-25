@@ -1,11 +1,15 @@
 package iam
 
 import (
+	"fmt"
+	"strconv"
+
+	"github.com/spf13/cobra"
+
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/spf13/cobra"
-	"strconv"
 )
 
 func (c *ipFilterCommand) newListCommand() *cobra.Command {
@@ -17,11 +21,11 @@ func (c *ipFilterCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
-	cmd.Flags().Bool("include-only-org-scope-filters", false, "Include only org scoped filters as part of the list result.")
+	cmd.Flags().Bool("only-org-filters", false, "Include only org scoped filters as part of the list result.")
 	cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include org scoped filters in the List Filters response.")
 
-	cmd.MarkFlagsMutuallyExclusive("environment", "include-only-org-scope-filters")
-	cmd.MarkFlagsMutuallyExclusive("include-parent-scope", "include-only-org-scope-filters")
+	cmd.MarkFlagsMutuallyExclusive("environment", "only-org-filters")
+	cmd.MarkFlagsMutuallyExclusive("include-parent-scope", "only-org-filters")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -37,15 +41,15 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	resourceScope := ""
 	if environment != "" {
-		resourceScope = crnBase + organizationStr + orgId + environmentStr + environment
+		resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
 	}
 
-	includeOnlyOrgScopeFilters, err := cmd.Flags().GetBool("include-only-org-scope-filters")
+	includeOnlyOrgScopeFilters, err := cmd.Flags().GetBool("only-org-filters")
 	if err != nil {
 		return err
 	}
 	orgOnly := ""
-	if cmd.Flags().Changed("include-only-org-scope-filters") {
+	if cmd.Flags().Changed("only-org-filters") {
 		orgOnly = strconv.FormatBool(includeOnlyOrgScopeFilters)
 	}
 

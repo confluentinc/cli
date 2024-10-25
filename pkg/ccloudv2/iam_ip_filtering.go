@@ -2,9 +2,11 @@ package ccloudv2
 
 import (
 	"context"
-	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"net/http"
+
+	sdk "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
+
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newIamIpFiltering(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *sdk.APIClient {
