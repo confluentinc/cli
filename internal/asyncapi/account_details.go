@@ -38,6 +38,7 @@ type accountDetails struct {
 	clusterCreds            *config.APIKeyPair
 	consumer                *ckgo.Consumer
 	kafkaUrl                string
+	kafkaBootstrapUrl       string
 	schemaRegistryUrl       string
 	srClient                *schemaregistry.Client
 	subjects                []string
