@@ -37,7 +37,7 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srCluste
 		} else if token != "" {
 			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
 		} else {
-			return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
+			return fmt.Errorf("schema registry client authentication should be provider to initialize deserializer")
 		}
 		serdeClient, err = schemaregistry.NewClient(serdeClientConfig)
 	}
