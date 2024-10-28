@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,7 @@ import (
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -20,12 +22,14 @@ func (c *ipFilterCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
-	cmd.Flags().Bool("only-org-filters", false, "Include only org scoped filters as part of the list result.")
-	cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include org scoped filters in the List Filters response.")
+	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enable", c.Context, config.CliLaunchDarklyClient, true, false) {
+		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
+		cmd.Flags().Bool("organization-wide", false, "Include only organization scoped filters as part of the list result.")
+		cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include organization scoped filters in the List Filters response.")
 
-	cmd.MarkFlagsMutuallyExclusive("environment", "only-org-filters")
-	cmd.MarkFlagsMutuallyExclusive("include-parent-scope", "only-org-filters")
+		cmd.MarkFlagsMutuallyExclusive("environment", "organization-wide")
+		cmd.MarkFlagsMutuallyExclusive("include-parent-scope", "organization-wide")
+	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -34,38 +38,45 @@ func (c *ipFilterCommand) newListCommand() *cobra.Command {
 }
 
 func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
-	orgId := c.Context.GetCurrentOrganization()
-	environment, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
-	resourceScope := ""
-	if environment != "" {
-		resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
-	}
+	var ipFilters []iamipfilteringv2.IamV2IpFilter
+	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enable", c.Context, config.CliLaunchDarklyClient, true, false) {
+		orgId := c.Context.GetCurrentOrganization()
+		environment, err := cmd.Flags().GetString("environment")
+		if err != nil {
+			return err
+		}
+		resourceScope := ""
+		if environment != "" {
+			resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
+		}
 
-	includeOnlyOrgScopeFilters, err := cmd.Flags().GetBool("only-org-filters")
-	if err != nil {
-		return err
+		orgWideFilters, err := cmd.Flags().GetBool("organization-wide")
+		if err != nil {
+			return err
+		}
+		orgOnly := ""
+		if cmd.Flags().Changed("organization-wide") {
+			orgOnly = strconv.FormatBool(orgWideFilters)
+		}
+		includeParentScope, err := cmd.Flags().GetBool("include-parent-scope")
+		if err != nil {
+			return err
+		}
+		parentScope := ""
+		if cmd.Flags().Changed("include-parent-scope") {
+			parentScope = strconv.FormatBool(includeParentScope)
+		}
+		ipFilters, err = c.V2Client.ListIamIpFilters(resourceScope, orgOnly, parentScope)
+		if err != nil {
+			return err
+		}
+	} else {
+		var err error
+		ipFilters, err = c.V2Client.ListIamIpFilters("", "false", "false")
+		if err != nil {
+			return err
+		}
 	}
-	orgOnly := ""
-	if cmd.Flags().Changed("only-org-filters") {
-		orgOnly = strconv.FormatBool(includeOnlyOrgScopeFilters)
-	}
-
-	includeParentScope, err := cmd.Flags().GetBool("include-parent-scope")
-	if err != nil {
-		return err
-	}
-	parentScope := ""
-	if cmd.Flags().Changed("include-parent-scope") {
-		parentScope = strconv.FormatBool(includeParentScope)
-	}
-	ipFilters, err := c.V2Client.ListIamIpFilters(resourceScope, orgOnly, parentScope)
-	if err != nil {
-		return err
-	}
-
 	list := output.NewList(cmd)
 	for _, filter := range ipFilters {
 		list.Add(&ipFilterOut{
