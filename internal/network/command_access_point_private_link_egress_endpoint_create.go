@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,7 +10,6 @@ import (
 	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func (c *accessPointCommand) newCreateCommand() *cobra.Command {
@@ -32,7 +30,7 @@ func (c *accessPointCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
+	pcmd.AddCloudAwsAzureFlag(cmd)
 	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service or ID of an Azure Private Link service.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("subresource", "", "Name of an Azure Private Link subresource.")

@@ -9,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func (c *command) newGatewayListCommand() *cobra.Command {
@@ -19,6 +20,7 @@ func (c *command) newGatewayListCommand() *cobra.Command {
 		RunE:  c.gatewayList,
 	}
 
+	cmd.Flags().StringSlice("types", nil, fmt.Sprintf("A comma-separated list of gateway types: %s.", utils.ArrayToCommaDelimitedString(listGatewayTypes, "or")))
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -32,7 +34,17 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	gateways, err := c.V2Client.ListGateways(environmentId)
+	types, err := cmd.Flags().GetStringSlice("types")
+	if err != nil {
+		return err
+	}
+	for i, gatewayType := range types {
+		if val, ok := gatewayTypeMap[gatewayType]; ok {
+			types[i] = val
+		}
+	}
+
+	gateways, err := c.V2Client.ListGateways(environmentId, types)
 	if err != nil {
 		return err
 	}
@@ -47,28 +59,31 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		}
 
 		out := &gatewayOut{
-			Id:          gateway.GetId(),
-			Name:        gateway.Spec.GetDisplayName(),
-			Environment: gateway.Spec.Environment.GetId(),
-			Phase:       gateway.Status.GetPhase(),
+			Id:           gateway.GetId(),
+			Name:         gateway.Spec.GetDisplayName(),
+			Environment:  gateway.Spec.Environment.GetId(),
+			Phase:        gateway.Status.GetPhase(),
+			ErrorMessage: gateway.Status.GetErrorMessage(),
 		}
 
 		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec != nil {
 			out.Region = gateway.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec.GetRegion()
+			out.Type = awsEgressPrivateLink
 		}
 		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1AwsPeeringGatewaySpec != nil {
 			out.Region = gateway.Spec.Config.NetworkingV1AwsPeeringGatewaySpec.GetRegion()
+			out.Type = awsPeering
 		}
 		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
 			out.Region = gateway.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec.GetRegion()
+			out.Type = azureEgressPrivateLink
 		}
 		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1AzurePeeringGatewaySpec != nil {
 			out.Region = gateway.Spec.Config.NetworkingV1AzurePeeringGatewaySpec.GetRegion()
+			out.Type = azurePeering
 		}
 
-		cloud := getGatewayCloud(gateway)
-
-		switch cloud {
+		switch getGatewayCloud(gateway) {
 		case pcloud.Aws:
 			out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
 		case pcloud.Azure:

@@ -4,8 +4,11 @@ Usage:
   confluent network gateway [command]
 
 Available Commands:
+  create      Create a network gateway.
+  delete      Delete one or more gateways.
   describe    Describe a gateway.
   list        List gateways.
+  update      Update a gateway.
 
 Global Flags:
   -h, --help            Show help for this command.

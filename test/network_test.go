@@ -116,6 +116,21 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 	}
 }
 
+func (s *CLITestSuite) TestNetworkGateway() {
+	tests := []CLITest{
+		{args: "network gateway create my-gateway --cloud aws --type egress-privatelink --region us-west-2", fixture: "network/gateway/create-aws.golden"},
+		{args: "network gateway update gw-111111 --name new-name", fixture: "network/gateway/update.golden"},
+		{args: "network gateway delete gw-12345", input: "y\n", fixture: "network/gateway/delete.golden"},
+		{args: "network gateway delete gw-12345 gw-54321", input: "y\n", fixture: "network/gateway/delete-multiple.golden"},
+		{args: "network gateway delete gw-invalid", input: "y\n", fixture: "network/gateway/delete-fail.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 	tests := []CLITest{
 		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
@@ -143,7 +158,8 @@ func (s *CLITestSuite) TestNetworkGatewayList() {
 
 func (s *CLITestSuite) TestNetworkGateway_Autocomplete() {
 	tests := []CLITest{
-		{args: `__complete network gateway describe ""`, login: "cloud", fixture: "network/gateway/describe-autocomplete.golden"},
+		{args: `__complete network gateway describe ""`, fixture: "network/gateway/describe-autocomplete.golden"},
+		{args: `__complete network gateway create --type ""`, fixture: "network/gateway/create-type-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
