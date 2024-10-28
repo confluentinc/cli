@@ -72,7 +72,7 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	} else {
 		var err error
-		ipFilters, err = c.V2Client.ListIamIpFilters("", "false", "false")
+		ipFilters, err = c.V2Client.ListIamIpFilters("", "", "")
 		if err != nil {
 			return err
 		}
