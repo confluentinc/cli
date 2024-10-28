@@ -1,8 +1,8 @@
 +-------------------+--------------------------------+
-| ID                | gw-12345                       |
-| Name              | my-aws-gateway                 |
+| ID                | gw-abc123                      |
+| Name              | my-gateway                     |
 | Environment       | env-596                        |
-| Region            | us-east-1                      |
+| Region            | us-west-2                      |
 | Type              | AwsEgressPrivateLink           |
 | AWS Principal ARN | arn:aws:iam::123456789012:role |
 | Phase             | READY                          |
