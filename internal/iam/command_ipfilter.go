@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -13,6 +14,7 @@ import (
 
 type ipFilterCommand struct {
 	*pcmd.AuthenticatedCLICommand
+	cfg *config.Config
 }
 
 type ipFilterOut struct {
@@ -24,7 +26,7 @@ type ipFilterOut struct {
 	ResourceScope   string   `human:"Resource Scope" serialized:"resource_scope"`
 }
 
-func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "ip-filter",
 		Short:       "Manage IP filters.",
@@ -32,7 +34,7 @@ func newIpFilterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	c := &ipFilterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &ipFilterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner), cfg}
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())

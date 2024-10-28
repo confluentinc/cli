@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -30,12 +31,15 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 	pcmd.AddResourceGroupFlag(cmd)
+	c.V2Client.IamIpFilteringContext()
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
+		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
+		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
+		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 
+	}
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
-	cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
-	cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
-	cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -53,34 +57,36 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	ipGroups, err := cmd.Flags().GetStringSlice("ip-groups")
 	if err != nil {
 		return err
 	}
-
-	orgId := c.Context.GetCurrentOrganization()
-	environment, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
-
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	resourceScope := ""
-	if environment != "" {
-		resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
+	operationGroups := []string{}
+	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
+		orgId := c.Context.GetCurrentOrganization()
+		environment, err := cmd.Flags().GetString("environment")
+		if err != nil {
+			return err
+		}
+		if environment != "" {
+			resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
+		}
+
+		operationGroups, err = cmd.Flags().GetStringSlice("operations")
+		if err != nil {
+			return err
+		}
+		npnGroup, err := cmd.Flags().GetBool("no-public-networks")
+		if err != nil {
+			return err
+		}
+		if npnGroup {
+			ipGroups = []string{"ipg-none"}
+		}
 	}
 
-	operationGroups, err := cmd.Flags().GetStringSlice("operations")
-	if err != nil {
-		return err
-	}
-	npnGroup, err := cmd.Flags().GetBool("no-public-networks")
-	if err != nil {
-		return err
-	}
-	if npnGroup {
-		ipGroups = []string{"ipg-none"}
-	}
 	// Convert the IP group IDs into IP group objects
 	ipGroupIdObjects := make([]iamipfilteringv2.GlobalObjectReference, len(ipGroups))
 	for i, ipGroupId := range ipGroups {

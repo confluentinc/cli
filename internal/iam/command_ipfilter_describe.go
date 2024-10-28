@@ -1,9 +1,8 @@
 package iam
 
 import (
-	"github.com/spf13/cobra"
-
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/spf13/cobra"
 )
 
 func (c *ipFilterCommand) newDescribeCommand() *cobra.Command {
@@ -22,6 +21,7 @@ func (c *ipFilterCommand) newDescribeCommand() *cobra.Command {
 }
 func (c *ipFilterCommand) describe(cmd *cobra.Command, args []string) error {
 	filter, err := c.V2Client.GetIamIpFilter(args[0])
+
 	if err != nil {
 		return err
 	}
