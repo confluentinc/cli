@@ -1,10 +1,15 @@
-List gateways.
+Update a gateway.
 
 Usage:
-  confluent network gateway list [flags]
+  confluent network gateway update <id> [flags]
+
+Examples:
+Update the name of gateway "gw-abc123".
+
+  $ confluent network gateway update gw-abc123 --name new-name
 
 Flags:
-      --types strings        A comma-separated list of gateway types: "aws-egress-privatelink" or "azure-egress-privatelink".
+      --name string          REQUIRED: Name of the gateway.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

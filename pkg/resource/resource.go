@@ -41,6 +41,7 @@ const (
 	FlinkRegion                     = "Flink region"
 	FlinkStatement                  = "Flink SQL statement"
 	FlinkConnection                 = "Flink connection"
+	Gateway                         = "gateway"
 	IdentityPool                    = "identity pool"
 	IdentityProvider                = "identity provider"
 	IpGroup                         = "IP group"
