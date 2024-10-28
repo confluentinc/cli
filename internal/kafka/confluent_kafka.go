@@ -209,7 +209,6 @@ func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
 			if err != nil {
 				return err
 			}
-			message.Key = message.Key[messageOffset:]
 			if err := keyDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
 				return err
 			}
@@ -243,8 +242,6 @@ func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
 		if err != nil {
 			return err
 		}
-		// Message body is encoded after 5 bytes of meta information.
-		message.Value = message.Value[messageOffset:]
 		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return err
 		}
