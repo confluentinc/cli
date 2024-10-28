@@ -60,8 +60,6 @@ type flags struct {
 	topics          []string
 }
 
-// messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
-const messageOffset = 5
 const protobufErrorMessage = "protobuf is not supported"
 
 func (c *command) newExportCommand() *cobra.Command {
@@ -292,8 +290,6 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 		if err != nil {
 			return nil, err
 		}
-		// Message body is encoded after 5 bytes of meta information.
-		value = value[messageOffset:]
 		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return nil, err
 		}
