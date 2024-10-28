@@ -323,8 +323,8 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	// Initialize the value serializer with the same SR endpoint during registration
 	// The associated schema ID is also required to initialize the serializer
 	var valueSchemaId = -1
-	if len(valueMetaInfo) >= 5 {
-		valueSchemaId = int(binary.BigEndian.Uint32(valueMetaInfo[1:5]))
+	if len(valueMetaInfo) >= messageOffset {
+		valueSchemaId = int(binary.BigEndian.Uint32(valueMetaInfo[1:messageOffset]))
 	}
 	if err := valueSerializer.InitSerializer(srEndpoint, srClusterId, "value", srApiKey, srApiSecret, token, valueSchemaId); err != nil {
 		return err
@@ -485,7 +485,7 @@ func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 	return message, nil
 }
 
-func serializeMessage(keyMetaInfo, valueMetaInfo []byte, topic, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
+func serializeMessage(_, _ []byte, topic, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
 	var serializedKey []byte
 	val := data
 	if parseKey {
@@ -508,7 +508,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, topic, data, delimiter 
 		return nil, nil, err
 	}
 
-	return append(keyMetaInfo, serializedKey...), append(valueMetaInfo, serializedValue...), nil
+	return serializedKey, serializedValue, nil
 }
 
 func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
