@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	ccl "github.com/confluentinc/cli/v4/internal/ccl"
 	"os"
 	"strings"
 
@@ -109,6 +110,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
+	cmd.AddCommand(ccl.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
