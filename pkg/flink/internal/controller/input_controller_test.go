@@ -151,23 +151,23 @@ func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeFalse() {
 	require.False(s.T(), hasUserEnabledReverseSearch)
 }
 
-func (s *InputControllerTestSuite) TestTurnOnSmartCompletion() {
-	s.inputController.smartCompletion = false
-
-	s.inputController.toggleSmartCompletion()
-
-	require.True(s.T(), s.inputController.smartCompletion)
-}
-
-func (s *InputControllerTestSuite) TestTurnOffSmartCompletion() {
-	s.inputController.smartCompletion = true
-
-	s.inputController.toggleSmartCompletion()
-
-	require.False(s.T(), s.inputController.smartCompletion)
-}
-
 func (s *InputControllerTestSuite) TestTurnOnCompletions() {
+	s.inputController.completionsEnabled = false
+
+	s.inputController.toggleCompletions()
+
+	require.True(s.T(), s.inputController.completionsEnabled)
+}
+
+func (s *InputControllerTestSuite) TestTurnOffCompletions() {
+	s.inputController.completionsEnabled = true
+
+	s.inputController.toggleCompletions()
+
+	require.False(s.T(), s.inputController.completionsEnabled)
+}
+
+func (s *InputControllerTestSuite) TestTurnOnDiagnostics() {
 	s.inputController.diagnosticsEnabled = false
 	s.prompt.EXPECT().SetDiagnostics(nil)
 
@@ -176,7 +176,7 @@ func (s *InputControllerTestSuite) TestTurnOnCompletions() {
 	require.True(s.T(), s.inputController.diagnosticsEnabled)
 }
 
-func (s *InputControllerTestSuite) TestTurnOffCompletions() {
+func (s *InputControllerTestSuite) TestTurnOffDiagnostics() {
 	s.inputController.diagnosticsEnabled = true
 	s.prompt.EXPECT().SetDiagnostics(nil)
 

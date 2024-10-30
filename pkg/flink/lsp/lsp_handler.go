@@ -2,9 +2,10 @@ package lsp
 
 import (
 	"context"
-	"github.com/confluentinc/cli/v4/pkg/log"
 
 	"github.com/sourcegraph/jsonrpc2"
+
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type LSPHandler struct {
