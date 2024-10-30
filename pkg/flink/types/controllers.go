@@ -14,6 +14,7 @@ type InputControllerInterface interface {
 	StartReverseSearch()
 	GetWindowWidth() int
 	SetDiagnostics(diagnostics []lsp.Diagnostic)
+	DiagnosticsEnabled() bool
 }
 
 type StatementControllerInterface interface {

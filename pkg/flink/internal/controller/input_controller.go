@@ -26,6 +26,7 @@ type InputController struct {
 	History               *history.History
 	InitialBuffer         string
 	smartCompletion       bool
+	diagnosticsEnabled    bool
 	reverseISearchEnabled bool
 	prompt                prompt.IPrompt
 	shouldExit            bool
@@ -37,12 +38,13 @@ const defaultWindowSize = 100
 
 func NewInputController(history *history.History, lspCompleter prompt.Completer, handlerCh chan *jsonrpc2.Request) types.InputControllerInterface {
 	inputController := &InputController{
-		History:         history,
-		InitialBuffer:   "",
-		smartCompletion: true,
-		shouldExit:      false,
-		reverseISearch:  reverseisearch.NewReverseISearch(),
-		lspCompleter:    lspCompleter,
+		History:            history,
+		InitialBuffer:      "",
+		smartCompletion:    true,
+		diagnosticsEnabled: true,
+		shouldExit:         false,
+		reverseISearch:     reverseisearch.NewReverseISearch(),
+		lspCompleter:       lspCompleter,
 	}
 	if prompt, err := inputController.initPrompt(); err == nil {
 		inputController.prompt = prompt
@@ -183,6 +185,10 @@ func (c *InputController) getSmartCompletion() bool {
 	return c.smartCompletion
 }
 
+func (c *InputController) DiagnosticsEnabled() bool {
+	return c.diagnosticsEnabled
+}
+
 func (c *InputController) toggleSmartCompletion() {
 	c.smartCompletion = !c.smartCompletion
 
@@ -193,6 +199,19 @@ func (c *InputController) toggleSmartCompletion() {
 	}
 
 	components.PrintSmartCompletionState(c.getSmartCompletion(), maxCol)
+}
+
+func (c *InputController) toggleDiagnostics() {
+	c.diagnosticsEnabled = !c.diagnosticsEnabled
+	c.SetDiagnostics(nil)
+	
+	maxCol, err := c.getMaxCol()
+	if err != nil {
+		log.CliLogger.Error(err)
+		return
+	}
+
+	components.PrintDiagnosticsState(c.DiagnosticsEnabled(), maxCol)
 }
 
 func (c *InputController) getKeyBindings() []prompt.Option {
@@ -212,6 +231,12 @@ func (c *InputController) getKeyBindings() []prompt.Option {
 				Key: prompt.ControlS,
 				Fn: func(b *prompt.Buffer) {
 					c.toggleSmartCompletion()
+				},
+			}),
+			prompt.OptionAddKeyBind(prompt.KeyBind{
+				Key: prompt.ControlG,
+				Fn: func(b *prompt.Buffer) {
+					c.toggleDiagnostics()
 				},
 			}),
 			prompt.OptionAddKeyBind(prompt.KeyBind{
@@ -290,6 +315,11 @@ func startLspRequestHandler(c types.InputControllerInterface, handlerCh chan *js
 		for req := range handlerCh {
 			switch req.Method {
 			case "textDocument/publishDiagnostics":
+				if !c.DiagnosticsEnabled() {
+					log.CliLogger.Infof("Received diagnostics from language server, but diagnostics are disabled")
+					return
+				}
+
 				var params lsp.PublishDiagnosticsParams
 				if err := json.Unmarshal(*req.Params, &params); err != nil {
 					log.CliLogger.Error("Not able to unmarshal diagnostics from language server", err)
