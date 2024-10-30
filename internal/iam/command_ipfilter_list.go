@@ -38,7 +38,6 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 
 func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	var ipFilters []iamipfilteringv2.IamV2IpFilter
-	fmt.Printf("%+v", c.Context.PlatformName)
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
 		orgId := c.Context.GetCurrentOrganization()
