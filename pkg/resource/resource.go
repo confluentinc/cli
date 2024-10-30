@@ -26,6 +26,7 @@ const (
 	Connector                       = "connector"
 	CustomConnectorPlugin           = "custom connector plugin"
 	CustomConnectorPluginVersion    = "custom connector plugin version"
+	CustomCodeLogging               = "custom code logging"
 	ConsumerShare                   = "consumer share"
 	Context                         = "context"
 	Dek                             = "DEK"

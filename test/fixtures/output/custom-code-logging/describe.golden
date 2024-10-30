@@ -1,0 +1,10 @@
++-------------+-------------+
+| ID          | ccl-123456  |
+| Cloud       | AWS         |
+| Region      | us-west-2   |
+| Environment | env-000000  |
+| Destination | Kafka       |
+| Topic       | topic-123   |
+| Cluster ID  | cluster-123 |
+| Log Level   | INFO        |
++-------------+-------------+
