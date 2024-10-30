@@ -166,3 +166,21 @@ func (s *InputControllerTestSuite) TestTurnOffSmartCompletion() {
 
 	require.False(s.T(), s.inputController.smartCompletion)
 }
+
+func (s *InputControllerTestSuite) TestTurnOnCompletions() {
+	s.inputController.diagnosticsEnabled = false
+	s.prompt.EXPECT().SetDiagnostics(nil)
+
+	s.inputController.toggleDiagnostics()
+
+	require.True(s.T(), s.inputController.diagnosticsEnabled)
+}
+
+func (s *InputControllerTestSuite) TestTurnOffCompletions() {
+	s.inputController.diagnosticsEnabled = true
+	s.prompt.EXPECT().SetDiagnostics(nil)
+
+	s.inputController.toggleDiagnostics()
+
+	require.False(s.T(), s.inputController.diagnosticsEnabled)
+}
