@@ -21,7 +21,7 @@ func (c *customCodeLoggingCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create custom code logging.`,
-				Code: "confluent custom-code-logging create --cloud aws --region us-west-2 --environment env-000000 --destination-kafka --topic topic-123 --cluster-id cluster-123",
+				Code: "confluent custom-code-logging create --cloud aws --region us-west-2 --environment env-000000 --topic topic-123 --cluster cluster-123",
 			},
 		),
 	}
@@ -29,19 +29,17 @@ func (c *customCodeLoggingCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagKafka(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Bool("destination-kafka", true, "Set custom code logging destination to KAFKA.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("topic", "", "Kafka topic of custom code logging destination.")
-	cmd.Flags().String("cluster-id", "", "Kafka cluster id of custom code logging destination.")
-	cmd.Flags().String("log-level", "", "Log level of custom code logging. (default \"INFO\").")
-
+	cmd.Flags().String("log-level", "INFO", "Log level of custom code logging.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
-	cmd.MarkFlagsOneRequired("destination-kafka")
-	cmd.MarkFlagsRequiredTogether("destination-kafka", "topic", "cluster-id")
+	cmd.MarkFlagsOneRequired("topic")
+	cmd.MarkFlagsOneRequired("cluster")
 	return cmd
 }
 
@@ -67,33 +65,25 @@ func (c *customCodeLoggingCommand) createCustomCodeLogging(cmd *cobra.Command, a
 
 	logLevel, _ := cmd.Flags().GetString("log-level")
 
-	destinationKafka, err := cmd.Flags().GetBool("destination-kafka")
-	if err != nil {
-		return err
-	}
-
 	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err
 	}
 
-	clusterId, err := cmd.Flags().GetString("cluster-id")
+	clusterId, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return err
 	}
 
-	var customCodeLoggingDestinationSettings *cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf
-	if destinationKafka {
-		customCodeLoggingDestinationSettings = &cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf{
-			CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
-				Kind:      "KAFKA",
-				Topic:     topic,
-				ClusterId: clusterId,
-			},
-		}
-		if logLevel != "" {
-			customCodeLoggingDestinationSettings.CclV1KafkaDestinationSettings.SetLogLevel(logLevel)
-		}
+	var customCodeLoggingDestinationSettings = &cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf{
+		CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
+			Kind:      "Kafka",
+			Topic:     topic,
+			ClusterId: clusterId,
+		},
+	}
+	if logLevel != "" {
+		customCodeLoggingDestinationSettings.CclV1KafkaDestinationSettings.SetLogLevel(logLevel)
 	}
 
 	request := cclv1.CclV1CustomCodeLogging{

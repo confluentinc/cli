@@ -19,10 +19,8 @@ func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
 		RunE:  c.update,
 	}
 
-	cmd.Flags().String("topic", "", "Kafka topic of custom code logging destination.")
-	cmd.Flags().String("cluster-id", "", "Kafka cluster id of custom code logging destination.")
-	cmd.Flags().String("log-level", "", "Log level of custom code logging. (default \"INFO\").")
-	cmd.MarkFlagsOneRequired("topic", "cluster-id", "log-level")
+	cmd.Flags().String("log-level", "INFO", "Log level of custom code logging.")
+	cmd.MarkFlagsOneRequired("log-level")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	return cmd
 }
@@ -30,30 +28,6 @@ func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
 func (c *customCodeLoggingCommand) update(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	updateCustomPluginRequest := cclv1.CclV1CustomCodeLoggingUpdate{}
-
-	if cmd.Flags().Changed("topic") {
-		if topic, err := cmd.Flags().GetString("topic"); err != nil {
-			return err
-		} else {
-			updateCustomPluginRequest.SetDestinationSettings(cclv1.CclV1CustomCodeLoggingUpdateDestinationSettingsOneOf{
-				CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
-					Topic: topic,
-				},
-			})
-		}
-	}
-
-	if cmd.Flags().Changed("cluster-id") {
-		if clusterId, err := cmd.Flags().GetString("cluster-id"); err != nil {
-			return err
-		} else {
-			updateCustomPluginRequest.SetDestinationSettings(cclv1.CclV1CustomCodeLoggingUpdateDestinationSettingsOneOf{
-				CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
-					ClusterId: clusterId,
-				},
-			})
-		}
-	}
 
 	if cmd.Flags().Changed("log-level") {
 		if logLevel, err := cmd.Flags().GetString("log-level"); err != nil {

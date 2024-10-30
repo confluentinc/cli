@@ -29,7 +29,7 @@ type customCodeLoggingOut struct {
 	Environment string `human:"Environment" serialized:"environment"`
 	Destination string `human:"Destination" serialized:"destination"`
 	Topic       string `human:"Topic" serialized:"topic"`
-	ClusterId   string `human:"Cluster ID" serialized:"cluster"`
+	Cluster     string `human:"Cluster" serialized:"cluster"`
 	LogLevel    string `human:"Log Level" serialized:"log_level"`
 }
 
@@ -65,7 +65,7 @@ func printTable(cmd *cobra.Command, customCodeLogging cclv1.CclV1CustomCodeLoggi
 	if customCodeLogging.GetDestinationSettings().CclV1KafkaDestinationSettings != nil {
 		customCodeLoggingOut.Destination = customCodeLogging.GetDestinationSettings().CclV1KafkaDestinationSettings.GetKind()
 		customCodeLoggingOut.Topic = customCodeLogging.GetDestinationSettings().CclV1KafkaDestinationSettings.GetTopic()
-		customCodeLoggingOut.ClusterId = customCodeLogging.GetDestinationSettings().CclV1KafkaDestinationSettings.GetClusterId()
+		customCodeLoggingOut.Cluster = customCodeLogging.GetDestinationSettings().CclV1KafkaDestinationSettings.GetClusterId()
 		customCodeLoggingOut.LogLevel = customCodeLogging.GetDestinationSettings().CclV1KafkaDestinationSettings.GetLogLevel()
 	}
 	table.Add(customCodeLoggingOut)

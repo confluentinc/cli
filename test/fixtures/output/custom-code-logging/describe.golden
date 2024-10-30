@@ -5,6 +5,6 @@
 | Environment | env-000000  |
 | Destination | Kafka       |
 | Topic       | topic-123   |
-| Cluster ID  | cluster-123 |
+| Cluster     | cluster-123 |
 | Log Level   | INFO        |
 +-------------+-------------+
