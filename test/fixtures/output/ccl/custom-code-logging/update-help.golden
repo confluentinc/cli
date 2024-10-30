@@ -1,0 +1,15 @@
+Update a custom code logging.
+
+Usage:
+  confluent ccl custom-code-logging update <id> [flags]
+
+Flags:
+      --destination-topic string        Kafka topic of custom code logging destination.
+      --destination-cluster-id string   Kafka cluster id of custom code logging destination.
+      --log-level string                Log level of custom code logging. (default "INFO")
+      --context string                  CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
