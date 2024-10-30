@@ -36,10 +36,10 @@ func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 
 	c := &ipFilterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner), cfg}
 
-	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newListCommand(cfg))
 	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
