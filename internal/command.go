@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	ccl "github.com/confluentinc/cli/v4/internal/ccl"
 	"os"
 	"strings"
 
@@ -18,6 +17,7 @@ import (
 	auditlog "github.com/confluentinc/cli/v4/internal/audit-log"
 	"github.com/confluentinc/cli/v4/internal/billing"
 	"github.com/confluentinc/cli/v4/internal/byok"
+	ccl "github.com/confluentinc/cli/v4/internal/ccl"
 	cloudsignup "github.com/confluentinc/cli/v4/internal/cloud-signup"
 	"github.com/confluentinc/cli/v4/internal/cluster"
 	"github.com/confluentinc/cli/v4/internal/completion"

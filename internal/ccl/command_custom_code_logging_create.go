@@ -1,14 +1,15 @@
 package customcodelogging
 
 import (
-	"github.com/confluentinc/cli/v4/pkg/output"
 	"strings"
 
-	cclv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccl/v1"
 	"github.com/spf13/cobra"
+
+	cclv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccl/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *customCodeLoggingCommand) newCreateCommand() *cobra.Command {
@@ -64,7 +65,7 @@ func (c *customCodeLoggingCommand) createCustomCodeLogging(cmd *cobra.Command, a
 		return err
 	}
 
-	logLevel, err := cmd.Flags().GetString("log-level")
+	logLevel, _ := cmd.Flags().GetString("log-level")
 
 	destinationKafka, err := cmd.Flags().GetBool("destination-kafka")
 	if err != nil {

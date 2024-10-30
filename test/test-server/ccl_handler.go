@@ -2,10 +2,11 @@ package testserver
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 
 	cclv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccl/v1"
 )
