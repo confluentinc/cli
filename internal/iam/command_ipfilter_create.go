@@ -37,8 +37,7 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 		return nil
 	}
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
-	ldClient := featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName)
-	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), ldClient, true, false) {
+	if cfg.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false) {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
 		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
 		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
@@ -61,6 +60,7 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	resourceScope := ""
 	operationGroups := []string{}
+	fmt.Printf("%+v", c.Context.PlatformName)
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
 		orgId := c.Context.GetCurrentOrganization()

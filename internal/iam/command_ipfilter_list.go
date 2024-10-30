@@ -21,8 +21,7 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
-	ldClient := featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName)
-	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), ldClient, true, false) {
+	if cfg.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false) {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
 		cmd.Flags().Bool("organization-wide", false, "Include only organization scoped filters as part of the list result.")
 		cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include organization scoped filters in the List Filters response.")
@@ -39,6 +38,7 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 
 func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	var ipFilters []iamipfilteringv2.IamV2IpFilter
+	fmt.Printf("%+v", c.Context.PlatformName)
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
 		orgId := c.Context.GetCurrentOrganization()

@@ -34,8 +34,7 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 
 	cmd.Flags().String("name", "", "Updated name of the IP filter.")
 	pcmd.AddResourceGroupFlag(cmd)
-	ldClient := featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName)
-	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), ldClient, true, false) {
+	if cfg.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false) {
 		cmd.Flags().StringSlice("add-operation-groups", []string{}, "A comma-separated list of operation groups to add.")
 		cmd.Flags().StringSlice("remove-operation-groups", []string{}, "A comma-separated list of operation groups to remove.")
 	}
