@@ -17,6 +17,7 @@ import (
 	auditlog "github.com/confluentinc/cli/v4/internal/audit-log"
 	"github.com/confluentinc/cli/v4/internal/billing"
 	"github.com/confluentinc/cli/v4/internal/byok"
+	ccl "github.com/confluentinc/cli/v4/internal/ccl"
 	cloudsignup "github.com/confluentinc/cli/v4/internal/cloud-signup"
 	"github.com/confluentinc/cli/v4/internal/cluster"
 	"github.com/confluentinc/cli/v4/internal/completion"
@@ -109,6 +110,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
+	cmd.AddCommand(ccl.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
