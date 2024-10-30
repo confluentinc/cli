@@ -2,6 +2,8 @@ package iam
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -15,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
-func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
+func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update an IP filter.",
@@ -32,8 +34,11 @@ func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Updated name of the IP filter.")
 	pcmd.AddResourceGroupFlag(cmd)
-	cmd.Flags().StringSlice("add-operation-groups", []string{}, "A comma-separated list of operation groups to add.")
-	cmd.Flags().StringSlice("remove-operation-groups", []string{}, "A comma-separated list of operation groups to remove.")
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName)
+	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), ldClient, true, false) {
+		cmd.Flags().StringSlice("add-operation-groups", []string{}, "A comma-separated list of operation groups to add.")
+		cmd.Flags().StringSlice("remove-operation-groups", []string{}, "A comma-separated list of operation groups to remove.")
+	}
 	cmd.Flags().StringSlice("add-ip-groups", []string{}, "A comma-separated list of IP groups to add.")
 	cmd.Flags().StringSlice("remove-ip-groups", []string{}, "A comma-separated list of IP groups to remove.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -61,16 +66,6 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	removeIpGroups, err := cmd.Flags().GetStringSlice("remove-ip-groups")
-	if err != nil {
-		return err
-	}
-
-	addOperationGroups, err := cmd.Flags().GetStringSlice("add-operation-groups")
-	if err != nil {
-		return err
-	}
-
-	removeOperationGroups, err := cmd.Flags().GetStringSlice("remove-operation-groups")
 	if err != nil {
 		return err
 	}
@@ -104,11 +99,6 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		output.ErrPrintf(c.Config.EnableColor, "[WARN] %s\n", warning)
 	}
 
-	newOperationGroups, warnings := types.AddAndRemove(currentOperationGroups, addOperationGroups, removeOperationGroups)
-	for _, warning := range warnings {
-		output.ErrPrintf(c.Config.EnableColor, "[WARN] %s\n", warning)
-	}
-
 	// Convert the IP group IDs into IP group objects
 	IpGroupIdObjects := make([]iamipfilteringv2.GlobalObjectReference, len(newIpGroupIds))
 	for i, ipGroupId := range newIpGroupIds {
@@ -121,7 +111,24 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	updateIpFilter.IpGroups = &IpGroupIdObjects
-	updateIpFilter.OperationGroups = &newOperationGroups
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	ipFilterEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	if ipFilterEnabled {
+		addOperationGroups, err := cmd.Flags().GetStringSlice("add-operation-groups")
+		if err != nil {
+			return err
+		}
+
+		removeOperationGroups, err := cmd.Flags().GetStringSlice("remove-operation-groups")
+		if err != nil {
+			return err
+		}
+		newOperationGroups, warnings := types.AddAndRemove(currentOperationGroups, addOperationGroups, removeOperationGroups)
+		for _, warning := range warnings {
+			output.ErrPrintf(c.Config.EnableColor, "[WARN] %s\n", warning)
+		}
+		updateIpFilter.OperationGroups = &newOperationGroups
+	}
 
 	filter, err := c.V2Client.UpdateIamIpFilter(updateIpFilter, currentIpFilterId)
 	if err != nil {

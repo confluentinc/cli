@@ -2,8 +2,6 @@ package iam
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,8 +9,10 @@ import (
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
@@ -36,6 +36,7 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	if err != nil {
 		return nil
 	}
+	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName)
 	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), ldClient, true, false) {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
@@ -43,7 +44,6 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 		cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")
 	}
-	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -59,9 +59,9 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	resourceScope := ""
 	operationGroups := []string{}
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")

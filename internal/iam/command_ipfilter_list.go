@@ -2,13 +2,14 @@ package iam
 
 import (
 	"fmt"
+	"strconv"
+
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {

@@ -1,8 +1,9 @@
 package iam
 
 import (
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"slices"
+
+	"github.com/confluentinc/cli/v4/pkg/config"
 
 	"github.com/spf13/cobra"
 
@@ -40,7 +41,7 @@ func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand(cfg))
-	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newUpdateCommand(cfg))
 
 	return cmd
 }
