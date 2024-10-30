@@ -3,13 +3,12 @@ package iam
 import (
 	"slices"
 
-	"github.com/confluentinc/cli/v4/pkg/config"
-
 	"github.com/spf13/cobra"
 
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
