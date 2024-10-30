@@ -1,12 +1,12 @@
-Error: at least one of the flags in the group [destination-topic destination-cluster-id log-level] is required
+Error: at least one of the flags in the group [topic cluster-id log-level] is required
 Usage:
-  confluent ccl custom-code-logging update <id> [flags]
+  confluent custom-code-logging update <id> [flags]
 
 Flags:
-      --destination-topic string        Kafka topic of custom code logging destination.
-      --destination-cluster-id string   Kafka cluster id of custom code logging destination.
-      --log-level string                Log level of custom code logging. (default "INFO")
-      --context string                  CLI context name.
+      --topic string        Kafka topic of custom code logging destination.
+      --cluster-id string   Kafka cluster id of custom code logging destination.
+      --log-level string    Log level of custom code logging. (default "INFO").
+      --context string      CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

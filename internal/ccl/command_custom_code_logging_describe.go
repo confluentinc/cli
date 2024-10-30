@@ -15,7 +15,7 @@ func (c *customCodeLoggingCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe custom code logging",
+				Text: "Describe custom code logging.",
 				Code: "confluent ccl custom-code-logging describe ccl-123456",
 			},
 		),

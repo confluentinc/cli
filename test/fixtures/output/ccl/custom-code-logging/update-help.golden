@@ -4,8 +4,8 @@ Usage:
   confluent ccl custom-code-logging update <id> [flags]
 
 Flags:
-      --destination-topic string        Kafka topic of custom code logging destination.
-      --destination-cluster-id string   Kafka cluster id of custom code logging destination.
+      --topic string        Kafka topic of custom code logging destination.
+      --cluster-id string   Kafka cluster id of custom code logging destination.
       --log-level string                Log level of custom code logging. (default "INFO")
       --context string                  CLI context name.
 

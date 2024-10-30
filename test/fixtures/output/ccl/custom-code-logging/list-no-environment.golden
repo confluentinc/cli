@@ -1,9 +1,9 @@
 Error: required flag(s) "environment" not set
 Usage:
-  confluent ccl custom-code-logging list [flags]
+  confluent custom-code-logging list [flags]
 
 Examples:
-List custom code loggings in the org
+List custom code loggings in the org.
 
   $ confluent ccl custom-code-logging list --environment env-000000
 
