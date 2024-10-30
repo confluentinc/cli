@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/test/generators"
 )
 
-func mockGetSmartCompletion() bool {
+func mockCompletionsEnabled() bool {
 	return true
 }
 
@@ -22,7 +22,7 @@ func TestBasicSelectAutoCompletion(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	expected := prompt.Suggest{Text: "SELECT ", Description: "Select data from a database"}
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		AddCompleter(SetCompleter).
 		AddCompleter(ShowCompleter).
@@ -38,7 +38,7 @@ func TestFailingBasicAutoCompletion(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	expected := prompt.Suggest{Text: "SELECT", Description: "Select data from a database"}
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		AddCompleter(SetCompleter).
 		AddCompleter(ShowCompleter).
@@ -62,7 +62,7 @@ func TestNoLineBreaksInAutocompletion(t *testing.T) {
 
 		// when
 		buffer.InsertText(randomStatement.Text, false, true)
-		completer := NewCompleterBuilder(mockGetSmartCompletion).
+		completer := NewCompleterBuilder(mockCompletionsEnabled).
 			AddCompleter(ExamplesCompleter).
 			AddCompleter(SetCompleter).
 			AddCompleter(ShowCompleter).

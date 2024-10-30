@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
 )

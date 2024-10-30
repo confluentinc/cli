@@ -369,7 +369,7 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 		require.NoError(t, err)
 
 		output := &strings.Builder{}
-		output.WriteString(waitForLine(stdoutScanner, "[Ctrl-Q] Quit [Ctrl-S] Toggle Smart Completion"))
+		output.WriteString(waitForLine(stdoutScanner, "[Ctrl-Q] Quit [Ctrl-S] Toggle Completions"))
 
 		// Execute commands
 		require.NoError(t, err)
