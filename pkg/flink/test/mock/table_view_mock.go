@@ -5,6 +5,7 @@
 //
 //	mockgen -destination table_view_mock.go -package=mock github.com/confluentinc/cli/v4/pkg/flink/components TableViewInterface
 //
+
 // Package mock is a generated GoMock package.
 package mock
 
@@ -21,6 +22,7 @@ import (
 type MockTableViewInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockTableViewInterfaceMockRecorder
+	isgomock struct{}
 }
 
 // MockTableViewInterfaceMockRecorder is the mock recorder for MockTableViewInterface.
@@ -119,13 +121,13 @@ func (mr *MockTableViewInterfaceMockRecorder) JumpUp() *gomock.Call {
 }
 
 // RenderTable mocks base method.
-func (m *MockTableViewInterface) RenderTable(arg0 string, arg1 *types.MaterializedStatementResults, arg2 *time.Time, arg3 types.RefreshState) {
+func (m *MockTableViewInterface) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, lastRefreshTimestamp *time.Time, refreshState types.RefreshState) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderTable", arg0, arg1, arg2, arg3)
+	m.ctrl.Call(m, "RenderTable", tableTitle, statementResults, lastRefreshTimestamp, refreshState)
 }
 
 // RenderTable indicates an expected call of RenderTable.
-func (mr *MockTableViewInterfaceMockRecorder) RenderTable(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockTableViewInterfaceMockRecorder) RenderTable(tableTitle, statementResults, lastRefreshTimestamp, refreshState any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderTable", reflect.TypeOf((*MockTableViewInterface)(nil).RenderTable), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderTable", reflect.TypeOf((*MockTableViewInterface)(nil).RenderTable), tableTitle, statementResults, lastRefreshTimestamp, refreshState)
 }

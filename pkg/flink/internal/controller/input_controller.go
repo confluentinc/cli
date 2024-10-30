@@ -25,7 +25,7 @@ import (
 type InputController struct {
 	History               *history.History
 	InitialBuffer         string
-	smartCompletion       bool
+	completionsEnabled    bool
 	diagnosticsEnabled    bool
 	reverseISearchEnabled bool
 	prompt                prompt.IPrompt
@@ -40,7 +40,7 @@ func NewInputController(history *history.History, lspCompleter prompt.Completer,
 	inputController := &InputController{
 		History:            history,
 		InitialBuffer:      "",
-		smartCompletion:    true,
+		completionsEnabled: true,
 		diagnosticsEnabled: true,
 		shouldExit:         false,
 		reverseISearch:     reverseisearch.NewReverseISearch(),
@@ -165,7 +165,7 @@ func (c *InputController) initPrompt() (prompt.IPrompt, error) {
 }
 
 func (c *InputController) promptCompleter() prompt.Completer {
-	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion)
+	completer := autocomplete.NewCompleterBuilder(c.CompletionsEnabled)
 
 	if c.lspCompleter == nil {
 		completer.
@@ -181,16 +181,16 @@ func (c *InputController) promptCompleter() prompt.Completer {
 	return completer.BuildCompleter()
 }
 
-func (c *InputController) getSmartCompletion() bool {
-	return c.smartCompletion
+func (c *InputController) CompletionsEnabled() bool {
+	return c.completionsEnabled
 }
 
 func (c *InputController) DiagnosticsEnabled() bool {
 	return c.diagnosticsEnabled
 }
 
-func (c *InputController) toggleSmartCompletion() {
-	c.smartCompletion = !c.smartCompletion
+func (c *InputController) toggleCompletions() {
+	c.completionsEnabled = !c.completionsEnabled
 
 	maxCol, err := c.getMaxCol()
 	if err != nil {
@@ -198,13 +198,13 @@ func (c *InputController) toggleSmartCompletion() {
 		return
 	}
 
-	components.PrintSmartCompletionState(c.getSmartCompletion(), maxCol)
+	components.PrintCompletionsState(c.CompletionsEnabled(), maxCol)
 }
 
 func (c *InputController) toggleDiagnostics() {
 	c.diagnosticsEnabled = !c.diagnosticsEnabled
 	c.SetDiagnostics(nil)
-	
+
 	maxCol, err := c.getMaxCol()
 	if err != nil {
 		log.CliLogger.Error(err)
@@ -230,7 +230,7 @@ func (c *InputController) getKeyBindings() []prompt.Option {
 			prompt.OptionAddKeyBind(prompt.KeyBind{
 				Key: prompt.ControlS,
 				Fn: func(b *prompt.Buffer) {
-					c.toggleSmartCompletion()
+					c.toggleCompletions()
 				},
 			}),
 			prompt.OptionAddKeyBind(prompt.KeyBind{
@@ -317,7 +317,7 @@ func startLspRequestHandler(c types.InputControllerInterface, handlerCh chan *js
 			case "textDocument/publishDiagnostics":
 				if !c.DiagnosticsEnabled() {
 					log.CliLogger.Infof("Received diagnostics from language server, but diagnostics are disabled")
-					return
+					continue
 				}
 
 				var params lsp.PublishDiagnosticsParams

@@ -5,6 +5,7 @@
 //
 //	mockgen -destination statement_controller_mock.go -package=mock github.com/confluentinc/cli/v4/pkg/flink/types StatementControllerInterface
 //
+
 // Package mock is a generated GoMock package.
 package mock
 
@@ -19,6 +20,7 @@ import (
 type MockStatementControllerInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockStatementControllerInterfaceMockRecorder
+	isgomock struct{}
 }
 
 // MockStatementControllerInterfaceMockRecorder is the mock recorder for MockStatementControllerInterface.
@@ -51,16 +53,16 @@ func (mr *MockStatementControllerInterfaceMockRecorder) CleanupStatement() *gomo
 }
 
 // ExecuteStatement mocks base method.
-func (m *MockStatementControllerInterface) ExecuteStatement(arg0 string) (*types.ProcessedStatement, *types.StatementError) {
+func (m *MockStatementControllerInterface) ExecuteStatement(statementToExecute string) (*types.ProcessedStatement, *types.StatementError) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExecuteStatement", arg0)
+	ret := m.ctrl.Call(m, "ExecuteStatement", statementToExecute)
 	ret0, _ := ret[0].(*types.ProcessedStatement)
 	ret1, _ := ret[1].(*types.StatementError)
 	return ret0, ret1
 }
 
 // ExecuteStatement indicates an expected call of ExecuteStatement.
-func (mr *MockStatementControllerInterfaceMockRecorder) ExecuteStatement(arg0 any) *gomock.Call {
+func (mr *MockStatementControllerInterfaceMockRecorder) ExecuteStatement(statementToExecute any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteStatement", reflect.TypeOf((*MockStatementControllerInterface)(nil).ExecuteStatement), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteStatement", reflect.TypeOf((*MockStatementControllerInterface)(nil).ExecuteStatement), statementToExecute)
 }

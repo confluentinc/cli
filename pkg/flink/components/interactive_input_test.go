@@ -1,34 +1,36 @@
 package components
 
 import (
-	"github.com/bradleyjkemp/cupaloy/v2"
-	"github.com/confluentinc/cli/v4/pkg/flink/test"
 	"testing"
+
+	"github.com/bradleyjkemp/cupaloy/v2"
+
+	"github.com/confluentinc/cli/v4/pkg/flink/test"
 )
 
 const MaxCol = 100
 
-func TestPrintSmartCompletionTrue(t *testing.T) {
-	smartCompletion := true
+func TestPrintCompletionsTrue(t *testing.T) {
+	completionsEnabled := true
 
 	actual := test.RunAndCaptureSTDOUT(t, func() {
-		PrintSmartCompletionState(smartCompletion, MaxCol)
+		PrintCompletionsState(completionsEnabled, MaxCol)
 	})
 
 	cupaloy.SnapshotT(t, actual)
 }
 
-func TestPrintSmartCompletionFalse(t *testing.T) {
-	smartCompletion := false
+func TestPrintCompletionsFalse(t *testing.T) {
+	completionsEnabled := false
 
 	actual := test.RunAndCaptureSTDOUT(t, func() {
-		PrintSmartCompletionState(smartCompletion, MaxCol)
+		PrintCompletionsState(completionsEnabled, MaxCol)
 	})
 
 	cupaloy.SnapshotT(t, actual)
 }
 
-func TestPrintSmartDiagnosticsStateTrue(t *testing.T) {
+func TestPrintDiagnosticsStateTrue(t *testing.T) {
 	completions := true
 
 	actual := test.RunAndCaptureSTDOUT(t, func() {
