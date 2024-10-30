@@ -21,7 +21,7 @@ func (c *customCodeLoggingCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create custom code logging.`,
-				Code: "confluent ccl custom-code-logging create --cloud aws --region us-west-2 --environment env-000000 --destination-kafka --destination-topic topic-123 --destination-cluster-id cluster-123",
+				Code: "confluent custom-code-logging create --cloud aws --region us-west-2 --environment env-000000 --destination-kafka --topic topic-123 --cluster-id cluster-123",
 			},
 		),
 	}
@@ -29,10 +29,10 @@ func (c *customCodeLoggingCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagKafka(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Bool("destination-kafka", true, "Set custom code logging destination to KAFKA")
-	cmd.Flags().String("destination-topic", "", "Kafka topic of custom code logging destination.")
-	cmd.Flags().String("destination-cluster-id", "", "Kafka cluster id of custom code logging destination.")
-	cmd.Flags().String("log-level", "", "Log level of custom code logging. (default \"INFO\")")
+	cmd.Flags().Bool("destination-kafka", true, "Set custom code logging destination to KAFKA.")
+	cmd.Flags().String("topic", "", "Kafka topic of custom code logging destination.")
+	cmd.Flags().String("cluster-id", "", "Kafka cluster id of custom code logging destination.")
+	cmd.Flags().String("log-level", "", "Log level of custom code logging. (default \"INFO\").")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -41,7 +41,7 @@ func (c *customCodeLoggingCommand) newCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 	cmd.MarkFlagsOneRequired("destination-kafka")
-	cmd.MarkFlagsRequiredTogether("destination-kafka", "destination-topic", "destination-cluster-id")
+	cmd.MarkFlagsRequiredTogether("destination-kafka", "topic", "cluster-id")
 	return cmd
 }
 
@@ -72,12 +72,12 @@ func (c *customCodeLoggingCommand) createCustomCodeLogging(cmd *cobra.Command, a
 		return err
 	}
 
-	topic, err := cmd.Flags().GetString("destination-topic")
+	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err
 	}
 
-	clusterId, err := cmd.Flags().GetString("destination-cluster-id")
+	clusterId, err := cmd.Flags().GetString("cluster-id")
 	if err != nil {
 		return err
 	}

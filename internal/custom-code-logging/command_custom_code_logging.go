@@ -33,7 +33,7 @@ type customCodeLoggingOut struct {
 	LogLevel    string `human:"Log Level" serialized:"log_level"`
 }
 
-func newLoggingCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "custom-code-logging",
 		Short:       "Manage custom code logging.",

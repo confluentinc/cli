@@ -1,12 +1,12 @@
 Describe a custom code logging.
 
 Usage:
-  confluent ccl custom-code-logging describe <id> [flags]
+  confluent custom-code-logging describe <id> [flags]
 
 Examples:
-Describe custom code logging
+Describe custom code logging.
 
-  $ confluent ccl custom-code-logging describe ccl-123456
+  $ confluent custom-code-logging describe ccl-123456
 
 Flags:
       --context string   CLI context name.

@@ -10,12 +10,12 @@ Available Commands:
   audit-log            Manage audit log configuration.
   billing              Manage Confluent Cloud billing.
   byok                 Manage your keys in Confluent Cloud.
-  ccl                  Manage custom code.
   cloud-signup         Sign up for Confluent Cloud.
   completion           Print shell completion code.
   configuration        Configure the Confluent CLI.
   connect              Manage Kafka Connect.
   context              Manage CLI configuration contexts.
+  custom-code-logging  Manage custom code logging.
   environment          Manage and select Confluent Cloud environments.
   feedback             Submit feedback for the Confluent CLI.
   flink                Manage Apache Flink.

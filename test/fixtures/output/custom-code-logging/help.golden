@@ -1,7 +1,7 @@
 Manage custom code logging.
 
 Usage:
-  confluent ccl custom-code-logging [command]
+  confluent custom-code-logging [command]
 
 Available Commands:
   create      Create a custom code logging.
@@ -15,4 +15,4 @@ Global Flags:
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent ccl custom-code-logging [command] --help" for more information about a command.
+Use "confluent custom-code-logging [command] --help" for more information about a command.

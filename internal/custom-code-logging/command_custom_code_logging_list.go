@@ -16,8 +16,8 @@ func (c *customCodeLoggingCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List custom code loggings in the org",
-				Code: "confluent ccl custom-code-logging list --environment env-000000",
+				Text: "List custom code loggings in the org.",
+				Code: "confluent custom-code-logging list --environment env-000000",
 			},
 		),
 	}
