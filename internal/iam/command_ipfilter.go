@@ -14,7 +14,6 @@ import (
 
 type ipFilterCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	cfg *config.Config
 }
 
 type ipFilterOut struct {
@@ -34,7 +33,7 @@ func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	c := &ipFilterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner), cfg}
+	c := &ipFilterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand())
