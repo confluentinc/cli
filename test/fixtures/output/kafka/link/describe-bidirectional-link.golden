@@ -1,7 +1,8 @@
-+---------------------+-----------+
-| Name                | link-4    |
-| Source Cluster      |           |
-| Destination Cluster |           |
-| Remote Cluster      | cluster-2 |
-| State               | AVAILABLE |
-+---------------------+-----------+
++-------------------------+---------------------------+
+| Name                    | link-4                    |
+| Source Cluster          |                           |
+| Destination Cluster     |                           |
+| Remote Cluster          | cluster-2                 |
+| State                   | AVAILABLE                 |
+| Mirror Partition States | {ACTIVE 10}, {IN_ERROR 2} |
++-------------------------+---------------------------+

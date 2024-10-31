@@ -10,14 +10,20 @@ import (
 )
 
 type linkOut struct {
-	Name               string `human:"Name" serialized:"link_name"`
-	TopicName          string `human:"Topic Name" serialized:"topic_name"`
-	SourceCluster      string `human:"Source Cluster" serialized:"source_cluster,omitempty"`
-	DestinationCluster string `human:"Destination Cluster" serialized:"destination_cluster,omitempty"`
-	RemoteCluster      string `human:"Remote Cluster" serialized:"remote_cluster,omitempty"`
-	State              string `human:"State" serialized:"state"`
-	Error              string `human:"Error,omitempty" serialized:"error,omitempty"`
-	ErrorMessage       string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	Name               string            `human:"Name" serialized:"link_name"`
+	TopicName          string            `human:"Topic Name" serialized:"topic_name"`
+	SourceCluster      string            `human:"Source Cluster" serialized:"source_cluster,omitempty"`
+	DestinationCluster string            `human:"Destination Cluster" serialized:"destination_cluster,omitempty"`
+	RemoteCluster      string            `human:"Remote Cluster" serialized:"remote_cluster,omitempty"`
+	State              string            `human:"State" serialized:"state"`
+	Error              string            `human:"Error,omitempty" serialized:"error,omitempty"`
+	ErrorMessage       string            `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	CategoryCounts     []linkCategoryOut `human:"Mirror Partition States,omitempty" serialized:"category_counts,omitempty"`
+}
+
+type linkCategoryOut struct {
+	StateCategory string `serialized:"state_category"`
+	Count         int32  `serialized:"count"`
 }
 
 func (c *linkCommand) newDescribeCommand() *cobra.Command {
@@ -52,7 +58,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(newDescribeLink(link, ""))
-	table.Filter(getListFields(false))
+	table.Filter(getDescribeFields(false))
 	return table.Print()
 }
 
@@ -60,6 +66,14 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *link
 	var linkError string
 	if link.GetLinkError() != "NO_ERROR" {
 		linkError = link.GetLinkError()
+	}
+	linkCategories := link.GetCategoryCounts()
+	categories := make([]linkCategoryOut, len(linkCategories))
+	for i, category := range linkCategories {
+		categories[i] = linkCategoryOut{
+			StateCategory: category.StateCategory,
+			Count:         category.Count,
+		}
 	}
 	return &linkOut{
 		Name:               link.GetLinkName(),
@@ -70,5 +84,16 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *link
 		State:              link.GetLinkState(),
 		Error:              linkError,
 		ErrorMessage:       link.GetLinkErrorMessage(),
+		CategoryCounts:     categories,
 	}
+}
+
+func getDescribeFields(includeTopics bool) []string {
+	x := []string{"Name"}
+
+	if includeTopics {
+		x = append(x, "TopicName")
+	}
+
+	return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage", "CategoryCounts")
 }
