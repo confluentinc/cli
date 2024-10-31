@@ -1,0 +1,13 @@
+Error: at least one of the flags in the group [log-level] is required
+Usage:
+  confluent custom-code-logging update <id> [flags]
+
+Flags:
+      --log-level string   Specify the Custom Code Logging Log Level as "INFO", "DEBUG", "ERROR", or "WARN". (default "INFO")
+      --context string     CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

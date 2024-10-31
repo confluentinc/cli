@@ -1,0 +1,12 @@
+- id: ccl-123456
+  cloud: AWS
+  region: us-west-2
+  environment: env-000000
+- id: ccl-456789
+  cloud: AWS
+  region: us-west-2
+  environment: env-111111
+- id: ccl-789012
+  cloud: AWS
+  region: us-west-2
+  environment: env-222222

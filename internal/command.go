@@ -23,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/configuration"
 	"github.com/confluentinc/cli/v4/internal/connect"
 	"github.com/confluentinc/cli/v4/internal/context"
+	ccl "github.com/confluentinc/cli/v4/internal/custom-code-logging"
 	"github.com/confluentinc/cli/v4/internal/environment"
 	"github.com/confluentinc/cli/v4/internal/feedback"
 	"github.com/confluentinc/cli/v4/internal/flink"
@@ -103,6 +104,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
+	cmd.AddCommand(ccl.New(cfg, prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New(prerunner))
 	cmd.AddCommand(completion.New())
