@@ -9,7 +9,7 @@ func (s *CLITestSuite) TestCustomCodeLogging() {
 		// create - missing region
 		{args: `custom-code-logging create --cloud AWS --environment env-000000--topic topic-123 --cluster cluster-123`, fixture: "custom-code-logging/create-no-region.golden", exitCode: 1},
 		// create - missing environment
-		{args: `custom-code-logging create --cloud AWS --region us-west-2 --topic topic-123 --cluster cluster-123`, fixture: "custom-code-logging/create-no-env.golden", exitCode: 1},
+		{args: `custom-code-logging create --cloud AWS --region us-west-2 --topic topic-123 --cluster cluster-123`, fixture: "custom-code-logging/create-no-env.golden"},
 		// create - missing destination topic
 		{args: `custom-code-logging create --cloud AWS --region us-west-2 --environment env-000000 --cluster cluster-123`, fixture: "custom-code-logging/create-no-topic.golden", exitCode: 1},
 		// create - missing destination cluster id
@@ -18,7 +18,7 @@ func (s *CLITestSuite) TestCustomCodeLogging() {
 		// list
 		{args: "custom-code-logging list --environment env-000000", fixture: "custom-code-logging/list.golden"},
 		// list - no environment
-		{args: "custom-code-logging list", fixture: "custom-code-logging/list-no-environment.golden", exitCode: 1},
+		{args: "custom-code-logging list", fixture: "custom-code-logging/list-no-environment.golden"},
 		// list - yaml
 		{args: "custom-code-logging list --environment env-000000 -o json", fixture: "custom-code-logging/list-json.golden"},
 		// list - json

@@ -9,7 +9,7 @@ List custom code loggings in the org.
   $ confluent custom-code-logging list --environment env-000000
 
 Flags:
-      --environment string   REQUIRED: Environment ID.
+      --environment string   Environment ID.
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

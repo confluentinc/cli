@@ -3,7 +3,7 @@ Usage:
   confluent custom-code-logging update <id> [flags]
 
 Flags:
-      --log-level string   Log level of custom code logging. (default "INFO")
+      --log-level string   Specify the Custom Code Logging Log Level as "INFO", "DEBUG", "ERROR", or "WARN". (default "INFO")
       --context string     CLI context name.
 
 Global Flags:

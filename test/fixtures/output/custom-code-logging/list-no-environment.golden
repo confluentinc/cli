@@ -1,19 +1,5 @@
-Error: required flag(s) "environment" not set
-Usage:
-  confluent custom-code-logging list [flags]
-
-Examples:
-List custom code loggings in the org.
-
-  $ confluent custom-code-logging list --environment env-000000
-
-Flags:
-      --environment string   REQUIRED: Environment ID.
-      --context string       CLI context name.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
-
-Global Flags:
-  -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
+      Id     | Cloud |  Region   | Environment  
+-------------+-------+-----------+--------------
+  ccl-123456 | AWS   | us-west-2 | env-000000   
+  ccl-456789 | AWS   | us-west-2 | env-111111   
+  ccl-789012 | AWS   | us-west-2 | env-222222   

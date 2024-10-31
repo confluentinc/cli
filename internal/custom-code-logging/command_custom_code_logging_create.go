@@ -1,6 +1,7 @@
 package customcodelogging
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -10,36 +11,40 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/utils"
+)
+
+var (
+	allowedLogLevels = []string{"INFO", "DEBUG", "ERROR", "WARN"}
 )
 
 func (c *customCodeLoggingCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a custom code logging.",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE:  c.createCustomCodeLogging,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create custom code logging.`,
-				Code: "confluent custom-code-logging create --cloud aws --region us-west-2 --environment env-000000 --topic topic-123 --cluster cluster-123",
+				Code: "confluent custom-code-logging create --cloud aws --region us-west-2 --topic topic-123 --cluster cluster-123 --environment env-000000",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagKafka(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("topic", "", "Kafka topic of custom code logging destination.")
-	cmd.Flags().String("log-level", "INFO", "Log level of custom code logging.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("log-level", "INFO", fmt.Sprintf("Specify the Custom Code Logging Log Level as %s.", utils.ArrayToCommaDelimitedString(allowedLogLevels, "or")))
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("region"))
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
-	cmd.MarkFlagsOneRequired("topic")
-	cmd.MarkFlagsOneRequired("cluster")
+	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
+	cobra.CheckErr(cmd.MarkFlagRequired("cluster"))
 	return cmd
 }
 
@@ -58,12 +63,15 @@ func (c *customCodeLoggingCommand) createCustomCodeLogging(cmd *cobra.Command, a
 
 	region = strings.ToUpper(region)
 
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	logLevel, _ := cmd.Flags().GetString("log-level")
+	logLevel, err := cmd.Flags().GetString("log-level")
+	if err != nil {
+		return err
+	}
 
 	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
@@ -97,13 +105,8 @@ func (c *customCodeLoggingCommand) createCustomCodeLogging(cmd *cobra.Command, a
 	if err != nil {
 		return err
 	}
-
 	table := output.NewTable(cmd)
-	table.Add(&customCodeLoggingShortOut{
-		Id:          resp.GetId(),
-		Cloud:       resp.GetCloud(),
-		Region:      resp.GetRegion(),
-		Environment: resp.GetEnvironment().Id,
-	})
+	table.Add(getCustomCodeLogging(resp))
+	table.Filter([]string{"Id", "Cloud", "Region", "Environment"})
 	return table.Print()
 }

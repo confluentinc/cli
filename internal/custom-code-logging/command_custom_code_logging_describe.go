@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *customCodeLoggingCommand) newDescribeCommand() *cobra.Command {
@@ -31,5 +32,8 @@ func (c *customCodeLoggingCommand) describe(cmd *cobra.Command, args []string) e
 	if err != nil {
 		return err
 	}
-	return printTable(cmd, customCodeLogging)
+	table := output.NewTable(cmd)
+	table.Add(getCustomCodeLogging(customCodeLogging))
+	table.Filter([]string{"Id", "Cloud", "Region", "Environment"})
+	return table.Print()
 }

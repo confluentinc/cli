@@ -1,6 +1,8 @@
 package customcodelogging
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	cclv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccl/v1"
@@ -9,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
@@ -19,7 +22,7 @@ func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
 		RunE:  c.update,
 	}
 
-	cmd.Flags().String("log-level", "INFO", "Log level of custom code logging.")
+	cmd.Flags().String("log-level", "INFO", fmt.Sprintf("Specify the Custom Code Logging Log Level as %s.", utils.ArrayToCommaDelimitedString(allowedLogLevels, "or")))
 	cmd.MarkFlagsOneRequired("log-level")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	return cmd

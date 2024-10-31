@@ -88,6 +88,7 @@ const (
 	ServiceAccountPrefix        = "sa"
 	SsoGroupMappingPrefix       = "group"
 	UserPrefix                  = "u"
+	CustomCodeLoggingPrefix     = "ccl"
 )
 
 var prefixToResource = map[string]string{
@@ -104,6 +105,7 @@ var prefixToResource = map[string]string{
 	ServiceAccountPrefix:        ServiceAccount,
 	SsoGroupMappingPrefix:       SsoGroupMapping,
 	UserPrefix:                  User,
+	CustomCodeLoggingPrefix:     CustomCodeLogging,
 }
 
 var resourceToPrefix = map[string]string{
@@ -118,6 +120,7 @@ var resourceToPrefix = map[string]string{
 	ServiceAccount:        ServiceAccountPrefix,
 	SsoGroupMapping:       SsoGroupMappingPrefix,
 	User:                  UserPrefix,
+	CustomCodeLogging:     CustomCodeLoggingPrefix,
 }
 
 func LookupType(id string) string {

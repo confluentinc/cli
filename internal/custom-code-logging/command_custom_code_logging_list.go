@@ -25,12 +25,11 @@ func (c *customCodeLoggingCommand) newListCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 	return cmd
 }
 
 func (c *customCodeLoggingCommand) list(cmd *cobra.Command, _ []string) error {
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
@@ -41,12 +40,8 @@ func (c *customCodeLoggingCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, customCodeLogging := range customCodeLoggings {
-		list.Add(&customCodeLoggingShortOut{
-			Id:          customCodeLogging.GetId(),
-			Cloud:       customCodeLogging.GetCloud(),
-			Region:      customCodeLogging.GetRegion(),
-			Environment: customCodeLogging.GetEnvironment().Id,
-		})
+		list.Add(getCustomCodeLogging(customCodeLogging))
 	}
+	list.Filter([]string{"Id", "Cloud", "Region", "Environment"})
 	return list.Print()
 }

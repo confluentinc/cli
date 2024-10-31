@@ -8,22 +8,14 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type customCodeLoggingCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type customCodeLoggingShortOut struct {
-	Id          string `human:"ID" serialized:"id"`
-	Cloud       string `human:"Cloud" serialized:"cloud"`
-	Region      string `human:"Region" serialized:"region"`
-	Environment string `human:"Environment" serialized:"environment"`
-}
-
 type customCodeLoggingOut struct {
-	Id          string `human:"ID" serialized:"id"`
+	Id          string `human:"Id" serialized:"id"`
 	Cloud       string `human:"Cloud" serialized:"cloud"`
 	Region      string `human:"Region" serialized:"region"`
 	Environment string `human:"Environment" serialized:"environment"`
@@ -45,17 +37,16 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	_ = cfg.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.custom_code_logging.early_access", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(c.newCreateCommand())
-		cmd.AddCommand(c.newListCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(c.newListCommand())
 		cmd.AddCommand(c.newUpdateCommand())
 	}
 
 	return cmd
 }
 
-func printTable(cmd *cobra.Command, customCodeLogging cclv1.CclV1CustomCodeLogging) error {
-	table := output.NewTable(cmd)
+func getCustomCodeLogging(customCodeLogging cclv1.CclV1CustomCodeLogging) *customCodeLoggingOut {
 	customCodeLoggingOut := &customCodeLoggingOut{
 		Id:          customCodeLogging.GetId(),
 		Cloud:       customCodeLogging.GetCloud(),
@@ -68,6 +59,5 @@ func printTable(cmd *cobra.Command, customCodeLogging cclv1.CclV1CustomCodeLoggi
 		customCodeLoggingOut.Cluster = customCodeLogging.GetDestinationSettings().CclV1KafkaDestinationSettings.GetClusterId()
 		customCodeLoggingOut.LogLevel = customCodeLogging.GetDestinationSettings().CclV1KafkaDestinationSettings.GetLogLevel()
 	}
-	table.Add(customCodeLoggingOut)
-	return table.Print()
+	return customCodeLoggingOut
 }

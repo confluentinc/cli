@@ -1,4 +1,4 @@
-      ID     | Cloud |  Region   | Environment  
+      Id     | Cloud |  Region   | Environment  
 -------------+-------+-----------+--------------
   ccl-123456 | AWS   | us-west-2 | env-000000   
   ccl-456789 | AWS   | us-west-2 | env-111111   

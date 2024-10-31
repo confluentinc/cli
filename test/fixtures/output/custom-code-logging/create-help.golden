@@ -6,15 +6,15 @@ Usage:
 Examples:
 Create custom code logging.
 
-  $ confluent custom-code-logging create --cloud aws --region us-west-2 --environment env-000000 --topic topic-123 --cluster cluster-123
+  $ confluent custom-code-logging create --cloud aws --region us-west-2 --topic topic-123 --cluster cluster-123 --environment env-000000
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --region string        REQUIRED: Cloud region for Kafka (use "confluent kafka region list" to see all).
-      --environment string   REQUIRED: Environment ID.
-      --cluster string       Kafka cluster ID.
-      --topic string         Kafka topic of custom code logging destination.
-      --log-level string     Log level of custom code logging. (default "INFO")
+      --cluster string       REQUIRED: Kafka cluster ID.
+      --topic string         REQUIRED: Kafka topic of custom code logging destination.
+      --environment string   Environment ID.
+      --log-level string     Specify the Custom Code Logging Log Level as "INFO", "DEBUG", "ERROR", or "WARN". (default "INFO")
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

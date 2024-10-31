@@ -2,7 +2,3 @@ id: ccl-789012
 cloud: AWS
 region: us-west-2
 environment: env-222222
-destination: Kafka
-topic: topic-789
-cluster: cluster-789
-log_level: DEBUG
