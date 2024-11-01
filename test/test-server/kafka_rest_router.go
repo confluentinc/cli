@@ -718,6 +718,10 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 					ClusterLinkId:   "LINKID4",
 					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
 					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+					CategoryCounts: []cckafkarestv3.LinkCategory{
+						{StateCategory: "ACTIVE", Count: 10},
+						{StateCategory: "IN_ERROR", Count: 2},
+					},
 				})
 				require.NoError(t, err)
 			} else if link == "link-5" {
