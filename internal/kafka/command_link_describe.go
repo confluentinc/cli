@@ -21,7 +21,7 @@ type linkOut struct {
 	State              string `human:"State" serialized:"state"`
 	Error              string `human:"Error,omitempty" serialized:"error,omitempty"`
 	ErrorMessage       string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
-	CategoryCounts     string `human:"Mirror Partition States,omitempty" serialized:"category_counts,omitempty"`
+	CategoryCounts     string `human:"Mirror Partition States Count,omitempty" serialized:"category_counts,omitempty"`
 }
 
 func (c *linkCommand) newDescribeCommand() *cobra.Command {
