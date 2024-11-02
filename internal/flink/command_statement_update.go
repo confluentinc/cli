@@ -28,8 +28,16 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 				Code: "confluent flink statement update my-statement --compute-pool lfcp-123456",
 			},
 			examples.Example{
-				Text: `Request to resume statement "my-statement".`,
+				Text: `Request to resume statement "my-statement" with original principal id and compute pool.`,
 				Code: "confluent flink statement update my-statement --stopped=false",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" to service account "sa-123456".`,
+				Code: "confluent flink statement update my-statement --stopped=false --principal sa-123456",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" to user account "u-987654".`,
+				Code: "confluent flink statement update my-statement --stopped=false --principal u-987654",
 			},
 			examples.Example{
 				Text: `Request to stop statement "my-statement".`,
@@ -40,7 +48,7 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 
 	c.addPrincipalFlag(cmd)
 	c.addComputePoolFlag(cmd)
-	cmd.Flags().Bool("stopped", false, "Request to stop the statement.")
+	cmd.Flags().Bool("stopped", false, "Request to stop or resume the statement.")
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
