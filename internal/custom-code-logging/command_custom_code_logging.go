@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 )
 
 type customCodeLoggingCommand struct {
@@ -35,14 +34,11 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	c := &customCodeLoggingCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.custom_code_logging.early_access", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(c.newCreateCommand())
-		cmd.AddCommand(c.newDeleteCommand())
-		cmd.AddCommand(c.newDescribeCommand())
-		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(c.newUpdateCommand())
-	}
-
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 	return cmd
 }
 
