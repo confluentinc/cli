@@ -19,6 +19,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2
+	github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.0-20240921001517-750d06dd7c27
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0

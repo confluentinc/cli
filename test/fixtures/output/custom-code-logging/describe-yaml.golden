@@ -1,0 +1,4 @@
+id: ccl-789012
+cloud: AWS
+region: us-west-2
+environment: env-222222
