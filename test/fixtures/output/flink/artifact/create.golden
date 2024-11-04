@@ -1,10 +1,11 @@
-+----------------+----------------------------------+
-| ID             | cfa-123456                       |
-| Name           | my-flink-artifact                |
-| Version        | 1.0.0                            |
-| Class          | io.confluent.flink.example1.test |
-| Content Format | JAR                              |
-| Cloud          | aws                              |
-| Region         | us-west-2                        |
-| Environment    | env-123456                       |
-+----------------+----------------------------------+
++--------------------+---------------------------+
+| ID                 | cfa-123456                |
+| Name               | my-flink-artifact         |
+| Version            | 1.0.0                     |
+| Cloud              | aws                       |
+| Region             | us-west-2                 |
+| Environment        | env-123456                |
+| Content Format     | JAR                       |
+| Description        | CliArtifactTest           |
+| Documentation link | https://docs.confluent.io |
++--------------------+---------------------------+
