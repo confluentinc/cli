@@ -23,11 +23,8 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 	}
 	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
-		cmd.Flags().Bool("organization-wide", false, "Include only organization scoped filters.")
 		cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include organization scoped filters.")
 
-		cmd.MarkFlagsMutuallyExclusive("environment", "organization-wide")
-		cmd.MarkFlagsMutuallyExclusive("include-parent-scope", "organization-wide")
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -49,14 +46,6 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 		if environment != "" {
 			resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
 		}
-		orgWideFilters, err := cmd.Flags().GetBool("organization-wide")
-		if err != nil {
-			return err
-		}
-		orgOnly := ""
-		if cmd.Flags().Changed("organization-wide") {
-			orgOnly = strconv.FormatBool(orgWideFilters)
-		}
 		includeParentScope, err := cmd.Flags().GetBool("include-parent-scope")
 		if err != nil {
 			return err
@@ -65,13 +54,13 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 		if cmd.Flags().Changed("include-parent-scope") {
 			parentScope = strconv.FormatBool(includeParentScope)
 		}
-		ipFilters, err = c.V2Client.ListIamIpFilters(resourceScope, orgOnly, parentScope)
+		ipFilters, err = c.V2Client.ListIamIpFilters(resourceScope, parentScope)
 		if err != nil {
 			return err
 		}
 	} else {
 		var err error
-		ipFilters, err = c.V2Client.ListIamIpFilters("", "", "")
+		ipFilters, err = c.V2Client.ListIamIpFilters("", "")
 		if err != nil {
 			return err
 		}

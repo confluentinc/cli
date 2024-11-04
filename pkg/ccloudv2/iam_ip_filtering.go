@@ -38,12 +38,12 @@ func (c *Client) GetIamIpFilter(id string) (iamipfilteringv2.IamV2IpFilter, erro
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListIamIpFilters(resourceScope string, includeOnlyOrgScopeFilters string, includeParentScope string) ([]iamipfilteringv2.IamV2IpFilter, error) {
+func (c *Client) ListIamIpFilters(resourceScope string, includeParentScope string) ([]iamipfilteringv2.IamV2IpFilter, error) {
 	var list []iamipfilteringv2.IamV2IpFilter
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListIpFilters(pageToken, resourceScope, includeOnlyOrgScopeFilters, includeParentScope)
+		page, httpResp, err := c.executeListIpFilters(pageToken, resourceScope, includeParentScope)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -57,8 +57,8 @@ func (c *Client) ListIamIpFilters(resourceScope string, includeOnlyOrgScopeFilte
 	return list, nil
 }
 
-func (c *Client) executeListIpFilters(pageToken string, resourceScope string, includeOnlyOrgScopeFilters string, includeParentScope string) (iamipfilteringv2.IamV2IpFilterList, *http.Response, error) {
-	req := c.IamIpFilteringClient.IPFiltersIamV2Api.ListIamV2IpFilters(c.IamIpFilteringContext()).PageSize(ccloudV2ListPageSize).ResourceScope(resourceScope).IncludeOnlyOrgScopeFilters(includeOnlyOrgScopeFilters).IncludeParentScope(includeParentScope)
+func (c *Client) executeListIpFilters(pageToken string, resourceScope string, includeParentScope string) (iamipfilteringv2.IamV2IpFilterList, *http.Response, error) {
+	req := c.IamIpFilteringClient.IPFiltersIamV2Api.ListIamV2IpFilters(c.IamIpFilteringContext()).PageSize(ccloudV2ListPageSize).ResourceScope(resourceScope).IncludeParentScope(includeParentScope)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
