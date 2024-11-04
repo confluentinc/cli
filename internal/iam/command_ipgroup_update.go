@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -66,7 +66,7 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initialize the IP group object that we will pass into the update command
-	updateIpGroup := iamv2.IamV2IpGroup{
+	updateIpGroup := iamipfilteringv2.IamV2IpGroup{
 		Id:        &args[0],
 		GroupName: currentIpGroup.GroupName,
 	}

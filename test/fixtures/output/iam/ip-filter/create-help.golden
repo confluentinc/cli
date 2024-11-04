@@ -9,8 +9,11 @@ Create an IP filter named "demo-ip-filter" with resource group "management" and 
   $ confluent iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-12345,ipg-67890
 
 Flags:
-      --ip-groups strings       REQUIRED: A comma-separated list of IP group IDs.
-      --resource-group string   Name of resource group. Currently, only "management" is supported. (default "management")
+      --resource-group string   REQUIRED: Name of resource group: "management" or "multiple".
+      --ip-groups strings       A comma-separated list of IP group IDs.
+      --environment string      Name of the environment for which this filter applies. By default will apply to the organization only.
+      --operations strings      A comma-separated list of operation groups: "MANAGEMENT" or "SCHEMA".
+      --no-public-networks      Use in place of ip-groups to reference the no public networks IP Group.
       --context string          CLI context name.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
