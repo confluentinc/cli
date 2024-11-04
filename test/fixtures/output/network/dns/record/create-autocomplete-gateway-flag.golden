@@ -2,5 +2,7 @@ gw-12345	my-aws-gateway
 gw-67890	my-aws-peering-gateway
 gw-67890	my-azure-gateway
 gw-09876	my-azure-peering-gateway
+gw-13570	my-gcp-gateway
+gw-67890	my-gcp-peering-gateway
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

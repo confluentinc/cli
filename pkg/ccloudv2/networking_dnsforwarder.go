@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
+	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
