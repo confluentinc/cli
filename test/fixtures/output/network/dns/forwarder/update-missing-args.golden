@@ -18,6 +18,7 @@ Flags:
       --context string           CLI context name.
       --environment string       Environment ID.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+      --domainMapping strings    Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.
 
 Global Flags:
   -h, --help            Show help for this command.

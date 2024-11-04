@@ -3,7 +3,7 @@ package network
 import (
 	"github.com/spf13/cobra"
 
-	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
+	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -33,8 +33,9 @@ func (c *command) newDnsForwarderUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+	cmd.Flags().StringSlice(domainMappingFlagName, []string{}, "Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.")
 
-	cmd.MarkFlagsOneRequired("name", "dns-server-ips", "domains")
+	cmd.MarkFlagsOneRequired("name", "dns-server-ips", domainMappingFlagName, "domains")
 
 	return cmd
 }
@@ -53,8 +54,17 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 	updateDnsForwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarderUpdate{
 		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdate{
 			Environment: &networkingdnsforwarderv1.ObjectReference{Id: environmentId},
-			Config:      &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaIp: dnsForwarder.Spec.Config.NetworkingV1ForwardViaIp},
 		},
+	}
+	domainFile, err := cmd.Flags().GetStringSlice(domainMappingFlagName)
+	if err != nil {
+		return err
+	}
+
+	if len(domainFile) == 0 {
+		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaIp: dnsForwarder.Spec.Config.NetworkingV1ForwardViaIp}
+	} else {
+		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaGcpDnsZones: dnsForwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones}
 	}
 
 	if cmd.Flags().Changed("name") {
@@ -79,6 +89,16 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		updateDnsForwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(dnsServerIps)
+	} else if cmd.Flags().Changed(domainMappingFlagName) {
+		domain, err := cmd.Flags().GetStringSlice(domainMappingFlagName)
+		if err != nil {
+			return err
+		}
+		domainMap, err := DomainFlagToMap(domain)
+		if err != nil {
+			return err
+		}
+		updateDnsForwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.SetDomainMappings(domainMap)
 	}
 
 	forwarder, err := c.V2Client.UpdateDnsForwarder(environmentId, args[0], updateDnsForwarder)
