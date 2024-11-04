@@ -55,12 +55,18 @@ type ConsumerProperties struct {
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	SrClient    *schemaregistry.Client
-	KeyFormat   string
-	ValueFormat string
-	Out         io.Writer
-	Subject     string
-	Properties  ConsumerProperties
+	SrClient          *schemaregistry.Client
+	SrApiKey          string
+	SrApiSecret       string
+	SrClusterId       string
+	SrClusterEndpoint string
+	Token             string
+	KeyFormat         string
+	ValueFormat       string
+	Out               io.Writer
+	Subject           string
+	Topic             string
+	Properties        ConsumerProperties
 }
 
 func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle) error {
@@ -193,18 +199,22 @@ func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
 			return err
 		}
 
+		err = keyDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "key", h.SrApiKey, h.SrApiSecret, h.Token, nil)
+		if err != nil {
+			return err
+		}
+
 		if slices.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
 			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
 			if err != nil {
 				return err
 			}
-			message.Key = message.Key[messageOffset:]
 			if err := keyDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
 				return err
 			}
 		}
 
-		jsonMessage, err := keyDeserializer.Deserialize(message.Key)
+		jsonMessage, err := keyDeserializer.Deserialize(h.Topic, message.Key)
 		if err != nil {
 			return err
 		}
@@ -222,19 +232,22 @@ func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
 		return err
 	}
 
+	err = valueDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "value", h.SrApiKey, h.SrApiSecret, h.Token, nil)
+	if err != nil {
+		return err
+	}
+
 	if slices.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
 		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
 		}
-		// Message body is encoded after 5 bytes of meta information.
-		message.Value = message.Value[messageOffset:]
 		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return err
 		}
 	}
 
-	messageString, err := getMessageString(message, valueDeserializer, h.Properties)
+	messageString, err := getMessageString(message, valueDeserializer, h.Properties, h.Topic)
 	if err != nil {
 		return err
 	}
@@ -255,8 +268,8 @@ func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
 	return nil
 }
 
-func getMessageString(message *ckgo.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties) (string, error) {
-	messageString, err := valueDeserializer.Deserialize(message.Value)
+func getMessageString(message *ckgo.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties, topic string) (string, error) {
+	messageString, err := valueDeserializer.Deserialize(topic, message.Value)
 	if err != nil {
 		return "", err
 	}

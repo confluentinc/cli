@@ -60,8 +60,6 @@ type flags struct {
 	topics          []string
 }
 
-// messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
-const messageOffset = 5
 const protobufErrorMessage = "protobuf is not supported"
 
 func (c *command) newExportCommand() *cobra.Command {
@@ -227,7 +225,7 @@ func (c *command) getAccountDetails(cmd *cobra.Command, flags *flags) (*accountD
 
 	// Create Consumer
 	if flags.consumeExamples {
-		details.consumer, err = createConsumer(details.kafkaUrl, details.clusterCreds, flags.group)
+		details.consumer, err = createConsumer(details.kafkaBootstrapUrl, details.clusterCreds, flags.group)
 		if err != nil {
 			return nil, err
 		}
@@ -276,6 +274,11 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	if err != nil {
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
+
+	err = deserializationProvider.InitDeserializer("", "", "value", "", "", "", srClient)
+	if err != nil {
+		return nil, err
+	}
 	groupHandler := kafka.GroupHandler{
 		SrClient:    srClient,
 		ValueFormat: valueFormat,
@@ -287,13 +290,12 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 		if err != nil {
 			return nil, err
 		}
-		// Message body is encoded after 5 bytes of meta information.
-		value = value[messageOffset:]
 		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return nil, err
 		}
 	}
-	jsonMessage, err := deserializationProvider.Deserialize(value)
+
+	jsonMessage, err := deserializationProvider.Deserialize(topicName, value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deserialize example: %v", err)
 	}
@@ -434,7 +436,9 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	details.kafkaClusterId = cluster.ID
 	details.schemaRegistryClusterId = clusters[0].GetId()
 	details.clusterCreds = clusterCreds
+	// kafkaUrl is used in exported file, while kafkaBootstrapUrl is used to create Kafka consumer
 	details.kafkaUrl = kafkaREST.CloudClient.GetUrl()
+	details.kafkaBootstrapUrl = cluster.Bootstrap
 	details.schemaRegistryUrl = clusters[0].Spec.GetHttpEndpoint()
 	details.topics = topics.Data
 

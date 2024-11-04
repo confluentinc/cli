@@ -17,6 +17,7 @@ import (
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
+	"github.com/confluentinc/cli/v4/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -274,6 +275,34 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return err
+	}
+	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return err
+	}
+
+	token, err := auth.GetDataplaneToken(c.Context)
+	if err != nil {
+		return err
+	}
+
+	// Initialize the key serializer with the same SR endpoint during registration
+	// The associated schema ID is also required to initialize the serializer
+	var keySchemaId = -1
+	if len(keyMetaInfo) >= 5 {
+		keySchemaId = int(binary.BigEndian.Uint32(keyMetaInfo[1:5]))
+	}
+	// Fetch the current SR cluster id and endpoint
+	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+	if err != nil {
+		return err
+	}
+	if err := keySerializer.InitSerializer(srEndpoint, srClusterId, "key", srApiKey, srApiSecret, token, keySchemaId); err != nil {
+		return err
+	}
 	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
 		return err
 	}
@@ -288,6 +317,16 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	}
 	valueMetaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
 	if err != nil {
+		return err
+	}
+
+	// Initialize the value serializer with the same SR endpoint during registration
+	// The associated schema ID is also required to initialize the serializer
+	var valueSchemaId = -1
+	if len(valueMetaInfo) >= messageOffset {
+		valueSchemaId = int(binary.BigEndian.Uint32(valueMetaInfo[1:messageOffset]))
+	}
+	if err := valueSerializer.InitSerializer(srEndpoint, srClusterId, "value", srApiKey, srApiSecret, token, valueSchemaId); err != nil {
 		return err
 	}
 	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
@@ -419,7 +458,7 @@ func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 		return nil, err
 	}
 
-	key, value, err := serializeMessage(keyMetaInfo, valueMetaInfo, data, delimiter, parseKey, keySerializer, valueSerializer)
+	key, value, err := serializeMessage(keyMetaInfo, valueMetaInfo, topic, data, delimiter, parseKey, keySerializer, valueSerializer)
 	if err != nil {
 		return nil, err
 	}
@@ -446,7 +485,7 @@ func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 	return message, nil
 }
 
-func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
+func serializeMessage(_, _ []byte, topic, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
 	var serializedKey []byte
 	val := data
 	if parseKey {
@@ -456,7 +495,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 			return nil, nil, err
 		}
 
-		serializedKey, err = keySerializer.Serialize(key)
+		serializedKey, err = keySerializer.Serialize(topic, key)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -464,12 +503,12 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 		val = value
 	}
 
-	serializedValue, err := valueSerializer.Serialize(val)
+	serializedValue, err := valueSerializer.Serialize(topic, val)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return append(keyMetaInfo, serializedKey...), append(valueMetaInfo, serializedValue...), nil
+	return serializedKey, serializedValue, nil
 }
 
 func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
@@ -595,6 +634,37 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		}
 	}
 
+	// Fetch the SR client endpoint during schema registration
+	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Initialize the serializer with the same SR endpoint during registration
+	// The associated schema ID is also required to initialize the serializer
+	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return nil, nil, err
+	}
+	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return nil, nil, err
+	}
+	var parsedSchemaId = -1
+	if len(metaInfo) >= 5 {
+		parsedSchemaId = int(binary.BigEndian.Uint32(metaInfo[1:5]))
+	}
+
+	token, err := auth.GetDataplaneToken(c.Context)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, srApiKey, srApiSecret, token, parsedSchemaId)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// LoadSchema() is only required for schemas with PROTOBUF format
 	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
 		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
 	}

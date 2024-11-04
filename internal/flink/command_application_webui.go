@@ -78,7 +78,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		handleRequest(w, r, url, environment, applicationName, client)
+		handleRequest(w, r, url, environment, applicationName, cmfClient.APIClient.GetConfig().UserAgent, client)
 	})
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -93,7 +93,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	return nil
 }
 
-func handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Request, url, environmentName, applicationName string, client *http.Client) {
+func handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Request, url, environmentName, applicationName, userAgent string, client *http.Client) {
 	body, err := io.ReadAll(userRequest.Body)
 	if err != nil {
 		http.Error(userResponseWriter, fmt.Sprintf("Failed to read request body: %s", err), http.StatusInternalServerError)
@@ -107,6 +107,7 @@ func handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Req
 		return
 	}
 	reqToCmf.Header = userRequest.Header
+	reqToCmf.Header.Set("x-confluent-cli-version", userAgent)
 
 	resFromCmf, err := client.Do(reqToCmf)
 	if err != nil {

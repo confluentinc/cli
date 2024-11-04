@@ -14,6 +14,7 @@ import (
 
 	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
+	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway/v1"
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
@@ -51,7 +52,14 @@ func handleNetworkingGateway(t *testing.T) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 		environment := r.URL.Query().Get("environment")
 
-		handleNetworkingGatewayGet(t, id, environment)(w, r)
+		switch r.Method {
+		case http.MethodGet:
+			handleNetworkingGatewayGet(t, id, environment)(w, r)
+		case http.MethodDelete:
+			handleNetworkingGatewayDelete(t, id)(w, r)
+		case http.MethodPatch:
+			handleNetworkingGatewayPatch(t, id)(w, r)
+		}
 	}
 }
 
@@ -61,6 +69,8 @@ func handleNetworkingGateways(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleNetworkingGatewayList(t, environment)(w, r)
+		case http.MethodPost:
+			handleNetworkingGatewayPost(t)(w, r)
 		}
 	}
 }
@@ -2131,34 +2141,34 @@ func getIpAddress(ipPrefix, cloud, region string, services []string) networkingi
 	}
 }
 
-func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind string) networkingv1.NetworkingV1Gateway {
-	gateway := networkingv1.NetworkingV1Gateway{
+func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind string) networkinggatewayv1.NetworkingV1Gateway {
+	gateway := networkinggatewayv1.NetworkingV1Gateway{
 		Id: networkingv1.PtrString(id),
-		Spec: &networkingv1.NetworkingV1GatewaySpec{
+		Spec: &networkinggatewayv1.NetworkingV1GatewaySpec{
 			DisplayName: networkingv1.PtrString(name),
-			Environment: &networkingv1.ObjectReference{Id: environment},
+			Environment: &networkinggatewayv1.ObjectReference{Id: environment},
 		},
-		Status: &networkingv1.NetworkingV1GatewayStatus{Phase: "READY"},
+		Status: &networkinggatewayv1.NetworkingV1GatewayStatus{Phase: "READY"},
 	}
 
 	switch specConfigKind {
 	case "AwsEgressPrivateLinkGatewaySpec":
-		gateway.Spec.SetConfig(networkingv1.NetworkingV1AwsEgressPrivateLinkGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkingv1.NetworkingV1AwsEgressPrivateLinkGatewaySpec{
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewaySpec{
 			Kind:   specConfigKind,
 			Region: "us-east-1",
 		}))
 	case "AwsPeeringGatewaySpec":
-		gateway.Spec.SetConfig(networkingv1.NetworkingV1AwsPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkingv1.NetworkingV1AwsPeeringGatewaySpec{
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AwsPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AwsPeeringGatewaySpec{
 			Kind:   specConfigKind,
 			Region: "us-east-2",
 		}))
 	case "AzureEgressPrivateLinkGatewaySpec":
-		gateway.Spec.SetConfig(networkingv1.NetworkingV1AzureEgressPrivateLinkGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkingv1.NetworkingV1AzureEgressPrivateLinkGatewaySpec{
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewaySpec{
 			Kind:   specConfigKind,
 			Region: "eastus",
 		}))
 	case "AzurePeeringGatewaySpec":
-		gateway.Spec.SetConfig(networkingv1.NetworkingV1AzurePeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkingv1.NetworkingV1AzurePeeringGatewaySpec{
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AzurePeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AzurePeeringGatewaySpec{
 			Kind:   specConfigKind,
 			Region: "eastus2",
 		}))
@@ -2166,14 +2176,14 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 
 	switch statusCloudGatewayKind {
 	case "AwsEgressPrivateLinkGatewayStatus":
-		gateway.Status.SetCloudGateway(networkingv1.NetworkingV1AwsEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkingv1.NetworkingV1AwsEgressPrivateLinkGatewayStatus{
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatus{
 			Kind:         statusCloudGatewayKind,
-			PrincipalArn: networkingv1.PtrString("arn:aws:iam::123456789012:role"),
+			PrincipalArn: networkinggatewayv1.PtrString("arn:aws:iam::123456789012:role"),
 		}))
 	case "AzureEgressPrivateLinkGatewayStatus":
-		gateway.Status.SetCloudGateway(networkingv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkingv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
 			Kind:         statusCloudGatewayKind,
-			Subscription: networkingv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
+			Subscription: networkinggatewayv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
 		}))
 	}
 
@@ -2183,6 +2193,10 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
+		case "gw-invalid":
+			w.WriteHeader(http.StatusNotFound)
+			err := writeErrorJson(w, "The gateway gw-invalid was not found.")
+			require.NoError(t, err)
 		case "gw-12345":
 			record := getGateway(id, environment, "my-aws-gateway", "AwsEgressPrivateLinkGatewaySpec", "AwsEgressPrivateLinkGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
@@ -2195,6 +2209,47 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 	}
 }
 
+func handleNetworkingGatewayDelete(_ *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		default:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
+func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := &networkinggatewayv1.NetworkingV1Gateway{}
+		err := json.NewDecoder(r.Body).Decode(body)
+		require.NoError(t, err)
+
+		gateway := networkinggatewayv1.NetworkingV1Gateway{
+			Id: networkingv1.PtrString("gw-abc123"),
+			Spec: &networkinggatewayv1.NetworkingV1GatewaySpec{
+				DisplayName: body.Spec.DisplayName,
+				Environment: &networkinggatewayv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+				Config:      body.Spec.Config,
+			},
+			Status: &networkinggatewayv1.NetworkingV1GatewayStatus{Phase: "READY"},
+		}
+		if body.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatus{
+				Kind:         "AwsEgressPrivateLinkGatewayStatus",
+				PrincipalArn: networkingv1.PtrString("arn:aws:iam::123456789012:role"),
+			}))
+		} else if body.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
+				Kind:         "AzureEgressPrivateLinkGatewayStatus",
+				Subscription: networkingv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
+			}))
+		}
+
+		err = json.NewEncoder(w).Encode(gateway)
+		require.NoError(t, err)
+	}
+}
+
 func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gatewayOne := getGateway("gw-12345", environment, "my-aws-gateway", "AwsEgressPrivateLinkGatewaySpec", "AwsEgressPrivateLinkGatewayStatus")
@@ -2202,9 +2257,24 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewayThree := getGateway("gw-67890", environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
 		gatewayFour := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
 
-		recordList := networkingv1.NetworkingV1GatewayList{Data: []networkingv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour}}
+		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
+	}
+}
+
+func handleNetworkingGatewayPatch(t *testing.T, id string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch id {
+		case "gw-111111":
+			body := &networkinggatewayv1.NetworkingV1GatewayUpdate{}
+			err := json.NewDecoder(r.Body).Decode(body)
+			require.NoError(t, err)
+
+			gateway := getGateway("gw-111111", "env-abc123", body.Spec.GetDisplayName(), "AwsEgressPrivateLinkGatewaySpec", "AwsEgressPrivateLinkGatewayStatus")
+			err = json.NewEncoder(w).Encode(gateway)
+			require.NoError(t, err)
+		}
 	}
 }
 

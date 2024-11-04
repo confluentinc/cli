@@ -3,6 +3,7 @@
   "name": "my-aws-gateway",
   "environment": "env-596",
   "region": "us-east-1",
+  "type": "AwsEgressPrivateLink",
   "aws_principal_arn": "arn:aws:iam::123456789012:role",
   "phase": "READY"
 }
