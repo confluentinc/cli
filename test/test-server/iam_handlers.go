@@ -581,15 +581,15 @@ func handleIamIpFilters(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", []string{"MANAGEMENT"})
-			err := json.NewEncoder(w).Encode(sdk.IamV2IpFilterList{Data: []sdk.IamV2IpFilter{ipFilter}})
+			err := json.NewEncoder(w).Encode(iamipfilteringv2.IamV2IpFilterList{Data: []iamipfilteringv2.IamV2IpFilter{ipFilter}})
 			require.NoError(t, err)
 		case http.MethodPost:
-			var req sdk.IamV2IpFilter
+			var req iamipfilteringv2.IamV2IpFilter
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 
-			ipFilter := &sdk.IamV2IpFilter{
-				Id:              sdk.PtrString(ipFilterId),
+			ipFilter := &iamipfilteringv2.IamV2IpFilter{
+				Id:              iamipfilteringv2.PtrString(ipFilterId),
 				FilterName:      req.FilterName,
 				ResourceGroup:   req.ResourceGroup,
 				IpGroups:        req.IpGroups,
@@ -607,10 +607,10 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPatch:
-			var req sdk.IamV2IpFilter
+			var req iamipfilteringv2.IamV2IpFilter
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &sdk.IamV2IpFilter{
+			res := &iamipfilteringv2.IamV2IpFilter{
 				Id:              req.Id,
 				FilterName:      req.FilterName,
 				ResourceGroup:   req.ResourceGroup,
@@ -636,7 +636,7 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
-			err := json.NewEncoder(w).Encode(sdk.IamV2IpGroupList{Data: []sdk.IamV2IpGroup{ipGroup}})
+			err := json.NewEncoder(w).Encode(iamipfilteringv2.IamV2IpGroupList{Data: []iamipfilteringv2.IamV2IpGroup{ipGroup}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamv2.IamV2IpGroup
@@ -848,28 +848,28 @@ func buildIamProvider(id, name, description, issuer, jwksUri string) identitypro
 	}
 }
 
-func buildIamIpFilter(id string, name string, resourceGroup string, ipGroupIds []string, resourceScope string, operationGroups []string) sdk.IamV2IpFilter {
+func buildIamIpFilter(id string, name string, resourceGroup string, ipGroupIds []string, resourceScope string, operationGroups []string) iamipfilteringv2.IamV2IpFilter {
 	// Convert the IP group IDs into IP group objects
-	IpGroupIdObjects := make([]sdk.GlobalObjectReference, len(ipGroupIds))
+	IpGroupIdObjects := make([]iamipfilteringv2.GlobalObjectReference, len(ipGroupIds))
 	for i, ipGroupId := range ipGroupIds {
 		// The empty string fields will get filled in automatically by the cc-policy-service
-		IpGroupIdObjects[i] = sdk.GlobalObjectReference{Id: ipGroupId}
+		IpGroupIdObjects[i] = iamipfilteringv2.GlobalObjectReference{Id: ipGroupId}
 	}
 
-	return sdk.IamV2IpFilter{
-		Id:              sdk.PtrString(id),
-		FilterName:      sdk.PtrString(name),
-		ResourceGroup:   sdk.PtrString(resourceGroup),
+	return iamipfilteringv2.IamV2IpFilter{
+		Id:              iamipfilteringv2.PtrString(id),
+		FilterName:      iamipfilteringv2.PtrString(name),
+		ResourceGroup:   iamipfilteringv2.PtrString(resourceGroup),
 		IpGroups:        &IpGroupIdObjects,
 		OperationGroups: &operationGroups,
 		ResourceScope:   &resourceScope,
 	}
 }
 
-func buildIamIpGroup(id string, name string, cidrBlocks []string) sdk.IamV2IpGroup {
-	return sdk.IamV2IpGroup{
-		Id:         sdk.PtrString(id),
-		GroupName:  sdk.PtrString(name),
+func buildIamIpGroup(id string, name string, cidrBlocks []string) iamipfilteringv2.IamV2IpGroup {
+	return iamipfilteringv2.IamV2IpGroup{
+		Id:         iamipfilteringv2.PtrString(id),
+		GroupName:  iamipfilteringv2.PtrString(name),
 		CidrBlocks: &cidrBlocks,
 	}
 }
