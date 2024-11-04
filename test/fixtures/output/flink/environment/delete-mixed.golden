@@ -2,3 +2,4 @@ Error: Flink environment "non-existent" not found
 
 Suggestions:
     List available Flink environments with `confluent flink environment list`.
+    Check that CMF is running and accessible.

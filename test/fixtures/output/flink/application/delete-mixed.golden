@@ -2,3 +2,4 @@ Error: Flink applications "default-application-1" and "non-existent" not found
 
 Suggestions:
     List available Flink applications with `confluent flink application list`.
+    Check that CMF is running and accessible.

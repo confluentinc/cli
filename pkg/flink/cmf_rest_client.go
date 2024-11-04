@@ -183,10 +183,14 @@ func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environmen
 func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environment string, application cmfsdk.Application) (cmfsdk.Application, error) {
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, _ := cmfClient.DefaultApi.GetApplication(ctx, environment, applicationName)
+	_, httpResponse, err := cmfClient.DefaultApi.GetApplication(ctx, environment, applicationName)
 	// check if the application exists by checking the status code
-	if httpResponse != nil && httpResponse.StatusCode != http.StatusOK {
+	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 		return cmfsdk.Application{}, fmt.Errorf(`application "%s" does not exist in the environment "%s"`, applicationName, environment)
+	} else if httpResponse == nil || httpResponse.StatusCode != http.StatusOK {
+		// Any failure other than 404 is an error in the response and shouldn't be treated as the application not existing.
+		parsedErr := parseSdkError(httpResponse, err)
+		return cmfsdk.Application{}, fmt.Errorf(`failed to update application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
 	}
 
 	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(ctx, environment, application)
@@ -260,10 +264,14 @@ func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before updation.
 func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
 	environmentName := postEnvironment.Name
-	_, httpResponse, _ := cmfClient.DefaultApi.GetEnvironment(ctx, environmentName)
+	_, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(ctx, environmentName)
 	// check if the environment exists by checking the status code
-	if httpResponse == nil || httpResponse.StatusCode != http.StatusOK {
+	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 		return cmfsdk.Environment{}, fmt.Errorf(`environment "%s" does not exist`, environmentName)
+	} else if httpResponse == nil || httpResponse.StatusCode != http.StatusOK {
+		// Any failure other than 404 is an error in the response and shouldn't be treated as the environment not existing.
+		parsedErr := parseSdkError(httpResponse, err)
+		return cmfsdk.Environment{}, fmt.Errorf(`failed to update environment "%s": %s`, environmentName, parsedErr)
 	}
 
 	outputEnvironment, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateEnvironment(ctx, postEnvironment)

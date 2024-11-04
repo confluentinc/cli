@@ -195,6 +195,11 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if strings.Contains(environment, "failure") {
+				http.Error(w, "", http.StatusUnprocessableEntity)
+				return
+			}
+
 			http.Error(w, "Environment not found", http.StatusNotFound)
 			return
 		case http.MethodDelete:
@@ -323,6 +328,11 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 				outputApplication := createApplication(application, environment)
 				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
+				return
+			}
+
+			if strings.Contains(application, "failure") {
+				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
