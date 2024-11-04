@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
-	perrors "github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -41,7 +41,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	if url == "" {
 		url = os.Getenv(auth.ConfluentPlatformCmfURL)
 		if url == "" {
-			return perrors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
+			return errors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
 		}
 	}
 
