@@ -22,7 +22,6 @@ func (c *ipFilterCommand) newDescribeCommand() *cobra.Command {
 }
 func (c *ipFilterCommand) describe(cmd *cobra.Command, args []string) error {
 	filter, err := c.V2Client.GetIamIpFilter(args[0])
-
 	if err != nil {
 		return err
 	}
