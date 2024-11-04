@@ -3,6 +3,7 @@ package flink
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -19,23 +20,25 @@ import (
 var (
 	allowedRuntimeLanguages = []string{"python", "java"}
 	allowedFileExtensions   = []string{"jar", "zip"}
+	allowedDocLinkPattern   = "^$|^(http://|https://).+"
 )
 
 type artifactCreateOut struct {
 	Id            string `human:"ID" serialized:"id"`
 	Name          string `human:"Name" serialized:"name"`
 	Version       string `human:"Version" serialized:"version"`
-	Class         string `human:"Class" serialized:"class"`
-	ContentFormat string `human:"Content Format" serialized:"content_format"`
 	Cloud         string `human:"Cloud" serialized:"cloud"`
 	Region        string `human:"Region" serialized:"region"`
 	Environment   string `human:"Environment" serialized:"environment"`
+	ContentFormat string `human:"Content Format" serialized:"content_format"`
+	Description   string `human:"Description" serialized:"description"`
+	DocLink       string `human:"Documentation link" serialized:"doc_link"`
 	ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
+		Use:   "create <unique-name>",
 		Short: "Create a Flink UDF artifact.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.createArtifact,
@@ -46,7 +49,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Create Flink artifact "flink-java-artifact".`,
-				Code: "confluent flink artifact create my-flink-artifact --artifact-file artifact.jar --cloud aws --region us-west-2 --environment env-123456 --description flinkJavaScalar --class io.confluent.example.SumScalarFunction",
+				Code: "confluent flink artifact create my-flink-artifact --artifact-file artifact.jar --cloud aws --region us-west-2 --environment env-123456 --description flinkJavaScalar",
 			},
 		),
 	}
@@ -56,8 +59,8 @@ func (c *command) newCreateCommand() *cobra.Command {
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("runtime-language", "java", fmt.Sprintf("Specify the Flink artifact runtime language as %s.", utils.ArrayToCommaDelimitedString(allowedRuntimeLanguages, "or")))
-	cmd.Flags().String("description", "", "Description of Flink artifact.")
-	cmd.Flags().String("class", "default", "Name of Flink artifact class or alias.")
+	cmd.Flags().String("description", "", "Specify the Flink artifact Description.")
+	cmd.Flags().String("documentation-link", "", "Specify the Flink artifact Documentation link.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -67,6 +70,11 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagFilename("artifact-file", "zip", "jar"))
 
 	return cmd
+}
+
+func isValidDockLink(docLink string) bool {
+	re := regexp.MustCompile(allowedDocLinkPattern)
+	return re.MatchString(docLink)
 }
 
 func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
@@ -95,9 +103,13 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	class, err := cmd.Flags().GetString("class")
+	documentationLink, err := cmd.Flags().GetString("documentation-link")
 	if err != nil {
 		return err
+	}
+
+	if !isValidDockLink(documentationLink) {
+		return fmt.Errorf("invalid documentation link format, must be empty or start with http:// or https://")
 	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
@@ -121,12 +133,12 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 	}
 
 	createArtifactRequest := flinkartifactv1.InlineObject{
-		DisplayName: displayName,
-		Cloud:       cloud,
-		Region:      region,
-		Environment: environment,
-		Class:       class,
-		Description: flinkartifactv1.PtrString(description),
+		DisplayName:       displayName,
+		Cloud:             cloud,
+		Region:            region,
+		Environment:       environment,
+		Description:       flinkartifactv1.PtrString(description),
+		DocumentationLink: flinkartifactv1.PtrString(documentationLink),
 		UploadSource: flinkartifactv1.InlineObjectUploadSourceOneOf{
 			ArtifactV1UploadSourcePresignedUrl: &flinkartifactv1.ArtifactV1UploadSourcePresignedUrl{
 				Location: flinkartifactv1.PtrString("PRESIGNED_URL_LOCATION"),
@@ -151,11 +163,12 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		Name:          artifact.GetDisplayName(),
 		Id:            artifact.GetId(),
 		Version:       artifactVersion,
-		Class:         artifact.GetClass(),
 		Cloud:         cloud,
 		Region:        region,
 		Environment:   environment,
 		ContentFormat: artifact.GetContentFormat(),
+		Description:   artifact.GetDescription(),
+		DocLink:       artifact.GetDocumentationLink(),
 	})
 	return table.Print()
 }
