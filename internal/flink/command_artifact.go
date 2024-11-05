@@ -10,14 +10,15 @@ import (
 )
 
 type flinkArtifactOut struct {
-	Id            string `human:"ID" serialized:"id"`
-	Name          string `human:"Name" serialized:"name"`
-	Version       string `human:"Version" serialized:"version"`
-	Class         string `human:"Class" serialized:"class"`
-	Cloud         string `human:"Cloud" serialized:"cloud"`
-	Region        string `human:"Region" serialized:"region"`
-	Environment   string `human:"Environment" serialized:"environment"`
-	ContentFormat string `human:"Content Format" serialized:"content_format"`
+	Id                string `human:"ID" serialized:"id"`
+	Name              string `human:"Name" serialized:"name"`
+	Version           string `human:"Version" serialized:"version"`
+	Cloud             string `human:"Cloud" serialized:"cloud"`
+	Region            string `human:"Region" serialized:"region"`
+	Environment       string `human:"Environment" serialized:"environment"`
+	ContentFormat     string `human:"Content Format" serialized:"content_format"`
+	Description       string `human:"Description" serialized:"description"`
+	DocumentationLink string `human:"Documentation Link" serialized:"documentation_link"`
 }
 
 func (c *command) newArtifactCommand() *cobra.Command {
@@ -44,14 +45,15 @@ func printTable(cmd *cobra.Command, artifact flinkartifactv1.ArtifactV1FlinkArti
 	}
 
 	table.Add(&flinkArtifactOut{
-		Name:          artifact.GetDisplayName(),
-		Id:            artifact.GetId(),
-		Version:       artifactVersion,
-		Class:         artifact.GetClass(),
-		Cloud:         artifact.GetCloud(),
-		Region:        artifact.GetRegion(),
-		Environment:   artifact.GetEnvironment(),
-		ContentFormat: artifact.GetContentFormat(),
+		Name:              artifact.GetDisplayName(),
+		Id:                artifact.GetId(),
+		Version:           artifactVersion,
+		Cloud:             artifact.GetCloud(),
+		Region:            artifact.GetRegion(),
+		Environment:       artifact.GetEnvironment(),
+		ContentFormat:     artifact.GetContentFormat(),
+		Description:       artifact.GetDescription(),
+		DocumentationLink: artifact.GetDocumentationLink(),
 	})
 
 	return table.Print()
