@@ -33,9 +33,7 @@ func (c *command) newDnsForwarderUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
-	cmd.Flags().StringSlice(domainMappingFlagName, []string{}, "Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.")
-
-	cmd.MarkFlagsOneRequired("name", "dns-server-ips", domainMappingFlagName, "domains")
+	cmd.MarkFlagsOneRequired("name", "dns-server-ips", "domain-mapping", "domains")
 
 	return cmd
 }
@@ -56,7 +54,7 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 			Environment: &networkingdnsforwarderv1.ObjectReference{Id: environmentId},
 		},
 	}
-	domainFile, err := cmd.Flags().GetStringSlice(domainMappingFlagName)
+	domainFile, err := cmd.Flags().GetStringSlice("domain-mapping")
 	if err != nil {
 		return err
 	}
@@ -89,8 +87,8 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		updateDnsForwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(dnsServerIps)
-	} else if cmd.Flags().Changed(domainMappingFlagName) {
-		domain, err := cmd.Flags().GetStringSlice(domainMappingFlagName)
+	} else if cmd.Flags().Changed("domain-mapping") {
+		domain, err := cmd.Flags().GetStringSlice("domain-mapping")
 		if err != nil {
 			return err
 		}
