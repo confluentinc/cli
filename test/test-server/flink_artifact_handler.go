@@ -38,14 +38,15 @@ func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 			switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
 			case "java", "":
 				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
-					Id:            flinkartifactv1.PtrString("cfa-123456"),
-					Cloud:         flinkartifactv1.PtrString("AWS"),
-					Region:        flinkartifactv1.PtrString("us-west-2"),
-					Environment:   flinkartifactv1.PtrString("env-123456"),
-					DisplayName:   flinkartifactv1.PtrString("my-flink-artifact"),
-					Class:         flinkartifactv1.PtrString("io.confluent.flink.example1.test"),
-					ContentFormat: flinkartifactv1.PtrString("JAR"),
-					Versions:      artifactVersions,
+					Id:                flinkartifactv1.PtrString("cfa-123456"),
+					Cloud:             flinkartifactv1.PtrString("AWS"),
+					Region:            flinkartifactv1.PtrString("us-west-2"),
+					Environment:       flinkartifactv1.PtrString("env-123456"),
+					DisplayName:       flinkartifactv1.PtrString("my-flink-artifact"),
+					ContentFormat:     flinkartifactv1.PtrString("JAR"),
+					Description:       flinkartifactv1.PtrString("CliArtifactTest"),
+					DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+					Versions:          artifactVersions,
 				}
 			case "python":
 				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
@@ -54,33 +55,37 @@ func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 					Region:        flinkartifactv1.PtrString("us-east-1"),
 					Environment:   flinkartifactv1.PtrString("env-789012"),
 					DisplayName:   flinkartifactv1.PtrString("my-flink-python-artifact"),
-					Class:         flinkartifactv1.PtrString("io.confluent.flink.example2.test"),
 					ContentFormat: flinkartifactv1.PtrString("ZIP"),
-					Versions:      artifactVersions,
+					Description: flinkartifactv1.PtrString("This is a longer description example to verify the" +
+						" output of the CLI is not affected and remains readable"),
+					DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+					Versions:          artifactVersions,
 				}
 			}
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodGet:
 			artifact1 := flinkartifactv1.ArtifactV1FlinkArtifact{
-				Id:            flinkartifactv1.PtrString("cfa-123456"),
-				Cloud:         flinkartifactv1.PtrString("AWS"),
-				Region:        flinkartifactv1.PtrString("us-west-2"),
-				Environment:   flinkartifactv1.PtrString("env-123456"),
-				DisplayName:   flinkartifactv1.PtrString("my-flink-artifact"),
-				Class:         flinkartifactv1.PtrString("io.confluent.flink.example1.test"),
-				ContentFormat: flinkartifactv1.PtrString("JAR"),
-				Versions:      artifactVersions,
+				Id:                flinkartifactv1.PtrString("cfa-123456"),
+				Cloud:             flinkartifactv1.PtrString("AWS"),
+				Region:            flinkartifactv1.PtrString("us-west-2"),
+				Environment:       flinkartifactv1.PtrString("env-123456"),
+				DisplayName:       flinkartifactv1.PtrString("my-flink-artifact"),
+				ContentFormat:     flinkartifactv1.PtrString("JAR"),
+				Description:       flinkartifactv1.PtrString("CliArtifactTest"),
+				DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+				Versions:          artifactVersions,
 			}
 			artifact2 := flinkartifactv1.ArtifactV1FlinkArtifact{
-				Id:            flinkartifactv1.PtrString("cfa-789012"),
-				Cloud:         flinkartifactv1.PtrString("AWS"),
-				Region:        flinkartifactv1.PtrString("us-east-1"),
-				Environment:   flinkartifactv1.PtrString("env-789012"),
-				DisplayName:   flinkartifactv1.PtrString("my-flink-python-artifact"),
-				Class:         flinkartifactv1.PtrString("io.confluent.flink.example2.test"),
-				ContentFormat: flinkartifactv1.PtrString("ZIP"),
-				Versions:      artifactVersions,
+				Id:                flinkartifactv1.PtrString("cfa-789012"),
+				Cloud:             flinkartifactv1.PtrString("AWS"),
+				Region:            flinkartifactv1.PtrString("us-east-1"),
+				Environment:       flinkartifactv1.PtrString("env-789012"),
+				DisplayName:       flinkartifactv1.PtrString("my-flink-python-artifact"),
+				ContentFormat:     flinkartifactv1.PtrString("ZIP"),
+				Description:       flinkartifactv1.PtrString("CliArtifactTest"),
+				DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+				Versions:          artifactVersions,
 			}
 			err := json.NewEncoder(w).Encode(flinkartifactv1.ArtifactV1FlinkArtifactList{Data: []flinkartifactv1.ArtifactV1FlinkArtifact{artifact1, artifact2}})
 			require.NoError(t, err)
