@@ -89,7 +89,7 @@ func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
 			},
 		}
 	} else {
-		domain, err := cmd.Flags().GetStringSlice("domain-mapping")
+		domain, err := cmd.Flags().GetString("domain-mapping")
 		if err != nil {
 			return err
 		}
@@ -122,8 +122,8 @@ func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
 	return printDnsForwarderTable(cmd, forwarder)
 }
 
-func DomainFlagToMap(domains []string) (map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings, error) {
-	buf, err := os.ReadFile(domains[0])
+func DomainFlagToMap(domains string) (map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings, error) {
+	buf, err := os.ReadFile(domains)
 	if err != nil {
 		return nil, err
 	}
