@@ -89,6 +89,7 @@ func (s *CLITestSuite) TestFlinkApplicationUpdate() {
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-non-existent.json", fixture: "flink/application/update-non-existent.golden", exitCode: 1},
 		{args: "flink application update --environment update-failure test/fixtures/input/flink/application/update-failure.json", fixture: "flink/application/update-failure.golden", exitCode: 1},
 		{args: "flink application update --environment non-existent test/fixtures/input/flink/application/update-with-non-existent-environment.json", fixture: "flink/application/update-with-non-existent-environment.golden", exitCode: 1},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-with-get-failure.json", fixture: "flink/application/update-with-get-failure.golden", exitCode: 1},
 		// success
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json", fixture: "flink/application/update-successful.golden"},
 	}
@@ -121,6 +122,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentUpdate() {
 		// failure
 		{args: "flink environment update update-failure", fixture: "flink/environment/update-failure.golden", exitCode: 1},
 		{args: "flink environment update non-existent", fixture: "flink/environment/update-non-existent.golden", exitCode: 1},
+		{args: "flink environment update get-failure", fixture: "flink/environment/update-get-failure.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -166,6 +168,8 @@ func (s *CLITestSuite) TestFlinkApplicationWebUiForward() {
 		// failure
 		{args: "flink --url dummy-url application web-ui-forward forward-negative-port --environment forward-test --port -30", fixture: "flink/application/forward-negative-port.golden", exitCode: 1},
 		{args: "flink --url dummy-url application web-ui-forward non-existent --environment default", fixture: "flink/application/forward-nonexistent-application.golden", exitCode: 1},
+		{args: "flink --url dummy-url application web-ui-forward default-application-1 --environment non-existent", fixture: "flink/application/forward-nonexistent-environment.golden", exitCode: 1},
+		{args: "flink --url dummy-url application web-ui-forward get-failure --environment default", fixture: "flink/application/forward-get-failure.golden", exitCode: 1},
 		{name: "no-url-set", args: "flink application web-ui-forward --environment does-not-matter missing-applications", fixture: "flink/application/url-missing.golden", exitCode: 1},
 	}
 
