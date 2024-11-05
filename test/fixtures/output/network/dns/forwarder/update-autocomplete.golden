@@ -1,7 +1,7 @@
 --name	Name of the DNS forwarder.
 --dns-server-ips	A comma-separated list of IP addresses for the DNS server.
 --domains	A comma-separated list of domains for the DNS forwarder to use.
---domainMapping	Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.
+--domain-mapping	Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.
 dnsf-abcde1	my-dns-forwarder-1
 dnsf-abcde2	my-dns-forwarder-2
 dnsf-abcde3	my-dns-forwarder-3

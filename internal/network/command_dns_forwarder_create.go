@@ -13,9 +13,8 @@ import (
 )
 
 const (
-	forwardViaIp          = "ForwardViaIp"
-	forwardViaGCP         = "ForwardViaGcpDnsZones"
-	domainMappingFlagName = "domainMapping"
+	forwardViaIp  = "ForwardViaIp"
+	forwardViaGCP = "ForwardViaGcpDnsZones"
 )
 
 func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
@@ -41,8 +40,7 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
-	cmd.Flags().StringSlice(domainMappingFlagName, []string{}, "Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.")
-	cmd.MarkFlagsMutuallyExclusive("dns-server-ips", domainMappingFlagName)
+	cmd.MarkFlagsMutuallyExclusive("dns-server-ips", "domain-mapping")
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
 	cobra.CheckErr(cmd.MarkFlagRequired("domains"))
 
@@ -91,7 +89,7 @@ func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
 			},
 		}
 	} else {
-		domain, err := cmd.Flags().GetStringSlice(domainMappingFlagName)
+		domain, err := cmd.Flags().GetStringSlice("domain-mapping")
 		if err != nil {
 			return err
 		}
