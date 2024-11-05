@@ -1,0 +1,5 @@
+Error: human output is not supported for this command
+
+Suggestions:
+    Try using --output flag with json or yaml.
+    

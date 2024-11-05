@@ -1,0 +1,5 @@
+name: default-2
+kubernetes_namespace: default-staging
+created_time: 2024-09-10 23:00:00 +0000 UTC
+updated_time: 2024-09-10 23:00:00 +0000 UTC
+flink_application_defaults: "null"
