@@ -16,6 +16,8 @@ const FlagName = "output"
 
 var ValidFlagValues = []string{"human", "json", "yaml"}
 
+var ValidFlagValuesHumanRestricted = []string{"json", "yaml"}
+
 func GetFormat(cmd *cobra.Command) Format {
 	format, _ := cmd.Flags().GetString(FlagName)
 

@@ -74,10 +74,11 @@ func (s *CLITestSuite) TestFlinkApplicationCreate() {
 		{args: "flink application create --environment default test/fixtures/input/flink/application/create-unsuccessful-application.json", fixture: "flink/application/create-unsuccessful-application.golden", exitCode: 1},
 		{args: "flink application create --environment default test/fixtures/input/flink/application/create-duplicate-application.json", fixture: "flink/application/create-duplicate-application.golden", exitCode: 1},
 		{args: "flink application create --environment non-existent test/fixtures/input/flink/application/create-with-non-existent-environment.json", fixture: "flink/application/create-with-non-existent-environment.golden", exitCode: 1},
-		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.json --output human", fixture: "flink/application/create-with-human.golden", exitCode: 1},
 		// success
 		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.json", fixture: "flink/application/create-success.golden"},
 		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.json --output yaml", fixture: "flink/application/create-success-yaml.golden"},
+		// explicit test to see that even if the output is set to human, the output is still in json
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.json --output human", fixture: "flink/application/create-with-human.golden"},
 	}
 
 	for _, test := range tests {
@@ -91,10 +92,11 @@ func (s *CLITestSuite) TestFlinkApplicationUpdate() {
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-non-existent.json", fixture: "flink/application/update-non-existent.golden", exitCode: 1},
 		{args: "flink application update --environment update-failure test/fixtures/input/flink/application/update-failure.json", fixture: "flink/application/update-failure.golden", exitCode: 1},
 		{args: "flink application update --environment non-existent test/fixtures/input/flink/application/update-with-non-existent-environment.json", fixture: "flink/application/update-with-non-existent-environment.golden", exitCode: 1},
-		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output human", fixture: "flink/application/update-with-human.golden", exitCode: 1},
 		// success
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json", fixture: "flink/application/update-successful.golden"},
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output yaml", fixture: "flink/application/update-successful-yaml.golden"},
+		// explicit test to see that even if the output is set to human, the output is still in json
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output human", fixture: "flink/application/update-with-human.golden"},
 	}
 
 	for _, test := range tests {
@@ -157,6 +159,8 @@ func (s *CLITestSuite) TestFlinkApplicationDescribe() {
 		// success
 		{args: "flink application describe --environment default default-application-1", fixture: "flink/application/describe-success.golden"},
 		{args: "flink application describe --environment default default-application-1 --output yaml", fixture: "flink/application/describe-success-yaml.golden"},
+		// explicit test to see that even if the output is set to human, the output is still in json
+		{args: "flink application describe --environment default default-application-1 --output human", fixture: "flink/application/create-with-human.golden"},
 		// failure
 		{args: "flink application describe --environment default non-existent", fixture: "flink/application/describe-non-existent.golden", exitCode: 1},
 		{args: "flink application describe --environment non-existent default-application", fixture: "flink/application/describe-non-existent-environment.golden", exitCode: 1},
