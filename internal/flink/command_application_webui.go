@@ -64,7 +64,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	applicationName := args[0]
 	_, err = cmfClient.DescribeApplication(cmd.Context(), environment, applicationName)
 	if err != nil {
-		return fmt.Errorf(`application "%s" does not exist in the environment "%s" or environment "%s" does not exist`, applicationName, environment, environment)
+		return fmt.Errorf(`failed to forward web UI: %s`, err)
 	}
 
 	restFlags, err := flink.ResolveOnPremCmfRestFlags(cmd)

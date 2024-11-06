@@ -1,1 +1,1 @@
-Error: application "non-existent" does not exist in the environment "default" or environment "default" does not exist
+Error: failed to forward web UI: failed to describe application "non-existent" in the environment "default": Application not found

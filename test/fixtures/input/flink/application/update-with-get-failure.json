@@ -1,0 +1,10 @@
+{
+    "apiVersion": "cmf.confluent.io/v1alpha1",
+    "kind": "FlinkApplication",
+    "metadata": {
+        "name": "get-failure"
+    },
+    "spec": {
+        "serviceAccount": "flink-new-service-account"
+    }
+}
