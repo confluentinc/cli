@@ -1,7 +1,9 @@
 {
   "name": "default",
-  "kubernetes_namespace": "default-namespace",
-  "created_time": "2024-09-10 23:00:00 +0000 UTC",
-  "updated_time": "2024-09-10 23:00:00 +0000 UTC",
-  "flink_application_defaults": "{\"property\":\"value\"}"
+  "created_time": "2024-09-10T23:00:00Z",
+  "updated_time": "2024-09-10T23:00:00Z",
+  "flinkApplicationDefaults": {
+    "property": "value"
+  },
+  "kubernetesNamespace": "default-namespace"
 }

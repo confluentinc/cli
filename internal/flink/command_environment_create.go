@@ -91,19 +91,23 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	var defaultsBytes []byte
-	defaultsBytes, err = json.Marshal(outputEnvironment.FlinkApplicationDefaults)
-	if err != nil {
-		return fmt.Errorf("failed to marshal defaults: %s", err)
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		var defaultsBytes []byte
+		defaultsBytes, err = json.Marshal(outputEnvironment.FlinkApplicationDefaults)
+		if err != nil {
+			return fmt.Errorf("failed to marshal defaults: %s", err)
+		}
+
+		table.Add(&flinkEnvironmentOutput{
+			Name:                     outputEnvironment.Name,
+			KubernetesNamespace:      outputEnvironment.KubernetesNamespace,
+			FlinkApplicationDefaults: string(defaultsBytes),
+			CreatedTime:              outputEnvironment.CreatedTime.String(),
+			UpdatedTime:              outputEnvironment.UpdatedTime.String(),
+		})
+		return table.Print()
 	}
 
-	table.Add(&flinkEnvironmentOutput{
-		Name:                     outputEnvironment.Name,
-		KubernetesNamespace:      outputEnvironment.KubernetesNamespace,
-		FlinkApplicationDefaults: string(defaultsBytes),
-		CreatedTime:              outputEnvironment.CreatedTime.String(),
-		UpdatedTime:              outputEnvironment.UpdatedTime.String(),
-	})
-	return table.Print()
+	return output.SerializedOutput(cmd, outputEnvironment)
 }
