@@ -26,7 +26,7 @@ func (c *command) newApplicationUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink application from.")
 	addCmfFlagSet(cmd)
-	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
+	pcmd.AddOutputFlagWithHumanRestricted(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
@@ -37,10 +37,6 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
-	}
-	// Disallow human output for this command
-	if output.GetFormat(cmd) == output.Human {
-		return errors.NewErrorWithSuggestions("human output is not supported for this command", "Try using --output flag with json or yaml.\n")
 	}
 
 	client, err := c.GetCmfClient(cmd)
