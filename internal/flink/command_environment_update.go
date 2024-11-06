@@ -11,6 +11,7 @@ import (
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -24,6 +25,7 @@ func (c *command) newEnvironmentUpdateCommand() *cobra.Command {
 
 	addCmfFlagSet(cmd)
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
