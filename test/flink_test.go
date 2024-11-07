@@ -39,10 +39,10 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud aws --region us-west-2 --environment env-123456 --description CliArtifactTest", fixture: "flink/artifact/create.golden"},
 		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud aws --region us-west-2 --environment env-123456 --description CliArtifactTest --documentation-link https://docs.confluent.io", fixture: "flink/artifact/create.golden"},
 		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/python-udf-examples.zip --cloud aws --region us-west-2 --environment env-789012 --description CliArtifactTest --runtime-language python", fixture: "flink/artifact/create-python.golden"},
-		{args: "flink artifact describe --cloud aws --region us-west-2 cfa-789013", fixture: "flink/artifact/describe.golden"},
-		{args: "flink artifact list --cloud aws --region us-west-2", fixture: "flink/artifact/list.golden"},
-		{args: "flink artifact delete --cloud aws --region us-west-2 --force cfa-123456", fixture: "flink/artifact/delete.golden"},
-		{args: "flink artifact delete --cloud aws --region us-west-2 cfa-123456", input: "y\n", fixture: "flink/artifact/delete-prompt.golden"},
+		{args: "flink artifact describe --cloud aws --region us-west-2 --environment env-123456 cfa-789013", fixture: "flink/artifact/describe.golden"},
+		{args: "flink artifact list --cloud aws --region us-west-2 --environment env-123456", fixture: "flink/artifact/list.golden"},
+		{args: "flink artifact delete --cloud aws --region us-west-2 --environment env-123456 --force cfa-123456", fixture: "flink/artifact/delete.golden"},
+		{args: "flink artifact delete --cloud aws --region us-west-2 --environment env-123456 cfa-123456", input: "y\n", fixture: "flink/artifact/delete-prompt.golden"},
 	}
 
 	for _, test := range tests {

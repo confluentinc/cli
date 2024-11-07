@@ -25,13 +25,14 @@ func (c *command) newListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List Flink UDF artifacts.",
-				Code: "confluent flink artifact list --cloud aws --region us-west-2",
+				Code: "confluent flink artifact list --cloud aws --region us-west-2 --environment env-123456",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -46,12 +47,18 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
 	}
 
-	artifacts, err := c.V2Client.ListFlinkArtifacts(cloud, region, "")
+	environment, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	artifacts, err := c.V2Client.ListFlinkArtifacts(cloud, region, environment)
 	if err != nil {
 		return err
 	}
