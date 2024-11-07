@@ -11,6 +11,7 @@ import (
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -24,6 +25,7 @@ func (c *command) newEnvironmentUpdateCommand() *cobra.Command {
 
 	addCmfFlagSet(cmd)
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -78,19 +80,22 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	var defaultsBytes []byte
-	defaultsBytes, err = json.Marshal(outputEnvironment.FlinkApplicationDefaults)
-	if err != nil {
-		return fmt.Errorf("failed to marshal defaults: %s", err)
-	}
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		var defaultsBytes []byte
+		defaultsBytes, err = json.Marshal(outputEnvironment.FlinkApplicationDefaults)
+		if err != nil {
+			return fmt.Errorf("failed to marshal defaults: %s", err)
+		}
 
-	table.Add(&flinkEnvironmentOutput{
-		Name:                     outputEnvironment.Name,
-		KubernetesNamespace:      outputEnvironment.KubernetesNamespace,
-		FlinkApplicationDefaults: string(defaultsBytes),
-		CreatedTime:              outputEnvironment.CreatedTime.String(),
-		UpdatedTime:              outputEnvironment.UpdatedTime.String(),
-	})
-	return table.Print()
+		table.Add(&flinkEnvironmentOutput{
+			Name:                     outputEnvironment.Name,
+			KubernetesNamespace:      outputEnvironment.KubernetesNamespace,
+			FlinkApplicationDefaults: string(defaultsBytes),
+			CreatedTime:              outputEnvironment.CreatedTime.String(),
+			UpdatedTime:              outputEnvironment.UpdatedTime.String(),
+		})
+		return table.Print()
+	}
+	return output.SerializedOutput(cmd, outputEnvironment)
 }
