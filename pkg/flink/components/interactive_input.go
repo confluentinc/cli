@@ -7,6 +7,9 @@ import (
 	"github.com/mattn/go-runewidth"
 
 	"github.com/confluentinc/cli/v4/pkg/color"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -46,12 +49,17 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 	}
 }
 
-func PrintWelcomeHeader() {
+func PrintWelcomeHeader(appOtions types.ApplicationOptions) {
 	// Print welcome message
 	output.Print(false, "Welcome! \n")
 	output.Print(false, "To exit, press Ctrl-Q or type \"exit\". \n\n")
 
 	// Print shortcuts
 	c := fColor.New(color.AccentColor)
-	output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s [Ctrl-G] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"), c.Sprint("Toggle Diagnostics"))
+
+	if featureflags.Manager.BoolVariation("cli.flink.shell.enable_diagnostics_toggle", appOtions.Context, config.CliLaunchDarklyClient, true, false) {
+		output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s [Ctrl-G] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"), c.Sprint("Toggle Diagnostics"))
+	} else {
+		output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"))
+	}
 }
