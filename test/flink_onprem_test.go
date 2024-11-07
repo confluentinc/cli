@@ -160,7 +160,7 @@ func (s *CLITestSuite) TestFlinkApplicationDescribe() {
 		{args: "flink application describe --environment default default-application-1", fixture: "flink/application/describe-success.golden"},
 		{args: "flink application describe --environment default default-application-1 --output yaml", fixture: "flink/application/describe-success-yaml.golden"},
 		// explicit test to see that even if the output is set to human, the output is still in json
-		{args: "flink application describe --environment default default-application-1 --output human", fixture: "flink/application/create-with-human.golden"},
+		{args: "flink application describe --environment default default-application-1 --output human", fixture: "flink/application/describe-with-human.golden"},
 		// failure
 		{args: "flink application describe --environment default non-existent", fixture: "flink/application/describe-non-existent.golden", exitCode: 1},
 		{args: "flink application describe --environment non-existent default-application", fixture: "flink/application/describe-non-existent-environment.golden", exitCode: 1},
