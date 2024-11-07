@@ -1,5 +1,6 @@
 name: default
 createdtime: 2024-09-10T23:00:00Z
 updatedtime: 2024-09-10T23:00:00Z
-flinkapplicationdefaults: {}
+flinkapplicationdefaults:
+    property: value
 kubernetesnamespace: default-namespace
