@@ -16,13 +16,14 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe Flink UDF artifact.",
-				Code: "confluent flink artifact describe --cloud aws --region us-west-2 cfa-123456",
+				Code: "confluent flink artifact describe --cloud aws --region us-west-2 --environment env-123456 cfa-123456",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -43,7 +44,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	artifact, err := c.V2Client.DescribeFlinkArtifact(cloud, region, args[0])
+	environment, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	artifact, err := c.V2Client.DescribeFlinkArtifact(cloud, region, environment, args[0])
 	if err != nil {
 		return err
 	}
