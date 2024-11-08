@@ -8,6 +8,7 @@ import (
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
@@ -19,6 +20,28 @@ func (c *command) newStatementResumeCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
 		RunE:              c.statementResume,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Request to resume statement "my-statement" with original principal id and compute pool.`,
+				Code: "confluent flink statement resume my-statement",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" with service account "sa-123456".`,
+				Code: "confluent flink statement resume my-statement --principal sa-123456",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" with user account "u-987654".`,
+				Code: "confluent flink statement resume my-statement --principal u-987654",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" and move to compute pool "lfcp-123456".`,
+				Code: "confluent flink statement resume my-statement --compute-pool lfcp-123456",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" with service account "sa-123456" and move to compute pool "lfcp-123456".`,
+				Code: "confluent flink statement resume my-statement --principal sa-123456 --compute-pool lfcp-123456",
+			},
+		),
 	}
 
 	c.addPrincipalFlag(cmd)
