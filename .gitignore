@@ -251,3 +251,4 @@ flycheck_*.el
 # Chart dependencies
 **/charts/*.tgz
 charts/package/
+.idea/cli.iml
