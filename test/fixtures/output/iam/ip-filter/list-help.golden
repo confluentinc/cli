@@ -5,8 +5,7 @@ Usage:
 
 Flags:
       --environment string     Name of the environment for which this filter applies. By default will apply to the org only.
-      --organization-wide      Include only organization scoped filters as part of the list result.
-      --include-parent-scope   If an environment is specified, include organization scoped filters in the List Filters response. (default true)
+      --include-parent-scope   If an environment is specified, include organization scoped filters. (default true)
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 
