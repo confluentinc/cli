@@ -11,10 +11,10 @@ Update the name and add an IP group to IP filter "ipf-abcde":
 Flags:
       --name string                       Updated name of the IP filter.
       --resource-group string             Name of resource group: "management" or "multiple".
-      --add-operation-groups strings      A comma-separated list of operation groups to add.
-      --remove-operation-groups strings   A comma-separated list of operation groups to remove.
       --add-ip-groups strings             A comma-separated list of IP groups to add.
       --remove-ip-groups strings          A comma-separated list of IP groups to remove.
+      --add-operation-groups strings      A comma-separated list of operation groups to add.
+      --remove-operation-groups strings   A comma-separated list of operation groups to remove.
       --context string                    CLI context name.
   -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
 

@@ -37,8 +37,6 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 
 	cmd.Flags().StringSlice("add-ip-groups", []string{}, "A comma-separated list of IP groups to add.")
 	cmd.Flags().StringSlice("remove-ip-groups", []string{}, "A comma-separated list of IP groups to remove.")
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
 	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
 		cmd.Flags().StringSlice("add-operation-groups", []string{}, "A comma-separated list of operation groups to add.")
 		cmd.Flags().StringSlice("remove-operation-groups", []string{}, "A comma-separated list of operation groups to remove.")
@@ -46,6 +44,8 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 	} else {
 		cmd.MarkFlagsOneRequired("name", "resource-group", "add-ip-groups", "remove-ip-groups")
 	}
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
