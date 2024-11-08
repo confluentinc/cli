@@ -24,9 +24,9 @@ func createApplication(name string, environment string) cmfsdk.Application {
 			"name": name,
 		},
 		Spec: map[string]interface{}{
-			"flinkEnvironmentName": environment,
-			"image":                "confluentinc/cp-flink:1.19.1-cp1",
-			"flinkVersion":         "v1_19",
+			"flinkEnvironment": environment,
+			"image":            "confluentinc/cp-flink:1.19.1-cp1",
+			"flinkVersion":     "v1_19",
 			"flinkConfiguration": map[string]interface{}{
 				"taskmanager.numberOfTaskSlots":       "8",
 				"metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",

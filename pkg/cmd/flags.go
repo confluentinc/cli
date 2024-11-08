@@ -290,6 +290,11 @@ func AddOutputFlag(cmd *cobra.Command) {
 	AddOutputFlagWithDefaultValue(cmd, output.Human.String())
 }
 
+func AddOutputFlagWithHumanRestricted(cmd *cobra.Command) {
+	cmd.Flags().StringP(output.FlagName, "o", output.JSON.String(), fmt.Sprintf("Specify the output format as %s.", utils.ArrayToCommaDelimitedString(output.ValidFlagValuesHumanRestricted, "or")))
+	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return output.ValidFlagValuesHumanRestricted })
+}
+
 func AddOutputFlagWithDefaultValue(cmd *cobra.Command, defaultValue string) {
 	cmd.Flags().StringP(output.FlagName, "o", defaultValue, fmt.Sprintf("Specify the output format as %s.", utils.ArrayToCommaDelimitedString(output.ValidFlagValues, "or")))
 	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return output.ValidFlagValues })
