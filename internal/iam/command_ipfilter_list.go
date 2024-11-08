@@ -24,7 +24,6 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
 		cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include organization scoped filters.")
-
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
