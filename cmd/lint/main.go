@@ -118,6 +118,8 @@ var flagRules = []linter.FlagRule{
 			"source-bootstrap-server",
 			"update-schema-registry",
 			"worker-configurations",
+			"add-operation-groups",
+			"remove-operation-groups",
 		),
 	),
 	linter.FlagFilter(

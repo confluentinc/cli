@@ -1,18 +1,24 @@
 package iam
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
-func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
+const resourceScopeStr = "crn://confluent.cloud/organization=%s/environment=%s"
+
+func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create an IP filter.",
@@ -25,13 +31,20 @@ func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 			},
 		),
 	}
-
-	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	pcmd.AddResourceGroupFlag(cmd)
+	err := cmd.MarkFlagRequired("resource-group")
+	if err != nil {
+		return nil
+	}
+	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
+	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
+		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
+		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
+		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
+		cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")
+	}
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("ip-groups"))
 
 	return cmd
 }
@@ -41,25 +54,50 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	ipGroups, err := cmd.Flags().GetStringSlice("ip-groups")
 	if err != nil {
 		return err
 	}
+	resourceScope := ""
+	operationGroups := []string{}
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
+		orgId := c.Context.GetCurrentOrganization()
+		environment, err := cmd.Flags().GetString("environment")
+		if err != nil {
+			return err
+		}
+		if environment != "" {
+			resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
+		}
+
+		operationGroups, err = cmd.Flags().GetStringSlice("operations")
+		if err != nil {
+			return err
+		}
+		npnGroup, err := cmd.Flags().GetBool("no-public-networks")
+		if err != nil {
+			return err
+		}
+		if npnGroup {
+			ipGroups = []string{"ipg-none"}
+		}
+	}
 
 	// Convert the IP group IDs into IP group objects
-	ipGroupIdObjects := make([]iamv2.GlobalObjectReference, len(ipGroups))
+	ipGroupIdObjects := make([]iamipfilteringv2.GlobalObjectReference, len(ipGroups))
 	for i, ipGroupId := range ipGroups {
 		// The empty string fields will get filled in automatically by the cc-policy-service
-		ipGroupIdObjects[i] = iamv2.GlobalObjectReference{Id: ipGroupId}
+		ipGroupIdObjects[i] = iamipfilteringv2.GlobalObjectReference{Id: ipGroupId}
 	}
 
-	createIpFilter := iamv2.IamV2IpFilter{
-		FilterName:    &args[0],
-		ResourceGroup: &resourceGroup,
-		IpGroups:      &ipGroupIdObjects,
+	createIpFilter := iamipfilteringv2.IamV2IpFilter{
+		FilterName:      &args[0],
+		ResourceGroup:   &resourceGroup,
+		IpGroups:        &ipGroupIdObjects,
+		ResourceScope:   &resourceScope,
+		OperationGroups: &operationGroups,
 	}
-
 	filter, err := c.V2Client.CreateIamIpFilter(createIpFilter)
 	if err != nil {
 		/*

@@ -14,6 +14,7 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	flinkartifactv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact/v1"
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
+	iamIpFilter "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
@@ -55,6 +56,7 @@ type Client struct {
 	FlinkArtifactClient          *flinkartifactv1.APIClient
 	FlinkClient                  *flinkv2.APIClient
 	IamClient                    *iamv2.APIClient
+	IamIpFilteringClient         *iamIpFilter.APIClient
 	IdentityProviderClient       *identityproviderv2.APIClient
 	KafkaQuotasClient            *kafkaquotasv1.APIClient
 	KsqlClient                   *ksqlv2.APIClient
@@ -101,6 +103,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		FlinkArtifactClient:          newFlinkArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkClient:                  newFlinkClient(httpClient, url, userAgent, unsafeTrace),
 		IamClient:                    newIamClient(httpClient, url, userAgent, unsafeTrace),
+		IamIpFilteringClient:         newIamIpFiltering(httpClient, url, userAgent, unsafeTrace),
 		IdentityProviderClient:       newIdentityProviderClient(httpClient, url, userAgent, unsafeTrace),
 		KafkaQuotasClient:            newKafkaQuotasClient(httpClient, url, userAgent, unsafeTrace),
 		KsqlClient:                   newKsqlClient(httpClient, url, userAgent, unsafeTrace),
