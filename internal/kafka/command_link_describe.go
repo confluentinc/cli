@@ -1,9 +1,6 @@
 package kafka
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -21,7 +18,6 @@ type linkOut struct {
 	State              string `human:"State" serialized:"state"`
 	Error              string `human:"Error,omitempty" serialized:"error,omitempty"`
 	ErrorMessage       string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
-	CategoryCounts     string `human:"Mirror Partition States Count,omitempty" serialized:"category_counts,omitempty"`
 }
 
 func (c *linkCommand) newDescribeCommand() *cobra.Command {
@@ -56,7 +52,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(newDescribeLink(link, ""))
-	table.Filter(getDescribeFields(false))
+	table.Filter(getListFields(false))
 	return table.Print()
 }
 
@@ -64,11 +60,6 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *link
 	var linkError string
 	if link.GetLinkError() != "NO_ERROR" {
 		linkError = link.GetLinkError()
-	}
-	linkCategories := link.GetCategoryCounts()
-	categories := make([]string, len(linkCategories))
-	for i, category := range linkCategories {
-		categories[i] = fmt.Sprintf(`%s: %d`, category.StateCategory, category.Count)
 	}
 	return &linkOut{
 		Name:               link.GetLinkName(),
@@ -79,16 +70,5 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *link
 		State:              link.GetLinkState(),
 		Error:              linkError,
 		ErrorMessage:       link.GetLinkErrorMessage(),
-		CategoryCounts:     strings.Join(categories, ", "),
 	}
-}
-
-func getDescribeFields(includeTopics bool) []string {
-	x := []string{"Name"}
-
-	if includeTopics {
-		x = append(x, "TopicName")
-	}
-
-	return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage", "CategoryCounts")
 }
