@@ -54,18 +54,19 @@ func (c *Client) ListFlinkArtifacts(cloud string, region string, env string) ([]
 	return list, nil
 }
 
-func (c *Client) DescribeFlinkArtifact(cloud string, region string, id string) (flinkartifactv1.ArtifactV1FlinkArtifact, error) {
-	resp, httpResp, err := c.FlinkArtifactClient.FlinkArtifactsArtifactV1Api.GetArtifactV1FlinkArtifact(c.flinkArtifactApiContext(), id).Cloud(cloud).Region(region).Execute()
+func (c *Client) DescribeFlinkArtifact(cloud string, region string, environment string, id string) (flinkartifactv1.ArtifactV1FlinkArtifact, error) {
+	resp, httpResp, err := c.FlinkArtifactClient.FlinkArtifactsArtifactV1Api.GetArtifactV1FlinkArtifact(c.flinkArtifactApiContext(), id).Cloud(cloud).Region(region).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteFlinkArtifact(cloud string, region string, id string) error {
-	httpResp, err := c.FlinkArtifactClient.FlinkArtifactsArtifactV1Api.DeleteArtifactV1FlinkArtifact(c.flinkArtifactApiContext(), id).Cloud(cloud).Region(region).Execute()
+func (c *Client) DeleteFlinkArtifact(cloud string, region string, environment string, id string) error {
+	httpResp, err := c.FlinkArtifactClient.FlinkArtifactsArtifactV1Api.DeleteArtifactV1FlinkArtifact(c.flinkArtifactApiContext(), id).Cloud(cloud).Region(region).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) UpdateFlinkArtifact(id string, updateRequest flinkartifactv1.ArtifactV1FlinkArtifactUpdate) (flinkartifactv1.ArtifactV1FlinkArtifact, error) {
-	resp, httpResp, err := c.FlinkArtifactClient.FlinkArtifactsArtifactV1Api.UpdateArtifactV1FlinkArtifact(c.flinkArtifactApiContext(), id).ArtifactV1FlinkArtifactUpdate(updateRequest).Execute()
+	resp, httpResp, err := c.FlinkArtifactClient.FlinkArtifactsArtifactV1Api.UpdateArtifactV1FlinkArtifact(c.flinkArtifactApiContext(), id).
+		Cloud(updateRequest.GetCloud()).Region(updateRequest.GetRegion()).Environment(updateRequest.GetEnvironment()).ArtifactV1FlinkArtifactUpdate(updateRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 

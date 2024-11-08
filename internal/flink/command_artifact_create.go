@@ -121,6 +121,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		ContentFormat: flinkartifactv1.PtrString(extension),
 		Cloud:         flinkartifactv1.PtrString(cloud),
 		Region:        flinkartifactv1.PtrString(region),
+		Environment:   flinkartifactv1.PtrString(environment),
 	}
 
 	resp, err := c.V2Client.GetFlinkPresignedUrl(request)
