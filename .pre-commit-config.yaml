@@ -22,4 +22,3 @@ repos:
         always_run: false
       - id: go-mod-tidy
         always_run: false
-
