@@ -1,8 +1,8 @@
 +------------------+----------------------+
 | ID               | ipf-34dq3            |
 | Name             | demo-ip-filter       |
-| Resource group   | multiple             |
-| IP groups        | ipg-12345, ipg-abcde |
-| Operation groups | MANAGEMENT           |
-| Resource scope   |                      |
+| Resource Group   | multiple             |
+| IP Groups        | ipg-12345, ipg-abcde |
+| Operation Groups | MANAGEMENT           |
+| Resource Scope   |                      |
 +------------------+----------------------+
