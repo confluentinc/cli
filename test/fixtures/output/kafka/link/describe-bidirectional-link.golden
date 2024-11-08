@@ -1,8 +1,7 @@
-+-------------------------------+-------------------------+
-| Name                          | link-4                  |
-| Source Cluster                |                         |
-| Destination Cluster           |                         |
-| Remote Cluster                | cluster-2               |
-| State                         | AVAILABLE               |
-| Mirror Partition States Count | ACTIVE: 10, IN_ERROR: 2 |
-+-------------------------------+-------------------------+
++---------------------+-----------+
+| Name                | link-4    |
+| Source Cluster      |           |
+| Destination Cluster |           |
+| Remote Cluster      | cluster-2 |
+| State               | AVAILABLE |
++---------------------+-----------+
