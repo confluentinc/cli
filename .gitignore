@@ -55,7 +55,7 @@ go.work.sum
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
 
 # Thumbnails
 ._*
@@ -251,4 +251,3 @@ flycheck_*.el
 # Chart dependencies
 **/charts/*.tgz
 charts/package/
-.idea/cli.iml
