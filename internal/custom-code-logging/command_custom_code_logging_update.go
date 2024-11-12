@@ -21,7 +21,7 @@ func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
 	}
-
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("log-level", "INFO", fmt.Sprintf("Specify the Custom Code Logging Log Level as %s.", utils.ArrayToCommaDelimitedString(allowedLogLevels, "or")))
 	cmd.MarkFlagsOneRequired("log-level")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -29,6 +29,10 @@ func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *customCodeLoggingCommand) update(cmd *cobra.Command, args []string) error {
+	environment, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
 	id := args[0]
 	updateCustomPluginRequest := cclv1.CclV1CustomCodeLoggingUpdate{}
 
@@ -44,7 +48,7 @@ func (c *customCodeLoggingCommand) update(cmd *cobra.Command, args []string) err
 		}
 	}
 
-	if _, err := c.V2Client.UpdateCustomCodeLogging(id, updateCustomPluginRequest); err != nil {
+	if _, err := c.V2Client.UpdateCustomCodeLogging(id, environment, updateCustomPluginRequest); err != nil {
 		return err
 	}
 
