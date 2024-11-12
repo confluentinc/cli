@@ -17,18 +17,22 @@ func (c *customCodeLoggingCommand) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe custom code logging.",
-				Code: "confluent custom-code-logging describe ccl-123456",
+				Code: "confluent custom-code-logging describe ccl-123456 --environment env-000000",
 			},
 		),
 	}
-
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	return cmd
 }
 
 func (c *customCodeLoggingCommand) describe(cmd *cobra.Command, args []string) error {
-	customCodeLogging, err := c.V2Client.DescribeCustomCodeLogging(args[0])
+	environment, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+	customCodeLogging, err := c.V2Client.DescribeCustomCodeLogging(args[0], environment)
 	if err != nil {
 		return err
 	}
