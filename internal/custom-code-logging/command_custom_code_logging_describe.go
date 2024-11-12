@@ -21,14 +21,18 @@ func (c *customCodeLoggingCommand) newDescribeCommand() *cobra.Command {
 			},
 		),
 	}
-
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	return cmd
 }
 
 func (c *customCodeLoggingCommand) describe(cmd *cobra.Command, args []string) error {
-	customCodeLogging, err := c.V2Client.DescribeCustomCodeLogging(args[0])
+	environment, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+	customCodeLogging, err := c.V2Client.DescribeCustomCodeLogging(args[0], environment)
 	if err != nil {
 		return err
 	}
