@@ -19,7 +19,6 @@ import (
 type MockReverseISearch struct {
 	ctrl     *gomock.Controller
 	recorder *MockReverseISearchMockRecorder
-	isgomock struct{}
 }
 
 // MockReverseISearchMockRecorder is the mock recorder for MockReverseISearch.
@@ -40,15 +39,15 @@ func (m *MockReverseISearch) EXPECT() *MockReverseISearchMockRecorder {
 }
 
 // ReverseISearch mocks base method.
-func (m *MockReverseISearch) ReverseISearch(history []string, initialText string) string {
+func (m *MockReverseISearch) ReverseISearch(arg0 []string, arg1 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReverseISearch", history, initialText)
+	ret := m.ctrl.Call(m, "ReverseISearch", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // ReverseISearch indicates an expected call of ReverseISearch.
-func (mr *MockReverseISearchMockRecorder) ReverseISearch(history, initialText any) *gomock.Call {
+func (mr *MockReverseISearchMockRecorder) ReverseISearch(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseISearch", reflect.TypeOf((*MockReverseISearch)(nil).ReverseISearch), history, initialText)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReverseISearch", reflect.TypeOf((*MockReverseISearch)(nil).ReverseISearch), arg0, arg1)
 }

@@ -21,7 +21,6 @@ import (
 type MockResultFetcherInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockResultFetcherInterfaceMockRecorder
-	isgomock struct{}
 }
 
 // MockResultFetcherInterfaceMockRecorder is the mock recorder for MockResultFetcherInterface.
@@ -110,15 +109,15 @@ func (mr *MockResultFetcherInterfaceMockRecorder) GetStatement() *gomock.Call {
 }
 
 // Init mocks base method.
-func (m *MockResultFetcherInterface) Init(statement types.ProcessedStatement) {
+func (m *MockResultFetcherInterface) Init(arg0 types.ProcessedStatement) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Init", statement)
+	m.ctrl.Call(m, "Init", arg0)
 }
 
 // Init indicates an expected call of Init.
-func (mr *MockResultFetcherInterfaceMockRecorder) Init(statement any) *gomock.Call {
+func (mr *MockResultFetcherInterfaceMockRecorder) Init(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockResultFetcherInterface)(nil).Init), statement)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockResultFetcherInterface)(nil).Init), arg0)
 }
 
 // IsRefreshRunning mocks base method.

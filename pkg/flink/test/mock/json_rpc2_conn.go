@@ -21,7 +21,6 @@ import (
 type MockJSONRpcConn struct {
 	ctrl     *gomock.Controller
 	recorder *MockJSONRpcConnMockRecorder
-	isgomock struct{}
 }
 
 // MockJSONRpcConnMockRecorder is the mock recorder for MockJSONRpcConn.
@@ -42,10 +41,10 @@ func (m *MockJSONRpcConn) EXPECT() *MockJSONRpcConnMockRecorder {
 }
 
 // Call mocks base method.
-func (m *MockJSONRpcConn) Call(ctx context.Context, method string, params, result any, opts ...jsonrpc2.CallOption) error {
+func (m *MockJSONRpcConn) Call(arg0 context.Context, arg1 string, arg2, arg3 any, arg4 ...jsonrpc2.CallOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, method, params, result}
-	for _, a := range opts {
+	varargs := []any{arg0, arg1, arg2, arg3}
+	for _, a := range arg4 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Call", varargs...)
@@ -54,9 +53,9 @@ func (m *MockJSONRpcConn) Call(ctx context.Context, method string, params, resul
 }
 
 // Call indicates an expected call of Call.
-func (mr *MockJSONRpcConnMockRecorder) Call(ctx, method, params, result any, opts ...any) *gomock.Call {
+func (mr *MockJSONRpcConnMockRecorder) Call(arg0, arg1, arg2, arg3 any, arg4 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, method, params, result}, opts...)
+	varargs := append([]any{arg0, arg1, arg2, arg3}, arg4...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Call", reflect.TypeOf((*MockJSONRpcConn)(nil).Call), varargs...)
 }
 
@@ -89,10 +88,10 @@ func (mr *MockJSONRpcConnMockRecorder) DisconnectNotify() *gomock.Call {
 }
 
 // DispatchCall mocks base method.
-func (m *MockJSONRpcConn) DispatchCall(ctx context.Context, method string, params any, opts ...jsonrpc2.CallOption) (jsonrpc2.Waiter, error) {
+func (m *MockJSONRpcConn) DispatchCall(arg0 context.Context, arg1 string, arg2 any, arg3 ...jsonrpc2.CallOption) (jsonrpc2.Waiter, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, method, params}
-	for _, a := range opts {
+	varargs := []any{arg0, arg1, arg2}
+	for _, a := range arg3 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "DispatchCall", varargs...)
@@ -102,17 +101,17 @@ func (m *MockJSONRpcConn) DispatchCall(ctx context.Context, method string, param
 }
 
 // DispatchCall indicates an expected call of DispatchCall.
-func (mr *MockJSONRpcConnMockRecorder) DispatchCall(ctx, method, params any, opts ...any) *gomock.Call {
+func (mr *MockJSONRpcConnMockRecorder) DispatchCall(arg0, arg1, arg2 any, arg3 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, method, params}, opts...)
+	varargs := append([]any{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DispatchCall", reflect.TypeOf((*MockJSONRpcConn)(nil).DispatchCall), varargs...)
 }
 
 // Notify mocks base method.
-func (m *MockJSONRpcConn) Notify(ctx context.Context, method string, params any, opts ...jsonrpc2.CallOption) error {
+func (m *MockJSONRpcConn) Notify(arg0 context.Context, arg1 string, arg2 any, arg3 ...jsonrpc2.CallOption) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, method, params}
-	for _, a := range opts {
+	varargs := []any{arg0, arg1, arg2}
+	for _, a := range arg3 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Notify", varargs...)
@@ -121,36 +120,36 @@ func (m *MockJSONRpcConn) Notify(ctx context.Context, method string, params any,
 }
 
 // Notify indicates an expected call of Notify.
-func (mr *MockJSONRpcConnMockRecorder) Notify(ctx, method, params any, opts ...any) *gomock.Call {
+func (mr *MockJSONRpcConnMockRecorder) Notify(arg0, arg1, arg2 any, arg3 ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, method, params}, opts...)
+	varargs := append([]any{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Notify", reflect.TypeOf((*MockJSONRpcConn)(nil).Notify), varargs...)
 }
 
 // ReplyWithError mocks base method.
-func (m *MockJSONRpcConn) ReplyWithError(ctx context.Context, id jsonrpc2.ID, respErr *jsonrpc2.Error) error {
+func (m *MockJSONRpcConn) ReplyWithError(arg0 context.Context, arg1 jsonrpc2.ID, arg2 *jsonrpc2.Error) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReplyWithError", ctx, id, respErr)
+	ret := m.ctrl.Call(m, "ReplyWithError", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ReplyWithError indicates an expected call of ReplyWithError.
-func (mr *MockJSONRpcConnMockRecorder) ReplyWithError(ctx, id, respErr any) *gomock.Call {
+func (mr *MockJSONRpcConnMockRecorder) ReplyWithError(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplyWithError", reflect.TypeOf((*MockJSONRpcConn)(nil).ReplyWithError), ctx, id, respErr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplyWithError", reflect.TypeOf((*MockJSONRpcConn)(nil).ReplyWithError), arg0, arg1, arg2)
 }
 
 // SendResponse mocks base method.
-func (m *MockJSONRpcConn) SendResponse(ctx context.Context, resp *jsonrpc2.Response) error {
+func (m *MockJSONRpcConn) SendResponse(arg0 context.Context, arg1 *jsonrpc2.Response) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendResponse", ctx, resp)
+	ret := m.ctrl.Call(m, "SendResponse", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendResponse indicates an expected call of SendResponse.
-func (mr *MockJSONRpcConnMockRecorder) SendResponse(ctx, resp any) *gomock.Call {
+func (mr *MockJSONRpcConnMockRecorder) SendResponse(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendResponse", reflect.TypeOf((*MockJSONRpcConn)(nil).SendResponse), ctx, resp)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendResponse", reflect.TypeOf((*MockJSONRpcConn)(nil).SendResponse), arg0, arg1)
 }
