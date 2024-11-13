@@ -21,7 +21,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2
-	github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.0-20240921001517-750d06dd7c27
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
@@ -32,6 +32,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.17.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0
+	github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.21.0
@@ -140,7 +141,6 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.3.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/distribution/reference v0.6.0 // indirect

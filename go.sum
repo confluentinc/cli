@@ -203,8 +203,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0 h1:a2EaPzwLEYkgil7rlsqRU
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0/go.mod h1:c7nUjQ5pQCqz4LagF1qatcj5NX4icoiSTaCxfdxAwsY=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2 h1:BV/dPTFVovJPylrcr9lcSmukCVxBxyUeHBr6hp7zUNk=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2/go.mod h1:MMtRTfg1g32bQrRwfqvGpe+grS5pQzeq9V+L5GKydV4=
-github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.2.0 h1:DQAD0SCIA8iYSjGc2lQLhfSDAXBa4XdswGQnfIRlPR4=
-github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.2.0/go.mod h1:UEXs5OUsWq9P0PBLlrtxPOX4H6nP3FaWFvnG8JrscAM=
+github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.3.0 h1:mvNcg2SsWp+o70/Oh7VkkW6Jdd5cYGTb2cJLegfQhQs=
+github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.3.0/go.mod h1:4j3H+EDIbYfPMkmIiHRk45asW7zm9/IYvGldBPN/7Ps=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5 h1:w0Z2hFxg8ng8gycWKRZFdus1R+q8D/I5AmN06NZso5s=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5/go.mod h1:L8U9xs2duASJnjIYkwGrSbZNpApsbh+vlxsJlZMHJPA=
 github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.0-20240921001517-750d06dd7c27 h1:prbOJKQGZ6VgBFRDN3mzE942apQnlS5d68L7HyA2Gz8=
@@ -225,8 +225,6 @@ github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.17.0 h1:8Y1uXjolI2d5ma
 github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.17.0/go.mod h1:cJ6erfVlWSyz6L+2dR46cF2+s5I2r+pTNrPm2fNbcqU=
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0 h1:ZUAow4L6De1FwYoiwvEodm4lvxc+46wNW+IEAb7K9VU=
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
-github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.1.0 h1:SowmwmquKo6hIjK+VmadgCtRQa8rxt78uFzXkMCrKqQ=
-github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.1.0/go.mod h1:S/XMI3WghekXGkLkHvt0l6RfK/2v67Dk+ZCaDjmGz8g=
 github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.3.0 h1:fOUGLnsL+oASdPwYcWX7wB4Wck1OYZEOLAkSB6nd3pE=
 github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.3.0/go.mod h1:S/XMI3WghekXGkLkHvt0l6RfK/2v67Dk+ZCaDjmGz8g=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0 h1:9TT8UCFRc5zUdsE7UgMz7hqN+2KYnIkBcAKCaiZJrXw=
