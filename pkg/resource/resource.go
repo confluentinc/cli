@@ -120,7 +120,7 @@ var resourceToPrefix = map[string]string{
 }
 
 func LookupType(id string) string {
-	if id == Cloud || id == Flink {
+	if id == Cloud || id == Flink || id == Tableflow {
 		return id
 	}
 
