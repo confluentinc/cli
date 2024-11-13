@@ -5,6 +5,7 @@
 //
 //	mockgen -destination console_parser_mock.go -package=mock github.com/confluentinc/go-prompt ConsoleParser
 //
+
 // Package mock is a generated GoMock package.
 package mock
 

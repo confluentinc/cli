@@ -13,7 +13,7 @@ func TestSelectExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		BuildCompleter()
 
@@ -27,7 +27,7 @@ func TestAlterExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		BuildCompleter()
 
@@ -41,7 +41,7 @@ func TestInserttExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		BuildCompleter()
 
@@ -55,7 +55,7 @@ func TestDescribeExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		BuildCompleter()
 
@@ -69,7 +69,7 @@ func TestUseExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		BuildCompleter()
 
@@ -83,7 +83,7 @@ func TestSetExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		BuildCompleter()
 
@@ -97,7 +97,7 @@ func TestResetExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
+	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleter).
 		BuildCompleter()
 

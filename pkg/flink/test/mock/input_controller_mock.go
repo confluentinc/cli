@@ -5,13 +5,14 @@
 //
 //	mockgen -destination input_controller_mock.go -package=mock github.com/confluentinc/cli/v4/pkg/flink/types InputControllerInterface
 //
+
 // Package mock is a generated GoMock package.
 package mock
 
 import (
 	reflect "reflect"
 
-	"github.com/sourcegraph/go-lsp"
+	lsp "github.com/sourcegraph/go-lsp"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -36,6 +37,20 @@ func NewMockInputControllerInterface(ctrl *gomock.Controller) *MockInputControll
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockInputControllerInterface) EXPECT() *MockInputControllerInterfaceMockRecorder {
 	return m.recorder
+}
+
+// DiagnosticsEnabled mocks base method.
+func (m *MockInputControllerInterface) DiagnosticsEnabled() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DiagnosticsEnabled")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// DiagnosticsEnabled indicates an expected call of DiagnosticsEnabled.
+func (mr *MockInputControllerInterfaceMockRecorder) DiagnosticsEnabled() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DiagnosticsEnabled", reflect.TypeOf((*MockInputControllerInterface)(nil).DiagnosticsEnabled))
 }
 
 // GetUserInput mocks base method.
@@ -94,6 +109,18 @@ func (mr *MockInputControllerInterfaceMockRecorder) HasUserInitiatedExit(arg0 an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasUserInitiatedExit", reflect.TypeOf((*MockInputControllerInterface)(nil).HasUserInitiatedExit), arg0)
 }
 
+// SetDiagnostics mocks base method.
+func (m *MockInputControllerInterface) SetDiagnostics(arg0 []lsp.Diagnostic) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDiagnostics", arg0)
+}
+
+// SetDiagnostics indicates an expected call of SetDiagnostics.
+func (mr *MockInputControllerInterfaceMockRecorder) SetDiagnostics(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDiagnostics", reflect.TypeOf((*MockInputControllerInterface)(nil).SetDiagnostics), arg0)
+}
+
 // StartReverseSearch mocks base method.
 func (m *MockInputControllerInterface) StartReverseSearch() {
 	m.ctrl.T.Helper()
@@ -104,16 +131,4 @@ func (m *MockInputControllerInterface) StartReverseSearch() {
 func (mr *MockInputControllerInterfaceMockRecorder) StartReverseSearch() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartReverseSearch", reflect.TypeOf((*MockInputControllerInterface)(nil).StartReverseSearch))
-}
-
-// SetDiagnostics mocks base method.
-func (m *MockInputControllerInterface) SetDiagnostics(arg0 []lsp.Diagnostic) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetDiagnostics")
-}
-
-// SetDiagnostics indicates an expected call of SetDiagnostics.
-func (mr *MockInputControllerInterfaceMockRecorder) SetDiagnostics(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDiagnostics", reflect.TypeOf((*MockInputControllerInterface)(nil).SetDiagnostics))
 }
