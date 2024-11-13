@@ -67,6 +67,7 @@ const (
 	SchemaRegistryConfiguration     = "Schema Registry configuration"
 	ServiceAccount                  = "service account"
 	SsoGroupMapping                 = "SSO group mapping"
+	Tableflow                       = "tableflow"
 	Topic                           = "topic"
 	TransitGatewayAttachment        = "transit gateway attachment"
 	User                            = "user"

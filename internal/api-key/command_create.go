@@ -53,6 +53,10 @@ func (c *command) newCreateCommand() *cobra.Command {
 				Text: `Create an API key for KSQL cluster "lksqlc-123456":`,
 				Code: "confluent api-key create --resource lksqlc-123456",
 			},
+			examples.Example{
+				Text: `Create a Tableflow API key:`,
+				Code: "confluent api-key create --resource tableflow",
+			},
 		),
 	}
 
@@ -133,6 +137,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 		key.Spec.Resource.Id = fmt.Sprintf("%s.%s", cloud, region)
 		key.Spec.Resource.Environment = &environmentId
+	case resource.Tableflow:
+		key.Spec.Resource.Id = resource.Tableflow
 	}
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
