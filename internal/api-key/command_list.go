@@ -183,7 +183,7 @@ func (c *command) getEmail(resourceId string, auditLogServiceAccountId int32, re
 }
 
 func getResourceId(id string) string {
-	if id == resource.Cloud {
+	if id == resource.Cloud || id == resource.Tableflow {
 		return ""
 	}
 	return id
