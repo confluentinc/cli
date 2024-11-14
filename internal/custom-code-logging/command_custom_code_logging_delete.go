@@ -15,15 +15,20 @@ func (c *customCodeLoggingCommand) newDeleteCommand() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 	}
-
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	return cmd
 }
 
 func (c *customCodeLoggingCommand) delete(cmd *cobra.Command, args []string) error {
+	environment, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.DescribeCustomCodeLogging(id)
+		_, err := c.V2Client.DescribeCustomCodeLogging(id, environment)
 		return err == nil
 	}
 
@@ -31,8 +36,8 @@ func (c *customCodeLoggingCommand) delete(cmd *cobra.Command, args []string) err
 		return err
 	}
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCustomCodeLogging(id)
+		return c.V2Client.DeleteCustomCodeLogging(id, environment)
 	}
-	_, err := deletion.Delete(args, deleteFunc, resource.CustomCodeLogging)
+	_, err = deletion.Delete(args, deleteFunc, resource.CustomCodeLogging)
 	return err
 }

@@ -3,9 +3,15 @@ Update a custom code logging.
 Usage:
   confluent custom-code-logging update <id> [flags]
 
+Examples:
+Describe custom code logging.
+
+  $ confluent custom-code-logging update ccl-123456 --log-level DEBUG --environment env-000000
+
 Flags:
-      --log-level string   Specify the Custom Code Logging Log Level as "INFO", "DEBUG", "ERROR", or "WARN". (default "INFO")
-      --context string     CLI context name.
+      --environment string   Environment ID.
+      --log-level string     Specify the Custom Code Logging Log Level as "INFO", "DEBUG", "ERROR", or "WARN". (default "INFO")
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.
