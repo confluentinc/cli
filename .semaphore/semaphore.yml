@@ -44,7 +44,7 @@ blocks:
             - checkout
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
-            - git clone --branch go$(cat cli/.go-version)-1-openssl-fips --depth 1 https://github.com/golang-fips/go.git go-openssl # validate that a release for the current .go-version exists
+            - git clone --branch go$(cat .go-version)-1-openssl-fips --depth 1 https://github.com/golang-fips/go.git go-openssl # validate that a release for the current .go-version exists
             - make test
       epilogue:
         always:
