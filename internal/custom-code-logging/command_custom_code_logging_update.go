@@ -2,7 +2,6 @@ package customcodelogging
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/examples"
 
 	"github.com/spf13/cobra"
 
@@ -10,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 	"github.com/confluentinc/cli/v4/pkg/utils"
