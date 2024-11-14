@@ -62,6 +62,8 @@ func main() {
 		panic(err)
 	}
 
+	removeUnreleasedCommands("custom-code-logging")
+
 	if err := os.Setenv("HOME", home); err != nil {
 		panic(err)
 	}
