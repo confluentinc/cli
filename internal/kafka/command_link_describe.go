@@ -13,15 +13,15 @@ import (
 )
 
 type linkOut struct {
-	Name               string `human:"Name" serialized:"link_name"`
-	TopicName          string `human:"Topic Name" serialized:"topic_name"`
-	SourceCluster      string `human:"Source Cluster" serialized:"source_cluster,omitempty"`
-	DestinationCluster string `human:"Destination Cluster" serialized:"destination_cluster,omitempty"`
-	RemoteCluster      string `human:"Remote Cluster" serialized:"remote_cluster,omitempty"`
-	State              string `human:"State" serialized:"state"`
-	Error              string `human:"Error,omitempty" serialized:"error,omitempty"`
-	ErrorMessage       string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
-	CategoryCounts     string `human:"Mirror Partition States Count,omitempty" serialized:"category_counts,omitempty"`
+	Name                       string `human:"Name" serialized:"link_name"`
+	TopicName                  string `human:"Topic Name" serialized:"topic_name"`
+	SourceCluster              string `human:"Source Cluster" serialized:"source_cluster,omitempty"`
+	DestinationCluster         string `human:"Destination Cluster" serialized:"destination_cluster,omitempty"`
+	RemoteCluster              string `human:"Remote Cluster" serialized:"remote_cluster,omitempty"`
+	State                      string `human:"State" serialized:"state"`
+	Error                      string `human:"Error,omitempty" serialized:"error,omitempty"`
+	ErrorMessage               string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	MirrorPartitionStatesCount string `human:"Mirror Partition States Count,omitempty" serialized:"mirror_partition_states_count,omitempty"`
 }
 
 func (c *linkCommand) newDescribeCommand() *cobra.Command {
@@ -71,15 +71,15 @@ func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *link
 		categories[i] = fmt.Sprintf(`%s: %d`, category.StateCategory, category.Count)
 	}
 	return &linkOut{
-		Name:               link.GetLinkName(),
-		TopicName:          topic,
-		SourceCluster:      link.GetSourceClusterId(),
-		DestinationCluster: link.GetDestinationClusterId(),
-		RemoteCluster:      link.GetRemoteClusterId(),
-		State:              link.GetLinkState(),
-		Error:              linkError,
-		ErrorMessage:       link.GetLinkErrorMessage(),
-		CategoryCounts:     strings.Join(categories, ", "),
+		Name:                       link.GetLinkName(),
+		TopicName:                  topic,
+		SourceCluster:              link.GetSourceClusterId(),
+		DestinationCluster:         link.GetDestinationClusterId(),
+		RemoteCluster:              link.GetRemoteClusterId(),
+		State:                      link.GetLinkState(),
+		Error:                      linkError,
+		ErrorMessage:               link.GetLinkErrorMessage(),
+		MirrorPartitionStatesCount: strings.Join(categories, ", "),
 	}
 }
 
@@ -90,5 +90,5 @@ func getDescribeFields(includeTopics bool) []string {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage", "CategoryCounts")
+	return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage", "MirrorPartitionStatesCount")
 }
