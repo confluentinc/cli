@@ -51,7 +51,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if resourceType == resource.Cloud {
+	if resourceType == resource.Cloud || resourceType == resource.Tableflow {
 		clusterId = resourceType
 	}
 
