@@ -62,12 +62,14 @@ func main() {
 		panic(err)
 	}
 
+	removeUnreleasedCommands("custom-code-logging")
+
 	if err := os.Setenv("HOME", home); err != nil {
 		panic(err)
 	}
 }
 
-func removeUnreleasedCommands(command string) { //nolint:unused
+func removeUnreleasedCommands(command string) {
 	subcommands := strings.Split(command, " ")
 
 	line := fmt.Sprintf(`\s{3}%s/index\n`, subcommands[len(subcommands)-1])
@@ -94,7 +96,7 @@ func removeUnreleasedCommands(command string) { //nolint:unused
 	}
 }
 
-func removeLineFromFile(line, file string) error { //nolint:unused
+func removeLineFromFile(line, file string) error {
 	out, err := os.ReadFile(file)
 	if err != nil {
 		return err
