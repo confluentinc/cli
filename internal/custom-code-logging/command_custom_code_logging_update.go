@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -20,8 +21,14 @@ func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
 		Short: "Update a custom code logging.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe custom code logging.",
+				Code: "confluent custom-code-logging update ccl-123456 --log-level DEBUG --environment env-000000",
+			},
+		),
 	}
-
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("log-level", "INFO", fmt.Sprintf("Specify the Custom Code Logging Log Level as %s.", utils.ArrayToCommaDelimitedString(allowedLogLevels, "or")))
 	cmd.MarkFlagsOneRequired("log-level")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -29,6 +36,10 @@ func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *customCodeLoggingCommand) update(cmd *cobra.Command, args []string) error {
+	environment, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
 	id := args[0]
 	updateCustomPluginRequest := cclv1.CclV1CustomCodeLoggingUpdate{}
 
@@ -44,7 +55,7 @@ func (c *customCodeLoggingCommand) update(cmd *cobra.Command, args []string) err
 		}
 	}
 
-	if _, err := c.V2Client.UpdateCustomCodeLogging(id, updateCustomPluginRequest); err != nil {
+	if _, err := c.V2Client.UpdateCustomCodeLogging(id, environment, updateCustomPluginRequest); err != nil {
 		return err
 	}
 
