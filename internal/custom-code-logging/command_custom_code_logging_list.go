@@ -33,7 +33,7 @@ func (c *customCodeLoggingCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	customCodeLoggings, err := c.V2Client.ListCustomCodeLoggings(environment, environment)
+	customCodeLoggings, err := c.V2Client.ListCustomCodeLoggings(environment)
 	if err != nil {
 		return err
 	}

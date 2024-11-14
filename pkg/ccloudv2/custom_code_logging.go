@@ -28,13 +28,13 @@ func (c *Client) CreateCustomCodeLogging(createCustomCodeLoggingRequest cclv1.Cc
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCustomCodeLoggings(environment string, env string) ([]cclv1.CclV1CustomCodeLogging, error) {
+func (c *Client) ListCustomCodeLoggings(env string) ([]cclv1.CclV1CustomCodeLogging, error) {
 	var list []cclv1.CclV1CustomCodeLogging
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListCustomCodeLoggings(pageToken, environment, env)
+		page, httpResp, err := c.executeListCustomCodeLoggings(pageToken, env)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -63,13 +63,10 @@ func (c *Client) UpdateCustomCodeLogging(id string, env string, updateCustomCode
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) executeListCustomCodeLoggings(pageToken string, environment string, env string) (cclv1.CclV1CustomCodeLoggingList, *http.Response, error) {
+func (c *Client) executeListCustomCodeLoggings(pageToken string, env string) (cclv1.CclV1CustomCodeLoggingList, *http.Response, error) {
 	req := c.Cclv1Client.CustomCodeLoggingsCclV1Api.ListCclV1CustomCodeLoggings(c.connectCustomCodeLoggingApiContext()).Environment(env).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
-	}
-	if environment != "" {
-		req = req.Environment(environment)
 	}
 	return req.Execute()
 }

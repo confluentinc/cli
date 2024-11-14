@@ -2,6 +2,7 @@ package customcodelogging
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 
 	"github.com/spf13/cobra"
 
@@ -20,6 +21,12 @@ func (c *customCodeLoggingCommand) newUpdateCommand() *cobra.Command {
 		Short: "Update a custom code logging.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe custom code logging.",
+				Code: "confluent custom-code-logging update ccl-123456 --log-level DEBUG --environment env-000000",
+			},
+		),
 	}
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("log-level", "INFO", fmt.Sprintf("Specify the Custom Code Logging Log Level as %s.", utils.ArrayToCommaDelimitedString(allowedLogLevels, "or")))
