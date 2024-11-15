@@ -48,7 +48,7 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key list --resource cloud", fixture: "api-key/19.golden"},
 
 		// create tableflow API key
-		{args: "api-key create --resource tableflow", fixture: "api-key/62.golden"}, // MYKEY18
+		{args: "api-key create --resource tableflow", fixture: "api-key/62.golden"}, // MYKEY20
 		{args: "api-key list --resource tableflow", fixture: "api-key/63.golden"},
 
 		// use an API key for kafka cluster
