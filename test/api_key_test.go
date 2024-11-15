@@ -47,10 +47,6 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key create --resource cloud", fixture: "api-key/18.golden"}, // MYKEY8
 		{args: "api-key list --resource cloud", fixture: "api-key/19.golden"},
 
-		// create tableflow API key
-		{args: "api-key create --resource tableflow", fixture: "api-key/62.golden"}, // MYKEY20
-		{args: "api-key list --resource tableflow", fixture: "api-key/63.golden"},
-
 		// use an API key for kafka cluster
 		{args: "api-key use MYKEY4", fixture: "api-key/20.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
@@ -109,6 +105,10 @@ func (s *CLITestSuite) TestApiKey() {
 
 		// create api-key and use for the resource
 		{args: "api-key create --description my-cool-app --resource lkc-cool1 --use", fixture: "api-key/60.golden"}, // MYKEY16
+
+		// create tableflow API key
+		{args: "api-key create --resource tableflow", fixture: "api-key/62.golden"}, // MYKEY17
+		{args: "api-key list --resource tableflow", fixture: "api-key/63.golden"},
 
 		// store: error handling
 		{name: "error if storing unknown API key", args: "api-key store UNKNOWN UIAPISECRET100 --resource lkc-cool1", fixture: "api-key/47.golden", exitCode: 1},
