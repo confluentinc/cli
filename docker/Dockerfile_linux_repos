@@ -1,6 +1,9 @@
-FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-linux-repo-base-amd64:latest
+FROM --platform=linux/amd64 ubuntu:jammy-20231211.1
 
 SHELL ["/bin/bash", "-c"]
+
+RUN apt-get update && \
+    apt-get install -y aptly createrepo-c libxml2-utils
 
 COPY . /cli/
 
