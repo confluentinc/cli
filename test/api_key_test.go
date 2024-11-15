@@ -47,6 +47,10 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key create --resource cloud", fixture: "api-key/18.golden"}, // MYKEY8
 		{args: "api-key list --resource cloud", fixture: "api-key/19.golden"},
 
+		// create tableflow API key
+		{args: "api-key create --resource tableflow", fixture: "api-key/62.golden"}, // MYKEY18
+		{args: "api-key list --resource tableflow", fixture: "api-key/63.golden"},
+
 		// use an API key for kafka cluster
 		{args: "api-key use MYKEY4", fixture: "api-key/20.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
@@ -135,6 +139,7 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key use UIAPIKEY103", fixture: "api-key/53.golden", exitCode: 1},
 		{args: "api-key create", fixture: "api-key/54.golden", exitCode: 1},
 		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", exitCode: 1},
+		// TODO: update the suggestions in api-key/resource-unknown-error.golden when the suggestions[i] related with Tableflow is ready
 		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", exitCode: 1},
 
 		// test multicluster keys
