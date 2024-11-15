@@ -12,10 +12,6 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
-
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/awskms"
@@ -24,6 +20,10 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/hcvault"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/localkms"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/jsonata"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
+
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type ProtobufSerializationProvider struct {
