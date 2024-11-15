@@ -44,6 +44,9 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 
 	serdeConfig := jsonschema.NewDeserializerConfig()
 	serdeConfig.EnableValidation = true
+	serdeConfig.RuleConfig = map[string]string{
+		"secret": "json_secret",
+	}
 
 	var serdeType serde.Type
 	switch mode {
