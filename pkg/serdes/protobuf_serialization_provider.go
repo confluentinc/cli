@@ -16,6 +16,14 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/awskms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/azurekms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/gcpkms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/hcvault"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/localkms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/jsonata"
 )
 
 type ProtobufSerializationProvider struct {
@@ -37,6 +45,16 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId,
 	}
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
+	// Register the KMS drivers and the field-level encryption executor
+	awskms.Register()
+	azurekms.Register()
+	gcpkms.Register()
+	hcvault.Register()
+	localkms.Register()
+	encryption.Register()
+	cel.Register()
+	jsonata.Register()
+
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
@@ -47,6 +65,9 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId,
 	serdeConfig := protobuf.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
+	serdeConfig.RuleConfig = map[string]string{
+		"secret": "protobuf_secret",
+	}
 	if schemaId > 0 {
 		serdeConfig.UseSchemaID = schemaId
 		serdeConfig.UseLatestVersion = false
