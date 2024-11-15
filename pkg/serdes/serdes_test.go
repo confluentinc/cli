@@ -203,6 +203,68 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
+func TestAvroSerdesValidWithRuleSet(t *testing.T) {
+	req := require.New(t)
+
+	dir, err := createTempDir()
+	req.Nil(err)
+
+	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string","confluent:tags": ["PII"]}]}`
+	schemaPath := filepath.Join(dir, "avro-schema.txt")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	expectedString := `{"f1":"this is a confidential message in AVRO schema"}`
+
+	// Initialize the mock serializer and use latest schemaId
+	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	// CSFLE specific rules during schema registration
+	encRule := schemaregistry.Rule{
+		Name: "avro-encrypt",
+		Kind: "TRANSFORM",
+		Mode: "WRITEREAD",
+		Type: "ENCRYPT",
+		Tags: []string{"PII"},
+		Params: map[string]string{
+			"encrypt.kek.name":   "kek1",
+			"encrypt.kms.type":   "local-kms",
+			"encrypt.kms.key.id": "mykey",
+		},
+		OnFailure: "ERROR,NONE",
+	}
+	ruleSet := schemaregistry.RuleSet{
+		DomainRules: []schemaregistry.Rule{encRule},
+	}
+
+	// Explicitly register the schema to have a schemaId with mock SR client
+	client := serializationProvider.GetSchemaRegistryClient()
+	info := schemaregistry.SchemaInfo{
+		Schema:     schemaString,
+		SchemaType: "AVRO",
+		RuleSet:    &ruleSet,
+	}
+	_, err = client.Register("topic1-value", info, false)
+	req.Nil(err)
+
+	data, err := serializationProvider.Serialize("topic1", expectedString)
+	req.Nil(err)
+
+	// Initialize the mock deserializer
+	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	req.Nil(err)
+
+	actualString, err := deserializationProvider.Deserialize("topic1", data)
+	req.Nil(err)
+
+	req.Equal(expectedString, actualString)
+	req.NoError(os.RemoveAll(dir))
+}
+
 func TestJsonSerdesValid(t *testing.T) {
 	req := require.New(t)
 
@@ -417,6 +479,68 @@ func TestJsonSerdesNestedValid(t *testing.T) {
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	req.Nil(err)
+
+	req.Equal(expectedString, actualString)
+	req.NoError(os.RemoveAll(dir))
+}
+
+func TestJsonSerdesValidWithRuleSet(t *testing.T) {
+	req := require.New(t)
+
+	dir, err := createTempDir()
+	req.Nil(err)
+
+	schemaString := `{"type":"object","properties":{"f1":{"type":"string","confluent:tags": ["PII"]}},"required":["f1"]}`
+	schemaPath := filepath.Join(dir, "json-schema-ruleset.json")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	expectedString := `{"f1":"this is a confidential message in JSON schema"}`
+
+	// Initialize the mock serializer and use latest schemaId
+	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	// CSFLE specific rules during schema registration
+	encRule := schemaregistry.Rule{
+		Name: "json-encrypt",
+		Kind: "TRANSFORM",
+		Mode: "WRITEREAD",
+		Type: "ENCRYPT",
+		Tags: []string{"PII"},
+		Params: map[string]string{
+			"encrypt.kek.name":   "kek1",
+			"encrypt.kms.type":   "local-kms",
+			"encrypt.kms.key.id": "mykey",
+		},
+		OnFailure: "ERROR,NONE",
+	}
+	ruleSet := schemaregistry.RuleSet{
+		DomainRules: []schemaregistry.Rule{encRule},
+	}
+
+	// Explicitly register the schema to have a schemaId with mock SR client
+	client := serializationProvider.GetSchemaRegistryClient()
+	info := schemaregistry.SchemaInfo{
+		Schema:     schemaString,
+		SchemaType: "JSON",
+		RuleSet:    &ruleSet,
+	}
+	_, err = client.Register("topic1-value", info, false)
+	req.Nil(err)
+
+	data, err := serializationProvider.Serialize("topic1", expectedString)
+	req.Nil(err)
+
+	// Initialize the mock deserializer
+	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	req.Nil(err)
+
+	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
