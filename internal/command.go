@@ -110,6 +110,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
+	cmd.AddCommand(ccl.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
@@ -138,9 +139,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	}
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(flink.New(cfg, prerunner))
-	}
-	if cfg.IsTest || featureflags.Manager.BoolVariation("custom-connect.cli.custom_code_logging.early_access", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(ccl.New(cfg, prerunner))
 	}
 
 	changeDefaults(cmd, cfg)
