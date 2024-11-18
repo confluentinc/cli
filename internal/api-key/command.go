@@ -60,7 +60,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
 	description := "The ID of the resource the API key is for."
 	if !isStore {
-		description += ` Use "cloud" for a Cloud API key, or "flink" for a Flink API key.`
+		description += ` Use "cloud" for a Cloud API key, "flink" for a Flink API key, or "tableflow" for a Tableflow API key.`
 	}
 
 	cmd.Flags().String("resource", "", description)
@@ -108,9 +108,11 @@ func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
 			i++
 		}
 
+		// TODO: update the suggestions when the suggestions[i] related with Tableflow is ready
 		if !isStore {
 			suggestions = append(suggestions, "cloud")
 			suggestions = append(suggestions, "flink")
+			suggestions = append(suggestions, "tableflow")
 		}
 
 		return suggestions
@@ -190,7 +192,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	var apiKey string
 
 	switch resourceType {
-	case presource.Cloud, presource.Flink:
+	case presource.Cloud, presource.Flink, presource.Tableflow:
 		break
 	case presource.KafkaCluster:
 		cluster, err := kafka.FindCluster(c.V2Client, c.Context, resource)
@@ -242,6 +244,8 @@ func getResourceType(resource apikeysv2.ObjectReference) string {
 		}
 	case "SchemaRegistry":
 		return "schema-registry"
+	case "Tableflow":
+		return "tableflow"
 	}
 
 	return ""
