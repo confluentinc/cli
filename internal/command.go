@@ -110,6 +110,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
+	cmd.AddCommand(ccl.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
@@ -131,7 +132,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
-	cmd.AddCommand(ccl.New(cfg, prerunner))
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.ai.enable", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
