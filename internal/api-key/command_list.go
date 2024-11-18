@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/confluentinc/cli/v4/pkg/resource"
+	presource "github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newListCommand() *cobra.Command {
@@ -51,7 +51,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if resourceType == resource.Cloud {
+	if resourceType == presource.Cloud || resourceType == presource.Tableflow {
 		clusterId = resourceType
 	}
 
@@ -74,7 +74,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	resourceIdToUserIdMap := mapResourceIdToUserId(allUsers)
 
 	if serviceAccount != "" {
-		if resource.LookupType(serviceAccount) != resource.ServiceAccount {
+		if presource.LookupType(serviceAccount) != presource.ServiceAccount {
 			return fmt.Errorf(errors.BadServiceAccountIdErrorMsg)
 		}
 		if _, ok := resourceIdToUserIdMap[serviceAccount]; !ok {
@@ -183,7 +183,7 @@ func (c *command) getEmail(resourceId string, auditLogServiceAccountId int32, re
 }
 
 func getResourceId(id string) string {
-	if id == resource.Cloud {
+	if id == presource.Cloud || id == presource.Tableflow {
 		return ""
 	}
 	return id

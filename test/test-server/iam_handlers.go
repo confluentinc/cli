@@ -172,6 +172,9 @@ func getKind(id string) string {
 	if id == "cloud" {
 		return "Cloud"
 	}
+	if id == "tableflow" {
+		return "Tableflow"
+	}
 
 	x := strings.SplitN(id, "-", 2)
 	if len(x) != 2 {
