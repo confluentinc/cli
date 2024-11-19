@@ -8,6 +8,7 @@ const (
 	Sku_STANDARD   Sku = 3
 	Sku_DEDICATED  Sku = 4
 	Sku_ENTERPRISE Sku = 6
+	Sku_FREIGHT    Sku = 7
 )
 
 var Sku_name = map[int32]string{
@@ -18,6 +19,7 @@ var Sku_name = map[int32]string{
 	4: "DEDICATED",
 	5: "DEDICATED_LEGACY",
 	6: "ENTERPRISE",
+	7: "FREIGHT",
 }
 
 var Sku_value = map[string]int32{
@@ -28,4 +30,5 @@ var Sku_value = map[string]int32{
 	"DEDICATED":        4,
 	"DEDICATED_LEGACY": 5,
 	"ENTERPRISE":       6,
+	"FREIGHT":          7,
 }

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "ap-54321",
+    "name": "my-aws-private-network-interface-access-point",
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY",
+    "network_interfaces": ["eni-00000000000000000", "eni-00000000000000001"],
+    "aws_account": "000000000000"
+  }
+]

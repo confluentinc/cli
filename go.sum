@@ -211,8 +211,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.0-2024092100
 github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.0-20240921001517-750d06dd7c27/go.mod h1:xqB2YHUtcYF5cbwctSDzXoYw0YXaawj13d0lzcvphEA=
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0 h1:OOFNqtZN3Spuzz4TX6K6JfDM7zNDIE6BE1TtK78jFHQ=
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0/go.mod h1:Mv0WTsBXUfKjmF+r2t2Dv/xJzZf17shhf5J1cttU2Qo=
-github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0 h1:YQEcSvhX5ODllg0mhxLivckKU3f5OF7s6zgABZporgA=
-github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0/go.mod h1:357Zo3HvVAe5iQgUFxUbQPAKJasGm8vFMkOB+krVmR8=
+github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.21.0 h1:ioG3TsP8FwskPtwitfGfvBgTdprYKutHB0oxG5F4Dj8=
+github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.21.0/go.mod h1:WndyhYUqeH7usVOfh+3g9CpVPqHWxIkJqopSISD0pGg=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0 h1:ISrVOX9qJ2Sxiu/fGBqqHeaA0SRJQujc8yP7qAZRL3Y=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0/go.mod h1:zHG/3DzsnoHC81B1AY9K/8bMX3mxbIp5/nHHdypa//w=
 github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.6 h1:DYQyS4lnYVtuTMVoF+g/ogWcgCiTbsKxhQv0c5KLRJc=
@@ -241,8 +241,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0 h1:TWwZHdfo2XNKrnGOuxXx4
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0/go.mod h1:odGsHChrn2l+jaOvx4Gib5//U4a3Id79wstQVkNh8v0=
 github.com/confluentinc/ccloud-sdk-go-v2/networking v0.12.0 h1:eaIjlpKyjW6WgOKqR2/v1oITgK/m/eg4PdIrmIN8fbc=
 github.com/confluentinc/ccloud-sdk-go-v2/networking v0.12.0/go.mod h1:jL9lLHYwFKzCJE5Fh62UdRqJCMJ9T/xg5QOdnQRYIUg=
-github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.3.0 h1:8STgb5JDV6QFhZIGzvLuGA3eC1aIUBcqW6zS8pHN6BU=
-github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.3.0/go.mod h1:HV1xGUwTsGEU3Mgvc+7Ya/0HRpUO69L2rqqxO7LeWMc=
+github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0 h1:q2sfstoFDF/ZUs0MapOzalwIjp4UjL6CK+cMNZmdzNM=
+github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0/go.mod h1:HV1xGUwTsGEU3Mgvc+7Ya/0HRpUO69L2rqqxO7LeWMc=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.2.0 h1:OdIeCGfy8iQ2Bm+08CDXYttwZOUme0e9FVGrBjBJGx4=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.2.0/go.mod h1:472T8ufudvXgXea2BhYxhE/2eowwhoulZzboDh6+ec4=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0 h1:a3eTOQy6tlbcZIFzcAKQPoZALi6Csg4phlCQLPyUdsA=

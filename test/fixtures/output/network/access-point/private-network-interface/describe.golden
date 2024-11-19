@@ -1,0 +1,9 @@
++--------------------+-----------------------------------------------+
+| ID                 | ap-54321                                      |
+| Name               | my-aws-private-network-interface-access-point |
+| Environment        | env-596                                       |
+| Gateway            | gw-12345                                      |
+| Phase              | READY                                         |
+| Network Interfaces | eni-00000000000000000, eni-00000000000000001  |
+| Aws Account        | 000000000000                                  |
++--------------------+-----------------------------------------------+

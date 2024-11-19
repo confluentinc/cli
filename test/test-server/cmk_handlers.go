@@ -56,6 +56,13 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				return
 			}
 			cluster.Spec.Config.CmkV2Enterprise = &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}
+		} else if req.Spec.Config.CmkV2Freight != nil {
+			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
+				err := writeError(w, "Durability must be HIGH for an Freight cluster")
+				require.NoError(t, err)
+				return
+			}
+			cluster.Spec.Config.CmkV2Freight = &cmkv2.CmkV2Freight{Kind: "Freight"}
 		} else {
 			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}
 		}

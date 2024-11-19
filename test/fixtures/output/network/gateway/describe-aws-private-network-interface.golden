@@ -1,0 +1,10 @@
++-------------+----------------------------+
+| ID          | gw-54321                   |
+| Name        | my-aws-gateway             |
+| Environment | env-596                    |
+| Region      | us-east-2                  |
+| Type        | AwsPrivateNetworkInterface |
+| Phase       | READY                      |
+| Zones       | us-east-2a, us-east-2b     |
+| Account     | 000000000000               |
++-------------+----------------------------+

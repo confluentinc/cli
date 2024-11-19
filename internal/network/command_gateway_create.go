@@ -23,12 +23,17 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 				Text: `Create network gateway "my-gateway".`,
 				Code: "confluent network gateway create my-gateway --cloud aws --region us-east-1 --type egress-privatelink",
 			},
+			examples.Example{
+				Text: "Create an AWS private network interface gateway.",
+				Code: "confluent network gateway create --cloud aws --region us-east-1 --type private-network-interface",
+			},
 		),
 	}
 
 	pcmd.AddCloudAwsAzureFlag(cmd)
 	addGatewayTypeFlag(cmd)
 	c.addRegionFlagGateway(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().StringSlice("zones", nil, "A comma-separated list of availability zones for this gateway.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -57,6 +62,11 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	zones, err := cmd.Flags().GetStringSlice("zones")
+	if err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -75,6 +85,14 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 				NetworkingV1AwsEgressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewaySpec{
 					Kind:   "AwsEgressPrivateLinkGatewaySpec",
 					Region: region,
+				},
+			}
+		} else if gatewayType == "private-network-interface" {
+			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
+				NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec: &networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec{
+					Kind:   "AwsPrivateNetworkInterfaceGatewaySpec",
+					Region: region,
+					Zones:  zones,
 				},
 			}
 		}

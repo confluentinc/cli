@@ -100,6 +100,9 @@ func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
 	if isEnterprise(cluster) {
 		return ccstructs.Sku_name[6]
 	}
+	if isFreight(cluster) {
+		return ccstructs.Sku_name[7]
+	}
 	return ccstructs.Sku_name[0] // UNKNOWN
 }
 
@@ -141,6 +144,10 @@ func isStandard(cluster *cmkv2.CmkV2Cluster) bool {
 
 func isEnterprise(cluster *cmkv2.CmkV2Cluster) bool {
 	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Enterprise != nil
+}
+
+func isFreight(cluster *cmkv2.CmkV2Cluster) bool {
+	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Freight != nil
 }
 
 func isDedicated(cluster *cmkv2.CmkV2Cluster) bool {

@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *accessPointCommand) newListCommand() *cobra.Command {
+func (c *accessPointCommand) newEgressEndpointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List egress endpoints.",
@@ -47,11 +47,14 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 		if egressEndpoint.Spec == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 		}
+		if egressEndpoint.Spec.GetConfig().NetworkingV1AwsEgressPrivateLinkEndpoint == nil && egressEndpoint.Spec.GetConfig().NetworkingV1AzureEgressPrivateLinkEndpoint == nil {
+			continue
+		}
 		if egressEndpoint.Status == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
-		out := &accessPointOut{
+		out := &egressEndpointOut{
 			Id:          egressEndpoint.GetId(),
 			Name:        egressEndpoint.Spec.GetDisplayName(),
 			Gateway:     egressEndpoint.Spec.Gateway.GetId(),
@@ -62,8 +65,7 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 		if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1AwsEgressPrivateLinkEndpoint != nil {
 			out.AwsVpcEndpointService = egressEndpoint.Spec.Config.NetworkingV1AwsEgressPrivateLinkEndpoint.GetVpcEndpointServiceName()
 			out.HighAvailability = egressEndpoint.Spec.Config.NetworkingV1AwsEgressPrivateLinkEndpoint.GetEnableHighAvailability()
-		}
-		if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint != nil {
+		} else if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint != nil {
 			out.AzurePrivateLinkService = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkServiceResourceId()
 			out.AzurePrivateLinkSubresourceName = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkSubresourceName()
 		}
@@ -71,8 +73,7 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 		if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus != nil {
 			out.AwsVpcEndpoint = egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus.GetVpcEndpointId()
 			out.AwsVpcEndpointDnsName = egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus.GetVpcEndpointDnsName()
-		}
-		if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus != nil {
+		} else if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus != nil {
 			out.AzurePrivateEndpoint = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointResourceId()
 			out.AzurePrivateEndpointDomain = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointDomain()
 			out.AzurePrivateEndpointIpAddress = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointIpAddress()

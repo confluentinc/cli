@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
-func (c *accessPointCommand) newDeleteCommand() *cobra.Command {
+func (c *accessPointCommand) newEgressEndpointDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete one or more egress endpoints.",
