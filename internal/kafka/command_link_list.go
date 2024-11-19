@@ -72,16 +72,20 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 			list.Add(newLink(link, ""))
 		}
 	}
-	list.Filter(getListFields(includeTopics))
+	list.Filter(getListFields(includeTopics, true))
 	return list.Print()
 }
 
-func getListFields(includeTopics bool) []string {
+func getListFields(includeTopics bool, isListLink bool) []string {
 	x := []string{"Name"}
 
 	if includeTopics {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage")
+	if isListLink {
+		return append(x, "RemoteCluster", "State", "Error", "ErrorMessage")
+	} else {
+		return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage")
+	}
 }
