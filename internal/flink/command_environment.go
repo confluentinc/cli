@@ -2,6 +2,8 @@ package flink
 
 import (
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type flinkEnvironmentOutput struct {
@@ -14,9 +16,10 @@ type flinkEnvironmentOutput struct {
 
 func (c *command) newEnvironmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "environment",
-		Short:   "Manage Flink environments.",
-		Aliases: []string{"env"},
+		Use:         "environment",
+		Short:       "Manage Flink environments.",
+		Aliases:     []string{"env"},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
 	cmd.AddCommand(c.newEnvironmentCreateCommand())
