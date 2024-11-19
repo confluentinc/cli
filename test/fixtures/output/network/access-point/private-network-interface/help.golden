@@ -1,0 +1,18 @@
+Manage access point private network interfaces.
+
+Usage:
+  confluent network access-point private-network-interface [command]
+
+Available Commands:
+  create      Create a private network interface.
+  delete      Delete one or more private network interfaces.
+  describe    Describe a private network interface.
+  list        List private network interfaces.
+  update      Update an existing private network interface.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network access-point private-network-interface [command] --help" for more information about a command.

@@ -2,17 +2,20 @@
   {
     "id": "ap-12345",
     "name": "my-aws-egress-access-point",
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY",
     "aws_vpc_endpoint_service": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
     "aws_vpc_endpoint": "vpc-endpoint-id",
     "aws_vpc_endpoint_dns_name": "vpc-endpoint-dns-name",
-    "high_availability": true,
-    "environment": "env-596",
-    "gateway": "gw-12345",
-    "phase": "READY"
+    "high_availability": true
   },
   {
     "id": "ap-67890",
     "name": "my-azure-egress-access-point",
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY",
     "azure_private_link_service": "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
     "azure_private_link_subresource_name": "subresource",
     "azure_private_endpoint": "private-endpoint-id",
@@ -21,9 +24,6 @@
     "azure_private_endpoint_custom_dns_config_domains": [
       "dbname.database.windows.net",
       "dbname-region.database.windows.net"
-    ],
-    "environment": "env-596",
-    "gateway": "gw-12345",
-    "phase": "READY"
+    ]
   }
 ]

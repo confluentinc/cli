@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -11,17 +12,35 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
+type egressEndpointOut struct {
+	Id                                         string   `human:"ID" serialized:"id"`
+	Name                                       string   `human:"Name,omitempty" serialized:"name,omitempty"`
+	Environment                                string   `human:"Environment" serialized:"environment"`
+	Gateway                                    string   `human:"Gateway" serialized:"gateway"`
+	Phase                                      string   `human:"Phase" serialized:"phase"`
+	AwsVpcEndpointService                      string   `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
+	AwsVpcEndpoint                             string   `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
+	AwsVpcEndpointDnsName                      string   `human:"AWS VPC Endpoint DNS Name,omitempty" serialized:"aws_vpc_endpoint_dns_name,omitempty"`
+	AzurePrivateLinkService                    string   `human:"Azure Private Link Service,omitempty" serialized:"azure_private_link_service,omitempty"`
+	AzurePrivateLinkSubresourceName            string   `human:"Azure Private Link Subresource Name,omitempty" serialized:"azure_private_link_subresource_name,omitempty"`
+	AzurePrivateEndpoint                       string   `human:"Azure Private Endpoint,omitempty" serialized:"azure_private_endpoint,omitempty"`
+	AzurePrivateEndpointDomain                 string   `human:"Azure Private Endpoint Domain,omitempty" serialized:"azure_private_endpoint_domain,omitempty"`
+	AzurePrivateEndpointIpAddress              string   `human:"Azure Private Endpoint IP Address,omitempty" serialized:"azure_private_endpoint_ip_address,omitempty"`
+	AzurePrivateEndpointCustomDnsConfigDomains []string `human:"Azure Private Endpoint Custom DNS Config Domains,omitempty" serialized:"azure_private_endpoint_custom_dns_config_domains,omitempty"`
+	HighAvailability                           bool     `human:"High Availability,omitempty" serialized:"high_availability,omitempty"`
+}
+
 func (c *accessPointCommand) newEgressEndpointCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "egress-endpoint",
 		Short: "Manage private link egress endpoints.",
 	}
 
-	cmd.AddCommand(c.newCreateCommand())
-	cmd.AddCommand(c.newDeleteCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newEgressEndpointCreateCommand())
+	cmd.AddCommand(c.newEgressEndpointDeleteCommand())
+	cmd.AddCommand(c.newEgressEndpointDescribeCommand())
+	cmd.AddCommand(c.newEgressEndpointListCommand())
+	cmd.AddCommand(c.newEgressEndpointUpdateCommand())
 
 	return cmd
 }
@@ -48,10 +67,13 @@ func (c *accessPointCommand) autocompleteEgressEndpoints() []string {
 		return nil
 	}
 
-	egressEndpoints, err := c.V2Client.ListAccessPoints(environmentId, nil)
+	accessPoints, err := c.V2Client.ListAccessPoints(environmentId, nil)
 	if err != nil {
 		return nil
 	}
+	egressEndpoints := slices.DeleteFunc(accessPoints, func(accessPoint networkingaccesspointv1.NetworkingV1AccessPoint) bool {
+		return accessPoint.Spec.GetConfig().NetworkingV1AwsEgressPrivateLinkEndpoint == nil && accessPoint.Spec.GetConfig().NetworkingV1AzureEgressPrivateLinkEndpoint == nil
+	})
 
 	suggestions := make([]string, len(egressEndpoints))
 	for i, egressEndpoint := range egressEndpoints {
@@ -68,7 +90,7 @@ func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, egressEndpoint netw
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 	}
 
-	out := &accessPointOut{
+	out := &egressEndpointOut{
 		Id:          egressEndpoint.GetId(),
 		Name:        egressEndpoint.Spec.GetDisplayName(),
 		Gateway:     egressEndpoint.Spec.Gateway.GetId(),

@@ -119,6 +119,7 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 func (s *CLITestSuite) TestNetworkGateway() {
 	tests := []CLITest{
 		{args: "network gateway create my-gateway --cloud aws --type egress-privatelink --region us-west-2", fixture: "network/gateway/create-aws.golden"},
+		{args: "network gateway create my-gateway --cloud aws --type private-network-interface --region us-west-2 --zones us-west-2a,us-west-2b", fixture: "network/gateway/create-aws-private-network-interface.golden"},
 		{args: "network gateway update gw-111111 --name new-name", fixture: "network/gateway/update.golden"},
 		{args: "network gateway delete gw-12345", input: "y\n", fixture: "network/gateway/delete.golden"},
 		{args: "network gateway delete gw-12345 gw-54321", input: "y\n", fixture: "network/gateway/delete-multiple.golden"},
@@ -134,6 +135,7 @@ func (s *CLITestSuite) TestNetworkGateway() {
 func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 	tests := []CLITest{
 		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
+		{args: "network gateway describe gw-54321", fixture: "network/gateway/describe-aws-private-network-interface.golden"},
 		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
 	}
@@ -1112,6 +1114,78 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpoint_Autocompl
 		{args: `__complete network access-point private-link egress-endpoint describe ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/describe-autocomplete.golden"},
 		{args: `__complete network access-point private-link egress-endpoint delete ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/delete-autocomplete.golden"},
 		{args: `__complete network access-point private-link egress-endpoint update ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/update-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterfaceDelete() {
+	tests := []CLITest{
+		{args: "network access-point private-network-interface delete ap-54321", input: "y\n", fixture: "network/access-point/private-network-interface/delete.golden"},
+		{args: "network access-point private-network-interface delete ap-invalid", fixture: "network/access-point/private-network-interface/delete-fail.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterfaceCreate() {
+	tests := []CLITest{
+		{args: "network access-point private-network-interface create --cloud aws --gateway gw-123456 --network-interfaces eni-00000000000000000,eni-00000000000000001 --account 000000000000", fixture: "network/access-point/private-network-interface/create.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterfaceDescribe() {
+	tests := []CLITest{
+		{args: "network access-point private-network-interface describe ap-54321", fixture: "network/access-point/private-network-interface/describe.golden"},
+		{args: "network access-point private-network-interface describe ap-54321 --output json", fixture: "network/access-point/private-network-interface/describe-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterfaceList() {
+	tests := []CLITest{
+		{args: "network access-point private-network-interface list", fixture: "network/access-point/private-network-interface/list.golden"},
+		{args: "network access-point private-network-interface list --output json", fixture: "network/access-point/private-network-interface/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterfaceUpdate() {
+	tests := []CLITest{
+		{args: "network access-point private-network-interface update ap-54321 --name my-new-aws-private-network-interface", input: "y\n", fixture: "network/access-point/private-network-interface/update.golden"},
+		{args: "network access-point private-network-interface update ap-54321 --network-interfaces eni-00000000000000002,eni-00000000000000003", input: "y\n", fixture: "network/access-point/private-network-interface/update-network-interfaces.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterface_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network access-point private-network-interface describe ""`, login: "cloud", fixture: "network/access-point/private-network-interface/describe-autocomplete.golden"},
+		{args: `__complete network access-point private-network-interface delete ""`, login: "cloud", fixture: "network/access-point/private-network-interface/delete-autocomplete.golden"},
+		{args: `__complete network access-point private-network-interface update ""`, login: "cloud", fixture: "network/access-point/private-network-interface/update-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

@@ -11,10 +11,11 @@ import (
 
 func (c *command) newGatewayUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update a gateway.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.gatewayUpdate,
+		Use:               "update <id>",
+		Short:             "Update a gateway.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.gatewayUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the name of gateway "gw-abc123".`,

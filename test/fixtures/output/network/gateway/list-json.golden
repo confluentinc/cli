@@ -17,7 +17,17 @@
     "phase": "READY"
   },
   {
-    "id": "gw-67890",
+    "id": "gw-23456",
+    "name": "my-aws-gateway",
+    "environment": "env-596",
+    "region": "us-east-2",
+    "type": "AwsPrivateNetworkInterface",
+    "phase": "READY",
+    "zones": ["us-east-2a", "us-east-2b"],
+    "account": "000000000000"
+  },
+  {
+    "id": "gw-54321",
     "name": "my-aws-peering-gateway",
     "environment": "env-596",
     "region": "us-east-2",

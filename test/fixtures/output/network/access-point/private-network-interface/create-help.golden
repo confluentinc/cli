@@ -1,0 +1,23 @@
+Create a private network interface.
+
+Usage:
+  confluent network access-point private-network-interface create [name] [flags]
+
+Examples:
+Create an AWS private network interface access point.
+
+  $ confluent network access-point private-network-interface create --cloud aws --gateway gw-123456 --network-interfaces usw2-az1,usw2-az2,usw2-az3 --account 000000000000
+
+Flags:
+      --cloud string                 REQUIRED: Specify the cloud provider as "aws".
+      --gateway string               REQUIRED: Gateway ID.
+      --network-interfaces strings   REQUIRED: A comma-separated list of the IDs of the Elastic Network Interfaces.
+      --account string               REQUIRED: The AWS account ID associated with the Elastic Network Interfaces.
+      --context string               CLI context name.
+      --environment string           Environment ID.
+  -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

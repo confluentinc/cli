@@ -1,0 +1,21 @@
+Update an existing private network interface.
+
+Usage:
+  confluent network access-point private-network-interface update <id> [flags]
+
+Examples:
+Update the name of private network interface "ap-123456".
+
+  $ confluent network access-point private-network-interface update ap-123456 --name my-new-private-network-interface
+
+Flags:
+      --name string                  Name of the private network interface.
+      --network-interfaces strings   A comma-separated list of the IDs of the Elastic Network Interfaces.
+      --environment string           Environment ID.
+      --context string               CLI context name.
+  -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
