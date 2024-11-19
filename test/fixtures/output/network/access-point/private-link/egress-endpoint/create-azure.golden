@@ -1,13 +1,13 @@
 +--------------------------------------------------+------------------------------------------------------------------------------------------------------------------------+
 | ID                                               | ap-67890                                                                                                               |
 | Name                                             | my-egress-endpoint                                                                                                     |
+| Environment                                      | env-596                                                                                                                |
+| Gateway                                          | gw-123456                                                                                                              |
+| Phase                                            | READY                                                                                                                  |
 | Azure Private Link Service                       | /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName |
 | Azure Private Link Subresource Name              | subresource1                                                                                                           |
 | Azure Private Endpoint                           | private-endpoint-id                                                                                                    |
 | Azure Private Endpoint Domain                    | domain.com                                                                                                             |
 | Azure Private Endpoint IP Address                | 10.2.0.68                                                                                                              |
 | Azure Private Endpoint Custom DNS Config Domains | dbname.database.windows.net, dbname-region.database.windows.net                                                        |
-| Environment                                      | env-596                                                                                                                |
-| Gateway                                          | gw-123456                                                                                                              |
-| Phase                                            | READY                                                                                                                  |
 +--------------------------------------------------+------------------------------------------------------------------------------------------------------------------------+

@@ -1,0 +1,5 @@
+--name	Name of the private network interface.
+--network-interfaces	A comma-separated list of the IDs of the Elastic Network Interfaces.
+ap-54321	my-aws-private-network-interface-access-point
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

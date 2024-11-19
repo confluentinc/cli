@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *accessPointCommand) newDescribeCommand() *cobra.Command {
+func (c *accessPointCommand) newEgressEndpointDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe an egress endpoint.",

@@ -2162,6 +2162,12 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 			Kind:   specConfigKind,
 			Region: "us-east-2",
 		}))
+	case "AwsPrivateNetworkInterfaceGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "us-east-2",
+			Zones:  []string{"us-east-2a", "us-east-2b"},
+		}))
 	case "AzureEgressPrivateLinkGatewaySpec":
 		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewaySpec{
 			Kind:   specConfigKind,
@@ -2179,6 +2185,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatus{
 			Kind:         statusCloudGatewayKind,
 			PrincipalArn: networkinggatewayv1.PtrString("arn:aws:iam::123456789012:role"),
+		}))
+	case "AwsPrivateNetworkInterfaceGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus{
+			Kind:    statusCloudGatewayKind,
+			Account: networkinggatewayv1.PtrString("000000000000"),
 		}))
 	case "AzureEgressPrivateLinkGatewayStatus":
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
@@ -2199,6 +2210,10 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 			require.NoError(t, err)
 		case "gw-12345":
 			record := getGateway(id, environment, "my-aws-gateway", "AwsEgressPrivateLinkGatewaySpec", "AwsEgressPrivateLinkGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		case "gw-54321":
+			record := getGateway(id, environment, "my-aws-gateway", "AwsPrivateNetworkInterfaceGatewaySpec", "AwsPrivateNetworkInterfaceGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
 			require.NoError(t, err)
 		case "gw-67890":
@@ -2238,6 +2253,11 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 				Kind:         "AwsEgressPrivateLinkGatewayStatus",
 				PrincipalArn: networkingv1.PtrString("arn:aws:iam::123456789012:role"),
 			}))
+		} else if body.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus{
+				Kind:    "AwsPrivateNetworkInterfaceGatewayStatus",
+				Account: networkinggatewayv1.PtrString("000000000000"),
+			}))
 		} else if body.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
 				Kind:         "AzureEgressPrivateLinkGatewayStatus",
@@ -2253,11 +2273,12 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gatewayOne := getGateway("gw-12345", environment, "my-aws-gateway", "AwsEgressPrivateLinkGatewaySpec", "AwsEgressPrivateLinkGatewayStatus")
-		gatewayTwo := getGateway("gw-67890", environment, "my-aws-peering-gateway", "AwsPeeringGatewaySpec", "")
-		gatewayThree := getGateway("gw-67890", environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
-		gatewayFour := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
+		gatewayTwo := getGateway("gw-54321", environment, "my-aws-peering-gateway", "AwsPeeringGatewaySpec", "")
+		gatewayThree := getGateway("gw-23456", environment, "my-aws-gateway", "AwsPrivateNetworkInterfaceGatewaySpec", "AwsPrivateNetworkInterfaceGatewayStatus")
+		gatewayFour := getGateway("gw-67890", environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
+		gatewayFive := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
 
-		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour}}
+		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2555,6 +2576,27 @@ func getAwsEgressAccessPoint(id, environment, name string) networkingaccesspoint
 	}
 }
 
+func getAwsPrivateNetworkInterfaceAccessPoint(id, environment, name string) networkingaccesspointv1.NetworkingV1AccessPoint {
+	return networkingaccesspointv1.NetworkingV1AccessPoint{
+		Id: networkingaccesspointv1.PtrString(id),
+		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
+			DisplayName: networkingaccesspointv1.PtrString(name),
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+				NetworkingV1AwsPrivateNetworkInterface: &networkingaccesspointv1.NetworkingV1AwsPrivateNetworkInterface{
+					Kind:              "AwsPrivateNetworkInterface",
+					NetworkInterfaces: &[]string{"eni-00000000000000000", "eni-00000000000000001"},
+					Account:           networkingaccesspointv1.PtrString("000000000000"),
+				},
+			},
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
+			Gateway:     &networkingaccesspointv1.ObjectReference{Id: "gw-12345"},
+		},
+		Status: &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+			Phase: "READY",
+		},
+	}
+}
+
 func getAzureEgressAccessPoint(id, environment, name string) networkingaccesspointv1.NetworkingV1AccessPoint {
 	return networkingaccesspointv1.NetworkingV1AccessPoint{
 		Id: networkingaccesspointv1.PtrString(id),
@@ -2587,16 +2629,18 @@ func getAzureEgressAccessPoint(id, environment, name string) networkingaccesspoi
 
 func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var record networkingaccesspointv1.NetworkingV1AccessPoint
+		var accessPoint networkingaccesspointv1.NetworkingV1AccessPoint
 		switch id {
 		case "ap-invalid":
 			w.WriteHeader(http.StatusNotFound)
 		case "ap-12345":
-			record = getAwsEgressAccessPoint(id, environment, "my-aws-egress-access-point")
+			accessPoint = getAwsEgressAccessPoint(id, environment, "my-aws-egress-access-point")
+		case "ap-54321":
+			accessPoint = getAwsPrivateNetworkInterfaceAccessPoint(id, environment, "my-aws-private-network-interface-access-point")
 		case "ap-67890":
-			record = getAzureEgressAccessPoint(id, environment, "my-azure-egress-access-point")
+			accessPoint = getAzureEgressAccessPoint(id, environment, "my-azure-egress-access-point")
 		}
-		err := json.NewEncoder(w).Encode(record)
+		err := json.NewEncoder(w).Encode(accessPoint)
 		require.NoError(t, err)
 	}
 }
@@ -2613,17 +2657,22 @@ func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
-		var record networkingaccesspointv1.NetworkingV1AccessPoint
+		var accessPoint networkingaccesspointv1.NetworkingV1AccessPoint
 		switch id {
 		case "ap-12345":
-			record = getAwsEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-aws-egress-access-point")
+			accessPoint = getAwsEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-aws-egress-access-point")
+		case "ap-54321":
+			accessPoint = getAwsPrivateNetworkInterfaceAccessPoint(id, body.Spec.Environment.GetId(), "my-aws-private-network-interface-access-point")
+			if networkInterfaces := body.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetNetworkInterfaces(); len(networkInterfaces) > 0 {
+				accessPoint.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.SetNetworkInterfaces(body.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetNetworkInterfaces())
+			}
 		case "ap-67890":
-			record = getAzureEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-egress-access-point")
+			accessPoint = getAzureEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-egress-access-point")
 		}
 
-		record.Spec.SetDisplayName(body.Spec.GetDisplayName())
+		accessPoint.Spec.SetDisplayName(body.Spec.GetDisplayName())
 
-		err = json.NewEncoder(w).Encode(record)
+		err = json.NewEncoder(w).Encode(accessPoint)
 		require.NoError(t, err)
 	}
 }
@@ -2632,8 +2681,9 @@ func handleNetworkingAccessPointList(t *testing.T, environment string) http.Hand
 	return func(w http.ResponseWriter, r *http.Request) {
 		accessPointOne := getAwsEgressAccessPoint("ap-12345", environment, "my-aws-egress-access-point")
 		accessPointTwo := getAzureEgressAccessPoint("ap-67890", environment, "my-azure-egress-access-point")
+		accessPointThree := getAwsPrivateNetworkInterfaceAccessPoint("ap-54321", environment, "my-aws-private-network-interface-access-point")
 
-		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo}}
+		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2656,6 +2706,11 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 						VpcEndpointDnsName: "vpc-endpoint-dns-name",
 					},
 				},
+			}
+		} else if accessPoint.Spec.Config.NetworkingV1AwsPrivateNetworkInterface != nil {
+			accessPoint.SetId("ap-54321")
+			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+				Phase: "READY",
 			}
 		} else if accessPoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint != nil {
 			accessPoint.SetId("ap-67890")

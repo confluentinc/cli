@@ -58,34 +58,44 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
+		gatewayType, err := getGatewayType(gateway)
+		if err != nil {
+			return err
+		}
+
 		out := &gatewayOut{
 			Id:           gateway.GetId(),
 			Name:         gateway.Spec.GetDisplayName(),
 			Environment:  gateway.Spec.Environment.GetId(),
+			Type:         gatewayType,
 			Phase:        gateway.Status.GetPhase(),
 			ErrorMessage: gateway.Status.GetErrorMessage(),
 		}
 
-		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec != nil {
+		if gatewayType == awsEgressPrivateLink {
 			out.Region = gateway.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec.GetRegion()
-			out.Type = awsEgressPrivateLink
 		}
-		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1AwsPeeringGatewaySpec != nil {
+		if gatewayType == awsPeering {
 			out.Region = gateway.Spec.Config.NetworkingV1AwsPeeringGatewaySpec.GetRegion()
-			out.Type = awsPeering
 		}
-		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
+		if gatewayType == azureEgressPrivateLink {
 			out.Region = gateway.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec.GetRegion()
-			out.Type = azureEgressPrivateLink
 		}
-		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1AzurePeeringGatewaySpec != nil {
+		if gatewayType == azurePeering {
 			out.Region = gateway.Spec.Config.NetworkingV1AzurePeeringGatewaySpec.GetRegion()
-			out.Type = azurePeering
+		}
+		if gatewayType == awsPrivateNetworkInterface {
+			out.Region = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetRegion()
+			out.Zones = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetZones()
 		}
 
 		switch getGatewayCloud(gateway) {
 		case pcloud.Aws:
-			out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
+			if gatewayType == "AwsEgressPrivateLink" {
+				out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
+			} else if gatewayType == "AwsPrivateNetworkInterface" {
+				out.Account = gateway.Status.CloudGateway.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus.GetAccount()
+			}
 		case pcloud.Azure:
 			out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
 		}

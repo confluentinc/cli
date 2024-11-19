@@ -22,6 +22,7 @@ const (
 	skuBasic      = "basic"
 	skuStandard   = "standard"
 	skuEnterprise = "enterprise"
+	skuFreight    = "freight"
 	skuDedicated  = "dedicated"
 )
 
@@ -175,7 +176,7 @@ func stringToAvailability(s string) (string, error) {
 func stringToSku(skuType string) (ccstructs.Sku, error) {
 	sku := ccstructs.Sku(ccstructs.Sku_value[strings.ToUpper(skuType)])
 	switch sku {
-	case ccstructs.Sku_BASIC, ccstructs.Sku_STANDARD, ccstructs.Sku_ENTERPRISE, ccstructs.Sku_DEDICATED:
+	case ccstructs.Sku_BASIC, ccstructs.Sku_STANDARD, ccstructs.Sku_ENTERPRISE, ccstructs.Sku_FREIGHT, ccstructs.Sku_DEDICATED:
 		break
 	default:
 		return ccstructs.Sku_UNKNOWN, errors.NewErrorWithSuggestions(
@@ -189,21 +190,17 @@ func stringToSku(skuType string) (ccstructs.Sku, error) {
 func setCmkClusterConfig(typeString string, cku int32) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 	switch typeString {
 	case skuBasic:
-		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-		}
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}}
 	case skuStandard:
-		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"},
-		}
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"}}
 	case skuEnterprise:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}}
+	case skuFreight:
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Freight: &cmkv2.CmkV2Freight{Kind: "Freight"}}
 	case skuDedicated:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku}}
 	default:
-		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-		}
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}}
 	}
 }
 
@@ -246,6 +243,9 @@ func catchClusterConfigurationNotValidError(err error, r *http.Response, cloud, 
 	}
 	if strings.Contains(err.Error(), "Durability must be HIGH for an Enterprise cluster") {
 		return fmt.Errorf(`availability must be "multi-zone" for enterprise clusters`)
+	}
+	if strings.Contains(err.Error(), "Durability must be HIGH for an Freight cluster") {
+		return fmt.Errorf(`availability must be "multi-zone" for freight clusters`)
 	}
 
 	return err

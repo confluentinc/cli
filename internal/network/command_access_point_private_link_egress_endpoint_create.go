@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *accessPointCommand) newCreateCommand() *cobra.Command {
+func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [name]",
 		Short: "Create an egress endpoint.",

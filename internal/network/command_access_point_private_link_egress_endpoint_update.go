@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *accessPointCommand) newUpdateCommand() *cobra.Command {
+func (c *accessPointCommand) newEgressEndpointUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update an existing egress endpoint.",

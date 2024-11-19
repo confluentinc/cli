@@ -1,0 +1,10 @@
++-------------+----------------------------+
+| ID          | gw-abc123                  |
+| Name        | my-gateway                 |
+| Environment | env-596                    |
+| Region      | us-west-2                  |
+| Type        | AwsPrivateNetworkInterface |
+| Phase       | READY                      |
+| Zones       | us-west-2a, us-west-2b     |
+| Account     | 000000000000               |
++-------------+----------------------------+
