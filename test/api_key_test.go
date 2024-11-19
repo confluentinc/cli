@@ -106,6 +106,10 @@ func (s *CLITestSuite) TestApiKey() {
 		// create api-key and use for the resource
 		{args: "api-key create --description my-cool-app --resource lkc-cool1 --use", fixture: "api-key/60.golden"}, // MYKEY16
 
+		// create tableflow API key
+		{args: "api-key create --resource tableflow", fixture: "api-key/62.golden"}, // MYKEY17
+		{args: "api-key list --resource tableflow", fixture: "api-key/63.golden"},
+
 		// store: error handling
 		{name: "error if storing unknown API key", args: "api-key store UNKNOWN UIAPISECRET100 --resource lkc-cool1", fixture: "api-key/47.golden", exitCode: 1},
 		{name: "error if storing API key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden", exitCode: 1},

@@ -69,6 +69,7 @@ const (
 	SchemaRegistryConfiguration     = "Schema Registry configuration"
 	ServiceAccount                  = "service account"
 	SsoGroupMapping                 = "SSO group mapping"
+	Tableflow                       = "tableflow"
 	Topic                           = "topic"
 	TransitGatewayAttachment        = "transit gateway attachment"
 	User                            = "user"
@@ -124,7 +125,7 @@ var resourceToPrefix = map[string]string{
 }
 
 func LookupType(id string) string {
-	if id == Cloud || id == Flink {
+	if id == Cloud || id == Flink || id == Tableflow {
 		return id
 	}
 
