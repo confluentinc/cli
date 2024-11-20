@@ -1,45 +1,32 @@
-Update a Flink SQL statement.
+Resume a Flink SQL statement.
 
 Usage:
-  confluent flink statement update <name> [flags]
+  confluent flink statement resume <name> [flags]
 
 Examples:
-Request to update the principal of statement "my-statement" to service account "sa-123456".
-
-  $ confluent flink statement update my-statement --principal sa-123456
-
-Request to move "my-statement" to compute pool "lfcp-123456".
-
-  $ confluent flink statement update my-statement --compute-pool lfcp-123456
-
 Request to resume statement "my-statement" with original principal id and compute pool.
 
-  $ confluent flink statement update my-statement --stopped=false
+  $ confluent flink statement resume my-statement
 
 Request to resume statement "my-statement" with service account "sa-123456".
 
-  $ confluent flink statement update my-statement --stopped=false --principal sa-123456
+  $ confluent flink statement resume my-statement --principal sa-123456
 
 Request to resume statement "my-statement" with user account "u-987654".
 
-  $ confluent flink statement update my-statement --stopped=false --principal u-987654
+  $ confluent flink statement resume my-statement --principal u-987654
 
 Request to resume statement "my-statement" and move to compute pool "lfcp-123456".
 
-  $ confluent flink statement update my-statement --stopped=false --compute-pool lfcp-123456
+  $ confluent flink statement resume my-statement --compute-pool lfcp-123456
 
 Request to resume statement "my-statement" with service account "sa-123456" and move to compute pool "lfcp-123456".
 
-  $ confluent flink statement update my-statement --stopped=false --principal sa-123456 --compute-pool lfcp-123456
-
-Request to stop statement "my-statement".
-
-  $ confluent flink statement update my-statement --stopped=true
+  $ confluent flink statement resume my-statement --principal sa-123456 --compute-pool lfcp-123456
 
 Flags:
       --principal string      A user or service account the statement runs as.
       --compute-pool string   Flink compute pool ID.
-      --stopped               Request to stop or resume the statement.
       --cloud string          Specify the cloud provider as "aws", "azure", or "gcp".
       --region string         Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string    Environment ID.
