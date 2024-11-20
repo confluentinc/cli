@@ -2,6 +2,7 @@ package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -12,6 +13,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+)
+
+const (
+	validFlinkStatementPrincipalId   = "u-123456"
+	validFlinkStatementComputePoolId = "lfcp-123456"
 )
 
 var flinkGatewayRoutes = []route{
@@ -123,6 +129,7 @@ func handleSqlEnvironmentsEnvironmentConnectionsConnection(t *testing.T) http.Ha
 	}
 }
 
+// Handler for "/sql/v1/organizations/{organization_id}/environments/{environment_id}/statements"
 func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -131,7 +138,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 				Name: flinkgatewayv1.PtrString("11111111-1111-1111-1"),
 				Spec: &flinkgatewayv1.SqlV1StatementSpec{
 					Statement:     flinkgatewayv1.PtrString("CREATE TABLE test;"),
-					ComputePoolId: flinkgatewayv1.PtrString("lfcp-123456"),
+					ComputePoolId: flinkgatewayv1.PtrString(validFlinkStatementComputePoolId),
 				},
 				Status: &flinkgatewayv1.SqlV1StatementStatus{
 					Phase:  "COMPLETED",
@@ -146,7 +153,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 				Name: flinkgatewayv1.PtrString("22222222-2222-2222-2"),
 				Spec: &flinkgatewayv1.SqlV1StatementSpec{
 					Statement:     flinkgatewayv1.PtrString("CREATE TABLE test;"),
-					ComputePoolId: flinkgatewayv1.PtrString("lfcp-123456"),
+					ComputePoolId: flinkgatewayv1.PtrString(validFlinkStatementComputePoolId),
 				},
 				Status: &flinkgatewayv1.SqlV1StatementStatus{
 					Phase:  "COMPLETED",
@@ -167,7 +174,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 
 			statement.Metadata = &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
-			statement.Spec.ComputePoolId = flinkgatewayv1.PtrString("lfcp-123456")
+			statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(validFlinkStatementComputePoolId)
 			statement.Status = &flinkgatewayv1.SqlV1StatementStatus{Phase: "PENDING"}
 
 			err = json.NewEncoder(w).Encode(statement)
@@ -195,7 +202,22 @@ func handleSqlEnvironmentsEnvironmentStatementExceptions(t *testing.T) http.Hand
 	}
 }
 
+// Handler for "/sql/v1/organizations/{organization_id}/environments/{environment_id}/statements/{statement_name}"
 func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleStatementGet(t)(w, r)
+		case http.MethodPut:
+			handleStatementUpdate(t)(w, r)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+	}
+}
+
+func handleStatementGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		statement := flinkgatewayv1.SqlV1Statement{
 			Name: flinkgatewayv1.PtrString(mux.Vars(r)["statement"]),
@@ -205,8 +227,8 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 					"sql.current-catalog":  "default",
 					"sql.current-database": "my-cluster",
 				},
-				ComputePoolId: flinkgatewayv1.PtrString("lfcp-123456"),
-				Principal:     flinkgatewayv1.PtrString("u-123456"),
+				ComputePoolId: flinkgatewayv1.PtrString(validFlinkStatementComputePoolId),
+				Principal:     flinkgatewayv1.PtrString(validFlinkStatementPrincipalId),
 			},
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
@@ -221,5 +243,43 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 
 		err := json.NewEncoder(w).Encode(statement)
 		require.NoError(t, err)
+	}
+}
+
+func handleStatementUpdate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := new(flinkgatewayv1.SqlV1Statement)
+		err := json.NewDecoder(r.Body).Decode(req)
+		require.NoError(t, err)
+
+		stopped := req.Spec.GetStopped()
+		principal := req.Spec.GetPrincipal()
+		computePool := req.Spec.GetComputePoolId()
+
+		// Handle the stop case, principal and computerPool shouldn't matter
+		if stopped {
+			w.WriteHeader(http.StatusAccepted)
+			err = json.NewEncoder(w).Encode(flinkgatewayv1.NewSqlV1Statement())
+			require.NoError(t, err)
+			return
+		}
+
+		// Handle the resume case: invalid principal ID
+		if principal != "" && principal != validFlinkStatementPrincipalId {
+			w.WriteHeader(http.StatusBadRequest)
+			err = writeError(w, "Bad Request")
+			require.NoError(t, err)
+			return
+		}
+
+		// Handle the resume case: invalid compute pool
+		if computePool != "" && computePool != validFlinkStatementComputePoolId {
+			w.WriteHeader(http.StatusBadRequest)
+			err = writeError(w, fmt.Sprintf("logical compute pool=%s not found", computePool))
+			require.NoError(t, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
 	}
 }

@@ -28,8 +28,24 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 				Code: "confluent flink statement update my-statement --compute-pool lfcp-123456",
 			},
 			examples.Example{
-				Text: `Request to resume statement "my-statement".`,
+				Text: `Request to resume statement "my-statement" with original principal id and compute pool.`,
 				Code: "confluent flink statement update my-statement --stopped=false",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" with service account "sa-123456".`,
+				Code: "confluent flink statement update my-statement --stopped=false --principal sa-123456",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" with user account "u-987654".`,
+				Code: "confluent flink statement update my-statement --stopped=false --principal u-987654",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" and move to compute pool "lfcp-123456".`,
+				Code: "confluent flink statement update my-statement --stopped=false --compute-pool lfcp-123456",
+			},
+			examples.Example{
+				Text: `Request to resume statement "my-statement" with service account "sa-123456" and move to compute pool "lfcp-123456".`,
+				Code: "confluent flink statement update my-statement --stopped=false --principal sa-123456 --compute-pool lfcp-123456",
 			},
 			examples.Example{
 				Text: `Request to stop statement "my-statement".`,
@@ -40,7 +56,7 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 
 	c.addPrincipalFlag(cmd)
 	c.addComputePoolFlag(cmd)
-	cmd.Flags().Bool("stopped", false, "Request to stop the statement.")
+	cmd.Flags().Bool("stopped", false, "Request to stop or resume the statement.")
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -120,8 +136,10 @@ func (c *command) statementUpdate(cmd *cobra.Command, args []string) error {
 		statement.Spec.SetStopped(stopped)
 	}
 
+	// the UPDATE statement is an async API
+	// An accepted response 202 doesn't necessarily mean the UPDATE will be successful/complete
 	if err := client.UpdateStatement(environmentId, args[0], c.Context.GetCurrentOrganization(), statement); err != nil {
-		return err
+		return fmt.Errorf("failed to update %s \"%s\": %w", resource.FlinkStatement, args[0], err)
 	}
 
 	output.Printf(c.Config.EnableColor, "Requested to update %s \"%s\".\n", resource.FlinkStatement, args[0])
