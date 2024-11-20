@@ -224,9 +224,20 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement list --cloud aws --region eu-west-1 --compute-pool lfcp-nonexistent", fixture: "flink/statement/list-cp-not-found.golden", exitCode: 1},
 		{args: "flink statement list --cloud aws --region eu-west-2 --compute-pool lfcp-123456", fixture: "flink/statement/list-cp-incorrect-region.golden", exitCode: 1},
 		{args: "flink statement stop my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/stop.golden"},
+		{args: "flink statement resume my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/resume-valid.golden"},
+		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --principal u-123456", fixture: "flink/statement/resume-valid.golden"},
+		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-123456", fixture: "flink/statement/resume-valid.golden"},
+		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --principal u-123456 --compute-pool lfcp-123456", fixture: "flink/statement/resume-valid.golden"},
+		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --principal sa-654321", fixture: "flink/statement/resume-invalid-principal.golden", exitCode: 1},
+		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-654321", fixture: "flink/statement/resume-invalid-compute-pool.golden", exitCode: 1},
 		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-123456", fixture: "flink/statement/update-compute-pool.golden"},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --principal sa-123456", fixture: "flink/statement/update-principal.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --principal u-123456", fixture: "flink/statement/update-principal.golden"},
 		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false", fixture: "flink/statement/update-stopped.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --principal u-123456", fixture: "flink/statement/update-stopped.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --compute-pool lfcp-123456", fixture: "flink/statement/update-stopped.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --compute-pool lfcp-123456 --principal u-123456", fixture: "flink/statement/update-stopped.golden"},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --compute-pool lfcp-654321", fixture: "flink/statement/update-invalid-compute-pool.golden", exitCode: 1},
+		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --principal u-654321", fixture: "flink/statement/update-invalid-principal.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
