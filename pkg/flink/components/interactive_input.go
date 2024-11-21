@@ -37,8 +37,8 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 	output.Print(false, "\n")
 	for i, line := range lines {
 		if i == len(lines)-1 {
-			output.Print(false, line+fColor.CyanString(stateMsg))
-			line = line + stateMsg
+			output.Print(false, line+fColor.CyanString(stateMsg)+".")
+			line = line + stateMsg + "."
 		} else {
 			output.Print(false, line)
 		}
