@@ -4,35 +4,27 @@ Usage:
   confluent flink statement update <name> [flags]
 
 Examples:
-Request to update the principal of statement "my-statement" to service account "sa-123456".
-
-  $ confluent flink statement update my-statement --principal sa-123456
-
-Request to move "my-statement" to compute pool "lfcp-123456".
-
-  $ confluent flink statement update my-statement --compute-pool lfcp-123456
-
-Request to resume statement "my-statement" with original principal id and compute pool.
+Request to resume the currently stopped statement "my-statement" with original principal id and compute pool.
 
   $ confluent flink statement update my-statement --stopped=false
 
-Request to resume statement "my-statement" with service account "sa-123456".
+Request to resume the currently stopped statement "my-statement" with service account "sa-123456".
 
   $ confluent flink statement update my-statement --stopped=false --principal sa-123456
 
-Request to resume statement "my-statement" with user account "u-987654".
+Request to resume the currently stopped statement "my-statement" with user account "u-987654".
 
   $ confluent flink statement update my-statement --stopped=false --principal u-987654
 
-Request to resume statement "my-statement" and move to compute pool "lfcp-123456".
+Request to resume the currently stopped statement "my-statement" under a different compute pool "lfcp-123456".
 
   $ confluent flink statement update my-statement --stopped=false --compute-pool lfcp-123456
 
-Request to resume statement "my-statement" with service account "sa-123456" and move to compute pool "lfcp-123456".
+Request to resume the currently stopped statement "my-statement" with service account "sa-123456" and under a different compute pool "lfcp-123456".
 
   $ confluent flink statement update my-statement --stopped=false --principal sa-123456 --compute-pool lfcp-123456
 
-Request to stop statement "my-statement".
+Request to stop the currently running statement "my-statement".
 
   $ confluent flink statement update my-statement --stopped=true
 

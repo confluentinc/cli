@@ -20,35 +20,27 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 		RunE:              c.statementUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Request to update the principal of statement "my-statement" to service account "sa-123456".`,
-				Code: "confluent flink statement update my-statement --principal sa-123456",
-			},
-			examples.Example{
-				Text: `Request to move "my-statement" to compute pool "lfcp-123456".`,
-				Code: "confluent flink statement update my-statement --compute-pool lfcp-123456",
-			},
-			examples.Example{
-				Text: `Request to resume statement "my-statement" with original principal id and compute pool.`,
+				Text: `Request to resume the currently stopped statement "my-statement" with original principal id and compute pool.`,
 				Code: "confluent flink statement update my-statement --stopped=false",
 			},
 			examples.Example{
-				Text: `Request to resume statement "my-statement" with service account "sa-123456".`,
+				Text: `Request to resume the currently stopped statement "my-statement" with service account "sa-123456".`,
 				Code: "confluent flink statement update my-statement --stopped=false --principal sa-123456",
 			},
 			examples.Example{
-				Text: `Request to resume statement "my-statement" with user account "u-987654".`,
+				Text: `Request to resume the currently stopped statement "my-statement" with user account "u-987654".`,
 				Code: "confluent flink statement update my-statement --stopped=false --principal u-987654",
 			},
 			examples.Example{
-				Text: `Request to resume statement "my-statement" and move to compute pool "lfcp-123456".`,
+				Text: `Request to resume the currently stopped statement "my-statement" under a different compute pool "lfcp-123456".`,
 				Code: "confluent flink statement update my-statement --stopped=false --compute-pool lfcp-123456",
 			},
 			examples.Example{
-				Text: `Request to resume statement "my-statement" with service account "sa-123456" and move to compute pool "lfcp-123456".`,
+				Text: `Request to resume the currently stopped statement "my-statement" with service account "sa-123456" and under a different compute pool "lfcp-123456".`,
 				Code: "confluent flink statement update my-statement --stopped=false --principal sa-123456 --compute-pool lfcp-123456",
 			},
 			examples.Example{
-				Text: `Request to stop statement "my-statement".`,
+				Text: `Request to stop the currently running statement "my-statement".`,
 				Code: "confluent flink statement update my-statement --stopped=true",
 			},
 		),
