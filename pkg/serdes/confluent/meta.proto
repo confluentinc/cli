@@ -3,7 +3,7 @@ package confluent;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package="../confluent";
+option csharp_namespace = "Confluent.SchemaRegistry.Serdes.Protobuf";
 
 message Meta {
   string doc = 1;

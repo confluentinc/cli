@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package confluent.type;
 
-option go_package="../types";
+option csharp_namespace = "Confluent.SchemaRegistry.Serdes.Protobuf";
 
 message Decimal {
 
