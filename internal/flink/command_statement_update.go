@@ -20,23 +20,23 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 		RunE:              c.statementUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Request to resume the currently stopped statement "my-statement" with original principal id and compute pool.`,
+				Text: `Request to resume the currently stopped statement "my-statement" using original principal id and under the original compute pool.`,
 				Code: "confluent flink statement update my-statement --stopped=false",
 			},
 			examples.Example{
-				Text: `Request to resume the currently stopped statement "my-statement" with service account "sa-123456".`,
+				Text: `Request to resume the currently stopped statement "my-statement" using service account "sa-123456".`,
 				Code: "confluent flink statement update my-statement --stopped=false --principal sa-123456",
 			},
 			examples.Example{
-				Text: `Request to resume the currently stopped statement "my-statement" with user account "u-987654".`,
+				Text: `Request to resume the currently stopped statement "my-statement" using user account "u-987654".`,
 				Code: "confluent flink statement update my-statement --stopped=false --principal u-987654",
 			},
 			examples.Example{
-				Text: `Request to resume the currently stopped statement "my-statement" under a different compute pool "lfcp-123456".`,
+				Text: `Request to resume the currently stopped statement "my-statement" and under a different compute pool "lfcp-123456".`,
 				Code: "confluent flink statement update my-statement --stopped=false --compute-pool lfcp-123456",
 			},
 			examples.Example{
-				Text: `Request to resume the currently stopped statement "my-statement" with service account "sa-123456" and under a different compute pool "lfcp-123456".`,
+				Text: `Request to resume the currently stopped statement "my-statement" using service account "sa-123456" and under a different compute pool "lfcp-123456".`,
 				Code: "confluent flink statement update my-statement --stopped=false --principal sa-123456 --compute-pool lfcp-123456",
 			},
 			examples.Example{
