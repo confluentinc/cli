@@ -799,16 +799,14 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	schemaString := `
 	syntax = "proto3";
 
- 	import "meta.proto";
+ 	import "confluent/meta.proto";
 
 	message Person {
-	  string name = 1 [
-		(confluent.field_meta) = { 
-			tags: ["PII"]
-        }
+      string name = 1 [
+		(confluent.field_meta).tags = "PII"
       ];
-	  int32 page = 2;
-	  double result = 3;
+      int32 page = 2;
+      double result = 3;
 	}`
 	schemaPath := filepath.Join(dir, "person-schema-ruleset.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
