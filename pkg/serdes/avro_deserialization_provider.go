@@ -44,6 +44,9 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 	}
 
 	serdeConfig := avrov2.NewDeserializerConfig()
+	serdeConfig.RuleConfig = map[string]string{
+		"secret": "avro_secret",
+	}
 
 	var serdeType serde.Type
 	switch mode {

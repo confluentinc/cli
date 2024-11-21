@@ -47,6 +47,9 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srCluste
 	}
 
 	serdeConfig := protobuf.NewDeserializerConfig()
+	serdeConfig.RuleConfig = map[string]string{
+		"secret": "protobuf_secret",
+	}
 
 	var serdeType serde.Type
 	switch mode {
