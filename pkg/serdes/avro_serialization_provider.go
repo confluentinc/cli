@@ -6,6 +6,14 @@ import (
 	"github.com/linkedin/goavro/v2"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/awskms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/azurekms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/gcpkms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/hcvault"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/localkms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/jsonata"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avrov2"
 )
@@ -30,6 +38,16 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
+	// Register the KMS drivers and the field-level encryption executor
+	awskms.Register()
+	azurekms.Register()
+	gcpkms.Register()
+	hcvault.Register()
+	localkms.Register()
+	encryption.Register()
+	cel.Register()
+	jsonata.Register()
+
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
@@ -40,6 +58,9 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 	serdeConfig := avrov2.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
+	serdeConfig.RuleConfig = map[string]string{
+		"secret": "avro_secret",
+	}
 	if schemaId > 0 {
 		serdeConfig.UseSchemaID = schemaId
 		serdeConfig.UseLatestVersion = false
@@ -98,8 +119,16 @@ func (a *AvroSerializationProvider) Serialize(topic, message string) ([]byte, er
 		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 
-	// Step#4: Serialize the Go native data object with the confluent-kafka-go Serialize() library
-	payload, err := a.ser.Serialize(topic, &object)
+	// Step#4: Fetch the Go native data object, cast it into generic map for Serialize()
+	// Note: the suggested argument to pass to Serialize() library function is:
+	// - pointer to a generic map consistent with the schema during registration
+	// - a materialized object consistent with the schema during registration
+	// Passing the Go native object directly could cause issues during ruleSet execution
+	v, ok := object.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("failed to serialize message: unexpected message type asserion result")
+	}
+	payload, err := a.ser.Serialize(topic, &v)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
