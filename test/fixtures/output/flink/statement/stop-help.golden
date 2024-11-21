@@ -3,6 +3,11 @@ Stop a Flink SQL statement.
 Usage:
   confluent flink statement stop <name> [flags]
 
+Examples:
+Request to stop the currently running statement "my-statement".
+
+  $ confluent flink statement stop my-statement
+
 Flags:
       --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
       --region string        Cloud region for Flink (use "confluent flink region list" to see all).
