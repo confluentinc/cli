@@ -790,6 +790,80 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
+func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
+	req := require.New(t)
+
+	dir, err := createTempDir()
+	req.Nil(err)
+
+	schemaString := `
+	syntax = "proto3";
+
+ 	import "meta.proto";
+
+	message Person {
+	  string name = 1 [
+		(confluent.field_meta) = { 
+			tags: ["PII"]
+        }
+      ];
+	  int32 page = 2;
+	  double result = 3;
+	}`
+	schemaPath := filepath.Join(dir, "person-schema-ruleset.proto")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	expectedString := `{"name":"abc","page":1,"result":2.5}`
+
+	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	// CSFLE specific rules during schema registration
+	encRule := schemaregistry.Rule{
+		Name: "protobuf-encrypt",
+		Kind: "TRANSFORM",
+		Mode: "WRITEREAD",
+		Type: "ENCRYPT",
+		Tags: []string{"PII"},
+		Params: map[string]string{
+			"encrypt.kek.name":   "kek1",
+			"encrypt.kms.type":   "local-kms",
+			"encrypt.kms.key.id": "mykey",
+		},
+		OnFailure: "ERROR,NONE",
+	}
+	ruleSet := schemaregistry.RuleSet{
+		DomainRules: []schemaregistry.Rule{encRule},
+	}
+
+	// Explicitly register the schema to have a schemaId with mock SR client
+	client := serializationProvider.GetSchemaRegistryClient()
+	info := schemaregistry.SchemaInfo{
+		Schema:     schemaString,
+		SchemaType: "PROTOBUF",
+		RuleSet:    &ruleSet,
+	}
+	_, err = client.Register("topic1-value", info, false)
+	req.Nil(err)
+
+	data, err := serializationProvider.Serialize("topic1", expectedString)
+	req.Nil(err)
+
+	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	req.Nil(err)
+	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+	actualString, err := deserializationProvider.Deserialize("topic1", data)
+	req.Nil(err)
+	req.JSONEq(expectedString, actualString)
+
+	req.NoError(os.RemoveAll(dir))
+}
+
 func createTempDir() (string, error) {
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	err := os.MkdirAll(dir, 0755)
