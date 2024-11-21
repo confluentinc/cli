@@ -6,6 +6,7 @@ import (
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
@@ -17,6 +18,12 @@ func (c *command) newStatementStopCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
 		RunE:              c.statementStop,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Request to stop the currently running statement "my-statement".`,
+				Code: "confluent flink statement stop my-statement",
+			},
+		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
