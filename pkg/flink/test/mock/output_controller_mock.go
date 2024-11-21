@@ -5,6 +5,7 @@
 //
 //	mockgen -destination output_controller_mock.go -package=mock github.com/confluentinc/cli/v4/pkg/flink/types OutputControllerInterface
 //
+
 // Package mock is a generated GoMock package.
 package mock
 
