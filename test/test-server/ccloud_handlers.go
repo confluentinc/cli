@@ -421,7 +421,7 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"cli.stream_designer.source_code.enable":    true,
 			"flink.rbac.namespace.cli.enable":           true,
 			"auth.rbac.identity_admin.enable":           true,
-			"cli.flink.shell.enable_diagnostics_toggle": true,
+			"flink.language_service.enable_diagnostics": true,
 			"cloud_growth.marketplace_linking_advertisement_experiment.enable": true,
 		}
 
