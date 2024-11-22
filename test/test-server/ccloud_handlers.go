@@ -411,16 +411,17 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 		require.NoError(t, json.Unmarshal(ldUserData, &ldUser))
 
 		flags := map[string]any{
-			"testBool":                               true,
-			"testString":                             "string",
-			"testInt":                                1,
-			"testAnotherInt":                         99,
-			"testJson":                               map[string]any{"key": "val"},
-			"cli.deprecation_notices":                []map[string]any{},
-			"cli.client_quotas.enable":               true,
-			"cli.stream_designer.source_code.enable": true,
-			"flink.rbac.namespace.cli.enable":        true,
-			"auth.rbac.identity_admin.enable":        true,
+			"testBool":                                  true,
+			"testString":                                "string",
+			"testInt":                                   1,
+			"testAnotherInt":                            99,
+			"testJson":                                  map[string]any{"key": "val"},
+			"cli.deprecation_notices":                   []map[string]any{},
+			"cli.client_quotas.enable":                  true,
+			"cli.stream_designer.source_code.enable":    true,
+			"flink.rbac.namespace.cli.enable":           true,
+			"auth.rbac.identity_admin.enable":           true,
+			"flink.language_service.enable_diagnostics": true,
 			"cloud_growth.marketplace_linking_advertisement_experiment.enable": true,
 		}
 

@@ -5,6 +5,7 @@
 //
 //	mockgen -destination result_fetcher_mock.go -package=mock github.com/confluentinc/cli/v4/pkg/flink/types ResultFetcherInterface
 //
+
 // Package mock is a generated GoMock package.
 package mock
 

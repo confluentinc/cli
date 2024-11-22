@@ -118,7 +118,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 		reportUsage:                 reportUsageFunc,
 		appOptions:                  appOptions,
 	}
-	components.PrintWelcomeHeader()
+	components.PrintWelcomeHeader(appOptions)
 	return app.readEvalPrintLoop()
 }
 
