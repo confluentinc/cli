@@ -1,6 +1,9 @@
-+-------------+------------+
-| Id          | ccl-123456 |
-| Cloud       | AWS        |
-| Region      | us-west-2  |
-| Environment | env-000000 |
-+-------------+------------+
++-------------+-------------+
+| Id          | ccl-123456  |
+| Cloud       | AWS         |
+| Region      | us-west-2   |
+| Environment | env-000000  |
+| Topic       | topic-123   |
+| Cluster     | cluster-123 |
+| Log Level   | INFO        |
++-------------+-------------+

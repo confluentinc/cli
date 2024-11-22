@@ -3,18 +3,27 @@
     "id": "ccl-123456",
     "cloud": "AWS",
     "region": "us-west-2",
-    "environment": "env-000000"
+    "environment": "env-000000",
+    "topic": "topic-123",
+    "cluster": "cluster-123",
+    "log_level": "INFO"
   },
   {
     "id": "ccl-456789",
     "cloud": "AWS",
     "region": "us-west-2",
-    "environment": "env-111111"
+    "environment": "env-111111",
+    "topic": "topic-456",
+    "cluster": "cluster-456",
+    "log_level": "ERROR"
   },
   {
     "id": "ccl-789012",
     "cloud": "AWS",
     "region": "us-west-2",
-    "environment": "env-222222"
+    "environment": "env-222222",
+    "topic": "topic-789",
+    "cluster": "cluster-789",
+    "log_level": "DEBUG"
   }
 ]
