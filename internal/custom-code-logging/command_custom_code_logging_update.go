@@ -49,6 +49,7 @@ func (c *customCodeLoggingCommand) update(cmd *cobra.Command, args []string) err
 		} else {
 			updateCustomPluginRequest.SetDestinationSettings(cclv1.CclV1CustomCodeLoggingUpdateDestinationSettingsOneOf{
 				CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
+					Kind:     "Kafka",
 					LogLevel: cclv1.PtrString(logLevel),
 				},
 			})
