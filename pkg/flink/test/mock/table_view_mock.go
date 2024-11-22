@@ -5,6 +5,7 @@
 //
 //	mockgen -destination table_view_mock.go -package=mock github.com/confluentinc/cli/v4/pkg/flink/components TableViewInterface
 //
+
 // Package mock is a generated GoMock package.
 package mock
 
