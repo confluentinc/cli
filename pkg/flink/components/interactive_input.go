@@ -7,7 +7,6 @@ import (
 	"github.com/mattn/go-runewidth"
 
 	"github.com/confluentinc/cli/v4/pkg/color"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -57,7 +56,8 @@ func PrintWelcomeHeader(appOtions types.ApplicationOptions) {
 	// Print shortcuts
 	c := fColor.New(color.AccentColor)
 
-	if featureflags.Manager.BoolVariation("cli.flink.shell.enable_diagnostics_toggle", appOtions.Context, config.CliLaunchDarklyClient, true, false) {
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(appOtions.Context.PlatformName)
+	if featureflags.Manager.BoolVariation("flink.language_service.enable_diagnostics", appOtions.Context, ldClient, true, false) {
 		output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s [Ctrl-G] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"), c.Sprint("Toggle Diagnostics"))
 	} else {
 		output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"))
