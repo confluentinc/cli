@@ -1,5 +1,5 @@
-      Id     | Cloud |  Region   | Environment  
--------------+-------+-----------+--------------
-  ccl-123456 | AWS   | us-west-2 | env-000000   
-  ccl-456789 | AWS   | us-west-2 | env-111111   
-  ccl-789012 | AWS   | us-west-2 | env-222222   
+      Id     | Cloud |  Region   | Environment |   Topic   |   Cluster   | Log Level  
+-------------+-------+-----------+-------------+-----------+-------------+------------
+  ccl-123456 | AWS   | us-west-2 | env-000000  | topic-123 | cluster-123 | INFO       
+  ccl-456789 | AWS   | us-west-2 | env-111111  | topic-456 | cluster-456 | ERROR      
+  ccl-789012 | AWS   | us-west-2 | env-222222  | topic-789 | cluster-789 | DEBUG      
