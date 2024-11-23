@@ -1,4 +1,4 @@
-      Id     | Cloud |  Region   | Environment |   Topic   |   Cluster   | Log Level  
+      ID     | Cloud |  Region   | Environment |   Topic   |   Cluster   | Log Level  
 -------------+-------+-----------+-------------+-----------+-------------+------------
   ccl-123456 | AWS   | us-west-2 | env-000000  | topic-123 | cluster-123 | INFO       
   ccl-456789 | AWS   | us-west-2 | env-111111  | topic-456 | cluster-456 | ERROR      

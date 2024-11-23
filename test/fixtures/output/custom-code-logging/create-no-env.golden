@@ -1,5 +1,5 @@
 +-------------+-------------+
-| Id          | ccl-123456  |
+| ID          | ccl-123456  |
 | Cloud       | AWS         |
 | Region      | us-west-2   |
 | Environment | env-000000  |
