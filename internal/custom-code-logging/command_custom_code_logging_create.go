@@ -107,6 +107,6 @@ func (c *customCodeLoggingCommand) createCustomCodeLogging(cmd *cobra.Command, a
 	}
 	table := output.NewTable(cmd)
 	table.Add(getCustomCodeLogging(resp))
-	table.Filter([]string{"Id", "Cloud", "Region", "Environment", "Topic", "Cluster", "LogLevel"})
+	table.Filter([]string{"ID", "Cloud", "Region", "Environment", "Topic", "Cluster", "LogLevel"})
 	return table.Print()
 }
