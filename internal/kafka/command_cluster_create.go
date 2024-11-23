@@ -77,22 +77,22 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	availabilityString, err := cmd.Flags().GetString("availability")
-	if err != nil {
-		return err
-	}
-
-	availability, err := stringToAvailability(availabilityString)
-	if err != nil {
-		return err
-	}
-
 	clusterType, err := cmd.Flags().GetString("type")
 	if err != nil {
 		return err
 	}
 
 	sku, err := stringToSku(clusterType)
+	if err != nil {
+		return err
+	}
+
+	availabilityString, err := cmd.Flags().GetString("availability")
+	if err != nil {
+		return err
+	}
+
+	availability, err := stringToAvailability(availabilityString, sku)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,12 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
 }
 
-func stringToAvailability(s string) (string, error) {
+func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
+	if sku == ccstructs.Sku_FREIGHT {
+		if modelAvailability, ok := availabilitiesToFreightModel[s]; ok {
+			return modelAvailability, nil
+		}
+	}
 	if modelAvailability, ok := availabilitiesToModel[s]; ok {
 		return modelAvailability, nil
 	}

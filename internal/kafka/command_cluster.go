@@ -14,16 +14,25 @@ const (
 	multiZone        = "multi-zone"
 	lowAvailability  = "SINGLE_ZONE"
 	highAvailability = "MULTI_ZONE"
+	low              = "LOW"
+	high             = "HIGH"
 )
 
 var availabilitiesToHuman = map[string]string{
 	lowAvailability:  singleZone,
 	highAvailability: multiZone,
+	low:              singleZone,
+	high:             multiZone,
 }
 
 var availabilitiesToModel = map[string]string{
 	singleZone: lowAvailability,
 	multiZone:  highAvailability,
+}
+
+var availabilitiesToFreightModel = map[string]string{
+	singleZone: low,
+	multiZone:  high,
 }
 
 type clusterCommand struct {
