@@ -168,9 +168,10 @@ func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
 		if modelAvailability, ok := availabilitiesToFreightModel[s]; ok {
 			return modelAvailability, nil
 		}
-	}
-	if modelAvailability, ok := availabilitiesToModel[s]; ok {
-		return modelAvailability, nil
+	} else {
+		if modelAvailability, ok := availabilitiesToModel[s]; ok {
+			return modelAvailability, nil
+		}
 	}
 	return "", errors.NewErrorWithSuggestions(
 		fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
