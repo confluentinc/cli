@@ -31,6 +31,7 @@ func handleCustomCodeLoggings(t *testing.T) http.HandlerFunc {
 						Kind:      KAFKA,
 						Topic:     "topic-123",
 						ClusterId: "cluster-123",
+						LogLevel:  cclv1.PtrString("INFO"),
 					},
 				},
 			}

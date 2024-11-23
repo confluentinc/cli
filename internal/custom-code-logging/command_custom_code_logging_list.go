@@ -42,6 +42,6 @@ func (c *customCodeLoggingCommand) list(cmd *cobra.Command, _ []string) error {
 	for _, customCodeLogging := range customCodeLoggings {
 		list.Add(getCustomCodeLogging(customCodeLogging))
 	}
-	list.Filter([]string{"Id", "Cloud", "Region", "Environment"})
+	list.Filter([]string{"Id", "Cloud", "Region", "Environment", "Topic", "Cluster", "LogLevel"})
 	return list.Print()
 }

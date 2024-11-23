@@ -2,5 +2,8 @@
   "id": "ccl-456789",
   "cloud": "AWS",
   "region": "us-west-2",
-  "environment": "env-111111"
+  "environment": "env-111111",
+  "topic": "topic-456",
+  "cluster": "cluster-456",
+  "log_level": "ERROR"
 }

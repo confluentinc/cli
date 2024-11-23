@@ -14,7 +14,7 @@ type customCodeLoggingCommand struct {
 }
 
 type customCodeLoggingOut struct {
-	Id          string `human:"Id" serialized:"id"`
+	Id          string `human:"ID" serialized:"id"`
 	Cloud       string `human:"Cloud" serialized:"cloud"`
 	Region      string `human:"Region" serialized:"region"`
 	Environment string `human:"Environment" serialized:"environment"`
