@@ -78,9 +78,14 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId,
 	serdeConfig := protobuf.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
-	serdeConfig.RuleConfig = map[string]string{
-		"secret": "protobuf_secret",
+
+	// local KMS secret is only set and used during local testing with ruleSet
+	if localKmsSecretValue := os.Getenv(localKmsSecretMacro); srClientUrl == mockClientUrl && localKmsSecretValue != "" {
+		serdeConfig.RuleConfig = map[string]string{
+			localKmsSecretKey: localKmsSecretValue,
+		}
 	}
+
 	if schemaId > 0 {
 		serdeConfig.UseSchemaID = schemaId
 		serdeConfig.UseLatestVersion = false

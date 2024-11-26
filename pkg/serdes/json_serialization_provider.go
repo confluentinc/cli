@@ -3,6 +3,7 @@ package serdes
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
@@ -55,9 +56,14 @@ func (j *JsonSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
 	serdeConfig.EnableValidation = true
-	serdeConfig.RuleConfig = map[string]string{
-		"secret": "json_secret",
+
+	// local KMS secret is only set and used during local testing with ruleSet
+	if localKmsSecretValue := os.Getenv(localKmsSecretMacro); srClientUrl == mockClientUrl && localKmsSecretValue != "" {
+		serdeConfig.RuleConfig = map[string]string{
+			localKmsSecretKey: localKmsSecretValue,
+		}
 	}
+
 	if schemaId > 0 {
 		serdeConfig.UseSchemaID = schemaId
 		serdeConfig.UseLatestVersion = false
