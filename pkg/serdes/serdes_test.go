@@ -623,7 +623,7 @@ import "address.proto";
 
 message Person {
   string name = 1;
-  io.confluent.Address address = 2;
+  test.Address address = 2;
   int32 result = 3;
 }
 `
