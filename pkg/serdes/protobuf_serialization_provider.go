@@ -3,20 +3,41 @@ package serdes
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/bufbuild/protocompile"
+	"github.com/otiai10/copy"
 	"google.golang.org/protobuf/encoding/protojson"
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/awskms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/azurekms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/gcpkms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/hcvault"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/localkms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/jsonata"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
+
+const (
+	confluentBuiltInSchemaFolder = "confluent"
+	googleBuiltInSchemaFolder    = "google"
+)
+
+var builtInSchemaFoldersToCopy = []string{
+	confluentBuiltInSchemaFolder,
+	googleBuiltInSchemaFolder,
+}
 
 type ProtobufSerializationProvider struct {
 	ser     *protobuf.Serializer
@@ -37,6 +58,16 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId,
 	}
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
+	// Register the KMS drivers and the field-level encryption executor
+	awskms.Register()
+	azurekms.Register()
+	gcpkms.Register()
+	hcvault.Register()
+	localkms.Register()
+	encryption.Register()
+	cel.Register()
+	jsonata.Register()
+
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
@@ -47,6 +78,9 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId,
 	serdeConfig := protobuf.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
+	serdeConfig.RuleConfig = map[string]string{
+		"secret": "protobuf_secret",
+	}
 	if schemaId > 0 {
 		serdeConfig.UseSchemaID = schemaId
 		serdeConfig.UseLatestVersion = false
@@ -99,13 +133,43 @@ func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]byte
 
 func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto.Message, error) {
 	// Collect import paths
-	importPaths := []string{filepath.Dir(schemaPath)}
+	importPath := filepath.Dir(schemaPath)
+	importPaths := []string{importPath}
+
 	for _, path := range referencePathMap {
 		importPaths = append(importPaths, strings.SplitAfter(path, "ccloud-schema")[0])
 	}
 
 	resolver := &protocompile.SourceResolver{
 		ImportPaths: importPaths,
+	}
+
+	currDir, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("Error getting current working directory: %v\n", err)
+	}
+	log.CliLogger.Debugf("Current working directory is: %s\n", currDir)
+
+	// Copy all the built-in proto schemas needed for CSFLE to <importPath> where the main schema is stored
+	// Note: folder path should be set correctly based on current working directory
+	// Expected working directory in CLI test is: /Users/github.com/confluentinc/cli/pkg/serdes
+	// Expected working directory in CLI shell execution is: /Users/github.com/confluentinc/cli
+	for _, folder := range builtInSchemaFoldersToCopy {
+		dst := importPath + "/" + folder
+
+		// Skip copying the built-in schema folders if they are present already in the temp folder
+		if _, err = os.Stat(dst); err == nil {
+			log.CliLogger.Debugf("Built-in schema folder already exists %s, skipping copy again:\n", dst)
+			continue
+		}
+
+		// Locate the source of built-in schema folders
+		if strings.HasSuffix(currDir, "confluentinc/cli") {
+			folder = "pkg/serdes/" + folder
+		}
+		if err = copy.Copy(folder, dst); err != nil {
+			return nil, fmt.Errorf("Error copying built-in schemas folder %s: %w\n", folder, err)
+		}
 	}
 
 	// Create the compiler
@@ -116,7 +180,7 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto
 	// Parse and compile the .proto files
 	compiledFiles, err := compiler.Compile(context.Background(), filepath.Base(schemaPath))
 	if err != nil {
-		return nil, fmt.Errorf("error compiling or finding .proto files")
+		return nil, fmt.Errorf("error compiling .proto files: %w\n", err)
 	}
 	if len(compiledFiles) == 0 {
 		return nil, fmt.Errorf("error fetching valid compiled files")
