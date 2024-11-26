@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"fmt"
+	"github.com/bradleyjkemp/cupaloy/v2"
+	"github.com/confluentinc/cli/v4/pkg/flink/test"
 	"net/http"
 	"reflect"
 	"strings"
@@ -1189,7 +1191,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	}
 	serviceAccountId := "sa-123"
 	store := Store{
-		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
+		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "client.statement-name": "statement-name"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1214,7 +1216,14 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	client.EXPECT().CreateStatement(SqlV1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, nil)
 
-	processedStatement, err := store.ProcessStatement(statement)
+	var processedStatement *types.ProcessedStatement
+	var err *types.StatementError
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		processedStatement, err = store.ProcessStatement(statement)
+
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
 }
@@ -1241,7 +1250,9 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 		Context:        &config.Context{State: contextState, Config: &config.Config{}},
 	}
 	store := Store{
-		Properties:       NewUserPropertiesWithDefaults(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+		Properties: NewUserPropertiesWithDefaults(
+			map[string]string{"client.statement-name": "statement-name"}, map[string]string{},
+		),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1265,7 +1276,14 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	client.EXPECT().CreateStatement(SqlV1StatementMatcher{statementObj}, user, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, nil)
 
-	processedStatement, err := store.ProcessStatement(statement)
+	var processedStatement *types.ProcessedStatement
+	var err *types.StatementError
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		processedStatement, err = store.ProcessStatement(statement)
+
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
 }
@@ -1279,7 +1297,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		ComputePoolId:  "computePoolId",
 	}
 	store := Store{
-		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "TestProp": "TestVal"}, map[string]string{}),
+		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "client.statement-name": "statement-name"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1308,7 +1326,14 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		FailureMessage: statusDetailMessage,
 	}
 
-	processedStatement, err := store.ProcessStatement(statement)
+	var processedStatement *types.ProcessedStatement
+	var err *types.StatementError
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		processedStatement, err = store.ProcessStatement(statement)
+
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
 	require.Nil(s.T(), processedStatement)
 	require.Equal(s.T(), expectedError, err)
 }
@@ -1348,7 +1373,14 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 	client.EXPECT().CreateStatement(SqlV1StatementMatcher{statementObj}, serviceAccountId, appOptions.EnvironmentId, appOptions.OrganizationId).
 		Return(statementObj, nil)
 
-	processedStatement, err := store.ProcessStatement(statement)
+	var processedStatement *types.ProcessedStatement
+	var err *types.StatementError
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		processedStatement, err = store.ProcessStatement(statement)
+
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
 	// statement name should be cleared after submission

@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
 	"net/url"
 	"strings"
 	"time"
@@ -91,6 +92,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		principal = s.appOptions.GetContext().GetUser().GetResourceId()
 	}
 
+	utils.OutputInfof("Statement name: %s\nSubmitting statement...", statementName)
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
 		createSqlV1Statement(statement, statementName, computePoolId, properties),
 		principal,
