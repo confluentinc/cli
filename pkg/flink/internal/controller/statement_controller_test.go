@@ -321,12 +321,10 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 		{
 			name:      "local failed statement",
 			statement: types.ProcessedStatement{IsLocalStatement: true, Status: types.FAILED},
-			want:      "Error: couldn't process statement, please check your statement and try again\n",
 		},
 		{
 			name:      "local non-failed statement",
 			statement: types.ProcessedStatement{IsLocalStatement: true, Status: types.RUNNING},
-			want:      "Statement successfully submitted.\n",
 		},
 	}
 	for _, test := range tests {
@@ -346,12 +344,10 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedState
 		{
 			name:      "statement with name",
 			statement: types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED},
-			want:      "Statement name: test-statement\nError: statement submission failed\n",
 		},
 		{
 			name:      "statement without name",
 			statement: types.ProcessedStatement{Status: types.FAILED},
-			want:      "Error: statement submission failed\n",
 		},
 	}
 	for _, test := range tests {
@@ -371,12 +367,10 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedSt
 		{
 			name:      "statement with name",
 			statement: types.ProcessedStatement{StatementName: "test-statement", Status: types.RUNNING},
-			want:      "Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n",
 		},
 		{
 			name:      "statement without name",
 			statement: types.ProcessedStatement{Status: types.RUNNING},
-			want:      "Statement successfully submitted.\nFetching results...\n",
 		},
 	}
 	for _, test := range tests {

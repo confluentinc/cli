@@ -3,14 +3,13 @@ package store
 import (
 	"context"
 	"fmt"
-	"github.com/bradleyjkemp/cupaloy/v2"
-	"github.com/confluentinc/cli/v4/pkg/flink/test"
 	"net/http"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/bradleyjkemp/cupaloy/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -23,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors/flink"
 	flinkconfig "github.com/confluentinc/cli/v4/pkg/flink/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/test"
 	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -1220,7 +1220,6 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
 		processedStatement, err = store.ProcessStatement(statement)
-
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1280,7 +1279,6 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
 		processedStatement, err = store.ProcessStatement(statement)
-
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1330,7 +1328,6 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
 		processedStatement, err = store.ProcessStatement(statement)
-
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1377,7 +1374,6 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
 		processedStatement, err = store.ProcessStatement(statement)
-
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
