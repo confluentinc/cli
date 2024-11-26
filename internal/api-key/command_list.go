@@ -117,9 +117,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		email := c.getEmail(ownerId, auditLogServiceAccountId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
 
+		multiClusterResources := apiKey.Spec.GetResources()
+
 		// Check if multicluster keys are enabled, and if so check the resources field
-		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, config.CliLaunchDarklyClient, true, false) && len(apiKey.Spec.GetResources()) > 0 {
-			resources = apiKey.Spec.GetResources()
+		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, config.CliLaunchDarklyClient, true, false) && len(multiClusterResources) > 0 {
+			resources = multiClusterResources
 		}
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
