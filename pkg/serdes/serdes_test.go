@@ -208,6 +208,7 @@ func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 
 	dir, err := createTempDir()
 	req.Nil(err)
+	t.Setenv(localKmsSecretMacro, localKmsSecretValueDefault)
 
 	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string","confluent:tags": ["PII"]}]}`
 	schemaPath := filepath.Join(dir, "avro-schema.txt")
@@ -490,6 +491,7 @@ func TestJsonSerdesValidWithRuleSet(t *testing.T) {
 
 	dir, err := createTempDir()
 	req.Nil(err)
+	t.Setenv(localKmsSecretMacro, localKmsSecretValueDefault)
 
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string","confluent:tags": ["PII"]}},"required":["f1"]}`
 	schemaPath := filepath.Join(dir, "json-schema-ruleset.json")
@@ -795,6 +797,7 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 
 	dir, err := createTempDir()
 	req.Nil(err)
+	t.Setenv(localKmsSecretMacro, localKmsSecretValueDefault)
 
 	schemaString := `
 	syntax = "proto3";

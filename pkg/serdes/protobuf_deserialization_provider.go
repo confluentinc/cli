@@ -2,6 +2,7 @@ package serdes
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -48,8 +49,12 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srCluste
 	}
 
 	serdeConfig := protobuf.NewDeserializerConfig()
-	serdeConfig.RuleConfig = map[string]string{
-		"secret": "protobuf_secret",
+
+	// local KMS secret is only set and used during local testing with ruleSet
+	if localKmsSecretValue := os.Getenv(localKmsSecretMacro); srClientUrl == mockClientUrl && localKmsSecretValue != "" {
+		serdeConfig.RuleConfig = map[string]string{
+			localKmsSecretKey: localKmsSecretValue,
+		}
 	}
 
 	var serdeType serde.Type
