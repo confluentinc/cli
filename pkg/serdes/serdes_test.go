@@ -603,7 +603,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 
 	referenceString := `syntax = "proto3";
 
-package io.confluent;
+package test;
 
 message Address {
   string city = 1;
@@ -617,7 +617,7 @@ message Address {
 
 	schemaString := `syntax = "proto3";
 
-package io.confluent;
+package test;
 
 import "address.proto";
 
@@ -800,6 +800,7 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	syntax = "proto3";
 
  	import "confluent/meta.proto";
+	package test;
 
 	message Person {
       string name = 1 [

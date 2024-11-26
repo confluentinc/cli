@@ -26,6 +26,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 const (
@@ -147,19 +148,27 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto
 	if err != nil {
 		return nil, fmt.Errorf("Error getting current working directory: %v\n", err)
 	}
-	fmt.Printf("Current working directory is: %s\n", currDir)
+	log.CliLogger.Debugf("Current working directory is: %s\n", currDir)
 
 	// Copy all the built-in proto schemas needed for CSFLE to <importPath> where the main schema is stored
+	// Note: folder path should be set correctly based on current working directory
+	// Expected working directory in CLI test is: /Users/github.com/confluentinc/cli/pkg/serdes
+	// Expected working directory in CLI shell execution is: /Users/github.com/confluentinc/cli
 	for _, folder := range builtInSchemaFoldersToCopy {
 		dst := importPath + "/" + folder
-		// Note: folder path should be set correctly based on current working directory
-		// Expected working directory in CLI test is: /Users/github.com/confluentinc/cli/pkg/serdes
-		// Expected working directory in CLI shell execution is: /Users/github.com/confluentinc/cli
+
+		// Skip copying the built-in schema folders if they are present already in the temp folder
+		if _, err = os.Stat(dst); err == nil {
+			log.CliLogger.Debugf("Built-in schema folder already exists %s, skipping copy again:\n", dst)
+			continue
+		}
+
+		// Locate the source of built-in schema folders
 		if strings.HasSuffix(currDir, "confluentinc/cli") {
 			folder = "pkg/serdes/" + folder
 		}
-		if err := copy.Copy(folder, dst); err != nil {
-			return nil, fmt.Errorf("Error copying folder %s: %v\n", folder, err)
+		if err = copy.Copy(folder, dst); err != nil {
+			return nil, fmt.Errorf("Error copying built-in schemas folder %s: %w\n", folder, err)
 		}
 	}
 
