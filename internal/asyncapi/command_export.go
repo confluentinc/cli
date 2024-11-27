@@ -17,6 +17,7 @@ import (
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
 	"github.com/confluentinc/cli/v4/internal/kafka"
+	"github.com/confluentinc/cli/v4/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -110,6 +111,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	defer accountDetails.consumer.Close()
 	// Servers & Info Section
 	reflector := addServer(accountDetails.kafkaUrl, accountDetails.schemaRegistryUrl, flags.specVersion)
 	log.CliLogger.Debug("Generating AsyncAPI specification")
@@ -229,7 +231,6 @@ func (c *command) getAccountDetails(cmd *cobra.Command, flags *flags) (*accountD
 		if err != nil {
 			return nil, err
 		}
-		defer details.consumer.Close()
 	}
 
 	return details, nil
@@ -275,7 +276,16 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
 
-	err = deserializationProvider.InitDeserializer("", "", "value", "", "", "", srClient)
+	token, err := auth.GetDataplaneToken(c.Context)
+	if err != nil {
+		return nil, err
+	}
+	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	err = deserializationProvider.InitDeserializer(srEndpoint, srClusterId, "value", "", "", token, nil)
 	if err != nil {
 		return nil, err
 	}
