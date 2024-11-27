@@ -106,7 +106,7 @@ blocks:
             - $Env:GOCOVERDIR = "test/coverage"
             - New-Item $Env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
-            - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
+            - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -race -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test)
             - go tool covdata textfmt -i $Env:GOCOVERDIR -o test/coverage.out
       epilogue:
