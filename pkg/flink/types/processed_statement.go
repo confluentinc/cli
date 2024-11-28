@@ -67,9 +67,6 @@ func (s ProcessedStatement) printStatusMessageOfLocalStatement() {
 }
 
 func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
-	if s.StatementName != "" {
-		utils.OutputInfof("Statement name: %s\n", s.StatementName)
-	}
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))
 	} else {
@@ -79,9 +76,6 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 }
 
 func (s ProcessedStatement) PrintOutputDryRunStatement() {
-	if s.StatementName != "" {
-		utils.OutputInfof("Statement name: %s\n", s.StatementName)
-	}
 	utils.OutputInfo(fmt.Sprintf("Statement successfully submitted. Statement phase is %s.", s.Status))
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Dry run statement was verified and there were issues found.\nError: %s", s.StatusDetail))

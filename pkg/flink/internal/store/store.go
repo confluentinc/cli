@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -91,6 +92,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		principal = s.appOptions.GetContext().GetUser().GetResourceId()
 	}
 
+	utils.OutputInfof("Statement name: %s\nSubmitting statement...", statementName)
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
 		createSqlV1Statement(statement, statementName, computePoolId, properties),
 		principal,
