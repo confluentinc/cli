@@ -111,7 +111,9 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	defer accountDetails.consumer.Close()
+	if flags.consumeExamples {
+		defer accountDetails.consumer.Close()
+	}
 	// Servers & Info Section
 	reflector := addServer(accountDetails.kafkaUrl, accountDetails.schemaRegistryUrl, flags.specVersion)
 	log.CliLogger.Debug("Generating AsyncAPI specification")
