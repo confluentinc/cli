@@ -372,6 +372,10 @@ func checkMachineArch() error {
 		systemArch = "amd64"
 	}
 
+	if systemArch == "aarch64" {
+		systemArch = "arm64"
+	}
+
 	if systemArch != runtime.GOARCH {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch),
