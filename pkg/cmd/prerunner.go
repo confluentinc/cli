@@ -730,7 +730,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, _ string) {
 		return
 	}
 
-	minorVersions, majorVersions := update.FilterUpdates(binaries, current, false)
+	minorVersions, majorVersions := update.FilterUpdates(binaries, current)
 
 	if len(majorVersions) > 0 {
 		output.ErrPrintf(r.Config.EnableColor, "A major version update is available for %s from (current: %s, latest: %s).\n", pversion.CLIName, current, majorVersions[len(majorVersions)-1])

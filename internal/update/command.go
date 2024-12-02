@@ -93,7 +93,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	minorVersions, majorVersions := pupdate.FilterUpdates(binaries, current, major)
+	minorVersions, majorVersions := pupdate.FilterUpdates(binaries, current)
 
 	if len(minorVersions) == 0 && len(majorVersions) == 0 {
 		output.Println(c.Config.EnableColor, "Already up to date.")
@@ -105,7 +105,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	versions := minorVersions
 	if major {
-		versions = majorVersions
+		versions = append(minorVersions, majorVersions...)
 	}
 
 	output.Printf(c.Config.EnableColor, "New version of confluent is available\n")
