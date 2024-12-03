@@ -3,6 +3,7 @@ package kafka
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/properties"
 	"github.com/confluentinc/cli/v4/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/retry"
 	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
@@ -114,11 +116,39 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		updateResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
+		_, err = kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
 		if err != nil {
 			return err
 		}
-		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
+
+		errPartition := retry.Retry(time.Second/10, time.Second, func() error {
+			topic, httpRespPartition, err := kafkaREST.CloudClient.GetKafkaTopic(topicName)
+			if err != nil {
+				if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
+					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+				}
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpRespPartition)
+			}
+
+			if int64(topic.PartitionsCount) != (updateNumPartitionsInt) {
+				return fmt.Errorf(`the partition count not yet updated`)
+			}
+			return nil
+		})
+
+		if errPartition != nil {
+			return errPartition
+		}
+
+		topic, httpRespPartition, errUpdated := kafkaREST.CloudClient.GetKafkaTopic(topicName)
+		if errUpdated != nil {
+			if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(errUpdated); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
+				return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+			}
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), errUpdated, httpRespPartition)
+		}
+
+		configsValues[numPartitionsKey] = fmt.Sprint(topic.PartitionsCount)
 		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
 		kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
 	}
