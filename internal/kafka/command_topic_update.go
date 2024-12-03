@@ -122,6 +122,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 		topic, httpRespPartition, err := kafkaREST.CloudClient.GetKafkaTopic(topicName)
 		errPartition := retry.Retry(time.Second/10, time.Second, func() error {
+			topic, httpRespPartition, err = kafkaREST.CloudClient.GetKafkaTopic(topicName)
 			if err != nil {
 				if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
@@ -137,14 +138,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 		if errPartition != nil {
 			return errPartition
-		}
-
-		topic, httpRespPartition, err = kafkaREST.CloudClient.GetKafkaTopic(topicName)
-		if err != nil {
-			if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-				return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-			}
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpRespPartition)
 		}
 
 		configsValues[numPartitionsKey] = fmt.Sprint(topic.PartitionsCount)
