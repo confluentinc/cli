@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
@@ -54,6 +55,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/form"
 	"github.com/confluentinc/cli/v4/pkg/help"
 	"github.com/confluentinc/cli/v4/pkg/jwt"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	ppanic "github.com/confluentinc/cli/v4/pkg/panic-recovery"
 	pplugin "github.com/confluentinc/cli/v4/pkg/plugin"
@@ -151,8 +153,8 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 	defer func() {
 		if r := recover(); r != nil {
-			if !cfg.Version.IsReleased() {
-				panic(r)
+			if !cfg.IsCloudLogin() || cfg.HasGovHostname() || !cfg.Version.IsReleased() {
+				log.CliLogger.Trace(string(debug.Stack()))
 			}
 			u := ppanic.CollectPanic(cmd, args, cfg)
 			if err := reportUsage(cmd, cfg, u); err != nil {
