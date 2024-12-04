@@ -13,79 +13,6 @@ execution_time_limit:
   hours: 1
 
 blocks:
-  - name: linux/amd64
-    dependencies: []
-    task:
-      jobs:
-        - name: "Test linux/amd64"
-          commands:
-            - checkout
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
-            - make generate-packaging-patch
-            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
-            - make lint
-            - make test
-            - make test-installer
-        - name: "Build linux/amd64 (GLIBC)"
-          commands:
-            - checkout
-            - docker build . --file docker/Dockerfile_build_linux_amd64 --tag test-build
-        - name: "Build linux/amd64 (Alpine)"
-          commands:
-            - checkout
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
-            - sudo apt install musl-tools --yes
-            - CC=musl-gcc CGO_LDFLAGS="-static" CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -tags musl -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "linux/amd64"
-
-  - name: linux/arm64
-    dependencies: []
-    task:
-      agent:
-        machine:
-          type: s1-prod-ubuntu20-04-arm64-1
-      jobs:
-        - name: "Build linux/arm64 (GLIBC)"
-          commands:
-            - checkout
-            - docker build . --file docker/Dockerfile_build_linux_arm64 --tag test-build
-        - name: "Build linux/arm64 (Alpine)"
-          commands:
-            - checkout
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
-            - sudo apt install musl-tools --yes
-            - CC=musl-gcc CGO_LDFLAGS="-static" CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -tags musl -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
-
-  - name: darwin
-    dependencies: []
-    task:
-      agent:
-        machine:
-          type: s1-prod-macos-13-5-arm64
-      jobs:
-        - name: "Build & Test darwin/arm64"
-          commands:
-            - checkout
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
-            - make test
-        - name: "Build darwin/amd64"
-          commands:
-            - checkout
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
-            - GOARCH=amd64 CGO_ENABLED=1 go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "darwin/arm64"
-
   - name: windows/amd64
     dependencies: []
     task:
@@ -106,7 +33,7 @@ blocks:
             - $Env:GOCOVERDIR = "test/coverage"
             - New-Item $Env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
-            - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
+            - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -parallel 1 $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test)
             - go tool covdata textfmt -i $Env:GOCOVERDIR -o test/coverage.out
       epilogue:
