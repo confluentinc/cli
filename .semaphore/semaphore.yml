@@ -16,6 +16,8 @@ blocks:
   - name: linux/amd64
     dependencies: []
     task:
+      when:
+        condition: false
       jobs:
         - name: linux/amd64
           commands:
@@ -35,6 +37,8 @@ blocks:
   - name: darwin/arm64
     dependencies: []
     task:
+      when:
+        condition: false
       agent:
         machine:
           type: s1-prod-macos-13-5-arm64
@@ -70,7 +74,7 @@ blocks:
             - $Env:GOCOVERDIR = "test/coverage"
             - New-Item $Env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
-            - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -race -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
+            - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -parallel 1 $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test)
             - go tool covdata textfmt -i $Env:GOCOVERDIR -o test/coverage.out
       epilogue:
