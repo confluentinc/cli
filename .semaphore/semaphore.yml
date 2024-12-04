@@ -16,8 +16,6 @@ blocks:
   - name: linux/amd64
     dependencies: []
     task:
-      when:
-        condition: false
       jobs:
         - name: "Test linux/amd64"
           commands:
@@ -67,8 +65,6 @@ blocks:
   - name: darwin
     dependencies: []
     task:
-      when:
-        condition: false
       agent:
         machine:
           type: s1-prod-macos-13-5-arm64
