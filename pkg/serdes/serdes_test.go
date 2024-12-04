@@ -3,6 +3,7 @@ package serdes
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,6 +12,24 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 )
+
+var tempDir string
+
+func TestMain(m *testing.M) {
+	// Create the temporary directory used for placing schemas
+	tempDir, _ = createTempDir()
+
+	// Run the required test(s)
+	code := m.Run()
+
+	// Cleanup directory here will always run after all test(s) have been executed.
+	if err := os.RemoveAll(tempDir); err != nil {
+		fmt.Printf("failed to remove temporary directory: %s", err)
+		code = 1
+	}
+
+	os.Exit(code)
+}
 
 func TestGetSerializationProvider(t *testing.T) {
 	req := require.New(t)
@@ -61,11 +80,8 @@ func TestStringSerdes(t *testing.T) {
 func TestAvroSerdesValid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
-	req.Nil(err)
-
 	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"int"}]}`
-	schemaPath := filepath.Join(dir, "avro-schema.txt")
+	schemaPath := filepath.Join(tempDir, "avro-schema.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// expectedBytes[0] is the magic byte, expectedBytes[1:5] is the schemaId in BigIndian
@@ -74,7 +90,7 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -103,22 +119,18 @@ func TestAvroSerdesValid(t *testing.T) {
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestAvroSerdesInvalid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
-	req.Nil(err)
-
 	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string"}]}`
-	schemaPath := filepath.Join(dir, "avro-schema-invalid.txt")
+	schemaPath := filepath.Join(tempDir, "avro-schema-invalid.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -151,18 +163,13 @@ func TestAvroSerdesInvalid(t *testing.T) {
 	invalidString := `{"f2": "abc"}`
 	_, err = serializationProvider.Serialize("topic1", invalidString)
 	req.Regexp(`cannot decode textual map: cannot determine codec: "f2"$`, err)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestAvroSerdesNestedValid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
-	req.Nil(err)
-
 	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string"},{"name":"nestedField","type":{"type":"record","name":"AnotherNestedRecord","fields":[{"name":"nested_field1","type":"float"},{"name":"nested_field2","type":"string"}]}}]}`
-	schemaPath := filepath.Join(dir, "avro-schema-nested.txt")
+	schemaPath := filepath.Join(tempDir, "avro-schema-nested.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// expectedBytes[0] is the magic byte, expectedBytes[1:5] is the schemaId in BigIndian
@@ -171,7 +178,7 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -200,25 +207,22 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
-	req.Nil(err)
 	t.Setenv(localKmsSecretMacro, localKmsSecretValueDefault)
 
 	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string","confluent:tags": ["PII"]}]}`
-	schemaPath := filepath.Join(dir, "avro-schema.txt")
+	schemaPath := filepath.Join(tempDir, "avro-schema.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"f1":"this is a confidential message in AVRO schema"}`
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -263,17 +267,13 @@ func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestJsonSerdesValid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
-	req.Nil(err)
-
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
-	schemaPath := filepath.Join(dir, "json-schema.json")
+	schemaPath := filepath.Join(tempDir, "json-schema.json")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"f1":"asd"}`
@@ -281,7 +281,7 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -311,26 +311,21 @@ func TestJsonSerdesValid(t *testing.T) {
 	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
 	req.Nil(err)
 	req.Equal(expectedString, actualString)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestJsonSerdesReference(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
-	req.Nil(err)
-
 	// Reference schema should be registered from user side prior to be used as reference
 	// So subject and schema version will be known value at this time
 	referenceContent := `[{"name":"RefSchema","subject":"topic2-value","version":1}]`
 	referenceString := `{"type": "string"}`
-	referencePath := filepath.Join(dir, "json-reference.json")
+	referencePath := filepath.Join(tempDir, "json-reference.json")
 	req.NoError(os.WriteFile(referencePath, []byte(referenceContent), 0644))
 
 	// Prepare main schema information
 	schemaString := `{"type":"object","properties":{"f1":{"$ref":"RefSchema"}},"required":["f1"]}`
-	schemaPath := filepath.Join(dir, "json-schema.json")
+	schemaPath := filepath.Join(tempDir, "json-schema.json")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// Read references from local reference schema file
@@ -380,23 +375,18 @@ func TestJsonSerdesReference(t *testing.T) {
 	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
 	req.Nil(err)
 	req.Equal(expectedString, actualString)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestJsonSerdesInvalid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
-	req.Nil(err)
-
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
-	schemaPath := filepath.Join(dir, "json-schema-invalid.json")
+	schemaPath := filepath.Join(tempDir, "json-schema-invalid.json")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -432,18 +422,13 @@ func TestJsonSerdesInvalid(t *testing.T) {
 
 	_, err = deserializationProvider.Deserialize("topic1", invalidBytes)
 	req.Regexp("unknown magic byte$", err)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestJsonSerdesNestedValid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
-	req.Nil(err)
-
 	schemaString := `{"type":"object","name":"myRecord","properties":{"f1":{"type":"string"},"nestedField":{"type":"object","name":"AnotherNestedRecord","properties":{"nested_field1":{"type":"number"},"nested_field2":{"type":"string"}}}},"required":["f1","nestedField"]}`
-	schemaPath := filepath.Join(dir, "json-schema-nested.txt")
+	schemaPath := filepath.Join(tempDir, "json-schema-nested.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// expectedBytes[0] is the magic byte, expectedBytes[1:5] is the schemaId in BigIndian
@@ -454,7 +439,7 @@ func TestJsonSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -483,25 +468,21 @@ func TestJsonSerdesNestedValid(t *testing.T) {
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestJsonSerdesValidWithRuleSet(t *testing.T) {
 	req := require.New(t)
-
-	dir, err := createTempDir()
-	req.Nil(err)
 	t.Setenv(localKmsSecretMacro, localKmsSecretValueDefault)
 
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string","confluent:tags": ["PII"]}},"required":["f1"]}`
-	schemaPath := filepath.Join(dir, "json-schema-ruleset.json")
+	schemaPath := filepath.Join(tempDir, "json-schema-ruleset.json")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"f1":"this is a confidential message in JSON schema"}`
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -546,14 +527,10 @@ func TestJsonSerdesValidWithRuleSet(t *testing.T) {
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestProtobufSerdesValid(t *testing.T) {
 	req := require.New(t)
-
-	dir, err := createTempDir()
-	req.Nil(err)
 
 	schemaString := `
 	syntax = "proto3";
@@ -562,13 +539,13 @@ func TestProtobufSerdesValid(t *testing.T) {
 	  int32 page = 2;
 	  double result = 3;
 	}`
-	schemaPath := filepath.Join(dir, "person-schema.proto")
+	schemaPath := filepath.Join(tempDir, "person-schema.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -593,28 +570,23 @@ func TestProtobufSerdesValid(t *testing.T) {
 	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
 	req.JSONEq(expectedString, actualString)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestProtobufSerdesReference(t *testing.T) {
 	req := require.New(t)
-
-	dir, err := createTempDir()
-	req.Nil(err)
 
 	referenceString := `syntax = "proto3";
 
 package test;
 
 message Address {
-  string city = 1;
+ string city = 1;
 }
 `
 
 	// Reference schema should be registered from user side prior to be used as reference
 	// So subject and schema version will be known value at this time
-	referencePath := filepath.Join(dir, "address.proto")
+	referencePath := filepath.Join(tempDir, "address.proto")
 	req.NoError(os.WriteFile(referencePath, []byte(referenceString), 0644))
 
 	schemaString := `syntax = "proto3";
@@ -624,18 +596,18 @@ package test;
 import "address.proto";
 
 message Person {
-  string name = 1;
-  test.Address address = 2;
-  int32 result = 3;
+ string name = 1;
+ test.Address address = 2;
+ int32 result = 3;
 }
 `
-	schemaPath := filepath.Join(dir, "person.proto")
+	schemaPath := filepath.Join(tempDir, "person.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
@@ -674,15 +646,10 @@ message Person {
 	str, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
 	req.JSONEq(str, expectedString)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestProtobufSerdesInvalid(t *testing.T) {
 	req := require.New(t)
-
-	dir, err := createTempDir()
-	req.Nil(err)
 
 	schemaString := `
 	syntax = "proto3";
@@ -691,11 +658,11 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	  int32 page = 2;
 	  int32 result = 3;
 	}`
-	schemaPath := filepath.Join(dir, "person-invalid.proto")
+	schemaPath := filepath.Join(tempDir, "person-invalid.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -732,15 +699,10 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 
 	_, err = deserializationProvider.Deserialize("topic1", invalidBytes)
 	req.Regexp("^failed to deserialize payload:.*Subject Not Found$", err)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestProtobufSerdesNestedValid(t *testing.T) {
 	req := require.New(t)
-
-	dir, err := createTempDir()
-	req.Nil(err)
 
 	schemaString := `
 	syntax = "proto3";
@@ -757,13 +719,13 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 			string street = 2;
 		}
 	}`
-	schemaPath := filepath.Join(dir, "person-nested.proto")
+	schemaPath := filepath.Join(tempDir, "person-nested.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","id":2,"add":{"zip":"123","street":"def"},"phones":{"number":"234"}}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -788,37 +750,32 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
 	req.JSONEq(expectedString, actualString)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	req := require.New(t)
-
-	dir, err := createTempDir()
-	req.Nil(err)
 	t.Setenv(localKmsSecretMacro, localKmsSecretValueDefault)
 
 	schemaString := `
 	syntax = "proto3";
 
- 	import "confluent/meta.proto";
+	import "confluent/meta.proto";
 	package test;
 
 	message Person {
-      string name = 1 [
+     string name = 1 [
 		(confluent.field_meta).tags = "PII"
-      ];
-      int32 page = 2;
-      double result = 3;
+     ];
+     int32 page = 2;
+     double result = 3;
 	}`
-	schemaPath := filepath.Join(dir, "person-schema-ruleset.proto")
+	schemaPath := filepath.Join(tempDir, "person-schema-ruleset.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -862,8 +819,6 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	actualString, err := deserializationProvider.Deserialize("topic1", data)
 	req.Nil(err)
 	req.JSONEq(expectedString, actualString)
-
-	req.NoError(os.RemoveAll(dir))
 }
 
 func createTempDir() (string, error) {
