@@ -29,7 +29,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) cloudSignup(_ *cobra.Command, _ []string) error {
-	signupUrl := "https://www.confluent.io/get-started/"
+	signupUrl := "https://www.confluent.io/get-started/?from=cli"
 
 	output.Printf(c.Config.EnableColor, "You will now be redirected to the Confluent Cloud sign up page in your browser. If you are not redirected, please use the following link: %s\n", signupUrl)
 	if err := form.ConfirmEnter(); err != nil {
