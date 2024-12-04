@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -120,7 +121,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		topic, httpRespPartition, err := kafkaREST.CloudClient.GetKafkaTopic(topicName)
+		var topic kafkarestv3.TopicData
+		var httpRespPartition *http.Response
 		errPartition := retry.Retry(time.Second/10, time.Second, func() error {
 			topic, httpRespPartition, err = kafkaREST.CloudClient.GetKafkaTopic(topicName)
 			if err != nil {
