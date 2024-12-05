@@ -215,7 +215,7 @@ func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 	t.Setenv(localKmsSecretMacro, localKmsSecretValueDefault)
 
 	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"string","confluent:tags": ["PII"]}]}`
-	schemaPath := filepath.Join(tempDir, "avro-schema.txt")
+	schemaPath := filepath.Join(tempDir, "avro-schema-ruleset.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"f1":"this is a confidential message in AVRO schema"}`
@@ -325,7 +325,7 @@ func TestJsonSerdesReference(t *testing.T) {
 
 	// Prepare main schema information
 	schemaString := `{"type":"object","properties":{"f1":{"$ref":"RefSchema"}},"required":["f1"]}`
-	schemaPath := filepath.Join(tempDir, "json-schema.json")
+	schemaPath := filepath.Join(tempDir, "json-schema-main.json")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	// Read references from local reference schema file

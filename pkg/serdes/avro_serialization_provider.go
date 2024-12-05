@@ -132,7 +132,7 @@ func (a *AvroSerializationProvider) Serialize(topic, message string) ([]byte, er
 	// Passing the Go native object directly could cause issues during ruleSet execution
 	v, ok := object.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("failed to serialize message: unexpected message type asserion result")
+		return nil, fmt.Errorf("failed to serialize message: unexpected message type assertion result")
 	}
 	payload, err := a.ser.Serialize(topic, &v)
 	if err != nil {
