@@ -79,6 +79,9 @@ lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
+ifneq ($(shell cat .go-version),$(shell go list -m -f '{{.GoVersion}}'))
+	$(error The go versions in go.mod and .go-version must match)
+endif
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0 && \
 	golangci-lint run --timeout 10m
 	@echo "✅  golangci-lint"
