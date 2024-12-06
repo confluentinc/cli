@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -51,6 +52,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
+	}
+	if _, err = c.V2Client.GetOrgEnvironment(environment); err != nil {
+		return fmt.Errorf("environment '%s' not found", environment)
 	}
 
 	existenceFunc := func(id string) bool {
