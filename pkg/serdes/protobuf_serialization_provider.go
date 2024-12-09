@@ -2,13 +2,14 @@ package serdes
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/bufbuild/protocompile"
-	"github.com/otiai10/copy"
 	"google.golang.org/protobuf/encoding/protojson"
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -26,18 +27,15 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
-	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
-const (
-	confluentBuiltInSchemaFolder = "confluent"
-	googleBuiltInSchemaFolder    = "google"
-)
-
-var builtInSchemaFoldersToCopy = []string{
-	confluentBuiltInSchemaFolder,
-	googleBuiltInSchemaFolder,
-}
+// Embed all .proto built-in schema files in both folders
+//
+//go:embed google/protobuf/*.proto
+//go:embed google/type/*.proto
+//go:embed confluent/*.proto
+//go:embed confluent/type/*.proto
+var builtInSchemas embed.FS
 
 type ProtobufSerializationProvider struct {
 	ser     *protobuf.Serializer
@@ -149,32 +147,10 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto
 		ImportPaths: importPaths,
 	}
 
-	currDir, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("Error getting current working directory: %v\n", err)
-	}
-	log.CliLogger.Debugf("Current working directory is: %s\n", currDir)
-
-	// Copy all the built-in proto schemas needed for CSFLE to <importPath> where the main schema is stored
-	// Note: folder path should be set correctly based on current working directory
-	// Expected working directory in CLI test is: /Users/github.com/confluentinc/cli/pkg/serdes
-	// Expected working directory in CLI shell execution is: /Users/github.com/confluentinc/cli
-	for _, folder := range builtInSchemaFoldersToCopy {
-		dst := importPath + "/" + folder
-
-		// Skip copying the built-in schema folders if they are present already in the temp folder
-		if _, err = os.Stat(dst); err == nil {
-			log.CliLogger.Debugf("Built-in schema folder already exists %s, skipping copy again:\n", dst)
-			continue
-		}
-
-		// Locate the source of built-in schema folders
-		if strings.HasSuffix(currDir, "confluentinc/cli") {
-			folder = "pkg/serdes/" + folder
-		}
-		if err = copy.Copy(folder, dst); err != nil {
-			return nil, fmt.Errorf("Error copying built-in schemas folder %s: %w\n", folder, err)
-		}
+	// Extract and copy embedded builtin proto files schemas needed for CSFLE to a temp destination directory
+	if err := copyBuiltInProtoFiles(importPaths[0]); err != nil {
+		fmt.Printf("Error copying proto files to the temp folder: %v\n", err)
+		return nil, err
 	}
 
 	// Create the compiler
@@ -212,4 +188,38 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto
 // as serializer and deserializer have to share the same SR client instance
 func (p *ProtobufSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return p.ser.Client
+}
+
+func copyBuiltInProtoFiles(destinationDir string) error {
+	return fs.WalkDir(builtInSchemas, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("error accessing path %s: %w", path, err)
+		}
+
+		// Skip directories
+		if d.IsDir() {
+			return nil
+		}
+
+		// Read file content from the embedded filesystem
+		content, err := builtInSchemas.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("failed to read embedded file %s: %w", path, err)
+		}
+
+		// Determine the destination path
+		destPath := filepath.Join(destinationDir, path)
+
+		// Ensure the destination directory exists
+		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+			return fmt.Errorf("failed to create directory for %s: %w", destPath, err)
+		}
+
+		// Write the built-in schema files to the destination
+		if err := os.WriteFile(destPath, content, 0644); err != nil {
+			return fmt.Errorf("failed to write file %s: %w", destPath, err)
+		}
+
+		return nil
+	})
 }
