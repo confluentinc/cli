@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	// Cleanup directory (with retry) here will always run after all test(s) have been executed.
 	for i := 0; i < 3; i++ {
 		err := os.RemoveAll(tempDir)
-		if err != nil {
+		if err == nil {
 			fmt.Printf("successfully removed temporary schema directory: %s", err)
 			code = 0
 			break
