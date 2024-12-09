@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -22,9 +23,18 @@ func TestMain(m *testing.M) {
 	// Run the required test(s)
 	code := m.Run()
 
-	// Cleanup directory here will always run after all test(s) have been executed.
-	if err := os.RemoveAll(tempDir); err != nil {
-		fmt.Printf("failed to remove temporary directory: %s", err)
+	// Sleep for additional 200ms to avoid certain OS still holding the files lock
+	time.Sleep(200 * time.Millisecond)
+
+	// Cleanup directory (with retry) here will always run after all test(s) have been executed.
+	for i := 0; i < 3; i++ {
+		err := os.RemoveAll(tempDir)
+		if err != nil {
+			fmt.Printf("successfully removed temporary schema directory: %s", err)
+			code = 0
+			break
+		}
+		fmt.Printf("failed to remove temporary schema directory: %s", err)
 		code = 1
 	}
 

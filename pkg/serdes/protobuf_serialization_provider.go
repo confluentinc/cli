@@ -149,8 +149,7 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto
 
 	// Extract and copy embedded builtin proto files schemas needed for CSFLE to a temp destination directory
 	if err := copyBuiltInProtoFiles(importPaths[0]); err != nil {
-		fmt.Printf("Error copying proto files to the temp folder: %v\n", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to copy built-in proto files to the temp folder: %w", err)
 	}
 
 	// Create the compiler
