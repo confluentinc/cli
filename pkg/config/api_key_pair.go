@@ -1,7 +1,6 @@
 package config
 
 import (
-	"runtime"
 	"strings"
 
 	"github.com/confluentinc/cli/v4/pkg/secret"
@@ -16,7 +15,7 @@ type APIKeyPair struct {
 }
 
 func (c *APIKeyPair) DecryptSecret() error {
-	if (strings.HasPrefix(c.Secret, secret.AesGcm) && c.Salt != nil) || runtime.GOOS == "windows" {
+	if (strings.HasPrefix(c.Secret, secret.AesGcm) && c.Salt != nil) || strings.HasPrefix(c.Secret, secret.Dpapi) {
 		decryptedSecret, err := secret.Decrypt(c.Key, c.Secret, c.Salt, c.Nonce)
 		if err != nil {
 			return err
