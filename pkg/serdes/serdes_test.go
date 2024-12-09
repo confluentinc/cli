@@ -22,41 +22,13 @@ func TestMain(m *testing.M) {
 
 	// Run the required test(s)
 	code := m.Run()
+	// Sleep for 2s as the Windows usually holds the file(s) access longer
+	time.Sleep(2 * time.Second)
 
-	// Walk through the directory
-	err := filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// Skip directories
-		if info.IsDir() {
-			return nil
-		}
-		// Try opening and closing the file to release any handle
-		file, err := os.Open(path)
-		if err != nil {
-			fmt.Printf("Failed to open %s: %v", path, err)
-			return nil // Skip if file cannot be opened
-		}
-		defer file.Close()
-		return nil
-	})
-
-	if err != nil {
-		fmt.Printf("failed to release all file handles for directory: %s", err)
-		os.Exit(1)
-	}
-
-	// Cleanup directory (with retry) here will always run after all test(s) have been executed.
-	for i := 0; i < 3; i++ {
-		err := os.RemoveAll(tempDir)
-		if err == nil {
-			fmt.Printf("successfully removed temporary schema directory: %s", err)
-			break
-		}
-		fmt.Printf("failed to remove temporary schema directory: %s", err)
+	// Cleanup directory here will always run after all test(s) have been executed.
+	if err := os.RemoveAll(tempDir); err != nil {
+		fmt.Printf("failed to remove temporary directory: %s", err)
 		code = 1
-		time.Sleep(500 * time.Millisecond)
 	}
 
 	os.Exit(code)
