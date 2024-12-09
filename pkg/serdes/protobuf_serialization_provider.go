@@ -2,7 +2,10 @@ package serdes
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -12,11 +15,27 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/awskms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/azurekms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/gcpkms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/hcvault"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/localkms"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/jsonata"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
+
+// Embed all .proto built-in schema files in both folders
+//
+//go:embed google/protobuf/*.proto
+//go:embed google/type/*.proto
+//go:embed confluent/*.proto
+//go:embed confluent/type/*.proto
+var builtInSchemas embed.FS
 
 type ProtobufSerializationProvider struct {
 	ser     *protobuf.Serializer
@@ -37,6 +56,16 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId,
 	}
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
+	// Register the KMS drivers and the field-level encryption executor
+	awskms.Register()
+	azurekms.Register()
+	gcpkms.Register()
+	hcvault.Register()
+	localkms.Register()
+	encryption.Register()
+	cel.Register()
+	jsonata.Register()
+
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
@@ -47,6 +76,14 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId,
 	serdeConfig := protobuf.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
+
+	// local KMS secret is only set and used during local testing with ruleSet
+	if localKmsSecretValue := os.Getenv(localKmsSecretMacro); srClientUrl == mockClientUrl && localKmsSecretValue != "" {
+		serdeConfig.RuleConfig = map[string]string{
+			localKmsSecretKey: localKmsSecretValue,
+		}
+	}
+
 	if schemaId > 0 {
 		serdeConfig.UseSchemaID = schemaId
 		serdeConfig.UseLatestVersion = false
@@ -99,13 +136,20 @@ func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]byte
 
 func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto.Message, error) {
 	// Collect import paths
-	importPaths := []string{filepath.Dir(schemaPath)}
+	importPath := filepath.Dir(schemaPath)
+	importPaths := []string{importPath}
+
 	for _, path := range referencePathMap {
 		importPaths = append(importPaths, strings.SplitAfter(path, "ccloud-schema")[0])
 	}
 
 	resolver := &protocompile.SourceResolver{
 		ImportPaths: importPaths,
+	}
+
+	// Extract and copy embedded builtin proto files schemas needed for CSFLE to a temp destination directory
+	if err := copyBuiltInProtoFiles(importPaths[0]); err != nil {
+		return nil, fmt.Errorf("failed to copy built-in proto files to the temp folder: %w", err)
 	}
 
 	// Create the compiler
@@ -116,7 +160,7 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto
 	// Parse and compile the .proto files
 	compiledFiles, err := compiler.Compile(context.Background(), filepath.Base(schemaPath))
 	if err != nil {
-		return nil, fmt.Errorf("error compiling or finding .proto files")
+		return nil, fmt.Errorf("error compiling .proto files: %w\n", err)
 	}
 	if len(compiledFiles) == 0 {
 		return nil, fmt.Errorf("error fetching valid compiled files")
@@ -143,4 +187,38 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto
 // as serializer and deserializer have to share the same SR client instance
 func (p *ProtobufSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return p.ser.Client
+}
+
+func copyBuiltInProtoFiles(destinationDir string) error {
+	return fs.WalkDir(builtInSchemas, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("error accessing path %s: %w", path, err)
+		}
+
+		// Skip directories
+		if d.IsDir() {
+			return nil
+		}
+
+		// Read file content from the embedded filesystem
+		content, err := builtInSchemas.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("failed to read embedded file %s: %w", path, err)
+		}
+
+		// Determine the destination path
+		destPath := filepath.Join(destinationDir, path)
+
+		// Ensure the destination directory exists
+		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+			return fmt.Errorf("failed to create directory for %s: %w", destPath, err)
+		}
+
+		// Write the built-in schema files to the destination
+		if err := os.WriteFile(destPath, content, 0644); err != nil {
+			return fmt.Errorf("failed to write file %s: %w", destPath, err)
+		}
+
+		return nil
+	})
 }
