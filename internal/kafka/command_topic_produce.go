@@ -635,9 +635,17 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	// Fetch the SR client endpoint during schema registration
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+	srClusterId, err := cmd.Flags().GetString("schema-registry-endpoint")
 	if err != nil {
 		return nil, nil, err
+	}
+
+	var srEndpoint string
+	if (schemaId.IsSet() || schema != "") && srClusterId == "" {
+		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// Initialize the serializer with the same SR endpoint during registration
@@ -655,9 +663,12 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		parsedSchemaId = int(binary.BigEndian.Uint32(metaInfo[1:5]))
 	}
 
-	token, err := auth.GetDataplaneToken(c.Context)
-	if err != nil {
-		return nil, nil, err
+	var token string
+	if c.Config.IsCloudLogin() { // Do no get token if users are consuming from Cloud while logged out
+		token, err = auth.GetDataplaneToken(c.Context)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, srApiKey, srApiSecret, token, parsedSchemaId)
 	if err != nil {
