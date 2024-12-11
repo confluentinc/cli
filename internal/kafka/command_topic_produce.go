@@ -635,13 +635,13 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	// Fetch the SR client endpoint during schema registration
-	srClusterId, err := cmd.Flags().GetString("schema-registry-endpoint")
+	srEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var srEndpoint string
-	if (schemaId.IsSet() || schema != "") && srClusterId == "" {
+	var srClusterId string
+	if (schemaId.IsSet() || schema != "") && srEndpoint == "" {
 		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
 		if err != nil {
 			return nil, nil, err
