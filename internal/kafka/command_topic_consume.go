@@ -173,9 +173,13 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	token, err := auth.GetDataplaneToken(c.Context)
-	if err != nil {
-		return err
+
+	var token string
+	if c.Config.IsCloudLogin() { // Do no get token if users are consuming from Cloud while logged out
+		token, err = auth.GetDataplaneToken(c.Context)
+		if err != nil {
+			return err
+		}
 	}
 
 	consumer, err := newConsumer(group, cluster, c.clientID, configFile, config)
