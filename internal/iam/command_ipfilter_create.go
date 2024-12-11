@@ -31,17 +31,17 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 			},
 		),
 	}
-	pcmd.AddResourceGroupFlag(cmd)
-	err := cmd.MarkFlagRequired("resource-group")
-	if err != nil {
-		return nil
-	}
+	ipFilterSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	pcmd.AddResourceGroupFlag(ipFilterSrEnabled, cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
-	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
+	if ipFilterSrEnabled {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
 		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
 		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 		cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")
+		cmd.MarkFlagsMutuallyExclusive("resource-group", "operations")
+	} else {
+		cobra.CheckErr(cmd.MarkFlagRequired("ip-groups"))
 	}
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
