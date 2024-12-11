@@ -173,9 +173,13 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	token, err := auth.GetDataplaneToken(c.Context)
-	if err != nil {
-		return err
+
+	var token string
+	if c.Config.IsCloudLogin() { // Do no get token if users are consuming from Cloud while logged out
+		token, err = auth.GetDataplaneToken(c.Context)
+		if err != nil {
+			return err
+		}
 	}
 
 	consumer, err := newConsumer(group, cluster, c.clientID, configFile, config)
@@ -229,6 +233,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	}
 
 	var srClient *schemaregistry.Client
+	var srClusterId, srEndpoint string
 	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) || slices.Contains(serdes.SchemaBasedFormats, keyFormat) {
 		// Only initialize client and context when schema is specified.
 		srClient, err = c.GetSchemaRegistryClient(cmd)
@@ -238,6 +243,11 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 			} else {
 				return err
 			}
+		}
+		// Fetch the current SR cluster id and endpoint
+		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -256,12 +266,6 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	}
 	if schemaRegistryContext != "" {
 		subject = schemaRegistryContext
-	}
-
-	// Fetch the current SR cluster id and endpoint
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
-	if err != nil {
-		return err
 	}
 
 	groupHandler := &GroupHandler{
