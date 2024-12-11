@@ -229,6 +229,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	}
 
 	var srClient *schemaregistry.Client
+	var srClusterId, srEndpoint string
 	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) || slices.Contains(serdes.SchemaBasedFormats, keyFormat) {
 		// Only initialize client and context when schema is specified.
 		srClient, err = c.GetSchemaRegistryClient(cmd)
@@ -238,6 +239,11 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 			} else {
 				return err
 			}
+		}
+		// Fetch the current SR cluster id and endpoint
+		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -256,12 +262,6 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 	}
 	if schemaRegistryContext != "" {
 		subject = schemaRegistryContext
-	}
-
-	// Fetch the current SR cluster id and endpoint
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
-	if err != nil {
-		return err
 	}
 
 	groupHandler := &GroupHandler{
