@@ -16,13 +16,20 @@ type ipFilterCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type ipFilterOut struct {
+type ipFilterOutSrEnabled struct {
 	ID              string   `human:"ID" serialized:"id"`
 	Name            string   `human:"Name" serialized:"name"`
 	ResourceGroup   string   `human:"Resource Group" serialized:"resource_group"`
 	IpGroups        []string `human:"IP Groups" serialized:"ip_groups"`
 	OperationGroups []string `human:"Operation Groups" serialized:"operation_groups,omitempty"`
 	ResourceScope   string   `human:"Resource Scope" serialized:"resource_scope"`
+}
+
+type ipFilterOut struct {
+	ID            string   `human:"ID" serialized:"id"`
+	Name          string   `human:"Name" serialized:"name"`
+	ResourceGroup string   `human:"Resource Group" serialized:"resource_group"`
+	IpGroups      []string `human:"IP Groups" serialized:"ip_groups"`
 }
 
 func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -44,17 +51,25 @@ func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 	return cmd
 }
 
-func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter) error {
+func printIpFilter(ipFilterSrEnabled bool, cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter) error {
 	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
+	if ipFilterSrEnabled {
+		table.Add(&ipFilterOutSrEnabled{
+			ID:              ipFilter.GetId(),
+			Name:            ipFilter.GetFilterName(),
+			ResourceGroup:   ipFilter.GetResourceGroup(),
+			IpGroups:        ipGroupIds,
+			ResourceScope:   ipFilter.GetResourceScope(),
+			OperationGroups: ipFilter.GetOperationGroups(),
+		})
+	}
 	table.Add(&ipFilterOut{
-		ID:              ipFilter.GetId(),
-		Name:            ipFilter.GetFilterName(),
-		ResourceGroup:   ipFilter.GetResourceGroup(),
-		IpGroups:        ipGroupIds,
-		ResourceScope:   ipFilter.GetResourceScope(),
-		OperationGroups: ipFilter.GetOperationGroups(),
+		ID:            ipFilter.GetId(),
+		Name:          ipFilter.GetFilterName(),
+		ResourceGroup: ipFilter.GetResourceGroup(),
+		IpGroups:      ipGroupIds,
 	})
 	return table.Print()
 }

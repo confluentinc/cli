@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -25,6 +26,8 @@ func (c *ipFilterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	ipFilterSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 
-	return printIpFilter(cmd, filter)
+	return printIpFilter(ipFilterSrEnabled, cmd, filter)
 }
