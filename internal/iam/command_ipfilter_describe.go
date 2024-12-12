@@ -29,5 +29,5 @@ func (c *ipFilterCommand) describe(cmd *cobra.Command, args []string) error {
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	ipFilterSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 
-	return printIpFilter(ipFilterSrEnabled, cmd, filter)
+	return printIpFilter(cmd, filter, ipFilterSrEnabled)
 }
