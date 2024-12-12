@@ -129,6 +129,9 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		for _, warning := range warnings {
 			output.ErrPrintf(c.Config.EnableColor, "[WARN] %s\n", warning)
 		}
+		if len(newOperationGroups) == 0 && resourceGroup == "multiple" {
+			newOperationGroups = []string{"MANAGEMENT"}
+		}
 		updateIpFilter.OperationGroups = &newOperationGroups
 	}
 
