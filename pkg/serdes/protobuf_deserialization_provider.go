@@ -2,6 +2,8 @@ package serdes
 
 import (
 	"fmt"
+	"os"
+	"regexp"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	gproto "google.golang.org/protobuf/proto"
@@ -48,6 +50,13 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srCluste
 
 	serdeConfig := protobuf.NewDeserializerConfig()
 
+	// local KMS secret is only set and used during local testing with ruleSet
+	if localKmsSecretValue := os.Getenv(localKmsSecretMacro); srClientUrl == mockClientUrl && localKmsSecretValue != "" {
+		serdeConfig.RuleConfig = map[string]string{
+			localKmsSecretKey: localKmsSecretValue,
+		}
+	}
+
 	var serdeType serde.Type
 	switch mode {
 	case "key":
@@ -78,19 +87,29 @@ func (p *ProtobufDeserializationProvider) LoadSchema(schemaPath string, referenc
 }
 
 func (p *ProtobufDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
-	err := p.deser.DeserializeInto(topic, payload, p.message)
+	// Register the protobuf message
+	err := p.deser.ProtoRegistry.RegisterMessage(p.message.ProtoReflect().Type())
+	re := regexp.MustCompile(`message .* is already registered`)
+
+	// If the error is due to already registered message, we shouldn't early return
+	if err != nil && !re.MatchString(err.Error()) {
+		return "", fmt.Errorf("failed to deserialize payload: %w", err)
+	}
+
+	// Deserialize the payload into the msgObj
+	msgObj, err := p.deser.Deserialize(topic, payload)
 	if err != nil {
 		return "", fmt.Errorf("failed to deserialize payload: %w", err)
 	}
 
-	// Use protojson to marshal the message to JSON in a compact format
+	// Use protojson library to marshal the message to JSON in a compact format
 	marshaler := protojson.MarshalOptions{
 		UseProtoNames:   true,  // Use original field names (snake_case) instead of camelCase
 		EmitUnpopulated: false, // Emit unset fields, false here to omit
 		Indent:          "",    // No indentation or additional formatting
 	}
 
-	jsonBytes, err := marshaler.Marshal(p.message)
+	jsonBytes, err := marshaler.Marshal(msgObj.(gproto.Message))
 	if err != nil {
 		return "", fmt.Errorf("failed to convert protobuf message into string after deserialization: %w", err)
 	}
