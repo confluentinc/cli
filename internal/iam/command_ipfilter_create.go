@@ -31,17 +31,17 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 			},
 		),
 	}
-	pcmd.AddResourceGroupFlag(cmd)
-	err := cmd.MarkFlagRequired("resource-group")
-	if err != nil {
-		return nil
-	}
+	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	pcmd.AddResourceGroupFlag(isSrEnabled, cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
-	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
+	if isSrEnabled {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
 		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
 		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 		cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")
+		cmd.MarkFlagsMutuallyExclusive("resource-group", "operations")
+	} else {
+		cobra.CheckErr(cmd.MarkFlagRequired("ip-groups"))
 	}
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -61,7 +61,8 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	resourceScope := ""
 	operationGroups := []string{}
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
+	isSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
@@ -70,10 +71,12 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		if environment != "" {
 			resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
 		}
-
 		operationGroups, err = cmd.Flags().GetStringSlice("operations")
 		if err != nil {
 			return err
+		}
+		if len(operationGroups) == 0 && resourceGroup == "multiple" {
+			operationGroups = []string{"MANAGEMENT"}
 		}
 		npnGroup, err := cmd.Flags().GetBool("no-public-networks")
 		if err != nil {
@@ -120,5 +123,5 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printIpFilter(cmd, filter)
+	return printIpFilter(cmd, filter, isSrEnabled)
 }
