@@ -21,8 +21,8 @@ type ipFilterOut struct {
 	Name            string   `human:"Name" serialized:"name"`
 	ResourceGroup   string   `human:"Resource Group" serialized:"resource_group"`
 	IpGroups        []string `human:"IP Groups" serialized:"ip_groups"`
-	OperationGroups []string `human:"Operation Groups" serialized:"operation_groups,omitempty"`
-	ResourceScope   string   `human:"Resource Scope" serialized:"resource_scope,omitempty"`
+	OperationGroups []string `human:"Operation Groups,omitempty" serialized:"operation_groups,omitempty"`
+	ResourceScope   string   `human:"Resource Scope,omitempty" serialized:"resource_scope,omitempty"`
 }
 
 func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
