@@ -9,7 +9,7 @@ Create an IP filter named "demo-ip-filter" with resource group "management" and 
   $ confluent iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-12345,ipg-67890
 
 Flags:
-      --resource-group string   REQUIRED: Name of resource group: "management" or "multiple".
+      --resource-group string   Name of resource group: "management" or "multiple".
       --ip-groups strings       A comma-separated list of IP group IDs.
       --environment string      Name of the environment for which this filter applies. By default will apply to the organization only.
       --operations strings      A comma-separated list of operation groups: "MANAGEMENT" or "SCHEMA".
