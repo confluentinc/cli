@@ -48,7 +48,7 @@ func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter, 
 	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
-	var filterOut = &ipFilterOut{
+	filterOut := &ipFilterOut{
 		ID:            ipFilter.GetId(),
 		Name:          ipFilter.GetFilterName(),
 		ResourceGroup: ipFilter.GetResourceGroup(),

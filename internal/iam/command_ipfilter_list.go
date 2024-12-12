@@ -67,7 +67,7 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	list := output.NewList(cmd)
 	for _, filter := range ipFilters {
-		var filterOut = ipFilterOut{
+		filterOut := ipFilterOut{
 			ID:            filter.GetId(),
 			Name:          filter.GetFilterName(),
 			ResourceGroup: filter.GetResourceGroup(),
