@@ -61,8 +61,8 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	resourceScope := ""
 	operationGroups := []string{}
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	ipFilterSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
-	if ipFilterSrEnabled {
+	isSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
@@ -123,5 +123,5 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printIpFilter(cmd, filter, ipFilterSrEnabled)
+	return printIpFilter(cmd, filter, isSrEnabled)
 }

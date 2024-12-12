@@ -114,8 +114,8 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 
 	updateIpFilter.IpGroups = &IpGroupIdObjects
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	ipFilterSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
-	if ipFilterSrEnabled {
+	isSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled {
 		addOperationGroups, err := cmd.Flags().GetStringSlice("add-operation-groups")
 		if err != nil {
 			return err
@@ -157,5 +157,5 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printIpFilter(cmd, filter, ipFilterSrEnabled)
+	return printIpFilter(cmd, filter, isSrEnabled)
 }
