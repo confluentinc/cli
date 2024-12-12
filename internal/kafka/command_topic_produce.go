@@ -664,7 +664,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	var token string
-	if c.Config.IsCloudLogin() { // Do no get token if users are consuming from Cloud while logged out
+	if c.Config.IsCloudLogin() { // Do not get token if users are consuming from Cloud while logged out
 		token, err = auth.GetDataplaneToken(c.Context)
 		if err != nil {
 			return nil, nil, err
