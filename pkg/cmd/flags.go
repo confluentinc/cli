@@ -374,7 +374,7 @@ func AddResourceGroupFlag(ipFilterSrEnabled bool, cmd *cobra.Command) {
 	var arr []string
 	if ipFilterSrEnabled {
 		arr = []string{"management", "multiple"}
-		cmd.Flags().String("resource-group", "", fmt.Sprintf("Name of resource group: %s.", utils.ArrayToCommaDelimitedString(arr, "or")))
+		cmd.Flags().String("resource-group", "multiple", fmt.Sprintf("Name of resource group: %s.", utils.ArrayToCommaDelimitedString(arr, "or")))
 	} else {
 		arr = []string{"management"}
 		cmd.Flags().String("resource-group", "management", "Name of resource group. Currently, only \"management\" is supported.")

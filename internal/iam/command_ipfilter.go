@@ -64,13 +64,14 @@ func printIpFilter(ipFilterSrEnabled bool, cmd *cobra.Command, ipFilter iamipfil
 			ResourceScope:   ipFilter.GetResourceScope(),
 			OperationGroups: ipFilter.GetOperationGroups(),
 		})
+	} else {
+		table.Add(&ipFilterOut{
+			ID:            ipFilter.GetId(),
+			Name:          ipFilter.GetFilterName(),
+			ResourceGroup: ipFilter.GetResourceGroup(),
+			IpGroups:      ipGroupIds,
+		})
 	}
-	table.Add(&ipFilterOut{
-		ID:            ipFilter.GetId(),
-		Name:          ipFilter.GetFilterName(),
-		ResourceGroup: ipFilter.GetResourceGroup(),
-		IpGroups:      ipGroupIds,
-	})
 	return table.Print()
 }
 

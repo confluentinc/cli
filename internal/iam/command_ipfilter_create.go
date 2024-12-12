@@ -75,6 +75,9 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		if len(operationGroups) == 0 && resourceGroup == "multiple" {
+			operationGroups = []string{"MANAGEMENT"}
+		}
 		npnGroup, err := cmd.Flags().GetBool("no-public-networks")
 		if err != nil {
 			return err
