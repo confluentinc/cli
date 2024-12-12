@@ -1,10 +1,10 @@
 package iam
 
 import (
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 )
 
 func (c *ipFilterCommand) newDescribeCommand() *cobra.Command {
