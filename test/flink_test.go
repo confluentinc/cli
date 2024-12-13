@@ -85,6 +85,21 @@ func (s *CLITestSuite) TestFlinkConnection() {
 	}
 }
 
+func (s *CLITestSuite) TestFlinkConnectionWrongEnv() {
+	tests := []CLITest{
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type openai --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000 --environment env-dne", fixture: "flink/connection/create/create-wrong-env.golden", exitCode: 1},
+		{args: "flink connection describe my-connection --cloud aws --region eu-west-1 --environment env-dne", fixture: "flink/connection/describe/describe-wrong-env.golden", exitCode: 1},
+		{args: "flink connection list --cloud aws --region eu-west-1 --environment env-dne", fixture: "flink/connection/list/list-wrong-env.golden", exitCode: 1},
+		{args: "flink connection update my-connection --cloud aws --region eu-west-1 --api-key 0000000000000000 --environment env-dne", fixture: "flink/connection/update/update-wrong-env.golden", exitCode: 1},
+		{args: "flink connection delete my-connection --force --cloud aws --region eu-west-1 --environment env-dne", fixture: "flink/connection/delete/delete-wrong-env.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestFlinkConnectionDelete() {
 	tests := []CLITest{
 		{args: "flink connection delete my-connection --force --cloud aws --region eu-west-1", fixture: "flink/connection/delete/delete.golden"},
