@@ -9,19 +9,18 @@ import (
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
+func (c *ipFilterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List IP filters.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
-	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
+	if c.Config.IsTest || (c.Config.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Config.Context(), featureflags.GetCcloudLaunchDarklyClient(c.Config.Context().PlatformName), true, false)) {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
 		cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include organization scoped filters.")
 	}
@@ -35,7 +34,7 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	var ipFilters []iamipfilteringv2.IamV2IpFilter
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	isSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 	if isSrEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
@@ -67,7 +66,7 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	list := output.NewList(cmd)
 	for _, filter := range ipFilters {
-		filterOut := ipFilterOut{
+		filterOut := &ipFilterOut{
 			ID:            filter.GetId(),
 			Name:          filter.GetFilterName(),
 			ResourceGroup: filter.GetResourceGroup(),

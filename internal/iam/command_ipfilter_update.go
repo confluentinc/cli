@@ -9,7 +9,6 @@ import (
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
@@ -17,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
-func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
+func (c *ipFilterCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update an IP filter.",
@@ -33,7 +32,7 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Updated name of the IP filter.")
-	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	isSrEnabled := c.Config.IsTest || (c.Config.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Config.Context(), featureflags.GetCcloudLaunchDarklyClient(c.Config.Context().PlatformName), true, false))
 	pcmd.AddResourceGroupFlag(isSrEnabled, cmd)
 
 	cmd.Flags().StringSlice("add-ip-groups", []string{}, "A comma-separated list of IP groups to add.")
@@ -114,7 +113,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 
 	updateIpFilter.IpGroups = &IpGroupIdObjects
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	isSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 	if isSrEnabled {
 		addOperationGroups, err := cmd.Flags().GetStringSlice("add-operation-groups")
 		if err != nil {

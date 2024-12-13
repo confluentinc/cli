@@ -5,5 +5,4 @@
 | Resource Group   | multiple             |
 | IP Groups        | ipg-12345, ipg-abcde |
 | Operation Groups | MANAGEMENT           |
-| Resource Scope   |                      |
 +------------------+----------------------+

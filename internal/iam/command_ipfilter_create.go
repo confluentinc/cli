@@ -9,7 +9,6 @@ import (
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
@@ -18,7 +17,7 @@ import (
 
 const resourceScopeStr = "crn://confluent.cloud/organization=%s/environment=%s"
 
-func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
+func (c *ipFilterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create an IP filter.",
@@ -31,9 +30,11 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 			},
 		),
 	}
-	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	isSrEnabled := c.Config.IsTest || (c.Config.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Config.Context(), featureflags.GetCcloudLaunchDarklyClient(c.Config.Context().PlatformName), true, false))
+	fmt.Println("DEBUG:", c.Config.IsTest)
 	pcmd.AddResourceGroupFlag(isSrEnabled, cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
+	fmt.Printf("isSrEnabled: %b", isSrEnabled)
 	if isSrEnabled {
 		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
 		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
@@ -61,7 +62,7 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	resourceScope := ""
 	operationGroups := []string{}
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	isSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 	if isSrEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")

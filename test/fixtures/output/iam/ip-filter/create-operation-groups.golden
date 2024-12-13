@@ -3,6 +3,4 @@
 | Name             | demo-ip-filter3      |
 | Resource Group   | multiple             |
 | IP Groups        | ipg-3g5jw, ipg-wjnde |
-| Operation Groups |                      |
-| Resource Scope   |                      |
 +------------------+----------------------+
