@@ -1,9 +1,12 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -31,6 +34,10 @@ func (c *command) connectionDescribe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
+	}
+
+	if _, err := c.V2Client.GetOrgEnvironment(environmentId); err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf("Failed to get environment '%s'. List available environments with `confluent environment list`.", environmentId))
 	}
 
 	client, err := c.GetFlinkGatewayClient(false)
