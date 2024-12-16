@@ -21,13 +21,16 @@ var KmsTypes = []string{
 }
 
 const (
-	avroSchemaName     = "avro"
-	doubleSchemaName   = "double"
-	integerSchemaName  = "integer"
-	jsonSchemaName     = "jsonschema"
-	protobufSchemaName = "protobuf"
-	stringSchemaName   = "string"
-	mockClientUrl      = "mock://"
+	avroSchemaName             = "avro"
+	doubleSchemaName           = "double"
+	integerSchemaName          = "integer"
+	jsonSchemaName             = "jsonschema"
+	protobufSchemaName         = "protobuf"
+	stringSchemaName           = "string"
+	mockClientUrl              = "mock://"
+	localKmsSecretKey          = "secret"
+	localKmsSecretValueDefault = "default_local_kms_secret_12345"
+	localKmsSecretMacro        = "LOCAL_KMS_SECRET"
 )
 
 var Formats = []string{
