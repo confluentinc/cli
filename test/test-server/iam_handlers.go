@@ -628,7 +628,18 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet:
-			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "", []string{"MANAGEMENT"})
+			r.URL.Query()
+			var ipFilter iamipfilteringv2.IamV2IpFilter
+			segments := strings.Split(r.URL.String(), "/")
+			var filterId string
+			if len(segments) > 0 {
+				filterId = segments[len(segments)-1] // "ipf-34dq3"
+			}
+			if filterId == "ipf-34dq4" {
+				ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "", []string{"MANAGEMENT", "SCHEMA"})
+			} else {
+				ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "", []string{"MANAGEMENT"})
+			}
 			err := json.NewEncoder(w).Encode(ipFilter)
 			require.NoError(t, err)
 		case http.MethodDelete:

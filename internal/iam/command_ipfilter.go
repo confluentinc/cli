@@ -2,6 +2,7 @@ package iam
 
 import (
 	"slices"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -17,12 +18,15 @@ type ipFilterCommand struct {
 }
 
 type ipFilterOut struct {
-	ID              string   `human:"ID" serialized:"id"`
-	Name            string   `human:"Name" serialized:"name"`
-	ResourceGroup   string   `human:"Resource Group" serialized:"resource_group"`
-	IpGroups        []string `human:"IP Groups" serialized:"ip_groups"`
-	OperationGroups []string `human:"Operation Groups,omitempty" serialized:"operation_groups,omitempty"`
-	ResourceScope   string   `human:"Resource Scope,omitempty" serialized:"resource_scope,omitempty"`
+	ID            string   `human:"ID" serialized:"id"`
+	Name          string   `human:"Name" serialized:"name"`
+	ResourceGroup string   `human:"Resource Group" serialized:"resource_group"`
+	IpGroups      []string `human:"IP Groups" serialized:"ip_groups"`
+	//OperationGroups []string `human:"Operation Groups" serialized:"operation_groups,omitempty"`
+	//OperationGroups []string `human:"Operation Groups,omitempty" serialized:"operation_groups,omitempty"`
+	//ResourceScope string `human:"Resource Scope" serialized:"resource_scope,omitempty"`
+	OperationGroups []string `human:"Operation Groups" serialized:"operation_groups,omitempty"`
+	ResourceScope   string   `human:"Resource Scope" serialized:"resource_scope"`
 }
 
 func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -56,6 +60,9 @@ func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter, 
 	}
 	if isSrEnabled {
 		filterOut.ResourceScope = ipFilter.GetResourceScope()
+		if ipFilter.OperationGroups != nil {
+			sort.Strings(*ipFilter.OperationGroups)
+		}
 		filterOut.OperationGroups = ipFilter.GetOperationGroups()
 	}
 	table.Add(filterOut)

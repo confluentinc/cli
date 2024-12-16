@@ -68,16 +68,18 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, filter := range ipFilters {
 		filterOut := ipFilterOut{
-			ID:            filter.GetId(),
-			Name:          filter.GetFilterName(),
-			ResourceGroup: filter.GetResourceGroup(),
-			IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
+			ID:              filter.GetId(),
+			Name:            filter.GetFilterName(),
+			ResourceGroup:   filter.GetResourceGroup(),
+			IpGroups:        convertIpGroupObjectsToIpGroupIds(filter),
+			OperationGroups: filter.GetOperationGroups(),
+			ResourceScope:   filter.GetResourceScope(),
 		}
 		if isSrEnabled {
 			filterOut.ResourceScope = filter.GetResourceScope()
 			filterOut.OperationGroups = filter.GetOperationGroups()
 		}
-		list.Add(filterOut)
+		list.Add(&filterOut)
 	}
 	return list.Print()
 }
