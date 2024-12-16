@@ -590,14 +590,18 @@ func handleIamIpFilters(t *testing.T) http.HandlerFunc {
 			var req iamipfilteringv2.IamV2IpFilter
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-
+			opGroups := req.OperationGroups
+			if *req.ResourceGroup == "management" {
+				opGroups = &[]string{"MANAGEMENT"}
+				req.ResourceGroup = iamipfilteringv2.PtrString("multiple")
+			}
 			ipFilter := &iamipfilteringv2.IamV2IpFilter{
 				Id:              iamipfilteringv2.PtrString(ipFilterId),
 				FilterName:      req.FilterName,
 				ResourceGroup:   req.ResourceGroup,
 				IpGroups:        req.IpGroups,
-				ResourceScope:   req.ResourceScope,
-				OperationGroups: req.OperationGroups,
+				ResourceScope:   iamipfilteringv2.PtrString("crn://confluent.cloud/organization=org123"),
+				OperationGroups: opGroups,
 			}
 			err = json.NewEncoder(w).Encode(ipFilter)
 			require.NoError(t, err)
