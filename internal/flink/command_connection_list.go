@@ -34,11 +34,6 @@ func (c *command) newConnectionListCommand() *cobra.Command {
 }
 
 func (c *command) connectionList(cmd *cobra.Command, _ []string) error {
-	client, err := c.GetFlinkGatewayClient(false)
-	if err != nil {
-		return err
-	}
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -57,6 +52,11 @@ func (c *command) connectionList(cmd *cobra.Command, _ []string) error {
 		if err = validateConnectionType(connectionType); err != nil {
 			return err
 		}
+	}
+
+	client, err := c.GetFlinkGatewayClient(false)
+	if err != nil {
+		return err
 	}
 
 	connections, err := client.ListConnections(environmentId, c.Context.GetCurrentOrganization(), strings.ToUpper(connectionType))
