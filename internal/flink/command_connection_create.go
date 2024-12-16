@@ -79,7 +79,7 @@ func (c *command) connectionCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if _, err := c.V2Client.GetOrgEnvironment(environmentId); err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
 	}
 
 	client, err := c.GetFlinkGatewayClient(false)

@@ -13,6 +13,8 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
+const envNotFoundErrorMsg = "Failed to get environment '%s'. List available environments with `confluent environment list`."
+
 type connectionOut struct {
 	CreationDate time.Time `human:"Creation Date" serialized:"creation_date"`
 	Name         string    `human:"Name" serialized:"name"`
