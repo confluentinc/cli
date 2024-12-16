@@ -628,7 +628,6 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet:
-			r.URL.Query()
 			var ipFilter iamipfilteringv2.IamV2IpFilter
 			segments := strings.Split(r.URL.String(), "/")
 			var filterId string
