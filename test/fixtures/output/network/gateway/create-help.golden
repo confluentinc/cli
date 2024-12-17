@@ -11,7 +11,7 @@ Create network gateway "my-gateway".
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws" or "azure".
       --type string          REQUIRED: Specify the gateway type as "egress-privatelink".
-      --region string        REQUIRED: AWS, Azure or GCP region of the gateway.
+      --region string        REQUIRED: AWS or Azure region of the gateway.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

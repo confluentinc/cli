@@ -21,8 +21,6 @@ const (
 	awsPeering             = "AwsPeering"
 	azureEgressPrivateLink = "AzureEgressPrivateLink"
 	azurePeering           = "AzurePeering"
-	gcpEgressPrivateLink   = "GcpEgressPrivateLink"
-	gcpPeering             = "GcpPeering"
 )
 
 var (
@@ -31,7 +29,6 @@ var (
 	gatewayTypeMap     = map[string]string{
 		"aws-egress-privatelink":   awsEgressPrivateLink,
 		"azure-egress-privatelink": azureEgressPrivateLink,
-		"gcp-egress-privatelink":   gcpEgressPrivateLink,
 	}
 )
 
@@ -43,7 +40,6 @@ type gatewayOut struct {
 	Type              string `human:"Type,omitempty" serialized:"type,omitempty"`
 	AwsPrincipalArn   string `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
 	AzureSubscription string `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
-	GcpProject        string `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
 	Phase             string `human:"Phase" serialized:"phase"`
 	ErrorMessage      string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
@@ -70,7 +66,7 @@ func addGatewayTypeFlag(cmd *cobra.Command) {
 }
 
 func (c *command) addRegionFlagGateway(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
-	cmd.Flags().String("region", "", "AWS, Azure or GCP region of the gateway.")
+	cmd.Flags().String("region", "", "AWS or Azure region of the gateway.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
@@ -134,10 +130,6 @@ func getGatewayCloud(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 		return pcloud.Azure
 	}
 
-	if cloud.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus != nil {
-		return pcloud.Gcp
-	}
-
 	return ""
 }
 
@@ -174,24 +166,12 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 		out.Type = azurePeering
 	}
 
-	if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
-		out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
-		out.Type = gcpEgressPrivateLink
-	}
-	if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
-		out.Region = gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
-		out.Type = gcpPeering
-	}
-
 	switch getGatewayCloud(gateway) {
 	case pcloud.Aws:
 		out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
 	case pcloud.Azure:
 		out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
-	case pcloud.Gcp:
-		out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()
 	}
-
 	table := output.NewTable(cmd)
 	table.Add(out)
 	return table.Print()

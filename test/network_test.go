@@ -137,7 +137,6 @@ func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 	tests := []CLITest{
 		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
 		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
-		{args: "network gateway describe gw-13570", fixture: "network/gateway/describe-gcp.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
 	}
 

@@ -82,22 +82,12 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 			out.Region = gateway.Spec.Config.NetworkingV1AzurePeeringGatewaySpec.GetRegion()
 			out.Type = azurePeering
 		}
-		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
-			out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
-			out.Type = gcpEgressPrivateLink
-		}
-		if gateway.Spec.Config != nil && gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
-			out.Region = gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
-			out.Type = gcpPeering
-		}
 
 		switch getGatewayCloud(gateway) {
 		case pcloud.Aws:
 			out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
 		case pcloud.Azure:
 			out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
-		case pcloud.Gcp:
-			out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()
 		}
 
 		list.Add(out)

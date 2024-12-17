@@ -87,15 +87,6 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 				},
 			}
 		}
-	case pcloud.Gcp:
-		if gatewayType == "egress-privatelink" {
-			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
-				NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec: &networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec{
-					Kind:   "GcpEgressPrivateLinkGatewaySpec",
-					Region: region,
-				},
-			}
-		}
 	}
 
 	if len(args) == 1 {
