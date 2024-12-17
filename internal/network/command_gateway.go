@@ -25,7 +25,7 @@ const (
 
 var (
 	createGatewayTypes = []string{"egress-privatelink"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "azure-egress-privatelink", "gcp-egress-privatelink"}
+	listGatewayTypes   = []string{"aws-egress-privatelink", "azure-egress-privatelink"}
 	gatewayTypeMap     = map[string]string{
 		"aws-egress-privatelink":   awsEgressPrivateLink,
 		"azure-egress-privatelink": azureEgressPrivateLink,
@@ -172,6 +172,7 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	case pcloud.Azure:
 		out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
 	}
+
 	table := output.NewTable(cmd)
 	table.Add(out)
 	return table.Print()
