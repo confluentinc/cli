@@ -195,6 +195,8 @@ github.com/compose-spec/compose-go/v2 v2.1.3 h1:bD67uqLuL/XgkAK6ir3xZvNLFPxPScEi
 github.com/compose-spec/compose-go/v2 v2.1.3/go.mod h1:lFN0DrMxIncJGYAXTfWuajfwj5haBJqrBkarHcnjJKc=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230822191820-abc0b42e8715 h1:ue2NpgHptQApJdrJIOQunF7Jjt4CHeIALTQsguBpWtU=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230822191820-abc0b42e8715/go.mod h1:Ja+ScdwUPpLwPDi/jI4FU2hI4Ncu3o4A4nxo05ehXHQ=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder v0.0.5 h1:M/UHgqszE5uQ72BfInvug1jgv/XpP5QthMcX1K377mo=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder v0.0.5/go.mod h1:pMrMk/Ag7OOnyoUsz9tYfigJZLEhLco+4ZJG39lK+vg=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0 h1:zSF4OQUJXWH2JeAo9rsq13ibk+JFdzITGR8S7cFMpzw=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0/go.mod h1:DoxqzzF3JzvJr3fWkvCiOHFlE0GoYpozWxFZ1Ud9ntA=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=

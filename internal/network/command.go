@@ -368,6 +368,7 @@ func toUpper(strSlice []string) []string {
 func addForwarderFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
 	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
+	cmd.Flags().String("domain-mapping", "", "Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.")
 }
 
 func addGatewayFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
