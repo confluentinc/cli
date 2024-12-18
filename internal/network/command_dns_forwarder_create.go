@@ -41,6 +41,7 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 	cmd.MarkFlagsMutuallyExclusive("dns-server-ips", "domain-mapping")
+	cmd.MarkFlagsOneRequired("dns-server-ips", "domain-mapping")
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
 	cobra.CheckErr(cmd.MarkFlagRequired("domains"))
 

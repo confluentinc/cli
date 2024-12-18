@@ -54,17 +54,6 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 			Environment: &networkingdnsforwarderv1.ObjectReference{Id: environmentId},
 		},
 	}
-	domainFile, err := cmd.Flags().GetString("domain-mapping")
-	if err != nil {
-		return err
-	}
-
-	if domainFile == "" {
-		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaIp: dnsForwarder.Spec.Config.NetworkingV1ForwardViaIp}
-	} else {
-		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaGcpDnsZones: dnsForwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones}
-	}
-
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
@@ -82,12 +71,14 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("dns-server-ips") {
+		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaIp: dnsForwarder.Spec.Config.NetworkingV1ForwardViaIp}
 		dnsServerIps, err := cmd.Flags().GetStringSlice("dns-server-ips")
 		if err != nil {
 			return err
 		}
 		updateDnsForwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(dnsServerIps)
 	} else if cmd.Flags().Changed("domain-mapping") {
+		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaGcpDnsZones: dnsForwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones}
 		domain, err := cmd.Flags().GetString("domain-mapping")
 		if err != nil {
 			return err

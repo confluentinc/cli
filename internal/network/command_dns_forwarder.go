@@ -91,7 +91,7 @@ func printDnsForwarderTable(cmd *cobra.Command, forwarder networkingdnsforwarder
 		Name:              forwarder.Spec.GetDisplayName(),
 		Domains:           forwarder.Spec.GetDomains(),
 		DnsServerIps:      forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
-		DnsDomainMappings: convertToTypeString(forwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings()),
+		DnsDomainMappings: convertToTypeMapString(forwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings()),
 		Gateway:           forwarder.Spec.Gateway.GetId(),
 		Environment:       forwarder.Spec.Environment.GetId(),
 		Phase:             forwarder.Status.GetPhase(),
@@ -99,7 +99,7 @@ func printDnsForwarderTable(cmd *cobra.Command, forwarder networkingdnsforwarder
 	return table.Print()
 }
 
-func convertToTypeString(input map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings) map[string]string {
+func convertToTypeMapString(input map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings) map[string]string {
 	myMap := make(map[string]string)
 	for key, value := range input {
 		myMap[key] = fmt.Sprintf("{%s, %s}", *value.Zone, *value.Project)
