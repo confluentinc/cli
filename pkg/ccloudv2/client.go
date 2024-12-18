@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder/v1"
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
@@ -21,7 +22,6 @@ import (
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
-	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
 	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway/v1"
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
