@@ -22,8 +22,8 @@ For detailed instructions, please refer to this Confluence page: https://conflue
 -->
 - [ ] I have successfully built and used a custom CLI binary, with no linting issues identified from this PR.
 - [ ] I have clearly specified in the `Release Notes` section above whether this PR applies to Confluent Cloud, Confluent Platform, or both. 
-- [ ] I have verified this PR with Confluent Cloud resources in a production environment.
-- [ ] I have verified this PR with Confluent Platform resources in an on-premises environment.
+- [ ] I have verified this PR with Confluent Cloud resources in a production environment, if applicable.
+- [ ] I have verified this PR with Confluent Platform resources in an on-premises environment, if applicable.
 - [ ] I have attached manual CLI verification results or screenshots in the `Test & Review` section below.
 - [ ] I have added appropriate CLI integration tests for any new or updated commands and functionality.
 - [ ] I confirm that this PR introduces no breaking changes or backward compatibility issues.
