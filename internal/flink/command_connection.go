@@ -18,13 +18,13 @@ const envNotFoundErrorMsg = "Failed to get environment '%s'. List available envi
 type connectionOut struct {
 	CreationDate time.Time `human:"Creation Date" serialized:"creation_date"`
 	Name         string    `human:"Name" serialized:"name"`
+	Environment  string    `human:"Environment" serialized:"environment"`
+	Cloud        string    `human:"Cloud" serialized:"cloud"`
+	Region       string    `human:"Region" serialized:"region"`
 	Type         string    `human:"Type" serialized:"type"`
 	Endpoint     string    `human:"Endpoint" serialized:"endpoint"`
 	Data         string    `human:"Data" serialized:"data"`
 	Status       string    `human:"Status" serialized:"status"`
-	Environment  string    `human:"Environment" serialized:"environment"`
-	Cloud        string    `human:"Cloud" serialized:"cloud"`
-	Region       string    `human:"Region" serialized:"region"`
 	StatusDetail string    `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
 }
 
