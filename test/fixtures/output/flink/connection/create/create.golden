@@ -5,4 +5,7 @@
 | Endpoint      | https://api.openai.com/v1/chat/completions |
 | Data          | <REDACTED>                                 |
 | Status        | PENDING                                    |
+| Environment   | env-596                                    |
+| Cloud         | aws                                        |
+| Region        | eu-west-1                                  |
 +---------------+--------------------------------------------+

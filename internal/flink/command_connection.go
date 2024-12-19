@@ -22,6 +22,9 @@ type connectionOut struct {
 	Endpoint     string    `human:"Endpoint" serialized:"endpoint"`
 	Data         string    `human:"Data" serialized:"data"`
 	Status       string    `human:"Status" serialized:"status"`
+	Environment  string    `human:"Environment" serialized:"environment"`
+	Cloud        string    `human:"Cloud" serialized:"cloud"`
+	Region       string    `human:"Region" serialized:"region"`
 	StatusDetail string    `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
 }
 
