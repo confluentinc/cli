@@ -57,6 +57,8 @@ else
 	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
 endif
 
+
+
 .PHONY: clean
 clean:
 	for dir in bin dist docs legal prebuilt release-notes; do \
