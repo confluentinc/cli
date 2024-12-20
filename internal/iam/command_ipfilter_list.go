@@ -35,7 +35,8 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	var ipFilters []iamipfilteringv2.IamV2IpFilter
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
+	isSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
@@ -66,14 +67,17 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	list := output.NewList(cmd)
 	for _, filter := range ipFilters {
-		list.Add(&ipFilterOut{
-			ID:              filter.GetId(),
-			Name:            filter.GetFilterName(),
-			ResourceGroup:   filter.GetResourceGroup(),
-			IpGroups:        convertIpGroupObjectsToIpGroupIds(filter),
-			OperationGroups: filter.GetOperationGroups(),
-			ResourceScope:   filter.GetResourceScope(),
-		})
+		filterOut := ipFilterOut{
+			ID:            filter.GetId(),
+			Name:          filter.GetFilterName(),
+			ResourceGroup: filter.GetResourceGroup(),
+			IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
+		}
+		if isSrEnabled {
+			filterOut.ResourceScope = filter.GetResourceScope()
+			filterOut.OperationGroups = filter.GetOperationGroups()
+		}
+		list.Add(filterOut)
 	}
 	return list.Print()
 }
