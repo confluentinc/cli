@@ -100,6 +100,9 @@ func (c *command) connectionUpdate(cmd *cobra.Command, args []string) error {
 	table.Add(&connectionOut{
 		CreationDate: connection.Metadata.GetCreatedAt(),
 		Name:         connection.GetName(),
+		Environment:  environmentId,
+		Cloud:        c.Context.GetCurrentFlinkCloudProvider(),
+		Region:       c.Context.GetCurrentFlinkRegion(),
 		Type:         connection.Spec.GetConnectionType(),
 		Endpoint:     connection.Spec.GetEndpoint(),
 		Data:         connection.Spec.AuthData.SqlV1PlaintextProvider.GetData(),
