@@ -108,7 +108,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.31.0
-	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
+	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/term v0.27.0
 	golang.org/x/text v0.21.0
