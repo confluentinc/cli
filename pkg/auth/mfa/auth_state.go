@@ -37,7 +37,7 @@ func newState(authUrl, email string) (*authState, error) {
 
 	state := &authState{
 		MFAProviderHost:        "https://" + sso.SsoConfigs[env].SsoProviderDomain,
-		MFAProviderCallbackUrl: strings.TrimSuffix(authUrl, "/") + sso.SsoProviderCallbackEndpoint,
+		MFAProviderCallbackUrl: sso.SsoProviderCallbackLocalURL,
 		MFAProviderClientID:    sso.GetAuth0CCloudClientIdFromBaseUrl(authUrl),
 		email:                  email,
 		MFAProviderScope:       sso.SsoConfigs[env].SsoProviderScope,
