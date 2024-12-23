@@ -27,6 +27,56 @@ var artifactVersions = &[]flinkartifactv1.ArtifactV1FlinkArtifactVersion{
 	},
 }
 
+var awsJavaArtifact = flinkartifactv1.ArtifactV1FlinkArtifact{
+	Id:                flinkartifactv1.PtrString("cfa-123456"),
+	Cloud:             flinkartifactv1.PtrString("AWS"),
+	Region:            flinkartifactv1.PtrString("us-west-2"),
+	Environment:       flinkartifactv1.PtrString("env-123456"),
+	DisplayName:       flinkartifactv1.PtrString("my-flink-artifact"),
+	ContentFormat:     flinkartifactv1.PtrString("JAR"),
+	Description:       flinkartifactv1.PtrString("CliArtifactTest"),
+	DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+	Versions:          artifactVersions,
+}
+
+var awsPythonArtifact = flinkartifactv1.ArtifactV1FlinkArtifact{
+	Id:            flinkartifactv1.PtrString("cfa-789012"),
+	Cloud:         flinkartifactv1.PtrString("AWS"),
+	Region:        flinkartifactv1.PtrString("us-east-1"),
+	Environment:   flinkartifactv1.PtrString("env-789012"),
+	DisplayName:   flinkartifactv1.PtrString("my-flink-python-artifact"),
+	ContentFormat: flinkartifactv1.PtrString("ZIP"),
+	Description: flinkartifactv1.PtrString("This is a longer description example to verify the" +
+		" output of the CLI is not affected and remains readable"),
+	DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+	Versions:          artifactVersions,
+}
+
+var azureJavaArtifact = flinkartifactv1.ArtifactV1FlinkArtifact{
+	Id:                flinkartifactv1.PtrString("cfa-123456"),
+	Cloud:             flinkartifactv1.PtrString("AZURE"),
+	Region:            flinkartifactv1.PtrString("centralus"),
+	Environment:       flinkartifactv1.PtrString("env-123456"),
+	DisplayName:       flinkartifactv1.PtrString("my-flink-artifact"),
+	ContentFormat:     flinkartifactv1.PtrString("JAR"),
+	Description:       flinkartifactv1.PtrString("CliArtifactTest"),
+	DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+	Versions:          artifactVersions,
+}
+
+var azurePythonArtifact = flinkartifactv1.ArtifactV1FlinkArtifact{
+	Id:            flinkartifactv1.PtrString("cfa-789012"),
+	Cloud:         flinkartifactv1.PtrString("AZURE"),
+	Region:        flinkartifactv1.PtrString("centralus"),
+	Environment:   flinkartifactv1.PtrString("env-789012"),
+	DisplayName:   flinkartifactv1.PtrString("my-flink-python-artifact"),
+	ContentFormat: flinkartifactv1.PtrString("ZIP"),
+	Description: flinkartifactv1.PtrString("This is a longer description example to verify the" +
+		" output of the CLI is not affected and remains readable"),
+	DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+	Versions:          artifactVersions,
+}
+
 // Handler for: "/artifact/v1/flink-artifacts"
 func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -35,57 +85,34 @@ func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 			var decodeRespone flinkartifactv1.ArtifactV1FlinkArtifact
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&decodeRespone))
 			var artifact flinkartifactv1.ArtifactV1FlinkArtifact
-			switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
-			case "java", "":
-				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
-					Id:                flinkartifactv1.PtrString("cfa-123456"),
-					Cloud:             flinkartifactv1.PtrString("AWS"),
-					Region:            flinkartifactv1.PtrString("us-west-2"),
-					Environment:       flinkartifactv1.PtrString("env-123456"),
-					DisplayName:       flinkartifactv1.PtrString("my-flink-artifact"),
-					ContentFormat:     flinkartifactv1.PtrString("JAR"),
-					Description:       flinkartifactv1.PtrString("CliArtifactTest"),
-					DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
-					Versions:          artifactVersions,
+			switch strings.ToLower(decodeRespone.GetCloud()) {
+			case "azure":
+				switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
+				case "java", "":
+					artifact = azureJavaArtifact
+				case "python":
+					artifact = azurePythonArtifact
 				}
-			case "python":
-				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
-					Id:            flinkartifactv1.PtrString("cfa-789012"),
-					Cloud:         flinkartifactv1.PtrString("AWS"),
-					Region:        flinkartifactv1.PtrString("us-east-1"),
-					Environment:   flinkartifactv1.PtrString("env-789012"),
-					DisplayName:   flinkartifactv1.PtrString("my-flink-python-artifact"),
-					ContentFormat: flinkartifactv1.PtrString("ZIP"),
-					Description: flinkartifactv1.PtrString("This is a longer description example to verify the" +
-						" output of the CLI is not affected and remains readable"),
-					DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
-					Versions:          artifactVersions,
+			case "aws":
+				switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
+				case "java", "":
+					artifact = awsJavaArtifact
+				case "python":
+					artifact = awsPythonArtifact
 				}
 			}
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodGet:
-			artifact1 := flinkartifactv1.ArtifactV1FlinkArtifact{
-				Id:                flinkartifactv1.PtrString("cfa-123456"),
-				Cloud:             flinkartifactv1.PtrString("AWS"),
-				Region:            flinkartifactv1.PtrString("us-west-2"),
-				Environment:       flinkartifactv1.PtrString("env-123456"),
-				DisplayName:       flinkartifactv1.PtrString("my-flink-artifact"),
-				ContentFormat:     flinkartifactv1.PtrString("JAR"),
-				Description:       flinkartifactv1.PtrString("CliArtifactTest"),
-				DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
-				Versions:          artifactVersions,
-			}
-			artifact2 := flinkartifactv1.ArtifactV1FlinkArtifact{
-				Id:                flinkartifactv1.PtrString("cfa-789012"),
-				Cloud:             flinkartifactv1.PtrString("AWS"),
-				Region:            flinkartifactv1.PtrString("us-east-1"),
-				Environment:       flinkartifactv1.PtrString("env-789012"),
-				DisplayName:       flinkartifactv1.PtrString("my-flink-python-artifact"),
-				ContentFormat:     flinkartifactv1.PtrString("ZIP"),
-				Description:       flinkartifactv1.PtrString("CliArtifactTest"),
-				DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
-				Versions:          artifactVersions,
+			var artifact1 flinkartifactv1.ArtifactV1FlinkArtifact
+			var artifact2 flinkartifactv1.ArtifactV1FlinkArtifact
+			switch strings.ToLower(r.URL.Query().Get("cloud")) {
+			case "azure":
+				artifact1 = azureJavaArtifact
+				artifact2 = azurePythonArtifact
+			case "aws":
+				artifact1 = awsJavaArtifact
+				artifact2 = awsPythonArtifact
 			}
 			err := json.NewEncoder(w).Encode(flinkartifactv1.ArtifactV1FlinkArtifactList{Data: []flinkartifactv1.ArtifactV1FlinkArtifact{artifact1, artifact2}})
 			require.NoError(t, err)
@@ -101,7 +128,9 @@ func handleFlinkArtifactId(t *testing.T) http.HandlerFunc {
 			vars := mux.Vars(r)
 			id := vars["id"]
 			var artifact flinkartifactv1.ArtifactV1FlinkArtifact
-			if id == "cfa-123456" {
+			if strings.ToLower(r.URL.Query().Get("cloud")) == "azure" {
+				artifact = azureJavaArtifact
+			} else if id == "cfa-123456" {
 				artifact = flinkartifactv1.ArtifactV1FlinkArtifact{
 					Id:            flinkartifactv1.PtrString("cfa-123456"),
 					Cloud:         flinkartifactv1.PtrString("AWS"),
@@ -159,6 +188,16 @@ func handleFlinkArtifactUploadUrl(t *testing.T) http.HandlerFunc {
 			uploadUrl := flinkartifactv1.ArtifactV1PresignedUrl{
 				ContentFormat: flinkartifactv1.PtrString("ZIP"),
 				Cloud:         flinkartifactv1.PtrString("AWS"),
+				Region:        flinkartifactv1.PtrString("us-west-2"),
+				UploadId:      flinkartifactv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl:     flinkartifactv1.PtrString(fmt.Sprintf("%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.String())),
+			}
+			err := json.NewEncoder(w).Encode(uploadUrl)
+			require.NoError(t, err)
+		} else if r.Method == http.MethodPut {
+			uploadUrl := flinkartifactv1.ArtifactV1PresignedUrl{
+				ContentFormat: flinkartifactv1.PtrString("ZIP"),
+				Cloud:         flinkartifactv1.PtrString("AZURE"),
 				Region:        flinkartifactv1.PtrString("us-west-2"),
 				UploadId:      flinkartifactv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
 				UploadUrl:     flinkartifactv1.PtrString(fmt.Sprintf("%s/connect/v1/dummy-presigned-url", TestV2CloudUrl.String())),
