@@ -43,6 +43,15 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 		{args: "flink artifact list --cloud aws --region us-west-2 --environment env-123456", fixture: "flink/artifact/list.golden"},
 		{args: "flink artifact delete --cloud aws --region us-west-2 --environment env-123456 --force cfa-123456", fixture: "flink/artifact/delete.golden"},
 		{args: "flink artifact delete --cloud aws --region us-west-2 --environment env-123456 cfa-123456", input: "y\n", fixture: "flink/artifact/delete-prompt.golden"},
+
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud azure --region centralus --environment env-123456", fixture: "flink/artifact/create-azure.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud azure --region centralus --environment env-123456 --description CliArtifactTest", fixture: "flink/artifact/create-azure.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud azure --region centralus --environment env-123456 --description CliArtifactTest --documentation-link https://docs.confluent.io", fixture: "flink/artifact/create-azure.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/python-udf-examples.zip --cloud azure --region centralus --environment env-789012 --description CliArtifactTest --runtime-language python", fixture: "flink/artifact/create-python-azure.golden"},
+		{args: "flink artifact describe --cloud azure --region centralus --environment env-123456 cfa-789013", fixture: "flink/artifact/describe-azure.golden"},
+		{args: "flink artifact list --cloud azure --region centralus --environment env-123456", fixture: "flink/artifact/list-azure.golden"},
+		{args: "flink artifact delete --cloud azure --region centralus --environment env-123456 --force cfa-123456", fixture: "flink/artifact/delete-azure.golden"},
+		{args: "flink artifact delete --cloud azure --region centralus --environment env-123456 cfa-123456", input: "y\n", fixture: "flink/artifact/delete-prompt-azure.golden"},
 	}
 
 	for _, test := range tests {
