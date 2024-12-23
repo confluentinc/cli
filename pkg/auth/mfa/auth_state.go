@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -75,7 +76,7 @@ func (s *authState) generateCodes() error {
 func (s *authState) getAuthorizationCodeUrl() string {
 	url := s.MFAProviderHost + "/authorize?challenge_mfa=true" +
 		"&response_type=code" +
-		"&email=" + s.email +
+		"&email=" + encodeEmail(s.email) +
 		"&from_cli=true" +
 		"&code_challenge=" + s.CodeChallenge +
 		"&code_challenge_method=S256" +
@@ -104,7 +105,7 @@ func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 }
 
 func (s *authState) getOAuthToken() error {
-	payload := strings.NewReader("grant_type=authorization_code" +
+	payload := strings.NewReader("grant_type=authorization_code&from_cli=true" +
 		"&client_id=" + s.MFAProviderClientID +
 		"&code_verifier=" + s.CodeVerifier +
 		"&code=" + s.MFAProviderAuthenticationCode +
@@ -139,4 +140,9 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 		return nil, fmt.Errorf("failed to unmarshal response body in oauth token request: %w", err)
 	}
 	return data, nil
+}
+
+func encodeEmail(email string) string {
+	encodedEmail := url.QueryEscape(email)
+	return encodedEmail
 }

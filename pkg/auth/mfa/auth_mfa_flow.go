@@ -20,7 +20,7 @@ func Login(authURL, email string) (string, string, error) {
 	// Get authorization code for making subsequent token request
 	url := state.getAuthorizationCodeUrl()
 	if err := browser.OpenURL(url); err != nil {
-		return "", "", fmt.Errorf("unable to open web browser for authorization[][][]: %w", err)
+		return "", "", fmt.Errorf("unable to open web browser for authorization: %w", err)
 	}
 
 	if err := server.awaitAuthorizationCode(300 * time.Second); err != nil {
