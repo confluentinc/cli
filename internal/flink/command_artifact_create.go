@@ -132,10 +132,16 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := utils.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
-		return err
+	if strings.ToLower(cloud) == "azure" {
+		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), artifactFile, strings.ToLower(resp.GetContentFormat())); err != nil {
+			return err
+		}
+	} else {
+		if err := utils.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
+			return err
+		}
 	}
-
+	
 	createArtifactRequest := flinkartifactv1.InlineObject{
 		DisplayName:       displayName,
 		Cloud:             cloud,
