@@ -141,6 +141,7 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
+
 	createArtifactRequest := flinkartifactv1.InlineObject{
 		DisplayName:       displayName,
 		Cloud:             cloud,
