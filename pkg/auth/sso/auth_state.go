@@ -98,7 +98,7 @@ func newState(authUrl string, noBrowser bool) (*authState, error) {
 
 	if !noBrowser {
 		// if we're not using the no browser flow, the callback will always be localhost regardless of environment
-		state.SSOProviderCallbackUrl = ssoProviderCallbackLocalURL
+		state.SSOProviderCallbackUrl = SsoProviderCallbackLocalURL
 	}
 
 	if err := state.generateCodes(); err != nil {
