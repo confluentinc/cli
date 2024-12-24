@@ -21,7 +21,7 @@ var (
 	SsoConfigs = map[string]ssoConfig{
 		"devel": {
 			SsoProviderDomain:     "login.confluent-dev.io/oauth",
-			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
+			SsoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
 			SsoProviderScope:      "email%20openid%20offline_access",
 		},
 		"devel-us-gov": {
@@ -34,7 +34,7 @@ var (
 		},
 		"prod": {
 			SsoProviderDomain:     "login.confluent.io/oauth",
-			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
+			SsoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
 			SsoProviderScope:      "email%20openid%20offline_access",
 		},
 		"prod-us-gov": {
@@ -43,12 +43,12 @@ var (
 		},
 		"stag": {
 			SsoProviderDomain:     "login-stag.confluent-dev.io/oauth",
-			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
+			SsoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
 			SsoProviderScope:      "email%20openid%20offline_access",
 		},
 		"test": {
 			SsoProviderDomain:     "test.com/oauth",
-			ssoProviderIdentifier: "https://test.auth0.com/api/v2/",
+			SsoProviderIdentifier: "https://test.auth0.com/api/v2/",
 			SsoProviderScope:      "email%20openid%20offline_access",
 		},
 	}
@@ -56,7 +56,7 @@ var (
 
 type ssoConfig struct {
 	SsoProviderDomain     string
-	ssoProviderIdentifier string
+	SsoProviderIdentifier string
 	SsoProviderScope      string
 }
 
@@ -92,7 +92,7 @@ func newState(authUrl string, noBrowser bool) (*authState, error) {
 		SSOProviderCallbackUrl: strings.TrimSuffix(authUrl, "/") + SsoProviderCallbackEndpoint,
 		SSOProviderHost:        "https://" + SsoConfigs[env].SsoProviderDomain,
 		SSOProviderClientID:    GetAuth0CCloudClientIdFromBaseUrl(authUrl),
-		SSOProviderIdentifier:  SsoConfigs[env].ssoProviderIdentifier,
+		SSOProviderIdentifier:  SsoConfigs[env].SsoProviderIdentifier,
 		SSOProviderScope:       SsoConfigs[env].SsoProviderScope,
 	}
 

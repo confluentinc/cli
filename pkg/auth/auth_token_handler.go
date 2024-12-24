@@ -133,8 +133,16 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudMFAToken(client *ccloudv1.Client, email, organizationId string) (string, string, error) {
+	connectionName, err := a.getMfaConnectionName(client, email, organizationId)
+	if err != nil {
+		log.CliLogger.Debugf("unable to obtain user MFA info: %v", err)
+		return "", "", fmt.Errorf(`unable to obtain MFA info for user "%s"`, email)
+	}
+	if connectionName == "" {
+		return "", "", fmt.Errorf(`tried to obtain MFA token for non MFA user "%s"`, email)
+	}
 
-	idToken, refreshToken, err := mfa.Login(client.BaseURL, email)
+	idToken, refreshToken, err := mfa.Login(client.BaseURL, email, connectionName)
 	if err != nil {
 		return "", "", err
 	}
@@ -162,6 +170,22 @@ func (a *AuthTokenHandlerImpl) getSsoConnectionName(client *ccloudv1.Client, ema
 		return "", err
 	}
 	if loginRealmReply.GetIsSso() {
+		return loginRealmReply.GetRealm(), nil
+	}
+	return "", nil
+}
+
+func (a *AuthTokenHandlerImpl) getMfaConnectionName(client *ccloudv1.Client, email, organizationId string) (string, error) {
+	req := &ccloudv1.GetLoginRealmRequest{
+		Email:         email,
+		ClientId:      sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL),
+		OrgResourceId: organizationId,
+	}
+	loginRealmReply, err := client.User.LoginRealm(req)
+	if err != nil {
+		return "", err
+	}
+	if loginRealmReply.GetMfaRequired() {
 		return loginRealmReply.GetRealm(), nil
 	}
 	return "", nil
