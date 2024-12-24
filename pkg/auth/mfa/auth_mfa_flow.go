@@ -2,23 +2,26 @@ package mfa
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/auth/sso"
 	"github.com/pkg/browser"
 	"strings"
 	"time"
 )
 
-func Login(authURL, email string) (string, string, error) {
+func Login(authURL, email, connectionName string) (string, string, error) {
 	state, err := newState(authURL, email)
 	if err != nil {
 		return "", "", err
 	}
+
+	isOkta := sso.IsOkta(authURL)
 
 	server := newServer(state)
 	if err := server.startServer(); err != nil {
 		return "", "", fmt.Errorf("unable to start HTTP server: %w", err)
 	}
 	// Get authorization code for making subsequent token request
-	url := state.getAuthorizationCodeUrl()
+	url := state.getAuthorizationCodeUrl(isOkta, connectionName)
 	if err := browser.OpenURL(url); err != nil {
 		return "", "", fmt.Errorf("unable to open web browser for authorization: %w", err)
 	}
