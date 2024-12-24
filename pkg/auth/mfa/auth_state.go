@@ -15,6 +15,8 @@ import (
 	"strings"
 )
 
+var mfaProviderCallbackLocalURL = fmt.Sprintf("http://127.0.0.1:%d", port) + sso.SsoProviderCallbackEndpoint
+
 type authState struct {
 	CodeVerifier                  string
 	CodeChallenge                 string
@@ -27,6 +29,7 @@ type authState struct {
 	MFAProviderHost               string
 	MFAProviderClientID           string
 	MFAProviderScope              string
+	MFAProviderIdentifier         string
 }
 
 func newState(authUrl, email string) (*authState, error) {
@@ -38,9 +41,10 @@ func newState(authUrl, email string) (*authState, error) {
 
 	state := &authState{
 		MFAProviderHost:        "https://" + sso.SsoConfigs[env].SsoProviderDomain,
-		MFAProviderCallbackUrl: sso.SsoProviderCallbackLocalURL,
+		MFAProviderCallbackUrl: mfaProviderCallbackLocalURL,
 		MFAProviderClientID:    sso.GetAuth0CCloudClientIdFromBaseUrl(authUrl),
 		email:                  email,
+		MFAProviderIdentifier:  sso.SsoConfigs[env].SsoProviderIdentifier,
 		MFAProviderScope:       sso.SsoConfigs[env].SsoProviderScope,
 	}
 	if err := state.generateCodes(); err != nil {
@@ -73,7 +77,7 @@ func (s *authState) generateCodes() error {
 	return nil
 }
 
-func (s *authState) getAuthorizationCodeUrl() string {
+func (s *authState) getAuthorizationCodeUrl(isOkta bool, mfaProviderConnectionName string) string {
 	url := s.MFAProviderHost + "/authorize?challenge_mfa=true" +
 		"&response_type=code" +
 		"&email=" + encodeEmail(s.email) +
@@ -84,6 +88,16 @@ func (s *authState) getAuthorizationCodeUrl() string {
 		"&redirect_uri=" + s.MFAProviderCallbackUrl +
 		"&scope=" + s.MFAProviderScope +
 		"&state=" + s.MFAProviderState
+
+	if s.MFAProviderIdentifier != "" {
+		url += "&audience=" + s.MFAProviderIdentifier
+	}
+
+	if isOkta {
+		url += "&idp=" + mfaProviderConnectionName
+	} else {
+		url += "&connection=" + mfaProviderConnectionName
+	}
 
 	return url
 }
