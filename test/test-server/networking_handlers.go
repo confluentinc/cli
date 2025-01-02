@@ -2584,7 +2584,6 @@ func handleNetworkingDnsForwarderCreate(t *testing.T) http.HandlerFunc {
 				}
 				err = json.NewEncoder(w).Encode(forwarder)
 				require.NoError(t, err)
-
 			} else {
 				forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
 					Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
