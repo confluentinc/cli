@@ -1,15 +1,16 @@
 package network
 
 import (
-	"github.com/confluentinc/cli/v4/pkg/properties"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-dnsforwarder/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/properties"
 )
 
 const (
@@ -139,7 +140,6 @@ func DomainFlagToMap(domains string) (map[string]networkingdnsforwarderv1.Networ
 			project := replaceSpecialCharacters(y[1])
 			m[x[0]] = networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings{Zone: networkingdnsforwarderv1.PtrString(zone), Project: networkingdnsforwarderv1.PtrString(project)}
 		}
-
 	}
 	return m, nil
 }
