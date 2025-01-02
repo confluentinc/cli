@@ -26,7 +26,7 @@ func fileToMap(filename string) (map[string]string, error) {
 		return nil, err
 	}
 
-	return ConfigSliceToMap(parseLines(string(buf)))
+	return ConfigSliceToMap(ParseLines(string(buf)))
 }
 
 // ConfigSliceToMap converts a list of key=value strings into a map.
@@ -45,7 +45,7 @@ func ConfigSliceToMap(configs []string) (map[string]string, error) {
 	return m, nil
 }
 
-func parseLines(content string) []string {
+func ParseLines(content string) []string {
 	var lines []string
 
 	// Support multiline properties

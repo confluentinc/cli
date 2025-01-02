@@ -1,0 +1,9 @@
++---------------------+---------------------------+
+| ID                  | dnsf-abcde1               |
+| Name                | my-dns-forwarder-file     |
+| Domains             | abc.com, def.com, xyz.com |
+| DNS Domain Mappings | abc.com={zone1, project1} |
+| Environment         | env-00000                 |
+| Gateway             | gw-123456                 |
+| Phase               | READY                     |
++---------------------+---------------------------+

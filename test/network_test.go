@@ -1,5 +1,7 @@
 package test
 
+import "os"
+
 func (s *CLITestSuite) TestNetworkDescribe() {
 	tests := []CLITest{
 		{args: "network describe n-abcde1", fixture: "network/describe-aws-ready.golden"},
@@ -927,11 +929,25 @@ func (s *CLITestSuite) TestNetworkDnsForwarderDelete() {
 }
 
 func (s *CLITestSuite) TestNetworkDnsForwarderUpdate() {
+	file, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = file.Write([]byte("abc.com=zone1,project1"))
+	defer func() {
+		_ = os.Remove(file.Name())
+	}()
+
+	fileUpdated, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = fileUpdated.Write([]byte("abc.com=zone2,project2"))
+	if fileUpdated != nil {
+		defer os.Remove(fileUpdated.Name())
+	}
+
 	tests := []CLITest{
 		{args: "network dns forwarder update", fixture: "network/dns/forwarder/update-missing-args.golden", exitCode: 1},
 		{args: "network dns forwarder update dnsf-111111", fixture: "network/dns/forwarder/update-missing-flags.golden", exitCode: 1},
 		{args: "network dns forwarder update dnsf-111111 --name my-new-dns-forwarder --domains ghi.com,jkl.com,xyz.com", fixture: "network/dns/forwarder/update.golden"},
 		{args: "network dns forwarder update dnsf-111111 --dns-server-ips 10.208.0.0,10.209.0.0", fixture: "network/dns/forwarder/update-ips.golden"},
+		{args: "network dns forwarder create my-dns-forwarder-file --gateway gw-123456 --domains abc.com,def.com,xyz.com --domain-mapping " + file.Name(), fixture: "network/dns/forwarder/create_file.golden"},
+		{args: "network dns forwarder update my-dns-forwarder-file --domain-mapping " + fileUpdated.Name(), fixture: "network/dns/forwarder/update-mappings.golden"},
 		{args: "network dns forwarder update dnsf-invalid --name my-new-dns-forwarder", fixture: "network/dns/forwarder/update-dnsf-not-exist.golden", exitCode: 1},
 	}
 
@@ -942,12 +958,19 @@ func (s *CLITestSuite) TestNetworkDnsForwarderUpdate() {
 }
 
 func (s *CLITestSuite) TestNetworkDnsForwarderCreate() {
+	file, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = file.Write([]byte("abc.com=zone1,project1"))
+	defer func() {
+		_ = os.Remove(file.Name())
+	}()
+
 	tests := []CLITest{
 		{args: "network dns forwarder create my-dns-forwarder", fixture: "network/dns/forwarder/create-missing-flags.golden", exitCode: 1},
 		{args: "network dns forwarder create dnsf-invalid-gateway --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com", fixture: "network/dns/forwarder/create-invalid-gateway.golden", exitCode: 1},
 		{args: "network dns forwarder create dnsf-duplicate --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com", fixture: "network/dns/forwarder/create-duplicate.golden", exitCode: 1},
 		{args: "network dns forwarder create dnsf-exceed-quota --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com", fixture: "network/dns/forwarder/create-exceed-quota.golden", exitCode: 1},
 		{args: "network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com,def.com,xyz.com", fixture: "network/dns/forwarder/create.golden"},
+		{args: "network dns forwarder create my-dns-forwarder-file --gateway gw-123456 --domains abc.com,def.com,xyz.com --domain-mapping " + file.Name(), fixture: "network/dns/forwarder/create_file.golden"},
 		{args: "network dns forwarder create --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com,def.com,xyz.com", fixture: "network/dns/forwarder/create-no-name.golden"},
 	}
 

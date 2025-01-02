@@ -31,5 +31,22 @@
     "environment": "env-00000",
     "gateway": "gw-333333",
     "phase": "READY"
+  },
+  {
+    "id": "dnsf-abcde4",
+    "name": "my-dns-forwarder-4",
+    "domains": [
+      "abc.com",
+      "def.com",
+      "example.domain",
+      "my.dns.forwarder.example.domain",
+      "xyz.com"
+    ],
+    "dns_domain_mappings": {
+      "abc.com": "{zone1, project1}"
+    },
+    "environment": "env-00000",
+    "gateway": "gw-111111",
+    "phase": "READY"
   }
 ]
