@@ -30,7 +30,7 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudAwsAzureFlag(cmd)
+	pcmd.AddCloudAwsAzureGcpFlag(cmd)
 	addGatewayTypeFlag(cmd)
 	c.addRegionFlagGateway(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("zones", nil, "A comma-separated list of availability zones for this gateway.")
@@ -101,6 +101,15 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
 				NetworkingV1AzureEgressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewaySpec{
 					Kind:   "AzureEgressPrivateLinkGatewaySpec",
+					Region: region,
+				},
+			}
+		}
+	case pcloud.Gcp:
+		if gatewayType == "egress-privatelink" {
+			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
+				NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec: &networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec{
+					Kind:   "GcpEgressPrivateServiceConnectGatewaySpec",
 					Region: region,
 				},
 			}
