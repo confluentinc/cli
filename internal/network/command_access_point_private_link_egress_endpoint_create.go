@@ -20,8 +20,7 @@ func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				// TODO: should "private link" be capital or lower case in Text?
-				Text: "Create an AWS private link egress endpoint with high availability.",
+				Text: "Create an AWS Private Link egress endpoint with high availability.",
 				Code: "confluent network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability",
 			},
 			examples.Example{
@@ -35,7 +34,7 @@ func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudAwsAzureGcpFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service, ID of an Azure Private Link service, or URI of a GCP Private Service Connect service.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("subresource", "", "Name of an Azure Private Link subresource.")
