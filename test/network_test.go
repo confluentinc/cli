@@ -91,6 +91,7 @@ func (s *CLITestSuite) TestNetworkCreate() {
 		{args: "network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27 --reserved-cidr 172.16.10.0/24 --environment env-00000", fixture: "network/create-peering-zone-info-pairs.golden"},
 		{args: "network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27=usw2-az4=10.10.0.64/27 --reserved-cidr 172.16.10.0/24 --environment env-00000", fixture: "network/create-peering-zone-info-invalid.golden", exitCode: 1},
 		{args: "network create aws-tgw-peering --cloud aws --region us-west-2 --connection-types transitgateway,peering --zones usw2-az1,usw2-az3,usw2-az4 --zone-info 192.168.1.0/27,192.168.2.0/27,192.168.3.0/27 --environment env-00000", fixture: "network/create-tgw-peering.golden"},
+		{args: "network create gcp-pl --cloud gcp --connection-types privatelink --region us-central1", fixture: "network/create-gcp-pl.golden"},
 	}
 
 	for _, test := range tests {
@@ -119,7 +120,6 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 func (s *CLITestSuite) TestNetworkGateway() {
 	tests := []CLITest{
 		{args: "network gateway create my-gateway --cloud aws --type egress-privatelink --region us-west-2", fixture: "network/gateway/create-aws.golden"},
-		{args: "network gateway create my-gateway --cloud gcp --type egress-privatelink --region us-west-2", fixture: "network/gateway/create-gcp.golden"},
 		{args: "network gateway create my-gateway --cloud aws --type private-network-interface --region us-west-2 --zones us-west-2a,us-west-2b", fixture: "network/gateway/create-aws-private-network-interface.golden"},
 		{args: "network gateway update gw-111111 --name new-name", fixture: "network/gateway/update.golden"},
 		{args: "network gateway delete gw-12345", input: "y\n", fixture: "network/gateway/delete.golden"},
@@ -139,7 +139,7 @@ func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 		{args: "network gateway describe gw-54321", fixture: "network/gateway/describe-aws-private-network-interface.golden"},
 		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
-		{args: "network gateway describe gw-13579", fixture: "network/gateway/describe-gcp.golden"},
+		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -1081,7 +1081,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDescribe()
 		{args: "network access-point private-link egress-endpoint describe ap-67890", fixture: "network/access-point/private-link/egress-endpoint/describe-azure.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-12345 --output json", fixture: "network/access-point/private-link/egress-endpoint/describe-aws-json.golden"},
 		// TODO: check what exactly to put as the Gcp endpoint
-		{args: "network access-point private-link egress-endpoint describe ap-13579", fixture: "network/access-point/private-link/egress-endpoint/describe-gcp.golden"},
+		{args: "network access-point private-link egress-endpoint describe ap-88888", fixture: "network/access-point/private-link/egress-endpoint/describe-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -1106,7 +1106,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointUpdate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint update ap-12345 --name my-new-aws-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-aws.golden"},
 		{args: "network access-point private-link egress-endpoint update ap-67890 --name my-new-azure-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-azure.golden"},
-		{args: "network access-point private-link egress-endpoint update ap-13579 --name my-new-gcp-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-gcp.golden"},
+		{args: "network access-point private-link egress-endpoint update ap-88888 --name my-new-gcp-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-gcp.golden"},
 	}
 
 	for _, test := range tests {
