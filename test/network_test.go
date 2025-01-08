@@ -139,7 +139,6 @@ func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 		{args: "network gateway describe gw-54321", fixture: "network/gateway/describe-aws-private-network-interface.golden"},
 		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
-		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -1080,7 +1079,6 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDescribe()
 		{args: "network access-point private-link egress-endpoint describe ap-12345", fixture: "network/access-point/private-link/egress-endpoint/describe-aws.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-67890", fixture: "network/access-point/private-link/egress-endpoint/describe-azure.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-12345 --output json", fixture: "network/access-point/private-link/egress-endpoint/describe-aws-json.golden"},
-		// TODO: check what exactly to put as the Gcp endpoint
 		{args: "network access-point private-link egress-endpoint describe ap-88888", fixture: "network/access-point/private-link/egress-endpoint/describe-gcp.golden"},
 	}
 
