@@ -23,7 +23,6 @@ const (
 	azurePeering                   = "AzurePeering"
 	awsPrivateNetworkInterface     = "AwsPrivateNetworkInterface"
 	gcpEgressPrivateServiceConnect = "GcpEgressPrivateServiceConnect"
-	gcpPeering                     = "GcpPeering"
 )
 
 var (
@@ -171,10 +170,6 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 		return gcpEgressPrivateServiceConnect, nil
 	}
 
-	if config.NetworkingV1GcpPeeringGatewaySpec != nil {
-		return gcpPeering, nil
-	}
-
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
 }
 
@@ -218,9 +213,6 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	}
 	if gatewayType == gcpEgressPrivateServiceConnect {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
-	}
-	if gatewayType == gcpPeering {
-		out.Region = gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
 	}
 
 	switch getGatewayCloud(gateway) {

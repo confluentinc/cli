@@ -91,9 +91,6 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		if gatewayType == gcpEgressPrivateServiceConnect {
 			out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
 		}
-		if gatewayType == gcpPeering {
-			out.Region = gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
-		}
 
 		switch getGatewayCloud(gateway) {
 		case pcloud.Aws:
