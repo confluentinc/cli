@@ -132,7 +132,7 @@ func DomainFlagToMap(domains string) (map[string]networkingdnsforwarderv1.Networ
 
 	domainsContent := properties.ParseLines(string(buf))
 	m := make(map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings)
-	for i := len(domainsContent) - 1; i >= 0; i-- {
+	for i := range len(domainsContent) {
 		x := strings.SplitN(domainsContent[i], "=", 2)
 		if _, ok := m[x[0]]; !ok {
 			y := strings.SplitN(x[1], ",", 2)
