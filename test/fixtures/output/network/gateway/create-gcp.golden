@@ -1,0 +1,8 @@
++-------------+--------------------------------+
+| ID          | gw-abc123                      |
+| Name        | my-gateway                     |
+| Environment | env-596                        |
+| Region      | us-west-2                      |
+| Type        | GcpEgressPrivateServiceConnect |
+| Phase       | READY                          |
++-------------+--------------------------------+
