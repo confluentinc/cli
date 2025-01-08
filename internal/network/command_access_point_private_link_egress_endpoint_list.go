@@ -47,7 +47,7 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 		if egressEndpoint.Spec == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 		}
-		if egressEndpoint.Spec.GetConfig().NetworkingV1AwsEgressPrivateLinkEndpoint == nil && egressEndpoint.Spec.GetConfig().NetworkingV1AzureEgressPrivateLinkEndpoint == nil {
+		if egressEndpoint.Spec.GetConfig().NetworkingV1AwsEgressPrivateLinkEndpoint == nil && egressEndpoint.Spec.GetConfig().NetworkingV1AzureEgressPrivateLinkEndpoint == nil && egressEndpoint.Spec.GetConfig().NetworkingV1GcpEgressPrivateServiceConnectEndpoint == nil {
 			continue
 		}
 		if egressEndpoint.Status == nil {
