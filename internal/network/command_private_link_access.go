@@ -20,7 +20,6 @@ type privateLinkAccessOut struct {
 	AwsAccount        string `human:"AWS Account,omitempty" serialized:"aws_account,omitempty"`
 	GcpProject        string `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
 	AzureSubscription string `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
-	GcpIAMPrincipal   string `human:"GCP IAM Principal,omitempty" serialized:"gcp_IAM_principal,omitempty"`
 	Phase             string `human:"Phase" serialized:"phase"`
 }
 

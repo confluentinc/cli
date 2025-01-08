@@ -35,7 +35,8 @@ func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service, ID of an Azure Private Link service, or URI of a GCP Private Service Connect service.")
+	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service, ID of an Azure Private Link service, URI of a GCP Private Service Connect Published Service, or all-google-apis and ALL_GOOGLE_APIS for endpoints that connect to Global Google APIs.")
+
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("subresource", "", "Name of an Azure Private Link subresource.")
 	cmd.Flags().Bool("high-availability", false, "Enable high availability for AWS egress endpoint.")
