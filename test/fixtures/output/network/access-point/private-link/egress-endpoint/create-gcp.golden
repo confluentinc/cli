@@ -1,0 +1,11 @@
++-------------------------------------------------+-----------------------------------------------------------------------------------+
+| ID                                              | ap-88888                                                                          |
+| Name                                            | my-egress-endpoint                                                                |
+| Environment                                     | env-596                                                                           |
+| Gateway                                         | gw-123456                                                                         |
+| Phase                                           | READY                                                                             |
+| GCP Private Service Connect Endpoint Service    | projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName |
+| GCP Private Service Connect Endpoint            | 111111111111111111                                                                |
+| GCP Private Service Connect Endpoint Name       | private-service-connect-endpoint-name                                             |
+| GCP Private Service Connect Endpoint IP Address | 10.2.0.68                                                                         |
++-------------------------------------------------+-----------------------------------------------------------------------------------+
