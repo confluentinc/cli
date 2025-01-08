@@ -27,6 +27,10 @@ type egressEndpointOut struct {
 	AzurePrivateEndpointDomain                 string   `human:"Azure Private Endpoint Domain,omitempty" serialized:"azure_private_endpoint_domain,omitempty"`
 	AzurePrivateEndpointIpAddress              string   `human:"Azure Private Endpoint IP Address,omitempty" serialized:"azure_private_endpoint_ip_address,omitempty"`
 	AzurePrivateEndpointCustomDnsConfigDomains []string `human:"Azure Private Endpoint Custom DNS Config Domains,omitempty" serialized:"azure_private_endpoint_custom_dns_config_domains,omitempty"`
+	GcpPrivateServiceConnectEndpointService    string   `human:"GCP Private Service Connect Endpoint Service,omitempty" serialized:"gcp_private_service_connect_endpoint_service,omitempty"`
+	GcpPrivateServiceConnectEndpoint           string   `human:"GCP Private Service Connect Endpoint,omitempty" serialized:"gcp_private_service_connect_endpoint,omitempty"`
+	GcpPrivateServiceConnectEndpointName       string   `human:"GCP Private Service Connect Endpoint Name,omitempty" serialized:"gcp_private_service_connect_endpoint_name,omitempty"`
+	GcpPrivateServiceConnectEndpointIpAddress  string   `human:"GCP Private Service Connect Endpoint IP Address,omitempty" serialized:"gcp_private_service_connect_endpoint_ip_address,omitempty"`
 	HighAvailability                           bool     `human:"High Availability,omitempty" serialized:"high_availability,omitempty"`
 }
 
@@ -106,6 +110,9 @@ func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, egressEndpoint netw
 		out.AzurePrivateLinkService = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkServiceResourceId()
 		out.AzurePrivateLinkSubresourceName = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkSubresourceName()
 	}
+	if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint != nil {
+		out.GcpPrivateServiceConnectEndpointService = egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint.GetPrivateServiceConnectEndpointTarget()
+	}
 
 	if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus != nil {
 		out.AwsVpcEndpoint = egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus.GetVpcEndpointId()
@@ -116,6 +123,11 @@ func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, egressEndpoint netw
 		out.AzurePrivateEndpointDomain = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointDomain()
 		out.AzurePrivateEndpointIpAddress = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointIpAddress()
 		out.AzurePrivateEndpointCustomDnsConfigDomains = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointCustomDnsConfigDomains()
+	}
+	if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus != nil {
+		out.GcpPrivateServiceConnectEndpoint = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointConnectionId()
+		out.GcpPrivateServiceConnectEndpointName = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointName()
+		out.GcpPrivateServiceConnectEndpointIpAddress = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointIpAddress()
 	}
 
 	table := output.NewTable(cmd)
