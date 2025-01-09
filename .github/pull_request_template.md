@@ -22,18 +22,17 @@ For detailed instructions, please refer to this Confluence page: https://conflue
 -->
 - [ ] I have successfully built and used a custom CLI binary, without linter issues from this PR.
 - [ ] I have clearly specified in the `What` section below whether this PR applies to Confluent Cloud, Confluent Platform, or both. 
-- [ ] I have verified this PR in Confluent Cloud pre-prod/production environment, if applicable.
+- [ ] I have verified this PR in Confluent Cloud pre-prod or production environment, if applicable.
 - [ ] I have verified this PR in Confluent Platform on-premises environment, if applicable.
 - [ ] I have attached manual CLI verification results or screenshots in the `Test & Review` section below.
 - [ ] I have added appropriate CLI integration or unit tests for any new or updated commands and functionality.
 - [ ] I confirm that this PR introduces no breaking changes or backward compatibility issues.
-- [ ] I have indicated the potential customer(s) impact if something goes wrong in the `Blast Radius` section below.
-- [ ] I have put checkmark below about the feature associated with this PR is enabled in:
+- [ ] I have indicated the potential customer impact if something goes wrong in the `Blast Radius` section below.
+- [ ] I have put checkmarks below confirming that the feature associated with this PR is enabled in:
   - [ ] Confluent Cloud prod
   - [ ] Confluent Cloud stag
-  - [ ] Confluent Cloud devel
   - [ ] Confluent Platform
-  - [ ] Check this box if the feature flag is enabled for certain organization only
+  - [ ] Check this box if the feature is enabled for certain organizations only
 
 What
 ----
