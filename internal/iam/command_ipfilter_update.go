@@ -18,30 +18,29 @@ import (
 )
 
 func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
-	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
-	exampleString := examples.BuildExampleString(
-		examples.Example{
-			Text: `Update the name and add an IP group to IP filter "ipf-abcde":`,
-			Code: `confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345`,
-		},
-	)
-	if isSrEnabled {
-		exampleString = examples.BuildExampleString(
-			examples.Example{
-				Text: `Update the name and add an IP group and operation group to IP filter "ipf-abcde":`,
-				Code: `confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345 --add-operation-groups SCHEMA`,
-			},
-		)
-	}
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update an IP filter.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
-		Example:           exampleString,
 	}
-
+	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	if isSrEnabled {
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: `Update the name and add an IP group and operation group to IP filter "ipf-abcde":`,
+				Code: `confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345 --add-operation-groups SCHEMA`,
+			},
+		)
+	} else {
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: `Update the name and add an IP group to IP filter "ipf-abcde":`,
+				Code: `confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345`,
+			},
+		)
+	}
 	cmd.Flags().String("name", "", "Updated name of the IP filter.")
 	pcmd.AddResourceGroupFlag(isSrEnabled, cmd)
 

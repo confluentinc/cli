@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -75,6 +76,9 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		if isSrEnabled {
 			filterOut.ResourceScope = filter.GetResourceScope()
+			if filter.OperationGroups != nil {
+				sort.Strings(*filter.OperationGroups)
+			}
 			filterOut.OperationGroups = filter.GetOperationGroups()
 		}
 		list.Add(&filterOut)

@@ -19,27 +19,27 @@ import (
 const resourceScopeStr = "crn://confluent.cloud/organization=%s/environment=%s"
 
 func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create <name>",
+		Short: "Create an IP filter.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.create,
+	}
 	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
-	exampleString := examples.BuildExampleString(
-		examples.Example{
-			Text: `Create an IP filter named "demo-ip-filter" with resource group "management" and IP groups "ipg-12345" and "ipg-67890":`,
-			Code: "confluent iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-12345,ipg-67890",
-		},
-	)
 	if isSrEnabled {
-		exampleString = examples.BuildExampleString(
+		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an IP filter named "demo-ip-filter" with operation group "management" and IP groups "ipg-12345" and "ipg-67890":`,
 				Code: "confluent iam ip-filter create demo-ip-filter --operations management --ip-groups ipg-12345,ipg-67890",
 			},
 		)
-	}
-	cmd := &cobra.Command{
-		Use:     "create <name>",
-		Short:   "Create an IP filter.",
-		Args:    cobra.ExactArgs(1),
-		RunE:    c.create,
-		Example: exampleString,
+	} else {
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: `Create an IP filter named "demo-ip-filter" with resource group "management" and IP groups "ipg-12345" and "ipg-67890":`,
+				Code: "confluent iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-12345,ipg-67890",
+			},
+		)
 	}
 	pcmd.AddResourceGroupFlag(isSrEnabled, cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
