@@ -1,9 +1,9 @@
-+------------------+--------------------------------+
-| ID               | ipf-34dq3                      |
-| Name             | new-ip-filter-demo             |
-| Resource Group   | multiple                       |
-| IP Groups        | ipg-1337a, ipg-abcde,          |
-|                  | ipg-ayd3n                      |
-| Operation Groups | MANAGEMENT                     |
-| Resource Scope   |                                |
-+------------------+--------------------------------+
++------------------+-------------------------------------------+
+| ID               | ipf-34dq3                                 |
+| Name             | new-ip-filter-demo                        |
+| Resource Group   | multiple                                  |
+| IP Groups        | ipg-1337a, ipg-abcde,                     |
+|                  | ipg-ayd3n                                 |
+| Operation Groups | MANAGEMENT                                |
+| Resource Scope   | crn://confluent.cloud/organization=org123 |
++------------------+-------------------------------------------+

@@ -1,8 +1,8 @@
-+------------------+----------------------+
-| ID               | ipf-34dq3            |
-| Name             | demo-ip-filter3      |
-| Resource Group   | multiple             |
-| IP Groups        | ipg-3g5jw, ipg-wjnde |
-| Operation Groups |                      |
-| Resource Scope   |                      |
-+------------------+----------------------+
++------------------+-------------------------------------------+
+| ID               | ipf-34dq3                                 |
+| Name             | demo-ip-filter3                           |
+| Resource Group   | multiple                                  |
+| IP Groups        | ipg-3g5jw, ipg-wjnde                      |
+| Operation Groups | MANAGEMENT                                |
+| Resource Scope   | crn://confluent.cloud/organization=org123 |
++------------------+-------------------------------------------+

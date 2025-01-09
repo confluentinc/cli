@@ -19,19 +19,28 @@ import (
 const resourceScopeStr = "crn://confluent.cloud/organization=%s/environment=%s"
 
 func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create an IP filter.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.create,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Create an IP filter named "demo-ip-filter" with resource group "management" and IP groups "ipg-12345" and "ipg-67890":`,
-				Code: "confluent iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-12345,ipg-67890",
-			},
-		),
-	}
 	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	exampleString := examples.BuildExampleString(
+		examples.Example{
+			Text: `Create an IP filter named "demo-ip-filter" with resource group "management" and IP groups "ipg-12345" and "ipg-67890":`,
+			Code: "confluent iam ip-filter create demo-ip-filter --resource-group management --ip-groups ipg-12345,ipg-67890",
+		},
+	)
+	if isSrEnabled {
+		exampleString = examples.BuildExampleString(
+			examples.Example{
+				Text: `Create an IP filter named "demo-ip-filter" with operation group "management" and IP groups "ipg-12345" and "ipg-67890":`,
+				Code: "confluent iam ip-filter create demo-ip-filter --operations management --ip-groups ipg-12345,ipg-67890",
+			},
+		)
+	}
+	cmd := &cobra.Command{
+		Use:     "create <name>",
+		Short:   "Create an IP filter.",
+		Args:    cobra.ExactArgs(1),
+		RunE:    c.create,
+		Example: exampleString,
+	}
 	pcmd.AddResourceGroupFlag(isSrEnabled, cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	if isSrEnabled {
@@ -61,7 +70,7 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	resourceScope := ""
 	operationGroups := []string{}
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	isSrEnabled := featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 	if isSrEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
@@ -77,6 +86,10 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 		if len(operationGroups) == 0 && resourceGroup == "multiple" {
 			operationGroups = []string{"MANAGEMENT"}
+		}
+		if resourceGroup == "management" {
+			operationGroups = []string{"MANAGEMENT"}
+			resourceGroup = "multiple"
 		}
 		npnGroup, err := cmd.Flags().GetBool("no-public-networks")
 		if err != nil {

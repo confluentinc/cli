@@ -1,10 +1,10 @@
 [WARN] "ipg-fedbc" is marked for deletion but does not exist
-+------------------+--------------------------------+
-| ID               | ipf-34dq3                      |
-| Name             | demo-ip-filter                 |
-| Resource Group   | multiple                       |
-| IP Groups        | ipg-12345, ipg-abcde,          |
-|                  | ipg-hjkil                      |
-| Operation Groups | MANAGEMENT                     |
-| Resource Scope   |                                |
-+------------------+--------------------------------+
++------------------+-------------------------------------------+
+| ID               | ipf-34dq3                                 |
+| Name             | demo-ip-filter                            |
+| Resource Group   | multiple                                  |
+| IP Groups        | ipg-12345, ipg-abcde,                     |
+|                  | ipg-hjkil                                 |
+| Operation Groups | MANAGEMENT                                |
+| Resource Scope   | crn://confluent.cloud/organization=org123 |
++------------------+-------------------------------------------+

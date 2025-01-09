@@ -2,6 +2,7 @@ package iam
 
 import (
 	"slices"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -56,6 +57,9 @@ func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter, 
 	}
 	if isSrEnabled {
 		filterOut.ResourceScope = ipFilter.GetResourceScope()
+		if ipFilter.OperationGroups != nil {
+			sort.Strings(*ipFilter.OperationGroups)
+		}
 		filterOut.OperationGroups = ipFilter.GetOperationGroups()
 	}
 	table.Add(filterOut)
