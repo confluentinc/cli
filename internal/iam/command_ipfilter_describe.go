@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 )
 
 func (c *ipFilterCommand) newDescribeCommand() *cobra.Command {
@@ -25,6 +26,7 @@ func (c *ipFilterCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	return printIpFilter(cmd, filter)
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	return printIpFilter(cmd, filter, isSrEnabled)
 }

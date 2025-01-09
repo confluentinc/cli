@@ -1,9 +1,9 @@
 [WARN] "ipg-abcde" is marked for addition but already exists
-+------------------+----------------+
-| ID               | ipf-34dq3      |
-| Name             | demo-ip-filter |
-| Resource Group   | multiple       |
-| IP Groups        | ipg-abcde      |
-| Operation Groups | MANAGEMENT     |
-| Resource Scope   |                |
-+------------------+----------------+
++------------------+-------------------------------------------+
+| ID               | ipf-34dq3                                 |
+| Name             | demo-ip-filter                            |
+| Resource Group   | multiple                                  |
+| IP Groups        | ipg-abcde                                 |
+| Operation Groups | MANAGEMENT                                |
+| Resource Scope   | crn://confluent.cloud/organization=org123 |
++------------------+-------------------------------------------+

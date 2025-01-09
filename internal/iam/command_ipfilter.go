@@ -2,6 +2,7 @@ package iam
 
 import (
 	"slices"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -21,8 +22,8 @@ type ipFilterOut struct {
 	Name            string   `human:"Name" serialized:"name"`
 	ResourceGroup   string   `human:"Resource Group" serialized:"resource_group"`
 	IpGroups        []string `human:"IP Groups" serialized:"ip_groups"`
-	OperationGroups []string `human:"Operation Groups" serialized:"operation_groups,omitempty"`
-	ResourceScope   string   `human:"Resource Scope" serialized:"resource_scope"`
+	OperationGroups []string `human:"Operation Groups,omitempty" serialized:"operation_groups,omitempty"`
+	ResourceScope   string   `human:"Resource Scope,omitempty" serialized:"resource_scope,omitempty"`
 }
 
 func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -44,18 +45,24 @@ func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 	return cmd
 }
 
-func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter) error {
+func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter, isSrEnabled bool) error {
 	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
-	table.Add(&ipFilterOut{
-		ID:              ipFilter.GetId(),
-		Name:            ipFilter.GetFilterName(),
-		ResourceGroup:   ipFilter.GetResourceGroup(),
-		IpGroups:        ipGroupIds,
-		ResourceScope:   ipFilter.GetResourceScope(),
-		OperationGroups: ipFilter.GetOperationGroups(),
-	})
+	filterOut := &ipFilterOut{
+		ID:            ipFilter.GetId(),
+		Name:          ipFilter.GetFilterName(),
+		ResourceGroup: ipFilter.GetResourceGroup(),
+		IpGroups:      ipGroupIds,
+	}
+	if isSrEnabled {
+		filterOut.ResourceScope = ipFilter.GetResourceScope()
+		if ipFilter.OperationGroups != nil {
+			sort.Strings(*ipFilter.OperationGroups)
+		}
+		filterOut.OperationGroups = ipFilter.GetOperationGroups()
+	}
+	table.Add(filterOut)
 	return table.Print()
 }
 
