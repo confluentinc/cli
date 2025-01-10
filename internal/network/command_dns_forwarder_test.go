@@ -1,10 +1,12 @@
 package network
 
 import (
-	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
 )
 
 func TestDomainFlagToMap(t *testing.T) {
@@ -44,7 +46,6 @@ func TestDomainFlagToMap(t *testing.T) {
 }
 
 func TestConvertToTypeMapString(t *testing.T) {
-
 	t.Run("success", func(t *testing.T) {
 		map1 := map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings{
 			"example": {Zone: networkingdnsforwarderv1.PtrString("zone1"), Project: networkingdnsforwarderv1.PtrString("project1")},
