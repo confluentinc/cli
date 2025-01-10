@@ -33,8 +33,7 @@ func (c *command) newDnsForwarderUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
-
-	cmd.MarkFlagsOneRequired("name", "dns-server-ips", "domains")
+	cmd.MarkFlagsOneRequired("name", "dns-server-ips", "domain-mapping", "domains")
 
 	return cmd
 }
@@ -53,10 +52,8 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 	updateDnsForwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarderUpdate{
 		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdate{
 			Environment: &networkingdnsforwarderv1.ObjectReference{Id: environmentId},
-			Config:      &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaIp: dnsForwarder.Spec.Config.NetworkingV1ForwardViaIp},
 		},
 	}
-
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
@@ -74,11 +71,23 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("dns-server-ips") {
+		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaIp: dnsForwarder.Spec.Config.NetworkingV1ForwardViaIp}
 		dnsServerIps, err := cmd.Flags().GetStringSlice("dns-server-ips")
 		if err != nil {
 			return err
 		}
 		updateDnsForwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(dnsServerIps)
+	} else if cmd.Flags().Changed("domain-mapping") {
+		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaGcpDnsZones: dnsForwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones}
+		domain, err := cmd.Flags().GetString("domain-mapping")
+		if err != nil {
+			return err
+		}
+		domainMap, err := DomainFlagToMap(domain)
+		if err != nil {
+			return err
+		}
+		updateDnsForwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.SetDomainMappings(domainMap)
 	}
 
 	forwarder, err := c.V2Client.UpdateDnsForwarder(environmentId, args[0], updateDnsForwarder)
