@@ -102,7 +102,11 @@ func printDnsForwarderTable(cmd *cobra.Command, forwarder networkingdnsforwarder
 func convertToTypeMapString(input map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings) map[string]string {
 	myMap := make(map[string]string)
 	for key, value := range input {
-		myMap[key] = fmt.Sprintf("{%s, %s}", *value.Zone, *value.Project)
+		zone, zoneOk := value.GetZoneOk()
+		project, projectOk := value.GetProjectOk()
+		if zoneOk && projectOk {
+			myMap[key] = fmt.Sprintf("{%s, %s}", *zone, *project)
+		}
 	}
 	return myMap
 }

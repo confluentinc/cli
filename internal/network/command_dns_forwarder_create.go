@@ -27,11 +27,15 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a DNS forwarder.",
-				Code: "confluent network dns forwarder create --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --domains abc.com,def.com ",
+				Code: "confluent network dns forwarder create --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --domains abc.com,def.com",
 			},
 			examples.Example{
 				Text: "Create a named DNS forwarder.",
-				Code: "confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --domains abc.com,def.com ",
+				Code: "confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --domains abc.com,def.com",
+			},
+			examples.Example{
+				Text: "Create a named DNS forwarder using domain-mapping. This will input a file which contains the domain mappings.",
+				Code: "network dns forwarder create my-dns-forwarder-file --gateway gateway-1 --domains example.com --domain-mapping filename",
 			},
 		),
 	}
@@ -124,8 +128,8 @@ func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
 	return printDnsForwarderTable(cmd, forwarder)
 }
 
-func DomainFlagToMap(domains string) (map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings, error) {
-	buf, err := os.ReadFile(domains)
+func DomainFlagToMap(path string) (map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings, error) {
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
