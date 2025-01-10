@@ -140,6 +140,8 @@ func DomainFlagToMap(path string) (map[string]networkingdnsforwarderv1.Networkin
 		x := strings.SplitN(domainsContent[i], "=", 2)
 		if _, ok := m[x[0]]; !ok {
 			y := strings.SplitN(x[1], ",", 2)
+			y[0] = strings.TrimSpace(y[0])
+			y[1] = strings.TrimSpace(y[1])
 			zone := replaceSpecialCharacters(y[0])
 			project := replaceSpecialCharacters(y[1])
 			m[x[0]] = networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings{Zone: networkingdnsforwarderv1.PtrString(zone), Project: networkingdnsforwarderv1.PtrString(project)}
