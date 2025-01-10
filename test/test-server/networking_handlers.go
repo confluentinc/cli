@@ -2178,6 +2178,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 			Kind:   specConfigKind,
 			Region: "eastus2",
 		}))
+	case "GcpPeeringGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "eastus2",
+		}))
 	}
 
 	switch statusCloudGatewayKind {
@@ -2195,6 +2200,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
 			Kind:         statusCloudGatewayKind,
 			Subscription: networkinggatewayv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
+		}))
+	case "GcpPeeringGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
+			Kind:         statusCloudGatewayKind,
+			IamPrincipal: networkinggatewayv1.PtrString("g000000-a000-0a00-00aa-0000aaa0a0a0"),
 		}))
 	}
 
@@ -2218,6 +2228,10 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 			require.NoError(t, err)
 		case "gw-67890":
 			record := getGateway(id, environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		case "gw-13570":
+			record := getGateway(id, environment, "my-gcp-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
 			require.NoError(t, err)
 		}
@@ -2263,6 +2277,11 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 				Kind:         "AzureEgressPrivateLinkGatewayStatus",
 				Subscription: networkingv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
 			}))
+		} else if body.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
+				Kind:         "GcpPeeringGatewayStatus",
+				IamPrincipal: networkingv1.PtrString("g000000-a000-0a00-00aa-0000aaa0a0a0"),
+			}))
 		}
 
 		err = json.NewEncoder(w).Encode(gateway)
@@ -2277,8 +2296,9 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewayThree := getGateway("gw-23456", environment, "my-aws-gateway", "AwsPrivateNetworkInterfaceGatewaySpec", "AwsPrivateNetworkInterfaceGatewayStatus")
 		gatewayFour := getGateway("gw-67890", environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
 		gatewayFive := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
+		gatewaySix := getGateway("gw-13570", environment, "my-gcp-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
 
-		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive}}
+		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2389,6 +2409,10 @@ func handleNetworkingDnsForwarderGet(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The dns forwarder dnsf-invalid was not found.")
 			require.NoError(t, err)
+		case "my-dns-forwarder-file":
+			dnsf := getDnsForwarderGCP(id, "my-dns-forwarder-file")
+			err := json.NewEncoder(w).Encode(dnsf)
+			require.NoError(t, err)
 		default:
 			dnsf := getDnsForwarder(id, "my-dns-forwarder")
 			err := json.NewEncoder(w).Encode(dnsf)
@@ -2429,6 +2453,31 @@ func getDnsForwarder(id, name string) networkingdnsforwarderv1.NetworkingV1DnsFo
 	return forwarder
 }
 
+func getDnsForwarderGCP(id, name string) networkingdnsforwarderv1.NetworkingV1DnsForwarder {
+	forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+		Id: networkingdnsforwarderv1.PtrString(id),
+		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+			DisplayName: networkingdnsforwarderv1.PtrString(name),
+			Domains:     &[]string{"abc.com", "def.com", "example.domain", "xyz.com", "my.dns.forwarder.example.domain"},
+			Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+				NetworkingV1ForwardViaGcpDnsZones: &networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZones{
+					Kind: "ForwardViaGcpDnsZones",
+					DomainMappings: map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings{
+						"abc.com": {
+							Zone:    ptrString("zone1"),
+							Project: ptrString("project1"),
+						},
+					},
+				},
+			},
+			Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
+			Gateway:     &networkingdnsforwarderv1.ObjectReference{Id: "gw-111111"},
+		},
+		Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+	}
+	return forwarder
+}
+
 func handleNetworkingDnsForwarderDelete(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -2447,14 +2496,20 @@ func handleNetworkingDnsForwarderList(t *testing.T) http.HandlerFunc {
 		forwarder1 := getDnsForwarder("dnsf-abcde1", "my-dns-forwarder-1")
 		forwarder2 := getDnsForwarder("dnsf-abcde2", "my-dns-forwarder-2")
 		forwarder3 := getDnsForwarder("dnsf-abcde3", "my-dns-forwarder-3")
+		forwarder4 := getDnsForwarderGCP("dnsf-abcde4", "my-dns-forwarder-4")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var dnsForwarderList networkingdnsforwarderv1.NetworkingV1DnsForwarderList
 		switch pageToken {
+		case "my-dns-forwarder-4":
+			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
+				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder4},
+				Metadata: networkingdnsforwarderv1.ListMeta{},
+			}
 		case "my-dns-forwarder-3":
 			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
 				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder3},
-				Metadata: networkingdnsforwarderv1.ListMeta{},
+				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarder?environment=a-595&page_size=1&page_token=my-dns-forwarder-4"))},
 			}
 		case "my-dns-forwarder-2":
 			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
@@ -2492,8 +2547,12 @@ func handleNetworkingDnsForwarderUpdate(t *testing.T, id string) http.HandlerFun
 			if body.Spec.Domains != nil {
 				forwarder.Spec.SetDomains(body.Spec.GetDomains())
 			}
-			if body.Spec.Config != nil {
+			if body.Spec.Config != nil && len(body.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps()) != 0 {
 				forwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(body.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps())
+			}
+			if body.Spec.Config != nil && len(body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings()) != 0 {
+				forwarder = getDnsForwarderGCP(id, "my-dns-forwarder")
+				forwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.SetDomainMappings(body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings())
 			}
 			err = json.NewEncoder(w).Encode(forwarder)
 			require.NoError(t, err)
@@ -2526,24 +2585,45 @@ func handleNetworkingDnsForwarderCreate(t *testing.T) http.HandlerFunc {
 			err := writeErrorJson(w, message)
 			require.NoError(t, err)
 		default:
-			forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
-				Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
-				Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
-					DisplayName: networkingdnsforwarderv1.PtrString(name),
-					Domains:     body.Spec.Domains,
-					Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
-						NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
-							Kind:         body.Spec.Config.NetworkingV1ForwardViaIp.Kind,
-							DnsServerIps: body.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps,
+			if numDnsServerIps == 0 {
+				forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+					Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
+					Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+						DisplayName: networkingdnsforwarderv1.PtrString(name),
+						Domains:     body.Spec.Domains,
+						Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+							NetworkingV1ForwardViaGcpDnsZones: &networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZones{
+								Kind:           body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.Kind,
+								DomainMappings: body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.DomainMappings,
+							},
 						},
+						Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
+						Gateway:     body.Spec.Gateway,
 					},
-					Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
-					Gateway:     body.Spec.Gateway,
-				},
-				Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+					Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+				}
+				err = json.NewEncoder(w).Encode(forwarder)
+				require.NoError(t, err)
+			} else {
+				forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+					Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
+					Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+						DisplayName: networkingdnsforwarderv1.PtrString(name),
+						Domains:     body.Spec.Domains,
+						Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+							NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
+								Kind:         body.Spec.Config.NetworkingV1ForwardViaIp.Kind,
+								DnsServerIps: body.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps,
+							},
+						},
+						Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
+						Gateway:     body.Spec.Gateway,
+					},
+					Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+				}
+				err = json.NewEncoder(w).Encode(forwarder)
+				require.NoError(t, err)
 			}
-			err = json.NewEncoder(w).Encode(forwarder)
-			require.NoError(t, err)
 		}
 	}
 }
