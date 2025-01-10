@@ -31,6 +31,10 @@ func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 				Text: `Create a GCP Private Link egress endpoint named "my-egress-endpoint".`,
 				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
 			},
+			examples.Example{
+				Text: `Create a GCP Private Link egress endpoint named "my-egress-endpoint" for endpoints that connect to Global Google APIs.`,
+				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service all-google-apis",
+			},
 		),
 	}
 

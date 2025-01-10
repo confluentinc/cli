@@ -16,6 +16,10 @@ Create a GCP Private Link egress endpoint named "my-egress-endpoint".
 
   $ confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName
 
+Create a GCP Private Link egress endpoint named "my-egress-endpoint" for endpoints that connect to Global Google APIs.
+
+  $ confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service all-google-apis
+
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --service string       REQUIRED: Name of an AWS VPC endpoint service, ID of an Azure Private Link service, URI of a GCP Private Service Connect Published Service, or all-google-apis and ALL_GOOGLE_APIS for endpoints that connect to Global Google APIs.
