@@ -94,7 +94,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		return "", "", err
 	}
 	if res.GetOrganization().GetMfaEnforcedAt() != nil && res.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_LOCAL {
-		output.Printf(false, "Please be aware that you will be required to enroll a MFA by %s\n", res.GetOrganization().GetMfaEnforcedAt())
+		output.Printf(false, "Please be aware that you will be required to enroll in MFA by %s\n", res.GetOrganization().GetMfaEnforcedAt())
 	}
 
 	if utils.IsOrgEndOfFreeTrialSuspended(res.GetOrganization().GetSuspensionStatus()) {
@@ -135,8 +135,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 func (a *AuthTokenHandlerImpl) getCCloudMFAToken(client *ccloudv1.Client, email, organizationId string) (string, string, error) {
 	connectionName, err := a.getMfaConnectionName(client, email, organizationId)
 	if err != nil {
-		log.CliLogger.Debugf("unable to obtain user MFA info: %v", err)
-		return "", "", fmt.Errorf(`unable to obtain MFA info for user "%s"`, email)
+		return "", "", fmt.Errorf(`unable to obtain MFA info for user "%s: %v"`, email, err)
 	}
 	if connectionName == "" {
 		return "", "", fmt.Errorf(`tried to obtain MFA token for non MFA user "%s"`, email)
@@ -312,7 +311,7 @@ func (a *AuthTokenHandlerImpl) checkMFAEmailMatchesLogin(client *ccloudv1.Client
 	if err != nil {
 		return err
 	}
-	if getMeReply.GetUser().GetEmail() != loginEmail {
+	if !strings.EqualFold(getMeReply.GetUser().GetEmail(), loginEmail) {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf("expected login credentials for %s but got credentials for %s", loginEmail, getMeReply.GetUser().GetEmail()),
 			"Please re-login and use the same email at the prompt and in the login portal.",
