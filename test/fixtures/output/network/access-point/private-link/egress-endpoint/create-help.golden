@@ -4,7 +4,7 @@ Usage:
   confluent network access-point private-link egress-endpoint create [name] [flags]
 
 Examples:
-Create an AWS private link egress endpoint with high availability.
+Create an AWS PrivateLink egress endpoint with high availability.
 
   $ confluent network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability
 
@@ -12,9 +12,17 @@ Create an Azure Private Link egress endpoint named "my-egress-endpoint".
 
   $ confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName
 
+Create a GCP Private Service Connect egress endpoint named "my-egress-endpoint".
+
+  $ confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName
+
+Create a GCP Private Service Connect egress endpoint named "my-egress-endpoint" for endpoints that connect to Global Google APIs.
+
+  $ confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service all-google-apis
+
 Flags:
-      --cloud string         REQUIRED: Specify the cloud provider as "aws" or "azure".
-      --service string       REQUIRED: Name of an AWS VPC endpoint service or ID of an Azure Private Link service.
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --service string       REQUIRED: Name of an AWS VPC endpoint service, ID of an Azure Private Link service, URI of a GCP Private Service Connect Published Service, or all-google-apis and ALL_GOOGLE_APIS for endpoints that connect to Global Google APIs.
       --gateway string       REQUIRED: Gateway ID.
       --subresource string   Name of an Azure Private Link subresource.
       --high-availability    Enable high availability for AWS egress endpoint.

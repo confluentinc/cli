@@ -20,21 +20,31 @@ func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an AWS private link egress endpoint with high availability.",
+				Text: "Create an AWS PrivateLink egress endpoint with high availability.",
 				Code: "confluent network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability",
 			},
 			examples.Example{
 				Text: `Create an Azure Private Link egress endpoint named "my-egress-endpoint".`,
 				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
 			},
+			examples.Example{
+				Text: `Create a GCP Private Service Connect egress endpoint named "my-egress-endpoint".`,
+				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
+			},
+			examples.Example{
+				Text: `Create a GCP Private Service Connect egress endpoint named "my-egress-endpoint" for endpoints that connect to Global Google APIs.`,
+				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service all-google-apis",
+			},
 		),
 	}
 
-	pcmd.AddCloudAwsAzureFlag(cmd)
-	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service or ID of an Azure Private Link service.")
+	pcmd.AddCloudFlag(cmd)
+	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service, ID of an Azure Private Link service, URI of a GCP Private Service Connect Published Service, or all-google-apis and ALL_GOOGLE_APIS for endpoints that connect to Global Google APIs.")
+
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("subresource", "", "Name of an Azure Private Link subresource.")
 	cmd.Flags().Bool("high-availability", false, "Enable high availability for AWS egress endpoint.")
+	// GCP PL command does not have any unique flags (reference: api/network-access-point/minispec.yaml line308-329)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -112,6 +122,13 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		}
 		if subresource != "" {
 			createEgressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.PrivateLinkSubresourceName = networkingaccesspointv1.PtrString(subresource)
+		}
+	case pcloud.Gcp:
+		createEgressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+			NetworkingV1GcpEgressPrivateServiceConnectEndpoint: &networkingaccesspointv1.NetworkingV1GcpEgressPrivateServiceConnectEndpoint{
+				Kind:                                "GcpEgressPrivateServiceConnectEndpoint",
+				PrivateServiceConnectEndpointTarget: service,
+			},
 		}
 	}
 

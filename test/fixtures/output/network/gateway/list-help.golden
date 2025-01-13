@@ -4,7 +4,7 @@ Usage:
   confluent network gateway list [flags]
 
 Flags:
-      --types strings        A comma-separated list of gateway types: "aws-egress-privatelink" or "azure-egress-privatelink".
+      --types strings        A comma-separated list of gateway types: "aws-egress-privatelink", "azure-egress-privatelink", or "gcp-egress-privatelink".
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
