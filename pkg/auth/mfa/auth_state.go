@@ -6,13 +6,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/auth/sso"
-	"github.com/confluentinc/cli/v4/pkg/errors"
-	"github.com/confluentinc/cli/v4/pkg/log"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/confluentinc/cli/v4/pkg/auth/sso"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 var mfaProviderCallbackLocalURL = fmt.Sprintf("http://127.0.0.1:%d", port) + sso.SsoProviderCallbackEndpoint

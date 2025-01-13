@@ -299,7 +299,6 @@ func (h *LoginCredentialsManagerImpl) isMFARequired(email, organizationId string
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
 	return err == nil && res.GetMfaRequired()
-
 }
 func (h *LoginCredentialsManagerImpl) isSSOUser(email, organizationId string) bool {
 	if h.client == nil {

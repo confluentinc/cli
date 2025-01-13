@@ -4,11 +4,12 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/errors"
-	"github.com/confluentinc/cli/v4/pkg/output"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 //go:embed mfa_callback.html
