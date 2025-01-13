@@ -13,9 +13,9 @@ Create an AWS private network interface gateway.
   $ confluent network gateway create --cloud aws --region us-east-1 --type private-network-interface
 
 Flags:
-      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --cloud string         REQUIRED: Specify the cloud provider as "aws" or "azure".
       --type string          REQUIRED: Specify the gateway type as "egress-privatelink" or "private-network-interface".
-      --region string        REQUIRED: AWS, Azure, or GCP region of the gateway.
+      --region string        REQUIRED: AWS or Azure region of the gateway.
       --zones strings        A comma-separated list of availability zones for this gateway.
       --context string       CLI context name.
       --environment string   Environment ID.

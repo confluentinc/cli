@@ -20,7 +20,7 @@ func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an AWS Private Link egress endpoint with high availability.",
+				Text: "Create an AWS PrivateLink egress endpoint with high availability.",
 				Code: "confluent network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability",
 			},
 			examples.Example{
@@ -28,11 +28,11 @@ func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
 			},
 			examples.Example{
-				Text: `Create a GCP Private Link egress endpoint named "my-egress-endpoint".`,
+				Text: `Create a GCP Private Service Connect egress endpoint named "my-egress-endpoint".`,
 				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
 			},
 			examples.Example{
-				Text: `Create a GCP Private Link egress endpoint named "my-egress-endpoint" for endpoints that connect to Global Google APIs.`,
+				Text: `Create a GCP Private Service Connect egress endpoint named "my-egress-endpoint" for endpoints that connect to Global Google APIs.`,
 				Code: "confluent network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service all-google-apis",
 			},
 		),
