@@ -2,10 +2,12 @@ package mfa
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/auth/sso"
-	"github.com/pkg/browser"
 	"strings"
 	"time"
+
+	"github.com/pkg/browser"
+
+	"github.com/confluentinc/cli/v4/pkg/auth/sso"
 )
 
 func Login(authURL, email, connectionName string) (string, string, error) {

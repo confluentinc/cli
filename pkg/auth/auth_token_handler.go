@@ -4,7 +4,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/auth/mfa"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
+	"github.com/confluentinc/cli/v4/pkg/auth/mfa"
 	"github.com/confluentinc/cli/v4/pkg/auth/sso"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/form"
