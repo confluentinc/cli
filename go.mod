@@ -95,7 +95,7 @@ require (
 	github.com/rivo/tview v0.0.0-20230511053024-822bd067b165
 	github.com/samber/lo v1.44.0
 	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
-	github.com/sourcegraph/go-lsp v0.0.0-20200429204803-219e11d77f5d
+	github.com/sourcegraph/go-lsp v0.0.0-20240223163137-f80c5dd31dfd
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
