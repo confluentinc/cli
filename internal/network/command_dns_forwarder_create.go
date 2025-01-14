@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -34,7 +35,7 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 				Code: "confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --domains abc.com,def.com",
 			},
 			examples.Example{
-				Text: "Create a named DNS forwarder using domain-mapping. This will input a file which contains the domain mappings.",
+				Text: "Create a named DNS forwarder using domain-mapping. This option reads the list of {domain, {zone, service}} mapping from a local file.",
 				Code: "network dns forwarder create my-dns-forwarder-file --gateway gateway-1 --domains example.com --domain-mapping filename",
 			},
 		),
@@ -95,11 +96,11 @@ func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
 			},
 		}
 	} else {
-		domain, err := cmd.Flags().GetString("domain-mapping")
+		mappingFilePath, err := cmd.Flags().GetString("domain-mapping")
 		if err != nil {
 			return err
 		}
-		domainMap, err := DomainFlagToMap(domain)
+		domainMap, err := DomainFlagToMap(mappingFilePath)
 		if err != nil {
 			return err
 		}
@@ -135,19 +136,22 @@ func DomainFlagToMap(path string) (map[string]networkingdnsforwarderv1.Networkin
 	}
 
 	domainsContent := properties.ParseLines(string(buf))
-	m := make(map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings)
-	for i := range len(domainsContent) {
-		x := strings.SplitN(domainsContent[i], "=", 2)
-		if _, ok := m[x[0]]; !ok {
-			y := strings.SplitN(x[1], ",", 2)
-			y[0] = strings.TrimSpace(y[0])
-			y[1] = strings.TrimSpace(y[1])
-			zone := replaceSpecialCharacters(y[0])
-			project := replaceSpecialCharacters(y[1])
-			m[x[0]] = networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings{Zone: networkingdnsforwarderv1.PtrString(zone), Project: networkingdnsforwarderv1.PtrString(project)}
+	domainMap := make(map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings)
+	for index := range len(domainsContent) {
+		mapping := strings.SplitN(domainsContent[index], "=", 2)
+		if _, ok := domainMap[mapping[0]]; !ok {
+			if len(strings.Split(mapping[1], ",")) != 2 {
+				return nil, fmt.Errorf(" The format of one of the entered mappings is incorrect. The correct format should be domainName=zoneName,projectName")
+			}
+			zoneAndProject := strings.SplitN(mapping[1], ",", 2)
+			zoneAndProject[0] = strings.TrimSpace(zoneAndProject[0])
+			zoneAndProject[1] = strings.TrimSpace(zoneAndProject[1])
+			zone := replaceSpecialCharacters(zoneAndProject[0])
+			project := replaceSpecialCharacters(zoneAndProject[1])
+			domainMap[mapping[0]] = networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings{Zone: networkingdnsforwarderv1.PtrString(zone), Project: networkingdnsforwarderv1.PtrString(project)}
 		}
 	}
-	return m, nil
+	return domainMap, nil
 }
 
 func replaceSpecialCharacters(val string) string {

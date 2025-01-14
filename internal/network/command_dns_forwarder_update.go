@@ -34,6 +34,7 @@ func (c *command) newDnsForwarderUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 	cmd.MarkFlagsOneRequired("name", "dns-server-ips", "domain-mapping", "domains")
+	cmd.MarkFlagsMutuallyExclusive("dns-server-ips", "domain-mapping")
 
 	return cmd
 }
@@ -79,11 +80,11 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 		updateDnsForwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(dnsServerIps)
 	} else if cmd.Flags().Changed("domain-mapping") {
 		updateDnsForwarder.Spec.Config = &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecUpdateConfigOneOf{NetworkingV1ForwardViaGcpDnsZones: dnsForwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones}
-		domain, err := cmd.Flags().GetString("domain-mapping")
+		mappingFilePath, err := cmd.Flags().GetString("domain-mapping")
 		if err != nil {
 			return err
 		}
-		domainMap, err := DomainFlagToMap(domain)
+		domainMap, err := DomainFlagToMap(mappingFilePath)
 		if err != nil {
 			return err
 		}
