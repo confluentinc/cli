@@ -22,6 +22,7 @@ const (
 	azureEgressPrivateLink     = "AzureEgressPrivateLink"
 	azurePeering               = "AzurePeering"
 	awsPrivateNetworkInterface = "AwsPrivateNetworkInterface"
+	gcpPeering                 = "GcpPeering"
 )
 
 var (
@@ -41,6 +42,7 @@ type gatewayOut struct {
 	Type              string   `human:"Type,omitempty" serialized:"type,omitempty"`
 	AwsPrincipalArn   string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
 	AzureSubscription string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
+	GcpIamPrincipal   string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
 	Phase             string   `human:"Phase" serialized:"phase"`
 	Zones             []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
 	Account           string   `human:"Account,omitempty" serialized:"account,omitempty"`
@@ -133,6 +135,10 @@ func getGatewayCloud(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 		return pcloud.Azure
 	}
 
+	if cloud.NetworkingV1GcpPeeringGatewayStatus != nil {
+		return pcloud.Gcp
+	}
+
 	return ""
 }
 
@@ -157,6 +163,10 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 
 	if config.NetworkingV1AzurePeeringGatewaySpec != nil {
 		return azurePeering, nil
+	}
+
+	if config.NetworkingV1GcpPeeringGatewaySpec != nil {
+		return gcpPeering, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
@@ -200,6 +210,9 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 		out.Region = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetRegion()
 		out.Zones = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetZones()
 	}
+	if gatewayType == gcpPeering {
+		out.Region = gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
+	}
 
 	switch getGatewayCloud(gateway) {
 	case pcloud.Aws:
@@ -210,6 +223,8 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 		}
 	case pcloud.Azure:
 		out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
+	case pcloud.Gcp:
+		out.GcpIamPrincipal = gateway.Status.CloudGateway.NetworkingV1GcpPeeringGatewayStatus.GetIamPrincipal()
 	}
 
 	table := output.NewTable(cmd)
