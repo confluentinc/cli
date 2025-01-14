@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.22.10
+go 1.22.7
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -39,7 +39,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.12.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.3.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.2.0
