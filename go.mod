@@ -92,7 +92,7 @@ require (
 	github.com/panta/machineid v1.0.2
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/rivo/tview v0.0.0-20230511053024-822bd067b165
+	github.com/rivo/tview v0.0.0-20241227133733-17b7edb88c57
 	github.com/samber/lo v1.44.0
 	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
 	github.com/sourcegraph/go-lsp v0.0.0-20240223163137-f80c5dd31dfd
