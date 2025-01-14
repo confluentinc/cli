@@ -1,6 +1,8 @@
 module github.com/confluentinc/cli/v4
 
-go 1.22.7
+go 1.22.10
+
+toolchain go1.23.4
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -14,7 +16,7 @@ require (
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
-	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230822191820-abc0b42e8715
+	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250113165220-9b0d275f944f
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
