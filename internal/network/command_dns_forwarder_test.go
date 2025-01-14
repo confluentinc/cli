@@ -59,6 +59,16 @@ func TestDomainFlagToMap(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+	t.Run("fail, missing =", func(t *testing.T) {
+		file, _ := os.CreateTemp(os.TempDir(), "test")
+		_, _ = file.Write([]byte("example zone1,project1"))
+		defer func() {
+			_ = os.Remove(file.Name())
+		}()
+		_, err := DomainFlagToMap(file.Name())
+		assert.Error(t, err)
+	})
+
 	t.Run("fail, wrong path", func(t *testing.T) {
 		file, _ := os.CreateTemp(os.TempDir(), "test")
 		_, _ = file.Write([]byte("example=zone1,project1"))
