@@ -27,7 +27,7 @@ type egressEndpointOut struct {
 	AzurePrivateEndpointDomain                   string   `human:"Azure Private Endpoint Domain,omitempty" serialized:"azure_private_endpoint_domain,omitempty"`
 	AzurePrivateEndpointIpAddress                string   `human:"Azure Private Endpoint IP Address,omitempty" serialized:"azure_private_endpoint_ip_address,omitempty"`
 	AzurePrivateEndpointCustomDnsConfigDomains   []string `human:"Azure Private Endpoint Custom DNS Config Domains,omitempty" serialized:"azure_private_endpoint_custom_dns_config_domains,omitempty"`
-	GcpPrivateServiceConnectEndpointService      string   `human:"GCP Private Service Connect Endpoint Service,omitempty" serialized:"gcp_private_service_connect_endpoint_service,omitempty"`
+	GcpPrivateServiceConnectEndpointTarget       string   `human:"GCP Private Service Connect Endpoint Target,omitempty" serialized:"gcp_private_service_connect_endpoint_target,omitempty"`
 	GcpPrivateServiceConnectEndpointConnectionId string   `human:"GCP Private Service Connect Endpoint Connection ID,omitempty" serialized:"gcp_private_service_connect_endpoint_connection_id,omitempty"`
 	GcpPrivateServiceConnectEndpointName         string   `human:"GCP Private Service Connect Endpoint Name,omitempty" serialized:"gcp_private_service_connect_endpoint_name,omitempty"`
 	GcpPrivateServiceConnectEndpointIpAddress    string   `human:"GCP Private Service Connect Endpoint IP Address,omitempty" serialized:"gcp_private_service_connect_endpoint_ip_address,omitempty"`
@@ -111,7 +111,7 @@ func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, egressEndpoint netw
 		out.AzurePrivateLinkSubresourceName = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkSubresourceName()
 	}
 	if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint != nil {
-		out.GcpPrivateServiceConnectEndpointService = egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint.GetPrivateServiceConnectEndpointTarget()
+		out.GcpPrivateServiceConnectEndpointTarget = egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint.GetPrivateServiceConnectEndpointTarget()
 	}
 
 	if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus != nil {

@@ -44,7 +44,6 @@ func (c *accessPointCommand) newEgressEndpointCreateCommand() *cobra.Command {
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("subresource", "", "Name of an Azure Private Link subresource.")
 	cmd.Flags().Bool("high-availability", false, "Enable high availability for AWS egress endpoint.")
-	// GCP PL command does not have any unique flags (reference: api/network-access-point/minispec.yaml line308-329)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)

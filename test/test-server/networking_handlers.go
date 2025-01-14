@@ -2643,7 +2643,7 @@ func getGcpEgressAccessPoint(id, environment, name string) networkingaccesspoint
 			DisplayName: networkingaccesspointv1.PtrString(name),
 			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 				NetworkingV1GcpEgressPrivateServiceConnectEndpoint: &networkingaccesspointv1.NetworkingV1GcpEgressPrivateServiceConnectEndpoint{
-					Kind:                                "GcpEgressPrivateLinkEndpoint",
+					Kind:                                "GcpEgressPrivateServiceConnectEndpoint",
 					PrivateServiceConnectEndpointTarget: "projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
 				},
 			},

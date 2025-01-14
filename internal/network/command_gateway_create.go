@@ -30,7 +30,7 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudAwsAzureFlag(cmd) // only support gateway create command for AWS and Azure
+	pcmd.AddCloudAwsAzureFlag(cmd)
 	addGatewayTypeFlag(cmd)
 	c.addRegionFlagGateway(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("zones", nil, "A comma-separated list of availability zones for this gateway.")

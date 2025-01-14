@@ -27,11 +27,11 @@ const (
 
 var (
 	createGatewayTypes = []string{"egress-privatelink", "private-network-interface"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "azure-egress-privatelink", "gcp-egress-privatelink"} // TODO: check if we accept private-network-interface here
+	listGatewayTypes   = []string{"aws-egress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect"} // TODO: check if we accept private-network-interface here
 	gatewayTypeMap     = map[string]string{
-		"aws-egress-privatelink":   awsEgressPrivateLink,
-		"azure-egress-privatelink": azureEgressPrivateLink,
-		"gcp-egress-privatelink":   gcpEgressPrivateServiceConnect,
+		"aws-egress-privatelink":             awsEgressPrivateLink,
+		"azure-egress-privatelink":           azureEgressPrivateLink,
+		"gcp-egress-private-service-connect": gcpEgressPrivateServiceConnect,
 	}
 )
 

@@ -69,7 +69,7 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 			out.AzurePrivateLinkService = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkServiceResourceId()
 			out.AzurePrivateLinkSubresourceName = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkSubresourceName()
 		} else if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint != nil {
-			out.GcpPrivateServiceConnectEndpointService = egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint.GetPrivateServiceConnectEndpointTarget()
+			out.GcpPrivateServiceConnectEndpointTarget = egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint.GetPrivateServiceConnectEndpointTarget()
 		}
 
 		if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus != nil {

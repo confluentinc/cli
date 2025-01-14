@@ -1,7 +1,8 @@
-+-------------+--------------------------------+
-| ID          | ap-88888                       |
-| Name        | my-new-gcp-egress-access-point |
-| Environment | env-596                        |
-| Gateway     | gw-12345                       |
-| Phase       | READY                          |
-+-------------+--------------------------------+
++---------------------------------------------+-----------------------------------------------------------------------------------+
+| ID                                          | ap-88888                                                                          |
+| Name                                        | my-new-gcp-egress-access-point                                                    |
+| Environment                                 | env-596                                                                           |
+| Gateway                                     | gw-12345                                                                          |
+| Phase                                       | READY                                                                             |
+| GCP Private Service Connect Endpoint Target | projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName |
++---------------------------------------------+-----------------------------------------------------------------------------------+
