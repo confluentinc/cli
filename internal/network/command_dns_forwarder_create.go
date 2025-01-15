@@ -35,7 +35,7 @@ func (c *command) newDnsForwarderCreateCommand() *cobra.Command {
 				Code: "confluent network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0,10.201.0.0 --gateway gw-123456 --domains abc.com,def.com",
 			},
 			examples.Example{
-				Text: "Create a named DNS forwarder using domain-mapping. This option reads the list of {domain=zone,project} mapping from a local file.",
+				Text: `Create a named DNS forwarder using domain-mapping. This option reads the list of "domainName=zoneName,projectName" mapping from a local file.`,
 				Code: "network dns forwarder create my-dns-forwarder-file --gateway gateway-1 --domains example.com --domain-mapping filename",
 			},
 		),
@@ -139,11 +139,11 @@ func DomainFlagToMap(path string) (map[string]networkingdnsforwarderv1.Networkin
 	domainMap := make(map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings)
 	for index := range len(domainsContent) {
 		if len(strings.Split(domainsContent[index], "=")) != 2 {
-			return nil, fmt.Errorf(" The mapping format of \" %s \" is incorrect. The correct format should be domainName=zoneName,projectName", domainsContent[index])
+			return nil, fmt.Errorf(`the mapping format of "%s" is incorrect. The correct format should be domainName=zoneName,projectName`, domainsContent[index])
 		}
 		mapping := strings.SplitN(domainsContent[index], "=", 2)
 		if len(strings.Split(mapping[1], ",")) != 2 {
-			return nil, fmt.Errorf("The mapping format of \" %s \" is incorrect. The correct format should be domainName=zoneName,projectName", mapping[1])
+			return nil, fmt.Errorf(`the mapping format of "%s" is incorrect. The correct format should be domainName=zoneName,projectName`, mapping[1])
 		}
 		zoneAndProject := strings.SplitN(mapping[1], ",", 2)
 		zoneAndProject[0] = strings.TrimSpace(zoneAndProject[0])
