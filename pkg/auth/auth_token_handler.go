@@ -4,6 +4,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"github.com/gogo/protobuf/types"
 	"strings"
 	"time"
 
@@ -94,7 +95,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		return "", "", err
 	}
 	if res.GetOrganization().GetMfaEnforcedAt() != nil && res.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_LOCAL {
-		output.Printf(false, "Please be aware that you will be required to enroll in MFA by %s\n", res.GetOrganization().GetMfaEnforcedAt())
+		output.Printf(false, "Please be aware that you will be required to enroll in MFA by %s\n", convertDateFormat(res.GetOrganization().GetMfaEnforcedAt()))
 	}
 
 	if utils.IsOrgEndOfFreeTrialSuspended(res.GetOrganization().GetSuspensionStatus()) {
@@ -340,4 +341,9 @@ func login(client *ccloudv1.Client, req *ccloudv1.AuthenticateRequest) (*ccloudv
 	} else {
 		return client.Auth.Login(req)
 	}
+}
+
+func convertDateFormat(mfaEnforcedAt *types.Timestamp) string {
+	date := time.Unix(mfaEnforcedAt.Seconds, int64(mfaEnforcedAt.Nanos)).UTC().Truncate(time.Microsecond)
+	return date.Format("01/02/2006")
 }
