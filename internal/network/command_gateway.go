@@ -146,6 +146,10 @@ func getGatewayCloud(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 		return pcloud.Gcp
 	}
 
+	if cloud.NetworkingV1GcpPeeringGatewayStatus != nil {
+		return pcloud.Gcp
+	}
+
 	return ""
 }
 
@@ -178,6 +182,10 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
 		return gcpEgressPrivateServiceConnect, nil
+	}
+
+	if config.NetworkingV1GcpPeeringGatewaySpec != nil {
+		return gcpPeering, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
@@ -227,6 +235,9 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	if gatewayType == gcpEgressPrivateServiceConnect {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
 	}
+	if gatewayType == gcpPeering {
+		out.Region = gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
+	}
 
 	switch getGatewayCloud(gateway) {
 	case pcloud.Aws:
@@ -240,6 +251,7 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	case pcloud.Gcp:
 		out.GcpIamPrincipal = gateway.Status.CloudGateway.NetworkingV1GcpPeeringGatewayStatus.GetIamPrincipal()
 		out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()
+		out.GcpIamPrincipal = gateway.Status.CloudGateway.NetworkingV1GcpPeeringGatewayStatus.GetIamPrincipal()
 	}
 
 	table := output.NewTable(cmd)
