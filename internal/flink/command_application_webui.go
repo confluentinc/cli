@@ -62,7 +62,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 
 	// Get the name of the application and check for its existence
 	applicationName := args[0]
-	_, err = cmfClient.DescribeApplication(cmd.Context(), environment, applicationName)
+	_, err = cmfClient.DescribeApplication(c.createContext(), environment, applicationName)
 	if err != nil {
 		return fmt.Errorf(`failed to forward web UI: %s`, err)
 	}
@@ -78,7 +78,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		handleRequest(w, r, url, environment, applicationName, cmfClient.APIClient.GetConfig().UserAgent, client)
+		c.handleRequest(w, r, url, environment, applicationName, cmfClient.APIClient.GetConfig().UserAgent, client)
 	})
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -93,7 +93,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	return nil
 }
 
-func handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Request, url, environmentName, applicationName, userAgent string, client *http.Client) {
+func (c *command) handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Request, url, environmentName, applicationName, userAgent string, client *http.Client) {
 	body, err := io.ReadAll(userRequest.Body)
 	if err != nil {
 		http.Error(userResponseWriter, fmt.Sprintf("Failed to read request body: %s", err), http.StatusInternalServerError)
@@ -108,6 +108,11 @@ func handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Req
 	}
 	reqToCmf.Header = userRequest.Header
 	reqToCmf.Header.Set("x-confluent-cli-version", userAgent)
+
+	if c.isMDSAuth {
+		accessToken := c.Context.GetAuthToken()
+		reqToCmf.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	}
 
 	resFromCmf, err := client.Do(reqToCmf)
 	if err != nil {

@@ -66,7 +66,7 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputApplication, err := client.CreateApplication(cmd.Context(), environment, application)
+	outputApplication, err := client.CreateApplication(c.createContext(), environment, application)
 	if err != nil {
 		return err
 	}

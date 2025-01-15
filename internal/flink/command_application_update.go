@@ -66,7 +66,7 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputApplication, err := client.UpdateApplication(cmd.Context(), environment, application)
+	outputApplication, err := client.UpdateApplication(c.createContext(), environment, application)
 	if err != nil {
 		return err
 	}

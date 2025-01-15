@@ -31,7 +31,7 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(name string) bool {
-		_, err := client.DescribeEnvironment(cmd.Context(), name)
+		_, err := client.DescribeEnvironment(c.createContext(), name)
 		return err == nil
 	}
 
@@ -44,7 +44,7 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(name string) error {
-		return client.DeleteEnvironment(cmd.Context(), name)
+		return client.DeleteEnvironment(c.createContext(), name)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkEnvironment)
