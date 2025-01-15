@@ -37,7 +37,7 @@ func (c *command) applicationDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(name string) bool {
-		_, err := client.DescribeApplication(cmd.Context(), environment, name)
+		_, err := client.DescribeApplication(c.createContext(), environment, name)
 		return err == nil
 	}
 
@@ -50,7 +50,7 @@ func (c *command) applicationDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(name string) error {
-		return client.DeleteApplication(cmd.Context(), environment, name)
+		return client.DeleteApplication(c.createContext(), environment, name)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkApplication)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -111,6 +112,25 @@ func createEnvironment(name string, namespace string) cmfsdk.Environment {
 	}
 }
 
+// Helper function to check that the login type is either empty or onprem, and if it's onprem,
+// that the headers are correct.
+func handleLoginType(t *testing.T, r *http.Request) {
+	loginType := os.Getenv("LOGIN_TYPE")
+
+	// Depending on the login type, we need to check if the headers are correct
+	if loginType == "" {
+		return
+	}
+	if loginType != "onprem" {
+		require.Fail(t, "LOGIN_TYPE besides onprem and not-logged in are not allowed - the test has a bug.")
+		return
+	}
+
+	authValue := r.Header.Get("Authorization")
+	require.NotEqual(t, "", authValue)
+	require.True(t, strings.HasPrefix(authValue, "Bearer "))
+}
+
 // There are a number of request and responses for each path depending on the test case.
 // We assume the following set of existing environments and applications as already existing:
 // default: default-application-1, default-application-2
@@ -126,6 +146,8 @@ func createEnvironment(name string, namespace string) cmfsdk.Environment {
 // Used to list, create and update environments.
 func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
 		switch r.Method {
 		case http.MethodGet:
 			page := r.URL.Query().Get("page")
@@ -185,6 +207,8 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 // Used by describe and delete.
 func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
 		environment := mux.Vars(r)["environment"]
 		switch r.Method {
 		case http.MethodGet:
@@ -225,6 +249,8 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 // Used by list, create and update applications.
 func handleCmfApplications(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
 		vars := mux.Vars(r)
 		environment := vars["environment"]
 		switch r.Method {
@@ -305,6 +331,8 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 // Used by describe and delete applications.
 func handleCmfApplication(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
 		vars := mux.Vars(r)
 		environment := vars["environment"]
 		application := vars["application"]
