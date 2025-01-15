@@ -1,4 +1,4 @@
-package sso
+package mfa
 
 import (
 	"net/http"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestServerTimeout(t *testing.T) {
-	state, err := newState("https://stag.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io")
 	require.NoError(t, err)
 	server := newServer(state)
 
@@ -24,16 +24,16 @@ func TestServerTimeout(t *testing.T) {
 }
 
 func TestCallback(t *testing.T) {
-	state, err := newState("https://stag.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io")
 	require.NoError(t, err)
 	server := newServer(state)
 
 	require.NoError(t, server.startServer())
 
-	state.SSOProviderCallbackUrl = "http://127.0.0.1:26635/cli_callback"
-	url := state.SSOProviderCallbackUrl
+	state.MFAProviderCallbackUrl = "http://127.0.0.1:26635/cli_callback"
+	url := state.MFAProviderCallbackUrl
 	mockCode := "uhlU7Fvq5NwLwBwk"
-	mockUri := url + "?code=" + mockCode + "&state=" + state.SSOProviderState
+	mockUri := url + "?code=" + mockCode + "&state=" + state.MFAProviderState
 
 	ch := make(chan bool)
 	go func() {
@@ -52,5 +52,5 @@ func TestCallback(t *testing.T) {
 	}()
 	authCodeError := server.awaitAuthorizationCode(3 * time.Second)
 	require.NoError(t, authCodeError)
-	require.Equal(t, state.SSOProviderAuthenticationCode, "uhlU7Fvq5NwLwBwk")
+	require.Equal(t, state.MFAProviderAuthenticationCode, "uhlU7Fvq5NwLwBwk")
 }
