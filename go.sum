@@ -226,6 +226,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0 h1:ZUAow4L6De1FwYoiwvEodm4l
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
 github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.4.0 h1:QP/5XeHZNBWq/mwjKHsQK8vDeZ/Uw07HcEsOQnltGic=
 github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.4.0/go.mod h1:HjwGSEX9RaQzAJJAlUN5PciTG8tHdS26PXA4Ka3Ote0=
+github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0 h1:xD7CXcyAqezFnSVFB4U27oWUY4FlbyciVP0ftDIiI18=
+github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0/go.mod h1:uAlz9SscVXU6XkDj2DHCytJcieT8tR0lnMPJMOX1BQ0=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0 h1:9TT8UCFRc5zUdsE7UgMz7hqN+2KYnIkBcAKCaiZJrXw=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0/go.mod h1:JLmrXfnT2PzcuXHD8a6c2cW1c9LKK7aMsdZjjqxYPEk=
 github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0 h1:T9e7lNj/VjxE89+tcpX2RS2NE4rWNWbJjxcO2yehEqM=
