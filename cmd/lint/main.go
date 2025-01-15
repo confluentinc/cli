@@ -120,6 +120,7 @@ var flagRules = []linter.FlagRule{
 			"worker-configurations",
 			"add-operation-groups",
 			"remove-operation-groups",
+			"include-parent-scopes",
 		),
 	),
 	linter.FlagFilter(
