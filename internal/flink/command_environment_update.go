@@ -75,7 +75,7 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 		environment.FlinkApplicationDefaults = defaultsParsed
 	}
 
-	outputEnvironment, err := client.UpdateEnvironment(cmd.Context(), environment)
+	outputEnvironment, err := client.UpdateEnvironment(c.createContext(), environment)
 	if err != nil {
 		return err
 	}

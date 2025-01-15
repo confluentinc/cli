@@ -6,6 +6,20 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/auth"
 )
 
+// Runs the integration test with login = "" and login = "onprem"
+func runIntegrationTestsWithMultipleAuth(s *CLITestSuite, tests []CLITest) {
+	for _, test := range tests {
+		test.login = ""
+		s.T().Setenv("LOGIN_TYPE", "")
+		s.runIntegrationTest(test)
+
+		test.name = test.args + "-onprem"
+		test.login = "onprem"
+		s.T().Setenv("LOGIN_TYPE", "onprem")
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestFlinkApplicationList() {
 	tests := []CLITest{
 		// failure scenarios
@@ -17,9 +31,7 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		{args: "flink application list --environment default  --output human", fixture: "flink/application/list-human.golden"},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkApplicationDelete() {
@@ -35,9 +47,7 @@ func (s *CLITestSuite) TestFlinkApplicationDelete() {
 		{args: "flink application delete --environment delete-test default-application-1 non-existent --force", fixture: "flink/application/delete-mixed.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkEnvironmentList() {
@@ -47,9 +57,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentList() {
 		{args: "flink environment list --output human", fixture: "flink/environment/list-human.golden"},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkEnvironmentDelete() {
@@ -63,9 +71,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentDelete() {
 		{args: "flink environment delete default non-existent --force", fixture: "flink/environment/delete-mixed.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkApplicationCreate() {
@@ -81,9 +87,7 @@ func (s *CLITestSuite) TestFlinkApplicationCreate() {
 		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.json --output human", fixture: "flink/application/create-with-human.golden"},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkApplicationUpdate() {
@@ -100,9 +104,7 @@ func (s *CLITestSuite) TestFlinkApplicationUpdate() {
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output human", fixture: "flink/application/update-with-human.golden"},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkEnvironmentCreate() {
@@ -118,9 +120,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentCreate() {
 		{args: "flink environment create default", fixture: "flink/environment/create-no-namespace.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkEnvironmentUpdate() {
@@ -135,9 +135,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentUpdate() {
 		{args: "flink environment update get-failure", fixture: "flink/environment/update-get-failure.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkEnvironmentDescribe() {
@@ -151,9 +149,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentDescribe() {
 		{args: "flink environment describe", fixture: "flink/environment/describe-no-environment.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkApplicationDescribe() {
@@ -169,9 +165,7 @@ func (s *CLITestSuite) TestFlinkApplicationDescribe() {
 		{args: "flink application describe default-application-1", fixture: "flink/application/describe-no-environment.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkApplicationWebUiForward() {
@@ -182,14 +176,17 @@ func (s *CLITestSuite) TestFlinkApplicationWebUiForward() {
 		{args: "flink --url dummy-url application web-ui-forward non-existent --environment default", fixture: "flink/application/forward-nonexistent-application.golden", exitCode: 1},
 		{args: "flink --url dummy-url application web-ui-forward default-application-1 --environment non-existent", fixture: "flink/application/forward-nonexistent-environment.golden", exitCode: 1},
 		{args: "flink --url dummy-url application web-ui-forward get-failure --environment default", fixture: "flink/application/forward-get-failure.golden", exitCode: 1},
-		{name: "no-url-set", args: "flink application web-ui-forward --environment does-not-matter missing-applications", fixture: "flink/application/url-missing.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		if test.name == "no-url-set" {
-			// unset the environment variable
-			os.Unsetenv(auth.ConfluentPlatformCmfURL)
-		}
-		s.runIntegrationTest(test)
-	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
+
+	noUrlSetTest := CLITest{name: "no-url-set", args: "flink application web-ui-forward --environment does-not-matter missing-applications", fixture: "flink/application/url-missing.golden", exitCode: 1}
+	// unset the environment variable
+	os.Unsetenv(auth.ConfluentPlatformCmfURL)
+	s.runIntegrationTest(noUrlSetTest)
+}
+
+func (s *CLITestSuite) TestFlinkOnPremWithCloudLogin() {
+	test := CLITest{args: "flink environment list --output json", fixture: "flink/environment/list-cloud.golden", login: "cloud", exitCode: 1}
+	s.runIntegrationTest(test)
 }

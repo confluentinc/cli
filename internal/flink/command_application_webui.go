@@ -62,7 +62,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 
 	// Get the name of the application and check for its existence
 	applicationName := args[0]
-	_, err = cmfClient.DescribeApplication(cmd.Context(), environment, applicationName)
+	_, err = cmfClient.DescribeApplication(c.createContext(), environment, applicationName)
 	if err != nil {
 		return fmt.Errorf(`failed to forward web UI: %s`, err)
 	}
