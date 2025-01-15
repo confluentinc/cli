@@ -4,10 +4,10 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/gogo/protobuf/types"
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/browser"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
