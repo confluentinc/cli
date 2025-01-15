@@ -11,7 +11,7 @@ import (
 )
 
 func TestServerTimeout(t *testing.T) {
-	state, err := newState("https://stag.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	server := newServer(state)
 
@@ -24,7 +24,7 @@ func TestServerTimeout(t *testing.T) {
 }
 
 func TestCallback(t *testing.T) {
-	state, err := newState("https://stag.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	server := newServer(state)
 
