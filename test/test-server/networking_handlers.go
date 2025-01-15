@@ -689,6 +689,12 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 			Region:      networkingv1.PtrString("us-central1"),
 			Cidr:        networkingv1.PtrString("10.1.0.0/16"),
 			Zones:       &[]string{"us-central1-a", "us-central1-b", "us-central1-c"},
+			Gateway: *networkingv1.NewNullableTypedEnvScopedObjectReference(
+				&networkingv1.TypedEnvScopedObjectReference{
+					Id:          "gateway-12345",
+					Environment: networkingv1.PtrString("env-00000"),
+				},
+			),
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
