@@ -2308,7 +2308,7 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 			}))
 		} else if body.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
-				Kind:    "GcpEgressPrivateLinkGatewayStatus",
+				Kind:    "GcpEgressPrivateServiceConnectGatewayStatus",
 				Project: networkingv1.PtrString("project-12345"),
 			}))
 		} else if body.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
