@@ -44,7 +44,7 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	pcmd.AddResourceGroupFlag(isSrEnabled, cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	if isSrEnabled {
-		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the organization only.")
+		cmd.Flags().String("environment", "", "Id of the environment for which this filter applies. By default will apply to the organization only.")
 		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
 		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 		cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")
