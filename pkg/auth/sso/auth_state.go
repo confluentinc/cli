@@ -81,7 +81,7 @@ type authState struct {
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
-func newState(authUrl string, noBrowser bool) (*authState, error) {
+func NewState(authUrl string, noBrowser bool) (*authState, error) {
 	if authUrl == "" {
 		authUrl = "https://confluent.cloud"
 	}
