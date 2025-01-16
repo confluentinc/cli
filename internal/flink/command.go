@@ -1,9 +1,12 @@
 package flink
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
@@ -12,6 +15,7 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
+	isMDSAuth bool
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -20,11 +24,15 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Apache Flink.",
 	}
 
-	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner), false}
 
+	// On-prem commands are able to run with or without login. Accordingly, set the pre-runner.
 	if !cfg.IsCloudLogin() {
-		// On-prem commands don't require login, so change the pre-runner to account for that.
-		cmd.PersistentPreRunE = prerunner.Anonymous(c.AuthenticatedCLICommand.CLICommand, false)
+		if cfg.IsOnPremLogin() {
+			c = &command{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner), true}
+		} else {
+			cmd.PersistentPreRunE = prerunner.Anonymous(c.AuthenticatedCLICommand.CLICommand, false)
+		}
 	}
 
 	// Cloud Specific Commands
@@ -103,4 +111,11 @@ func addCmfFlagSet(cmd *cobra.Command) {
 	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
+}
+
+func (c *command) createContext() context.Context {
+	if !c.isMDSAuth {
+		return context.Background()
+	}
+	return context.WithValue(context.Background(), cmfsdk.ContextAccessToken, c.Context.GetAuthToken())
 }

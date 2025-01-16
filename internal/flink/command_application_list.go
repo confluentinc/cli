@@ -35,7 +35,7 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	applications, err := client.ListApplications(cmd.Context(), environment)
+	applications, err := client.ListApplications(c.createContext(), environment)
 	if err != nil {
 		return err
 	}
