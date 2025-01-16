@@ -29,7 +29,7 @@ type authServer struct {
 	State  *authState
 }
 
-func newServer(state *authState) *authServer {
+func NewServer(state *authState) *authServer {
 	return &authServer{
 		wait:  make(chan bool),
 		State: state,
@@ -37,7 +37,7 @@ func newServer(state *authState) *authServer {
 }
 
 // Start begins the server including attempting to bind the desired TCP port
-func (s *authServer) startServer() error {
+func (s *authServer) StartServer() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/cli_callback", s.callbackHandler)
 
@@ -69,7 +69,7 @@ func (s *authServer) startServer() error {
 }
 
 // GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from the SSO provider
-func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
+func (s *authServer) AwaitAuthorizationCode(timeout time.Duration) error {
 	// Wait until flow is finished / callback is called (or timeout...)
 	go func() {
 		time.Sleep(timeout)
