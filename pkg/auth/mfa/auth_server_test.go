@@ -34,7 +34,6 @@ func TestServerTimeout(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, err.Error(), errors.BrowserAuthTimedOutErrorMsg)
 	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.BrowserAuthTimedOutErrorMsg, errors.BrowserAuthTimedOutSuggestions)
-
 }
 
 func TestCallback(t *testing.T) {
