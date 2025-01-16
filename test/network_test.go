@@ -93,6 +93,7 @@ func (s *CLITestSuite) TestNetworkCreate() {
 		{args: "network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27 --reserved-cidr 172.16.10.0/24 --environment env-00000", fixture: "network/create-peering-zone-info-pairs.golden"},
 		{args: "network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27=usw2-az4=10.10.0.64/27 --reserved-cidr 172.16.10.0/24 --environment env-00000", fixture: "network/create-peering-zone-info-invalid.golden", exitCode: 1},
 		{args: "network create aws-tgw-peering --cloud aws --region us-west-2 --connection-types transitgateway,peering --zones usw2-az1,usw2-az3,usw2-az4 --zone-info 192.168.1.0/27,192.168.2.0/27,192.168.3.0/27 --environment env-00000", fixture: "network/create-tgw-peering.golden"},
+		{args: "network create gcp-pl --cloud gcp --connection-types privatelink --region us-central1", fixture: "network/create-gcp-pl.golden"},
 	}
 
 	for _, test := range tests {
@@ -138,7 +139,8 @@ func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 	tests := []CLITest{
 		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
 		{args: "network gateway describe gw-54321", fixture: "network/gateway/describe-aws-private-network-interface.golden"},
-		{args: "network gateway describe gw-13570", fixture: "network/gateway/describe-gcp.golden"},
+		{args: "network gateway describe gw-13570", fixture: "network/gateway/describe-gcp-dns-peering.golden"},
+		{args: "network gateway describe gw-07531", fixture: "network/gateway/describe-gcp-psc.golden"},
 		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
 	}
@@ -1088,6 +1090,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointCreate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability", fixture: "network/access-point/private-link/egress-endpoint/create-aws.golden"},
 		{args: "network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName --subresource subresource1", fixture: "network/access-point/private-link/egress-endpoint/create-azure.golden"},
+		{args: "network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName", fixture: "network/access-point/private-link/egress-endpoint/create-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -1101,6 +1104,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDescribe()
 		{args: "network access-point private-link egress-endpoint describe ap-12345", fixture: "network/access-point/private-link/egress-endpoint/describe-aws.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-67890", fixture: "network/access-point/private-link/egress-endpoint/describe-azure.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-12345 --output json", fixture: "network/access-point/private-link/egress-endpoint/describe-aws-json.golden"},
+		{args: "network access-point private-link egress-endpoint describe ap-88888", fixture: "network/access-point/private-link/egress-endpoint/describe-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -1125,6 +1129,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointUpdate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint update ap-12345 --name my-new-aws-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-aws.golden"},
 		{args: "network access-point private-link egress-endpoint update ap-67890 --name my-new-azure-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-azure.golden"},
+		{args: "network access-point private-link egress-endpoint update ap-88888 --name my-new-gcp-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-gcp.golden"},
 	}
 
 	for _, test := range tests {
