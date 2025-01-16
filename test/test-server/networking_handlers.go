@@ -2193,6 +2193,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 			Kind:   specConfigKind,
 			Region: "eastus2",
 		}))
+	case "GcpEgressPrivateServiceConnectGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "eastus",
+		}))
 	case "GcpPeeringGatewaySpec":
 		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpec{
 			Kind:   specConfigKind,
@@ -2215,6 +2220,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
 			Kind:         statusCloudGatewayKind,
 			Subscription: networkinggatewayv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
+		}))
+	case "GcpEgressPrivateServiceConnectGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
+			Kind:    statusCloudGatewayKind,
+			Project: networkinggatewayv1.PtrString("project-12345"),
 		}))
 	case "GcpPeeringGatewayStatus":
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
@@ -2247,6 +2257,10 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 			require.NoError(t, err)
 		case "gw-13570":
 			record := getGateway(id, environment, "my-gcp-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		case "gw-07531":
+			record := getGateway(id, environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
 			require.NoError(t, err)
 		}
@@ -2289,8 +2303,13 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 			}))
 		} else if body.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
-				Kind:         "AzureEgressPrivateLinkGatewayStatus",
+				Kind:         "Azure≈",
 				Subscription: networkingv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
+			}))
+		} else if body.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
+				Kind:    "GcpEgressPrivateLinkGatewayStatus",
+				Project: networkingv1.PtrString("project-12345"),
 			}))
 		} else if body.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
@@ -2311,9 +2330,10 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewayThree := getGateway("gw-23456", environment, "my-aws-gateway", "AwsPrivateNetworkInterfaceGatewaySpec", "AwsPrivateNetworkInterfaceGatewayStatus")
 		gatewayFour := getGateway("gw-67890", environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
 		gatewayFive := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
-		gatewaySix := getGateway("gw-13570", environment, "my-gcp-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
+		gatewaySix := getGateway("gw-13570", environment, "my-gcp-peering-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
+		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 
-		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix}}
+		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
