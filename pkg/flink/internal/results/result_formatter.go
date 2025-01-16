@@ -1,9 +1,10 @@
 package results
 
 import (
-	"github.com/samber/lo"
+	"strings"
 
-	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
+	"github.com/mattn/go-runewidth"
+	"github.com/samber/lo"
 )
 
 type truncatedColumn struct {
@@ -38,6 +39,7 @@ func GetTruncatedColumnWidths(columnWidths []int, maxCharacters int) []int {
 	var truncatedColumns []truncatedColumn // slice of struct instead of map because we need to preserve the order
 	truncatedColumnWidths := make([]int, numColumns)
 	for i, col := range columnWidths {
+		// We should not need to check only col > charsPerColumn but rather first search for line breaks
 		if col > charsPerColumn {
 			truncatedColumnWidths[i] = charsPerColumn
 			truncatedColumns = append(truncatedColumns, truncatedColumn{
@@ -57,11 +59,14 @@ func GetTruncatedColumnWidths(columnWidths []int, maxCharacters int) []int {
 }
 
 func TruncateString(str string, maxCharCountToDisplay int) string {
-	if utils.GetMaxStrWidth(str) > maxCharCountToDisplay {
-		if maxCharCountToDisplay <= 3 {
-			return "..."
-		}
-		return str[:maxCharCountToDisplay-3] + "..."
+	lines := strings.Split(str, "\n")
+	truncatedLines := make([]string, 0)
+	// We need to manually format each line here so that we append empty spaces to lines that doesn't fill the whole row, for it to look like "error box component" and not always have a different format depending on the error message.
+	for _, line := range lines {
+		// Using runewidth.Truncate instead of substring is important because it handles multi-byte characters
+		// (e.g. chinese characters, emojis etc.). It uses runewidth.StringWidth internally to calculate the width
+		// of the string which is important in a terminal environment where any miscalculation causes poor formatting
+		truncatedLines = append(truncatedLines, runewidth.Truncate(line, maxCharCountToDisplay, "..."))
 	}
-	return str
+	return strings.Join(truncatedLines, "\n")
 }
