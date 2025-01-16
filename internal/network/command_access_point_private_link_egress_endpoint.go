@@ -13,21 +13,25 @@ import (
 )
 
 type egressEndpointOut struct {
-	Id                                         string   `human:"ID" serialized:"id"`
-	Name                                       string   `human:"Name,omitempty" serialized:"name,omitempty"`
-	Environment                                string   `human:"Environment" serialized:"environment"`
-	Gateway                                    string   `human:"Gateway" serialized:"gateway"`
-	Phase                                      string   `human:"Phase" serialized:"phase"`
-	AwsVpcEndpointService                      string   `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
-	AwsVpcEndpoint                             string   `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
-	AwsVpcEndpointDnsName                      string   `human:"AWS VPC Endpoint DNS Name,omitempty" serialized:"aws_vpc_endpoint_dns_name,omitempty"`
-	AzurePrivateLinkService                    string   `human:"Azure Private Link Service,omitempty" serialized:"azure_private_link_service,omitempty"`
-	AzurePrivateLinkSubresourceName            string   `human:"Azure Private Link Subresource Name,omitempty" serialized:"azure_private_link_subresource_name,omitempty"`
-	AzurePrivateEndpoint                       string   `human:"Azure Private Endpoint,omitempty" serialized:"azure_private_endpoint,omitempty"`
-	AzurePrivateEndpointDomain                 string   `human:"Azure Private Endpoint Domain,omitempty" serialized:"azure_private_endpoint_domain,omitempty"`
-	AzurePrivateEndpointIpAddress              string   `human:"Azure Private Endpoint IP Address,omitempty" serialized:"azure_private_endpoint_ip_address,omitempty"`
-	AzurePrivateEndpointCustomDnsConfigDomains []string `human:"Azure Private Endpoint Custom DNS Config Domains,omitempty" serialized:"azure_private_endpoint_custom_dns_config_domains,omitempty"`
-	HighAvailability                           bool     `human:"High Availability,omitempty" serialized:"high_availability,omitempty"`
+	Id                                           string   `human:"ID" serialized:"id"`
+	Name                                         string   `human:"Name,omitempty" serialized:"name,omitempty"`
+	Environment                                  string   `human:"Environment" serialized:"environment"`
+	Gateway                                      string   `human:"Gateway" serialized:"gateway"`
+	Phase                                        string   `human:"Phase" serialized:"phase"`
+	AwsVpcEndpointService                        string   `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
+	AwsVpcEndpoint                               string   `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
+	AwsVpcEndpointDnsName                        string   `human:"AWS VPC Endpoint DNS Name,omitempty" serialized:"aws_vpc_endpoint_dns_name,omitempty"`
+	AzurePrivateLinkService                      string   `human:"Azure Private Link Service,omitempty" serialized:"azure_private_link_service,omitempty"`
+	AzurePrivateLinkSubresourceName              string   `human:"Azure Private Link Subresource Name,omitempty" serialized:"azure_private_link_subresource_name,omitempty"`
+	AzurePrivateEndpoint                         string   `human:"Azure Private Endpoint,omitempty" serialized:"azure_private_endpoint,omitempty"`
+	AzurePrivateEndpointDomain                   string   `human:"Azure Private Endpoint Domain,omitempty" serialized:"azure_private_endpoint_domain,omitempty"`
+	AzurePrivateEndpointIpAddress                string   `human:"Azure Private Endpoint IP Address,omitempty" serialized:"azure_private_endpoint_ip_address,omitempty"`
+	AzurePrivateEndpointCustomDnsConfigDomains   []string `human:"Azure Private Endpoint Custom DNS Config Domains,omitempty" serialized:"azure_private_endpoint_custom_dns_config_domains,omitempty"`
+	GcpPrivateServiceConnectEndpointTarget       string   `human:"GCP Private Service Connect Endpoint Target,omitempty" serialized:"gcp_private_service_connect_endpoint_target,omitempty"`
+	GcpPrivateServiceConnectEndpointConnectionId string   `human:"GCP Private Service Connect Endpoint Connection ID,omitempty" serialized:"gcp_private_service_connect_endpoint_connection_id,omitempty"`
+	GcpPrivateServiceConnectEndpointName         string   `human:"GCP Private Service Connect Endpoint Name,omitempty" serialized:"gcp_private_service_connect_endpoint_name,omitempty"`
+	GcpPrivateServiceConnectEndpointIpAddress    string   `human:"GCP Private Service Connect Endpoint IP Address,omitempty" serialized:"gcp_private_service_connect_endpoint_ip_address,omitempty"`
+	HighAvailability                             bool     `human:"High Availability,omitempty" serialized:"high_availability,omitempty"`
 }
 
 func (c *accessPointCommand) newEgressEndpointCommand() *cobra.Command {
@@ -72,7 +76,7 @@ func (c *accessPointCommand) autocompleteEgressEndpoints() []string {
 		return nil
 	}
 	egressEndpoints := slices.DeleteFunc(accessPoints, func(accessPoint networkingaccesspointv1.NetworkingV1AccessPoint) bool {
-		return accessPoint.Spec.GetConfig().NetworkingV1AwsEgressPrivateLinkEndpoint == nil && accessPoint.Spec.GetConfig().NetworkingV1AzureEgressPrivateLinkEndpoint == nil
+		return accessPoint.Spec.GetConfig().NetworkingV1AwsEgressPrivateLinkEndpoint == nil && accessPoint.Spec.GetConfig().NetworkingV1AzureEgressPrivateLinkEndpoint == nil && accessPoint.Spec.GetConfig().NetworkingV1GcpEgressPrivateServiceConnectEndpoint == nil
 	})
 
 	suggestions := make([]string, len(egressEndpoints))
@@ -106,6 +110,9 @@ func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, egressEndpoint netw
 		out.AzurePrivateLinkService = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkServiceResourceId()
 		out.AzurePrivateLinkSubresourceName = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkSubresourceName()
 	}
+	if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint != nil {
+		out.GcpPrivateServiceConnectEndpointTarget = egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint.GetPrivateServiceConnectEndpointTarget()
+	}
 
 	if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus != nil {
 		out.AwsVpcEndpoint = egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus.GetVpcEndpointId()
@@ -116,6 +123,11 @@ func printPrivateLinkEgressEndpointTable(cmd *cobra.Command, egressEndpoint netw
 		out.AzurePrivateEndpointDomain = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointDomain()
 		out.AzurePrivateEndpointIpAddress = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointIpAddress()
 		out.AzurePrivateEndpointCustomDnsConfigDomains = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointCustomDnsConfigDomains()
+	}
+	if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus != nil {
+		out.GcpPrivateServiceConnectEndpointConnectionId = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointConnectionId()
+		out.GcpPrivateServiceConnectEndpointName = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointName()
+		out.GcpPrivateServiceConnectEndpointIpAddress = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointIpAddress()
 	}
 
 	table := output.NewTable(cmd)

@@ -25,5 +25,13 @@
       "dbname.database.windows.net",
       "dbname-region.database.windows.net"
     ]
+  },
+  {
+    "id": "ap-88888",
+    "name": "my-gcp-egress-access-point",
+    "environment": "env-596",
+    "gateway": "gw-12345",
+    "phase": "READY",
+    "gcp_private_service_connect_endpoint_target": "projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName"
   }
 ]
