@@ -26,6 +26,9 @@ func (c *poolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
+	cmd.Flags().String("assigned-resource-owner", "", "The resource_id of the principal who will be assigned resource owner on the "+
+		"created identity pool. Principal can be group-mapping (group-xxx), "+
+		"user (u-xxx), service-account (sa-xxx) or identity-pool (pool-xxx).")
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -53,6 +56,11 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	filter, err := cmd.Flags().GetString("filter")
+	if err != nil {
+		return err
+	}
+
+	assignedResourceOwner, err := cmd.Flags().GetString("assigned-resource-owner")
 	if err != nil {
 		return err
 	}
