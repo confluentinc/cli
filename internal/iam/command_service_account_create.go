@@ -66,7 +66,7 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		DisplayName: iamv2.PtrString(name),
 		Description: iamv2.PtrString(description),
 	}
-	serviceAccount, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount)
+	serviceAccount, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount, assignedResourceOwner)
 	if err != nil {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}

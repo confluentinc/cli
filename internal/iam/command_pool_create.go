@@ -71,7 +71,7 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
+	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider, assignedResourceOwner)
 	if err != nil {
 		return err
 	}
