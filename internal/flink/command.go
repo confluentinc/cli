@@ -15,7 +15,6 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	isMDSAuth bool
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -24,15 +23,13 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Apache Flink.",
 	}
 
-	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner), false}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	// On-prem commands are able to run with or without login. Accordingly, set the pre-runner.
-	if !cfg.IsCloudLogin() {
-		if cfg.IsOnPremLogin() {
-			c = &command{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner), true}
-		} else {
-			cmd.PersistentPreRunE = prerunner.Anonymous(c.AuthenticatedCLICommand.CLICommand, false)
-		}
+	if cfg.IsOnPremLogin() {
+		c = &command{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
+	} else if !cfg.IsCloudLogin() {
+		cmd.PersistentPreRunE = prerunner.Anonymous(c.AuthenticatedCLICommand.CLICommand, false)
 	}
 
 	// Cloud Specific Commands
@@ -114,7 +111,7 @@ func addCmfFlagSet(cmd *cobra.Command) {
 }
 
 func (c *command) createContext() context.Context {
-	if !c.isMDSAuth {
+	if !c.Config.IsOnPremLogin() {
 		return context.Background()
 	}
 	return context.WithValue(context.Background(), cmfsdk.ContextAccessToken, c.Context.GetAuthToken())

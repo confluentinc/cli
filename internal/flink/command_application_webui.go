@@ -109,7 +109,7 @@ func (c *command) handleRequest(userResponseWriter http.ResponseWriter, userRequ
 	reqToCmf.Header = userRequest.Header
 	reqToCmf.Header.Set("x-confluent-cli-version", userAgent)
 
-	if c.isMDSAuth {
+	if c.Config.IsOnPremLogin() {
 		accessToken := c.Context.GetAuthToken()
 		reqToCmf.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	}
