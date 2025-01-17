@@ -1,4 +1,4 @@
-package sso
+package mfa
 
 import (
 	"context"
@@ -12,8 +12,8 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-//go:embed sso_callback.html
-var ssoCallbackHTML string
+//go:embed mfa_callback.html
+var mfaCallbackHTML string
 
 // Ideally we would randomize this value, but Auth0 requires that we hardcode a single port.
 const port = 26635
@@ -29,7 +29,7 @@ type authServer struct {
 	State  *authState
 }
 
-func NewServer(state *authState) *authServer {
+func newServer(state *authState) *authServer {
 	return &authServer{
 		wait:  make(chan bool),
 		State: state,
@@ -37,7 +37,7 @@ func NewServer(state *authState) *authServer {
 }
 
 // Start begins the server including attempting to bind the desired TCP port
-func (s *authServer) StartServer() error {
+func (s *authServer) startServer() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/cli_callback", s.callbackHandler)
 
@@ -69,7 +69,7 @@ func (s *authServer) StartServer() error {
 }
 
 // GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from the SSO provider
-func (s *authServer) AwaitAuthorizationCode(timeout time.Duration) error {
+func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	// Wait until flow is finished / callback is called (or timeout...)
 	go func() {
 		time.Sleep(timeout)
@@ -91,15 +91,15 @@ func (s *authServer) AwaitAuthorizationCode(timeout time.Duration) error {
 // callbackHandler serves the route /callback
 func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
 	states, ok := r.URL.Query()["state"]
-	if !(ok && states[0] == s.State.SSOProviderState) {
+	if !(ok && states[0] == s.State.MFAProviderState) {
 		s.bgErr = fmt.Errorf("authentication callback URL either did not contain a state parameter in query string, or the state parameter was invalid; login will fail")
 	}
 
-	fmt.Fprintln(w, ssoCallbackHTML)
+	fmt.Fprintln(w, mfaCallbackHTML)
 
 	codes, ok := r.URL.Query()["code"]
 	if ok {
-		s.State.SSOProviderAuthenticationCode = codes[0]
+		s.State.MFAProviderAuthenticationCode = codes[0]
 	} else {
 		s.bgErr = fmt.Errorf("authentication callback URL did not contain code parameter in query string; login will fail")
 	}
