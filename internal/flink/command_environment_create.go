@@ -86,7 +86,7 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	}
 	postEnvironment.KubernetesNamespace = kubernetesNamespace
 
-	outputEnvironment, err := client.CreateEnvironment(cmd.Context(), postEnvironment)
+	outputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
 	if err != nil {
 		return err
 	}
