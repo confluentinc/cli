@@ -26,6 +26,9 @@ func (c *poolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
+	cmd.Flags().String("assigned-resource-owner", "", "The resource_id of the principal who will be assigned resource owner on the "+
+		"created identity pool. Principal can be group-mapping (group-xxx), "+
+		"user (u-xxx), service-account (sa-xxx) or identity-pool (pool-xxx).")
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -57,13 +60,18 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	assignedResourceOwner, err := cmd.Flags().GetString("assigned-resource-owner")
+	if err != nil {
+		return err
+	}
+
 	createIdentityPool := identityproviderv2.IamV2IdentityPool{
 		DisplayName:   identityproviderv2.PtrString(args[0]),
 		Description:   identityproviderv2.PtrString(description),
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
+	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider, assignedResourceOwner)
 	if err != nil {
 		return err
 	}
