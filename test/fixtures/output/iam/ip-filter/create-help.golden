@@ -11,7 +11,7 @@ Create an IP filter named "demo-ip-filter" with operation group "management" and
 Flags:
       --resource-group string   Name of resource group: "management" or "multiple". (default "multiple")
       --ip-groups strings       A comma-separated list of IP group IDs.
-      --environment string      Name of the environment for which this filter applies. By default will apply to the organization only.
+      --environment string      Id of the environment for which this filter applies. By default will apply to the organization only.
       --operations strings      A comma-separated list of operation groups: "MANAGEMENT" or "SCHEMA".
       --no-public-networks      Use in place of ip-groups to reference the no public networks IP Group.
       --context string          CLI context name.

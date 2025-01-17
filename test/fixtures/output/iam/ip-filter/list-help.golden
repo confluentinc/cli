@@ -4,8 +4,8 @@ Usage:
   confluent iam ip-filter list [flags]
 
 Flags:
-      --environment string      Name of the environment for which this filter applies. By default will apply to the org only.
-      --include-parent-scopes   If an environment is specified, include organization scoped filters. (default true)
+      --environment string      Id of the environment for which this filter applies. By default will apply to the org only.
+      --include-parent-scopes   Include organization scoped filters when listing filters in an environment.
       --context string          CLI context name.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
