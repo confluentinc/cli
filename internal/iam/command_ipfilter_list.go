@@ -23,8 +23,8 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.list,
 	}
 	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
-		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
-		cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include organization scoped filters.")
+		cmd.Flags().String("environment", "", "Id of the environment for which this filter applies. By default will apply to the org only.")
+		cmd.Flags().Bool("include-parent-scopes", false, "Include organization scoped filters when listing filters in an environment.")
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -47,15 +47,15 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 		if environment != "" {
 			resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
 		}
-		includeParentScope, err := cmd.Flags().GetBool("include-parent-scope")
+		includeParentScopes, err := cmd.Flags().GetBool("include-parent-scopes")
 		if err != nil {
 			return err
 		}
-		parentScope := ""
-		if cmd.Flags().Changed("include-parent-scope") {
-			parentScope = strconv.FormatBool(includeParentScope)
+		parentScopes := ""
+		if cmd.Flags().Changed("include-parent-scopes") {
+			parentScopes = strconv.FormatBool(includeParentScopes)
 		}
-		ipFilters, err = c.V2Client.ListIamIpFilters(resourceScope, parentScope)
+		ipFilters, err = c.V2Client.ListIamIpFilters(resourceScope, parentScopes)
 		if err != nil {
 			return err
 		}
