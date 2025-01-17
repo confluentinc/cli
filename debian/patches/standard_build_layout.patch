@@ -1,6 +1,6 @@
---- cli/Makefile	2024-09-26 10:12:52.818827565 -0700
-+++ debian/Makefile	2024-09-11 13:09:21.649421504 -0700
-@@ -1,139 +1,163 @@
+--- cli/Makefile	2024-11-14 13:18:17.935544771 -0800
++++ debian/Makefile	2024-10-14 14:34:25.138231210 -0700
+@@ -1,142 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -165,6 +165,9 @@
 -
 -.PHONY: lint-go
 -lint-go:
+-ifneq ($(shell cat .go-version),$(shell go list -m -f '{{.GoVersion}}'))
+-	$(error The go versions in go.mod and .go-version must match)
+-endif
 -	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0 && \
 -	golangci-lint run --timeout 10m
 -	@echo "✅  golangci-lint"
