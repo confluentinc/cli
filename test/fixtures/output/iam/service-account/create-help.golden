@@ -10,7 +10,7 @@ Create a service account named "my-service-account".
 
 Flags:
       --description string               REQUIRED: Description of the service account.
-      --assigned-resource-owner string   The resource_id of the principal who will be assigned resource owner on the created service account. Principal can be group-mapping (group-xxx), user (u-xxx), service-account (sa-xxx) or identity-pool (pool-xxx).
+      --assigned-resource-owner string   The resource_id of the principal who will be assigned resource owner on the created service account. Principal can be group-mapping, user, service-account, or identity-pool.
       --context string                   CLI context name.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 

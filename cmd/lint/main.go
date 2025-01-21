@@ -121,6 +121,7 @@ var flagRules = []linter.FlagRule{
 			"add-operation-groups",
 			"remove-operation-groups",
 			"include-parent-scopes",
+			"assigned-resource-owner",
 		),
 	),
 	linter.FlagFilter(
