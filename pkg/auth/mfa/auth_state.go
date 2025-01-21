@@ -82,7 +82,7 @@ func (s *authState) getAuthorizationCodeUrl(isOkta bool, mfaProviderConnectionNa
 	url := s.MFAProviderHost + "/authorize?challenge_mfa=true" +
 		"&response_type=code" +
 		"&email=" + encodeEmail(s.email) +
-		"&from_cli=true" +
+		"&from_cli=true&mfa_from_cli=true" +
 		"&code_challenge=" + s.CodeChallenge +
 		"&code_challenge_method=S256" +
 		"&client_id=" + s.MFAProviderClientID +
@@ -120,7 +120,7 @@ func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 }
 
 func (s *authState) getOAuthToken() error {
-	payload := strings.NewReader("grant_type=authorization_code&from_cli=true" +
+	payload := strings.NewReader("grant_type=authorization_code&from_cli=true&mfa_from_cli=true" +
 		"&client_id=" + s.MFAProviderClientID +
 		"&code_verifier=" + s.CodeVerifier +
 		"&code=" + s.MFAProviderAuthenticationCode +

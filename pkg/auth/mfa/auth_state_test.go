@@ -57,7 +57,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 	expectedUri := "/authorize?challenge_mfa=true" +
 		"&response_type=code" +
 		"&email=" + encodeEmail(state.email) +
-		"&from_cli=true" +
+		"&from_cli=true&mfa_from_cli=true" +
 		"&code_challenge=" + state.CodeChallenge +
 		"&code_challenge_method=S256" +
 		"&client_id=" + state.MFAProviderClientID +
@@ -87,7 +87,7 @@ func TestGetOAuthToken(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedUri := "/token"
-	expectedPayload := "grant_type=authorization_code&from_cli=true" +
+	expectedPayload := "grant_type=authorization_code&from_cli=true&mfa_from_cli=true" +
 		"&client_id=" + state.MFAProviderClientID +
 		"&code_verifier=" + state.CodeVerifier +
 		"&code=" + state.MFAProviderAuthenticationCode +
