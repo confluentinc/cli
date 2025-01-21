@@ -9,12 +9,13 @@ Create an identity pool named "demo-identity-pool" with identity provider "op-12
   $ confluent iam pool create demo-identity-pool --provider op-12345 --description "new description" --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'
 
 Flags:
-      --provider string         REQUIRED: ID of this pool's identity provider.
-      --identity-claim string   REQUIRED: Claim specifying the external identity using this identity pool.
-      --description string      Description of the identity pool.
-      --filter string           A supported Common Expression Language (CEL) filter expression. (default "true")
-      --context string          CLI context name.
-  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
+      --provider string                  REQUIRED: ID of this pool's identity provider.
+      --identity-claim string            REQUIRED: Claim specifying the external identity using this identity pool.
+      --description string               Description of the identity pool.
+      --assigned-resource-owner string   The resource_id of the principal who will be assigned resource owner on the created identity pool. Principal can be group-mapping, user, service-account, or identity-pool.
+      --filter string                    A supported Common Expression Language (CEL) filter expression. (default "true")
+      --context string                   CLI context name.
+  -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
