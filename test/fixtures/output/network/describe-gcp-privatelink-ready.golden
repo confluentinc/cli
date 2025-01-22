@@ -2,7 +2,6 @@
 | ID                             | n-abcde8                                                                                                           |
 | Environment                    | env-00000                                                                                                          |
 | Name                           | prod-gcp-us-central1                                                                                               |
-| Gateway                        | gateway-12345                                                                                                      |
 | Cloud                          | GCP                                                                                                                |
 | Region                         | us-central1                                                                                                        |
 | Zones                          | us-central1-a, us-central1-b,                                                                                      |

@@ -47,7 +47,7 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 		if egressEndpoint.Spec == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 		}
-		if egressEndpoint.Spec.GetConfig().NetworkingV1AwsEgressPrivateLinkEndpoint == nil && egressEndpoint.Spec.GetConfig().NetworkingV1AzureEgressPrivateLinkEndpoint == nil && egressEndpoint.Spec.GetConfig().NetworkingV1GcpEgressPrivateServiceConnectEndpoint == nil {
+		if egressEndpoint.Spec.GetConfig().NetworkingV1AwsEgressPrivateLinkEndpoint == nil && egressEndpoint.Spec.GetConfig().NetworkingV1AzureEgressPrivateLinkEndpoint == nil {
 			continue
 		}
 		if egressEndpoint.Status == nil {
@@ -68,8 +68,6 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 		} else if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint != nil {
 			out.AzurePrivateLinkService = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkServiceResourceId()
 			out.AzurePrivateLinkSubresourceName = egressEndpoint.Spec.Config.NetworkingV1AzureEgressPrivateLinkEndpoint.GetPrivateLinkSubresourceName()
-		} else if egressEndpoint.Spec.Config != nil && egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint != nil {
-			out.GcpPrivateServiceConnectEndpointTarget = egressEndpoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint.GetPrivateServiceConnectEndpointTarget()
 		}
 
 		if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1AwsEgressPrivateLinkEndpointStatus != nil {
@@ -80,10 +78,6 @@ func (c *accessPointCommand) list(cmd *cobra.Command, _ []string) error {
 			out.AzurePrivateEndpointDomain = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointDomain()
 			out.AzurePrivateEndpointIpAddress = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointIpAddress()
 			out.AzurePrivateEndpointCustomDnsConfigDomains = egressEndpoint.Status.Config.NetworkingV1AzureEgressPrivateLinkEndpointStatus.GetPrivateEndpointCustomDnsConfigDomains()
-		} else if egressEndpoint.Status.Config != nil && egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus != nil {
-			out.GcpPrivateServiceConnectEndpointConnectionId = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointConnectionId()
-			out.GcpPrivateServiceConnectEndpointName = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointName()
-			out.GcpPrivateServiceConnectEndpointIpAddress = egressEndpoint.Status.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectEndpointIpAddress()
 		}
 
 		list.Add(out)
