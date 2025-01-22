@@ -17,22 +17,20 @@ import (
 )
 
 const (
-	awsEgressPrivateLink           = "AwsEgressPrivateLink"
-	awsPeering                     = "AwsPeering"
-	azureEgressPrivateLink         = "AzureEgressPrivateLink"
-	azurePeering                   = "AzurePeering"
-	awsPrivateNetworkInterface     = "AwsPrivateNetworkInterface"
-	gcpPeering                     = "GcpPeering"
-	gcpEgressPrivateServiceConnect = "GcpEgressPrivateServiceConnect"
+	awsEgressPrivateLink       = "AwsEgressPrivateLink"
+	awsPeering                 = "AwsPeering"
+	azureEgressPrivateLink     = "AzureEgressPrivateLink"
+	azurePeering               = "AzurePeering"
+	awsPrivateNetworkInterface = "AwsPrivateNetworkInterface"
+	gcpPeering                 = "GcpPeering"
 )
 
 var (
 	createGatewayTypes = []string{"egress-privatelink", "private-network-interface"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect"} // TODO: check if we accept private-network-interface here
+	listGatewayTypes   = []string{"aws-egress-privatelink", "azure-egress-privatelink"} // TODO: check if we accept private-network-interface here
 	gatewayTypeMap     = map[string]string{
-		"aws-egress-privatelink":             awsEgressPrivateLink,
-		"azure-egress-privatelink":           azureEgressPrivateLink,
-		"gcp-egress-private-service-connect": gcpEgressPrivateServiceConnect,
+		"aws-egress-privatelink":   awsEgressPrivateLink,
+		"azure-egress-privatelink": azureEgressPrivateLink,
 	}
 )
 
@@ -45,7 +43,6 @@ type gatewayOut struct {
 	AwsPrincipalArn   string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
 	AzureSubscription string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
 	GcpIamPrincipal   string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
-	GcpProject        string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
 	Phase             string   `human:"Phase" serialized:"phase"`
 	Zones             []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
 	Account           string   `human:"Account,omitempty" serialized:"account,omitempty"`
@@ -138,10 +135,6 @@ func getGatewayCloud(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 		return pcloud.Azure
 	}
 
-	if cloud.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus != nil {
-		return pcloud.Gcp
-	}
-
 	if cloud.NetworkingV1GcpPeeringGatewayStatus != nil {
 		return pcloud.Gcp
 	}
@@ -174,10 +167,6 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 
 	if config.NetworkingV1GcpPeeringGatewaySpec != nil {
 		return gcpPeering, nil
-	}
-
-	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
-		return gcpEgressPrivateServiceConnect, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
@@ -221,9 +210,6 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 		out.Region = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetRegion()
 		out.Zones = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetZones()
 	}
-	if gatewayType == gcpEgressPrivateServiceConnect {
-		out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
-	}
 	if gatewayType == gcpPeering {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
 	}
@@ -238,7 +224,6 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	case pcloud.Azure:
 		out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
 	case pcloud.Gcp:
-		out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()
 		out.GcpIamPrincipal = gateway.Status.CloudGateway.NetworkingV1GcpPeeringGatewayStatus.GetIamPrincipal()
 	}
 

@@ -2,7 +2,6 @@
   "id": "n-abcde8",
   "environment": "env-00000",
   "name": "prod-gcp-us-central1",
-  "gateway": "gateway-12345",
   "cloud": "GCP",
   "region": "us-central1",
   "zones": ["us-central1-a", "us-central1-b", "us-central1-c"],

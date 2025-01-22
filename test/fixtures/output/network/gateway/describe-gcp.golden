@@ -1,9 +1,9 @@
-+-------------+--------------------------------+
-| ID          | gw-07531                       |
-| Name        | my-gcp-gateway                 |
-| Environment | env-596                        |
-| Region      | eastus                         |
-| Type        | GcpEgressPrivateServiceConnect |
-| GCP Project | project-12345                  |
-| Phase       | READY                          |
-+-------------+--------------------------------+
++-------------------+-------------------------------------+
+| ID                | gw-13570                            |
+| Name              | my-gcp-gateway                      |
+| Environment       | env-596                             |
+| Region            | eastus2                             |
+| Type              | GcpPeering                          |
+| GCP IAM Principal | g000000-a000-0a00-00aa-0000aaa0a0a0 |
+| Phase             | READY                               |
++-------------------+-------------------------------------+
