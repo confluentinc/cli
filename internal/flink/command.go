@@ -27,19 +27,23 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.PersistentPreRunE = prerunner.Anonymous(c.AuthenticatedCLICommand.CLICommand, false)
 	}
 
-	// Cloud Specific Commands
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(c.newConnectionCommand())
-	}
-
+	// On-Prem Specific Commands
 	cmd.AddCommand(c.newApplicationCommand())
-	cmd.AddCommand(c.newArtifactCommand())
-	cmd.AddCommand(c.newComputePoolCommand())
-	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEnvironmentCommand())
-	cmd.AddCommand(c.newRegionCommand())
-	cmd.AddCommand(c.newShellCommand(prerunner))
-	cmd.AddCommand(c.newStatementCommand())
+
+	// Cloud Specific Commands
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
+		if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
+			cmd.AddCommand(c.newConnectionCommand())
+		}
+
+		cmd.AddCommand(c.newArtifactCommand())
+		cmd.AddCommand(c.newComputePoolCommand())
+		cmd.AddCommand(c.newConnectivityTypeCommand())
+		cmd.AddCommand(c.newRegionCommand())
+		cmd.AddCommand(c.newShellCommand(prerunner))
+		cmd.AddCommand(c.newStatementCommand())
+	}
 
 	return cmd
 }
