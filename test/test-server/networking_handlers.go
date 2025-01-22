@@ -613,15 +613,6 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 				if slices.Contains(connectionTypes, "PRIVATELINK") {
 					network.Status.Cloud.NetworkingV1AwsNetwork.PrivateLinkEndpointService = networkingv1.PtrString("")
 				}
-			case "GCP":
-				network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
-					NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
-						Kind: "GcpNetwork",
-					},
-				}
-				if slices.Contains(connectionTypes, "PRIVATELINK") {
-					network.Status.Cloud.NetworkingV1GcpNetwork.PrivateServiceConnectServiceAttachments = &map[string]string{}
-				}
 			}
 
 			err = json.NewEncoder(w).Encode(network)
@@ -689,12 +680,6 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 			Region:      networkingv1.PtrString("us-central1"),
 			Cidr:        networkingv1.PtrString("10.1.0.0/16"),
 			Zones:       &[]string{"us-central1-a", "us-central1-b", "us-central1-c"},
-			Gateway: *networkingv1.NewNullableTypedEnvScopedObjectReference(
-				&networkingv1.TypedEnvScopedObjectReference{
-					Id:          "gateway-12345",
-					Environment: networkingv1.PtrString("env-00000"),
-				},
-			),
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -2193,16 +2178,6 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 			Kind:   specConfigKind,
 			Region: "eastus2",
 		}))
-	case "GcpEgressPrivateServiceConnectGatewaySpec":
-		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec{
-			Kind:   specConfigKind,
-			Region: "eastus",
-		}))
-	case "GcpPeeringGatewaySpec":
-		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpec{
-			Kind:   specConfigKind,
-			Region: "eastus2",
-		}))
 	}
 
 	switch statusCloudGatewayKind {
@@ -2220,16 +2195,6 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
 			Kind:         statusCloudGatewayKind,
 			Subscription: networkinggatewayv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
-		}))
-	case "GcpEgressPrivateServiceConnectGatewayStatus":
-		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
-			Kind:    statusCloudGatewayKind,
-			Project: networkinggatewayv1.PtrString("project-12345"),
-		}))
-	case "GcpPeeringGatewayStatus":
-		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
-			Kind:         statusCloudGatewayKind,
-			IamPrincipal: networkinggatewayv1.PtrString("g000000-a000-0a00-00aa-0000aaa0a0a0"),
 		}))
 	}
 
@@ -2253,14 +2218,6 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 			require.NoError(t, err)
 		case "gw-67890":
 			record := getGateway(id, environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
-			err := json.NewEncoder(w).Encode(record)
-			require.NoError(t, err)
-		case "gw-13570":
-			record := getGateway(id, environment, "my-gcp-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
-			err := json.NewEncoder(w).Encode(record)
-			require.NoError(t, err)
-		case "gw-07531":
-			record := getGateway(id, environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
 			require.NoError(t, err)
 		}
@@ -2306,16 +2263,6 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 				Kind:         "AzureEgressPrivateLinkGatewayStatus",
 				Subscription: networkingv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
 			}))
-		} else if body.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
-			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
-				Kind:    "GcpEgressPrivateServiceConnectGatewayStatus",
-				Project: networkingv1.PtrString("project-12345"),
-			}))
-		} else if body.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
-			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
-				Kind:         "GcpPeeringGatewayStatus",
-				IamPrincipal: networkingv1.PtrString("g000000-a000-0a00-00aa-0000aaa0a0a0"),
-			}))
 		}
 
 		err = json.NewEncoder(w).Encode(gateway)
@@ -2330,10 +2277,8 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewayThree := getGateway("gw-23456", environment, "my-aws-gateway", "AwsPrivateNetworkInterfaceGatewaySpec", "AwsPrivateNetworkInterfaceGatewayStatus")
 		gatewayFour := getGateway("gw-67890", environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
 		gatewayFive := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
-		gatewaySix := getGateway("gw-13570", environment, "my-gcp-peering-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
-		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 
-		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven}}
+		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2444,10 +2389,6 @@ func handleNetworkingDnsForwarderGet(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The dns forwarder dnsf-invalid was not found.")
 			require.NoError(t, err)
-		case "my-dns-forwarder-file":
-			dnsf := getDnsForwarderGCP(id, "my-dns-forwarder-file")
-			err := json.NewEncoder(w).Encode(dnsf)
-			require.NoError(t, err)
 		default:
 			dnsf := getDnsForwarder(id, "my-dns-forwarder")
 			err := json.NewEncoder(w).Encode(dnsf)
@@ -2488,31 +2429,6 @@ func getDnsForwarder(id, name string) networkingdnsforwarderv1.NetworkingV1DnsFo
 	return forwarder
 }
 
-func getDnsForwarderGCP(id, name string) networkingdnsforwarderv1.NetworkingV1DnsForwarder {
-	forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
-		Id: networkingdnsforwarderv1.PtrString(id),
-		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
-			DisplayName: networkingdnsforwarderv1.PtrString(name),
-			Domains:     &[]string{"abc.com", "def.com", "example.domain", "xyz.com", "my.dns.forwarder.example.domain"},
-			Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
-				NetworkingV1ForwardViaGcpDnsZones: &networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZones{
-					Kind: "ForwardViaGcpDnsZones",
-					DomainMappings: map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings{
-						"abc.com": {
-							Zone:    ptrString("zone1"),
-							Project: ptrString("project1"),
-						},
-					},
-				},
-			},
-			Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
-			Gateway:     &networkingdnsforwarderv1.ObjectReference{Id: "gw-111111"},
-		},
-		Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
-	}
-	return forwarder
-}
-
 func handleNetworkingDnsForwarderDelete(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -2531,20 +2447,14 @@ func handleNetworkingDnsForwarderList(t *testing.T) http.HandlerFunc {
 		forwarder1 := getDnsForwarder("dnsf-abcde1", "my-dns-forwarder-1")
 		forwarder2 := getDnsForwarder("dnsf-abcde2", "my-dns-forwarder-2")
 		forwarder3 := getDnsForwarder("dnsf-abcde3", "my-dns-forwarder-3")
-		forwarder4 := getDnsForwarderGCP("dnsf-abcde4", "my-dns-forwarder-4")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var dnsForwarderList networkingdnsforwarderv1.NetworkingV1DnsForwarderList
 		switch pageToken {
-		case "my-dns-forwarder-4":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder4},
-				Metadata: networkingdnsforwarderv1.ListMeta{},
-			}
 		case "my-dns-forwarder-3":
 			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
 				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder3},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarder?environment=a-595&page_size=1&page_token=my-dns-forwarder-4"))},
+				Metadata: networkingdnsforwarderv1.ListMeta{},
 			}
 		case "my-dns-forwarder-2":
 			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
@@ -2582,12 +2492,8 @@ func handleNetworkingDnsForwarderUpdate(t *testing.T, id string) http.HandlerFun
 			if body.Spec.Domains != nil {
 				forwarder.Spec.SetDomains(body.Spec.GetDomains())
 			}
-			if body.Spec.Config != nil && len(body.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps()) != 0 {
+			if body.Spec.Config != nil {
 				forwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(body.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps())
-			}
-			if body.Spec.Config != nil && len(body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings()) != 0 {
-				forwarder = getDnsForwarderGCP(id, "my-dns-forwarder")
-				forwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.SetDomainMappings(body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings())
 			}
 			err = json.NewEncoder(w).Encode(forwarder)
 			require.NoError(t, err)
@@ -2620,45 +2526,24 @@ func handleNetworkingDnsForwarderCreate(t *testing.T) http.HandlerFunc {
 			err := writeErrorJson(w, message)
 			require.NoError(t, err)
 		default:
-			if numDnsServerIps == 0 {
-				forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
-					Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
-					Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
-						DisplayName: networkingdnsforwarderv1.PtrString(name),
-						Domains:     body.Spec.Domains,
-						Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
-							NetworkingV1ForwardViaGcpDnsZones: &networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZones{
-								Kind:           body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.Kind,
-								DomainMappings: body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.DomainMappings,
-							},
+			forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+				Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
+				Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+					DisplayName: networkingdnsforwarderv1.PtrString(name),
+					Domains:     body.Spec.Domains,
+					Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+						NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
+							Kind:         body.Spec.Config.NetworkingV1ForwardViaIp.Kind,
+							DnsServerIps: body.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps,
 						},
-						Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
-						Gateway:     body.Spec.Gateway,
 					},
-					Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
-				}
-				err = json.NewEncoder(w).Encode(forwarder)
-				require.NoError(t, err)
-			} else {
-				forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
-					Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
-					Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
-						DisplayName: networkingdnsforwarderv1.PtrString(name),
-						Domains:     body.Spec.Domains,
-						Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
-							NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
-								Kind:         body.Spec.Config.NetworkingV1ForwardViaIp.Kind,
-								DnsServerIps: body.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps,
-							},
-						},
-						Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
-						Gateway:     body.Spec.Gateway,
-					},
-					Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
-				}
-				err = json.NewEncoder(w).Encode(forwarder)
-				require.NoError(t, err)
+					Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
+					Gateway:     body.Spec.Gateway,
+				},
+				Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
 			}
+			err = json.NewEncoder(w).Encode(forwarder)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -2742,34 +2627,6 @@ func getAzureEgressAccessPoint(id, environment, name string) networkingaccesspoi
 	}
 }
 
-func getGcpEgressAccessPoint(id, environment, name string) networkingaccesspointv1.NetworkingV1AccessPoint {
-	return networkingaccesspointv1.NetworkingV1AccessPoint{
-		Id: networkingaccesspointv1.PtrString(id),
-		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
-			DisplayName: networkingaccesspointv1.PtrString(name),
-			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
-				NetworkingV1GcpEgressPrivateServiceConnectEndpoint: &networkingaccesspointv1.NetworkingV1GcpEgressPrivateServiceConnectEndpoint{
-					Kind:                                "GcpEgressPrivateServiceConnectEndpoint",
-					PrivateServiceConnectEndpointTarget: "projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
-				},
-			},
-			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
-			Gateway:     &networkingaccesspointv1.ObjectReference{Id: "gw-12345"},
-		},
-		Status: &networkingaccesspointv1.NetworkingV1AccessPointStatus{
-			Phase: "READY",
-			Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
-				NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus: &networkingaccesspointv1.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus{
-					Kind: "GcpEgressPrivateLinkEndpointStatus",
-					PrivateServiceConnectEndpointConnectionId: "111111111111111111",
-					PrivateServiceConnectEndpointName:         "private-service-connect-endpoint-name",
-					PrivateServiceConnectEndpointIpAddress:    "10.2.0.68",
-				},
-			},
-		},
-	}
-}
-
 func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var accessPoint networkingaccesspointv1.NetworkingV1AccessPoint
@@ -2782,8 +2639,6 @@ func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.H
 			accessPoint = getAwsPrivateNetworkInterfaceAccessPoint(id, environment, "my-aws-private-network-interface-access-point")
 		case "ap-67890":
 			accessPoint = getAzureEgressAccessPoint(id, environment, "my-azure-egress-access-point")
-		case "ap-88888":
-			accessPoint = getGcpEgressAccessPoint(id, environment, "my-gcp-egress-access-point")
 		}
 		err := json.NewEncoder(w).Encode(accessPoint)
 		require.NoError(t, err)
@@ -2813,8 +2668,6 @@ func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc
 			}
 		case "ap-67890":
 			accessPoint = getAzureEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-egress-access-point")
-		case "ap-88888":
-			accessPoint = getGcpEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-gcp-egress-access-point")
 		}
 
 		accessPoint.Spec.SetDisplayName(body.Spec.GetDisplayName())
@@ -2829,9 +2682,8 @@ func handleNetworkingAccessPointList(t *testing.T, environment string) http.Hand
 		accessPointOne := getAwsEgressAccessPoint("ap-12345", environment, "my-aws-egress-access-point")
 		accessPointTwo := getAzureEgressAccessPoint("ap-67890", environment, "my-azure-egress-access-point")
 		accessPointThree := getAwsPrivateNetworkInterfaceAccessPoint("ap-54321", environment, "my-aws-private-network-interface-access-point")
-		accessPointFour := getGcpEgressAccessPoint("ap-88888", environment, "my-gcp-egress-access-point")
 
-		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree, accessPointFour}}
+		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2871,19 +2723,6 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 						PrivateEndpointDomain:                 networkingaccesspointv1.PtrString("domain.com"),
 						PrivateEndpointIpAddress:              "10.2.0.68",
 						PrivateEndpointCustomDnsConfigDomains: &[]string{"dbname.database.windows.net", "dbname-region.database.windows.net"},
-					},
-				},
-			}
-		} else if accessPoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint != nil {
-			accessPoint.SetId("ap-88888")
-			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
-				Phase: "READY",
-				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
-					NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus: &networkingaccesspointv1.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus{
-						Kind: "GcpEgressPrivateServiceConnectEndpointStatus",
-						PrivateServiceConnectEndpointConnectionId: "111111111111111111",
-						PrivateServiceConnectEndpointName:         "private-service-connect-endpoint-name",
-						PrivateServiceConnectEndpointIpAddress:    "10.2.0.68",
 					},
 				},
 			}

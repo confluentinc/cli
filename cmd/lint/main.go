@@ -193,7 +193,6 @@ var vocabWords = []string{
 	"ai",
 	"apac",
 	"api",
-	"apis",
 	"arn",
 	"asyncapi",
 	"auth",
