@@ -43,14 +43,13 @@ func (c *command) dnsForwarderList(cmd *cobra.Command, _ []string) error {
 		sort.Strings(forwarder.Spec.GetDomains())
 
 		list.Add(&dnsForwarderOut{
-			Id:                forwarder.GetId(),
-			Name:              forwarder.Spec.GetDisplayName(),
-			Domains:           forwarder.Spec.GetDomains(),
-			DnsServerIps:      forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
-			DnsDomainMappings: convertToTypeMapString(forwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings()),
-			Gateway:           forwarder.Spec.Gateway.GetId(),
-			Environment:       forwarder.Spec.Environment.GetId(),
-			Phase:             forwarder.Status.GetPhase(),
+			Id:           forwarder.GetId(),
+			Name:         forwarder.Spec.GetDisplayName(),
+			Domains:      forwarder.Spec.GetDomains(),
+			DnsServerIps: forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
+			Gateway:      forwarder.Spec.Gateway.GetId(),
+			Environment:  forwarder.Spec.Environment.GetId(),
+			Phase:        forwarder.Status.GetPhase(),
 		})
 	}
 

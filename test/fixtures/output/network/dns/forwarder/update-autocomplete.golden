@@ -1,10 +1,8 @@
 --name	Name of the DNS forwarder.
---domains	A comma-separated list of domains for the DNS forwarder to use.
 --dns-server-ips	A comma-separated list of IP addresses for the DNS server.
---domain-mapping	Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.
+--domains	A comma-separated list of domains for the DNS forwarder to use.
 dnsf-abcde1	my-dns-forwarder-1
 dnsf-abcde2	my-dns-forwarder-2
 dnsf-abcde3	my-dns-forwarder-3
-dnsf-abcde4	my-dns-forwarder-4
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp
