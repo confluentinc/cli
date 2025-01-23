@@ -43,6 +43,7 @@
   {
     "id": "n-abcde1",
     "name": "prod-gcp-us-central1",
+    "gateway": "gateway-12345",
     "cloud": "GCP",
     "region": "us-central1",
     "cidr": "10.1.0.0/16",
