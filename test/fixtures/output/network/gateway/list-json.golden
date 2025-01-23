@@ -1,5 +1,14 @@
 [
   {
+    "id": "gw-07531",
+    "name": "my-gcp-gateway",
+    "environment": "env-596",
+    "region": "eastus",
+    "type": "GcpEgressPrivateServiceConnect",
+    "gcp_project": "project-12345",
+    "phase": "READY"
+  },
+  {
     "id": "gw-09876",
     "name": "my-azure-peering-gateway",
     "environment": "env-596",
@@ -14,6 +23,15 @@
     "region": "us-east-1",
     "type": "AwsEgressPrivateLink",
     "aws_principal_arn": "arn:aws:iam::123456789012:role",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-13570",
+    "name": "my-gcp-peering-gateway",
+    "environment": "env-596",
+    "region": "eastus2",
+    "type": "GcpPeering",
+    "gcp_iam_principal": "g000000-a000-0a00-00aa-0000aaa0a0a0",
     "phase": "READY"
   },
   {
