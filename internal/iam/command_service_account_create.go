@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -30,9 +32,10 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
-	cmd.Flags().String("assigned-resource-owner", "", "The resource_id of the principal who will be assigned resource owner on the "+
-		"created service account. Principal can be group-mapping, "+
-		"user, service-account, or identity-pool.")
+	items := []string{"user", "group-mapping", "service-account", "identity-pool"}
+	cmd.Flags().String("resource-owner", "", fmt.Sprintf("The resource_id of the principal who will be assigned resource owner on the "+
+		"created service account. Principal can be a %s.",
+		utils.ArrayToCommaDelimitedString(items, "or")))
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -53,7 +56,7 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	assignedResourceOwner, err := cmd.Flags().GetString("assigned-resource-owner")
+	assignedResourceOwner, err := cmd.Flags().GetString("resource-owner")
 	if err != nil {
 		return err
 	}
