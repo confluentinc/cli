@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 	"github.com/spf13/cobra"
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
@@ -26,6 +28,10 @@ func (c *poolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
+	items := []string{"user", "group-mapping", "service-account", "identity-pool"}
+	cmd.Flags().String("resource-owner", "", fmt.Sprintf("The resource_id of the principal who will be assigned resource owner on the "+
+		"created identity pool. Principal can be a %s.",
+		utils.ArrayToCommaDelimitedString(items, "or")))
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -57,13 +63,18 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	assignedResourceOwner, err := cmd.Flags().GetString("resource-owner")
+	if err != nil {
+		return err
+	}
+
 	createIdentityPool := identityproviderv2.IamV2IdentityPool{
 		DisplayName:   identityproviderv2.PtrString(args[0]),
 		Description:   identityproviderv2.PtrString(description),
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
+	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider, assignedResourceOwner)
 	if err != nil {
 		return err
 	}
