@@ -55,14 +55,15 @@ func getSchemaRegistryClusterV3(packageType, endpoint string) srcmv3.SrcmV3Clust
 	return srcmv3.SrcmV3Cluster{
 		Id: srcmv3.PtrString(srClusterId),
 		Spec: &srcmv3.SrcmV3ClusterSpec{
-			DisplayName:         srcmv3.PtrString("account schema-registry"),
-			Package:             srcmv3.PtrString(packageType),
-			HttpEndpoint:        srcmv3.PtrString(endpoint),
-			PrivateHttpEndpoint: srcmv3.PtrString("http://127.0.0.1:1029"),
-			CatalogHttpEndpoint: srcmv3.PtrString("http://127.0.0.1:1030"),
-			Environment:         &srcmv3.GlobalObjectReference{Id: SRApiEnvId},
-			Region:              srcmv3.PtrString(regionSpec),
-			Cloud:               srcmv3.PtrString(cloudSpec),
+			DisplayName:                  srcmv3.PtrString("account schema-registry"),
+			Package:                      srcmv3.PtrString(packageType),
+			HttpEndpoint:                 srcmv3.PtrString(endpoint),
+			PrivateHttpEndpoint:          srcmv3.PtrString("http://127.0.0.1:1029"),
+			PrivateHttpRegionalEndpoints: &map[string]string{"key1": "value1", "key2": "value2"},
+			CatalogHttpEndpoint:          srcmv3.PtrString("http://127.0.0.1:1030"),
+			Environment:                  &srcmv3.GlobalObjectReference{Id: SRApiEnvId},
+			Region:                       srcmv3.PtrString(regionSpec),
+			Cloud:                        srcmv3.PtrString(cloudSpec),
 		},
 		Status: &srcmv3.SrcmV3ClusterStatus{Phase: srClusterStatus},
 	}
