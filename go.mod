@@ -113,7 +113,7 @@ require (
 	golang.org/x/term v0.27.0
 	golang.org/x/text v0.21.0
 	google.golang.org/protobuf v1.34.2
-	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
+	gopkg.in/launchdarkly/go-sdk-common.v3 v3.2.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.30.2
 	pgregory.net/rapid v1.1.0
