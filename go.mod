@@ -80,7 +80,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.3.0
-	github.com/imdario/mergo v0.3.16
+	github.com/imdario/mergo v1.0.1
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/jonboulle/clockwork v0.4.0
 	github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100
