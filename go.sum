@@ -256,6 +256,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
 github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.0 h1:BFab+P8PHLsmmPfg/K7eguW1wE9mlL1sLYlvZxVzWH8=
 github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.0/go.mod h1:9JegVbJxJf/F5q5YZKd1GC2fwh1lBvkqXuRG8yk5zV8=
+github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.1-0.20250123224054-9f5582d9a847 h1:JzfrSZRKVxxoeG7q59ZFeid4Fad0+zkPhz9aPW6TjeQ=
+github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.1-0.20250123224054-9f5582d9a847/go.mod h1:Kx0FUZFiTWLZmSAP5ugGzIAlS/h2HpBHkxemXnvqyLo=
 github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access v0.0.1 h1:q5KwLTkKIyCf2Tnp7orMSSFXSTXfTDJxKKZig3e9XG0=
 github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access v0.0.1/go.mod h1:zDElXJ9Q4RlIF31dBqmGVrH3nhQWIQiIkJhfcuoeleM=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1 h1:WZJYfgXJrvTIYQpCFps/qHF7T8ekgPlX/SFqx4EY2zQ=
