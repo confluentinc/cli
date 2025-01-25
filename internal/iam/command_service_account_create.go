@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/utils"
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -32,10 +30,7 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
-	items := []string{"user", "group-mapping", "service-account", "identity-pool"}
-	cmd.Flags().String("resource-owner", "", fmt.Sprintf("The resource_id of the principal who will be assigned resource owner on the "+
-		"created service account. Principal can be a %s.",
-		utils.ArrayToCommaDelimitedString(items, "or")))
+	pcmd.AddResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
