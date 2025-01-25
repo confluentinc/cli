@@ -69,9 +69,13 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 
 	// Instantiate LSP
 	handlerCh := make(chan *jsonrpc2.Request) // This is the channel used for the messages received by the language to be passed through to the input controller
-	lspClient, err := lsp.NewWebsocketClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
+	lspClient, _, err := lsp.NewInitializedLspClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
 	if err != nil {
-		log.CliLogger.Errorf("Failed to initialize LSP client: %s", err.Error())
+		log.CliLogger.Errorf("Failed to connect to the language service. Check your network."+
+			" If you're using private networking, you might still be able to submit queries. If that's the case and you"+
+			"want to uso language features like autocompletion, error highlighting and up to date syntax highlighting,"+
+			" you or your system admin might need to setup DNS resolution for both \"flink\" AND \"flinkpls\""+
+			" (e.g. flinkpls.us-east-2.aws.private.confluent.cloud). Contact support for assistance. Error: %s", err.Error())
 	}
 
 	stdinBefore := utils.GetStdin()
@@ -95,6 +99,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 			Catalog:             userProperties.Get(config.KeyCatalog),
 			Database:            userProperties.Get(config.KeyDatabase),
 			ComputePoolId:       appOptions.GetComputePoolId(),
+			LspDocumentUri:      lspClient.CurrentDocumentUri(),
 			StatementProperties: userProperties.GetMaskedNonLocalProperties(),
 		}
 	})
