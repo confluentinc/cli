@@ -42,6 +42,7 @@ func NewLSPClientImpl(conn types.JSONRpcConn) *LSPClient {
 }
 
 func (c *LSPClient) Initialize() (*lsp.InitializeResult, error) {
+	log.CliLogger.Debugf("Initialize called")
 	var resp lsp.InitializeResult
 
 	initializeParams := lsp.InitializeParams{}
@@ -59,7 +60,9 @@ func (c *LSPClient) Initialize() (*lsp.InitializeResult, error) {
 	return &resp, err
 }
 
-func (c *LSPClient) DidOpen() error {
+func (c *LSPClient) DidOpen() (lsp.DocumentURI, error) {
+	log.CliLogger.Debugf("DidOpen called")
+
 	var resp interface{}
 
 	documentURI := lsp.DocumentURI("temp_session_" + uuid.New().String() + ".sql")
@@ -86,6 +89,7 @@ func (c *LSPClient) DidOpen() error {
 }
 
 func (c *LSPClient) DidChange(newText string) error {
+	log.CliLogger.Debugf("DidChange called")
 	if c.conn == nil || c.documentURI == nil {
 		return errors.New("connection to LSP server not established/nil")
 	}
@@ -111,6 +115,7 @@ func (c *LSPClient) DidChange(newText string) error {
 }
 
 func (c *LSPClient) DidChangeConfiguration(settings any) error {
+	log.CliLogger.Debugf("DidChangeConfiguration called")
 	if c.conn == nil {
 		return errors.New("connection to LSP server not established/nil")
 	}
@@ -129,6 +134,7 @@ func (c *LSPClient) DidChangeConfiguration(settings any) error {
 }
 
 func (c *LSPClient) Completion(position lsp.Position) (lsp.CompletionList, error) {
+	log.CliLogger.Debugf("Completion called")
 	var resp lsp.CompletionList
 
 	if c.conn == nil || c.documentURI == nil {
@@ -153,6 +159,7 @@ func (c *LSPClient) Completion(position lsp.Position) (lsp.CompletionList, error
 }
 
 func (c *LSPClient) ShutdownAndExit() {
+	log.CliLogger.Debugf("ShutdownAndExit called")
 	if c.conn == nil {
 		return
 	}
