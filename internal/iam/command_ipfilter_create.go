@@ -26,7 +26,8 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.create,
 	}
 	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
-	if isSrEnabled {
+	isFlinkEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	if isSrEnabled || isFlinkEnabled {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an IP filter named "demo-ip-filter" with operation group "management" and IP groups "ipg-12345" and "ipg-67890":`,
@@ -41,11 +42,17 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 			},
 		)
 	}
-	pcmd.AddResourceGroupFlag(isSrEnabled, cmd)
+	pcmd.AddResourceGroupFlag(isSrEnabled, isFlinkEnabled, cmd)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
-	if isSrEnabled {
+	if isSrEnabled || isFlinkEnabled {
 		cmd.Flags().String("environment", "", "Id of the environment for which this filter applies. By default will apply to the organization only.")
-		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
+		if isSrEnabled && isFlinkEnabled {
+			cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA", "FLINK"}, "or")))
+		} else if isSrEnabled {
+			cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
+		} else {
+			cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "FLINK"}, "or")))
+		}
 		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 		cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")
 		cmd.MarkFlagsMutuallyExclusive("resource-group", "operations")
@@ -71,7 +78,8 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	operationGroups := []string{}
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
-	if isSrEnabled {
+	isFlinkEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled || isFlinkEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
@@ -136,5 +144,5 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printIpFilter(cmd, filter, isSrEnabled)
+	return printIpFilter(cmd, filter, isSrEnabled, isFlinkEnabled)
 }

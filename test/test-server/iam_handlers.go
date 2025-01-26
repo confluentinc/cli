@@ -636,6 +636,8 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 			}
 			if filterId == "ipf-34dq4" {
 				ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", []string{"MANAGEMENT", "SCHEMA"})
+			} else if filterId == "ipf-34dq6" {
+				ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", []string{"MANAGEMENT", "SCHEMA", "FLINK"})
 			} else {
 				ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", []string{"MANAGEMENT"})
 			}
