@@ -370,9 +370,9 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []str
 	return suggestions
 }
 
-func AddResourceGroupFlag(isDataPlaneEnabled bool, cmd *cobra.Command) {
+func AddResourceGroupFlag(isSrEnabled bool, cmd *cobra.Command) {
 	var arr []string = []string{"management"}
-	if isDataPlaneEnabled {
+	if isSrEnabled {
 		arr = append(arr, "multiple")
 		cmd.Flags().String("resource-group", "multiple", fmt.Sprintf("Name of resource group: %s.", utils.ArrayToCommaDelimitedString(arr, "or")))
 	} else {
