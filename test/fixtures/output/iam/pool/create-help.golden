@@ -10,6 +10,7 @@ Create an identity pool named "demo-identity-pool" with identity provider "op-12
 
 Flags:
       --provider string         REQUIRED: ID of this pool's identity provider.
+      --resource-owner string   The resource_id of the principal who will be assigned resource owner on the created resource. Principal can be a "user", "group-mapping", "service-account", or "identity-pool".
       --identity-claim string   REQUIRED: Claim specifying the external identity using this identity pool.
       --description string      Description of the identity pool.
       --filter string           A supported Common Expression Language (CEL) filter expression. (default "true")
